@@ -45,3 +45,22 @@ class conductivity_2(template.PROPERTY):
         string = self._getcodeasstring("dvalue",None)
         string = self._convertpythontoexprtk(string)
         return string
+    #(4.12292/298.15-1.63866*2*(temperature/298.15))*0.6065
+
+class conductivity_3(template.PROPERTY):
+    def value(self, temperature):
+        # use only one-liner to keep it parsable:
+        return (-1.48445+4.12292*(temperature/298.15)-1.63866*(temperature/298.15)**2)*0.6065
+    def dvalue(self, temperature):
+        # use only one-liner to keep it parsable:
+        return (4.12292/298.15-1.63866*2*(temperature/298.15))*0.6065
+    def dvaluenum(self, temperature):
+        return np.gradient(self.value(temperature),temperature)
+    def exprtk_value(self):
+        string = self._getcodeasstring("value", None)
+        string = self._convertpythontoexprtk(string)
+        return string
+    def exprtk_dvalue(self):
+        string = self._getcodeasstring("dvalue",None)
+        string = self._convertpythontoexprtk(string)
+        return string
