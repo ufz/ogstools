@@ -22,7 +22,7 @@ class WATER:
                 viscosity.viscosity_2,
                 viscosity.viscosity_3,
                 viscosity.viscosity_4]
-        self.conductivities = [conductivity.conductivity_1, conductivity.conductivity_2]
+        self.conductivities = [conductivity.conductivity_1, conductivity.conductivity_2, conductivity.conductivity_3]
         self.specificheatcapacities = [specificheatcapacity.specificheatcapacity_1, specificheatcapacity.specificheatcapacity_2]
         self.expansivities = [expansivity.expansivity_1, expansivity.expansivity_2]
         self.rho = self.densities[rho]()
