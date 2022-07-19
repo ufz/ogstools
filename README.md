@@ -27,3 +27,8 @@ merge request option is preferred.
 * You as a donator must have the right to donate the code, i.e., you are the
   sole author or all authors agree.
 
+## Development setup
+
+For basic style checks setup [pre-commit](https://pre-commit.com) by
+[installing](https://pre-commit.com/#installation) and enabling it (run
+`pre-commit install`).

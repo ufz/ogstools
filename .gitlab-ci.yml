@@ -1,0 +1,20 @@
+image: python:3.9
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+checks:
+  script:
+    - pip install pre-commit
+    - pre-commit install
+    - pre-commit run --all-files
