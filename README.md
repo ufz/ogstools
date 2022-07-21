@@ -29,6 +29,7 @@ merge request option is preferred.
 
 ## Development setup
 
-For basic style checks setup [pre-commit](https://pre-commit.com) by
-[installing](https://pre-commit.com/#installation) and enabling it (run
-`pre-commit install`).
+* Install [poetry](https://python-poetry.org/docs/#installation)
+* Run `poetry install`
+* For basic style checks setup [pre-commit](https://pre-commit.com) by enabling it (run
+  `poetry run pre-commit install`).

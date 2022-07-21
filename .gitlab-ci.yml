@@ -1,20 +1,21 @@
 image: python:3.9
 
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
 
 cache:
   paths:
-    - .cache/pip
-    - venv/
+    - .cache
 
 before_script:
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
+  - curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 -
+  - poetry install
 
 checks:
   script:
-    - pip install pre-commit
-    - pre-commit install
-    - pre-commit run --all-files
+    - poetry run pre-commit install
+    - poetry run pre-commit run --all-files
+
+build:
+  script:
+    - poetry build
