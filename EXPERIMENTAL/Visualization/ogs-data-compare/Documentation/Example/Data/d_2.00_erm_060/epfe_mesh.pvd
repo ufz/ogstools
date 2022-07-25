@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<VTKFile type="Collection" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">
+  <Collection>
+    <DataSet timestep="69347920" group="" part="0" file="epfe_mesh_ts_80_t_69347920.000000.vtu"/>
+    <DataSet timestep="86684900" group="" part="0" file="epfe_mesh_ts_100_t_86684900.000000.vtu"/>
+  </Collection>
+</VTKFile>
