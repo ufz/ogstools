@@ -8,4 +8,3 @@ import os
 # I will rewrite this part to call to it. For now it will remain a placeholder.
 def get_analytica_model(parameter_name, x, y, z, t, ogs_model=None):
    pass
-

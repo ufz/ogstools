@@ -35,4 +35,3 @@ def read_data_full(path, parameter_to_read, experiments_results):
             data_full[experiment][vtu_file] = vtu_data.get_point_field(parameter_to_read)
 
     return data_full
-

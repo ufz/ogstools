@@ -86,4 +86,3 @@ class ANASOL(object):
         self.X=self.a_u*(self.lambd+2*self.G)-self.bprime
         self.Y=1/(self.lambd+2*self.G) * (self.X/((1-self.c/self.kappa)*self.a_u)+self.bprime/self.a_u)
         self.Z=1/(self.lambd+2*self.G) * (self.X/((1-self.c/self.kappa)*self.a_u))
-

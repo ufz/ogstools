@@ -119,4 +119,3 @@ class ElasticAnisotropy(object):
                     for l in range(3):
                         cijklnew[i,j,k,l] = transformTensor(cijkl,R,i,j,k,l)
         return cijklnew
-

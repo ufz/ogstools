@@ -10,8 +10,8 @@ You can provide a dictionary with settings:
 settings = { # Required parameters
             'parameter': 'parameter_to_observe',
             'path': 'path/to/experiment/folder', # os.path.join is recommended
-            'points_file': 'path/to/observation/points/definition/file.csv',  # os.path.join is recommended 
-            
+            'points_file': 'path/to/observation/points/definition/file.csv',  # os.path.join is recommended
+
             # Optional parameters
             'plot_ext': ['png'],
             'include_legend': True

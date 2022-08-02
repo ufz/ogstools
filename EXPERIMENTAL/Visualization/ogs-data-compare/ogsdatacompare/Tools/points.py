@@ -13,7 +13,7 @@ import os
 
 def load_points(file_path):
     '''
-    Load list of points from csv files exported from Paraview into format 
+    Load list of points from csv files exported from Paraview into format
     acceptable by vtuIO
 
     Parameters
@@ -28,13 +28,13 @@ def load_points(file_path):
 
     '''
     points = {}
-    
+
     points_df = pd.read_csv(file_path)
     #points_df = points_df.sort_values(by=["Points_Magnitude"], ascending=True)
     points_x = points_df["Points_0"].to_numpy()
     points_y = points_df["Points_1"].to_numpy()
     points_z = points_df["Points_2"].to_numpy()
-    
+
     for point_id in range(len(points_df.index)):
         point_name = "pt_{p_num}".format(p_num=f'{int(point_id):03d}')
         points[point_name] = (points_x[point_id],

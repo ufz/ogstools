@@ -4,4 +4,3 @@ def legend_without_duplicate_labels(figure, leg_loc='lower center', n_col=8):
     figure.legend(handles, labels, loc=leg_loc, ncol=n_col)
 
     return figure
-    

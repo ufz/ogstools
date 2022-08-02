@@ -15,7 +15,7 @@ There is a function extract_params, that can be used to automatically extract pa
 ParameterName1_parametervalue1_ParameterName2_parametervalue2
 ```
 Currently only ogd_compare_3d_view requires it, but it can be added to other functions as well.
-The experiment folder has to contain one pvd file. Other files will be ignored. Folders without pvd file will be skipped. 
+The experiment folder has to contain one pvd file. Other files will be ignored. Folders without pvd file will be skipped.
 
 ### Configuration dictionary
 Most of the functions require a configuration dictionary to run. What exactly has to be in it, varies between functions. See an example below:
@@ -36,7 +36,7 @@ settings = {'color_ref': 'red',
             'include_legend': True
             }
 ```
-At the end of the ogs_compare/ogs_compary.py file, a function can be found that reads this dictionary. It gives an overview of what parameters are available and which of them are mandatory. 
+At the end of the ogs_compare/ogs_compary.py file, a function can be found that reads this dictionary. It gives an overview of what parameters are available and which of them are mandatory.
 
 ### Warning
 Methods read_data and read_data_full assume that the input data is 2D. For 3D and 1D files, "dim" parameter needs to be adjusted in the code. In the future it may be done automatically.
@@ -48,21 +48,21 @@ Methods read_data and read_data_full assume that the input data is 2D. For 3D an
 ```python
 OGSDataCompare.ogs_compare_time_point(time_step)
 ```
-Configuration dictionary is explained in "General setup" section, result_folder is an access path (both absolute and relative should work) to folder containing all experiments, time_step is a list of time steps at which the results will be compared given as an array. Each value in the time_step array will generate a separate figure. 
+Configuration dictionary is explained in "General setup" section, result_folder is an access path (both absolute and relative should work) to folder containing all experiments, time_step is a list of time steps at which the results will be compared given as an array. Each value in the time_step array will generate a separate figure.
 
-#### Goal 
-Creates plot with value of an output parameter (temperature, pressure, etc) on Y-axis and separate experiments on X-axis. 
+#### Goal
+Creates plot with value of an output parameter (temperature, pressure, etc) on Y-axis and separate experiments on X-axis.
 
 ### ogs_compare
 #### Syntax
 ```python
 OGSDataCompare.ogs_compare()
 ```
-This function doesn't require any input. 
+This function doesn't require any input.
 Optional parameters:
-- analytical_ref 
+- analytical_ref
 #### Goal
-Creates a figure with separate subfigures for all observation points. Each of this figures plots parameter vs time functions for all experiments in one subplot. This function is not fully automatic. The number of subplots, position of legend etc are setup for data I was working with. For other datasets, it may require some tweaking in the code. 
+Creates a figure with separate subfigures for all observation points. Each of this figures plots parameter vs time functions for all experiments in one subplot. This function is not fully automatic. The number of subplots, position of legend etc are setup for data I was working with. For other datasets, it may require some tweaking in the code.
 
 ### ogs_compare_separate
 #### Syntax
