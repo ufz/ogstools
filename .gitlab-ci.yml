@@ -19,3 +19,7 @@ checks:
 build:
   script:
     - poetry build
+
+tests:
+  script:
+    - poetry run pytest
