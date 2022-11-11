@@ -9,7 +9,7 @@ This script is derived from the gmsh-demo   terrain_stl.py
 Requirements: relief.stl (possibly converted from relief.grd)
 It is assumed that curves and points of read-in boundary are ordered.
 
-TODO
+TODO 
     - N-E-S-W instead of front/left/...
     - use transfinite curves/surfaces/volumes to create a hex-mesh
     - make class for SIDES
@@ -24,12 +24,12 @@ import numpy as np
 dim1 = 1
 dim2 = 2
 dim3 = 3
-EPS = 1e-6   # for collinearity check,
+EPS = 1e-6   # for collinearity check, 
 MIN_SIZE = 0.1 # minimum element size
 MAX_SIZE = 1.0 # maximum elemenz size
 
 # side definitions (straight lines), points chosen outside to prevent collocation
-X0 =  0
+X0 =  0 
 X1 = 10
 DX =  1
 Y0 =  0
@@ -37,15 +37,15 @@ Y1 = 10
 DY =  1
 Z = 7   # bottom_level
 
-side_points = {"front": {"p1": np.array([X1, Y0-DY]), "p2": np.array([X1, Y1+DY])},
-               "right": {"p1": np.array([X0-DX, Y1]), "p2": np.array([X1+DX, Y1])},
-               "back":  {"p1": np.array([X0, Y0-DY]), "p2": np.array([X0, Y1+DY])},
+side_points = {"front": {"p1": np.array([X1, Y0-DY]), "p2": np.array([X1, Y1+DY])}, 
+               "right": {"p1": np.array([X0-DX, Y1]), "p2": np.array([X1+DX, Y1])}, 
+               "back":  {"p1": np.array([X0, Y0-DY]), "p2": np.array([X0, Y1+DY])}, 
                "left":  {"p1": np.array([X0-DX, Y0]), "p2": np.array([X1+DX, Y0])}}   # a line is defined by two points: p1 (x,y), p2 (x,y)
 
-side_surface_ids = {"front": [],
-                    "right": [],
-                    "back":  [],
-                    "left":  []}
+side_surface_ids = {"front": [], 
+                    "right": [], 
+                    "back":  [], 
+                    "left":  []}   
 
 
 def collinear2D(p0, p1, p2):   #
@@ -68,8 +68,8 @@ def on_line2D(xyz, guess):
             print(side)
             if collinear2D(p0, points["p1"], points["p2"]):
                 return side
-    print("point " + str(p0) + " not on a given side")
-    return "NO SIDE FOUND"
+    print("point " + str(p0) + " not on a given side")            
+    return "NO SIDE FOUND" 
 
 
 gmsh.initialize(sys.argv) # use finalize to unload from memory
@@ -86,10 +86,10 @@ gmsh.model.mesh.classifySurfaces(math.pi, curveAngle = 0.0*math.pi)   # angle, b
 # curveAngle=0 selects each STL line segment as curve, even if they continue in the same direction
 
 # create a geometry for the discrete curves and surfaces
-gmsh.model.mesh.createGeometry()
+gmsh.model.mesh.createGeometry()   
 
 # retrieve the surface, its boundary curves and corner points
-top_surfaces = gmsh.model.getEntities(2)   # discrete surface
+top_surfaces = gmsh.model.getEntities(2)   # discrete surface 
 if len(top_surfaces) == 1:
     top_surface = top_surfaces[0]
 else:
@@ -97,14 +97,14 @@ else:
     gmsh.finalize()
     sys.exit()
 
-top_curves = gmsh.model.getEntities(1)   # discrete surface
-top_points = gmsh.model.getEntities(0)   # discrete surface
+top_curves = gmsh.model.getEntities(1)   # discrete surface 
+top_points = gmsh.model.getEntities(0)   # discrete surface 
 
 ## create geometric entities to form one volume below the terrain surface
 bottom_point_ids = []
 side_curve_ids = []   # vertical lines
 for top_point in top_points:
-    xyz = gmsh.model.getValue(0, top_point[1], [])   # get x,y,z coordinates
+    xyz = gmsh.model.getValue(0, top_point[1], [])   # get x,y,z coordinates   
     bottom_point_id = gmsh.model.geo.addPoint(xyz[0], xyz[1], Z)
     bottom_point_ids.append(bottom_point_id)
     side_curve_id = gmsh.model.geo.addLine(bottom_point_id, top_point[1])
@@ -115,10 +115,10 @@ Nc = len(top_curves)
 bottom_curve_ids = []   # horizontal lines
 
 guessed_side = "left"
-for ci, top_curve in enumerate(top_curves):
+for ci, top_curve in enumerate(top_curves):  
     cip1 = (ci+1) % Nc   # switch to next and from last to first (cycle)
-    xyz_i = gmsh.model.getValue(0, bottom_point_ids[ci], [])   # get x,y,z coordinates
-    xyz_ip1 = gmsh.model.getValue(0, bottom_point_ids[cip1], [])   # get x,y,z coordinates
+    xyz_i = gmsh.model.getValue(0, bottom_point_ids[ci], [])   # get x,y,z coordinates 
+    xyz_ip1 = gmsh.model.getValue(0, bottom_point_ids[cip1], [])   # get x,y,z coordinates 
     xyz = 0.5*(xyz_i+xyz_ip1)   # midpoint
     detected_side = on_line2D(xyz, guessed_side)
     if detected_side not in side_points:
@@ -127,13 +127,13 @@ for ci, top_curve in enumerate(top_curves):
         sys.exit()
     else:
         guessed_side =  detected_side   # next guess
-
+    
     bottom_curve_id = gmsh.model.geo.addLine(bottom_point_ids[ci], bottom_point_ids[cip1])
     bottom_curve_ids.append(bottom_curve_id)
     side_ll = gmsh.model.geo.addCurveLoop([bottom_curve_id, side_curve_ids[cip1], -top_curve[1], -side_curve_ids[ci]])
     side_surface_id = gmsh.model.geo.addPlaneSurface([side_ll])
     side_surface_ids[detected_side].append(side_surface_id)
-
+    
 bottom_ll = gmsh.model.geo.addCurveLoop(bottom_curve_ids)
 bottom_surface_id = gmsh.model.geo.addPlaneSurface([bottom_ll])
 

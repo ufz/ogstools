@@ -1,17 +1,11 @@
-harmonize with OGStools requirements (code formatter, documentation generator, unit tests instead of selfmade)
-
-OOP design (make module accessable in Python and not only via command line)
+store original mesh (cell_sets cannot be saved to vtu-format, so convert them to cell_data)
 
 store bulk element ID of preferred domain for internal boundaries [Aqeel]
 
-reactivate writing of original file
-
-handle physical group integer IDs
-
 offer option to check 2D meshes for common surface normals (n=(P2-P1 x P3-P1), sign(n*ez or e_user) and possibly enforce it (change element connectivity)
-
+  
 try msh2vtu on further Gmsh tutorial examples
 
-verify domain cell numbering of mixed domains (e.g. tri and quad), i.e. cell numbering in node connectivity matches with vtu-file (and thus OGS), ideally implement OOP style (node_connectivity class), possibly try to use remove_lower_dimensional_cells() for domain or copy cells/cell_data instead of dicts
+verify domain cell numbering of mixed domains (e.g. tri and quad), i.e. cell numbering in node connectivity matches with vtu-file (and thus OGS), ideally implement OOP style (node_connectivity class), possibly try to use remove_lower_dimensional_cells() for domain or copy cells/cell_data instead of dicts 
 
 try other file formats (xdmf, ...)

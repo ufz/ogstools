@@ -14,7 +14,7 @@ lc = 150.0    # mesh size
 
 # opposite vertices
 x0 = 0.0
-y0 = 0.0
+y0 = 0.0 
 z0 = 0.0
 x1 = 1000.0
 y1 = 1000.0
@@ -73,16 +73,16 @@ gmsh.model.geo.addVolume([1], 1)
 
 
 # physical groups
-D = gmsh.model.addPhysicalGroup(dim2, [4])
+D = gmsh.model.addPhysicalGroup(dim2, [4])   
 gmsh.model.setPhysicalName(dim2, D, "west")
 
-C = gmsh.model.addPhysicalGroup(dim2, [3])
+C = gmsh.model.addPhysicalGroup(dim2, [3]) 
 gmsh.model.setPhysicalName(dim2, C, "top")
 
 B = gmsh.model.addPhysicalGroup(dim2, [2])
-gmsh.model.setPhysicalName(dim2, B, "east")
+gmsh.model.setPhysicalName(dim2, B, "east") 
 
-F = gmsh.model.addPhysicalGroup(dim2, [6])
+F = gmsh.model.addPhysicalGroup(dim2, [6])  
 gmsh.model.setPhysicalName(dim2, F, "bottom")
 
 A = gmsh.model.addPhysicalGroup(dim2, [1])
@@ -102,3 +102,4 @@ gmsh.model.mesh.setOrder(2)   # higher order, for simplex (tetra) no difference 
 
 gmsh.write("cube_tet.msh")
 gmsh.finalize()
+

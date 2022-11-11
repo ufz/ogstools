@@ -12,7 +12,7 @@ If the relief is given as relief.grd, then we need to convert it first (file nam
 ``python3 grd2stl.py``.
 
 Running ``python3 gmsh_mesh.py`` reads in relief.stl and meshes the volume between the relief and a *z*-coordinate specified in the script.
-In addition it creates physical groups for all bounding surfaces.
+In addition it creates physical groups for all bounding surfaces. 
 
 ![gmsh](gmsh.png)
 
@@ -34,7 +34,7 @@ Running ``python3 pyvista_mesh.py`` generates a structured mesh on the relief an
 
 ![pyvista](pyvista.png)
 
-## TetGen
+## TetGen 
 TetGen creates a 3D mesh from a 2D mesh on a closed surface.
-This surface may be either read from stl-files or PyVista-data.
-Currently the _pyvista-tetgen basic example_ (``tetgen_example.py``) has been prepared for terrain meshing (``tetgen_mesh.py``), but is not finished yet.
+This surface may be either read from stl-files or PyVista-data. 
+Currently the _pyvista-tetgen basic example_ (``tetgen_example.py``) has been prepared for terrain meshing (``tetgen_mesh.py``), but is not finished yet. 

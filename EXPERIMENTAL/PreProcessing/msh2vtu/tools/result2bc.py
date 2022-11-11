@@ -13,3 +13,4 @@ displacement_x_values=domain_mesh.point_data["displacement"][selection][:,0]		# 
 subdomain_mesh.point_data["displacement_x"]=displacement_x_values	# add selected data to subdomain mesh (point data title "displacement_x" is arbitrary)
 
 subdomain_mesh.write('boundary_with_added_data.vtu')
+
