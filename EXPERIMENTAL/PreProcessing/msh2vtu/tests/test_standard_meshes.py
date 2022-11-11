@@ -52,13 +52,13 @@ def test_msh_vtu():
                  "square_with_circular_hole_physical_group_SG.vtu"]
 
     for msh_file in msh_files:
-        args = argparse.Namespace(filename=msh_file, output='', dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)
+        args = argparse.Namespace(filename=os.path.join(working_dir, msh_file), output=working_dir, dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)
         assert msh2vtu.run(args) == 0, "msh2vtu finished with errors."
 
     for vtu_file in vtu_files:
         ErrorCode = 0
         try:
-            mesh = meshio.read(vtu_file)
+            mesh = meshio.read(os.path.join(working_dir, vtu_file))
         except:
             ErrorCode = 1
             #print("ERROR: " + vtu_file)
