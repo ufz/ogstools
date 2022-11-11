@@ -16,4 +16,3 @@ Physical Curve("rechts") = {2};
 Physical Curve("oben") = {3};
 Physical Curve("links") = {4};
 Physical Surface("Einheitsquadrat") = {1};
-

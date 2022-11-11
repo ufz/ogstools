@@ -23,7 +23,7 @@ Line(5) = {6,7};
 Line(6) = {7,8};
 Line(7) = {8,9};
 Line(8) = {9,6};
-Line Loop(2) = {5,6,7,8}; 
+Line Loop(2) = {5,6,7,8};
 Physical Curve("Outer_Boundary_right") = {5};
 Physical Curve("Outer_Boundary_top") = {6};
 Physical Curve("Outer_Boundary_left") = {7};
@@ -31,4 +31,3 @@ Physical Curve("Outer_Boundary_bottom") = {8};
 
 Plane Surface(1) = {2,1}; // line loop 2 - line loop 1
 Physical Surface("SG") = {1};
-

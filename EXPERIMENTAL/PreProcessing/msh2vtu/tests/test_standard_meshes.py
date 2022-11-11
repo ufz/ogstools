@@ -3,7 +3,7 @@ Tests (pytest) for msh2vtu
 '''
 from context import msh2vtu
 import os
-import argparse   
+import argparse
 import meshio
 import warnings
 
@@ -13,7 +13,7 @@ working_dir=os.path.dirname(__file__)
 
 def test_msh_vtu():
     '''
-    Test whether msh2vtu finishes without errors 
+    Test whether msh2vtu finishes without errors
     and generated vtu-files are readable.
 
     Returns
@@ -50,11 +50,11 @@ def test_msh_vtu():
                  "square_with_circular_hole_physical_group_Outer_Boundary_right.vtu",
                  "square_with_circular_hole_physical_group_Outer_Boundary_top.vtu",
                  "square_with_circular_hole_physical_group_SG.vtu"]
-    
+
     for msh_file in msh_files:
-        args = argparse.Namespace(filename=msh_file, output='', dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)   
+        args = argparse.Namespace(filename=msh_file, output='', dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)
         assert msh2vtu.run(args) == 0, "msh2vtu finished with errors."
-    
+
     for vtu_file in vtu_files:
         ErrorCode = 0
         try:
@@ -63,4 +63,3 @@ def test_msh_vtu():
             ErrorCode = 1
             #print("ERROR: " + vtu_file)
         assert ErrorCode == 0, "Generated vtu-files are erroneous."
-    

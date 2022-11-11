@@ -11,8 +11,8 @@ So one needs to find a way to create such a surface (pyvista).
 FAVORIZED STRATEGY:
     - create a pv.Box, adjust its top surface z=z_top to DEM z=z(x,y)
 
-ALTERNATIVES 
-    - create complete Polydata (vertices, faces) for DEM and remaining sides 
+ALTERNATIVES
+    - create complete Polydata (vertices, faces) for DEM and remaining sides
     - generate DEM for all sides and merge them
     - clip a volume
 """
@@ -34,4 +34,3 @@ cell_qual = grid.compute_cell_quality()['CellQuality']
 grid.plot(scalars=cell_qual, scalar_bar_args={'title': 'Quality'},
               cmap='bwr', clim=[0, 1], flip_scalars=True,
               show_edges=True,)
-

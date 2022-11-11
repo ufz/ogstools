@@ -20,11 +20,11 @@ filename = "relief.grd"
 dem = SurferGridReader().apply(filename)
 
 relief = dem.warp_by_scalar(scale_factor=1)
-relief.plot(cmap='terrain')   # 
+relief.plot(cmap='terrain')   #
 
 # create meshgrid
-z_spacing = np.array([1, 2, 3])   
- 
+z_spacing = np.array([1, 2, 3])
+
 xx = np.repeat(relief.x, len(z_spacing), axis=-1)
 yy = np.repeat(relief.y, len(z_spacing), axis=-1)
 z_offset = np.cumsum(z_spacing).reshape((1, 1, -1))
@@ -42,5 +42,5 @@ mesh["Elevation"] = zz.ravel(order="F")   # flatten nested array to 1D-array
 # as "Elevation is the only data field it gets plotted
 mesh.plot(show_edges=True)   # lighting=False
 
-#mesh.save("terrain.vtk")   
+#mesh.save("terrain.vtk")
 pv.save_meshio("pv_terrain.vtu", mesh)

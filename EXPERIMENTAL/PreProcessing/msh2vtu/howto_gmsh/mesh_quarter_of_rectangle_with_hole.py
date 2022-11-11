@@ -13,7 +13,7 @@ gmsh.model.add("rectangle")
 dim1 = 1
 dim2 = 2
 
-# Geometry 
+# Geometry
 a = 3.0
 b = 4.0
 r = 1.0
@@ -25,9 +25,9 @@ Nx =  4
 Ny = 5
 NR = 5
 Nr =  5
-P = 1.3 # Progression towards hole 
+P = 1.3 # Progression towards hole
 
-# Auxiliary 
+# Auxiliary
 s45 = np.sin(np.pi/4)
 c45 = np.cos(np.pi/4)
 
@@ -48,7 +48,7 @@ gmsh.model.geo.addPoint(r*c45, r*s45, 0, lc, 11)
 
 # Inner point (only one)
 gmsh.model.geo.addPoint(R, R, 0, lc, 12)
-    
+
 # Outer lines (ccw)
 gmsh.model.geo.addLine( 2,  3,  1)
 gmsh.model.geo.addLine( 3,  4,  2)
@@ -69,7 +69,7 @@ gmsh.model.geo.addLine( 9, 12, 14)
 gmsh.model.geo.addLine(11, 12, 15)
 
 
-# The third elementary entity is the surface. In order to define a surface 
+# The third elementary entity is the surface. In order to define a surface
 # from the curves defined above, a curve loop has first to be defined (ccw).
 gmsh.model.geo.addCurveLoop([ 2,  3, 12,-11], 1)
 gmsh.model.geo.addCurveLoop([ 4,  5, 13,-12], 2)

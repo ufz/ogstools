@@ -24,7 +24,7 @@ gmsh.model.geo.addLine(2, 3, 2)
 gmsh.model.geo.addLine(3, 4, 3)
 gmsh.model.geo.addLine(4, 1, 4)
 
-# The third elementary entity is the surface. In order to define a surface 
+# The third elementary entity is the surface. In order to define a surface
 # from the curves defined above, a curve loop has first to be defined.
 gmsh.model.geo.addCurveLoop([1, 2, 3, 4], 1)
 

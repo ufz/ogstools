@@ -14,7 +14,7 @@ lc = 1.0    # mesh size
 
 # opposite vertices
 x0 = 0.0
-y0 = 0.0 
+y0 = 0.0
 z0 = 0.0
 x1 = 1.0
 y1 = 1.0

@@ -3,7 +3,7 @@ from msh2vtu import run, msh2vtu_version, tested_gmsh_version, tested_meshio_ver
 
 if __name__ == "__main__":
     ''' command line use '''
-    
+
     # parsing command line arguments
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-a",
         "--ascii",
-        action = "store_true",	
+        action = "store_true",
         help = "save output files (*.vtu) in ascii format",
     )
     parser.add_argument(
@@ -58,13 +58,12 @@ if __name__ == "__main__":
         action = "store_true",
         help = "swap x and y coordinate",
     )
-    parser.add_argument('-v', '--version', action='version', version='msh2vtu {}   (Dominik Kern)'.format(msh2vtu_version)) 
-        
-    args = parser.parse_args()   
-    
+    parser.add_argument('-v', '--version', action='version', version='msh2vtu {}   (Dominik Kern)'.format(msh2vtu_version))
+
+    args = parser.parse_args()
+
     ErrorCode = run(args)
     if ErrorCode ==0:
         print("msh2vtu successfully finished")
     else:
         print("msh2vtu stopped with errors")
-        
