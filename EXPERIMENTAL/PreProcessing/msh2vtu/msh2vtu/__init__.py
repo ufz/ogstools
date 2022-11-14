@@ -160,6 +160,8 @@ def run(args):
     else:
         output_basename = args.output
 
+    print(f"Output: {output_basename}")
+
     # read in mesh (be aware of shallow copies, i.e. by reference)
     mesh = meshio.read(args.filename)
     points, point_data = mesh.points, mesh.point_data
