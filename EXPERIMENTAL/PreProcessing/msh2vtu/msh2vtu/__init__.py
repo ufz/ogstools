@@ -513,5 +513,5 @@ def run(args):
 #print("initializing msh2vtu")
 msh2vtu_version = "0.5"
 tested_gmsh_version = "4.8.4"
-tested_meshio_version = "5.3.8"
+tested_meshio_version = "5.3.4"
 first_meshio_version_without_meshtools = "5.0.0"
