@@ -1,6 +1,5 @@
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+include:
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
 
 image: python:3.9
 
