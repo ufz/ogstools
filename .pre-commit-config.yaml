@@ -10,6 +10,14 @@ repos:
     hooks:
       - id: black
         exclude: EXPERIMENTAL/.*
+  # black-formats code blocks in documentation files
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: "blacken-docs"
+        exclude: EXPERIMENTAL/.*
+        additional_dependencies:
+          - black==22.10.0 # keep in sync with black hook
   - repo: https://github.com/PyCQA/isort
     rev: "5.10.1"
     hooks:
