@@ -1,0 +1,4 @@
+[flake8]
+; max-line-length: see also black setting in pyproject.toml
+max-line-length = 80
+show-source = True
