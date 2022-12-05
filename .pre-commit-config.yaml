@@ -5,9 +5,37 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-  # - repo: https://github.com/psf/black
-  # rev: 22.6.0
-  # hooks:
-  # - id: black
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        exclude: EXPERIMENTAL/.*
+  # black-formats code blocks in documentation files
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: "blacken-docs"
+        exclude: EXPERIMENTAL/.*
+        additional_dependencies:
+          - black==22.10.0 # keep in sync with black hook
+  - repo: https://github.com/PyCQA/isort
+    rev: "5.10.1"
+    hooks:
+      - id: isort
+        exclude: EXPERIMENTAL/.*
+  - repo: https://github.com/PyCQA/flake8
+    rev: "5.0.4"
+    hooks:
+      - id: flake8
+        exclude: EXPERIMENTAL/.*
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-comprehensions
+  - repo: https://github.com/asottile/pyupgrade
+    rev: "v3.2.0"
+    hooks:
+      - id: pyupgrade
+        exclude: EXPERIMENTAL/.*
+        args: [--py37-plus]
 default_language_version:
   python: python3.9
