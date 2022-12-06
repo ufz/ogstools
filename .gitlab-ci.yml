@@ -1,3 +1,7 @@
+stages:
+  - test
+  - deploy
+
 include:
   - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
 
@@ -34,10 +38,35 @@ tests:
   script:
     - tox -p
 
+.docs-script: &docs-script
+  - (cd docs && make html)
+  - mv docs/_build/html public
+
+docs preview:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - *docs-script
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: docs preview
+    url: "https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/tools/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
+
+pages:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - *docs-script
+  artifacts:
+    paths:
+      - public
+  environment: production
+
 publish:
   rules:
     - if: $CI_COMMIT_TAG
   variables:
     TWINE_REPOSITORY: testpypi
-  script:
-    - tox -e publish
