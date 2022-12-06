@@ -6,10 +6,14 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from datetime import datetime
+
+import ogstools
+
 project = "ogstools"
-copyright = "2022, OpenGeoSys Community <info@opengeosys.org>"
-author = "OpenGeoSys Community <info@opengeosys.org>"
-release = "0.0.1"
+author = ogstools.__authors__  # "OpenGeoSys Community <info@opengeosys.org>"
+copyright = f"{datetime.now().year}, {author}"
+release = ogstools.__version__  # "0.0.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
