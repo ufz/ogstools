@@ -10,6 +10,7 @@ Welcome to ogstools's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   reference/ogstools
 
 
 Indices and tables

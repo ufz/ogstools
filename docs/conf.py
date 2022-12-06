@@ -11,14 +11,17 @@ from datetime import datetime
 import ogstools
 
 project = "ogstools"
-author = ogstools.__authors__  # "OpenGeoSys Community <info@opengeosys.org>"
+author = ogstools.__authors__
 copyright = f"{datetime.now().year}, {author}"
-release = ogstools.__version__  # "0.0.1"
+version = release = ogstools.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc.typehints",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
