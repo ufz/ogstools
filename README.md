@@ -72,3 +72,12 @@ pyproject-build
 ```
 
 Packages can then be found in `dist/`.
+
+### Build documentation
+
+```bash
+cd docs
+make html
+```
+
+This will create the documentation files in `docs/_build/html`.
