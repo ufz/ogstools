@@ -4,7 +4,6 @@ Created on Thu Sep 23 13:54:03 2021
 
 @author: dominik
 """
-import numpy as np
 import pyvista as pv
 from PVGeo.grids import SurferGridReader
 
@@ -14,6 +13,7 @@ dem = SurferGridReader().apply(filename)  # GRD reader
 x0, x1, y0, y1, z0, z1 = dem.GetBounds()
 
 # RESAMPLE
+# import numpy as np
 # x = np.linspace(x0, x1, num=10)
 # y = np.linspace(y0, y1, num=10)
 # xx, yy, zz = np.meshgrid(x, y, [0])

@@ -1,6 +1,5 @@
 # mesh unit square with quadrilaterals (of higher two)
 import gmsh
-import numpy
 
 # Before using any functions in the Python API, Gmsh must be initialized:
 gmsh.initialize()

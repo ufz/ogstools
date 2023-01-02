@@ -1,6 +1,5 @@
 # mesh unit square with triangle elements (higher order)
 import gmsh
-import numpy
 
 # Before using any functions in the Python API, Gmsh must be initialized:
 gmsh.initialize()
@@ -50,9 +49,9 @@ gmsh.model.setPhysicalName(dim2, Rectangle, "UnitSquare")
 # Before it can be meshed, the internal CAD representation must be synchronized
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim2)
-gmsh.model.mesh.setOrder(
-    2
-)  # higher order, for simplex elements there is no difference between Lagrange and Serendipity
+# higher order, for simplex elements there is no difference between Lagrange
+# and Serendipity
+gmsh.model.mesh.setOrder(2)
 gmsh.write("square_tri.msh")
 
 gmsh.finalize()

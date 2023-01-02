@@ -9,10 +9,8 @@
 #        cell_sets[name] = [[] for _ in range(len(cells))]
 #        for e in gmsh.model.getEntitiesForPhysicalGroup(dim, tag):
 import argparse  # to parse emulated command line call
-import sys  # to emulate command line call
 
 import gmsh  # for meshing
-import numpy  # for numerics
 from msh2vtu import run  # to run mesh conversion
 
 parser = argparse.ArgumentParser()
@@ -65,10 +63,12 @@ gmsh.model.setPhysicalName(dim2, Rectangle, "UnitSquare")
 # Before it can be meshed, the internal CAD representation must be synchronized
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim2)
-# gmsh.model.mesh.setOrder(2)   # higher order, for simplex elements there is no difference between Lagrange and Serendipity
-gmsh.write(
-    "square_tri.msh"
-)  # if meshio could directly access a gmsh object then this intermediate file could be skipped
+# higher order, for simplex elements there is no difference between Lagrange
+# and Serendipity
+# gmsh.model.mesh.setOrder(2)
+# if meshio could directly access a gmsh object then this intermediate file
+# could be skipped
+gmsh.write("square_tri.msh")
 gmsh.finalize()
 
 # emulate command line and run msh2vtu

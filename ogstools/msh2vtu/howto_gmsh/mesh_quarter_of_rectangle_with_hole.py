@@ -93,9 +93,7 @@ gmsh.model.geo.mesh.setTransfiniteCurve(4, Ny)
 gmsh.model.geo.mesh.setTransfiniteCurve(5, Nx)
 gmsh.model.geo.mesh.setTransfiniteCurve(6, NR)
 gmsh.model.geo.mesh.setTransfiniteCurve(7, Ny)
-gmsh.model.geo.mesh.setTransfiniteCurve(
-    8, Nr, "Progression", -P
-)  # note direction
+gmsh.model.geo.mesh.setTransfiniteCurve(8, Nr, "Progression", -P)
 gmsh.model.geo.mesh.setTransfiniteCurve(9, NR)
 gmsh.model.geo.mesh.setTransfiniteCurve(10, NR)
 gmsh.model.geo.mesh.setTransfiniteCurve(11, NR)
@@ -139,7 +137,7 @@ gmsh.model.setPhysicalName(dim2, Plate, "Plate")
 gmsh.model.geo.synchronize()
 
 gmsh.model.mesh.generate(dim2)
-# gmsh.option.setNumber('Mesh.SecondOrderIncomplete', 1)   # serendipity elements
+# gmsh.option.setNumber('Mesh.SecondOrderIncomplete', 1) # serendipity elements
 # gmsh.model.mesh.setOrder(2)   # higher order elements (quadratic)
 gmsh.write("quarter_rectangle_with_hole.msh")
 

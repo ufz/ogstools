@@ -15,7 +15,6 @@ ALTERNATIVES
     - generate DEM for all sides and merge them
     - clip a volume
 """
-import numpy as np
 import pyvista as pv
 import tetgen
 

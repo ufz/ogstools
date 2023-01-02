@@ -1,6 +1,5 @@
 # mesh unit cube with tetraeders
 import gmsh
-import numpy
 
 # init
 gmsh.initialize()
@@ -98,9 +97,9 @@ gmsh.model.setPhysicalName(dim3, W, "volume")
 # mesh
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim3)
-gmsh.model.mesh.setOrder(
-    2
-)  # higher order, for simplex (tetra) no difference between Lagrange and Serendipity elements
+# higher order, for simplex (tetra) no difference between Lagrange and
+# Serendipity elements
+gmsh.model.mesh.setOrder(2)
 
 gmsh.write("cube_tet.msh")
 gmsh.finalize()

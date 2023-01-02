@@ -5,7 +5,6 @@ Created on Wed Sep 22 15:56:56 2021
 
 Changed from Sphere (https://tetgen.pyvista.org basic example) to Box
 """
-import numpy as np
 import pyvista as pv
 import tetgen
 

@@ -28,7 +28,8 @@ EPS = 1e-6  # for collinearity check,
 MIN_SIZE = 0.1  # minimum element size
 MAX_SIZE = 1.0  # maximum elemenz size
 
-# side definitions (straight lines), points chosen outside to prevent collocation
+# side definitions (straight lines), points chosen outside to prevent
+# collocation
 X0 = 0
 X1 = 10
 DX = 1
@@ -84,8 +85,10 @@ gmsh.merge(os.path.join(path, "relief.stl"))
 gmsh.model.mesh.classifySurfaces(
     math.pi, curveAngle=0.0 * math.pi
 )  # angle, boundary = True, forReparametrization = False, curveAngle = pi
-# angle=pi, selects the surface as one, no matter what angles are between the STL-patches
-# curveAngle=0 selects each STL line segment as curve, even if they continue in the same direction
+# angle=pi, selects the surface as one, no matter what angles are between the
+# STL-patches
+# curveAngle=0 selects each STL line segment as curve, even if they continue in
+# the same direction
 
 # create a geometry for the discrete curves and surfaces
 gmsh.model.mesh.createGeometry()
@@ -102,7 +105,7 @@ else:
 top_curves = gmsh.model.getEntities(1)  # discrete surface
 top_points = gmsh.model.getEntities(0)  # discrete surface
 
-## create geometric entities to form one volume below the terrain surface
+# create geometric entities to form one volume below the terrain surface
 bottom_point_ids = []
 side_curve_ids = []  # vertical lines
 for top_point in top_points:
@@ -119,9 +122,8 @@ bottom_curve_ids = []  # horizontal lines
 guessed_side = "left"
 for ci, top_curve in enumerate(top_curves):
     cip1 = (ci + 1) % Nc  # switch to next and from last to first (cycle)
-    xyz_i = gmsh.model.getValue(
-        0, bottom_point_ids[ci], []
-    )  # get x,y,z coordinates
+    # get x,y,z coordinates
+    xyz_i = gmsh.model.getValue(0, bottom_point_ids[ci], [])
     xyz_ip1 = gmsh.model.getValue(
         0, bottom_point_ids[cip1], []
     )  # get x,y,z coordinates

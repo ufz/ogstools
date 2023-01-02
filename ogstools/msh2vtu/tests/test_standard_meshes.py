@@ -3,7 +3,6 @@ Tests (pytest) for msh2vtu
 """
 import argparse
 import os
-import warnings
 
 import meshio
 from context import msh2vtu
@@ -78,8 +77,8 @@ def test_msh_vtu():
     for vtu_file in vtu_files:
         ErrorCode = 0
         try:
-            mesh = meshio.read(os.path.join(working_dir, vtu_file))
-        except:
+            meshio.read(os.path.join(working_dir, vtu_file))
+        except Exception:
             ErrorCode = 1
             # print("ERROR: " + vtu_file)
         assert ErrorCode == 0, "Generated vtu-files are erroneous."

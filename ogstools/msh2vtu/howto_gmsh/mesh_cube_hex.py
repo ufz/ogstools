@@ -1,6 +1,5 @@
 # mesh unit cube with hexaeders
 import gmsh
-import numpy
 
 # init
 gmsh.initialize()
@@ -52,7 +51,7 @@ gmsh.model.geo.mesh.setRecombine(dim2, 1)
 
 # volume (dim=3)
 # extrusion of a surface creates: top surface, volume, side surfaces
-# parameters: (dim, tag), x,y,z, divisions per layer, heights per layer, Recombine
+# parameters: (dim, tag), x,y,z, divisions per layer, heights per layer
 newEntities = gmsh.model.geo.extrude([(dim2, 1)], 0, 0, z1 - z0, [2], [], True)
 top_tag = newEntities[0][1]
 vol_tag = newEntities[1][1]
