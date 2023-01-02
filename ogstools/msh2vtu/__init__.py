@@ -8,9 +8,8 @@ import meshio
 import numpy
 
 
-# 	auxiliary function needed for meshio version <4.0.16 or >=5.0.0
 def my_remove_orphaned_nodes(my_mesh):
-    """own implementation to remove points not belonging to any cell"""
+    """Auxiliary function to remove points not belonging to any cell"""
 
     # find connected points and derive mapping from all points to them
     connected_point_index = numpy.array([])
@@ -400,11 +399,7 @@ def run(args):
             cells=domain_cells,
             cell_data=domain_cell_data,
         )
-        # domain_mesh.prune()	# for older meshio version (4.0.16)
-        if meshio.__version__ < first_meshio_version_without_meshtools:
-            domain_mesh.remove_orphaned_nodes()
-        else:
-            my_remove_orphaned_nodes(domain_mesh)
+        my_remove_orphaned_nodes(domain_mesh)
 
         if len(domain_mesh.points) != number_of_original_points:
             warnings.warn(
@@ -571,11 +566,7 @@ def run(args):
         cell_data=boundary_cell_data,
     )
     if len(boundary_cells):
-        # print(boundary_cells)
-        if meshio.__version__ < first_meshio_version_without_meshtools:
-            boundary_mesh.remove_orphaned_nodes()
-        else:
-            my_remove_orphaned_nodes(boundary_mesh)
+        my_remove_orphaned_nodes(boundary_mesh)
 
         meshio.write(
             output_basename + "_boundary.vtu",
@@ -718,11 +709,7 @@ def run(args):
             )
 
         if len(subdomain_cells):
-            if meshio.__version__ < first_meshio_version_without_meshtools:
-                # submesh.prune() for meshio_version 4.0.16
-                submesh.remove_orphaned_nodes()
-            else:
-                my_remove_orphaned_nodes(submesh)
+            my_remove_orphaned_nodes(submesh)
 
             outputfilename = (
                 output_basename + "_physical_group_" + name + ".vtu"
@@ -738,4 +725,3 @@ def run(args):
 
 # print("initializing msh2vtu")
 tested_gmsh_version = "4.8.4"
-first_meshio_version_without_meshtools = "5.0.0"
