@@ -11,7 +11,8 @@
 import argparse  # to parse emulated command line call
 
 import gmsh  # for meshing
-from msh2vtu import run  # to run mesh conversion
+
+from ogstools.msh2vtu import run  # to run mesh conversion
 
 parser = argparse.ArgumentParser()
 

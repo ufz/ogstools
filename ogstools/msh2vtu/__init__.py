@@ -721,7 +721,3 @@ def run(args):
             print("Submesh " + name + " empty (not written)")
 
     return 0  # successfully finished
-
-
-# print("initializing msh2vtu")
-tested_gmsh_version = "4.8.4"

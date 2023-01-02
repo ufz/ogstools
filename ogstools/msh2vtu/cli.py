@@ -1,7 +1,7 @@
 import argparse
 
 from ogstools import __version__
-from ogstools.msh2vtu import run, tested_gmsh_version
+from ogstools.msh2vtu import run
 
 
 def cli():
@@ -16,9 +16,6 @@ def cli():
             " vtu-format. Note that all mesh entities should belong to physical"
             " groups."
         ),
-        epilog="Tested with Gmsh "
-        + tested_gmsh_version
-        + ". Check for changes between versions, if there are errors.",
     )
     parser.add_argument("filename", help="Gmsh mesh file (*.msh) as input data")
     parser.add_argument(
