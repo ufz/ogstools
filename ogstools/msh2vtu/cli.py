@@ -1,7 +1,7 @@
 import argparse
 
 from ogstools import __version__
-from ogstools.msh2vtu import run, tested_gmsh_version, tested_meshio_version
+from ogstools.msh2vtu import run, tested_gmsh_version
 
 
 def cli():
@@ -16,9 +16,7 @@ def cli():
             " vtu-format. Note that all mesh entities should belong to physical"
             " groups."
         ),
-        epilog="Tested with Meshio "
-        + tested_meshio_version
-        + " and Gmsh "
+        epilog="Tested with Gmsh "
         + tested_gmsh_version
         + ". Check for changes between versions, if there are errors.",
     )

@@ -168,24 +168,6 @@ def run(args):
     ogs_domain_cell_data_key = "MaterialIDs"
     ogs_boundary_cell_data_key = "bulk_elem_ids"
 
-    print(
-        f"MeshIO {meshio.__version__} found, MSH2VTU was tested with MeshIO"
-        f" {tested_meshio_version}."
-    )
-    if meshio.__version__ < tested_meshio_version:
-        warnings.warn(
-            "Warning, out-dated MeshIO version. In case of errors watch for"
-            " commented code fragments from previous versions in this script"
-            " (msh2vtu).",
-            stacklevel=2,
-        )
-    elif meshio.__version__ > tested_meshio_version:
-        print(
-            "Newer version of MeshIO than supported. Backward compatibility may"
-            " be missing!"
-        )
-    print("##")
-
     # ###
     # Here was the parser, filling structure variable args
     # args.filename
@@ -756,5 +738,4 @@ def run(args):
 
 # print("initializing msh2vtu")
 tested_gmsh_version = "4.8.4"
-tested_meshio_version = "5.3.4"
 first_meshio_version_without_meshtools = "5.0.0"
