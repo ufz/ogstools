@@ -5,7 +5,8 @@ import argparse
 import os
 
 import meshio
-from context import msh2vtu
+
+import ogstools.msh2vtu as msh2vtu
 
 parser = argparse.ArgumentParser()
 working_dir = os.path.dirname(__file__)
