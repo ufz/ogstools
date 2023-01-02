@@ -34,3 +34,4 @@ merge request option is preferred.
 * For basic style checks setup [pre-commit](https://pre-commit.com) by enabling it (run
   `poetry run pre-commit install`).
 * To run the test suite: `poetry run pytest`
+* To run cli tools, e.g.: `poetry run msh2vtu

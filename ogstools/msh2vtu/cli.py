@@ -1,13 +1,14 @@
 import argparse
 
-from msh2vtu import (
+from ogstools.msh2vtu import (
     msh2vtu_version,
     run,
     tested_gmsh_version,
     tested_meshio_version,
 )
 
-if __name__ == "__main__":
+
+def cli():
     """command line use"""
 
     # parsing command line arguments
@@ -98,3 +99,7 @@ if __name__ == "__main__":
         print("msh2vtu successfully finished")
     else:
         print("msh2vtu stopped with errors")
+
+
+if __name__ == "__main__":
+    cli()
