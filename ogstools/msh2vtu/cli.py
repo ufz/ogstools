@@ -1,11 +1,7 @@
 import argparse
 
-from ogstools.msh2vtu import (
-    msh2vtu_version,
-    run,
-    tested_gmsh_version,
-    tested_meshio_version,
-)
+from ogstools import __version__
+from ogstools.msh2vtu import run, tested_gmsh_version, tested_meshio_version
 
 
 def cli():
@@ -89,7 +85,7 @@ def cli():
         "-v",
         "--version",
         action="version",
-        version=f"msh2vtu {msh2vtu_version}   (Dominik Kern)",
+        version=f"msh2vtu (part of ogstools {__version__}, Dominik Kern)",
     )
 
     args = parser.parse_args()
