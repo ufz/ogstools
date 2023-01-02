@@ -1,14 +1,21 @@
 import argparse
-from msh2vtu import run, msh2vtu_version, tested_gmsh_version, tested_meshio_version, first_meshio_version_without_meshtools
+
+from msh2vtu import (
+    first_meshio_version_without_meshtools,
+    msh2vtu_version,
+    run,
+    tested_gmsh_version,
+    tested_meshio_version,
+)
 
 if __name__ == "__main__":
-    ''' command line use '''
+    """command line use"""
 
     # parsing command line arguments
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(
-        description = "Prepares a Gmsh-mesh for use in OGS by extracting domain-, boundary- and physical group-submeshes, and saves them in vtu-format. Note that all mesh entities should belong to physical groups.",
-        epilog = "Tested with Meshio "
+        description="Prepares a Gmsh-mesh for use in OGS by extracting domain-, boundary- and physical group-submeshes, and saves them in vtu-format. Note that all mesh entities should belong to physical groups.",
+        epilog="Tested with Meshio "
         + tested_meshio_version
         + " and Gmsh "
         + tested_gmsh_version
@@ -18,52 +25,57 @@ if __name__ == "__main__":
     parser.add_argument(
         "-g",
         "--ogs",
-        action = "store_true",
-        help = 'rename "gmsh:physical" to "MaterialIDs" for domains and change type of corresponding cell data to INT32',
+        action="store_true",
+        help='rename "gmsh:physical" to "MaterialIDs" for domains and change type of corresponding cell data to INT32',
     )
     parser.add_argument(
         "-r",
         "--rdcd",
-        action = "store_true",
-        help = "renumber domain cell data, physical IDs (cell data) of domains get numbered beginning with zero",
+        action="store_true",
+        help="renumber domain cell data, physical IDs (cell data) of domains get numbered beginning with zero",
     )
     parser.add_argument(
         "-a",
         "--ascii",
-        action = "store_true",
-        help = "save output files (*.vtu) in ascii format",
+        action="store_true",
+        help="save output files (*.vtu) in ascii format",
     )
     parser.add_argument(
         "-d",
         "--dim",
-        type = int,
-        default = 0,
-        help = "spatial dimension (1, 2 or 3), trying automatic detection, if not given",
+        type=int,
+        default=0,
+        help="spatial dimension (1, 2 or 3), trying automatic detection, if not given",
     )
     parser.add_argument(
         "-o",
         "--output",
-        default = "",
-        help = "basename of output files; if not given, then it defaults to basename of inputfile",
+        default="",
+        help="basename of output files; if not given, then it defaults to basename of inputfile",
     )
     parser.add_argument(
         "-z",
         "--delz",
-        action = "store_true",
-        help = "deleting z-coordinate, for 2D-meshes with z=0, note that vtu-format requires 3D points",
+        action="store_true",
+        help="deleting z-coordinate, for 2D-meshes with z=0, note that vtu-format requires 3D points",
     )
     parser.add_argument(
         "-s",
         "--swapxy",
-        action = "store_true",
-        help = "swap x and y coordinate",
+        action="store_true",
+        help="swap x and y coordinate",
     )
-    parser.add_argument('-v', '--version', action='version', version='msh2vtu {}   (Dominik Kern)'.format(msh2vtu_version))
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"msh2vtu {msh2vtu_version}   (Dominik Kern)",
+    )
 
     args = parser.parse_args()
 
     ErrorCode = run(args)
-    if ErrorCode ==0:
+    if ErrorCode == 0:
         print("msh2vtu successfully finished")
     else:
         print("msh2vtu stopped with errors")

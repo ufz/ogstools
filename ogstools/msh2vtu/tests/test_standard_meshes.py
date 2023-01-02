@@ -1,11 +1,12 @@
 """
 Tests (pytest) for msh2vtu
 """
-from context import msh2vtu
-import os
 import argparse
-import meshio
+import os
 import warnings
+
+import meshio
+from context import msh2vtu
 
 parser = argparse.ArgumentParser()
 working_dir = os.path.dirname(__file__)

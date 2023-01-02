@@ -1,6 +1,6 @@
 # mesh unit square with quadrilaterals (of higher two)
-import numpy
 import gmsh
+import numpy
 
 # Before using any functions in the Python API, Gmsh must be initialized:
 gmsh.initialize()
@@ -8,10 +8,10 @@ gmsh.option.setNumber("General.Terminal", 1)
 gmsh.model.add("square")
 
 # Dimensions
-dim1=1
-dim2=2
+dim1 = 1
+dim2 = 2
 
-lc = 0.5 # characteristic length for meshing
+lc = 0.5  # characteristic length for meshing
 # Define some corner points. All points should have different tags:
 gmsh.model.geo.addPoint(0, 0, 0, lc, 1)
 gmsh.model.geo.addPoint(1, 0, 0, lc, 2)
@@ -60,8 +60,8 @@ gmsh.model.setPhysicalName(dim2, Rectangle, "UnitSquare")
 
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim2)
-gmsh.option.setNumber('Mesh.SecondOrderIncomplete', 1) # serendipity elements
-gmsh.model.mesh.setOrder(2)   # higher order elements (quadratic)
+gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)  # serendipity elements
+gmsh.model.mesh.setOrder(2)  # higher order elements (quadratic)
 gmsh.write("square_quad.msh")
 
 gmsh.finalize()

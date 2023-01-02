@@ -8,11 +8,13 @@
 #        name = gmsh.model.getPhysicalName(dim, tag)
 #        cell_sets[name] = [[] for _ in range(len(cells))]
 #        for e in gmsh.model.getEntitiesForPhysicalGroup(dim, tag):
-import numpy   # for numerics
-import gmsh   # for meshing
-from msh2vtu import run   # to run mesh conversion
-import sys   # to emulate command line call
-import argparse   # to parse emulated command line call
+import argparse  # to parse emulated command line call
+import sys  # to emulate command line call
+
+import gmsh  # for meshing
+import numpy  # for numerics
+from msh2vtu import run  # to run mesh conversion
+
 parser = argparse.ArgumentParser()
 
 # Before using any functions in the Python API, Gmsh must be initialized:
@@ -21,10 +23,10 @@ gmsh.option.setNumber("General.Terminal", 1)
 gmsh.model.add("square")
 
 # Dimensions
-dim1=1
-dim2=2
+dim1 = 1
+dim2 = 2
 
-lc=0.5 # characteristic length for mesh size
+lc = 0.5  # characteristic length for mesh size
 
 gmsh.model.geo.addPoint(0, 0, 0, lc, 1)
 gmsh.model.geo.addPoint(1, 0, 0, lc, 2)
@@ -63,10 +65,21 @@ gmsh.model.setPhysicalName(dim2, Rectangle, "UnitSquare")
 # Before it can be meshed, the internal CAD representation must be synchronized
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim2)
-#gmsh.model.mesh.setOrder(2)   # higher order, for simplex elements there is no difference between Lagrange and Serendipity
-gmsh.write("square_tri.msh")   # if meshio could directly access a gmsh object then this intermediate file could be skipped
+# gmsh.model.mesh.setOrder(2)   # higher order, for simplex elements there is no difference between Lagrange and Serendipity
+gmsh.write(
+    "square_tri.msh"
+)  # if meshio could directly access a gmsh object then this intermediate file could be skipped
 gmsh.finalize()
 
 # emulate command line and run msh2vtu
-args = argparse.Namespace(filename='square_tri.msh', output='', dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)   # filename, output="", dim=0, delz, swapxy, rdcd, ogs, ascii
+args = argparse.Namespace(
+    filename="square_tri.msh",
+    output="",
+    dim=0,
+    delz=False,
+    swapxy=False,
+    rdcd=True,
+    ogs=True,
+    ascii=False,
+)  # filename, output="", dim=0, delz, swapxy, rdcd, ogs, ascii
 run(args)
