@@ -33,5 +33,23 @@ merge request option is preferred.
 * Run `poetry install`
 * For basic style checks setup [pre-commit](https://pre-commit.com) by enabling it (run
   `poetry run pre-commit install`).
-* To run the test suite: `poetry run pytest --cov`
-* To run cli tools, e.g.: `poetry run msh2vtu
+* To run cli tools, e.g.: `poetry run msh2vtu`
+
+### Testing with `tox` and `pytest`
+
+Test environment are created and run with [`tox`](https://tox.wiki).
+Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/)
+
+To run the tests:
+
+```bash
+poetry run tox # parallelize with `tox -p`
+```
+
+You can view a coverage report by opening `htmlcov/index.html` in a browser.
+
+You can also run a single test environment with e.g.:
+
+```bash
+poetry run tox -e py39
+```

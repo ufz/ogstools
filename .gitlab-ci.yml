@@ -1,5 +1,5 @@
 include:
-  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+  - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
 
 image: python:3.9
 
@@ -25,8 +25,7 @@ build:
 
 tests:
   script:
-    - poetry run pytest --cov
-    - poetry run coverage xml
+    - poetry run tox -p
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
