@@ -11,14 +11,19 @@ cache:
     - .cache
 
 before_script:
-  - curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 -
+  - |
+    if ! command -v poetry &> /dev/null
+    then
+      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 -
+    fi
   - poetry install
 
 build:
   script:
     - poetry build
 
-tests:
+tests (arch):
+  tags: [shell, envinf]
   script:
     - poetry run tox -p
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
@@ -27,3 +32,7 @@ tests:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+
+tests:
+  script:
+    - poetry run tox -p
