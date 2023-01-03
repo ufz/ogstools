@@ -38,5 +38,3 @@ repos:
       - id: pyupgrade
         exclude: EXPERIMENTAL/.*
         args: [--py37-plus]
-default_language_version:
-  python: python3.9
