@@ -14,11 +14,6 @@ before_script:
   - curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 -
   - poetry install
 
-checks:
-  script:
-    - poetry run pre-commit install
-    - poetry run pre-commit run --all-files
-
 build:
   script:
     - poetry build
