@@ -7,7 +7,7 @@ Welcome to ogstools's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    reference/ogstools
