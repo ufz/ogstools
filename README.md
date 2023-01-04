@@ -76,7 +76,7 @@ Packages can then be found in `dist/`.
 ### Build documentation
 
 ```bash
-cd docs
+poetry run tox -e docs
 make html
 ```
 
@@ -85,6 +85,6 @@ This will create the documentation files in `docs/_build/html`.
 For development use the auto-generating and -reloading web server:
 
 ```bash
-python docs/server.py
+tox -e devdocs
 # open http://127.0.0.1:5500 in a web browser
 ```

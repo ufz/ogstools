@@ -39,7 +39,7 @@ tests:
     - tox -p
 
 .docs-script: &docs-script
-  - (cd docs && make html)
+  - tox -e docs
   - mv docs/_build/html public
 
 docs preview:
