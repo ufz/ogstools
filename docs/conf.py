@@ -21,6 +21,7 @@ version = release = ogstools.__version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autodoc.typehints",
+    "sphinxarg.ext",
 ]
 
 templates_path = ["_templates"]
