@@ -81,3 +81,10 @@ make html
 ```
 
 This will create the documentation files in `docs/_build/html`.
+
+For development use the auto-generating and -reloading web server:
+
+```bash
+python docs/server.py
+# open http://127.0.0.1:5500 in a web browser
+```
