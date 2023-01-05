@@ -43,7 +43,6 @@ In addition it may be used as Python module with an emulated command line call
 
 ```python
 from ogstools.msh2vtu import run  # to run mesh conversion
-import sys  # to emulate command line call
 import argparse  # to parse emulated command line call
 
 parser = argparse.ArgumentParser()
