@@ -11,21 +11,18 @@ cache:
     - .cache
 
 before_script:
-  - |
-    if ! command -v poetry &> /dev/null
-    then
-      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 -
-    fi
-  - poetry install
+  - python -m venv .venv
+  - source .venv/bin/activate
+  - pip install -e ".[test]"
 
 build:
   script:
-    - poetry build
+    - pyproject-build
 
 tests (arch):
   tags: [shell, envinf]
   script:
-    - poetry run tox -p
+    - tox -p
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
@@ -35,4 +32,4 @@ tests (arch):
 
 tests:
   script:
-    - poetry run tox -p
+    - tox -p

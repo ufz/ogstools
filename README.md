@@ -29,11 +29,22 @@ merge request option is preferred.
 
 ## Development setup
 
-* Install [poetry](https://python-poetry.org/docs/#installation)
-* Run `poetry install`
-* For basic style checks setup [pre-commit](https://pre-commit.com) by enabling it (run
-  `poetry run pre-commit install`).
-* To run cli tools, e.g.: `poetry run msh2vtu`
+Create a virtual environment, activate it and install required packages:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate # run this in every new shell session
+pip install -e ".[test]"
+
+# enable basic style checks once:
+pre-commit install
+```
+
+CLI scripts can now be simply run:
+
+```bash
+msh2vtu --help
+```
 
 ### Testing with `tox` and `pytest`
 
@@ -43,7 +54,7 @@ Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/)
 To run the tests:
 
 ```bash
-poetry run tox # parallelize with `tox -p`
+tox # parallelize with `tox -p`
 ```
 
 You can view a coverage report by opening `htmlcov/index.html` in a browser.
@@ -51,5 +62,13 @@ You can view a coverage report by opening `htmlcov/index.html` in a browser.
 You can also run a single test environment with e.g.:
 
 ```bash
-poetry run tox -e py39
+tox -e py39
 ```
+
+### Create a package
+
+```bash
+pyproject-build
+```
+
+Packages can then be found in `dist/`.
