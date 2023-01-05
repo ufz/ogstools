@@ -90,7 +90,3 @@ def cli():
         print("msh2vtu successfully finished")
     else:
         print("msh2vtu stopped with errors")
-
-
-if __name__ == "__main__":
-    cli()
