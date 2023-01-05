@@ -22,6 +22,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autodoc.typehints",
     "sphinxarg.ext",
+    "sphinxcontrib.programoutput",
 ]
 
 templates_path = ["_templates"]

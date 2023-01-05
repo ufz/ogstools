@@ -10,6 +10,7 @@ Welcome to ogstools's documentation!
    :maxdepth: 3
    :caption: Contents:
 
+   development
    reference/ogstools
 
 
