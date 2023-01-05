@@ -7,6 +7,15 @@ import warnings
 import meshio
 import numpy
 
+# For more info on __all__ see: https://stackoverflow.com/a/35710527/80480
+__all__ = [
+    "my_remove_orphaned_nodes",
+    "print_info",
+    "find_cells_at_nodes",
+    "find_connected_domain_cells",
+    "run",
+]
+
 
 def my_remove_orphaned_nodes(my_mesh):
     """Auxiliary function to remove points not belonging to any cell"""
