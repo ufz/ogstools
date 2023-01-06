@@ -1,7 +1,8 @@
 # msh2vtu
 
+TODO: Move this into ogstools documentation
+
 This script depends on [meshio](https://github.com/nschloe/meshio).
-It was tested with meshio 5.3.4 [Python 3.10.6] and gmsh 4.10.5.
 
 Supported element types
 
@@ -12,7 +13,7 @@ Supported element types
 ## Usage
 
 ```
-pip install msh2vtu
+pip install ogstools
 msh2vtu [-h] [-g] [-r] [-a] [-d DIM] [-o OUTPUT] [-z] [-s] [-v] filename
 
 Prepares a Gmsh-mesh for use in OGS by extracting domain-, boundary- and physical group-submeshes
@@ -37,16 +38,27 @@ optional arguments:
   -v, --version         show program's version number and exit
 
 ```
+
 In addition it may be used as Python module with an emulated command line call
-```
-from msh2vtu import run   # to run mesh conversion
-import sys   # to emulate command line call
-import argparse   # to parse emulated command line call
+
+```python
+from ogstools.msh2vtu import run  # to run mesh conversion
+import argparse  # to parse emulated command line call
+
 parser = argparse.ArgumentParser()
 
 # generate a mesh, e.g. my_mesh.msh with Gmsh
 
-args = argparse.Namespace(filename='my_mesh.msh', output='', dim=0, delz=False, swapxy=False, rdcd=True, ogs=True, ascii=False)   # filename, output="", dim=0, delz, swapxy, rdcd, ogs, ascii
+args = argparse.Namespace(
+    filename="my_mesh.msh",
+    output="",
+    dim=0,
+    delz=False,
+    swapxy=False,
+    rdcd=True,
+    ogs=True,
+    ascii=False,
+)
 run(args)
 ```
 
@@ -66,24 +78,3 @@ A geological model (2D) of a sediment basin by Christian Silbermann and a terrai
 - *geolayers_2d_physical_group_Left.vtu*
 - *geolayers_2d_physical_group_Right.vtu*
 - *geolayers_2d_physical_group_Top.vtu*
-
-## Build instructions
-
-Local development:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-msh2vtu --help
-```
-
-Distribution:
-
-```bash
-# python -m venv .venv
-# source .venv/bin/activate
-pip install --upgrade build twine
-python -m build
-python -m twine upload [--repository testpypi] dist/*
-```

@@ -1,19 +1,15 @@
 """
 Tests (pytest) for msh2vtu
 """
-from context import msh2vtu
-import os
 import argparse
+import os
+
 import meshio
-import warnings
 
-parser = argparse.ArgumentParser()
-working_dir = os.path.dirname(__file__)
-
-print(working_dir)
+import ogstools.msh2vtu as msh2vtu
 
 
-def test_msh_vtu():
+def test_msh_vtu(tmp_path):
     """
     Test whether msh2vtu finishes without errors
     and generated vtu-files are readable.
@@ -60,10 +56,12 @@ def test_msh_vtu():
         "square_with_circular_hole_physical_group_SG.vtu",
     ]
 
+    working_dir = tmp_path
+
     for msh_file in msh_files:
         basename = os.path.splitext(os.path.basename(msh_file))[0]
         args = argparse.Namespace(
-            filename=os.path.join(working_dir, msh_file),
+            filename=os.path.join(os.path.dirname(__file__), msh_file),
             output=os.path.join(working_dir, basename),
             dim=0,
             delz=False,
@@ -72,13 +70,12 @@ def test_msh_vtu():
             ogs=True,
             ascii=False,
         )
-        assert msh2vtu.run(args) == 0, "msh2vtu finished with errors."
+        assert msh2vtu.run(args) == 0
 
     for vtu_file in vtu_files:
         ErrorCode = 0
         try:
-            mesh = meshio.read(os.path.join(working_dir, vtu_file))
-        except:
+            meshio.read(os.path.join(working_dir, vtu_file))
+        except Exception:
             ErrorCode = 1
-            # print("ERROR: " + vtu_file)
         assert ErrorCode == 0, "Generated vtu-files are erroneous."

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Sep 23 09:29:51 2021
 
@@ -18,19 +17,24 @@ ALTERNATIVES
 """
 import pyvista as pv
 import tetgen
-import numpy as np
-pv.set_plot_theme('document')
 
-box = pv.Box(bounds=(-1., 1., -1., 1., -1., 1.), level=1, quads=False)
-#box.plot(show_edges=True, opacity=0.4)
+pv.set_plot_theme("document")
+
+box = pv.Box(bounds=(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0), level=1, quads=False)
+# box.plot(show_edges=True, opacity=0.4)
 
 tet = tetgen.TetGen(box)
 tet.tetrahedralize(order=1, mindihedral=20, minratio=1.5)
 grid = tet.grid
-#grid.plot(show_edges=True, opacity=0.4)
+# grid.plot(show_edges=True, opacity=0.4)
 
 # plot mesh quality
-cell_qual = grid.compute_cell_quality()['CellQuality']
-grid.plot(scalars=cell_qual, scalar_bar_args={'title': 'Quality'},
-              cmap='bwr', clim=[0, 1], flip_scalars=True,
-              show_edges=True,)
+cell_qual = grid.compute_cell_quality()["CellQuality"]
+grid.plot(
+    scalars=cell_qual,
+    scalar_bar_args={"title": "Quality"},
+    cmap="bwr",
+    clim=[0, 1],
+    flip_scalars=True,
+    show_edges=True,
+)

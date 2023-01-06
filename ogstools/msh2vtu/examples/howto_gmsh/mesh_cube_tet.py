@@ -1,5 +1,4 @@
 # mesh unit cube with tetraeders
-import numpy
 import gmsh
 
 # init
@@ -7,10 +6,10 @@ gmsh.initialize()
 gmsh.option.setNumber("General.Terminal", 1)
 gmsh.model.add("cube")
 
-dim1=1
-dim2=2
-dim3=3
-lc = 150.0    # mesh size
+dim1 = 1
+dim2 = 2
+dim3 = 3
+lc = 150.0  # mesh size
 
 # opposite vertices
 x0 = 0.0
@@ -68,7 +67,7 @@ gmsh.model.geo.addPlaneSurface([6], 6)
 
 
 # volume
-gmsh.model.geo.addSurfaceLoop([6,2,1,4,3,5], 1)
+gmsh.model.geo.addSurfaceLoop([6, 2, 1, 4, 3, 5], 1)
 gmsh.model.geo.addVolume([1], 1)
 
 
@@ -98,7 +97,9 @@ gmsh.model.setPhysicalName(dim3, W, "volume")
 # mesh
 gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(dim3)
-gmsh.model.mesh.setOrder(2)   # higher order, for simplex (tetra) no difference between Lagrange and Serendipity elements
+# higher order, for simplex (tetra) no difference between Lagrange and
+# Serendipity elements
+gmsh.model.mesh.setOrder(2)
 
 gmsh.write("cube_tet.msh")
 gmsh.finalize()
