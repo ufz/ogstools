@@ -32,5 +32,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reference/modules.rst"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+
+html_theme_options = {
+    "logo": {
+        "image_light": "logo-light.png",
+        "image_dark": "logo-dark.png",
+    }
+}
