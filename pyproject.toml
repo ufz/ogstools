@@ -4,7 +4,7 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = "ogstools"
-version = "0.0.1"
+version = "0.0.2"
 description = "A collection of Python tools aimed at evolving into a modeling toolchain around OpenGeoSys."
 authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
