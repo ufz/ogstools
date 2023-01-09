@@ -7,7 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
-EXCLUDES      = "$(SOURCEDIR)/../**/examples/**"
+EXCLUDES      = "$(SOURCEDIR)/../**/examples/**" "$(SOURCEDIR)/../**/tests/**"
 APIDOC_ARGS   = --force --implicit-namespaces --module-first --separate
 
 # Put it first so that "make" without argument is like "make help".
