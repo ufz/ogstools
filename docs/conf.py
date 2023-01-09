@@ -23,11 +23,14 @@ extensions = [
     "sphinx.ext.autodoc.typehints",
     "sphinxarg.ext",
     "sphinxcontrib.programoutput",
+    "myst_parser",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reference/modules.rst"]
 
+myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
+myst_heading_anchors = 3
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
