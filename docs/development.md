@@ -1,6 +1,5 @@
-# Development
 
-## Development setup
+# Development setup
 
 Create a virtual environment, activate it and install required packages:
 
@@ -80,3 +79,8 @@ For development use the auto-generating and -reloading web server:
 docs/toxin -e docs python docs/server.py
 # open http://127.0.0.1:5500 in a web browser
 ```
+
+- [MyST Markdown Parser](https://myst-parser.readthedocs.io/en/latest/)
+- [MySt Markdown cheat sheet](https://jupyterbook.org/en/stable/reference/cheatsheet.html#math)
+- [PyData theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
+- [programoutput-extension](https://sphinxcontrib-programoutput.readthedocs.io/en/latest/#)
