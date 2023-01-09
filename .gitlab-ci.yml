@@ -38,6 +38,15 @@ tests:
   script:
     - tox -p
 
+tests win:
+  tags: [windows]
+  before_script:
+    - python -m venv .venv
+    - .venv\Scripts\Activate.ps1
+    - pip install -e ".[test]"
+  script:
+    - tox -p
+
 .docs-script: &docs-script
   - tox -e docs
   - mv docs/_build/html public
