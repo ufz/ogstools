@@ -46,6 +46,9 @@ tests win:
     - pip install -e ".[test]"
   script:
     - tox -p
+    # Bug: -e docs only works on Windows when called from docs/-dir.
+    - cd docs
+    - tox -e docs
 
 .docs-script: &docs-script
   - tox -e docs
