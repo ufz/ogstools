@@ -31,6 +31,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reference/modules.rst"]
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
+# myst_title_to_header = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -40,7 +41,7 @@ html_static_path = ["_static"]
 
 html_theme_options = {
     "logo": {
-        "image_light": "logo-light.png",
-        "image_dark": "logo-dark.png",
+        "image_light": "logo.png",
+        "image_dark": "logo.png",
     }
 }
