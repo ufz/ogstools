@@ -12,12 +12,6 @@ pip install -e ".[test]"
 pre-commit install
 ```
 
-CLI scripts can now be simply run:
-
-```bash
-msh2vtu --help
-```
-
 :::{important}
 Make sure to activate the virtual environment in every new shell session:
 
@@ -26,7 +20,26 @@ source .venv/bin/activate
 ```
 
 If you want to automate this checkout [direnv](https://direnv.net).
+
+<h5><i class="fa-brands fa-windows"></i> Windows-specifics</h5>
+
+On Windows the syntax for virtual environment activation is a bit different:
+
+```powershell
+# The following may need to be run once. Please check the docs for its consequences:
+# https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policiess
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+
+# Activate via:
+.venv\Scripts\Activate.ps1
+```
 :::
+
+CLI scripts can now be simply run:
+
+```bash
+msh2vtu --help
+```
 
 ## Testing with `tox` and `pytest`
 
