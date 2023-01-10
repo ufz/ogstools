@@ -19,14 +19,22 @@ dependencies = ["meshio>=5.3.0"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ogstools"]
+include = ["ogstools*"]
 namespaces = false
 
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 
 [project.optional-dependencies]
-test = ["pre-commit>=2.20", "tox>=4.1", "build"]
+test = [
+  "pre-commit>=2.20",
+  "tox>=4.1",
+  "build",
+  "sphinx>=5.3.0",
+  "sphinx-argparse>=0.4.0",
+  "livereload>=2.6.3",
+  "sphinxcontrib-programoutput>=0.17",
+]
 
 [tool.black]
 line-length = 80

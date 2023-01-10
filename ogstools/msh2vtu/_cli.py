@@ -4,11 +4,8 @@ from ogstools import __version__
 from ogstools.msh2vtu import run
 
 
-def cli():
-    """command line use"""
-
+def argparser():
     # parsing command line arguments
-    parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(
         description=(
             "Prepares a Gmsh-mesh for use in OGS by extracting domain-,"
@@ -83,7 +80,12 @@ def cli():
         version=f"msh2vtu (part of ogstools {__version__}, Dominik Kern)",
     )
 
-    args = parser.parse_args()
+    return parser
+
+
+def cli():
+    """command line use"""
+    args = argparser().parse_args()
 
     ErrorCode = run(args)
     if ErrorCode == 0:

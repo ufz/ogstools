@@ -1,3 +1,7 @@
+stages:
+  - test
+  - deploy
+
 include:
   - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
 
@@ -33,6 +37,45 @@ tests (arch):
 tests:
   script:
     - tox -p
+
+tests win:
+  tags: [windows]
+  before_script:
+    - python -m venv .venv
+    - .venv\Scripts\Activate.ps1
+    - pip install -e ".[test]"
+  script:
+    - tox -p
+    # Bug: -e docs only works on Windows when called from docs/-dir.
+    - cd docs
+    - tox -e docs
+
+.docs-script: &docs-script
+  - tox -e docs
+  - mv docs/_build/html public
+
+docs preview:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - *docs-script
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: docs preview
+    url: "https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/tools/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
+
+pages:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - *docs-script
+  artifacts:
+    paths:
+      - public
+  environment: production
 
 publish:
   rules:
