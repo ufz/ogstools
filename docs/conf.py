@@ -24,6 +24,7 @@ extensions = [
     "sphinxarg.ext",
     "sphinxcontrib.programoutput",
     "myst_parser",
+    "sphinx_design",
 ]
 
 templates_path = ["_templates"]
@@ -43,5 +44,21 @@ html_theme_options = {
     "logo": {
         "image_light": "logo.png",
         "image_dark": "logo.png",
-    }
+    },
+    "announcement": "<p style='font-weight: 400'>These docs and ogstools itself"
+    " are work-in-progress!</p>",
+    "icon_links": [
+        {
+            "name": "GitLab",
+            "url": "https://gitlab.opengeosys.org/ogs/tools/ogstools",
+            "icon": "fa-brands fa-square-gitlab",
+            "type": "fontawesome",
+        }
+    ],
 }
+
+show_authors = True
+
+# sphinx-panels shouldn't add bootstrap css since the pydata-sphinx-theme
+# already loads it
+panels_add_bootstrap_css = False

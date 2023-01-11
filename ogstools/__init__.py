@@ -1,5 +1,4 @@
 """
-TODO: Placeholder text
 """
 from importlib import metadata
 
