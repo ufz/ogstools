@@ -48,7 +48,7 @@ pip install ogstools
 
 ## First steps
 
-Currently ogstools only contains the {doc}`msh2vtu` application. Try to run it:
+Currently ogstools only contains the [](msh2vtu.md) application. Try to run it:
 
 ```{command-output} msh2vtu --help
 ```

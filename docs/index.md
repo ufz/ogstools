@@ -11,6 +11,7 @@ User Guide <user-guide/index>
 Examples <examples/index>
 API reference <reference/ogstools>
 Development <development/index>
+Release notes <releases/index>
 ```
 
 # ogstools documentation
