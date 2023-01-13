@@ -1,0 +1,7 @@
+nav.bd-links li>a {
+  padding: .25rem 1.5rem;
+}
+
+.navbar-brand img {
+  height: 50px;
+}

@@ -33,6 +33,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
 # Activate via:
 .venv\Scripts\Activate.ps1
 ```
+
 :::
 
 CLI scripts can now be simply run:
@@ -43,8 +44,8 @@ msh2vtu --help
 
 ## Testing with `tox` and `pytest`
 
-Test environment are created and run with [`tox`](https://tox.wiki).
-Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/)
+Test environments are created and run with [`tox`](https://tox.wiki).
+Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/).
 
 To run the tests:
 
@@ -86,14 +87,18 @@ make html
 
 This will create the documentation files in `docs/_build/html`.
 
-For development use the auto-generating and -reloading web server:
+Once tox has created an environment (you ran it once) you can use the auto-generating and -reloading web server (Linux / macOS only) for developing the documentation:
 
 ```bash
 docs/toxin -e docs python docs/server.py
 # open http://127.0.0.1:5500 in a web browser
 ```
 
+For syntax references and extension usage see the following links:
+
+- [Sphinx](https://www.sphinx-doc.org/en/master/)
 - [MyST Markdown Parser](https://myst-parser.readthedocs.io/en/latest/)
 - [MySt Markdown cheat sheet](https://jupyterbook.org/en/stable/reference/cheatsheet.html#math)
 - [PyData theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
 - [programoutput-extension](https://sphinxcontrib-programoutput.readthedocs.io/en/latest/#)
+- [sphinx_design-extension](https://sphinx-design.readthedocs.io/en/furo-theme/index.html)

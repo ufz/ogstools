@@ -63,7 +63,7 @@ docs preview:
     paths:
       - public
   environment:
-    name: docs preview
+    name: docs preview $CI_MERGE_REQUEST_IID
     url: "https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/tools/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
 
 pages:
