@@ -6,6 +6,8 @@ In this project we'll collect existing pre and postprocessing scripts for
 OpenGeoSys at first. Over time we'll develop an entire toolchain out of that
 collection. Currently we are at the stage of code collection.
 
+See the [Documentation](https://ogs.ogs.xyz/tools/ogstools/) for more information.
+
 ## Please donate your existing Python tools for OpenGeoSys
 
 This can be done via merge request or via issue. For both we have set up
