@@ -4,7 +4,7 @@
 .. sectionauthor:: Dominik Kern (TU Bergakademie Freiberg)
 ```
 
-`msh2vtu` is a command line application that prepares a Gmsh mesh for use
+`msh2vtu` is a command line application that converts a Gmsh mesh for use
 in OGS by extracting domain-, boundary- and physical group-submeshes and saves
 them in vtu-format.
 
@@ -32,7 +32,7 @@ In addition it may be used as Python module with an emulated command line call:
 
 ```python
 from ogstools.msh2vtu import run  # to run mesh conversion
-import argparse  # to parse emulated command line call
+import argparse
 
 parser = argparse.ArgumentParser()
 
