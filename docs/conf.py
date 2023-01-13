@@ -45,14 +45,15 @@ myst_heading_anchors = 3
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_css_files = ["ogstools.css"]
+html_context = {"default_mode": "light"}
 
 html_theme_options = {
     "logo": {
         "image_light": "logo.png",
         "image_dark": "logo.png",
     },
-    "announcement": "<p style='font-weight: 400'>These docs and ogstools itself"
-    " are work-in-progress!</p>",
+    # "announcement": "<p style='font-weight: 400'>Some announcement</p>",
     "icon_links": [
         {
             "name": "GitLab",
