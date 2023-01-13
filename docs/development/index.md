@@ -44,8 +44,8 @@ msh2vtu --help
 
 ## Testing with `tox` and `pytest`
 
-Test environment are created and run with [`tox`](https://tox.wiki).
-Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/)
+Test environments are created and run with [`tox`](https://tox.wiki).
+Tests are executed via [`pytest`](https://docs.pytest.org/en/7.2.x/).
 
 To run the tests:
 
@@ -87,7 +87,7 @@ make html
 
 This will create the documentation files in `docs/_build/html`.
 
-Once tox has created an environment (you ran it once) you can use the auto-generating and -reloading web server (Linux / macOS only):
+Once tox has created an environment (you ran it once) you can use the auto-generating and -reloading web server (Linux / macOS only) for developing the documentation:
 
 ```bash
 docs/toxin -e docs python docs/server.py

@@ -3,7 +3,8 @@
 ## Installation
 
 It is a good practice to create a Python virtual environment in which your
-Python will get installed. Create a virtual environment and activate it:
+Python packages will get installed. Create a virtual environment and activate
+it:
 
 ::::{tab-set}
 

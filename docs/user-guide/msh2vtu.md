@@ -28,7 +28,7 @@ prog: msh2vtu
 
 ## API usage
 
-In addition it may be used as Python module with an emulated command line call::
+In addition it may be used as Python module with an emulated command line call:
 
 ```python
 from ogstools.msh2vtu import run  # to run mesh conversion
@@ -58,7 +58,7 @@ run(args)
 A geological model (2D) of a sediment basin by Christian Silbermann and a
 terrain model (3D) from the official Gmsh tutorials (x2).
 
-`msh2vtu example/geolayers_2d.msh` generates from the following output files:
+`msh2vtu example/geolayers_2d.msh` generates the following output files:
 
 - *geolayers_2d_boundary.vtu*
 - *geolayers_2d_domain.vtu*
