@@ -9,7 +9,7 @@ hidden:
 ---
 User Guide <user-guide/index>
 Examples <examples/index>
-API reference <reference/ogstools>
+API reference <reference/index>
 Development <development/index>
 Release notes <releases/index>
 ```
@@ -68,7 +68,7 @@ It describes which methods are available, how they work and which parameters can
 
 ---
 
-```{button-ref} reference/ogstools
+```{button-ref} reference/index
 :ref-type: doc
 :color: primary
 :click-parent:
@@ -99,5 +99,3 @@ To the Developer guide
 ::::
 
 ---
-
-**Indices and tables:** {ref}`genindex` | {ref}`modindex` | {ref}`search`

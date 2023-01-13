@@ -28,7 +28,13 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reference/modules.rst"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "reference/modules.rst",
+    "reference/ogstools.rst",
+]
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
