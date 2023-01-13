@@ -1,10 +1,11 @@
 [build-system]
-requires = ['setuptools']
+requires = ['setuptools', 'setuptools_scm[toml]']
 build-backend = 'setuptools.build_meta'
 
 [project]
 name = "ogstools"
-version = "0.0.2"
+# version = "0.0.2"
+dynamic = ["version"]
 description = "A collection of Python tools aimed at evolving into a modeling toolchain around OpenGeoSys."
 authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
@@ -21,6 +22,9 @@ dependencies = ["meshio>=5.3.0"]
 where = ["."]
 include = ["ogstools*"]
 namespaces = false
+
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev" # would increment version otherwise
 
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
