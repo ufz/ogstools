@@ -81,6 +81,6 @@ publish:
   rules:
     - if: $CI_COMMIT_TAG
   variables:
-    TWINE_REPOSITORY: testpypi
+    TWINE_REPOSITORY: pypi
   script:
     - tox -e publish
