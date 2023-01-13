@@ -1,7 +1,8 @@
-
 ```{eval-rst}
 :html_theme.sidebar_secondary.remove: true
 ```
+
+# ogstools Documentation
 
 ```{toctree}
 ---
@@ -97,5 +98,3 @@ To the Developer guide
 :::
 
 ::::
-
----
