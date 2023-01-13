@@ -1,6 +1,12 @@
-# Getting Started
+# User Guide
 
-## Installation
+This guide gives an overview over the `ogstools` package.
+It explains important features, especially the usage of shipped command-line tools,
+and should give new users a good start with this package.
+
+## Getting Started
+
+### Installation
 
 It is a good practice to create a Python virtual environment in which your
 Python packages will get installed. Create a virtual environment and activate
@@ -47,7 +53,7 @@ ogstools can be installed from [PyPI](https://pypi.org/project/ogstools/) using
 pip install ogstools
 ```
 
-## First steps
+### First steps
 
 Currently ogstools only contains the [](msh2vtu.md) application. Try to run it:
 
@@ -58,6 +64,7 @@ Currently ogstools only contains the [](msh2vtu.md) application. Try to run it:
 ---
 maxdepth: 2
 hidden:
+caption: Meshing tools
 ---
 msh2vtu
 ```

@@ -28,7 +28,7 @@ prog: msh2vtu
 
 ## API usage
 
-In addition it may be used as Python module with an emulated command line call:
+In addition, it may be used as Python module:
 
 ```python
 from ogstools.msh2vtu import run  # to run mesh conversion
