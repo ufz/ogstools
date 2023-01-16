@@ -23,7 +23,7 @@ extensions = [
     "sphinx.ext.autodoc.typehints",
     "sphinxarg.ext",
     "sphinxcontrib.programoutput",
-    "myst_parser",
+    "myst_nb",
     "sphinx_design",
 ]
 

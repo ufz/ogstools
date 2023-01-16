@@ -94,6 +94,16 @@ docs/toxin -e docs python docs/server.py
 # open http://127.0.0.1:5500 in a web browser
 ```
 
+## Using Jupyter notebooks for documentation
+
+Instead of Markdown files simply create notebook files. If you want to interactively write them in Jupyter Lab (make sure to have [`jupyterlab`](https://jupyter.org) installed on your system):
+
+```bash
+docs/toxin -e docs jupyter lab docs/
+```
+
+## Further information
+
 For syntax references and extension usage see the following links:
 
 - [Sphinx](https://www.sphinx-doc.org/en/master/)
@@ -102,3 +112,4 @@ For syntax references and extension usage see the following links:
 - [PyData theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
 - [programoutput-extension](https://sphinxcontrib-programoutput.readthedocs.io/en/latest/#)
 - [sphinx_design-extension](https://sphinx-design.readthedocs.io/en/furo-theme/index.html)
+- [MyST-NB documentation](https://myst-nb.readthedocs.io/en/latest/)
