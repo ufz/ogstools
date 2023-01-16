@@ -161,13 +161,14 @@ def run(args):
         dim0: {"vertex"},
         dim1: {"line", "line3", "line4"},
         dim2: {
-            "triangle", 
-            "triangle6", 
-            "triangle9", 
-            "triangle10", 
-            "quad", 
-            "quad8", 
-            "quad9"},
+            "triangle",
+            "triangle6",
+            "triangle9",
+            "triangle10",
+            "quad",
+            "quad8",
+            "quad9",
+        },
         dim3: {
             "tetra",
             "tetra10",
@@ -185,7 +186,8 @@ def run(args):
             "pyramid14",
             "prism",
             "prism15",
-            "prism18"}
+            "prism18",
+        },
     }
     gmsh_physical_cell_data_key = "gmsh:physical"
     ogs_domain_cell_data_key = "MaterialIDs"
