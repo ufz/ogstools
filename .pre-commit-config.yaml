@@ -43,3 +43,14 @@ repos:
     hooks:
       - id: nbstripout
         exclude: EXPERIMENTAL/.*
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.6.1
+    hooks:
+      # Use same versions as above
+      - id: nbqa-black
+        additional_dependencies: [black==22.10.0]
+      - id: nbqa-pyupgrade
+        additional_dependencies: [pyupgrade==3.2.0]
+        args: [--py38-plus]
+      - id: nbqa-isort
+        additional_dependencies: [isort==5.10.1]
