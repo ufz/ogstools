@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?= -W --keep-going -n # warnings as errors
+SPHINXOPTS    ?= -W --keep-going -n -j auto # warnings as errors, parallel build
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
