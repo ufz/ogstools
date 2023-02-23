@@ -27,22 +27,11 @@ repos:
       - id: "blacken-docs"
         additional_dependencies:
           - black==23.1.0 # keep in sync with black hook
-  - repo: https://github.com/PyCQA/isort
-    rev: "5.12.0"
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.0.252"
     hooks:
-      - id: isort
-  - repo: https://github.com/PyCQA/flake8
-    rev: "6.0.0"
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-bugbear
-          - flake8-comprehensions
-  - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.3.1"
-    hooks:
-      - id: pyupgrade
-        args: [--py37-plus]
+      - id: ruff
+        args: ["--show-fixes"] # "--fix",
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
     hooks:
@@ -51,15 +40,5 @@ repos:
     rev: 1.6.3
     hooks:
       # Use same versions as above
-      - id: nbqa-black
-        additional_dependencies: [black==22.10.0]
-      - id: nbqa-pyupgrade
-        additional_dependencies: [pyupgrade==3.2.0]
-        args: [--py38-plus]
-      - id: nbqa-isort
-        additional_dependencies: [isort==5.10.1]
-  - repo: https://github.com/hadialqattan/pycln
-    rev: v2.1.3
-    hooks:
-      - id: pycln
-        args: [--config=pyproject.toml]
+      - id: nbqa-ruff
+        additional_dependencies: [ruff==v0.0.252]
