@@ -64,11 +64,10 @@ def on_line2D(xyz, guess):
     points = side_points[guess]
     if collinear2D(p0, points["p1"], points["p2"]):
         return guess
-    else:
-        for side, points in side_points.items():
-            print(side)
-            if collinear2D(p0, points["p1"], points["p2"]):
-                return side
+    for side, points in side_points.items():
+        print(side)
+        if collinear2D(p0, points["p1"], points["p2"]):
+            return side
     print("point " + str(p0) + " not on a given side")
     return "NO SIDE FOUND"
 
