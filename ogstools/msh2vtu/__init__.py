@@ -1,5 +1,4 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
-import os
 import warnings
 from pathlib import Path
 
@@ -49,7 +48,7 @@ def my_remove_orphaned_nodes(my_mesh):
     # cell data are not affected by point changes
     my_mesh.cells = output_cell_blocks  # update cells
 
-    return None
+    return
 
 
 # print info for mesh: statistics and data field names

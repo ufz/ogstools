@@ -31,7 +31,7 @@ repos:
     rev: "v0.0.252"
     hooks:
       - id: ruff
-        args: ["--show-fixes"] # "--fix",
+        args: ["--show-fixes", "--fix"]
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
     hooks:
