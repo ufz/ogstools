@@ -1,6 +1,7 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
 import os
 import warnings
+from pathlib import Path
 
 import meshio
 import numpy
@@ -187,23 +188,21 @@ def run(args):
     # ###
 
     # check if input file exists and is in gmsh-format
-    if os.path.isfile(args.filename):
-        filename_without_extension = os.path.splitext(args.filename)[0]
-        file_extension = os.path.splitext(args.filename)[1]
-        if file_extension != ".msh":
-            warnings.warn(
-                "Warning, input file seems not to be in gmsh-format (*.msh)",
-                stacklevel=2,
-            )
-    else:
+    if not Path(args.filename).is_file():
         warnings.warn("No input file (mesh) found.", stacklevel=2)
         # raise FileNotFoundError
         return 1
 
+    if Path(args.filename).suffix != ".msh":
+        warnings.warn(
+            "Warning, input file seems not to be in gmsh-format (*.msh)",
+            stacklevel=2,
+        )
+
     # derive output filenames
     if args.output == "":
         # no parameter given, use same basename as input file
-        output_basename = filename_without_extension
+        output_basename = Path(args.filename).stem
     else:
         output_basename = args.output
 
