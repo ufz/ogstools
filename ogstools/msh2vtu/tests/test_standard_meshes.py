@@ -2,7 +2,7 @@
 Tests (pytest) for msh2vtu
 """
 import argparse
-import os
+from pathlib import Path
 
 import meshio
 
@@ -56,13 +56,12 @@ def test_msh_vtu(tmp_path):
         "square_with_circular_hole_physical_group_SG.vtu",
     ]
 
-    working_dir = tmp_path
+    working_dir = Path(tmp_path)
 
     for msh_file in msh_files:
-        basename = os.path.splitext(os.path.basename(msh_file))[0]
         args = argparse.Namespace(
-            filename=os.path.join(os.path.dirname(__file__), msh_file),
-            output=os.path.join(working_dir, basename),
+            filename=(Path(__file__).parent / msh_file),
+            output=str(working_dir / Path(msh_file).stem),
             dim=0,
             delz=False,
             swapxy=False,
@@ -75,7 +74,7 @@ def test_msh_vtu(tmp_path):
     for vtu_file in vtu_files:
         ErrorCode = 0
         try:
-            meshio.read(os.path.join(working_dir, vtu_file))
+            meshio.read(working_dir / vtu_file)
         except Exception:
             ErrorCode = 1
         assert ErrorCode == 0, "Generated vtu-files are erroneous."
