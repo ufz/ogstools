@@ -4,7 +4,7 @@ import warnings
 from pathlib import Path
 
 import meshio
-import numpy
+import numpy as np
 
 # For more info on __all__ see: https://stackoverflow.com/a/35710527/80480
 __all__ = [
@@ -20,15 +20,15 @@ def my_remove_orphaned_nodes(my_mesh):
     """Auxiliary function to remove points not belonging to any cell"""
 
     # find connected points and derive mapping from all points to them
-    connected_point_index = numpy.array([])
+    connected_point_index = np.array([])
     for cell_block in my_mesh.cells:
         cell_block_values = cell_block.data
-        connected_point_index = numpy.concatenate(
+        connected_point_index = np.concatenate(
             [connected_point_index, cell_block_values.flatten()]
         ).astype(int)
 
-    unique_point_index = numpy.unique(connected_point_index)
-    old2new = numpy.zeros(len(my_mesh.points))
+    unique_point_index = np.unique(connected_point_index)
+    old2new = np.zeros(len(my_mesh.points))
     for new_index, old_index in enumerate(unique_point_index):
         old2new[old_index] = int(new_index)
 
@@ -98,8 +98,8 @@ def find_connected_domain_cells(boundary_cells_values, domain_cells_at_node):
     number_of_boundary_cells = len(boundary_cells_values)
     # to return unique common connected domain cell to be stored as cell_data
     # ("bulk_element_id"), if there are more than one do not store anything
-    domain_cells_array = numpy.zeros(number_of_boundary_cells)
-    domain_cells_number = numpy.zeros(
+    domain_cells_array = np.zeros(number_of_boundary_cells)
+    domain_cells_number = np.zeros(
         number_of_boundary_cells
     )  # number of connected domain_cells
 
@@ -300,10 +300,10 @@ def run(args):
                     pg_dim = dim2
                 if pg_cell_type in available_cell_types[dim3]:
                     pg_dim = dim3
-                pg_ids = numpy.unique(pg_cell_data)
+                pg_ids = np.unique(pg_cell_data)
                 for pg_id in pg_ids:
                     pg_key = "PhysicalGroup_" + str(pg_id)
-                    field_data[pg_key] = numpy.array([pg_id, pg_dim])
+                    field_data[pg_key] = np.array([pg_id, pg_dim])
 
         # if user wants physical group numbering of domains beginning with zero
         id_offset = 0  # initial value, zero will not change anything
@@ -334,13 +334,13 @@ def run(args):
     # domain and subdomains. Make sure to use domain_mesh=deepcopy(mesh) in this
     # case!
     ############################################################################
-    all_points = numpy.copy(points)  # copy all, superfluous get deleted later
+    all_points = np.copy(points)  # copy all, superfluous get deleted later
     if args.ogs:
-        original_point_numbers = numpy.arange(
+        original_point_numbers = np.arange(
             number_of_original_points
         )  # to associate domain points later
         all_point_data = {}  # dict
-        all_point_data[ogs_domain_point_data_key] = numpy.uint64(
+        all_point_data[ogs_domain_point_data_key] = np.uint64(
             original_point_numbers
         )
     else:
@@ -381,7 +381,7 @@ def run(args):
                 ][domain_cell_type]
                 # ogs needs MaterialIDs as int32, possibly beginning with zero
                 # (by id_offset)
-                domain_cell_data_values = numpy.int32(
+                domain_cell_data_values = np.int32(
                     domain_cell_data_values - id_offset
                 )
             else:
@@ -389,7 +389,7 @@ def run(args):
                     gmsh_physical_cell_data_key
                 ][domain_cell_type]
         else:
-            domain_cell_data_values = numpy.zeros(
+            domain_cell_data_values = np.zeros(
                 (number_of_domain_cells), dtype=int
             )
             print(
@@ -422,8 +422,7 @@ def run(args):
         if args.ogs:
             # store domain node numbers for use as bulk_node_id (point_data)
             original2domain_point_table = (
-                numpy.ones(number_of_original_points)
-                * number_of_original_points
+                np.ones(number_of_original_points) * number_of_original_points
             )
             # initialize with non-existing number --> error when bulk_id for
             # non-domain mesh should be written
@@ -469,12 +468,12 @@ def run(args):
     # shallow copy of point_data
 
     # copy again, in case previous remove_orphaned_nodes() affected all_points
-    all_points = numpy.copy(points)
+    all_points = np.copy(points)
 
     if args.ogs:
         all_point_data = {}  # dict
         # now containing domain node numbers
-        all_point_data[ogs_point_data_key] = numpy.uint64(
+        all_point_data[ogs_point_data_key] = np.uint64(
             original2domain_point_table
         )
     else:
@@ -497,7 +496,7 @@ def run(args):
         # preliminary, as there may be cells of boundary dimension inside domain
         # (i.e. which are no boundary cells)
         boundary_cells_values = cells_dict[boundary_cell_type]
-        connected_cells, connected_cells_count = numpy.uint64(
+        connected_cells, connected_cells_count = np.uint64(
             find_connected_domain_cells(
                 boundary_cells_values, domain_cells_at_node
             )
@@ -554,7 +553,7 @@ def run(args):
                 number_of_boundary_cells = len(
                     boundary_cells_values
                 )  # cells of specific type
-                boundary_cell_data_values = numpy.zeros(
+                boundary_cell_data_values = np.zeros(
                     (number_of_boundary_cells), dtype=int
                 )
                 print(
@@ -604,12 +603,12 @@ def run(args):
             )
             continue
 
-        all_points = numpy.copy(points)
+        all_points = np.copy(points)
         # point data, make another copy due to possible changes by previous
         # actions
         if args.ogs:
             all_point_data = {}  # dict
-            all_point_data[ogs_point_data_key] = numpy.uint64(
+            all_point_data[ogs_point_data_key] = np.uint64(
                 original2domain_point_table
             )
         else:
@@ -659,9 +658,7 @@ def run(args):
                         # a boundary cell is connected with one domain cell,
                         # needed to write bulk_elem_id
                         boundary_index = connected_cells_count == 1
-                        selection_cell_data_values = numpy.uint64(
-                            connected_cells
-                        )
+                        selection_cell_data_values = np.uint64(connected_cells)
                         if not boundary_index.all():
                             print(
                                 "In physical group "
@@ -676,7 +673,7 @@ def run(args):
                             )
                             subdomain_cell_data_trouble = True
                     elif subdomain_dim == domain_dim:
-                        selection_cell_data_values = numpy.int32(
+                        selection_cell_data_values = np.int32(
                             cell_data_dict[gmsh_physical_cell_data_key][
                                 cell_type
                             ][selection_index]
@@ -684,7 +681,7 @@ def run(args):
                         )
 
                     else:  # any cells of lower dimension than boundary
-                        selection_cell_data_values = numpy.int32(
+                        selection_cell_data_values = np.int32(
                             cell_data_dict[gmsh_physical_cell_data_key][
                                 cell_type
                             ][selection_index]
