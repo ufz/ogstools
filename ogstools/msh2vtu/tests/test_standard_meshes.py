@@ -21,6 +21,7 @@ def test_msh_vtu(tmp_path):
     """
     msh_files = [
         "cube_tet.msh",
+        "cube_mixed.msh",
         "square_quad.msh",
         "square_tri.msh",
         "square_with_circular_hole.msh",
@@ -32,6 +33,8 @@ def test_msh_vtu(tmp_path):
         "cube_tet_physical_group_B.vtu",
         "cube_tet_physical_group_vier.vtu",
         "cube_tet_physical_group_Wuerfel.vtu",
+        "cube_mixed_boundary.vtu",
+        "cube_mixed_domain.vtu",
         "square_quad_boundary.vtu",
         "square_quad_domain.vtu",
         "square_quad_physical_group_Einheitsquadrat.vtu",
