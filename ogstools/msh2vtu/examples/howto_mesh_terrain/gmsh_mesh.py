@@ -15,8 +15,8 @@ TODO
     - try to detect side points automatically from stl
 """
 import math
-import os
 import sys
+from pathlib import Path
 
 import gmsh
 import numpy as np
@@ -64,11 +64,10 @@ def on_line2D(xyz, guess):
     points = side_points[guess]
     if collinear2D(p0, points["p1"], points["p2"]):
         return guess
-    else:
-        for side, points in side_points.items():
-            print(side)
-            if collinear2D(p0, points["p1"], points["p2"]):
-                return side
+    for side, points in side_points.items():
+        print(side)
+        if collinear2D(p0, points["p1"], points["p2"]):
+            return side
     print("point " + str(p0) + " not on a given side")
     return "NO SIDE FOUND"
 
@@ -76,8 +75,8 @@ def on_line2D(xyz, guess):
 gmsh.initialize(sys.argv)  # use finalize to unload from memory
 
 # load an STL surface
-path = os.path.dirname(os.path.abspath(__file__))
-gmsh.merge(os.path.join(path, "relief.stl"))
+path = Path(__file__).parent
+gmsh.merge(path / "relief.stl")
 
 # classify the surface mesh according to given angle, and create discrete model
 # entities (surfaces, curves and points) accordingly; curveAngle forces bounding
