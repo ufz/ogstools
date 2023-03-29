@@ -233,7 +233,9 @@ def run(args):
         all_available_cell_types = all_available_cell_types.union(cell_types)
     for cell_type in existing_cell_types:
         if cell_type not in all_available_cell_types:
-            warnings.warn("Cell type " + str(cell_type) + " not supported", stacklevel=2)
+            warnings.warn(
+                "Cell type " + str(cell_type) + " not supported", stacklevel=2
+            )
 
     # set spatial dimension of mesh
     if args.dim == 0:
