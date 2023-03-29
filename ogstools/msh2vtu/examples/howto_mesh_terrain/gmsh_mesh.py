@@ -158,7 +158,7 @@ for surface_ids in side_surface_ids.values():
     all_side_ids += surface_ids
 
 surface_loop1 = gmsh.model.geo.addSurfaceLoop(
-    [top_surface[1], *all_side_ids] + [bottom_surface_id]
+    [top_surface[1]] + all_side_ids + [bottom_surface_id]
 )
 volume1 = gmsh.model.geo.addVolume([surface_loop1])
 
