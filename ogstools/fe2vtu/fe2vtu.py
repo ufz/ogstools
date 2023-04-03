@@ -15,7 +15,7 @@ import pyvista as pv
 log.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     encoding="utf-8",
-    level=log.DEBUG,
+    level=log.INFO,
     stream=stdout,
     datefmt="%d/%m/%Y %H:%M:%S",
 )
@@ -208,3 +208,26 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     )
 
     return pt_data, cell_data
+
+def get_geo_mesh(doc: ifm.FeflowDoc):
+    points, cells, celltypes = get_pts_cells(doc)
+    return pv.UnstructuredGrid(cells, celltypes, points)
+
+def get_property_mesh(doc: ifm.FeflowDoc):
+    mesh = get_geo_mesh(doc)
+    MaterialIDs = get_matids_from_selections(doc)
+    point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
+    for i in point_data:
+        mesh.point_data.update({i: point_data[i]})
+    for i in cell_data:
+        mesh.cell_data.update({i: cell_data[i][0]})
+    return mesh
+
+def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
+    MaterialIDs = get_matids_from_selections(doc)
+    point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
+    for i in point_data:
+        mesh.point_data.update({i: point_data[i]})
+    for i in cell_data:
+        mesh.cell_data.update({i: cell_data[i][0]})
+    return mesh
