@@ -2,6 +2,9 @@
 Tests (pytest) for msh2vtu
 """
 import argparse
+import glob
+import os
+import runpy
 from pathlib import Path
 
 import meshio
@@ -9,62 +12,27 @@ import meshio
 import ogstools.msh2vtu as msh2vtu
 
 
-def test_msh_vtu(tmp_path):
-    """
-    Test whether msh2vtu finishes without errors
-    and generated vtu-files are readable.
-
-    Returns
-    -------
-    None.
-
-    """
-    msh_files = [
-        "cube_tet.msh",
-        "cube_mixed.msh",
-        "square_quad.msh",
-        "square_tri.msh",
-        "square_with_circular_hole.msh",
-    ]
-    vtu_files = [
-        "cube_tet_boundary.vtu",
-        "cube_tet_domain.vtu",
-        "cube_tet_physical_group_A.vtu",
-        "cube_tet_physical_group_B.vtu",
-        "cube_tet_physical_group_vier.vtu",
-        "cube_tet_physical_group_Wuerfel.vtu",
-        "cube_mixed_boundary.vtu",
-        "cube_mixed_domain.vtu",
-        "square_quad_boundary.vtu",
-        "square_quad_domain.vtu",
-        "square_quad_physical_group_Einheitsquadrat.vtu",
-        "square_quad_physical_group_links.vtu",
-        "square_quad_physical_group_oben.vtu",
-        "square_quad_physical_group_rechts.vtu",
-        "square_quad_physical_group_unten.vtu",
-        "square_tri_boundary.vtu",
-        "square_tri_domain.vtu",
-        "square_tri_physical_group_Einheitsquadrat.vtu",
-        "square_tri_physical_group_links.vtu",
-        "square_tri_physical_group_oben.vtu",
-        "square_tri_physical_group_rechts.vtu",
-        "square_tri_physical_group_unten.vtu",
-        "square_with_circular_hole_boundary.vtu",
-        "square_with_circular_hole_domain.vtu",
-        "square_with_circular_hole_physical_group_Inner_Boundary.vtu",
-        "square_with_circular_hole_physical_group_Outer_Boundary_bottom.vtu",
-        "square_with_circular_hole_physical_group_Outer_Boundary_left.vtu",
-        "square_with_circular_hole_physical_group_Outer_Boundary_right.vtu",
-        "square_with_circular_hole_physical_group_Outer_Boundary_top.vtu",
-        "square_with_circular_hole_physical_group_SG.vtu",
-    ]
-
+def test_howto_gmsh(tmp_path):
     working_dir = Path(tmp_path)
+    os.chdir(working_dir)
 
-    for msh_file in msh_files:
+    for script in [
+        "cube_tet.py",
+        "cube_mixed.py",
+        "square_tri.py",
+        "square_quad.py",
+        # no script for square_with_circular_hole.msh
+        "quarter_rectangle_with_hole.py",
+        "cube_hex.py",
+        "line.py",
+    ]:
+        runpy.run_module(
+            f"ogstools.msh2vtu.examples.howto_gmsh.{Path(script).stem}"
+        )
+        msh_file = f"{Path(script).stem}.msh"
         args = argparse.Namespace(
-            filename=(Path(__file__).parent / msh_file),
-            output=str(working_dir / Path(msh_file).stem),
+            filename=msh_file,
+            output=str(Path(msh_file).stem),
             dim=0,
             delz=False,
             swapxy=False,
@@ -74,10 +42,11 @@ def test_msh_vtu(tmp_path):
         )
         assert msh2vtu.run(args) == 0
 
-    for vtu_file in vtu_files:
+    glob_vtu_files = glob.glob("*.vtu")
+    for vtu_file in glob_vtu_files:
         ErrorCode = 0
         try:
-            meshio.read(working_dir / vtu_file)
+            meshio.read(vtu_file)
         except Exception:
             ErrorCode = 1
         assert ErrorCode == 0, "Generated vtu-files are erroneous."
