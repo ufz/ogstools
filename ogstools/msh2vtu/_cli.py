@@ -10,8 +10,8 @@ def argparser():
         description=(
             "Prepares a Gmsh-mesh for use in OGS by extracting domain-,"
             " boundary- and physical group-submeshes, and saves them in"
-            " vtu-format. Note that all mesh entities should belong to physical"
-            " groups."
+            " vtu-format. Note that all mesh entities should belong to"
+            " physical groups."
         ),
     )
     parser.add_argument("filename", help="Gmsh mesh file (*.msh) as input data")

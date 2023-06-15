@@ -164,7 +164,12 @@ def run(args):
         dim3: {
             "tetra",
             "tetra10",
+            "pyramid",
+            "pyramid13",
+            "pyramid15",
             "wedge",
+            "wedge15",
+            "wedge18",
             "hexahedron",
             "hexahedron20",
             "hexahedron27",
@@ -228,7 +233,9 @@ def run(args):
         all_available_cell_types = all_available_cell_types.union(cell_types)
     for cell_type in existing_cell_types:
         if cell_type not in all_available_cell_types:
-            warnings.warn("Unsupported cell type found", stacklevel=2)
+            warnings.warn(
+                "Cell type " + str(cell_type) + " not supported", stacklevel=2
+            )
 
     # set spatial dimension of mesh
     if args.dim == 0:
