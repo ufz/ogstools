@@ -159,20 +159,34 @@ def run(args):
     ogs_domain_point_data_key = "original_node_number"
     available_cell_types = {
         dim0: {"vertex"},
-        dim1: {"line", "line3"},
-        dim2: {"triangle", "triangle6", "quad", "quad8", "quad9"},
+        dim1: {"line", "line3", "line4"},
+        dim2: {
+            "triangle",
+            "triangle6",
+            "triangle9",
+            "triangle10",
+            "quad",
+            "quad8",
+            "quad9",
+        },
         dim3: {
             "tetra",
             "tetra10",
             "pyramid",
             "pyramid13",
             "pyramid15",
-            "wedge",
+            "wedge",  # outdated, keep for backward compatibility
             "wedge15",
             "wedge18",
             "hexahedron",
             "hexahedron20",
             "hexahedron27",
+            "pyramid",
+            "pyramid13",
+            "pyramid14",
+            "prism",
+            "prism15",
+            "prism18",
         },
     }
     gmsh_physical_cell_data_key = "gmsh:physical"
