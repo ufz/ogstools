@@ -1,0 +1,5 @@
+* pinpoint the limits in the plot
+* improve the colormap handling, especially the custom colormap for temperature
+* skip overlapping layer boundaries
+* alternative to pyvista native isometric plot (hassle with dependencies and docker container)
+* get rid of scipy dependency (only needed for griddata)
