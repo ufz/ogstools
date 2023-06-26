@@ -8,6 +8,10 @@ This is the first release of the `ogstools`-package, a joint effort of OGS users
 
 The `msh2vtu`-tool by Dominik Kern (TU Bergakademie Freiberg) has been integrated into ogstools. For more info see [](../user-guide/msh2vtu.md). Its former repository at GitHub [dominik-kern/msh2vtu](https://github.com/dominik-kern/msh2vtu) has been deprecated and development continues under the ogstools umbrella.
 
+### meshplotlib
+
+A python package to visualize mesh data. For more info see [](../user-guide/meshplotlib.md).
+
 ## Infrastructure
 
 ### Documentation web site

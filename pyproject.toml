@@ -10,7 +10,15 @@ authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
 readme = "README.md"
 requires-python = '>=3.9'
-dependencies = ["meshio>=5.3.0"]
+dependencies = [
+  "h5py>=3.9.0",
+  "meshio>=5.3.0",
+  "matplotlib>=3.7.1",
+  "pyvista>=0.39.1",
+  "scipy>=1.10.1",
+  "Pint>=0.22",
+  "Pillow>=9.5.0",
+]
 
 [project.urls]
 "Documentation" = 'https://ogs.ogs.xyz/tools/ogstools/'

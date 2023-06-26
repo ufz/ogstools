@@ -64,6 +64,10 @@ html_theme_options = {
     ],
 }
 
+nitpick_ignore_regex = [("py:class", r".*")]
+
+autodoc_mock_imports = ["pyvista"]
+
 show_authors = True
 
 # sphinx-panels shouldn't add bootstrap css since the pydata-sphinx-theme
