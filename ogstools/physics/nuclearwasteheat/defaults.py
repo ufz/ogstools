@@ -1,14 +1,28 @@
+"""Default nuclear waste models and repository setups. references:
+
+GRS 281 Endlagerauslegung und -optimierung: Bericht zum Arbeitspaket 6
+Vorläufige Sicherheitsanalyse für den Standort Gorleben p.254
+https://docplayer.org/72965403-Endlagerauslegung-und-optimierung.html
+
+**2016 models**
+
+Projekt Ansicht: Systemanalyse für die Endlagerstandortmodelle Methode und
+exemplarische Berechnungen zum Sicherheitsnachweis (2016)
+https://www.bge-technology.de/fileadmin/user_upload/FuE_Berichte/Ansicht/02_ANSICHT_Systemanalyse_fuer_die_Endlagerstandortmodelle.pdf p. 27
+
+**2020 models**
+
+GRS 571 RESUS: Grundlagen zur Bewertung eines Endlagersystems in einer
+Tongesteinsformation größerer Mächtigkeit
+https://www.grs.de/sites/default/files/publications/grs-571.pdf p.49
+"""  # noqa: E501,RUF100
+
 from dataclasses import replace
 
 import numpy as np
 
-from ._setup import Q_
-from .nuclearwaste import NuclearWaste, Repo
-
-# GRS 281 Endlagerauslegung und -optimierung: Bericht zum Arbeitspaket 6
-# Vorläufige Sicherheitsanalyse für den Standort Gorleben (2012) p.254
-# https://docplayer.org/72965403-Endlagerauslegung-und-optimierung.html
-
+from ._unitsetup import Q_
+from .nuclearwaste import NuclearWaste, Repository
 
 dwr_UO2_2012 = NuclearWaste(
     name="DWR-UO2 (2012)",
@@ -38,10 +52,6 @@ csd_2012 = NuclearWaste(
     time_deposit=Q_(5, "yr"),
 )
 
-# GRS 571 RESUS: Grundlagen zur Bewertung eines Endlagersystems in einer
-# Tongesteinsformation größerer Mächtigkeit (2020)
-# https://www.grs.de/sites/default/files/publications/grs-571.pdf p.49
-
 dwr_mix8911_2020 = NuclearWaste(
     name="DWR-mix 89/11 (2020)",
     nuclide_powers=Q_([1156, 226.7, 21.51, 0.9466], "W"),
@@ -70,11 +80,6 @@ csd_2020 = NuclearWaste(
     time_deposit=Q_(30, "yr"),
 )
 
-# Projekt Ansicht: Systemanalyse für die Endlagerstandortmodelle Methode und
-# exemplarische Berechnungen zum Sicherheitsnachweis (2016)
-"""
-https://www.bge-technology.de/fileadmin/user_upload/FuE_Berichte/Ansicht/02_ANSICHT_Systemanalyse_fuer_die_Endlagerstandortmodelle.pdf p. 27
-"""  # noqa: E501,RUF100
 
 rk_be_2016 = NuclearWaste(
     name="RK-BE (2016)",
@@ -97,8 +102,19 @@ rk_ha_2016 = NuclearWaste(
 )
 
 
-repo_be_ha_2016 = Repo([rk_be_2016, rk_ha_2016])
-repo_2020 = Repo([dwr_mix8911_2020, wwer_2020, csd_2020])
-repo_2020_conservative = Repo([replace(dwr_mix8911_2020, num_bundles=34630)])
+repo_be_ha_2016 = Repository([rk_be_2016, rk_ha_2016])
+repo_2020 = Repository([dwr_mix8911_2020, wwer_2020, csd_2020])
+repo_2020_conservative = Repository(
+    [replace(dwr_mix8911_2020, num_bundles=34630)]
+)
 
-models = [v for v in locals().values() if isinstance(v, NuclearWaste)]
+waste_types = [
+    dwr_UO2_2012,
+    wwer_2012,
+    csd_2012,
+    dwr_mix8911_2020,
+    wwer_2020,
+    csd_2020,
+    rk_be_2016,
+    rk_ha_2016,
+]
