@@ -55,7 +55,8 @@ pip install ogstools
 
 ### First steps
 
-Currently ogstools contains [](propertylib.md), [](meshplotlib.md) and the [](msh2vtu.md) application. Try to run it:
+Currently ogstools contains [](propertylib.md), [](meshplotlib.md),
+[](nuclearwasteheat.md) and the [](msh2vtu.md) application. Try to run it:
 
 ```{command-output} msh2vtu --help
 ```
@@ -69,4 +70,5 @@ caption: Meshing tools
 meshplotlib
 msh2vtu
 propertylib
+nuclearwasteheat
 ```
