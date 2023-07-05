@@ -9,7 +9,7 @@
 hidden:
 ---
 User Guide <user-guide/index>
-Examples <examples/index>
+Examples <auto_examples/index>
 API reference <reference/index>
 Development <development/index>
 Release notes <releases/index>
@@ -51,7 +51,7 @@ complete modeling workflows.
 
 ---
 
-```{button-ref} examples/index
+```{button-ref} auto_examples/index
 :ref-type: doc
 :color: primary
 :click-parent:
