@@ -43,7 +43,16 @@ test = ["pre-commit>=2.20", "tox>=4.1", "build"]
 line-length = 80
 
 [tool.mypy]
+files = "ogstools"
 exclude = ['.*/examples/.*']
+strict = false
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+# Uncomment and fix one by one:
+# check_untyped_defs = true
+# disallow_untyped_defs = true
+# disallow_incomplete_defs =  true
 
 [tool.ruff]
 select = [

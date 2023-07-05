@@ -45,7 +45,12 @@ side_points = {
     "left": {"p1": np.array([X0 - DX, Y0]), "p2": np.array([X1 + DX, Y0])},
 }  # a line is defined by two points: p1 (x,y), p2 (x,y)
 
-side_surface_ids = {"front": [], "right": [], "back": [], "left": []}
+side_surface_ids: dict[str, list[int]] = {
+    "front": [],
+    "right": [],
+    "back": [],
+    "left": [],
+}
 
 
 def collinear2D(p0, p1, p2):  #
@@ -171,7 +176,6 @@ gmsh.model.setPhysicalName(dim2, Top_Surface, "top")
 Bottom_Surface = gmsh.model.addPhysicalGroup(dim2, [bottom_surface_id])
 gmsh.model.setPhysicalName(dim2, Bottom_Surface, "bottom")
 
-Side_Surfaces = []
 for side in side_surface_ids:
     Side_Surface = gmsh.model.addPhysicalGroup(dim2, side_surface_ids[side])
     gmsh.model.setPhysicalName(dim2, Side_Surface, side)
