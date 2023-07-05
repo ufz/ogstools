@@ -64,3 +64,7 @@ repos:
       - id: rst-backticks
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.16
+    hooks:
+    - id: mdformat
