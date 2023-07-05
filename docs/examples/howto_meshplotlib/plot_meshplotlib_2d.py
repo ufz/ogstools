@@ -10,6 +10,7 @@ First, let's plot the material ids (cell_data). Per default in the setup, this
 will automatically show the element edges.
 """
 
+# %%
 import ogstools.meshplotlib as mpl
 from ogstools.propertylib import THM, ScalarProperty
 

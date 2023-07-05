@@ -94,13 +94,13 @@ docs/toxin -e docs python docs/server.py
 # open http://127.0.0.1:5500 in a web browser
 ```
 
-## Using Jupyter notebooks for documentation
+### Galleries
 
-Instead of Markdown files simply create notebook files. If you want to interactively write them in Jupyter Lab (make sure to have [`jupyterlab`](https://jupyter.org) installed on your system):
+Python files in `docs/examples` will be added to the Examples-gallery based on [sphinx-gallery](https://sphinx-gallery.github.io/stable/index.html).
+Please note that text blocks are written [reStructuredText](https://docutils.sourceforge.io/rst.html)-format.
+The examples can be downloaded from the final website as Jupyter notebook files.
 
-```bash
-docs/toxin -e docs jupyter lab docs/
-```
+You can interactively run and debug these files in Visual Studio Code, see the [Python Interactive window documentation](https://code.visualstudio.com/docs/python/jupyter-support-py).
 
 ## Further information
 
@@ -112,4 +112,4 @@ For syntax references and extension usage see the following links:
 - [PyData theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
 - [programoutput-extension](https://sphinxcontrib-programoutput.readthedocs.io/en/latest/#)
 - [sphinx_design-extension](https://sphinx-design.readthedocs.io/en/furo-theme/index.html)
-- [MyST-NB documentation](https://myst-nb.readthedocs.io/en/latest/)
+- [sphinx-gallery](https://sphinx-gallery.github.io/stable/index.html)

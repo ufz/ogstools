@@ -7,6 +7,7 @@ Plotting nuclear waste heat over time
 First, some minimal example usage:
 """
 
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 
