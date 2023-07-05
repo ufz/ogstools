@@ -13,7 +13,7 @@ It is heavily based on `matplotlib` and `pyvista`.
 * plotting multiple meshes in a subplot grid
 * projections of arbitrarily oriented 2D meshes
 * isometric views of 3D meshes
-* show region/material boundaries (optionally wth labels)
+* show region/material boundaries (optionally with labels)
 * show element boundaries
 * streamlines of vector data
 * sensible default colormaps
