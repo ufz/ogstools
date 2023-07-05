@@ -31,7 +31,7 @@ In this project we’ll collect existing pre and postprocessing scripts for Open
 
 Get an overview over the key concepts of `ogstools` and the included tools.
 
----
+______________________________________________________________________
 
 ```{button-ref} user-guide/index
 :ref-type: doc
@@ -49,7 +49,7 @@ To the User guide
 Examples of ogstools usage, especially in combination with other tools or even
 complete modeling workflows.
 
----
+______________________________________________________________________
 
 ```{button-ref} auto_examples/index
 :ref-type: doc
@@ -67,7 +67,7 @@ To the Examples section
 The reference guide contains a detailed description of the ogstools API.
 It describes which methods are available, how they work and which parameters can be used.
 
----
+______________________________________________________________________
 
 ```{button-ref} reference/index
 :ref-type: doc
@@ -85,7 +85,7 @@ To the API reference
 Learn how to setup a development environment and how contribute your code to
 help improving the OpenGeoSys tools ecosystem.
 
----
+______________________________________________________________________
 
 ```{button-ref} development/index
 :ref-type: doc

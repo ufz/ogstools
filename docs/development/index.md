@@ -1,4 +1,3 @@
-
 # Development setup
 
 Create a virtual environment, activate it and install required packages:
