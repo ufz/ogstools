@@ -12,6 +12,7 @@ First, let's load 3D example data from ``pyvista`` and plot an isometric view of
 the only available dataset: "facies".
 """
 
+# %%
 import numpy as np
 from pyvista import examples
 
