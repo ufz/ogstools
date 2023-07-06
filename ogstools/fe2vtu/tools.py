@@ -62,7 +62,10 @@ def write_xml(
     for parameter_name in data:
         if mesh_name == "":
             mesh_name = parameter_name
-        if parameter_name != "BULK_NODE_ID" and parameter_name != "BULK_ELEMENT_ID":
+        if (
+            parameter_name != "BULK_NODE_ID"
+            and parameter_name != "BULK_ELEMENT_ID"
+        ):
             bc = ET.SubElement(xml_bc, "boundary_condtion")
             ET.SubElement(bc, "mesh").text = mesh_name
             ET.SubElement(bc, "type").text = bc_type

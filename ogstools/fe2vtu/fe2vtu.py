@@ -70,7 +70,7 @@ def get_pts_cells(doc: ifm.FeflowDoc):
 
     # 4 .write the list for all points and their global coordinates
     points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
-    pts = points[["X", "Y", "Z"]].values
+    pts = points[["X", "Y", "Z"]].to_numpy()
 
     # 5. log information
     log.info(
@@ -139,7 +139,7 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
     return {"MaterialIDs": mat_ids_mesh}
 
 
-def get_pt_cell_data(MaterialIDs: tuple, doc: ifm.FeflowDoc):
+def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
     cell data
@@ -149,7 +149,7 @@ def get_pt_cell_data(MaterialIDs: tuple, doc: ifm.FeflowDoc):
         MaterialIDs (tuple): MaterialIDs
 
     Returns:
-        tuple: MaterialIDs
+        tuple: pt_data, cell_data
     """
     # Input parameter: MaterialIDs (python-dictionary),
     # doc (FEFLOW Data as type ifm.FeflowDoc)

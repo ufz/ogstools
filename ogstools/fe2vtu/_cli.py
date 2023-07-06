@@ -16,9 +16,8 @@ from ogstools.fe2vtu import (
     get_matids_from_selections,
     get_pt_cell_data,
     get_pts_cells,
-    helpFormat,
+    get_specific_surface,
     write_xml,
-    get_specific_surface
 )
 
 parser = ArgumentParser(
@@ -34,11 +33,11 @@ parser.add_argument(
     default="properties",
     type=str,
     help="Different cases can be chosen for the conversion: \n"
-    "- `geometry` to convert only the geometries of the mesh.\n"
-    "- `properties` to convert all the mesh properties to nodes and cells.\n"
-    "- `surface` to convert only the surface of the mesh.\n"
-    "- `properties_surface` to convert the surface with properties.\n"
-    " If none is given, `properties` is taken by default.",
+    '- "geometry" to convert only the geometries of the mesh.\n'
+    '- "properties" to convert all the mesh properties to nodes and cells.\n'
+    '- "surface" to convert only the surface of the mesh.\n'
+    '- "properties_surface" to convert the surface with properties.\n'
+    ' If none is given, "properties" is taken by default.',
     nargs="?",
     const=1,
 )
@@ -110,7 +109,7 @@ def cli():
             for cd in [
                 cell_data
                 for cell_data in BC_mesh.cell_data
-                if cell_data not in ['P_SOUF', 'P_IOFLOW']
+                if cell_data not in ["P_SOUF", "P_IOFLOW"]
             ]:
                 BC_mesh.cell_data.remove(cd)
             # Only cell data are needed
@@ -119,9 +118,14 @@ def cli():
             topsurf = get_specific_surface(
                 BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
             )
-            topsurf.save("topsurface_"+args.output)
+            topsurf.save("topsurface_" + args.output)
             # create the xml-file
-            write_xml("topsurface_"+args.output, "Neumann", topsurf.cell_data, "MeshElement")
+            write_xml(
+                "topsurface_" + args.output,
+                "Neumann",
+                topsurf.cell_data,
+                "MeshElement",
+            )
 
             # remove all the point data that are not of interest
             for point_data in mesh.point_data:
