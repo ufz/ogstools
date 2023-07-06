@@ -51,6 +51,12 @@ tests:
     - *setup-headless
     - make test
 
+tests feflow:
+  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
+  script:
+    - *setup-headless
+    - make test
+
 tests win:
   tags: [windows]
   needs: []
