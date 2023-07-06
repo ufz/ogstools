@@ -1,9 +1,12 @@
 import unittest
 
-import ifm_contrib as ifm
+import pytest
 import pyvista as pv
 
-from ogstools.fe2vtu.fe2vtu import get_pts_cells
+pytest.importorskip("ifm")
+import ifm_contrib as ifm  # noqa: E402
+
+from ogstools.fe2vtu.fe2vtu import get_pts_cells  # noqa: E402
 
 
 class TestConverter(unittest.TestCase):
