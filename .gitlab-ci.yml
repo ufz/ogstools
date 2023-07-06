@@ -38,13 +38,7 @@ tests (arch):
   needs: []
   script:
     - *setup-headless
-    - make coverage
-  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+    - make test
 
 tests:
   script:
@@ -55,7 +49,13 @@ tests feflow:
   image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *setup-headless
-    - make test
+    - make coverage
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 tests win:
   tags: [windows]
