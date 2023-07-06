@@ -20,5 +20,6 @@ class TestConverter(unittest.TestCase):
         assert len(celltypes) == 32
         assert celltypes[0] == pv.CellType.HEXAHEDRON
 
+
 if __name__ == "__main__":
     unittest.main(argv=[""], verbosity=2, exit=False)

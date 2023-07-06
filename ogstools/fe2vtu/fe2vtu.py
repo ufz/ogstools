@@ -32,15 +32,12 @@ log.info(
 
 def get_pts_cells(doc: ifm.FeflowDoc):
     """
-    Get points and cells in a pyvista compatible format
+    Get points and cells in a pyvista compatible format.
 
-    Args:
-        doc (ifm.FeflowDoc): The FEFLOW data
-
-    Returns:
-        pts (numpy.ndarray): Points
-        cells (list): Cells
-        celltypes (): Celltypes
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :return: pts, cells, celltypes (points, cells, celltypes)
+    :rtype: tuple(numpy.ndarray, list, list)
     """
     # 0. define variables
     nDim = doc.getNumberOfDimensions()
@@ -87,16 +84,12 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
     Get MaterialIDs from the FEFLOW data. Only applicable if they are
     saved in doc.c.sel.selections().
 
-    Args:
-        doc (ifm.FeflowDoc): The FEFLOW data
-
-    Returns:
-        tuple: MaterialIDs
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :return: MaterialIDs
+    :rtype: tuple
     """
-    # input parameter: doc are the FEFLOW data as type ifm.FeflowDoc
     # Note: an error occurs if there are no elements defined to the selection
-    # taken in line 84, then this selection is skipped. E.g. only nodes are
-    # defined for that selection
 
     # 1. define necessary variables
     mat_ids = []
@@ -105,7 +98,6 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
     mat_id = 0
 
     # 2. try to overcome ValueError for selec not referring to element
-    # (if it refers to a node)
     for selec in doc.c.sel.selections():
         try:
             # 2.1 write a list of elements that refer to a material that
@@ -142,17 +134,15 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
 def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
-    cell data
+    cell data.
 
-    Args:
-        doc (ifm.FeflowDoc): FEFLOW data
-        MaterialIDs (tuple): MaterialIDs
-
-    Returns:
-        tuple: pt_data, cell_data
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :param MaterialIDs:
+    :type MaterialIDs: dict
+    :return: pt_data, cell_data (point and cell data)
+    :rtype: tuple(dict,dict)
     """
-    # Input parameter: MaterialIDs (python-dictionary),
-    # doc (FEFLOW Data as type ifm.FeflowDoc)
 
     # 1. create a dictionary to filter all nodal and elemental values
     #  according to their name and ifm.Enum value
@@ -209,12 +199,31 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
 
     return pt_data, cell_data
 
+
 def get_geo_mesh(doc: ifm.FeflowDoc):
+    """
+    Get the geometric contruction of the mesh.
+
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :return: mesh
+    :rtype: pyvista.UnstructuredGrid
+    """
     points, cells, celltypes = get_pts_cells(doc)
     return pv.UnstructuredGrid(cells, celltypes, points)
 
-def get_property_mesh(doc: ifm.FeflowDoc):
-    mesh = get_geo_mesh(doc)
+
+def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
+    """
+    Upate the geometric construction of the mesh with point and cell data.
+
+    :param mesh: The mesh to be updated.
+    :type mesh: pyvista.UnstructuredGrid
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :return: mesh
+    :rtype: pyvista.UnstructuredGrid
+    """
     MaterialIDs = get_matids_from_selections(doc)
     point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
     for i in point_data:
@@ -223,11 +232,16 @@ def get_property_mesh(doc: ifm.FeflowDoc):
         mesh.cell_data.update({i: cell_data[i][0]})
     return mesh
 
-def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
-    MaterialIDs = get_matids_from_selections(doc)
-    point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
-    for i in point_data:
-        mesh.point_data.update({i: point_data[i]})
-    for i in cell_data:
-        mesh.cell_data.update({i: cell_data[i][0]})
+
+def get_property_mesh(doc: ifm.FeflowDoc):
+    """
+    Get the mesh with point and cell properties.
+
+    :param doc: The FEFLOW data.
+    :type doc: ifm.FeflowDoc
+    :return: mesh
+    :rtype: pyvista.UnstructuredGrid
+    """
+    mesh = get_geo_mesh(doc)
+    update_geo_mesh(mesh, doc)
     return mesh
