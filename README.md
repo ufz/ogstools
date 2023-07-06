@@ -23,8 +23,8 @@ merge request option is preferred.
 
 ## Minimum requirements for a donation
 
-* The Python scripts must be syntactically correct code.
-* There should be a short feature and usage description, e.g., in form of a README file
-* Please do not add large amounts of data.
-* You as a donator must have the right to donate the code, i.e., you are the
+- The Python scripts must be syntactically correct code.
+- There should be a short feature and usage description, e.g., in form of a README file
+- Please do not add large amounts of data.
+- You as a donator must have the right to donate the code, i.e., you are the
   sole author or all authors agree.
