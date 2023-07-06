@@ -7,7 +7,7 @@ import pyvista as pv
 pytest.importorskip("ifm")
 import ifm_contrib as ifm  # noqa: E402
 
-from ogstools.fe2vtu.fe2vtu import get_pts_cells  # noqa: E402
+from ogstools.fe2vtu import get_pts_cells  # noqa: E402
 
 current_dir = Path(__file__).parent
 
