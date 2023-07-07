@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+from pint.facets.plain import PlainQuantity
 
 from ogstools.propertylib import HM, TH, THM, TM, H, M, T, property_collection
 from ogstools.propertylib.property import ScalarProperty, u_reg
@@ -14,7 +15,7 @@ EPS = 1e-7
 class PhysicalPropertyTest(unittest.TestCase):
     """Test case for physical properties."""
 
-    def equality(self, p: ScalarProperty, vals: np.ndarray, res):
+    def equality(self, p: ScalarProperty, vals: np.ndarray, res: PlainQuantity):
         """
         Assert the equality of property calculations.
 
@@ -22,10 +23,8 @@ class PhysicalPropertyTest(unittest.TestCase):
         :param values: The input values.
         :param expected_result: The expected result.
         """
-        print(p.quantity(vals))
-        print(res)
         np.testing.assert_allclose(
-            p.quantity(vals).magnitude,
+            p(vals).magnitude,
             res.to(p.output_unit).magnitude,
             rtol=EPS,
             verbose=True,
@@ -41,8 +40,8 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_velocity(self):
         """Test qp_ratio property."""
+        self.equality(H.velocity.magnitude, [3.0, 4.0], Q_(5.0, "m/s"))
         self.equality(H.velocity.log_magnitude, np.sqrt([50, 50]), Q_(1, ""))
-        self.equality(H.velocity.trace, np.array([1.0, 2.0]), Q_(3.0, "m/s"))
 
     def test_displacement(self):
         """Test displacement property."""
@@ -52,19 +51,18 @@ class PhysicalPropertyTest(unittest.TestCase):
     def test_strain(self):
         """Test strain property."""
         eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
-        self.equality(M.strain.trace, eps, Q_(13, "percent"))
+        self.equality(M.strain.magnitude, eps, Q_(10, "%"))
+        self.equality(M.strain.trace, eps, Q_(13, "%"))
 
     def test_components(self):
         """Test strain components."""
         eps = np.array([0, 1, 2, 3, 4, 5]) * 1e-2
         u = np.array([0, 1, 2]) * 1e-3
         for i in range(len(eps)):
-            self.equality(M.strain[i], eps, Q_(i, "percent"))
-            self.equality(M.strain.component(i), eps, Q_(i, "percent"))
+            self.equality(M.strain[i], eps, Q_(i, "%"))
         for i in range(len(u)):
             self.equality(M.displacement[i], u, Q_(i, "mm"))
-            self.equality(M.displacement.component(i), u, Q_(i, "mm"))
-        assert M.strain.component(0).is_component
+        assert M.strain[0].is_component
 
     def test_von_mises(self):
         """Test von_mises_stress property."""
@@ -93,11 +91,11 @@ class PhysicalPropertyTest(unittest.TestCase):
             Q_(-100 * 12 / 7, "percent"),
         )
 
-    def test_cast(self):
+    def test_simple(self):
         """Test cast functionality."""
-        assert T.temperature.cast(273.15) == Q_(0, "°C")
-        assert M.displacement[0].cast([1, 2, 3]) == Q_(1, "m")
-        assert M.displacement.cast([1, 2, 3])[1] == Q_(2, "m")
+        assert T.temperature(273.15) == Q_(0, "°C")
+        assert M.displacement[0]([1, 2, 3]) == Q_(1, "m")
+        assert M.displacement([1, 2, 3])[1] == Q_(2, "m")
 
     def test_values(self):
         """Test values functionality."""
@@ -127,7 +125,7 @@ class PhysicalPropertyTest(unittest.TestCase):
     def test_copy_ctor(self):
         """Test process attributes."""
 
-        strain_copy = M.stress(
+        strain_copy = M.stress.replace(
             data_name=M.strain.data_name,
             data_unit=M.strain.data_unit,
             output_unit=M.strain.output_unit,

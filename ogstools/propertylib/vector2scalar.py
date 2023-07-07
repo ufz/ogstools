@@ -2,7 +2,18 @@
 
 import numpy as np
 
-from ._mathfuncs import trace
+from .utils import dim_from_len
+
+
+def trace(vals: np.ndarray) -> np.ndarray:
+    """
+    Calculate the trace of each vector in the input array.
+
+    :param values: The input array of vectors.
+
+    :returns: The trace values of the vectors.
+    """
+    return np.sum(vals[..., : dim_from_len(vals.shape[-1])], axis=-1)
 
 
 def effective_pressure(vals: np.ndarray) -> np.ndarray:

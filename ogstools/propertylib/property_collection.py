@@ -22,7 +22,7 @@ class PropertyCollection:
 
     def __init__(self):
         """Initialize the PropertyCollection with default attributes."""
-        self.material_id = ScalarProperty("MaterialIDs", "", "", "Material ID")
+        self.material_id = ScalarProperty("MaterialIDs")
 
     def get_properties(
         self,
