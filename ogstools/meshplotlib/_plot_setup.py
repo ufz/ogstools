@@ -4,7 +4,8 @@
 from dataclasses import dataclass
 from typing import Literal, Union
 
-from ..propertylib.property import ScalarProperty
+from ogstools.propertylib.property import ScalarProperty
+
 from .default_setup import default_setup
 
 
@@ -45,7 +46,7 @@ class PlotSetup:
         return self.default_cmap
 
     @property
-    def rcParams_scaled(self):
+    def rcParams_scaled(self) -> dict:
         """Get the scaled rcParams values."""
         params = self.rcParams
         for k, v in self.rcParams.items():
@@ -77,7 +78,7 @@ class PlotSetup:
             rcParams=obj["rcParams"],
         )
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the plot setup to default values."""
         for k, v in self.from_dict(default_setup).__dict__.items():
             self.__dict__[k] = v

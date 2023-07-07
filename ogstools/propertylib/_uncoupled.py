@@ -7,9 +7,9 @@ processes.
 
 from dataclasses import dataclass
 
-from . import _engfuncs as ef
 from .property import MatrixProperty, ScalarProperty, VectorProperty
 from .property_collection import PropertyCollection
+from .vector2scalar import effective_pressure, qp_ratio, von_mises
 
 
 @dataclass(init=False)
@@ -76,14 +76,14 @@ class M(PropertyCollection):
         self.stress = MatrixProperty(
             "sigma", "Pa", "MPa", "stress", "displacement_active"
         )
-        self.von_mises_stress = self.stress(
-            output_name="von Mises stress", func=ef.von_mises
+        self.von_mises_stress = self.stress.replace(
+            output_name="von Mises stress", func=von_mises
         )
-        self.effective_pressure = self.stress(
-            output_name="effective pressure", func=ef.effective_pressure
+        self.effective_pressure = self.stress.replace(
+            output_name="effective pressure", func=effective_pressure
         )
-        self.qp_ratio = self.stress(
-            output_name="QP ratio", output_unit="percent", func=ef.qp_ratio
+        self.qp_ratio = self.stress.replace(
+            output_name="QP ratio", output_unit="percent", func=qp_ratio
         )
         self.nodal_forces = VectorProperty(
             "NodalForces", "", "", "NodalForces", "displacement_active"

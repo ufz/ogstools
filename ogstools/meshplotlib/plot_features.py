@@ -8,11 +8,14 @@ from matplotlib.collections import PolyCollection
 from matplotlib.transforms import blended_transform_factory as btf
 from scipy.interpolate import griddata
 
-from ..propertylib.property import VectorProperty
+from ogstools.propertylib.property import VectorProperty
+
 from . import setup
 
 
-def plot_layer_boundaries(ax: plt.Axes, surf: pv.DataSet, projection: int):
+def plot_layer_boundaries(
+    ax: plt.Axes, surf: pv.DataSet, projection: int
+) -> None:
     """Plot the material boundaries of a surface on a matplotlib axis."""
     mat_ids = np.unique(surf.cell_data["MaterialIDs"])
     x_id, y_id = np.delete([0, 1, 2], projection)
@@ -53,7 +56,7 @@ def plot_layer_boundaries(ax: plt.Axes, surf: pv.DataSet, projection: int):
             )
 
 
-def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int):
+def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
     """Plot the element edges of a surface on a matplotlib axis."""
     cell_points = [surf.get_cell(i).points for i in range(surf.n_cells)]
     cell_types = [surf.get_cell(i).type for i in range(surf.n_cells)]
@@ -73,7 +76,7 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int):
 
 def plot_streamlines(
     ax: plt.Axes, surf: pv.DataSet, property: VectorProperty, projection: int
-):
+) -> None:
     """Plot vector streamlines on a matplotlib axis."""
     if not setup.num_streamline_interp_pts:
         return
@@ -88,7 +91,7 @@ def plot_streamlines(
     )
     interp = surf.interpolate(pv.StructuredGrid(x, y, z))
     p_field = property.values(interp.point_data[property.data_name])
-    if isinstance(property.mask, str) and property.mask in interp.point_data:
+    if property.mask in interp.point_data:
         mask = interp.point_data[property.mask]
     else:
         mask = np.ones(len(interp.points))
@@ -133,7 +136,7 @@ def plot_streamlines(
     )
 
 
-def get_aspect(ax):
+def get_aspect(ax: plt.Axes) -> float:
     """Return the aspect ratio of a matplotlib axis."""
     figW, figH = ax.get_figure().get_size_inches()
     _, _, w, h = ax.get_position().bounds

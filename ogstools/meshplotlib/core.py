@@ -13,8 +13,9 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 
-from ..propertylib import ScalarProperty as Scalar
-from ..propertylib import VectorProperty as Vector
+from ogstools.propertylib import ScalarProperty as Scalar
+from ogstools.propertylib import VectorProperty as Vector
+
 from . import image_tools, setup
 from . import plot_features as pf
 from .levels import get_levels
@@ -31,17 +32,19 @@ def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
     )
 
 
-def get_data(mesh: pv.UnstructuredGrid, property: Property):
+def get_data(mesh: pv.UnstructuredGrid, property: Property) -> pv.DataSet:
     """Get the data associated with a scalar or vector property from a mesh."""
     if property.data_name in mesh.point_data:
         return mesh.point_data
     if property.data_name in mesh.cell_data:
         return mesh.cell_data
-    print("Property not found in mesh.")
-    return None
+    msg = "Property not found in mesh."
+    raise IndexError(msg)
 
 
-def get_cmap_norm(levels: np.ndarray, property: Scalar, cell_data: bool):
+def get_cmap_norm(
+    levels: np.ndarray, property: Scalar, cell_data: bool
+) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the property field."""
     vmin, vmax = (levels[0], levels[-1])
     bilinear = property.is_component() and vmin <= 0.0 <= vmax
@@ -88,14 +91,10 @@ def get_cmap_norm(levels: np.ndarray, property: Scalar, cell_data: bool):
 
 def plot_isometric(
     mesh: Mesh, property: Property, levels: Opt[np.ndarray] = None
-):
+) -> image_tools.Image:
     """Plot an isometric view of the property field on the mesh."""
     mesh = mesh.copy()
-    if (
-        isinstance(property.mask, str)
-        and property.mask in mesh.cell_data
-        and len(mesh.cell_data[property.mask])
-    ):
+    if property.mask in mesh.cell_data and len(mesh.cell_data[property.mask]):
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
 
     get_data(mesh, property).active_scalars_name = property.data_name
@@ -135,11 +134,11 @@ def add_colorbar(
     cmap: mcolors.Colormap,
     norm: mcolors.Normalize,
     levels: np.ndarray,
-):
+) -> None:
     """Add a colorbar to the matplotlib figure."""
     cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
     scale_mag = np.median(np.abs(np.diff(levels)))
-    scale_exp = np.log10(scale_mag) if scale_mag != 0 else 0
+    scale_exp = np.log10(scale_mag) if scale_mag > 1e-12 else 0
     if abs(scale_exp) >= 3:
         levels *= 10 ** (-scale_exp)
         norm.vmin *= 10 ** (-scale_exp)
@@ -204,7 +203,7 @@ def subplot(
     property: Property,
     ax: plt.Axes,
     levels: Opt[np.ndarray] = None,
-):
+) -> None:
     """
     Plot the property field of a mesh on a matplotlib.axis.
 
@@ -220,16 +219,11 @@ def subplot(
 
     ax.axis(setup.scale_type)
 
-    if (
-        isinstance(property.mask, str)
-        and property.mask in mesh.cell_data
-        and len(mesh.cell_data[property.mask])
-    ):
-        subplot(mesh, Scalar(property.mask, mask=True), ax)
+    if property.mask in mesh.cell_data and len(mesh.cell_data[property.mask]):
+        subplot(mesh, property.get_mask(), ax)
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
 
-    if mesh.get_cell(0).dimension == 2:
-        surf_tri = mesh.triangulate().extract_surface()
+    surf_tri = mesh.triangulate().extract_surface()
 
     # get projection
     mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
@@ -267,8 +261,7 @@ def subplot(
         if property.is_component():
             ax.tricontour(x, y, tri, values, levels=[0], colors="w")
 
-    if mesh.get_cell(0).dimension == 2:
-        surf = mesh.extract_surface()
+    surf = mesh.extract_surface()
 
     if setup.show_layer_bounds and "MaterialIDs" in mesh.cell_data:
         pf.plot_layer_boundaries(ax, surf, projection)
