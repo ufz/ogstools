@@ -26,7 +26,7 @@ cache:
 before_script:
   - python -m venv --upgrade-deps .venv
   - source .venv/bin/activate
-  - pip install -e ".[test]"
+  - pip install -e ".[dev,test]"
 
 build:
   script:
@@ -57,7 +57,7 @@ tests win:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[test]"
+    - pip install -e ".[dev,test]"
   script:
     - tox -p
     # Bug: -e docs only works on Windows when called from docs/-dir.
