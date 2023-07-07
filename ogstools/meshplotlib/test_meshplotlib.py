@@ -67,6 +67,13 @@ class MeshplotlibTest(unittest.TestCase):
         plot(mesh, VectorProperty("u"))
         plot(mesh, ScalarProperty("a"))
 
+    def test_xdmf_with_slices(self):
+        """Test creation of 2D plots from xdmf data."""
+        mesh = MeshSeries(
+            f"{THIS_DIR}/examples/2D_single_fracture_HT_2D_single_fracture.xdmf"
+        ).read(0)
+        plot(mesh, property=THM.material_id)
+
 
 if __name__ == "__main__":
     unittest.main(argv=[""], verbosity=2, exit=False)
