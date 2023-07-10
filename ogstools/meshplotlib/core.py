@@ -111,7 +111,6 @@ def plot_isometric(
 
     # add arg show_edges=True if you want to see the cell edges
     # mesh = mesh.scale([1.0, 1.0, 15.0], inplace=False)
-    pv.start_xvfb()
     pv.set_plot_theme("document")
     p = pv.Plotter(off_screen=True, notebook=False)
     p.add_mesh(mesh, cmap=cmap, clim=[levels[0], levels[-1]], lighting=False)
