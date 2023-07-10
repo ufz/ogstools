@@ -67,7 +67,7 @@ pip install git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git@main
 ### First steps
 
 Currently ogstools contains [](propertylib.md), [](meshplotlib.md),
-[](nuclearwasteheat.md) and the [](msh2vtu.md) application. Try to run it:
+[](nuclearwasteheat.md), [](fe2vtu.md) and the [](msh2vtu.md) application. Try to run it:
 
 ```{command-output} msh2vtu --help
 ```
@@ -80,6 +80,7 @@ caption: Meshing tools
 ---
 meshplotlib
 msh2vtu
+fe2vtu
 propertylib
 nuclearwasteheat
 ```
