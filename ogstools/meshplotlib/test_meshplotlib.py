@@ -73,7 +73,7 @@ class MeshplotlibTest(unittest.TestCase):
         mesh = MeshSeries(
             f"{THIS_DIR}/examples/2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
-        plot(mesh, property=THM.material_id)
+        plot(mesh, property=THM.temperature)
 
 
 if __name__ == "__main__":
