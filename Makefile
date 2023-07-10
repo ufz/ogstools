@@ -1,5 +1,5 @@
 help:  ## Show this help
-	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | column -tl 2
+	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | column -t -s :
 
 .PHONY : setup test coverage check clean docs cleandocs preview
 
