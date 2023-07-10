@@ -46,12 +46,23 @@ Make sure to activate the virtual environment in every new shell session!
 
 :::
 
-ogstools can be installed from [PyPI](https://pypi.org/project/ogstools/) using
+The latest release of ogstools can be installed from [PyPI](https://pypi.org/project/ogstools/) using
 `pip`:
 
 ```bash
 pip install ogstools
 ```
+
+:::{admonition} Install development version
+:class: tip
+
+You can also install the latest development version with `pip` (requires also [`git`](https://git-scm.com)):
+
+```bash
+pip install git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git@main
+```
+
+:::
 
 ### First steps
 

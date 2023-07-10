@@ -38,7 +38,19 @@ version_scheme = "no-guess-dev" # would increment version otherwise
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 
 [project.optional-dependencies]
-test = ["pre-commit>=2.20", "tox>=4.1", "build"]
+dev = ["pre-commit>=2.20", "tox>=4.1", "build"]
+test = ["pytest", "coverage", "gmsh"]
+docs = [
+  "sphinx",
+  "sphinx-argparse",
+  "sphinxcontrib-programoutput",
+  "livereload",
+  "pydata-sphinx-theme",
+  "myst-parser",
+  "myst_nb",
+  "sphinx-design",
+  "sphinx_gallery",
+]
 
 [tool.black]
 line-length = 80

@@ -20,4 +20,4 @@ This documentation website has been implemented and is available at <https://ogs
 
 ### Unit testing and style checks
 
-A [tox](https://tox.wiki)-based test driver for unit tests and style checks has been implemented. See [](../development/index.md#testing-with-tox-and-pytest) for more info.
+A [tox](https://tox.wiki)-based test driver for unit tests and style checks has been implemented. See [](../development/index.md#testing-with-tox) for more info.
