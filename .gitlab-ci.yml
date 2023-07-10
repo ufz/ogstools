@@ -35,7 +35,7 @@ build:
 tests (arch):
   tags: [shell, envinf]
   script:
-    - tox -p
+    - xvfb-run -a tox -p
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
@@ -45,12 +45,7 @@ tests (arch):
 
 tests:
   script:
-    - set -x
-    - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-    # give xvfb some time to start
-    - sleep 3
-    - set +x
-    - tox -p
+    - xvfb-run -a tox -p
 
 tests win:
   tags: [windows]
@@ -65,7 +60,7 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
-  - tox -e docs
+  - xvfb-run -a tox -e docs
   - mv docs/_build/html public
 
 docs preview:
