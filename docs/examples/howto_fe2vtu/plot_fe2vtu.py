@@ -29,6 +29,17 @@ from ogstools.propertylib import ScalarProperty
 doc = ifm.loadDocument("../../../ogstools/fe2vtu/tests/test.fem")
 
 mesh = get_geo_mesh(doc)
+
+# sphinx_gallery_start_ignore
+# Needed for headless linux systems (CI)
+import sys  # noqa: E402
+
+if "linux" in sys.platform:
+    import pyvista as pv
+
+    pv.start_xvfb()
+# sphinx_gallery_end_ignore
+
 mesh.plot(show_edges=True, color=True, off_screen=True)
 
 # sphinx_gallery_start_ignore
