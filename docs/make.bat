@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set EXCLUDES="%SOURCEDIR%\..\**\examples\**" "%SOURCEDIR%\..\**\tests\**"
+set EXCLUDES="%SOURCEDIR%\..\**\examples\**" "%SOURCEDIR%\..\tests\**"
 set APIDOC_ARGS=--force --implicit-namespaces --module-first --separate
 
 %SPHINXBUILD% >NUL 2>NUL
