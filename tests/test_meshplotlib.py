@@ -76,7 +76,7 @@ class MeshplotlibTest(unittest.TestCase):
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = MeshSeries(
-            f"{THIS_DIR}/examples/2D_single_fracture_HT_2D_single_fracture.xdmf"
+            f"{THIS_DIR}/data/meshplotlib/2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
         plot(mesh, property=THM.temperature)
 
