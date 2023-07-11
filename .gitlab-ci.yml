@@ -23,18 +23,21 @@ cache:
   paths:
     - .cache
 
-before_script:
+.setup-headless: &setup-headless
   - make setup
   - make setup_headless
   - source .venv/bin/activate
 
 build:
   script:
+    - pip install build
     - pyproject-build
 
 tests (arch):
   tags: [shell, envinf]
+  needs: []
   script:
+    - *setup-headless
     - make coverage
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
@@ -45,10 +48,12 @@ tests (arch):
 
 tests:
   script:
+    - *setup-headless
     - make test
 
 tests win:
   tags: [windows]
+  needs: []
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
@@ -60,6 +65,7 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
+  - *setup-headless
   - make docs
   - mv docs/_build/html public
 
@@ -93,6 +99,7 @@ publish:
     TWINE_REPOSITORY: pypi
     PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
   script:
+    - *setup-headless
     - tox -e publish
 
 docker image:
