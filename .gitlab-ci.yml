@@ -26,7 +26,10 @@ cache:
 before_script:
   - python -m venv --upgrade-deps .venv
   - source .venv/bin/activate
-  - pip install -e ".[dev,test]"
+  - pip install -e ".[dev,test,docs]"
+  # Use vtk-osmesa variant for offscreen-rendering
+  - pip uninstall vtk -y
+  - pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
 
 build:
   script:
@@ -35,7 +38,7 @@ build:
 tests (arch):
   tags: [shell, envinf]
   script:
-    - xvfb-run -a tox -p
+    - tox -p
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
@@ -45,7 +48,7 @@ tests (arch):
 
 tests:
   script:
-    - xvfb-run -a tox -p
+    - make test
 
 tests win:
   tags: [windows]
@@ -60,7 +63,7 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
-  - xvfb-run -a tox -e docs
+  - make docs # still error xauth not found
   - mv docs/_build/html public
 
 docs preview:

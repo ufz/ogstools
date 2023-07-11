@@ -20,6 +20,14 @@ setup.show_fig_after_plot = False
 class MeshplotlibTest(unittest.TestCase):
     """Test case for meshplotlib."""
 
+    def test_pyvista_offscreen(self):
+        import pyvista as pv
+
+        sphere = pv.Sphere()
+        plotter = pv.Plotter(off_screen=True)
+        plotter.add_mesh(sphere)
+        plotter.screenshot(filename=None)
+
     def test_levels(self):
         """Test levels calculation property."""
         equality(get_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1])
