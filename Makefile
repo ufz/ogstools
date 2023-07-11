@@ -4,12 +4,11 @@ help:  ## Show this help
 .PHONY : setup test coverage check clean docs cleandocs preview
 
 setup:  ## Setup a virtual environment and install all development dependencies
-	python -m venv .venv
-	. .venv/bin/activate
-	pip install -e .[dev,test,docs]
-	pre-commit install
+	python -m venv .venv --upgrade-deps
+	.venv/bin/pip install -e .[dev,test,docs]
+	.venv/bin/pre-commit install
 	@echo
-	@echo You need to activate the virtual environment with:
+	@echo ATTENTION: You need to activate the virtual environment in every shell with:
 	@echo source .venv/bin/activate
 
 test:  ## Runs the unit tests
@@ -20,6 +19,7 @@ coverage:  ## Runs the unit tests generating code coverage reports
 	coverage combine
 	coverage report --no-skip-covered
 	coverage html
+	coverage xml
 
 check:  ## Runs various checks with pre-commit
 	pre-commit run --all-files
