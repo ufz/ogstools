@@ -6,9 +6,7 @@ if find_spec("ifm") is None:
 
 from .fe2vtu import (
     get_geo_mesh,
-    get_matids_from_selections,
-    get_pt_cell_data,
-    get_pts_cells,
+    get_property_mesh,
     update_geo_mesh,
 )
 from .tools import (
@@ -18,10 +16,8 @@ from .tools import (
 
 __all__ = [
     "get_geo_mesh",
-    "get_matids_from_selections",
-    "get_pt_cell_data",
-    "get_pts_cells",
     "get_specific_surface",
+    "get_property_mesh",
     "update_geo_mesh",
     "write_xml",
 ]

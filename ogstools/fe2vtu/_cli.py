@@ -13,10 +13,9 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.fe2vtu import (
-    get_matids_from_selections,
-    get_pt_cell_data,
-    get_pts_cells,
+    get_geo_mesh,
     get_specific_surface,
+    update_geo_mesh,
     write_xml,
 )
 
@@ -70,8 +69,7 @@ def cli():
 
     doc = ifm.loadDocument(args.input)
 
-    points, cells, celltypes = get_pts_cells(doc)
-    mesh = pv.UnstructuredGrid(cells, celltypes, points)
+    mesh = get_geo_mesh(doc)
 
     if args.case == "geometry" or args.case == "geo_surface":
         if args.case == "geo_surface":
@@ -88,13 +86,7 @@ def cli():
                 "The geometry of the input mesh has been successfully converted."
             )
     elif args.case == "properties" or args.case == "properties_surface":
-        MaterialIDs = get_matids_from_selections(doc)
-        point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
-        # write the materialIDs and properties of the mesh to nodes and cells/elements
-        for i in point_data:
-            mesh.point_data.update({i: point_data[i]})
-        for i in cell_data:
-            mesh.cell_data.update({i: cell_data[i][0]})
+        update_geo_mesh(mesh, doc)
         if args.case == "properties_surface":
             surf = mesh.extract_surface()
             pv.save_meshio(args.output, surf, file_format="vtu")
