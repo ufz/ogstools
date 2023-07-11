@@ -62,7 +62,7 @@ To get all available `make`-targets run `make help`:
 Tests are executed via [`pytest`](https://docs.pytest.org) (shortcut: `make test`):
 
 ```bash
-pytest
+pytest [--capture=tee-sys]
 ```
 
 ### Test coverage
