@@ -39,35 +39,21 @@ if "linux" in sys.platform:
 
     pv.start_xvfb()
 # sphinx_gallery_end_ignore
-
-mesh.plot(show_edges=True, color=True, off_screen=True)
-
-# sphinx_gallery_start_ignore
-# Needed for headless linux systems (CI)
-import sys  # noqa: E402
-
-if "linux" in sys.platform:
-    import pyvista as pv
-
-    pv.start_xvfb()
-# sphinx_gallery_end_ignore
 mesh.plot(show_edges=True, color=True, off_screen=True)
 # %%
 # 2. To this mesh we add point and cell data.
+
 mesh = update_geo_mesh(mesh, doc)
-#mesh.plot(scalars="P_HEAD", off_screen=True)
+mesh.plot(scalars="P_HEAD", off_screen=True)
 print(type(mesh))
 
 # %%
 # As the converted mesh is a pyvista.UnstructuredGrid, we can apply the MeshPlotLib to it.
-"""
 mpl.setup.reset()
 fig = mpl.plot(mesh, ScalarProperty("P_HEAD"))
-"""
+
 # %%
-"""
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
 fig = mpl.plot(slices, ScalarProperty("P_HEAD"))
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
-"""
