@@ -5,11 +5,16 @@ import argparse
 import glob
 import os
 import runpy
+import subprocess
 from pathlib import Path
 
 import meshio
 
 import ogstools.msh2vtu as msh2vtu
+
+
+def test_cli():
+    subprocess.run(["msh2vtu", "--help"], check=True)
 
 
 def test_howto_gmsh(tmp_path):
