@@ -1,14 +1,14 @@
 """
-Conversion of Feflow data to vtk-format and many other things to happen and see.
-================================================================================
+How to work with FEFLOW data.
+=============================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-Discribtion of what the converter can do and how it is used and so on.
+In this example we show how a simple FEFLOW model consisting of two layers can be converted.
 """
 
 # %%
-# 1. Let us convert only the points and cells of a Feflow model.
+# 1. Let us convert only the points and cells at first.
 from importlib.util import find_spec
 
 # Check for Feflow Python setup
@@ -26,7 +26,7 @@ from ogstools.fe2vtu import (
 )
 from ogstools.propertylib import ScalarProperty
 
-doc = ifm.loadDocument("../../../ogstools/fe2vtu/tests/test.fem")
+doc = ifm.loadDocument("../../../tests/data/fe2vtu/2layers_model.fem")
 
 mesh = get_geo_mesh(doc)
 
@@ -39,7 +39,10 @@ if "linux" in sys.platform:
 
     pv.start_xvfb()
 # sphinx_gallery_end_ignore
-mesh.plot(show_edges=True, color=True, off_screen=True)
+pl = pv.Plotter(off_screen=True)
+actor = pl.add_mesh(mesh, show_edges=True)
+pl.show()
+# mesh.plot(show_edges=True, color=True, off_screen=True)
 # %%
 # 2. To this mesh we add point and cell data.
 
