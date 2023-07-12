@@ -111,9 +111,8 @@ def plot_isometric(
 
     # add arg show_edges=True if you want to see the cell edges
     # mesh = mesh.scale([1.0, 1.0, 15.0], inplace=False)
-    pv.start_xvfb()
     pv.set_plot_theme("document")
-    p = pv.Plotter(off_screen=True, notebook=False)
+    p = pv.Plotter(off_screen=True)
     p.add_mesh(mesh, cmap=cmap, clim=[levels[0], levels[-1]], lighting=False)
     p.add_mesh(mesh.extract_feature_edges(), color="black")
     mesh_surf = mesh.extract_surface()
@@ -123,8 +122,9 @@ def plot_isometric(
             p.add_mesh(mesh_id.extract_feature_edges(), color="k")
     p.camera.azimuth += 270
     p.remove_scalar_bar()
-    p.show()
-    return image_tools.trim(image_tools.Image.fromarray(p.image), 50)
+    return image_tools.trim(
+        image_tools.Image.fromarray(p.screenshot(filename=None)), 50
+    )
 
 
 def add_colorbar(

@@ -1,6 +1,5 @@
 """Unit tests for meshplotlib."""
 
-import sys
 import unittest
 from functools import partial
 from pathlib import Path
@@ -20,6 +19,14 @@ setup.show_fig_after_plot = False
 
 class MeshplotlibTest(unittest.TestCase):
     """Test case for meshplotlib."""
+
+    def test_pyvista_offscreen(self):
+        import pyvista as pv
+
+        sphere = pv.Sphere()
+        plotter = pv.Plotter(off_screen=True)
+        plotter.add_mesh(sphere)
+        plotter.screenshot(filename=None)
 
     def test_levels(self):
         """Test levels calculation property."""
@@ -52,9 +59,7 @@ class MeshplotlibTest(unittest.TestCase):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
         # TODO: find alternative for isometric plot with pyvista
-        if "win" not in sys.platform:
-            # pyvista.start_xvfb() doesn't work on windows
-            plot(mesh, ScalarProperty("Spatial Point Data"))
+        plot(mesh, ScalarProperty("Spatial Point Data"))
         plot(mesh.slice((1, 1, 0)), ScalarProperty("Spatial Point Data"))
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
         plot(meshes, ScalarProperty("Spatial Point Data"))
