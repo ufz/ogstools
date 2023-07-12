@@ -1,6 +1,6 @@
 """
-How to work with FEFLOW data.
-=============================
+How to work with FEFLOW data in pyvista.
+========================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
@@ -17,8 +17,6 @@ if find_spec("ifm") is None:
     exit(0)
 
 import ifm_contrib as ifm
-import numpy as np
-import pyvista as pv
 
 import ogstools.meshplotlib as mpl
 from ogstools.fe2vtu import (
@@ -28,27 +26,19 @@ from ogstools.fe2vtu import (
 from ogstools.propertylib import ScalarProperty
 
 doc = ifm.loadDocument("../../../tests/data/fe2vtu/2layers_model.fem")
-
 mesh = get_geo_mesh(doc)
-
-pl = pv.Plotter(off_screen=True)
-actor = pl.add_mesh(mesh, show_edges=True)
-pl.show()
-# mesh.plot(show_edges=True, color=True, off_screen=True)
+mesh.plot(show_edges=True, off_screen=True)
 # %%
 # 2. To this mesh we add point and cell data.
-
 mesh = update_geo_mesh(mesh, doc)
-mesh.plot(scalars="P_HEAD", off_screen=True)
-print(type(mesh))
-
+mesh.plot(scalars="P_HEAD", show_edges=True, off_screen=True)
+print(mesh)
 # %%
-# As the converted mesh is a pyvista.UnstructuredGrid, we can apply the MeshPlotLib to it.
-mpl.setup.reset()
-fig = mpl.plot(mesh, ScalarProperty("P_HEAD"))
-
+# 3. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
+# Further information can be found at https://docs.pyvista.org/version/stable/user-guide/simple.html.
+# For example it can be saved as a VTK Unstructured Grid File (\*.vtu).
+# This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
+mesh.save("2layers_model.vtu")
 # %%
-slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
-fig = mpl.plot(slices, ScalarProperty("P_HEAD"))
-for ax, slice in zip(fig.axes, np.ravel(slices)):
-    ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
+# 4. As the converted mesh is a pyvista.UnstructuredGrid, we can plot it using meshplotlib.
+mpl.plot(mesh, ScalarProperty("P_HEAD"))
