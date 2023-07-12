@@ -18,6 +18,7 @@ if find_spec("ifm") is None:
 
 import ifm_contrib as ifm
 import numpy as np
+import pyvista as pv
 
 import ogstools.meshplotlib as mpl
 from ogstools.fe2vtu import (
@@ -30,15 +31,6 @@ doc = ifm.loadDocument("../../../tests/data/fe2vtu/2layers_model.fem")
 
 mesh = get_geo_mesh(doc)
 
-# sphinx_gallery_start_ignore
-# Needed for headless linux systems (CI)
-import sys  # noqa: E402
-
-if "linux" in sys.platform:
-    import pyvista as pv
-
-    pv.start_xvfb()
-# sphinx_gallery_end_ignore
 pl = pv.Plotter(off_screen=True)
 actor = pl.add_mesh(mesh, show_edges=True)
 pl.show()
