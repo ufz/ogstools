@@ -13,15 +13,14 @@ from matplotlib import patches as mpatches
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 
-from ogstools.propertylib import ScalarProperty as Scalar
+from ogstools.propertylib import MatrixProperty as Matrix
+from ogstools.propertylib import Property
 from ogstools.propertylib import VectorProperty as Vector
 
 from . import image_tools, setup
 from . import plot_features as pf
 from .levels import get_levels
 from .mesh import Mesh
-
-Property = Union[Scalar, Vector]
 
 
 def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
@@ -43,7 +42,7 @@ def get_data(mesh: pv.UnstructuredGrid, property: Property) -> pv.DataSet:
 
 
 def get_cmap_norm(
-    levels: np.ndarray, property: Scalar, cell_data: bool
+    levels: np.ndarray, property: Property, cell_data: bool
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the property field."""
     vmin, vmax = (levels[0], levels[-1])
@@ -99,7 +98,11 @@ def plot_isometric(
 
     get_data(mesh, property).active_scalars_name = property.data_name
     # data = get_data(mesh, property)[property.data_name]
-    _p_val = property.magnitude if isinstance(property, Vector) else property
+    _p_val = (
+        property.magnitude
+        if isinstance(property, (Vector, Matrix))
+        else property
+    )
 
     data = get_data(mesh, property)[property.data_name]
     get_data(mesh, property)[property.data_name] = _p_val.values(data)
@@ -129,7 +132,7 @@ def plot_isometric(
 
 def add_colorbar(
     fig: mfigure.Figure,
-    property: Scalar,
+    property: Property,
     cell_data: bool,
     cmap: mcolors.Colormap,
     norm: mcolors.Normalize,
@@ -227,14 +230,18 @@ def subplot(
 
     # get projection
     mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
-    projection = np.argmax(mean_normal)
+    projection = int(np.argmax(mean_normal))
     x_id, y_id = np.delete([0, 1, 2], projection)
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
     x, y = setup.length.values(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
-    _property = property.magnitude if isinstance(property, Vector) else property
+    _property = (
+        property.magnitude
+        if isinstance(property, (Vector, Matrix))
+        else property
+    )
     values = _property.values(get_data(surf_tri, property)[property.data_name])
     p_min, p_max = np.nanmin(values), np.nanmax(values)
 
@@ -281,7 +288,7 @@ def subplot(
         sec_id = np.argmax(np.delete(mean_normal, projection))
         sec_labels = []
         for tick in ax.get_xticks():
-            origin = mesh.center
+            origin = np.array(mesh.center)
             origin[sec_id] = min(
                 max(tick, mesh.bounds[2 * sec_id] + 1e-6),
                 mesh.bounds[2 * sec_id + 1] - 1e-6,
@@ -301,7 +308,7 @@ def subplot(
 
 
 def plot(
-    meshes: Union[np.ndarray[Mesh], Mesh], property: Property
+    meshes: Union[list[Mesh], np.ndarray], property: Property
 ) -> mfigure.Figure:
     """
     Plot the property field of meshes with default settings.
@@ -330,9 +337,13 @@ def plot(
         figsize=figsize,
     )
     fig.patch.set_alpha(1)
-    axs: np.ndarray[plt.Axes] = np.reshape(_axs, [len(meshes), len(meshes[0])])
+    axs: np.ndarray = np.reshape(_axs, [len(meshes), len(meshes[0])])
 
-    _p_val = property.magnitude if isinstance(property, Vector) else property
+    _p_val = (
+        property.magnitude
+        if isinstance(property, (Vector, Matrix))
+        else property
+    )
     p_min, p_max, n_values = np.inf, -np.inf, 0
     for mesh in np.ravel(meshes):
         if get_data(mesh, property) is None:

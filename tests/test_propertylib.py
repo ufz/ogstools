@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from pint.facets.plain import PlainQuantity
 
-from ogstools.propertylib import HM, TH, THM, TM, H, M, T, property_collection
+from ogstools.propertylib import HM, TH, THM, TM, H, M, PropertyCollection, T
 from ogstools.propertylib.property import ScalarProperty, u_reg
 
 Q_ = u_reg.Quantity
@@ -93,34 +93,36 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_simple(self):
         """Test cast functionality."""
-        assert T.temperature(273.15) == Q_(0, "°C")
-        assert M.displacement[0]([1, 2, 3]) == Q_(1, "m")
-        assert M.displacement([1, 2, 3])[1] == Q_(2, "m")
+        self.assertEqual(T.temperature(273.15), Q_(0, "°C"))
+        self.assertEqual(M.displacement[0]([1, 2, 3]), Q_(1, "m"))
+        self.assertEqual(M.displacement([1, 2, 3])[1], Q_(2, "m"))
 
     def test_values(self):
         """Test values functionality."""
-        assert T.temperature.values(273.15) == 0.0
+        self.assertEqual(T.temperature.values(273.15), 0.0)
 
     def test_units(self):
         """Test get_output_unit functionality."""
-        assert T.temperature.get_output_unit() == "°C"
-        assert H.pressure.get_output_unit() == "MPa"
-        assert M.strain.get_output_unit() == "%"
+        self.assertEqual(T.temperature.get_output_unit(), "°C")
+        self.assertEqual(H.pressure.get_output_unit(), "MPa")
+        self.assertEqual(M.strain.get_output_unit(), "%")
 
     def test_mask(self):
         """Test get_output_unit functionality."""
-        assert ScalarProperty("pressure_active").is_component
+        self.assertTrue(ScalarProperty("pressure_active").is_component)
 
     def test_processes(self):
         """Test process attributes."""
 
-        def data_name_set(process: property_collection.PropertyCollection):
+        def data_name_set(process: PropertyCollection):
             return {p.data_name for p in process.get_properties()}
 
-        assert data_name_set(TH) == data_name_set(T) | data_name_set(H)
-        assert data_name_set(HM) == data_name_set(H) | data_name_set(M)
-        assert data_name_set(TM) == data_name_set(T) | data_name_set(M)
-        assert data_name_set(THM) == data_name_set(TH) | data_name_set(M)
+        self.assertEqual(data_name_set(TH), data_name_set(T) | data_name_set(H))
+        self.assertEqual(data_name_set(HM), data_name_set(H) | data_name_set(M))
+        self.assertEqual(data_name_set(TM), data_name_set(T) | data_name_set(M))
+        self.assertEqual(
+            data_name_set(THM), data_name_set(TH) | data_name_set(M)
+        )
 
     def test_copy_ctor(self):
         """Test process attributes."""
@@ -134,7 +136,7 @@ class PhysicalPropertyTest(unittest.TestCase):
             func=M.strain.func,
         )
 
-        assert M.strain == strain_copy
+        self.assertEqual(M.strain, strain_copy)
 
 
 if __name__ == "__main__":

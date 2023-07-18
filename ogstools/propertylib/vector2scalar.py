@@ -9,7 +9,7 @@ def trace(vals: np.ndarray) -> np.ndarray:
     """
     Calculate the trace of each vector in the input array.
 
-    :param values: The input array of vectors.
+    :param vals: The input array of vectors.
 
     :returns: The trace values of the vectors.
     """
@@ -20,7 +20,7 @@ def effective_pressure(vals: np.ndarray) -> np.ndarray:
     """
     Calculate the effective pressure based on the input array.
 
-    :param values: The input array.
+    :param vals: The input array.
 
     :returns: The effective pressure values.
     """
@@ -31,7 +31,7 @@ def von_mises(vals: np.ndarray) -> np.ndarray:
     """
     Calculate the von Mises stress based on the input array.
 
-    :param values: The input array.
+    :param vals: The input array.
 
     :returns: The von Mises stress values.
     """
@@ -45,7 +45,7 @@ def qp_ratio(vals: np.ndarray) -> np.ndarray:
     """
     Calculate the QP ratio (von Mises stress / effective pressure).
 
-    :param values: The input array.
+    :param vals: The input array.
 
     :returns: The QP ratios.
     """

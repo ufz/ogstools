@@ -7,9 +7,9 @@ processes.
 
 from dataclasses import dataclass
 
+from . import defaults
 from .property import MatrixProperty, ScalarProperty, VectorProperty
 from .property_collection import PropertyCollection
-from .vector2scalar import effective_pressure, qp_ratio, von_mises
 
 
 @dataclass(init=False)
@@ -22,12 +22,8 @@ class T(PropertyCollection):
     def __init__(self):
         """Initialize the PropertyCollection with default attributes."""
         super().__init__()
-        self.temperature = ScalarProperty(
-            "temperature", "K", "°C", "temperature", "temperature_active"
-        )
-        self.heatflowrate = ScalarProperty(
-            "HeatFlowRate", "", "", "HeatFlowRate", "temperature_active"
-        )
+        self.temperature = defaults.temperature
+        self.heatflowrate = defaults.heatflowrate
 
 
 @dataclass(init=False)
@@ -41,15 +37,9 @@ class H(PropertyCollection):
     def __init__(self):
         """Initialize the PropertyCollection with default attributes."""
         super().__init__()
-        self.pressure = ScalarProperty(
-            "pressure", "Pa", "MPa", "pore pressure", "pressure_active"
-        )
-        self.velocity = VectorProperty(
-            "velocity", "m/s", "mm/d", "darcy velocity", "pressure_active"
-        )
-        self.massflowrate = ScalarProperty(
-            "MassFlowRate", "", "", "MassFlowRate", "pressure_active"
-        )
+        self.pressure = defaults.pressure
+        self.velocity = defaults.velocity
+        self.massflowrate = defaults.massflowrate
 
 
 @dataclass(init=False)
@@ -67,24 +57,10 @@ class M(PropertyCollection):
     def __init__(self):
         """Initialize the PropertyCollection with default attributes."""
         super().__init__()
-        self.displacement = VectorProperty(
-            "displacement", "m", "mm", "displacement", "displacement_active"
-        )
-        self.strain = MatrixProperty(
-            "epsilon", "", "percent", "strain", "displacement_active"
-        )
-        self.stress = MatrixProperty(
-            "sigma", "Pa", "MPa", "stress", "displacement_active"
-        )
-        self.von_mises_stress = self.stress.replace(
-            output_name="von Mises stress", func=von_mises
-        )
-        self.effective_pressure = self.stress.replace(
-            output_name="effective pressure", func=effective_pressure
-        )
-        self.qp_ratio = self.stress.replace(
-            output_name="QP ratio", output_unit="percent", func=qp_ratio
-        )
-        self.nodal_forces = VectorProperty(
-            "NodalForces", "", "", "NodalForces", "displacement_active"
-        )
+        self.displacement = defaults.displacement
+        self.strain = defaults.strain
+        self.stress = defaults.stress
+        self.von_mises_stress = defaults.von_mises_stress
+        self.effective_pressure = defaults.effective_pressure
+        self.qp_ratio = defaults.qp_ratio
+        self.nodal_forces = defaults.nodal_forces

@@ -71,7 +71,7 @@ class Repository:
     "Waste inventory of the repository."
 
     @property
-    def time_deposit(self) -> Union[float, np.ndarray]:
+    def time_deposit(self) -> Union[float, list[float]]:
         "Deposition time for each nuclear waste type."
         if len(self.waste) == 1:
             return Q_(self.waste[0].time_deposit, units.time).magnitude
@@ -94,5 +94,6 @@ class Repository:
         """
 
         return np.sum(
-            [nw.heat(t, baseline, ncl_id) for nw in self.waste], axis=0
+            np.array([nw.heat(t, baseline, ncl_id) for nw in self.waste]),
+            axis=0,
         )

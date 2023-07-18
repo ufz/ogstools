@@ -19,6 +19,7 @@ dependencies = [
   "scipy>=1.10.1",
   "Pint>=0.22",
   "Pillow>=9.5.0",
+  "pandas>=2.0.3"
 ]
 
 [project.urls]
@@ -110,6 +111,7 @@ extend-ignore = [
   # RUF005 should be disabled when using numpy, see
   # https://github.com/charliermarsh/ruff/issues/2142:
   "RUF005",
+  "PT009",  # can use unittest-assertion
 ]
 target-version = "py39"
 typing-modules = ["mypackage._compat.typing"]
