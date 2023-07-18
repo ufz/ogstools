@@ -5,3 +5,7 @@ nav.bd-links li>a {
 .navbar-brand img {
   height: 50px;
 }
+
+table.dataframe {
+  width: auto;
+}

@@ -7,7 +7,7 @@ via pint.
 
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import Callable, Literal, Union
+from typing import Any, Callable, Literal, Union
 
 import numpy as np
 from pint import UnitRegistry
@@ -24,27 +24,39 @@ u_reg.setup_matplotlib(True)
 
 
 class TagType(Enum):
+    """Enum for property tag types."""
+
     mask = "mask"
     component = "component"
     unit_dim_const = "unit_dim_const"
 
 
 @dataclass
-class ScalarProperty:
-    "Represent a scalar property of a dataset."
+class Property:
+    """Represent a property of a dataset."""
 
     data_name: str
+    """The name of the property data in the dataset."""
     data_unit: str = ""
+    """The unit of the property data in the dataset."""
     output_unit: str = ""
+    """The output unit of the property."""
     output_name: str = ""
+    """The output name of the property."""
     mask: str = ""
-    func: Callable[
-        [Union[float, np.ndarray, PlainQuantity]],
-        Union[float, np.ndarray, PlainQuantity],
+    """The name of the mask data in the dataset."""
+    func: Union[
+        Callable[
+            [Union[float, np.ndarray, PlainQuantity]],
+            Union[float, np.ndarray, PlainQuantity],
+        ],
+        Callable[[Any], Any],
     ] = identity
+    """The function to be applied on the data."""
     tag: Union[
         TagType, Literal["mask", "component", "unit_dim_const"], None
     ] = None
+    """A tag to signify special meanings of the property."""
 
     def __post_init__(self):
         if not self.output_name:
@@ -58,14 +70,14 @@ class ScalarProperty:
 
     def replace(self, **changes):
         """
-        Create a new ScalarProperty object with modified attributes.
+        Create a new Property object with modified attributes.
 
         Be aware that there is no type check safety here. So make sure, the new
         attributes and values are correct.
 
         :param changes: Attributes to be changed.
 
-        :returns: A copy of the ScalarProperty with changed attributes.
+        :returns: A copy of the Property with changed attributes.
         """
         return replace(self, **changes)
 
@@ -122,11 +134,19 @@ class ScalarProperty:
         return self.tag == TagType.mask
 
     def get_mask(self):
-        return ScalarProperty(data_name=self.mask, tag=TagType.mask)
+        """
+        :returns: A property representing this properties mask.
+        """
+        return Property(data_name=self.mask, tag=TagType.mask)
 
 
 @dataclass
-class VectorProperty(ScalarProperty):
+class ScalarProperty(Property):
+    "Represent a scalar property of a dataset."
+
+
+@dataclass
+class VectorProperty(Property):
     """Represent a vector property of a dataset.
 
     Vector properties should contain either 2 (2D) or 3 (3D) components.
@@ -175,7 +195,7 @@ class VectorProperty(ScalarProperty):
 
 
 @dataclass
-class MatrixProperty(ScalarProperty):
+class MatrixProperty(Property):
     """Represent a matrix property of a dataset.
 
     Matrix properties should contain either 4 (2D) or 6 (3D) components.
