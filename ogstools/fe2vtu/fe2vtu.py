@@ -40,12 +40,13 @@ def get_pts_cells(doc: ifm.FeflowDoc):
     :rtype: tuple(numpy.ndarray, list, list)
     """
     # 0. define variables
-    nDim = doc.getNumberOfDimensions()
-    cell_type_dict_2D = {3: pv.CellType.TRIANGLE, 4: pv.CellType.QUAD}
-    cell_type_dict_3D = {
-        4: pv.CellType.TETRA,
-        6: pv.CellType.WEDGE,
-        8: pv.CellType.HEXAHEDRON,
+    cell_type_dict = {
+        2: {3: pv.CellType.TRIANGLE, 4: pv.CellType.QUAD},
+        3: {
+            4: pv.CellType.TETRA,
+            6: pv.CellType.WEDGE,
+            8: pv.CellType.HEXAHEDRON,
+        },
     }
     # 1. get a list of all cells/elements
     elements = doc.c.mesh.get_imatrix()
@@ -57,10 +58,7 @@ def get_pts_cells(doc: ifm.FeflowDoc):
     for element in elements:
         nElement = len(element)
         element.insert(0, nElement)
-        if nDim == 2:
-            celltypes.append(cell_type_dict_2D[nElement])
-        elif nDim == 3:
-            celltypes.append(cell_type_dict_3D[nElement])
+        celltypes.append(cell_type_dict[doc.getNumberOfDimensions()][nElement])
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
@@ -189,9 +187,7 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
 
     # 8. log the data arrays
     log.info("These data arrays refer to point data: %s", list(pt_data.keys()))
-    log.info(
-        "These data arrays refer to cell data: %s", list(cell_data.keys())
-    )
+    log.info("These data arrays refer to cell data: %s", list(cell_data.keys()))
     log.info(
         "These data arrays have been neglected as they are full of nans: %s",
         nan_arrays,
@@ -202,7 +198,7 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
 
 def get_geo_mesh(doc: ifm.FeflowDoc):
     """
-    Get the geometric contruction of the mesh.
+    Get the geometric construction of the mesh.
 
     :param doc: The FEFLOW data.
     :type doc: ifm.FeflowDoc
@@ -215,7 +211,7 @@ def get_geo_mesh(doc: ifm.FeflowDoc):
 
 def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     """
-    Upate the geometric construction of the mesh with point and cell data.
+    Update the geometric construction of the mesh with point and cell data.
 
     :param mesh: The mesh to be updated.
     :type mesh: pyvista.UnstructuredGrid
