@@ -6,12 +6,11 @@ import pyvista as pv
 
 
 class helpFormat(
-    argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter
+    argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter
 ):
     """
     A helper class for passing the correct format for the CLI arguments.
     """
-    pass
 
 
 def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):

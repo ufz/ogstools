@@ -5,7 +5,7 @@ Created on Tue Mar 14 2023
 """
 
 import logging as log
-from argparse import ArgumentParser, RawTextHelpFormatter
+from argparse import ArgumentParser
 from sys import stdout
 
 import ifm_contrib as ifm
@@ -15,13 +15,14 @@ import pyvista as pv
 from ogstools.fe2vtu import (
     get_geo_mesh,
     get_specific_surface,
+    helpFormat,
     update_geo_mesh,
     write_xml,
 )
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",
-    formatter_class=RawTextHelpFormatter,
+    formatter_class=helpFormat,
 )
 
 parser.add_argument("-i", "--input", help="The path to the input FEFLOW file.")
@@ -32,11 +33,10 @@ parser.add_argument(
     default="properties",
     type=str,
     help="Different cases can be chosen for the conversion: \n"
-    '- "geometry" to convert only the geometries of the mesh.\n'
-    '- "properties" to convert all the mesh properties to nodes and cells.\n'
-    '- "surface" to convert only the surface of the mesh.\n'
-    '- "properties_surface" to convert the surface with properties.\n'
-    ' If none is given, "properties" is taken by default.',
+    '1. "geometry" to convert only the geometries of the mesh.\n'
+    '2. "properties" to convert all the mesh properties to nodes and cells.\n'
+    '3. "surface" to convert only the surface of the mesh.\n'
+    '4. "properties_surface" to convert the surface with properties.\n',
     nargs="?",
     const=1,
 )
@@ -48,7 +48,7 @@ parser.add_argument(
     type=str,
     help="This argument specifies whether the boundary conditions\n"
     "is extracted and a corresponding xml file is written. It\n"
-    "should only be used if the input data consists of 3D.",
+    "should only be used if the input data consists of 3D.\n",
     nargs="?",
     const=1,
 )

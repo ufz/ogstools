@@ -11,6 +11,7 @@ from .fe2vtu import (
 )
 from .tools import (
     get_specific_surface,
+    helpFormat,
     write_xml,
 )
 
@@ -18,6 +19,7 @@ __all__ = [
     "get_geo_mesh",
     "get_specific_surface",
     "get_property_mesh",
+    "helpFormat",
     "update_geo_mesh",
     "write_xml",
 ]
