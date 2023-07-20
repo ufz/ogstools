@@ -43,4 +43,6 @@ fig = mpl.plot(
 # We can also plot components of vector property:
 
 fig = mpl.plot(meshseries_THM_2D.read(1), THM.displacement[0])
+
+# %%
 fig = mpl.plot(meshseries_THM_2D.read(1), THM.displacement[1])

@@ -6,7 +6,6 @@ import pyvista as pv
 from matplotlib import patheffects
 from matplotlib.collections import PolyCollection
 from matplotlib.transforms import blended_transform_factory as btf
-from scipy.interpolate import griddata
 
 from ogstools.propertylib.property import VectorProperty
 
@@ -78,62 +77,33 @@ def plot_streamlines(
     ax: plt.Axes, surf: pv.DataSet, property: VectorProperty, projection: int
 ) -> None:
     """Plot vector streamlines on a matplotlib axis."""
-    if not setup.num_streamline_interp_pts:
+    if (n_pts := setup.num_streamline_interp_pts) is None:
         return
-    x_id, y_id = np.delete([0, 1, 2], projection)
-    x, y, z = (
-        np.linspace(
-            float(surf.bounds[c_id * 2]),
-            float(surf.bounds[c_id * 2 + 1]),
-            setup.num_streamline_interp_pts,
-        )
-        for c_id in [x_id, y_id, projection]
+    x_id, y_id = 2 * np.delete([0, 1, 2], projection)
+    bounds = [float(b) for b in surf.bounds]
+    x = np.linspace(bounds[x_id], bounds[x_id + 1], n_pts)
+    y = np.linspace(bounds[y_id], bounds[y_id + 1], n_pts)
+    z = np.mean(surf.points[..., 2])
+
+    _surf = surf
+    for key in _surf.point_data:
+        if key not in [property.data_name, property.mask]:
+            del _surf.point_data[key]
+    grid = pv.RectilinearGrid(x, y).translate([0, 0, z])
+    grid = grid.sample(_surf, pass_cell_data=False)
+    val = np.reshape(
+        property.values(grid.point_data[property.data_name]), (n_pts, n_pts, 2)
     )
-    interp = surf.interpolate(pv.StructuredGrid(x, y, z))
-    p_field = property.values(interp.point_data[property.data_name])
-    if property.mask in interp.point_data:
-        mask = interp.point_data[property.mask]
-    else:
-        mask = np.ones(len(interp.points))
-    x_grid, y_grid = np.meshgrid(x, y)
-    val = p_field.T[[x_id, y_id]].T
-    u_grid = griddata(
-        (interp.points[:, x_id], interp.points[:, y_id]),
-        val[:, 0],
-        (x_grid, y_grid),
-        method="linear",
-    )
-    v_grid = griddata(
-        (interp.points[:, x_id], interp.points[:, y_id]),
-        val[:, 1],
-        (x_grid, y_grid),
-        method="linear",
-    )
-    val_grid = griddata(
-        (interp.points[:, x_id], interp.points[:, y_id]),
-        np.linalg.norm(val, axis=1),
-        (x_grid, y_grid),
-        method="linear",
-    )
-    mask_grid = griddata(
-        (interp.points[:, x_id], interp.points[:, y_id]),
-        mask,
-        (x_grid, y_grid),
-        method="cubic",
-    )
-    # interpolation of masked cell_data to points is a bit tricky
-    # cubic interpolation and a threshold of 0.4 gives good results
-    u_grid[mask_grid < 0.4] = np.nan
-    v_grid[mask_grid < 0.4] = np.nan
-    lw = 2.5 * val_grid / np.max(np.linalg.norm(val, axis=1))
-    ax.streamplot(
-        setup.length.values(x_grid),
-        setup.length.values(y_grid),
-        u_grid,
-        v_grid,
-        color="k",
-        linewidth=lw * setup.rcParams_scaled["lines.linewidth"],
-    )
+
+    if property.mask in grid.point_data:
+        mask = np.reshape(grid.point_data[property.mask], (n_pts, n_pts))
+        val[mask == 0, :] = 0
+    val_norm = np.linalg.norm(val, axis=-1)
+    lw = 2.5 * val_norm / np.max(val_norm)
+    lw *= setup.rcParams_scaled["lines.linewidth"]
+
+    x_g, y_g = setup.length.values(np.meshgrid(x, y))
+    ax.streamplot(x_g, y_g, val[..., 0], val[..., 1], color="k", linewidth=lw)
 
 
 def get_aspect(ax: plt.Axes) -> float:
