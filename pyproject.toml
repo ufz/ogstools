@@ -19,7 +19,7 @@ dependencies = [
   "scipy>=1.10.1",
   "Pint>=0.22",
   "Pillow>=9.5.0",
-  "pandas>=2.0.3"
+  "pandas>=2.0.3",
   "ifm_contrib@git+https://github.com/red5alex/ifm_contrib",
 ]
 
