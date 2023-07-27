@@ -1,5 +1,4 @@
 """Meshplotlib core utilitites."""
-import sys
 from typing import Optional as Opt
 from typing import Union
 
