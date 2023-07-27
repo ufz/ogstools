@@ -59,6 +59,8 @@ docs = [
 minversion = "6.0"
 addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
 xfail_strict = true
+# TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
+# tests
 #filterwarnings = ["error"]
 log_cli_level = "info"
 testpaths = ["tests"]
