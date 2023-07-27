@@ -38,6 +38,17 @@ tests (arch):
   needs: []
   script:
     - *setup-headless
+    - make test
+
+tests:
+  script:
+    - *setup-headless
+    - make test
+
+tests feflow:
+  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
+  script:
+    - *setup-headless
     - make coverage
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
@@ -45,11 +56,6 @@ tests (arch):
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
-
-tests:
-  script:
-    - *setup-headless
-    - make test
 
 tests win:
   tags: [windows]
@@ -72,6 +78,7 @@ tests win:
 docs preview:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *docs-script
   artifacts:
@@ -85,6 +92,7 @@ pages:
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *docs-script
   artifacts:

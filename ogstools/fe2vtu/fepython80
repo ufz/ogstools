@@ -1,0 +1,16 @@
+#!/bin/bash
+CMD=
+case $1 in
+-gdb) CMD=gdb;shift;;
+-ldd) CMD=ldd;shift;;
+esac
+PREFIX=/opt/feflow/8.0
+LIBPATH=$PREFIX/lib64
+LIBPATH=$LIBPATH:/opt/feflow/common/qt/lib64
+QTDIR=/opt/feflow/common/qt
+XDG_CONFIG_DIRS=/opt/feflow/common/qt/etc/xdg
+LIBPATH=$LIBPATH:/opt/feflow/common/lib64
+export LD_LIBRARY_PATH=$LIBPATH:$LD_LIBRARY_PATH
+export FEFLOW80_ROOT=$PREFIX
+export PYTHONPATH=$PREFIX/python
+export MIKE_HOME=$PREFIX

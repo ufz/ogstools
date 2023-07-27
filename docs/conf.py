@@ -8,6 +8,8 @@
 
 from datetime import datetime
 
+import pyvista
+
 import ogstools
 
 project = "ogstools"
@@ -76,6 +78,10 @@ show_authors = True
 # already loads it
 panels_add_bootstrap_css = False
 
+# necessary when building the sphinx gallery
+pyvista.BUILDING_GALLERY = True
+pyvista.OFF_SCREEN = True
+
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],  # path to your example scripts
     "gallery_dirs": [
@@ -83,6 +89,7 @@ sphinx_gallery_conf = {
     ],  # path to where to save gallery generated output
     "show_signature": False,
     "download_all_examples": False,
+    "image_scrapers": ("matplotlib", "pyvista"),
 }
 
 autoclass_content = "both"
