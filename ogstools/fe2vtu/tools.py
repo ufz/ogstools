@@ -36,8 +36,8 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
         filter_condition(surface_mesh["Normals"])
     ]
     # Extract those cells
-    surface_mesh.rename_array("vtkOriginalPointIds", "BULK_NODE_ID")
-    surface_mesh.rename_array("vtkOriginalCellIds", "BULK_ELEMENT_ID")
+    surface_mesh.rename_array("vtkOriginalPointIds", "bulk_node_ids")
+    surface_mesh.rename_array("vtkOriginalCellIds", "bulk_element_ids")
     surface_mesh.cell_data.remove("Normals")
     specific_cells = surface_mesh.extract_cells(ids)
     specific_cells.cell_data.remove("vtkOriginalCellIds")
@@ -45,44 +45,136 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     return specific_cells
 
 
-def write_xml(
-    mesh_name: str, bc_type: str, data: pv.DataSetAttributes, mesh_type: str
-):
+def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
     """
-    Writes two xml-files, one for parameters and one for boundary conditions.
+    Writes three xml-files, one for parameters, one for boundary conditions and one for meshes (geometry).
 
     :param mesh_name: name of the mesh
     :type mesh_name: str
-    :param bc_type: type of the boundary condition (Neumann or Dirichlet)
-    :type bc_type: str
     :param data: point or cell data
     :type data: pyvista.DataSetAttributes
     :param mesh_type: type of the mesh (MeshNode or MeshElement)
     :type mesh_type: str
     """
 
+    BC_type_dict = {
+        "_BC_": "Dirichlet",
+        "2ND": "Neumann",
+        "3RD": "Robin",
+        "4TH": "NodalSourceTerm",
+    }
     mesh_name = mesh_name.replace(".vtu", "")
+    xml_meshes = ET.Element("meshes")
+    ET.SubElement(xml_meshes, "mesh").text = mesh_name
     xml_bc = ET.Element("boundary_conditions")
     xml_parameter = ET.Element("parameters")
     for parameter_name in data:
         if mesh_name == "":
             mesh_name = parameter_name
         if (
-            parameter_name != "BULK_NODE_ID"
-            and parameter_name != "BULK_ELEMENT_ID"
+            parameter_name != "bulk_node_ids"
+            and parameter_name != "bulk_element_ids"
+            and parameter_name != "vtkOriginalPointIds"
+            and parameter_name != "orig_indices"
         ):
-            bc = ET.SubElement(xml_bc, "boundary_condtion")
-            ET.SubElement(bc, "mesh").text = mesh_name
-            ET.SubElement(bc, "type").text = bc_type
+            ET.SubElement(xml_meshes, "mesh").text = parameter_name
+
+            bc = ET.SubElement(xml_bc, "boundary_condition")
+            ET.SubElement(bc, "mesh").text = parameter_name
+            ET.SubElement(bc, "type").text = next(
+                val
+                for key, val in BC_type_dict.items()
+                if key in parameter_name
+            )
             ET.SubElement(bc, "parameter").text = parameter_name
 
             parameter = ET.SubElement(xml_parameter, "parameter")
             ET.SubElement(parameter, "name").text = parameter_name
             ET.SubElement(parameter, "type").text = mesh_type
             ET.SubElement(parameter, "field_name").text = parameter_name
-            ET.SubElement(parameter, "mesh").text = mesh_name
+            ET.SubElement(parameter, "mesh").text = parameter_name
 
+    ET.indent(xml_meshes, space="\t", level=0)
+    ET.ElementTree(xml_meshes).write("mesh_" + mesh_name + ".xml")
     ET.indent(xml_bc, space="\t", level=0)
-    ET.ElementTree(xml_bc).write("bc_" + mesh_name + ".xml")
+    ET.ElementTree(xml_bc).write("BC_" + mesh_name + ".xml")
     ET.indent(xml_parameter, space="\t", level=0)
     ET.ElementTree(xml_parameter).write("parameter_" + mesh_name + ".xml")
+
+
+def write_pt_bc(mesh_name: str, mesh: pv.UnstructuredGrid):
+    """
+    Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
+    data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
+    This function also writes then the corresponding xml-files using "write_xml"
+
+    :param mesh_name: name of the mesh
+    :type mesh_name: str
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
+
+    # assign an array with integer of the indices of the original mesh
+    mesh["orig_indices"] = np.arange(mesh.n_points, dtype=np.uint64)
+    mesh.cell_data["bulk_element_ids"] = np.arange(
+        mesh.n_cells, dtype=np.uint64
+    )
+    # extract mesh since boundary condition are on the surface ?! (not safe!)
+    mesh = mesh.extract_surface()
+    # remove all the point data that are not of interest
+    for point_data in mesh.point_data:
+        if not all(["_BC" in point_data]) and point_data != "orig_indices":
+            mesh.point_data.remove(point_data)
+    # remove all points with point data that are of "nan"-value
+    for point_data in mesh.point_data:
+        if point_data != "orig_indices":
+            filtered_points = mesh.extract_points(
+                [not np.isnan(x) for x in mesh[point_data]],
+                adjacent_cells=False,
+                include_cells=True,
+            )
+            # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
+            for cell_data in filtered_points.cell_data:
+                if cell_data != "bulk_element_ids":
+                    filtered_points.cell_data.remove(cell_data)
+            # remove data of BC that are of no value for this part of the mesh
+            for pt_data in mesh.point_data:
+                if pt_data != point_data and pt_data != "orig_indices":
+                    filtered_points.point_data.remove(pt_data)
+
+            # Only "bulk_node_ids" can be read by ogs
+            filtered_points.rename_array("orig_indices", "bulk_node_ids")
+            filtered_points.save(point_data + ".vtu")
+            # pv.save_meshio(
+            #    point_data + ".vtu", filtered_points, file_format="vtu"
+            # )
+    # create the xml-file
+    write_xml(mesh_name, mesh.point_data, "MeshNode")
+
+
+"""
+def write_cell_bc():
+    BC_mesh = mesh.copy()
+    # print("no nan:", [x for x in mesh["P_BCFLOW_4TH"] if not np.isnan(x)])
+    for cd in [
+        cell_data
+        for cell_data in BC_mesh.cell_data
+        if cell_data not in ["P_SOUF", "P_IOFLOW"]
+    ]:
+        BC_mesh.cell_data.remove(cd)
+    # Only cell data are needed
+    BC_mesh.point_data.clear()
+    # get the topsurface since there are the cells of interest
+    topsurf = get_specific_surface(
+        BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
+    )
+    topsurf.save("topsurface_" + args.output)
+    # pv.save_meshio("topsurface_" + args.output, topsurf, file_format="vtu")
+    # create the xml-file
+    write_xml(
+        "topsurface_" + args.output,
+        "Neumann",
+        topsurf.cell_data,
+        "MeshElement",
+    )
+"""

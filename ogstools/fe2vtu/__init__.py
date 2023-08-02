@@ -9,11 +9,7 @@ from .fe2vtu import (
     get_property_mesh,
     update_geo_mesh,
 )
-from .tools import (
-    get_specific_surface,
-    helpFormat,
-    write_xml,
-)
+from .tools import get_specific_surface, helpFormat, write_pt_bc, write_xml
 
 __all__ = [
     "get_geo_mesh",
@@ -22,4 +18,5 @@ __all__ = [
     "helpFormat",
     "update_geo_mesh",
     "write_xml",
+    "write_pt_bc",
 ]

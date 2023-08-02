@@ -48,8 +48,8 @@ def get_pts_cells(doc: ifm.FeflowDoc):
             8: pv.CellType.HEXAHEDRON,
         },
     }
-    # 1. get a list of all cells/elements
-    elements = doc.c.mesh.get_imatrix()
+    # 1. get a list of all cells/elements and reverse it for correct node order in OGS
+    elements = np.fliplr(np.array(doc.c.mesh.get_imatrix())).tolist()
     # 2. write the amount of nodes per element to the first entry of each list
     # of nodes. This is needed for pyvista !
     # 2 could also be done with np.hstack([len(ele)]*len(elements,elements))
@@ -62,7 +62,7 @@ def get_pts_cells(doc: ifm.FeflowDoc):
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
-
+    # print(cells.tolist())
     # 4 .write the list for all points and their global coordinates
     points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
     pts = points[["X", "Y", "Z"]].to_numpy()
@@ -107,7 +107,7 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
             )
             # 2.2 write a list with a corresponding id for
             # that material (mat_id)
-            mat_ids.append(mat_id)
+            mat_ids.append(int(mat_id))
             # 2.3 write a dictionary to understand which id refers
             # to which selection
             dict_matid[mat_id] = selec
@@ -125,8 +125,8 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
 
     # 4. log the dictionary of the MaterialIDs
     log.info("MaterialIDs refer to: %s", dict_matid)
-
-    return {"MaterialIDs": mat_ids_mesh}
+    # MaterialIDs must be int32
+    return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
 def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
