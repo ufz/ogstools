@@ -17,7 +17,9 @@ parser.add_argument(
     help="The path to the output file.\n"
     "The extension defines the format according to meshio",
 )
-parser.add_argument("-c", "--cellsize", help="The cellsize for the mesh.", type = float)
+parser.add_argument(
+    "-c", "--cellsize", help="The cellsize for the mesh.", type=float
+)
 parser.add_argument(
     "meshing",
     choices=["Triangle", "GMSH"],
@@ -66,6 +68,12 @@ if args.simplify == "simplified":
     final_gdf["dissolve_column"] = 0
     final_gdf = final_gdf.dissolve(by="dissolve_column")
     final_gdf.geometry = final_gdf.geometry.simplify(args.cellsize / 2)
+    exploded_union = final_gdf.explode()
+    # create final geodataframe
+    final_gdf = gp.GeoDataFrame(
+        geometry=[polygon for polygon in exploded_union["geometry"]]
+    )
+    final_gdf["cellsize"] = args.cellsize
 
 # choose the meshing algorithm: also GmshMesher() possible, but requires installation of gmsh or triangle
 if args.meshing == "Triangle":
