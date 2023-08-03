@@ -1,7 +1,10 @@
 """Specialized plot features."""
 
+from typing import Callable
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyvista as pv
 from matplotlib import patheffects
 from matplotlib.collections import PolyCollection
@@ -104,6 +107,29 @@ def plot_streamlines(
 
     x_g, y_g = setup.length.values(np.meshgrid(x, y))
     ax.streamplot(x_g, y_g, val[..., 0], val[..., 1], color="k", linewidth=lw)
+
+
+def plot_on_top(
+    ax: plt.Axes,
+    surf: pv.DataSet,
+    contour: Callable[[np.ndarray], np.ndarray],
+    scaling: float = 1.0,
+) -> None:
+    normal = np.abs(np.mean(surf.extract_surface().cell_normals, axis=0))
+    projection = int(np.argmax(normal))
+
+    XYZ = surf.extract_feature_edges().points
+    df_pts = pd.DataFrame(np.delete(XYZ, projection, axis=1))
+    x_vals = df_pts.groupby([0])[0].agg(np.mean).to_numpy()
+    y_vals = df_pts.groupby([0])[1].agg(np.max).to_numpy()
+    contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
+    ax.set_ylim(top=setup.length.values(np.max(contour_vals)))
+    ax.fill_between(
+        setup.length.values(x_vals),
+        setup.length.values(y_vals),
+        setup.length.values(contour_vals),
+        facecolor="lightgrey",
+    )
 
 
 def get_aspect(ax: plt.Axes) -> float:

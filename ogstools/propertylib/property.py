@@ -227,7 +227,7 @@ class MatrixProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + "_magnitude",
-            func=lambda x: np.linalg.norm(sym_tensor_to_mat(x)),
+            func=lambda x: np.linalg.norm(sym_tensor_to_mat(x), axis=(-2, -1)),
             tag=TagType.unit_dim_const,
         )
 

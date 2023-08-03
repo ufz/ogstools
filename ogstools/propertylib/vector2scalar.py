@@ -36,7 +36,8 @@ def von_mises(vals: np.ndarray) -> np.ndarray:
     :returns: The von Mises stress values.
     """
     return np.sqrt(
-        0.5 * np.sum(np.square(np.diff(vals[..., :3], append=vals[..., 0])), -1)
+        0.5
+        * np.sum(np.square(np.diff(vals[..., :3], append=vals[..., :1])), -1)
         + 3 * np.sum(np.square(vals[..., 3:]), -1)
     )
 
