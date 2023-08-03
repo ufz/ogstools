@@ -50,15 +50,14 @@ class MeshplotlibTest(unittest.TestCase):
         setup.length.output_unit = "km"
         setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
         meshseries = examples.meshseries_THM_2D
-        plot(meshseries.read(0), property=THM.material_id)
-        plot(meshseries.read(1), property=THM.temperature)
-        plot(meshseries.read(1), ScalarProperty("pressure_active"))
-        plot(meshseries.read(1).threshold((1, 3), "MaterialIDs"), THM.velocity)
-        fig = plot(meshseries.read(1), THM.displacement[0])
+        mesh = meshseries.read(1)
+        plot(mesh, property=THM.material_id)
+        plot(mesh, property=THM.temperature)
+        plot(mesh, ScalarProperty("pressure_active"))
+        plot(mesh.threshold((1, 3), "MaterialIDs"), THM.velocity)
+        fig = plot(mesh, THM.displacement[0])
         plot_on_top(
-            fig.axes[0],
-            meshseries.read(1),
-            lambda x: min(max(0, 0.1 * (x - 3)), 100),
+            fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
 
     def test_plot_3D(self):

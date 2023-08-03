@@ -21,6 +21,7 @@ default_setup = {
     "title_right": "",
     "cmap_dict": {
         "displacement": "Greens",
+        # TODO: custom colormap for temperature
         "temperature": ["Blues", "plasma"],
         "pressure": "Blues",
         "velocity": "coolwarm",

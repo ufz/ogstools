@@ -3,6 +3,7 @@ from typing import Optional as Opt
 from typing import Union
 
 import numpy as np
+import PIL.Image as Image
 import pyvista as pv
 from matplotlib import cm as mcm
 from matplotlib import colormaps, rcParams
@@ -16,8 +17,9 @@ from ogstools.propertylib import MatrixProperty as Matrix
 from ogstools.propertylib import Property
 from ogstools.propertylib import VectorProperty as Vector
 
-from . import image_tools, setup
 from . import plot_features as pf
+from . import setup
+from .image_tools import trim
 from .levels import get_levels
 from .mesh import Mesh
 
@@ -27,6 +29,12 @@ def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
     return (
         property.data_name in mesh.cell_data
         and property.data_name not in mesh.point_data.keys()
+    )
+
+
+def _q_zero_line(property: Property, levels: np.ndarray):
+    return property.is_component() or (
+        property.data_name == "temperature" and levels[0] < 0 < levels[-1]
     )
 
 
@@ -67,9 +75,9 @@ def get_cmap_norm(
     if cell_data:
         vmin += 0.5
         vmax += 0.5
-    continuous_norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+    conti_norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
-    colors = [conti_cmap(continuous_norm(m_l)) for m_l in mid_levels]
+    colors = [conti_cmap(conti_norm(m_l)) for m_l in mid_levels]
     cmap = mcolors.ListedColormap(colors, name="custom")
     boundaries = levels
     if cell_data:
@@ -86,7 +94,7 @@ def get_cmap_norm(
 
 def plot_isometric(
     mesh: Mesh, property: Property, levels: Opt[np.ndarray] = None
-) -> image_tools.Image.Image:
+) -> Image.Image:
     """Plot an isometric view of the property field on the mesh."""
     mesh = mesh.copy()
     if property.mask in mesh.cell_data and len(mesh.cell_data[property.mask]):
@@ -121,9 +129,7 @@ def plot_isometric(
             p.add_mesh(mesh_id.extract_feature_edges(), color="k")
     p.camera.azimuth += 270
     p.remove_scalar_bar()
-    return image_tools.trim(
-        image_tools.Image.fromarray(p.screenshot(filename=None)), 50
-    )
+    return trim(Image.fromarray(p.screenshot(filename=None)), 50)
 
 
 def add_colorbar(
@@ -165,7 +171,8 @@ def add_colorbar(
     if property.get_output_unit():
         unit_str += " / " + property.get_output_unit()
     cb.set_label(
-        property.output_name + unit_str, size=setup.rcParams_scaled["font.size"]
+        property.output_name.replace("_", " ") + unit_str,
+        size=setup.rcParams_scaled["font.size"],
     )
     cb.ax.tick_params(
         labelsize=setup.rcParams_scaled["font.size"], direction="out"
@@ -173,9 +180,7 @@ def add_colorbar(
     cb.ax.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
     cb.ax.ticklabel_format(useOffset=False, style="plain")
 
-    if property.is_component() or (
-        property.data_name == "temperature" and levels[0] < 0 < levels[-1]
-    ):
+    if _q_zero_line(property, levels):
         cb.ax.axhline(
             y=0, color="w", lw=2 * setup.rcParams_scaled["lines.linewidth"]
         )
@@ -245,9 +250,7 @@ def subplot(
             )
     else:
         ax.tricontourf(x, y, tri, values, levels=levels, cmap=cmap, norm=norm)
-        if property.is_component() or (
-            property.data_name == "temperature" and levels[0] < 0 < levels[-1]
-        ):
+        if _q_zero_line(property, levels):
             ax.tricontour(x, y, tri, values, levels=[0], colors="w")
 
     surf = mesh.extract_surface()
