@@ -9,6 +9,7 @@ from pyvista import examples as pv_examples
 
 from ogstools.meshplotlib import MeshSeries, examples, plot, setup
 from ogstools.meshplotlib.levels import get_levels
+from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.propertylib import THM, ScalarProperty
 
 THIS_DIR = Path(__file__).parent
@@ -49,11 +50,15 @@ class MeshplotlibTest(unittest.TestCase):
         setup.length.output_unit = "km"
         setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
         meshseries = examples.meshseries_THM_2D
-        plot(meshseries.read(0), property=THM.material_id)
-        plot(meshseries.read(1), property=THM.temperature)
-        plot(meshseries.read(1), ScalarProperty("pressure_active"))
-        plot(meshseries.read(1).threshold((1, 3), "MaterialIDs"), THM.velocity)
-        plot(meshseries.read(1), THM.displacement[0])
+        mesh = meshseries.read(1)
+        plot(mesh, property=THM.material_id)
+        plot(mesh, property=THM.temperature)
+        plot(mesh, ScalarProperty("pressure_active"))
+        plot(mesh.threshold((1, 3), "MaterialIDs"), THM.velocity)
+        fig = plot(mesh, THM.displacement[0])
+        plot_on_top(
+            fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
+        )
 
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""
@@ -76,7 +81,8 @@ class MeshplotlibTest(unittest.TestCase):
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = MeshSeries(
-            f"{THIS_DIR}/data/meshplotlib/2D_single_fracture_HT_2D_single_fracture.xdmf"
+            f"{THIS_DIR}/data/meshplotlib/"
+            "2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
         plot(mesh, property=THM.temperature)
 

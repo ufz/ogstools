@@ -70,10 +70,14 @@ class MeshSeries:
                     time_values += [float(element.attrib["Value"])]
         return time_values
 
-    def timestep_from_value(self, timevalue: float) -> int:
+    def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
-        return np.abs(timevalue - np.array(self.timevalues)).argmin()
+        return int(np.argmin(np.abs(np.array(self.timevalues) - timevalue)))
+
+    def closest_timevalue(self, timevalue: float) -> float:
+        """Return the closest timevalue to a timevalue."""
+        return self.timevalues[self.closest_timestep(timevalue)]
 
     def read_closest_timestep(self, timevalue: float) -> Mesh:
         """Return the closest timestep in the data for a given timevalue."""
-        return self.read(self.timestep_from_value(timevalue))
+        return self.read(self.closest_timestep(timevalue))
