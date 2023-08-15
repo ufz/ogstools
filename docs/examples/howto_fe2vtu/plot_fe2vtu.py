@@ -9,13 +9,6 @@ In this example we show how a simple FEFLOW model consisting of two layers can b
 
 # %%
 # 1. Let us convert only the points and cells at first.
-from importlib.util import find_spec
-
-# Check for Feflow Python setup
-if find_spec("ifm") is None:
-    msg = "Could not import ifm. A working Feflow Python setup is required!"
-    exit(0)
-
 import ifm_contrib as ifm
 
 import ogstools.meshplotlib as mpl

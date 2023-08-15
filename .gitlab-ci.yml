@@ -48,7 +48,10 @@ tests:
 tests feflow:
   image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
-    - *setup-headless
+    - python -m venv .venv --upgrade-deps
+    - .venv/bin/pip install -e .[dev,test,docs,feflow]
+    - make setup_headless
+    - source .venv/bin/activate
     - make coverage
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
