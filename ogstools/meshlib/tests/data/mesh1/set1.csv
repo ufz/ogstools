@@ -1,0 +1,6 @@
+layer_id,resolution,material_id,filename
+0,0,0,surface_data/00_KB.vtu
+1,0,1,surface_data/01_q.vtu
+2,0,2,surface_data/02_krl.vtu
+3,0,3,surface_data/03_S3.vtu
+4,0,4,surface_data/04_krp.vtu
