@@ -9,8 +9,6 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set EXCLUDES="%SOURCEDIR%\..\**\examples\**" "%SOURCEDIR%\..\tests\**"
-set APIDOC_ARGS=--force --implicit-namespaces --module-first --separate
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -26,8 +24,6 @@ if errorlevel 9009 (
 )
 
 if "%1" == "" goto help
-
-sphinx-apidoc %APIDOC_ARGS% -o %SOURCEDIR%\reference %SOURCEDIR%\..\ogstools\ %EXCLUDES%
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 goto end

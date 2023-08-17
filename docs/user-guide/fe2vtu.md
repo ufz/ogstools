@@ -54,19 +54,12 @@ The installation is according to the official [website](https://www.mikepoweredb
 
 ::::
 
-## Requirements:
+## Requirements
 
 - FEFLOW
-- Python packages:
-  - ifm_contrib
-  - pyvista
+- ogstools with feflow (`pip install ogstools[feflow]`)
 
-The converter works with [ifm_contrib](https://github.com/red5alex/ifm_contrib), a library for extending the functionalities of the FEFLOW Python API.
-This library must be installed beforehand:
-
-```bash
-pip install https://github.com/red5alex/ifm_contrib/archive/refs/heads/master.zip
-```
+The converter uses [ifm_contrib](https://github.com/red5alex/ifm_contrib), a library for extending the functionalities of the FEFLOW Python API.
 
 ## Command line usage
 
