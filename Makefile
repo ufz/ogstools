@@ -5,7 +5,7 @@ help:  ## Show this help
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install -e .[dev,test,docs]
+	.venv/bin/pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e .[dev,test,docs]
 	.venv/bin/pre-commit install
 	@echo
 	@echo ATTENTION: You need to activate the virtual environment in every shell with:

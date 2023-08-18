@@ -5,7 +5,7 @@ Create a virtual environment, activate it and install required packages:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,test,docs]"
+pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e ".[dev,test,docs]"
 
 # enable basic style checks once
 pre-commit install
@@ -18,7 +18,7 @@ Make sure to activate the virtual environment in every new shell session:
 source .venv/bin/activate
 ```
 
-If you want to automate this checkout [direnv](https://direnv.net).
+If you want to automate this install [direnv](https://direnv.net) and allow it once via `direnv allow` (see `.envrc` configuration file).
 
 <h5><i class="fa-brands fa-windows"></i> Windows-specifics</h5>
 
