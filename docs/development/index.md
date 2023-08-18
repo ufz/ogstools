@@ -3,10 +3,9 @@
 Create a virtual environment, activate it and install required packages:
 
 ```bash
-export PIP_EXTRA_INDEX_URL=https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,test,docs]"
+pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e ".[dev,test,docs]"
 
 # enable basic style checks once
 pre-commit install
@@ -16,7 +15,6 @@ pre-commit install
 Make sure to activate the virtual environment in every new shell session:
 
 ```bash
-export PIP_EXTRA_INDEX_URL=https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 source .venv/bin/activate
 ```
 
