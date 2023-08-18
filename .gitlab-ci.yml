@@ -5,7 +5,6 @@ stages:
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
   DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/ci-python-3.9
-  PIP_EXTRA_INDEX_URL: https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 
 workflow:
   rules:
@@ -50,7 +49,7 @@ tests feflow:
   image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - python -m venv .venv --upgrade-deps
-    - .venv/bin/pip install -e .[dev,test,docs,feflow]
+    - .venv/bin/pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e .[dev,test,docs,feflow]
     - make setup_headless
     - source .venv/bin/activate
     - make coverage
@@ -67,7 +66,7 @@ tests win:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[dev,test]"
+    - pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e ".[dev,test]"
   script:
     - tox -p
     # Bug: -e docs only works on Windows when called from docs/-dir.
