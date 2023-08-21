@@ -160,9 +160,11 @@ def add_colorbar(
     if property.is_mask():
         cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
     if not cell_data:
-        kwargs = {"transform": cb.ax.transAxes, "ha": "center"}
-        cb.ax.text(0.5, -0.01, f"{levels[0]:.3g}", **kwargs, va="top")
-        cb.ax.text(0.5, 1.01, f"{levels[-1]:.3g}", **kwargs, va="bottom")
+        kwargs = {"transform": cb.ax.transAxes, "ha": "left"}
+        if setup.log_scaled:
+            levels = 10**levels
+        cb.ax.text(0, -0.02, f"{levels[0]:.3g}", **kwargs, va="top")
+        cb.ax.text(0, 1.02, f"{levels[-1]:.3g}", **kwargs, va="bottom")
 
     unit_str = ""
     factor_str = rf"$10^{{{int(scale_exp)}}}$" if abs(scale_exp) >= 3 else ""
@@ -184,6 +186,8 @@ def add_colorbar(
         cb.ax.axhline(
             y=0, color="w", lw=2 * setup.rcParams_scaled["lines.linewidth"]
         )
+    if setup.log_scaled:
+        cb.ax.set_yticklabels(10**ticks)
 
 
 def subplot(
@@ -228,6 +232,8 @@ def subplot(
         else property
     )
     values = _property.values(get_data(surf_tri, property)[property.data_name])
+    if setup.log_scaled:
+        values = np.log10(values)
     p_min, p_max = np.nanmin(values), np.nanmax(values)
 
     if levels is None:
@@ -288,8 +294,10 @@ def subplot(
         secax.set_xticklabels(sec_labels)
         secax.set_xlabel(f'{"xyz"[projection]} / {setup.length.output_unit}')
 
-    ax.set_xlabel(f'{"xyz"[x_id]} / {setup.length.output_unit}')
-    ax.set_ylabel(f'{"xyz"[y_id]} / {setup.length.output_unit}')
+    x_label = setup.x_label or f'{"xyz"[x_id]} / {setup.length.output_unit}'
+    y_label = setup.y_label or f'{"xyz"[y_id]} / {setup.length.output_unit}'
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
 
 
 def _get_shape(meshes: Union[list[Mesh], np.ndarray, Mesh]) -> tuple[int, ...]:
@@ -342,6 +350,8 @@ def _plot(
             print("a mesh doesn't contain the requested property.")
             return None
         values = _p_val.values(get_data(mesh, property)[property.data_name])
+        if setup.log_scaled:
+            values = np.log10(values)
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
         p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
         n_values = max(n_values, len(np.unique(values)))

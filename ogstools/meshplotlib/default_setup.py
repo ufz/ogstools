@@ -19,6 +19,9 @@ default_setup = {
     "title_center": "",
     "title_left": "",
     "title_right": "",
+    "x_label": None,
+    "y_label": None,
+    "log_scaled": False,
     "cmap_dict": {
         "displacement": "Greens",
         # TODO: custom colormap for temperature
@@ -32,7 +35,7 @@ default_setup = {
     "rcParams": {
         "font.weight": "normal",
         "font.family": "sans-serif",
-        "font.size": 24,
+        "font.size": 32,
         "axes.titlesize": "medium",
         "axes.labelsize": "medium",
         "axes.labelpad": 12,

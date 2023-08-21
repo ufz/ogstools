@@ -34,6 +34,9 @@ class PlotSetup:
     title_center: str
     title_left: str
     title_right: str
+    x_label: str
+    y_label: str
+    log_scaled: bool
     """ if a string, element edges are shown if it equals \n
     the current property.data_name, otherwise True or False. """
     show_layer_bounds: bool
@@ -77,6 +80,9 @@ class PlotSetup:
             title_center=obj["title_center"],
             title_left=obj["title_left"],
             title_right=obj["title_right"],
+            x_label=obj["x_label"],
+            y_label=obj["y_label"],
+            log_scaled=obj["log_scaled"],
             length=ScalarProperty("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
             cmap_dict=obj["cmap_dict"],
