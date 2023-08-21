@@ -3,6 +3,7 @@
 
 from ._plot_setup import PlotSetup
 from ._plot_setup import _plot_setup as setup
+from .animation import animate
 from .core import plot, plot_isometric, subplot
 from .mesh import Mesh
 from .mesh_series import MeshSeries
@@ -11,6 +12,7 @@ from .plot_features import plot_on_top
 __all__ = [
     "PlotSetup",
     "setup",
+    "animate",
     "plot",
     "plot_isometric",
     "plot_on_top",

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshplotlib import MeshSeries, examples, plot, setup
+from ogstools.meshplotlib import MeshSeries, animate, examples, plot, setup
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.propertylib import THM, ScalarProperty
@@ -59,6 +59,15 @@ class MeshplotlibTest(unittest.TestCase):
         plot_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
+
+    def test_animation(self):
+        """Test creation of animation."""
+        setup.reset()
+        meshseries = examples.meshseries_THM_2D
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        titles = [str(tv) for tv in timevalues]
+        anim = animate(meshseries, THM.temperature, timevalues, titles)
+        anim.to_jshtml()
 
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""

@@ -2,6 +2,6 @@
 <VTKFile type="Collection" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">
   <Collection>
     <DataSet timestep="0" group="" part="0" file="2D_ts_0_t_0e+00.vtu"/>
-    <DataSet timestep="1262304" group="" part="0" file="2D_ts_10_t_1e+09.vtu"/>
+    <DataSet timestep="1e+09" group="" part="0" file="2D_ts_10_t_1e+09.vtu"/>
   </Collection>
 </VTKFile>

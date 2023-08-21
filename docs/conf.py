@@ -117,6 +117,7 @@ sphinx_gallery_conf = {
     "download_all_examples": False,
     "image_scrapers": ("matplotlib", "pyvista"),
     "ignore_pattern": gallery_ignore_pattern,
+    "matplotlib_animations": True,
 }
 
 
