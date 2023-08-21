@@ -292,8 +292,84 @@ def subplot(
     ax.set_ylabel(f'{"xyz"[y_id]} / {setup.length.output_unit}')
 
 
+def _get_shape(meshes: Union[list[Mesh], np.ndarray, Mesh]) -> tuple[int, ...]:
+    if isinstance(meshes, np.ndarray):
+        if meshes.ndim in [1, 2]:
+            return meshes.shape
+        msg = "Input numpy array must be 1D or 2D."
+        raise ValueError(msg)
+    if isinstance(meshes, list):
+        return (1, len(meshes))
+    return (1, 1)
+
+
+def _fig_init(shape: tuple[int, ...]) -> tuple[mfigure.Figure, list[plt.Axes]]:
+    figsize = np.array(setup.figsize) * setup.fig_scale
+    fig, _ = plt.subplots(
+        shape[0], shape[1], dpi=setup.dpi * setup.fig_scale, figsize=figsize
+    )
+    fig.patch.set_alpha(1)
+    return fig
+
+
+def _plot(
+    fig: mfigure.Figure,
+    meshes: Union[list[Mesh], np.ndarray, Mesh],
+    property: Property,
+) -> mfigure.Figure:
+    """
+    Plot the property field of meshes with default settings.
+
+    The resulting figure adheres to the configurations in meshplotlib.setup.
+    For 2D, the whole domain, for 3D a set of slices is displayed.
+
+    :param meshes: Singular mesh of 2D numpy array of meshes
+    :param property: the property field to be visualized on all meshes
+    """
+
+    shape = _get_shape(meshes)
+
+    _p_val = (
+        property.magnitude
+        if isinstance(property, (Vector, Matrix))
+        else property
+    )
+    p_min, p_max, n_values = np.inf, -np.inf, 0
+    _meshes = np.reshape(meshes, shape)
+    _axs = np.reshape(fig.axes, shape)
+    for mesh in np.ravel(_meshes):
+        if get_data(mesh, property) is None:
+            print("a mesh doesn't contain the requested property.")
+            return None
+        values = _p_val.values(get_data(mesh, property)[property.data_name])
+        p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
+        p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
+        n_values = max(n_values, len(np.unique(values)))
+    num_levels = min(setup.num_levels, n_values)
+    p_min = setup.p_min if setup.p_min is not None else p_min
+    p_max = setup.p_max if setup.p_max is not None else p_max
+    levels = get_levels(p_min, p_max, num_levels)
+
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            subplot(_meshes[i, j], property, _axs[i, j], levels)
+    # for ax in fig.axes[:-1]:
+    #     ax.set_xlabel("")
+
+    cell_data = xin_cell_data(_meshes[0, 0], property)
+    cmap, norm = get_cmap_norm(levels, property, cell_data)
+
+    _axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
+    _axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
+    _axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
+    plt.tight_layout()
+    add_colorbar(fig, property, cell_data, cmap, norm, levels)
+
+    return fig
+
+
 def plot(
-    meshes: Union[list[Mesh], np.ndarray], property: Property
+    meshes: Union[list[Mesh], np.ndarray, Mesh], property: Property
 ) -> mfigure.Figure:
     """
     Plot the property field of meshes with default settings.
@@ -306,60 +382,6 @@ def plot(
     """
 
     rcParams.update(setup.rcParams_scaled)
-
-    if len(np.shape(meshes)) == 0:
-        meshes = np.array([[meshes]])
-    if len(np.shape(meshes)) != 2:
-        msg = "Meshes must be a single mesh or a 2D np.array of meshes."
-        raise TypeError(msg)
-    if isinstance(meshes, list):
-        meshes = np.array(meshes)
-    figsize = np.array(setup.figsize) * setup.fig_scale
-    fig, _axs = plt.subplots(
-        len(meshes),
-        len(meshes[0]),
-        dpi=setup.dpi * setup.fig_scale,
-        figsize=figsize,
-    )
-    fig.patch.set_alpha(1)
-    axs: np.ndarray = np.reshape(_axs, [len(meshes), len(meshes[0])])
-    axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
-    axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
-    axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
-
-    _p_val = (
-        property.magnitude
-        if isinstance(property, (Vector, Matrix))
-        else property
-    )
-    p_min, p_max, n_values = np.inf, -np.inf, 0
-    for mesh in np.ravel(meshes):
-        if get_data(mesh, property) is None:
-            print("a mesh doesn't contain the requested property.")
-            return None
-        values = _p_val.values(get_data(mesh, property)[property.data_name])
-        if setup.p_min is None:
-            p_min = min(p_min, np.nanmin(values))
-        if setup.p_max is None:
-            p_max = max(p_max, np.nanmax(values))
-        n_values = max(n_values, len(np.unique(values)))
-    num_levels = min(setup.num_levels, n_values)
-    levels = get_levels(p_min, p_max, num_levels)
-
-    for i in range(len(meshes)):
-        for j in range(len(meshes[0])):
-            subplot(meshes[i, j], property, axs[i, j], levels)
-    # for ax in fig.axes[:-1]:
-    #     ax.set_xlabel("")
-
-    cmap, norm = get_cmap_norm(
-        levels, property, xin_cell_data(meshes[0, 0], property)
-    )
-
-    plt.tight_layout()
-
-    add_colorbar(
-        fig, property, xin_cell_data(meshes[0, 0], property), cmap, norm, levels
-    )
-
-    return fig
+    shape = _get_shape(meshes)
+    fig = _fig_init(shape)
+    return _plot(fig, meshes, property)

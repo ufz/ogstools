@@ -23,7 +23,7 @@ def plot_layer_boundaries(
     x_id, y_id = np.delete([0, 1, 2], projection)
     for mat_id in mat_ids:
         m_i = surf.threshold((mat_id, mat_id), "MaterialIDs")
-        # the pyvista connectivity call add RegionID cell data
+        # the pyvista connectivity call adds RegionID cell data
         segments = m_i.extract_feature_edges().connectivity(largest=False)
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
@@ -31,12 +31,8 @@ def plot_layer_boundaries(
             x_b, y_b = setup.length.values(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
-            ax.plot(
-                x_b,
-                y_b,
-                "-k",
-                lw=0.5 * setup.rcParams_scaled["lines.linewidth"],
-            )
+            lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
+            ax.plot(x_b, y_b, "-k", lw=lw)
         x_pos = 0.01 if mat_id % 2 == 0 else 0.99
         ha = "left" if mat_id % 2 == 0 else "right"
         x_b_lim = x_b.min() if mat_id % 2 == 0 else x_b.max()
@@ -67,12 +63,8 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
             cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
         ]
         verts = setup.length.values(np.delete(cell_pts, projection, -1))
-        pc = PolyCollection(
-            verts,
-            fc="None",
-            ec="black",
-            lw=0.5 * setup.rcParams_scaled["lines.linewidth"],
-        )
+        lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
+        pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
 
 
