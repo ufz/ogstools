@@ -143,7 +143,7 @@ def add_colorbar(
     """Add a colorbar to the matplotlib figure."""
     cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
     scale_mag = np.median(np.abs(np.diff(levels)))
-    scale_exp = np.log10(scale_mag) if scale_mag > 1e-12 else 0
+    scale_exp = np.ceil(np.log10(scale_mag)) if scale_mag > 1e-12 else 0
     if abs(scale_exp) >= 3:
         levels *= 10 ** (-scale_exp)
         norm.vmin *= 10 ** (-scale_exp)
