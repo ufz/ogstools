@@ -28,7 +28,7 @@ def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
     """Determine if the property is exclusive in cell data."""
     return (
         property.data_name in mesh.cell_data
-        and property.data_name not in mesh.point_data.keys()
+        and property.data_name not in mesh.point_data
     )
 
 
@@ -233,7 +233,8 @@ def subplot(
     )
     values = _property.values(get_data(surf_tri, property)[property.data_name])
     if setup.log_scaled:
-        values = np.log10(values)
+        values_temp = np.where(values > 1e-14, values, 1e-14)
+        values = np.log10(values_temp)
     p_min, p_max = np.nanmin(values), np.nanmax(values)
 
     if levels is None:
@@ -351,7 +352,8 @@ def _plot(
             return None
         values = _p_val.values(get_data(mesh, property)[property.data_name])
         if setup.log_scaled:
-            values = np.log10(values)
+            values_temp = np.where(values > 1e-14, values, 1e-14)
+            values = np.log10(values_temp)
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
         p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
         n_values = max(n_values, len(np.unique(values)))
