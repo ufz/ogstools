@@ -74,18 +74,24 @@ def plot_streamlines(
     """Plot vector streamlines on a matplotlib axis."""
     if (n_pts := setup.num_streamline_interp_pts) is None:
         return
-    x_id, y_id = 2 * np.delete([0, 1, 2], projection)
+    x_id, y_id = np.delete([0, 1, 2], projection)
     bounds = [float(b) for b in surf.bounds]
-    x = np.linspace(bounds[x_id], bounds[x_id + 1], n_pts)
-    y = np.linspace(bounds[y_id], bounds[y_id + 1], n_pts)
-    z = np.mean(surf.points[..., 2])
+    x = np.linspace(bounds[2 * x_id], bounds[2 * x_id + 1], n_pts)
+    y = np.linspace(bounds[2 * y_id], bounds[2 * y_id + 1], n_pts)
+    z = np.array([np.mean(surf.points[..., projection])])
 
     _surf = surf
     for key in _surf.point_data:
         if key not in [property.data_name, property.mask]:
             del _surf.point_data[key]
-    grid = pv.RectilinearGrid(x, y).translate([0, 0, z])
+    grid = pv.RectilinearGrid(
+        [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
+    )
     grid = grid.sample(_surf, pass_cell_data=False)
+    if np.shape(grid.point_data[property.data_name])[-1] == 3:
+        grid.point_data[property.data_name] = np.delete(
+            grid.point_data[property.data_name], projection, 1
+        )
     val = np.reshape(
         property.values(grid.point_data[property.data_name]), (n_pts, n_pts, 2)
     )
