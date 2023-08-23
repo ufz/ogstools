@@ -17,15 +17,15 @@ from .mesh_series import MeshSeries
 
 
 def timeline(ax: plt.Axes, x: float, xticks: list[float]) -> None:
-    y = 1.07
+    y = 1.1
     ap = {"arrowstyle": "-", "color": "k"}
     axfr = "axes fraction"
     ax.annotate("", (1, y), (0, y), axfr, arrowprops=ap)
     align = dict(ha="center", va="center")  # noqa: C408: noqa
     for xt in xticks:
-        ax.annotate("|", (xt, y), (xt, y), axfr, **align, size=6)
+        ax.annotate("|", (xt, y), (xt, y), axfr, **align, size=28)
     align = dict(ha="center", va="center")  # noqa: C408: noqa
-    style = dict(color="g", size=18, weight="bold")  # noqa: C408: noqa
+    style = dict(color="g", size=36, weight="bold")  # noqa: C408: noqa
     ax.annotate("|", (x, y), (x, y), axfr, **align, **style)
 
 
@@ -49,7 +49,11 @@ def animate(
     start_time = time.time()
     ts = mesh_series.timesteps if timesteps is None else timesteps
     tv = mesh_series.timevalues
-    xticks = [t / tv[-1] for t in tv]
+
+    def t_frac(t):
+        return (t - tv[0]) / (tv[-1] - tv[0])
+
+    xticks = [t_frac(t) for t in tv]
     fig = plot(mesh_series.read(0, False), property)
 
     def init() -> None:
@@ -72,11 +76,11 @@ def animate(
         if isinstance(i, int):
             mesh = mesh_series.read(i)
         else:
-            mesh = mesh_series.read_interp(i, False)
+            mesh = mesh_series.read_interp(i, True)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             fig = _plot(fig, mesh, property)
-            x = i / len(ts) if isinstance(i, int) else i / tv[-1]
+            x = i / len(ts) if isinstance(i, int) else t_frac(i)
             timeline(fig.axes[0], x, xticks)
 
     _func = partial(animate_func, fig=fig)
