@@ -19,7 +19,7 @@ mesh_series = examples.meshseries_CT_2D
 # %%
 # Let's use fixed scale limits to prevent rescaling during the animation.
 setup.p_min = 0
-setup.p_max = 1
+setup.p_max = 100
 
 # %%
 # You can choose which timesteps to render by passing either an int array
