@@ -17,9 +17,7 @@ class MeshSeries:
     Will be replaced by own module in ogstools with similar interface.
     """
 
-    def __init__(
-        self, filepath: str, func: Opt[Callable] = None, **func_args
-    ) -> None:
+    def __init__(self, filepath: str) -> None:
         self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
@@ -29,8 +27,6 @@ class MeshSeries:
         else:
             msg = "Can only read 'pvd' or 'xdmf' files."
             raise TypeError(msg)
-        self.func = func
-        self.func_args = func_args
 
     def _read_pvd(self, timestep: int) -> Mesh:
         self._pvd_reader.set_active_time_point(timestep)
@@ -53,14 +49,8 @@ class MeshSeries:
         elif self._data_type == "xdmf":
             mesh = self._read_xdmf(timestep)
         if lazy_eval:
-            self._data[timestep] = (
-                self.func(mesh, **self.func_args)
-                if self.func is not None
-                else mesh
-            )
-        return (
-            self.func(mesh, **self.func_args) if self.func is not None else mesh
-        )
+            self._data[timestep] = mesh
+        return mesh
 
     def clear(self) -> None:
         self._data.clear()
