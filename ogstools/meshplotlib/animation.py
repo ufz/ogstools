@@ -7,7 +7,7 @@ from typing import Union
 
 import numpy as np
 from matplotlib import figure as mfigure
-from matplotlib.animation import FFMpegWriter, FuncAnimation
+from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
 
 from ogstools.propertylib import Property
 
@@ -96,7 +96,12 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
     start_time = time.time()
     print("Start saving animation...")
     codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
-    writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
+    if FFMpegWriter.isAvailable():
+        writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
+    elif ImageMagickWriter.isAvailable():
+        writer = "imagemagick"
+    else:
+        writer = None
     anim.save(filename + ".mp4", writer=writer)
     print("\ndone!")
     print(f"Elapsed time: {(time.time() - start_time):.2f}")
