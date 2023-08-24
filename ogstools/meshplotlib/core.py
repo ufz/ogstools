@@ -123,7 +123,7 @@ def plot_isometric(
     p.add_mesh(mesh, cmap=cmap, clim=[levels[0], levels[-1]], lighting=False)
     p.add_mesh(mesh.extract_feature_edges(), color="black")
     mesh_surf = mesh.extract_surface()
-    if setup.show_layer_bounds and "MaterialIDs" in mesh.cell_data:
+    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
         for mat_id in np.unique(mesh.cell_data["MaterialIDs"]):
             mesh_id = mesh_surf.threshold(mat_id, "MaterialIDs")
             p.add_mesh(mesh_id.extract_feature_edges(), color="k")
@@ -262,7 +262,7 @@ def subplot(
 
     surf = mesh.extract_surface()
 
-    if setup.show_layer_bounds and "MaterialIDs" in mesh.cell_data:
+    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
         pf.plot_layer_boundaries(ax, surf, projection)
 
     show_edges = setup.show_element_edges

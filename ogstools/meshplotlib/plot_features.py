@@ -100,7 +100,7 @@ def plot_streamlines(
         mask = np.reshape(grid.point_data[property.mask], (n_pts, n_pts))
         val[mask == 0, :] = 0
     val_norm = np.linalg.norm(val, axis=-1)
-    lw = 2.5 * val_norm / np.max(val_norm)
+    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
 
     x_g, y_g = setup.length.values(np.meshgrid(x, y))

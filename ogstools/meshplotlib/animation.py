@@ -34,7 +34,6 @@ def animate(
     property: Property,
     timesteps: Opt[Sequence] = None,
     titles: Opt[list[str]] = None,
-    save: bool = False,
 ) -> Opt[FuncAnimation]:
     """
     Create an animation for a property of a mesh series with given timesteps.
@@ -46,7 +45,6 @@ def animate(
     :param titles: the title on top of the animation for each frame
     """
 
-    start_time = time.time()
     ts = mesh_series.timesteps if timesteps is None else timesteps
     tv = mesh_series.timevalues
 
@@ -58,8 +56,6 @@ def animate(
 
     def init() -> None:
         pass
-
-    print("Starting animation...")
 
     def animate_func(i: Union[int, float], fig: mfigure.Figure) -> None:
         index = np.argmin(np.abs(np.asarray(ts) - i))
@@ -84,14 +80,23 @@ def animate(
             timeline(fig.axes[0], x, xticks)
 
     _func = partial(animate_func, fig=fig)
-    anim = FuncAnimation(
+    return FuncAnimation(
         fig, _func, ts, blit=False, interval=50, repeat=False, init_func=init
     )
-    if save:
-        codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
-        writer = FFMpegWriter(fps=5, codec="libx265", extra_args=codec_args)
-        anim.save("animation.mp4", writer=writer)
-        print("\ndone!")
-        print(f"Elapsed time: {(time.time() - start_time):.2f}")
-        plt.close()
-    return None if save else anim
+
+
+def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
+    """
+    Save a FuncAnimation with some codec presets.
+
+    :param anim:        the FuncAnimation to be saved
+    :param filename:    the name of the resulting file
+    :param fps:         the number of frames per second
+    """
+    start_time = time.time()
+    print("Start saving animation...")
+    codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
+    writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
+    anim.save(filename + ".mp4", writer=writer)
+    print("\ndone!")
+    print(f"Elapsed time: {(time.time() - start_time):.2f}")

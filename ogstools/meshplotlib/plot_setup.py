@@ -6,40 +6,70 @@ from typing import Literal, Union
 
 from ogstools.propertylib.property import Property, ScalarProperty
 
-from .default_setup import default_setup
+from .plot_setup_defaults import setup_dict
 
 
 @dataclass
 class PlotSetup:
-    """Configuration setup for the plot."""
+    """
+    Configuration class for easy plot adjustments.
+
+    Each entry has a default value as listed in
+    :obj:`ogstools.meshplotlib.plot_setup_defaults`.
+    """
 
     cmap_dict_if_component: dict
+    "A dictionary that maps colormaps to property components."
     cmap_dict: dict
+    "A dictionary that maps colormaps to properties."
     cmap_if_mask: list
+    "A list of colors corresponding to [True, False] values of masks."
     default_cmap: str
+    "The default colormap to use."
     dpi: int
+    "The resolution (dots per inch) for the figure."
     fig_scale: float
+    "A scaling factor for the figure."
     figsize: list[int]
+    "The size of the figure as a list of integers [width, height]."
     invert_colorbar: bool
+    "A boolean indicating whether to invert the colorbar."
     length: ScalarProperty
+    "A property to set data and output unit of a models spatial extension."
     material_names: dict
+    "A dictionary that maps material names to regions (MaterialIDs)."
     num_levels: int
+    "The aimed number of levels / bins of the colorbar. See ~.levels"
     num_streamline_interp_pts: int
+    "The number of interpolation points for streamlines."
     p_max: float
+    "The fixed upper limit for the current scale."
     p_min: float
+    "The fixed lower limit for the current scale."
     rcParams: dict
+    "Matplotlib runtime configuration. See ~.plot_setup_defaults:setup_dict"
     scale_type: Literal["equal", "scaled", "tight", "auto", "image", "square"]
+    "The type of scaling for the plot."
     show_aspect_ratio: bool
+    "A boolean indicating whether to display the aspect ratio."
     show_element_edges: Union[bool, str]
+    """Controls the display of element edges, can be a boolean or 'str'. In the
+    latter case element edges are always shown for if the name matches the
+    property data name."""
     title_center: str
+    "The center part of the plot's title."
     title_left: str
+    "The left part of the plot's title."
     title_right: str
+    "The right part of the plot's title."
     x_label: str
+    "The label for the x-axis."
     y_label: str
+    "The label for the y-axis."
     log_scaled: bool
-    """ if a string, element edges are shown if it equals \n
-    the current property.data_name, otherwise True or False. """
-    show_layer_bounds: bool
+    "A boolean indicating whether the scaling should be logarithmic."
+    show_region_bounds: bool
+    "Controls the display of region (MaterialIDs) edges."
 
     def cmap_str(self, property: Property) -> Union[str, list]:
         """Get the colormap string for a given property."""
@@ -74,7 +104,7 @@ class PlotSetup:
             p_min=obj["p_min"],
             p_max=obj["p_max"],
             scale_type=obj["scale_type"],
-            show_layer_bounds=obj["show_layer_bounds"],
+            show_region_bounds=obj["show_region_bounds"],
             show_element_edges=obj["show_element_edges"],
             show_aspect_ratio=obj["show_aspect_ratio"],
             title_center=obj["title_center"],
@@ -94,8 +124,8 @@ class PlotSetup:
 
     def reset(self) -> None:
         """Reset the plot setup to default values."""
-        for k, v in self.from_dict(default_setup).__dict__.items():
+        for k, v in self.from_dict(setup_dict).__dict__.items():
             self.__dict__[k] = v
 
 
-_plot_setup = PlotSetup.from_dict(default_setup)
+_setup = PlotSetup.from_dict(setup_dict)
