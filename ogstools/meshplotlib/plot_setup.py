@@ -39,7 +39,8 @@ class PlotSetup:
     material_names: dict
     "A dictionary that maps material names to regions (MaterialIDs)."
     num_levels: int
-    "The aimed number of levels / bins of the colorbar. See ~.levels"
+    """The aimed number of levels / bins of the colorbar. See
+    :obj:`ogstools.meshplotlib.levels`"""
     num_streamline_interp_pts: int
     "The number of interpolation points for streamlines."
     p_max: float
@@ -47,7 +48,8 @@ class PlotSetup:
     p_min: float
     "The fixed lower limit for the current scale."
     rcParams: dict
-    "Matplotlib runtime configuration. See ~.plot_setup_defaults:setup_dict"
+    """Matplotlib runtime configuration. See
+    :obj:`ogstools.meshplotlib.plot_setup_defaults`"""
     scale_type: Literal["equal", "scaled", "tight", "auto", "image", "square"]
     "The type of scaling for the plot."
     show_aspect_ratio: bool
