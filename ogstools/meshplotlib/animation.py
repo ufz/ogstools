@@ -98,10 +98,12 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
     codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
+        filename += ".mp4"
     elif ImageMagickWriter.isAvailable():
         writer = "imagemagick"
+        filename += ".gif"
     else:
         writer = None
-    anim.save(filename + ".mp4", writer=writer)
+    anim.save(filename, writer=writer)
     print("\ndone!")
     print(f"Elapsed time: {(time.time() - start_time):.2f}")
