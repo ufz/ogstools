@@ -1,6 +1,12 @@
-"""The default plot setup."""
+"""
+.. literalinclude:: ../../ogstools/meshplotlib/plot_setup_defaults.py
+   :language: python
+   :linenos:
+   :lines: 9-
 
-default_setup = {
+"""
+
+setup_dict = {
     "default_cmap": "RdBu_r",
     "dpi": 200,
     "fig_scale": 1.0,
@@ -15,13 +21,15 @@ default_setup = {
     "scale_type": "auto",
     "show_aspect_ratio": False,
     "show_element_edges": "MaterialIDs",
-    "show_layer_bounds": True,
+    "show_region_bounds": True,
     "title_center": "",
     "title_left": "",
     "title_right": "",
+    "x_label": None,
+    "y_label": None,
+    "log_scaled": False,
     "cmap_dict": {
         "displacement": "Greens",
-        # TODO: custom colormap for temperature
         "temperature": ["Blues", "plasma"],
         "pressure": "Blues",
         "velocity": "coolwarm",
@@ -32,7 +40,7 @@ default_setup = {
     "rcParams": {
         "font.weight": "normal",
         "font.family": "sans-serif",
-        "font.size": 24,
+        "font.size": 32,
         "axes.titlesize": "medium",
         "axes.labelsize": "medium",
         "axes.labelpad": 12,

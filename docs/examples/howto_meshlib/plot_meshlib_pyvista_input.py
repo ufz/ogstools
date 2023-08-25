@@ -24,32 +24,12 @@ from ogstools.propertylib import ScalarProperty  # For visualization only
 # %%
 # Define a simple surface
 bounds = (-200, 210, -200, 210)
-surface1 = Surface(
-    Gaussian2D(
-        bound2D=bounds, amplitude=100, spread=100, height_offset=0, n=40
-    ),
-    material_id=0,
-)
-surface2 = Surface(
-    Gaussian2D(
-        bound2D=bounds, amplitude=100, spread=100, height_offset=-100, n=40
-    ),
-    material_id=1,
-)
-surface3 = Surface(
-    Gaussian2D(
-        bound2D=bounds, amplitude=100, spread=100, height_offset=-200, n=40
-    ),
-    material_id=2,
-)
+args = {"bound2D": bounds, "amplitude": 100, "spread": 100, "n": 40}
+surface1 = Surface(Gaussian2D(**args, height_offset=0), material_id=0)
+surface2 = Surface(Gaussian2D(**args, height_offset=-100), material_id=1)
+surface3 = Surface(Gaussian2D(**args, height_offset=-200), material_id=2)
 
-
-ls = LayerSet(
-    [
-        Layer(surface1, surface2),
-        Layer(surface2, surface3),
-    ]
-)
+ls = LayerSet([Layer(surface1, surface2), Layer(surface2, surface3)])
 mesh = to_region_tetraeder(ls, 40).as_pyvista()
 
 # %%

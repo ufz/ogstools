@@ -23,7 +23,7 @@ def plot_layer_boundaries(
     x_id, y_id = np.delete([0, 1, 2], projection)
     for mat_id in mat_ids:
         m_i = surf.threshold((mat_id, mat_id), "MaterialIDs")
-        # the pyvista connectivity call add RegionID cell data
+        # the pyvista connectivity call adds RegionID cell data
         segments = m_i.extract_feature_edges().connectivity(largest=False)
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
@@ -31,12 +31,8 @@ def plot_layer_boundaries(
             x_b, y_b = setup.length.values(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
-            ax.plot(
-                x_b,
-                y_b,
-                "-k",
-                lw=0.5 * setup.rcParams_scaled["lines.linewidth"],
-            )
+            lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
+            ax.plot(x_b, y_b, "-k", lw=lw)
         x_pos = 0.01 if mat_id % 2 == 0 else 0.99
         ha = "left" if mat_id % 2 == 0 else "right"
         x_b_lim = x_b.min() if mat_id % 2 == 0 else x_b.max()
@@ -67,12 +63,8 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
             cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
         ]
         verts = setup.length.values(np.delete(cell_pts, projection, -1))
-        pc = PolyCollection(
-            verts,
-            fc="None",
-            ec="black",
-            lw=0.5 * setup.rcParams_scaled["lines.linewidth"],
-        )
+        lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
+        pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
 
 
@@ -82,18 +74,24 @@ def plot_streamlines(
     """Plot vector streamlines on a matplotlib axis."""
     if (n_pts := setup.num_streamline_interp_pts) is None:
         return
-    x_id, y_id = 2 * np.delete([0, 1, 2], projection)
+    x_id, y_id = np.delete([0, 1, 2], projection)
     bounds = [float(b) for b in surf.bounds]
-    x = np.linspace(bounds[x_id], bounds[x_id + 1], n_pts)
-    y = np.linspace(bounds[y_id], bounds[y_id + 1], n_pts)
-    z = np.mean(surf.points[..., 2])
+    x = np.linspace(bounds[2 * x_id], bounds[2 * x_id + 1], n_pts)
+    y = np.linspace(bounds[2 * y_id], bounds[2 * y_id + 1], n_pts)
+    z = np.array([np.mean(surf.points[..., projection])])
 
     _surf = surf
     for key in _surf.point_data:
         if key not in [property.data_name, property.mask]:
             del _surf.point_data[key]
-    grid = pv.RectilinearGrid(x, y).translate([0, 0, z])
+    grid = pv.RectilinearGrid(
+        [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
+    )
     grid = grid.sample(_surf, pass_cell_data=False)
+    if np.shape(grid.point_data[property.data_name])[-1] == 3:
+        grid.point_data[property.data_name] = np.delete(
+            grid.point_data[property.data_name], projection, 1
+        )
     val = np.reshape(
         property.values(grid.point_data[property.data_name]), (n_pts, n_pts, 2)
     )
@@ -102,7 +100,7 @@ def plot_streamlines(
         mask = np.reshape(grid.point_data[property.mask], (n_pts, n_pts))
         val[mask == 0, :] = 0
     val_norm = np.linalg.norm(val, axis=-1)
-    lw = 2.5 * val_norm / np.max(val_norm)
+    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
 
     x_g, y_g = setup.length.values(np.meshgrid(x, y))

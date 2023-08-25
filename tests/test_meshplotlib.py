@@ -3,19 +3,20 @@
 import unittest
 from functools import partial
 from pathlib import Path
+from tempfile import mkstemp
 
 import numpy as np
 from pyvista import examples as pv_examples
 
 from ogstools.meshplotlib import MeshSeries, examples, plot, setup
+from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
-from ogstools.propertylib import THM, ScalarProperty
+from ogstools.propertylib import THM, ScalarProperty, VectorProperty
 
 THIS_DIR = Path(__file__).parent
 
 equality = partial(np.testing.assert_allclose, rtol=1e-7, verbose=True)
-setup.show_fig_after_plot = False
 
 
 class MeshplotlibTest(unittest.TestCase):
@@ -60,6 +61,14 @@ class MeshplotlibTest(unittest.TestCase):
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
 
+    def test_animation(self):
+        """Test creation of animation."""
+        meshseries = examples.meshseries_THM_2D
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        titles = [str(tv) for tv in timevalues]
+        anim = animate(meshseries, THM.temperature, timevalues, titles)
+        save_animation(anim, mkstemp()[1], 5)
+
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
@@ -75,7 +84,7 @@ class MeshplotlibTest(unittest.TestCase):
         filename = pv_examples.download_meshio_xdmf(load=False)
         mesh = MeshSeries(filename).read(0)
         plot(mesh, ScalarProperty("phi"))
-        # plot(mesh, VectorProperty("u")) # TODO: property not in data?
+        plot(mesh, VectorProperty("u"))
         plot(mesh, ScalarProperty("a"))
 
     def test_xdmf_with_slices(self):
