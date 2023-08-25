@@ -67,6 +67,7 @@ class MeshplotlibTest(unittest.TestCase):
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         titles = [str(tv) for tv in timevalues]
         anim = animate(meshseries, THM.temperature, timevalues, titles)
+        # TODO: get running properly on CI
         save_animation(anim, mkstemp()[1], 5)
 
     def test_plot_3D(self):

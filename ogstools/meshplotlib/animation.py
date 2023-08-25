@@ -5,6 +5,7 @@ from functools import partial
 from typing import Optional as Opt
 from typing import Union
 
+import matplotlib as mpl
 import numpy as np
 from matplotlib import figure as mfigure
 from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
@@ -96,14 +97,24 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
     start_time = time.time()
     print("Start saving animation...")
     codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
+    writer = None
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
         filename += ".mp4"
-    elif ImageMagickWriter.isAvailable():
-        writer = "imagemagick"
-        filename += ".gif"
     else:
-        writer = None
-    anim.save(filename, writer=writer)
+        print("\nffmpeg not available. It is recommended for saving animation.")
+        filename += ".gif"
+        if ImageMagickWriter.isAvailable():
+            writer = "imagemagick"
+        else:
+            print(
+                "ImageMagick also not available. Falling back to"
+                f" {mpl.rcParams['animation.writer']}."
+            )
+    try:
+        anim.save(filename, writer=writer)
+    except Exception as err:
+        print("\nSaving Animation failed with the following error:")
+        print(err)
     print("\ndone!")
     print(f"Elapsed time: {(time.time() - start_time):.2f}")
