@@ -19,14 +19,10 @@ class SimplifiedMeshTest(unittest.TestCase):
             self.surfacedata,
         )
         layerset_coarse = LayerSet.from_pandas(mesh_df_coarseZ)
-        mesh_fineXY_coarseZ = to_region_simplified(
-            layerset_coarse, 300, 3
-        ).as_pyvista()
+        mesh_fineXY_coarseZ = to_region_simplified(layerset_coarse, 300, 3).mesh
         self.assertGreater(mesh_fineXY_coarseZ.number_of_cells, 0)
         self.assertGreater(mesh_fineXY_coarseZ.number_of_points, 0)
-        mesh_coarseXYZ = to_region_simplified(
-            layerset_coarse, 400, 3
-        ).as_pyvista()
+        mesh_coarseXYZ = to_region_simplified(layerset_coarse, 400, 3).mesh
         self.assertGreater(
             mesh_fineXY_coarseZ.number_of_cells, mesh_coarseXYZ.number_of_cells
         )
@@ -41,9 +37,7 @@ class SimplifiedMeshTest(unittest.TestCase):
             self.surfacedata,
         )
         layerset_fine = LayerSet.from_pandas(mesh_df_fineZ)
-        mesh_coarseXY_fineZ = to_region_simplified(
-            layerset_fine, 400, 3
-        ).as_pyvista()
+        mesh_coarseXY_fineZ = to_region_simplified(layerset_fine, 400, 3).mesh
         self.assertGreater(
             mesh_coarseXY_fineZ.number_of_cells, mesh_coarseXYZ.number_of_cells
         )
@@ -60,14 +54,10 @@ class SimplifiedMeshTest(unittest.TestCase):
             self.surfacedata,
         )
         layerset_coarse = LayerSet.from_pandas(mesh_df_coarseZ)
-        mesh_fineXY_coarseZ = to_region_simplified(
-            layerset_coarse, 300, 2
-        ).as_pyvista()
+        mesh_fineXY_coarseZ = to_region_simplified(layerset_coarse, 300, 2).mesh
         self.assertGreater(mesh_fineXY_coarseZ.number_of_cells, 0)
         self.assertGreater(mesh_fineXY_coarseZ.number_of_points, 0)
-        mesh_coarseXYZ = to_region_simplified(
-            layerset_coarse, 400, 2
-        ).as_pyvista()
+        mesh_coarseXYZ = to_region_simplified(layerset_coarse, 400, 2).mesh
         self.assertGreater(
             mesh_fineXY_coarseZ.number_of_cells, mesh_coarseXYZ.number_of_cells
         )
@@ -83,7 +73,7 @@ class SimplifiedMeshTest(unittest.TestCase):
         )
         layerset_fine = LayerSet.from_pandas(mesh_df_fineZ)
         sm = to_region_simplified(layerset_fine, 400, 2)
-        mesh_coarseXY_fineZ = sm.as_pyvista()
+        mesh_coarseXY_fineZ = sm.mesh
         self.assertGreater(
             mesh_coarseXY_fineZ.number_of_cells, mesh_coarseXYZ.number_of_cells
         )

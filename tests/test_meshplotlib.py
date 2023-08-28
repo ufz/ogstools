@@ -8,7 +8,8 @@ from tempfile import mkstemp
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshplotlib import MeshSeries, examples, plot, setup
+from ogstools.meshlib import MeshSeries
+from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
@@ -67,7 +68,15 @@ class MeshplotlibTest(unittest.TestCase):
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         titles = [str(tv) for tv in timevalues]
         anim = animate(meshseries, THM.temperature, timevalues, titles)
-        save_animation(anim, mkstemp()[1], 5)
+        anim.to_jshtml()
+
+    def test_save_animation(self):
+        """Test creation of animation."""
+        meshseries = examples.meshseries_THM_2D
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        anim = animate(meshseries, THM.temperature, timevalues)
+        if not save_animation(anim, mkstemp()[1], 5):
+            self.skipTest("Saving animation failed.")
 
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""

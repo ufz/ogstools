@@ -21,10 +21,10 @@ class VoxelMeshTest(unittest.TestCase):
         layer_set = LayerSet.from_pandas(mesh1_df)
         mesh_fine = to_region_voxel(
             layer_set=layer_set, resolution=[200, 200, 50]
-        ).as_pyvista()
+        ).mesh
         mesh_coarse = to_region_voxel(
             layer_set=layer_set, resolution=[200, 200, 100]
-        ).as_pyvista()
+        ).mesh
         self.assertGreater(
             mesh_fine.number_of_cells, mesh_coarse.number_of_cells
         )

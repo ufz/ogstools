@@ -20,7 +20,7 @@ class TetraederTest(unittest.TestCase):
         layer_set = LayerSet.from_pandas(mesh1_df)
         tetraeder = to_region_tetraeder(layer_set=layer_set, resolution=400)
 
-        mesh = tetraeder.as_pyvista()
+        mesh = tetraeder.mesh
         self.assertGreater(len(mesh.cell_data["MaterialIDs"]), 0)
         self.assertGreater(mesh.number_of_cells, 10000)
         self.assertLess(mesh.number_of_cells, 30000)

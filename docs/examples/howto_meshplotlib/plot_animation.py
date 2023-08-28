@@ -16,6 +16,9 @@ from ogstools.meshplotlib.animation import animate
 from ogstools.propertylib import ScalarProperty
 
 mesh_series = examples.meshseries_CT_2D
+# alternatively:
+# from ogstools.meshlib import MeshSeries
+# mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
 # %%
 # Let's use fixed scale limits to prevent rescaling during the animation.
 setup.p_min = 0
@@ -33,6 +36,8 @@ timevalues = np.linspace(
 # %%
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
+# Note that rendering many frames in conjunction with large meshes might take
+# a really long time.
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
 si = ScalarProperty("Si", "", "%", "Saturation")
 anim = animate(mesh_series, si, timevalues, titles)

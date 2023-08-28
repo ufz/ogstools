@@ -69,7 +69,6 @@ class LayerTest(unittest.TestCase):
         ]
         ls1 = LayerSet(layers=base_layers)
         tm = to_region_tetraeder(ls1, 200)
-        tm.as_file()
 
         # Prism mesh does not work when a surface is plane with height 0, limitation/bug of
         # CLI tool createIntermediateRasters
@@ -79,16 +78,10 @@ class LayerTest(unittest.TestCase):
         # Voxel mesh has some limitation that resolution must fit, here height (900) is multiple of resolution (100)
         vm = to_region_voxel(ls1, [200, 200, 100])
 
-        self.assertGreater(
-            vm.as_pyvista().number_of_cells, sm.as_pyvista().number_of_cells
-        )
-        self.assertGreater(
-            pm.as_pyvista().number_of_cells, vm.as_pyvista().number_of_cells
-        )
+        self.assertGreater(vm.mesh.number_of_cells, sm.mesh.number_of_cells)
+        self.assertGreater(pm.mesh.number_of_cells, vm.mesh.number_of_cells)
 
-        self.assertGreater(
-            tm.as_pyvista().number_of_cells, pm.as_pyvista().number_of_cells
-        )
+        self.assertGreater(tm.mesh.number_of_cells, pm.mesh.number_of_cells)
 
 
 class RasterTest(unittest.TestCase):
