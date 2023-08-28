@@ -8,10 +8,9 @@ import pyvista as pv
 from ogs import cli
 
 from ..boundary_set import LayerSet
-from ..mesh import Mesh
 
 
-class RegionSet(Mesh):
+class RegionSet:
     """
     A class representing a set of regions composed of subsets, each identified by MaterialID.
 
@@ -19,15 +18,13 @@ class RegionSet(Mesh):
     subsets. Each subset within a region is uniquely identified by "MaterialID".
     """
 
-    def __init__(self, input: Union[Path, Mesh]):
+    def __init__(self, input: Union[Path, pv.DataSet]):
         if type(input) is Path:
-            filename = input
-            mesh = None
+            self.filename = input
+            self.mesh = None
         else:
-            filename = None
-            mesh = input
-
-        super().__init__(filename, mesh)
+            self.filename = Path(tempfile.mkstemp(".vtu", "region_set")[1])
+            self.mesh = input
 
     def box_boundaries(self):
         """
@@ -49,7 +46,7 @@ class RegionSet(Mesh):
             mesh = ...
             u_min, u_max, v_min, v_max, w_min, w_max = mesh.box_boundaries()
         """
-        surface = self.as_pyvista().extract_surface()
+        surface = self.mesh.extract_surface()
         u_max = to_boundary(surface, lambda normals: normals[:, 0] > 0.5)
         u_min = to_boundary(surface, lambda normals: normals[:, 0] < -0.5)
         v_max = to_boundary(surface, lambda normals: normals[:, 1] > 0.5)
@@ -191,8 +188,8 @@ def layer_to_simplified_mesh(
     axis1_range = np.arange(bounds[2], bounds[3], resolution)
 
     heights = np.linspace(
-        layer.bottom.as_pyvista().points[:, 2].mean(),
-        layer.top.as_pyvista().points[:, 2].mean(),
+        layer.bottom.mesh.points[:, 2].mean(),
+        layer.top.mesh.points[:, 2].mean(),
         num=layer.num_subdivisions + 2,
     )
 
@@ -335,7 +332,7 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
     return RegionSet(input=pv_mesh)
 
 
-def to_region_voxel(layer_set: LayerSet, resolution: list):
+def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     """
     Convert a layered geological structure to a voxelized mesh.
 
@@ -360,6 +357,7 @@ def to_region_voxel(layer_set: LayerSet, resolution: list):
 
     layers_txt = Path(tempfile.mkstemp(".txt", "layers")[1])
     layer_filenames = layer_set.filenames()
+    layer_set.save_layers()
     with layers_txt.open("w") as file:
         file.write("\n".join(str(filename) for filename in layer_filenames))
     outfile = Path(tempfile.mkstemp(".vtu", "region_voxel")[1])
@@ -397,4 +395,4 @@ def to_region_voxel(layer_set: LayerSet, resolution: list):
     ]
     pv_mesh.cell_data["MaterialIDs"].setfield(new_ids, np.uint32)
 
-    return Mesh(filename=None, mesh=pv_mesh)
+    return RegionSet(input=pv_mesh)

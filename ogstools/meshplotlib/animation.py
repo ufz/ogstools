@@ -10,11 +10,11 @@ import numpy as np
 from matplotlib import figure as mfigure
 from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
 
+from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property
 
 from . import setup
 from .core import _plot, plot, plt
-from .mesh_series import MeshSeries
 
 
 def timeline(ax: plt.Axes, x: float, xticks: list[float]) -> None:
@@ -35,7 +35,7 @@ def animate(
     property: Property,
     timesteps: Opt[Sequence] = None,
     titles: Opt[list[str]] = None,
-) -> Opt[FuncAnimation]:
+) -> FuncAnimation:
     """
     Create an animation for a property of a mesh series with given timesteps.
 
@@ -86,7 +86,7 @@ def animate(
     )
 
 
-def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
+def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
     """
     Save a FuncAnimation with some codec presets.
 
@@ -113,8 +113,10 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
             )
     try:
         anim.save(filename, writer=writer)
+        print("\ndone!")
+        print(f"Elapsed time: {(time.time() - start_time):.2f}")
+        return True
     except Exception as err:
         print("\nSaving Animation failed with the following error:")
         print(err)
-    print("\ndone!")
-    print(f"Elapsed time: {(time.time() - start_time):.2f}")
+        return False

@@ -6,10 +6,8 @@ import numpy as np
 import pyvista as pv
 from ogs import cli
 
-from .mesh import Mesh
 
-
-class Surface(Mesh):
+class Surface:
     """
     A surface is a sub group of a polygon mesh (2D). A surface is not closed and therefore does not represent a volume.
     (Geological) layers (stratigraphic units) can be defined by an upper and lower surface.
@@ -23,30 +21,28 @@ class Surface(Mesh):
 
     def __init__(
         self,
-        input: Union[Mesh, Path],
+        input: Union[Path, pv.DataSet],
         material_id: int,
     ):
         """Initialize a surface mesh. Either from pyvista or from a file."""
         self._material_id = material_id
 
         if isinstance(input, Path):
-            filename = input
-            file_exists = filename.exists()
-            if file_exists is False:
-                print(filename, "does not exist.")
+            self.filename = input
+            if self.filename.exists() is False:
+                print(self.filename, "does not exist.")
                 raise ValueError
-            super().__init__(filename=filename, mesh=None)
-
+            self.mesh = pv.get_reader(self.filename).read()
         elif isinstance(input, pv.DataSet):
-            super().__init__(filename=None, mesh=input)
+            self.mesh = input
+            self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
+            pv.save_meshio(self.filename, self.mesh, file_format="vtu")
         else:
             raise ValueError
 
-        if self.mesh:
-            grid = self.mesh
-            grid.cell_data["MaterialIDs"] = (
-                np.ones(grid.n_cells) * self.material_id
-            ).astype(np.int32)
+        self.mesh.cell_data["MaterialIDs"] = (
+            np.ones(self.mesh.n_cells) * self.material_id
+        ).astype(np.int32)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -57,7 +53,6 @@ class Surface(Mesh):
 
         :returns the path and filename of the created file (.asc)
         """
-        self.as_file()
         outfile = Path(tempfile.mkstemp(".asc", self.filename.stem)[1])
 
         ret = cli.Mesh2Raster(

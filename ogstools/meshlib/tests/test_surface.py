@@ -31,12 +31,11 @@ class SurfaceTest(unittest.TestCase):
         surface_mesh = pv.StructuredGrid(X1, Y1, Z1)
 
         s = Surface(surface_mesh, 0)
-        p = s.as_pyvista()
-        self.assertGreater(p.GetNumberOfPoints(), 0)
+        self.assertGreater(s.mesh.GetNumberOfPoints(), 0)
 
-        new_file = s.as_file()
-        s2 = Surface(new_file, material_id=2)
-        self.assertGreater(s2.as_pyvista().GetNumberOfPoints(), 0)
+        pv.save_meshio(filename=s.filename, mesh=s.mesh)
+        s2 = Surface(s.filename, material_id=2)
+        self.assertGreater(s2.mesh.GetNumberOfPoints(), 0)
 
     def testsurfaceFromFileInvalid(self):
         """

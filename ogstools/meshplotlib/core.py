@@ -21,7 +21,6 @@ from . import plot_features as pf
 from . import setup
 from .image_tools import trim
 from .levels import get_levels
-from .mesh import Mesh
 
 
 def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
@@ -93,7 +92,9 @@ def get_cmap_norm(
 
 
 def plot_isometric(
-    mesh: Mesh, property: Property, levels: Opt[np.ndarray] = None
+    mesh: pv.UnstructuredGrid,
+    property: Property,
+    levels: Opt[np.ndarray] = None,
 ) -> Image.Image:
     """Plot an isometric view of the property field on the mesh."""
     mesh = mesh.copy()
@@ -191,7 +192,7 @@ def add_colorbar(
 
 
 def subplot(
-    mesh: Mesh,
+    mesh: pv.UnstructuredGrid,
     property: Property,
     ax: plt.Axes,
     levels: Opt[np.ndarray] = None,
@@ -301,7 +302,9 @@ def subplot(
     ax.set_ylabel(y_label)
 
 
-def _get_shape(meshes: Union[list[Mesh], np.ndarray, Mesh]) -> tuple[int, ...]:
+def _get_shape(
+    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid]
+) -> tuple[int, ...]:
     if isinstance(meshes, np.ndarray):
         if meshes.ndim in [1, 2]:
             return meshes.shape
@@ -323,7 +326,7 @@ def _fig_init(shape: tuple[int, ...]) -> tuple[mfigure.Figure, list[plt.Axes]]:
 
 def _plot(
     fig: mfigure.Figure,
-    meshes: Union[list[Mesh], np.ndarray, Mesh],
+    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
     property: Property,
 ) -> mfigure.Figure:
     """
@@ -381,7 +384,8 @@ def _plot(
 
 
 def plot(
-    meshes: Union[list[Mesh], np.ndarray, Mesh], property: Property
+    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
+    property: Property,
 ) -> mfigure.Figure:
     """
     Plot the property field of meshes with default settings.

@@ -51,10 +51,10 @@ layer_set1 = LayerSet(layers=[layer1, layer2, layer3])
 
 # %%
 # From layerset creation of simplified meshes (sm), prism meshes (pm), voxel meshes (vm), tetraeder mesh (tm) is possible.
-sm = to_region_simplified(layer_set1, xy_resolution=200, rank=3).as_pyvista()
-pm = to_region_prism(layer_set1, resolution=200).as_pyvista()
-vm = to_region_voxel(layer_set1, resolution=[200, 200, 50]).as_pyvista()
-tm = to_region_tetraeder(layer_set1, resolution=200).as_pyvista()
+sm = to_region_simplified(layer_set1, xy_resolution=200, rank=3).mesh
+pm = to_region_prism(layer_set1, resolution=200).mesh
+vm = to_region_voxel(layer_set1, resolution=[200, 200, 50]).mesh
+tm = to_region_tetraeder(layer_set1, resolution=200).mesh
 
 
 # %%

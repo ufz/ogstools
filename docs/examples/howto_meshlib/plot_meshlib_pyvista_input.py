@@ -30,7 +30,7 @@ surface2 = Surface(Gaussian2D(**args, height_offset=-100), material_id=1)
 surface3 = Surface(Gaussian2D(**args, height_offset=-200), material_id=2)
 
 ls = LayerSet([Layer(surface1, surface2), Layer(surface2, surface3)])
-mesh = to_region_tetraeder(ls, 40).as_pyvista()
+mesh = to_region_tetraeder(ls, 40).mesh
 
 # %%
 # Visualize the prism mesh

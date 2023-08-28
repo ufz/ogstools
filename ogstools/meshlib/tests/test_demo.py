@@ -43,25 +43,25 @@ class DemoTest(unittest.TestCase):
 
         sm = to_region_simplified(layer_set, 200, 3)
         self.assertEqual(
-            len(Counter(sm.as_pyvista().cell_data["MaterialIDs"]).keys()),
+            len(Counter(sm.mesh.cell_data["MaterialIDs"]).keys()),
             number_of_layers,
         )
 
         tm = to_region_tetraeder(layer_set, 200)
         self.assertEqual(
-            len(Counter(tm.as_pyvista().cell_data["MaterialIDs"]).keys()),
+            len(Counter(tm.mesh.cell_data["MaterialIDs"]).keys()),
             number_of_layers,
         )
 
         pm = to_region_prism(layer_set, 200)
         self.assertEqual(
-            len(Counter(pm.as_pyvista().cell_data["MaterialIDs"]).keys()),
+            len(Counter(pm.mesh.cell_data["MaterialIDs"]).keys()),
             number_of_layers,
         )
 
         vm = to_region_voxel(layer_set, [200, 200, 50])
         self.assertEqual(
-            len(Counter(vm.as_pyvista().cell_data["MaterialIDs"]).keys()),
+            len(Counter(vm.mesh.cell_data["MaterialIDs"]).keys()),
             number_of_layers,
         )
 
@@ -80,5 +80,4 @@ class DemoTest(unittest.TestCase):
 
         ls = LayerSet([Layer(surface_test1, surface_test2, material_id=1)])
         pm = to_region_prism(ls, 40)
-        mesh = pm.as_pyvista()
-        self.assertGreater(mesh.number_of_cells, 0)
+        self.assertGreater(pm.mesh.number_of_cells, 0)

@@ -29,9 +29,7 @@ def dataframe_from_csv(
     dfs = pd.read_csv(layer_sets_csvfile)
     dfs = dfs[dfs["set_id"] == layer_set_id]
     if len(dfs) == 0:
-        msg = "no model defined with {layer_set_id}".format(
-            layer_set_id=layer_set_id
-        )
+        msg = f"no model defined with {layer_set_id}"
         raise Exception(msg)
     dfm = pd.read_csv(parameters_csvfile, delimiter=",")
     model_df = dfs.merge(dfm)

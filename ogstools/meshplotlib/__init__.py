@@ -4,8 +4,6 @@
 from .plot_setup import _setup as setup  # noqa: I001: noqa
 
 from .core import plot, plot_isometric, subplot
-from .mesh import Mesh
-from .mesh_series import MeshSeries
 from .plot_features import plot_on_top
 
 __all__ = [
@@ -14,6 +12,4 @@ __all__ = [
     "plot_isometric",
     "plot_on_top",
     "subplot",
-    "Mesh",
-    "MeshSeries",
 ]

@@ -1,13 +1,8 @@
 """A class to handle Meshseries data."""
 
-# flake8: noqa
-import h5py  # for requirements (needed for xdmf reading in meshio )
 import meshio
 import numpy as np
 import pyvista as pv
-
-from .mesh import Mesh
-from typing import Callable, Optional as Opt
 
 
 class MeshSeries:
@@ -18,7 +13,7 @@ class MeshSeries:
     """
 
     def __init__(self, filepath: str) -> None:
-        self._data: dict[int, Mesh] = {}
+        self._data: dict[int, pv.UnstructuredGrid] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
@@ -28,19 +23,21 @@ class MeshSeries:
             msg = "Can only read 'pvd' or 'xdmf' files."
             raise TypeError(msg)
 
-    def _read_pvd(self, timestep: int) -> Mesh:
+    def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
-        return Mesh(self._pvd_reader.read()[0])
+        return self._pvd_reader.read()[0]
 
-    def _read_xdmf(self, timestep: int) -> Mesh:
+    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
         points, cells = self._xdmf_reader.read_points_cells()
         _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
             timestep
         )
         meshio_mesh = meshio.Mesh(points, cells, point_data, cell_data)
-        return Mesh(pv.from_meshio(meshio_mesh))
+        return pv.from_meshio(meshio_mesh)
 
-    def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
+    def read(
+        self, timestep: int, lazy_eval: bool = True
+    ) -> pv.UnstructuredGrid:
         """Lazy read function."""
         if timestep in self._data:
             return self._data[timestep]
@@ -84,11 +81,13 @@ class MeshSeries:
         """Return the closest timevalue to a timevalue."""
         return self.timevalues[self.closest_timestep(timevalue)]
 
-    def read_closest(self, timevalue: float) -> Mesh:
+    def read_closest(self, timevalue: float) -> pv.UnstructuredGrid:
         """Return the closest timestep in the data for a given timevalue."""
         return self.read(self.closest_timestep(timevalue))
 
-    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
+    def read_interp(
+        self, timevalue: float, lazy_eval: bool = True
+    ) -> pv.UnstructuredGrid:
         """Return the temporal interpolated mesh for a given timevalue."""
         t_vals = np.array(self.timevalues)
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)

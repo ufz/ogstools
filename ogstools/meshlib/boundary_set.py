@@ -4,6 +4,7 @@ from collections import namedtuple
 from pathlib import Path
 
 import pandas as pd
+import pyvista as pv
 
 from ogstools.meshlib.boundary import Layer, LocationFrame, Raster
 from ogstools.meshlib.boundary_subset import Surface
@@ -50,14 +51,17 @@ class LayerSet(BoundarySet):
         self.layers = layers
 
     def bounds(self):
-        return list(self.layers[0].top.as_pyvista().bounds)
+        return list(self.layers[0].top.mesh.bounds)
 
     def filenames(self):
-        layer_filenames = [layer.bottom.as_file() for layer in self.layers]
-        layer_filenames.insert(
-            0, self.layers[0].top.as_file()
-        )  # file interface
+        layer_filenames = [layer.bottom.filename for layer in self.layers]
+        layer_filenames.insert(0, self.layers[0].top.filename)  # file interface
         return layer_filenames
+
+    def save_layers(self):
+        for layer in self.layers:
+            pv.save_meshio(layer.bottom.filename, layer.bottom.mesh)
+        pv.save_meshio(self.layers[0].top.filename, self.layers[0].top.mesh)
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame):
@@ -88,7 +92,7 @@ class LayerSet(BoundarySet):
         This method generates raster files at a specified resolution for each layer's
         top and bottom boundaries and returns paths to the raster files.
         """
-        bounds = self.layers[0].top.as_pyvista().bounds
+        bounds = self.layers[0].top.mesh.bounds
         raster_set = self.create_rasters(resolution=resolution)
 
         locFrame = LocationFrame(

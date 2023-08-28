@@ -22,7 +22,7 @@ class PrismMeshTest(unittest.TestCase):
         prism_mesh = to_region_prism(layer_set=layer_set, resolution=200)
 
         ## Test
-        mesh_fine = prism_mesh.as_pyvista()
+        mesh_fine = prism_mesh.mesh
         self.assertEqual(
             mesh_fine.number_of_cells % 4,
             0,
@@ -36,7 +36,7 @@ class PrismMeshTest(unittest.TestCase):
         )
 
         prism_mesh_coarse = to_region_prism(layer_set=layer_set, resolution=300)
-        mesh_coarse = prism_mesh_coarse.as_pyvista()
+        mesh_coarse = prism_mesh_coarse.mesh
         self.assertGreater(
             mesh_fine.number_of_cells, mesh_coarse.number_of_cells
         )
