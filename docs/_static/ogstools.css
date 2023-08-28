@@ -9,3 +9,9 @@ nav.bd-links li>a {
 table.dataframe {
   width: auto;
 }
+
+html[data-theme="light"] {
+  --pst-color-primary: rgb(16, 78, 178);
+  --sd-color-primary-highlight: rgb(6, 58, 158);
+  --pst-color-secondary: rgb(217, 119, 6);
+}
