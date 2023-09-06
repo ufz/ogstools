@@ -59,7 +59,13 @@ feflow = ["ifm_contrib@git+https://github.com/red5alex/ifm_contrib"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+addopts = [
+  "-ra",
+  "--showlocals",
+  "--strict-markers",
+  "--strict-config",
+  "--import-mode=importlib",
+]
 xfail_strict = true
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
 # tests
