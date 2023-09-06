@@ -74,8 +74,10 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
-  - *setup-headless
-  - pip install .[dev,test,docs,feflow]
+  - python -m venv .venv --upgrade-deps
+  - .venv/bin/pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e .[dev,test,docs,feflow]
+  - make setup_headless
+  - source .venv/bin/activate
   - make docs
   - mv docs/_build/html public
 
