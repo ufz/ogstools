@@ -98,7 +98,7 @@ gallery_ignore_pattern = ""
 try:
     import ifm_contrib as ifm  # noqa: F401
 except ImportError:
-    msg = "Could not import ifm. A working Feflow Python setup is required!"
+    print("Skipping FEFLOW-related functionality for the documentation!")
     exclude_patterns.extend(
         ["reference/ogstools.fe2vtu.*", "user-guide/fe2vtu*"]
     )

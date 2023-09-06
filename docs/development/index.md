@@ -43,6 +43,7 @@ msh2vtu --help
 
 :::{admonition} Using `make` for shortcuts!
 :class: tip
+:name: make-shortcut
 
 Development-related tasks can also be done with `make` (requires a Bash shell with `make`). The above development setup can also be generated with:
 
