@@ -12,9 +12,9 @@ setup:  ## Setup a virtual environment and install all development dependencies
 	@echo source .venv/bin/activate
 
 setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
-	.venv/bin/pip uninstall vtk -y
+	.venv/bin/pip uninstall gmsh vtk -y
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
-	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox --force-reinstall --no-cache-dir gmsh
+	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
 test:  ## Runs the unit tests
 	pytest
