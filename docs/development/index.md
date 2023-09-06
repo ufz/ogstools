@@ -112,6 +112,12 @@ The examples can be downloaded from the final website as Jupyter notebook files.
 
 You can interactively run and debug these files in Visual Studio Code, see the [Python Interactive window documentation](https://code.visualstudio.com/docs/python/jupyter-support-py).
 
+If you want to link to a gallery page from another page use the following syntax (prefix with `sphx_glr_`, replace directory separator with `_`):
+
+```md
+{ref}`meshlib example <sphx_glr_auto_examples_howto_meshlib_plot_meshlib_pyvista_input.py>`
+```
+
 ### Further information
 
 For syntax references and extension usage see the following links:
