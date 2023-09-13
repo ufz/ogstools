@@ -1,14 +1,15 @@
-# Project description
+![ogstools](https://ogs.ogs.xyz/tools/ogstools/_static/logo.png "ogstools") 
 
-<img src="ogstools_logo.png"  width="10%"> is a:
+is a:
 
-- python library to for streamlined usage of [opengeosys](opengeosys.org)
+
+- python library for streamlined usage of [opengeosys](opengeosys.org)
 
 - set of interconnected modules for pre- and postprocessing of simulations with [opengeosys](opengeosys.org)
 
 - valuable resource that includes documentation, Jupyter notebooks, and workflows for guidance and reference.
 
-<img src="ogstools.png"  width="75%">
+![](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing") 
 
 # Overview
 
@@ -22,7 +23,7 @@
 
 - **Bug reports:** https://discourse.opengeosys.org
 
-# Install
+# Installation
 
 Install the latest version of ogstools:
 

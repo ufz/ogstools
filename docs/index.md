@@ -17,8 +17,6 @@ Release notes <releases/index>
 
 `ogstools` is a collection of Python tools aimed at evolving into a modeling toolchain around [OpenGeoSys](https://www.opengeosys.org), a finite element solver for coupled thermo-hydro-chemo-mechanical problems in the subsurface.
 
-In this project we’ll collect existing pre and postprocessing scripts for OpenGeoSys at first. Over time we’ll develop an entire toolchain out of that collection. Currently we are at the stage of code collection.
-
 **Date:** {sub-ref}`today` **Version:** {sub-ref}`version`
 
 **Useful links:** [Source repository](https://gitlab.opengeosys.org/ogs/tools/ogstools) | [Issues](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/issues) | [OpenGeoSys Website](https://www.opengeosys.org) | [OpenGeoSys Forum](https://discourse.opengeosys.org)
