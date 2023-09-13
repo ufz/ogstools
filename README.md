@@ -30,17 +30,13 @@ Install the latest version of ogstools:
 
 For further details see the [User Guide](https://ogs.ogs.xyz/tools/ogstools/user-guide/index.html).
 
-# Highlights
+# Getting started
 
-## Preprocessing
-
-## In-Situ
-
-## Postprocessing
+For first steps, please take a look at our [examples](https://ogs.ogs.xyz/tools/ogstools/auto_examples/index.html).
 
 # Contribution
 
-Please report bugs on [discourse](https://discourse.opengeosys.org) or fork the repository on our [gitlab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
+Please report bugs on [discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
 
 You may also contribute by [donating](donation.md) your existing code snippets.
 
