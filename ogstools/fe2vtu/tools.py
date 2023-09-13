@@ -35,10 +35,11 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     ids = np.arange(surface_mesh.n_cells)[
         filter_condition(surface_mesh["Normals"])
     ]
-    # Extract those cells
+    # Rename cell arrays to satisfy ogs-convention
     surface_mesh.rename_array("vtkOriginalPointIds", "bulk_node_ids")
     surface_mesh.rename_array("vtkOriginalCellIds", "bulk_element_ids")
     surface_mesh.cell_data.remove("Normals")
+    # Extract cells that meet the filter condition
     specific_cells = surface_mesh.extract_cells(ids)
     specific_cells.cell_data.remove("vtkOriginalCellIds")
     specific_cells.point_data.remove("vtkOriginalPointIds")
@@ -71,12 +72,12 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
     for parameter_name in data:
         if mesh_name == "":
             mesh_name = parameter_name
-        if (
-            parameter_name != "bulk_node_ids"
-            and parameter_name != "bulk_element_ids"
-            and parameter_name != "vtkOriginalPointIds"
-            and parameter_name != "orig_indices"
-        ):
+        if parameter_name not in [
+            "bulk_node_ids",
+            "bulk_element_ids",
+            "vtkOriginalPointIds",
+            "orig_indices",
+        ]:
             ET.SubElement(xml_meshes, "mesh").text = parameter_name
 
             bc = ET.SubElement(xml_bc, "boundary_condition")
@@ -102,7 +103,7 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
     ET.ElementTree(xml_parameter).write("parameter_" + mesh_name + ".xml")
 
 
-def write_pt_bc(mesh_name: str, mesh: pv.UnstructuredGrid):
+def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     """
     Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.

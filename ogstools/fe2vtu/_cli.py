@@ -14,7 +14,7 @@ from ogstools.fe2vtu import (
     get_geo_mesh,
     helpFormat,
     update_geo_mesh,
-    write_pt_bc,
+    write_point_boundary_conditions,
 )
 
 parser = ArgumentParser(
@@ -77,9 +77,9 @@ def cli():
         "properties_surface": "surface with properties",
         "properties": "properties",
     }
-    # print(mesh.cells)
     mesh.save(args.output)
-    # pv.save_meshio(args.output, mesh)
+    # save meshio changes node order -> not compatible with OGS
+    # in the future meshio is desired for saving ! -> pv.save_meshio(args.output, mesh)
     log.info(
         "The %s of the input mesh has been successfully converted.",
         msg[args.case],
@@ -87,4 +87,4 @@ def cli():
     if "properties" not in args.case or args.BC != "BC":
         return
 
-    write_pt_bc(args.output, mesh)
+    write_point_boundary_conditions(args.output, mesh)

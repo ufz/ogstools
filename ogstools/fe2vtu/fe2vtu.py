@@ -62,7 +62,6 @@ def get_pts_cells(doc: ifm.FeflowDoc):
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
-    # print(cells.tolist())
     # 4 .write the list for all points and their global coordinates
     points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
     pts = points[["X", "Y", "Z"]].to_numpy()
