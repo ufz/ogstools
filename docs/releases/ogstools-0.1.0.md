@@ -1,6 +1,6 @@
 # ogstools 0.1.0 Release Notes
 
-The second release of the `ogstools`-package brings lots of new library functionality for e.g. plotting and mesh generation as well as a new tool for converting FEFLOW meshes!
+The second release of the `ogstools`-package brings lots of new library functionality for e.g. plotting and mesh generation as well as a new tool for converting FEFLOW meshes! A full-featured prebuilt [Docker image](../user-guide/docker.md) is provided.
 
 ## Library
 
@@ -29,3 +29,5 @@ The new [`fe2vtu`](../user-guide/fe2vtu.md)-tool convert data stored in FEFLOW b
 [Examples](../auto_examples/index.rst) on the web page are generated via [sphinx_gallery](https://sphinx-gallery.github.io/stable/index.html) which also allows for downloading the example as an Jupyter Notebook file.
 
 We also added some shortcuts via `make` for [development related tasks](../development/index.md) such as setting up the development environment, running the tests or creating a live preview of the documentation.
+
+Development can now be done via VSCode's [Dev Containers](../development/index.md#development-in-a-container-with-vscode).
