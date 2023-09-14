@@ -14,6 +14,7 @@ from ogstools.fe2vtu import (
     get_geo_mesh,
     helpFormat,
     update_geo_mesh,
+    write_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
 
@@ -88,3 +89,4 @@ def cli():
         return
 
     write_point_boundary_conditions(args.output, mesh)
+    write_cell_boundary_conditions(args.output, mesh)

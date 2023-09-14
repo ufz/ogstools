@@ -12,6 +12,7 @@ from .fe2vtu import (
 from .tools import (
     get_specific_surface,
     helpFormat,
+    write_cell_boundary_conditions,
     write_point_boundary_conditions,
     write_xml,
 )
@@ -23,5 +24,6 @@ __all__ = [
     "helpFormat",
     "update_geo_mesh",
     "write_xml",
+    "write_cell_boundary_conditions",
     "write_point_boundary_conditions",
 ]

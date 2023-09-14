@@ -63,6 +63,8 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
         "2ND": "Neumann",
         "3RD": "Robin",
         "4TH": "NodalSourceTerm",
+        "P_IOFLOW": "Neumann?",
+        "P_SOUF": "Neumann?",
     }
     mesh_name = mesh_name.replace(".vtu", "")
     xml_meshes = ET.Element("meshes")
@@ -107,7 +109,7 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     """
     Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
-    This function also writes then the corresponding xml-files using "write_xml"
+    This function also writes then the corresponding xml-files using the function "write_xml"
 
     :param mesh_name: name of the mesh
     :type mesh_name: str
@@ -153,10 +155,20 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     write_xml(mesh_name, mesh.point_data, "MeshNode")
 
 
-"""
-def write_cell_bc():
+def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
+    """
+    Writes the cell boundary condition of the mesh. It works by iterating all cell data and looking for
+    data arrays that include the strings "P_SOUF" or "P_IOFLOW".
+    This function also writes then the corresponding xml-files using the function "write_xml".
+    +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
+    be used in the future.
+
+    :param mesh_name: name of the mesh
+    :type mesh_name: str
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
     BC_mesh = mesh.copy()
-    # print("no nan:", [x for x in mesh["P_BCFLOW_4TH"] if not np.isnan(x)])
     for cd in [
         cell_data
         for cell_data in BC_mesh.cell_data
@@ -166,16 +178,14 @@ def write_cell_bc():
     # Only cell data are needed
     BC_mesh.point_data.clear()
     # get the topsurface since there are the cells of interest
+    # TODO: Allow a generic definition of the normal vector for the filter condition.
     topsurf = get_specific_surface(
         BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
     )
-    topsurf.save("topsurface_" + args.output)
-    # pv.save_meshio("topsurface_" + args.output, topsurf, file_format="vtu")
+    topsurf.save("topsurface_" + mesh_name)
     # create the xml-file
     write_xml(
-        "topsurface_" + args.output,
-        "Neumann",
+        "topsurface_" + mesh_name,
         topsurf.cell_data,
         "MeshElement",
     )
-"""
