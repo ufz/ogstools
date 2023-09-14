@@ -30,7 +30,7 @@ log.info(
 )
 
 
-def get_pts_cells(doc: ifm.FeflowDoc):
+def points_and_cells(doc: ifm.FeflowDoc):
     """
     Get points and cells in a pyvista compatible format.
 
@@ -76,7 +76,7 @@ def get_pts_cells(doc: ifm.FeflowDoc):
     return pts, cells, celltypes
 
 
-def get_matids_from_selections(doc: ifm.FeflowDoc):
+def material_ids_from_selections(doc: ifm.FeflowDoc):
     """
     Get MaterialIDs from the FEFLOW data. Only applicable if they are
     saved in doc.c.sel.selections().
@@ -128,7 +128,7 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
-def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
+def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
     cell data.
@@ -195,7 +195,7 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     return pt_data, cell_data
 
 
-def get_geo_mesh(doc: ifm.FeflowDoc):
+def read_geometry(doc: ifm.FeflowDoc):
     """
     Get the geometric construction of the mesh.
 
@@ -204,11 +204,11 @@ def get_geo_mesh(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    points, cells, celltypes = get_pts_cells(doc)
+    points, cells, celltypes = points_and_cells(doc)
     return pv.UnstructuredGrid(cells, celltypes, points)
 
 
-def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
+def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     """
     Update the geometric construction of the mesh with point and cell data.
 
@@ -219,8 +219,8 @@ def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    MaterialIDs = get_matids_from_selections(doc)
-    point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
+    MaterialIDs = material_ids_from_selections(doc)
+    point_data, cell_data = point_and_cell_data(MaterialIDs, doc)
     for i in point_data:
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
@@ -228,7 +228,7 @@ def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     return mesh
 
 
-def get_property_mesh(doc: ifm.FeflowDoc):
+def read_properties(doc: ifm.FeflowDoc):
     """
     Get the mesh with point and cell properties.
 
@@ -237,6 +237,6 @@ def get_property_mesh(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    mesh = get_geo_mesh(doc)
-    update_geo_mesh(mesh, doc)
+    mesh = read_geometry(doc)
+    update_geometry(mesh, doc)
     return mesh

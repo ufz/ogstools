@@ -4,6 +4,8 @@ The second release of the `ogstools`-package brings lots of new library function
 
 ## Library
 
+[`feflowlib`](../user-guide/feflowlib.md) is a new package for accessing FEFLOW easily in `pyvista`.
+
 [`meshlib`](../user-guide/meshlib.md) is a new package for efficient mesh generation from surfaces. It can be used to create meshes from  {ref}`PyVista surfaces <sphx_glr_auto_examples_howto_meshlib_plot_meshlib_pyvista_input.py>` and from {ref}`.vtu surface files <sphx_glr_auto_examples_howto_meshlib_plot_meshlib_vtu_input.py>`.
 
 ______________________________________________________________________
@@ -22,7 +24,7 @@ ______________________________________________________________________
 
 ## Tools
 
-The new [`fe2vtu`](../user-guide/fe2vtu.md)-tool convert data stored in FEFLOW binary format to VTK format. It can only be used with a [FEFLOW installation](../user-guide/fe2vtu.md#installation).
+The new [`feflow2ogs`](../user-guide/feflowlib.md)-tool converts data stored in FEFLOW binary format to VTK format. It can only be used with a [FEFLOW installation](../user-guide/feflowlib.md#installation).
 
 ## Infrastructure & Development
 

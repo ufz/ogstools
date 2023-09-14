@@ -10,10 +10,10 @@ from sys import stdout
 
 import ifm_contrib as ifm
 
-from ogstools.fe2vtu import (
-    get_geo_mesh,
+from ogstools.feflowlib import (
     helpFormat,
-    update_geo_mesh,
+    read_geometry,
+    update_geometry,
     write_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
@@ -67,10 +67,10 @@ def cli():
 
     doc = ifm.loadDocument(args.input)
 
-    mesh = get_geo_mesh(doc)
+    mesh = read_geometry(doc)
 
     if "properties" in args.case:
-        update_geo_mesh(mesh, doc)
+        update_geometry(mesh, doc)
     mesh = mesh.extract_surface() if "surface" in args.case else mesh
     msg = {
         "geo_surface": "surface",

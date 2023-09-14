@@ -1,13 +1,13 @@
 from importlib.util import find_spec
 
 if find_spec("ifm") is None:
-    msg = "Could not import ifm. A working Feflow Python setup is required!"
+    msg = "Could not import ifm. A working FEFLOW Python setup is required!"
     raise ImportError(msg)
 
-from .fe2vtu import (
-    get_geo_mesh,
-    get_property_mesh,
-    update_geo_mesh,
+from .feflowlib import (
+    read_geometry,
+    read_properties,
+    update_geometry,
 )
 from .tools import (
     get_specific_surface,
@@ -18,12 +18,12 @@ from .tools import (
 )
 
 __all__ = [
-    "get_geo_mesh",
     "get_specific_surface",
-    "get_property_mesh",
     "helpFormat",
-    "update_geo_mesh",
-    "write_xml",
+    "read_geometry",
+    "read_properties",
+    "update_geometry",
     "write_cell_boundary_conditions",
     "write_point_boundary_conditions",
+    "write_xml",
 ]

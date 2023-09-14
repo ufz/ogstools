@@ -38,7 +38,7 @@ version_scheme = "no-guess-dev" # would increment version otherwise
 
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
-fe2vtu = 'ogstools.fe2vtu._cli:cli'
+feflow2ogs = 'ogstools.feflowlib._cli:cli'
 
 [project.optional-dependencies]
 dev = ["pre-commit>=2.20", "tox>=4.1", "build", "black"]
