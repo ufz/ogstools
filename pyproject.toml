@@ -20,7 +20,6 @@ dependencies = [
   "Pint>=0.22",
   "Pillow>=9.5.0",
   "pandas>=2.0.3",
-  # needs PIP_EXTRA_INDEX_URL=https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
   "ogs>=6.4.5.dev0",
 ]
 
@@ -42,7 +41,7 @@ msh2vtu = 'ogstools.msh2vtu._cli:cli'
 fe2vtu = 'ogstools.fe2vtu._cli:cli'
 
 [project.optional-dependencies]
-dev = ["pre-commit>=2.20", "tox>=4.1", "build"]
+dev = ["pre-commit>=2.20", "tox>=4.1", "build", "black"]
 test = ["pytest", "coverage", "gmsh"]
 docs = [
   "sphinx",
@@ -60,7 +59,13 @@ feflow = ["ifm_contrib@git+https://github.com/red5alex/ifm_contrib"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+addopts = [
+  "-ra",
+  "--showlocals",
+  "--strict-markers",
+  "--strict-config",
+  "--import-mode=importlib",
+]
 xfail_strict = true
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
 # tests

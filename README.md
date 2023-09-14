@@ -1,30 +1,47 @@
-# ogstools
+![ogstools](https://ogs.ogs.xyz/tools/ogstools/_static/logo.png "ogstools")
 
-A collection of Python tools aimed at evolving into a modeling toolchain around OpenGeoSys.
+is a:
 
-In this project we'll collect existing pre and postprocessing scripts for
-OpenGeoSys at first. Over time we'll develop an entire toolchain out of that
-collection. Currently we are at the stage of code collection.
+- python library for streamlined usage of [OpenGeoSys](https://www.opengeosys.org),
+- set of interconnected modules for pre- and postprocessing of simulations with [OpenGeoSys](https://www.opengeosys.org),
+- valuable resource that includes documentation, Jupyter notebooks, and workflows for guidance and reference.
 
-See the [Documentation](https://ogs.ogs.xyz/tools/ogstools/) for more information.
+![OGS workflow overview](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
-## Please donate your existing Python tools for OpenGeoSys
+# Overview
 
-This can be done via merge request or via issue. For both we have set up
-templates for the merge request or issue description that will ask you for some
-details, e.g., purpose, features, application background of your contribution.
+- **Website:** <https://www.opengeosys.org>
+- **Documentation:** <https://ogs.ogs.xyz/tools/ogstools>
+- **Source code:** <https://gitlab.opengeosys.org/ogs/tools/ogstools>
+- **Contributing:** <https://ogs.ogs.xyz/tools/ogstools/development/index.html>
+- **Bug reports:** <https://discourse.opengeosys.org>
 
-Use the merge request option if you want to contribute some tool that is very
-likely useful for many users of OGS.
+# Installation
 
-Use the issue option if you have a bunch of scripts in some repository, out of
-which some might be useful for others and some are too special. However, the
-merge request option is preferred.
+Install the latest version of ogstools:
 
-## Minimum requirements for a donation
+```bash
+pip install ogstools
+```
 
-- The Python scripts must be syntactically correct code.
-- There should be a short feature and usage description, e.g., in form of a README file
-- Please do not add large amounts of data.
-- You as a donator must have the right to donate the code, i.e., you are the
-  sole author or all authors agree.
+For further details see the [User Guide](https://ogs.ogs.xyz/tools/ogstools/user-guide/index.html).
+
+# Getting started
+
+For first steps, please take a look at our [examples](https://ogs.ogs.xyz/tools/ogstools/auto_examples/index.html).
+
+# Contribution
+
+Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
+
+You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/blob/release-notes/donation.md) your existing code snippets.
+
+# Related projects
+
+- [ogs](https://pypi.org/project/ogs)
+- [ogs6py](https://pypi.org/project/ogs6py)
+- [VTUInterface](https://pypi.org/project/VTUinterface)
+
+# License
+
+`ogstools` is distributed under the Modified BSD License. See the `LICENSE`-file for the license text.

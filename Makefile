@@ -5,16 +5,16 @@ help:  ## Show this help
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e .[dev,test,docs]
+	.venv/bin/pip install -e .[dev,test,docs]
 	.venv/bin/pre-commit install
 	@echo
 	@echo ATTENTION: You need to activate the virtual environment in every shell with:
 	@echo source .venv/bin/activate
 
 setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
-	.venv/bin/pip uninstall vtk -y
+	.venv/bin/pip uninstall gmsh vtk -y
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
-	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox --force-reinstall --no-cache-dir gmsh
+	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
 test:  ## Runs the unit tests
 	pytest

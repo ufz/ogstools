@@ -5,7 +5,7 @@ Create a virtual environment, activate it and install required packages:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e ".[dev,test,docs]"
+pip install -e ".[dev,test,docs]"
 
 # enable basic style checks once
 pre-commit install
@@ -43,6 +43,7 @@ msh2vtu --help
 
 :::{admonition} Using `make` for shortcuts!
 :class: tip
+:name: make-shortcut
 
 Development-related tasks can also be done with `make` (requires a Bash shell with `make`). The above development setup can also be generated with:
 
@@ -110,6 +111,12 @@ Please note that text blocks are written [reStructuredText](https://docutils.sou
 The examples can be downloaded from the final website as Jupyter notebook files.
 
 You can interactively run and debug these files in Visual Studio Code, see the [Python Interactive window documentation](https://code.visualstudio.com/docs/python/jupyter-support-py).
+
+If you want to link to a gallery page from another page use the following syntax (prefix with `sphx_glr_`, replace directory separator with `_`):
+
+```md
+{ref}`meshlib example <sphx_glr_auto_examples_howto_meshlib_plot_meshlib_pyvista_input.py>`
+```
 
 ### Further information
 

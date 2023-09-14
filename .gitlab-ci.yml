@@ -49,7 +49,7 @@ tests feflow:
   image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - python -m venv .venv --upgrade-deps
-    - .venv/bin/pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e .[dev,test,docs,feflow]
+    - .venv/bin/pip install -e .[dev,test,docs,feflow]
     - make setup_headless
     - source .venv/bin/activate
     - make coverage
@@ -66,7 +66,7 @@ tests win:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple -e ".[dev,test]"
+    - pip install -e ".[dev,test]"
   script:
     - tox -p
     # Bug: -e docs only works on Windows when called from docs/-dir.
@@ -74,7 +74,10 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
-  - *setup-headless
+  - python -m venv .venv --upgrade-deps
+  - .venv/bin/pip install -e .[dev,test,docs,feflow]
+  - make setup_headless
+  - source .venv/bin/activate
   - make docs
   - mv docs/_build/html public
 
