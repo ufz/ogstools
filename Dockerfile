@@ -1,6 +1,10 @@
-FROM python:3.9
+FROM registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
 
-RUN apt-get update \
-    && apt-get install  -yq --no-install-recommends \
-    bsdextrautils ffmpeg \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN --mount=target=/ogstools,type=bind,source=.,readwrite \
+     pip install /ogstools[feflow] \
+  && pip uninstall vtk -y
+
+RUN pip install --extra-index-url https://wheels.vtk.org vtk-osmesa \
+  && pip install -i https://gmsh.info/python-packages-dev-nox gmsh
+
+ENTRYPOINT bash
