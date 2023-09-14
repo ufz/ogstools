@@ -186,7 +186,7 @@ A full-featured (including e.g. FEFLOW-functionality), ready-to-use development 
 - Click the blue button in the left-bottom corner
 - Click on `Reopen in Container`
 
-Now you are inside the container. You can e.g. open a new terminal (`Terminal` / `New Terminal`) and then run some tests with `pytest` or use the [`Testing`-sidebar](https://code.visualstudio.com/docs/python/testing#_run-tests) to select specific tests to debug.
+Now you are inside the container. For example, you can open a new terminal (`Terminal` / `New Terminal`) and then run some tests with `pytest` or use the [`Testing`-sidebar](https://code.visualstudio.com/docs/python/testing#_run-tests) to select specific tests to debug.
 
 ## Container specification
 
@@ -207,7 +207,7 @@ Now you are inside the container. You can e.g. open a new terminal (`Terminal` /
 :::{admonition} Advanced topic
 :class: caution
 
-If you know some Docker the container can also manually run with e.g.:
+If you are familiar with Docker, you can also start the container manually, e.g. with:
 
 ```bash
 docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9 /bin/bash

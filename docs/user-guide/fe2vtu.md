@@ -56,6 +56,10 @@ The installation is according to the official [website](https://www.mikepoweredb
 
 ## Requirements
 
+- Running via [Docker](./docker.md)
+
+**OR**:
+
 - FEFLOW
 - ogstools with feflow (`pip install ogstools[feflow]`)
 
