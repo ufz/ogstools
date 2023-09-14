@@ -16,15 +16,13 @@ setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
 	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
-setup_devcontainer:
+setup_devcontainer:  ## Internal usage
+	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
 	.venv-devcontainer/bin/pip install -e .[dev,test,docs,feflow]
 	.venv-devcontainer/bin/pip uninstall gmsh vtk -y
 	.venv-devcontainer/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
-	@echo
-	@echo ATTENTION: You need to activate the virtual environment in every shell with:
-	@echo source .venv-devcontainer/bin/activate
 
 test:  ## Runs the unit tests
 	pytest

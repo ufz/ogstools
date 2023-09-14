@@ -170,3 +170,52 @@ pyproject-build
 ```
 
 Packages can then be found in `dist/`.
+
+# Development in a container with VSCode
+
+A full-featured (including e.g. FEFLOW-functionality), ready-to-use development environment can be used via VSCode's [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) feature. You can do all development-related tasks with it, e.g. testing, previewing documentation or even debugging.
+
+## Requirements
+
+- [Docker](https://www.docker.com)
+- [VSCode](https://code.visualstudio.com/) with [Remote Development extension pack](https://code.visualstudio.com/docs/remote/remote-overview) installed
+
+## How-to
+
+- Open the `ogstools`-project in VSCode
+- Click the blue button in the left-bottom corner
+- Click on `Reopen in Container`
+
+Now you are inside the container. You can e.g. open a new terminal (`Terminal` / `New Terminal`) and then run some tests with `pytest` or use the [`Testing`-sidebar](https://code.visualstudio.com/docs/python/testing#_run-tests) to select specific tests to debug.
+
+## Container specification
+
+[`.devcontainer/devcontainer.json`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/tree/main/.devcontainer/devcontainer.json) (see also [available settings](https://containers.dev)):
+
+:::{literalinclude} ../../.devcontainer/devcontainer.json
+:language: json
+:::
+
+[`.devcontainer/Dockerfile`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/tree/main/.devcontainer/Dockerfile):
+
+:::{literalinclude} ../../.devcontainer/Dockerfile
+:language: Dockerfile
+:::
+
+# Container usage without VSCode
+
+:::{admonition} Advanced topic
+:class: caution
+
+If you know some Docker the container can also manually run with e.g.:
+
+```bash
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9 /bin/bash
+# Inside the container:
+make setup_devcontainer
+pytest
+```
+
+Please also be aware of permission issue when mounting your working directory.
+
+:::
