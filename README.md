@@ -1,33 +1,28 @@
-![ogstools](https://ogs.ogs.xyz/tools/ogstools/_static/logo.png "ogstools") 
+![ogstools](https://ogs.ogs.xyz/tools/ogstools/_static/logo.png "ogstools")
 
 is a:
 
-
-- python library for streamlined usage of [opengeosys](opengeosys.org)
-
-- set of interconnected modules for pre- and postprocessing of simulations with [opengeosys](opengeosys.org)
-
+- python library for streamlined usage of [OpenGeoSys](https://www.opengeosys.org),
+- set of interconnected modules for pre- and postprocessing of simulations with [OpenGeoSys](https://www.opengeosys.org),
 - valuable resource that includes documentation, Jupyter notebooks, and workflows for guidance and reference.
 
-![](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing") 
+![OGS workflow overview](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
 # Overview
 
-- **Website:** https://www.opengeosys.org
-
-- **Documentation:** https://ogs.ogs.xyz/tools/ogstools
-
-- **Source code:** https://gitlab.opengeosys.org/ogs/tools/ogstools
-
-- **Contributing:** https://ogs.ogs.xyz/tools/ogstools/development/index.html
-
-- **Bug reports:** https://discourse.opengeosys.org
+- **Website:** <https://www.opengeosys.org>
+- **Documentation:** <https://ogs.ogs.xyz/tools/ogstools>
+- **Source code:** <https://gitlab.opengeosys.org/ogs/tools/ogstools>
+- **Contributing:** <https://ogs.ogs.xyz/tools/ogstools/development/index.html>
+- **Bug reports:** <https://discourse.opengeosys.org>
 
 # Installation
 
 Install the latest version of ogstools:
 
-`pip install ogstools`
+```bash
+pip install ogstools
+```
 
 For further details see the [User Guide](https://ogs.ogs.xyz/tools/ogstools/user-guide/index.html).
 
@@ -37,9 +32,9 @@ For first steps, please take a look at our [examples](https://ogs.ogs.xyz/tools/
 
 # Contribution
 
-Please report bugs on [discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
+Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
 
-You may also contribute by [donating](donation.md) your existing code snippets.
+You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/blob/release-notes/donation.md) your existing code snippets.
 
 # Related projects
 
@@ -49,5 +44,4 @@ You may also contribute by [donating](donation.md) your existing code snippets.
 
 # License
 
-OpenGeoSys is distributed under the Modified BSD License. See the
-LICENSE.txt for the license text.
+`ogstools` is distributed under the Modified BSD License. See the `LICENSE`-file for the license text.
