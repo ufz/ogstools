@@ -7,7 +7,7 @@
 A prebuilt [Docker](https://www.docker.com) image with the latest (nightly build) `ogstools` and all features can be used:
 
 ```bash
-docker run --rm -it registry.opengeosys.org/ogs/tools/ogstools/main-3.9
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.9
 # Now in the container:
 ogs --version
 ...
