@@ -69,7 +69,7 @@ tests win:
 .docs-script: &docs-script
   - make setup_devcontainer
   - source .venv-devcontainer/bin/activate
-  - make docs
+  - make docs SPHINXOPTS="-W --keep-going -n -j auto"
   - mv docs/_build/html public
 
 docs preview:
