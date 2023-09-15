@@ -357,7 +357,6 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
 
     layers_txt = Path(tempfile.mkstemp(".txt", "layers")[1])
     layer_filenames = layer_set.filenames()
-    layer_set.save_layers()
     with layers_txt.open("w") as file:
         file.write("\n".join(str(filename) for filename in layer_filenames))
     outfile = Path(tempfile.mkstemp(".vtu", "region_voxel")[1])
