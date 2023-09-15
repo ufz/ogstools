@@ -207,7 +207,7 @@ Now you are inside the container. For example, you can open a new terminal (`Ter
 :::{admonition} Advanced topic
 :class: caution
 
-If you are familiar with Docker, you can also start the container manually, e.g. with:
+If you are familiar with [Docker](https://www.docker.com), you can also start the container manually, e.g. with:
 
 ```bash
 docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9 /bin/bash
@@ -216,6 +216,17 @@ make setup_devcontainer
 pytest
 ```
 
-Please also be aware of permission issue when mounting your working directory.
+Please also be aware of [file permission issues](../user-guide/docker.md#running-with-docker) when mounting your working directory.
+
+______________________________________________________________________
+
+To prevent these issues we recommend running via [Apptainer](https://apptainer.org):
+
+```bash
+apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
+# Inside the container:
+make setup_devcontainer
+pytest
+```
 
 :::
