@@ -4,7 +4,6 @@ from collections import namedtuple
 from pathlib import Path
 
 import pandas as pd
-import pyvista as pv
 
 from ogstools.meshlib.boundary import Layer, LocationFrame, Raster
 from ogstools.meshlib.boundary_subset import Surface
@@ -57,11 +56,6 @@ class LayerSet(BoundarySet):
         layer_filenames = [layer.bottom.filename for layer in self.layers]
         layer_filenames.insert(0, self.layers[0].top.filename)  # file interface
         return layer_filenames
-
-    def save_layers(self):
-        for layer in self.layers:
-            pv.save_meshio(layer.bottom.filename, layer.bottom.mesh)
-        pv.save_meshio(self.layers[0].top.filename, self.layers[0].top.mesh)
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame):
