@@ -92,4 +92,4 @@ Further information can be found at: [](../reference/ogstools.feflowlib).
 
 ## Example
 
-An example of how the API can be used is given at: [](../auto_examples/howto_fe2vtu/index).
+An example of how the API can be used is given at: [](../auto_examples/howto_feflowlib/index).
