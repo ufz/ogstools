@@ -20,3 +20,8 @@ It is heavily based on `matplotlib` and `pyvista`.
 - nicely formatted colorbars
 - a temporary interface class for Meshes
 - a temporary interface class for MeshSeries (.pvd or .xdmf)
+
+## Getting started
+
+- Examples demonstrating the usage of the meshplotlib can be found at: [](../auto_examples/howto_meshplotlib/index).
+- You can access the comprehensive API documentation at: [](../reference/ogstools.meshplotlib).
