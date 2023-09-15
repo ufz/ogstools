@@ -170,3 +170,63 @@ pyproject-build
 ```
 
 Packages can then be found in `dist/`.
+
+# Development in a container with VSCode
+
+A full-featured (including e.g. FEFLOW-functionality), ready-to-use development environment can be used via VSCode's [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) feature. You can do all development-related tasks with it, e.g. testing, previewing documentation or even debugging.
+
+## Requirements
+
+- [Docker](https://www.docker.com)
+- [VSCode](https://code.visualstudio.com/) with [Remote Development extension pack](https://code.visualstudio.com/docs/remote/remote-overview) installed
+
+## How-to
+
+- Open the `ogstools`-project in VSCode
+- Click the blue button in the left-bottom corner
+- Click on `Reopen in Container`
+
+Now you are inside the container. For example, you can open a new terminal (`Terminal` / `New Terminal`) and then run some tests with `pytest` or use the [`Testing`-sidebar](https://code.visualstudio.com/docs/python/testing#_run-tests) to select specific tests to debug.
+
+## Container specification
+
+[`.devcontainer/devcontainer.json`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/tree/main/.devcontainer/devcontainer.json) (see also [available settings](https://containers.dev)):
+
+:::{literalinclude} ../../.devcontainer/devcontainer.json
+:language: json
+:::
+
+[`.devcontainer/Dockerfile`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/tree/main/.devcontainer/Dockerfile):
+
+:::{literalinclude} ../../.devcontainer/Dockerfile
+:language: Dockerfile
+:::
+
+# Container usage without VSCode
+
+:::{admonition} Advanced topic
+:class: caution
+
+If you are familiar with [Docker](https://www.docker.com), you can also start the container manually, e.g. with:
+
+```bash
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9 /bin/bash
+# Inside the container:
+make setup_devcontainer
+pytest
+```
+
+Please also be aware of [file permission issues](../user-guide/docker.md#running-with-docker) when mounting your working directory.
+
+______________________________________________________________________
+
+To prevent these issues we recommend running via [Apptainer](https://apptainer.org):
+
+```bash
+apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
+# Inside the container:
+make setup_devcontainer
+pytest
+```
+
+:::

@@ -55,7 +55,10 @@ docs = [
   "sphinx-design",
   "sphinx_gallery",
 ]
-feflow = ["ifm_contrib@git+https://github.com/red5alex/ifm_contrib"]
+feflow = [
+  "ifm_contrib@git+https://github.com/red5alex/ifm_contrib",
+  "matplotlib<3.8" # TODO: remove when ifm_contrib supports matplotlib 3.8
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

@@ -4,7 +4,8 @@ stages:
 
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/ci-python-3.9
+  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
+  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.9
 
 workflow:
   rules:
@@ -12,7 +13,7 @@ workflow:
       changes:
         - Dockerfile
       variables:
-        DOCKER_IMAGE: $CI_REGISTRY_IMAGE/ci-python-3.9:$CI_COMMIT_REF_SLUG
+        DOCKER_IMAGE: $CI_REGISTRY_IMAGE/devcontainer-3.9:$CI_COMMIT_REF_SLUG
     - if: $CI_MERGE_REQUEST_IID
     - if: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -42,16 +43,8 @@ tests (arch):
 
 tests:
   script:
-    - *setup-headless
-    - make test
-
-tests feflow:
-  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
-  script:
-    - python -m venv .venv --upgrade-deps
-    - .venv/bin/pip install -e .[dev,test,docs,feflow]
-    - make setup_headless
-    - source .venv/bin/activate
+    - make setup_devcontainer
+    - source .venv-devcontainer/bin/activate
     - make coverage
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
@@ -74,17 +67,14 @@ tests win:
     - tox -e docs
 
 .docs-script: &docs-script
-  - python -m venv .venv --upgrade-deps
-  - .venv/bin/pip install -e .[dev,test,docs,feflow]
-  - make setup_headless
-  - source .venv/bin/activate
-  - make docs
+  - make setup_devcontainer
+  - source .venv-devcontainer/bin/activate
+  - make docs SPHINXOPTS="-W --keep-going -n -j auto"
   - mv docs/_build/html public
 
 docs preview:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *docs-script
   artifacts:
@@ -116,15 +106,27 @@ publish:
     - *setup-headless
     - tox -e publish
 
-docker image:
+devcontainer image:
   stage: .pre
   tags:
     - envinf
     - shell
   rules:
     - changes:
-        - Dockerfile
+        - .devcontainer/*
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
+    - devcontainer build --workspace-folder . --push true --image-name ${DOCKER_IMAGE}
+
+user container image:
+  stage: .pre
+  needs: []
+  tags:
+    - envinf
+    - shell
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_USER_IMAGE .
+    - docker push $DOCKER_USER_IMAGE
