@@ -30,7 +30,7 @@ log.info(
 )
 
 
-def get_pts_cells(doc: ifm.FeflowDoc):
+def points_and_cells(doc: ifm.FeflowDoc):
     """
     Get points and cells in a pyvista compatible format.
 
@@ -48,8 +48,8 @@ def get_pts_cells(doc: ifm.FeflowDoc):
             8: pv.CellType.HEXAHEDRON,
         },
     }
-    # 1. get a list of all cells/elements
-    elements = doc.c.mesh.get_imatrix()
+    # 1. get a list of all cells/elements and reverse it for correct node order in OGS
+    elements = np.fliplr(np.array(doc.c.mesh.get_imatrix())).tolist()
     # 2. write the amount of nodes per element to the first entry of each list
     # of nodes. This is needed for pyvista !
     # 2 could also be done with np.hstack([len(ele)]*len(elements,elements))
@@ -62,7 +62,6 @@ def get_pts_cells(doc: ifm.FeflowDoc):
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
-
     # 4 .write the list for all points and their global coordinates
     points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
     pts = points[["X", "Y", "Z"]].to_numpy()
@@ -77,7 +76,7 @@ def get_pts_cells(doc: ifm.FeflowDoc):
     return pts, cells, celltypes
 
 
-def get_matids_from_selections(doc: ifm.FeflowDoc):
+def material_ids_from_selections(doc: ifm.FeflowDoc):
     """
     Get MaterialIDs from the FEFLOW data. Only applicable if they are
     saved in doc.c.sel.selections().
@@ -107,7 +106,7 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
             )
             # 2.2 write a list with a corresponding id for
             # that material (mat_id)
-            mat_ids.append(mat_id)
+            mat_ids.append(int(mat_id))
             # 2.3 write a dictionary to understand which id refers
             # to which selection
             dict_matid[mat_id] = selec
@@ -125,11 +124,11 @@ def get_matids_from_selections(doc: ifm.FeflowDoc):
 
     # 4. log the dictionary of the MaterialIDs
     log.info("MaterialIDs refer to: %s", dict_matid)
+    # MaterialIDs must be int32
+    return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
-    return {"MaterialIDs": mat_ids_mesh}
 
-
-def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
+def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
     cell data.
@@ -196,7 +195,7 @@ def get_pt_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     return pt_data, cell_data
 
 
-def get_geo_mesh(doc: ifm.FeflowDoc):
+def read_geometry(doc: ifm.FeflowDoc):
     """
     Get the geometric construction of the mesh.
 
@@ -205,11 +204,11 @@ def get_geo_mesh(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    points, cells, celltypes = get_pts_cells(doc)
+    points, cells, celltypes = points_and_cells(doc)
     return pv.UnstructuredGrid(cells, celltypes, points)
 
 
-def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
+def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     """
     Update the geometric construction of the mesh with point and cell data.
 
@@ -220,8 +219,8 @@ def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    MaterialIDs = get_matids_from_selections(doc)
-    point_data, cell_data = get_pt_cell_data(MaterialIDs, doc)
+    MaterialIDs = material_ids_from_selections(doc)
+    point_data, cell_data = point_and_cell_data(MaterialIDs, doc)
     for i in point_data:
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
@@ -229,7 +228,7 @@ def update_geo_mesh(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     return mesh
 
 
-def get_property_mesh(doc: ifm.FeflowDoc):
+def read_properties(doc: ifm.FeflowDoc):
     """
     Get the mesh with point and cell properties.
 
@@ -238,6 +237,6 @@ def get_property_mesh(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    mesh = get_geo_mesh(doc)
-    update_geo_mesh(mesh, doc)
+    mesh = read_geometry(doc)
+    update_geometry(mesh, doc)
     return mesh

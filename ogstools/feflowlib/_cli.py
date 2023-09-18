@@ -9,15 +9,13 @@ from argparse import ArgumentParser
 from sys import stdout
 
 import ifm_contrib as ifm
-import numpy as np
-import pyvista as pv
 
-from ogstools.fe2vtu import (
-    get_geo_mesh,
-    get_specific_surface,
+from ogstools.feflowlib import (
     helpFormat,
-    update_geo_mesh,
-    write_xml,
+    read_geometry,
+    update_geometry,
+    write_cell_boundary_conditions,
+    write_point_boundary_conditions,
 )
 
 parser = ArgumentParser(
@@ -69,59 +67,26 @@ def cli():
 
     doc = ifm.loadDocument(args.input)
 
-    mesh = get_geo_mesh(doc)
+    mesh = read_geometry(doc)
 
     if "properties" in args.case:
-        update_geo_mesh(mesh, doc)
+        update_geometry(mesh, doc)
     mesh = mesh.extract_surface() if "surface" in args.case else mesh
     msg = {
         "geo_surface": "surface",
         "geometry": "geometry",
         "properties_surface": "surface with properties",
-        "properties": "",
+        "properties": "properties",
     }
-    pv.save_meshio(args.output, mesh, file_format="vtu")
+    mesh.save(args.output)
+    # save meshio changes node order -> not compatible with OGS
+    # in the future meshio is desired for saving ! -> pv.save_meshio(args.output, mesh)
     log.info(
         "The %s of the input mesh has been successfully converted.",
         msg[args.case],
     )
     if "properties" not in args.case or args.BC != "BC":
         return
-    BC_mesh = mesh.copy()
-    for cd in [
-        cell_data
-        for cell_data in BC_mesh.cell_data
-        if cell_data not in ["P_SOUF", "P_IOFLOW"]
-    ]:
-        BC_mesh.cell_data.remove(cd)
-    # Only cell data are needed
-    BC_mesh.point_data.clear()
-    # get the topsurface since there are the cells of interest
-    topsurf = get_specific_surface(
-        BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
-    )
-    topsurf.save("topsurface_" + args.output)
-    # create the xml-file
-    write_xml(
-        "topsurface_" + args.output,
-        "Neumann",
-        topsurf.cell_data,
-        "MeshElement",
-    )
-    # remove all the point data that are not of interest
-    for point_data in mesh.point_data:
-        if not all(["_BC_" in point_data]):
-            mesh.point_data.remove(point_data)
-    # Only selected point data is needed -> clear all cell data
-    mesh.cell_data.clear()
-    # remove all points with point data that are of "nan"-value
-    for point_data in mesh.point_data:
-        filtered_points = mesh.extract_points(
-            [not np.isnan(x) for x in mesh[point_data]],
-            include_cells=False,
-        )
-        # Only "BULK_NODE_ID" can be read by ogs
-        filtered_points.rename_array("vtkOriginalPointIds", "BULK_NODE_ID")
-        filtered_points.save(point_data + ".vtu")
-    # create the xml-file
-    write_xml("", "Dirichlet", filtered_points.point_data, "MeshNode")
+
+    write_point_boundary_conditions(args.output, mesh)
+    write_cell_boundary_conditions(args.output, mesh)
