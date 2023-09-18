@@ -103,8 +103,9 @@ publish:
     TWINE_REPOSITORY: pypi
     PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
   script:
-    - *setup-headless
-    - tox -e publish
+    - pip install build twine
+    - pyproject-build
+    - twine upload dist/*
 
 devcontainer image:
   stage: .pre
