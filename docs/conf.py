@@ -57,6 +57,7 @@ html_context = {"default_mode": "light"}
 
 html_theme_options = {
     "logo": {
+        # "text": "OGSTools",
         "image_light": "ogstools.png",
         "image_dark": "ogstools-dark.png",
     },
