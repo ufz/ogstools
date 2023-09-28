@@ -37,16 +37,26 @@ def plot_layer_boundaries(
         ha = "left" if mat_id % 2 == 0 else "right"
         x_b_lim = x_b.min() if mat_id % 2 == 0 else x_b.max()
         y_pos = np.mean(y_b[x_b == x_b_lim])
-
+        if not setup.embedded_region_names_color:
+            continue
         if setup.material_names is not None and mat_id in setup.material_names:
+            c = setup.embedded_region_names_color
+            m = ">" if mat_id % 2 == 0 else "<"
             outline = [patheffects.withStroke(linewidth=1, foreground="k")]
+            plt.scatter(
+                round(x_pos) + 0.2 * (x_pos - round(x_pos)),
+                y_pos,
+                transform=btf(ax.transAxes, ax.transData),
+                color=c,
+                marker=m,
+            )
             plt.text(
                 x_pos,
                 y_pos,
                 setup.material_names[mat_id],
                 fontsize=plt.rcParams["font.size"] * 0.75,
                 transform=btf(ax.transAxes, ax.transData),
-                color="w",
+                color=c,
                 weight="bold",
                 ha=ha,
                 va="center",

@@ -22,6 +22,7 @@ setup_dict = {
     "show_aspect_ratio": False,
     "show_element_edges": "MaterialIDs",
     "show_region_bounds": True,
+    "embedded_region_names_color": None,
     "title_center": "",
     "title_left": "",
     "title_right": "",

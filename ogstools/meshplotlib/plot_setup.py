@@ -72,6 +72,8 @@ class PlotSetup:
     "A boolean indicating whether the scaling should be logarithmic."
     show_region_bounds: bool
     "Controls the display of region (MaterialIDs) edges."
+    embedded_region_names_color: str
+    "Color of the embedded region names inside the plot."
 
     def cmap_str(self, property: Property) -> Union[str, list]:
         """Get the colormap string for a given property."""
@@ -109,6 +111,7 @@ class PlotSetup:
             show_region_bounds=obj["show_region_bounds"],
             show_element_edges=obj["show_element_edges"],
             show_aspect_ratio=obj["show_aspect_ratio"],
+            embedded_region_names_color=obj["embedded_region_names_color"],
             title_center=obj["title_center"],
             title_left=obj["title_left"],
             title_right=obj["title_right"],
