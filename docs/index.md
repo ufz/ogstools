@@ -2,7 +2,7 @@
 :html_theme.sidebar_secondary.remove: true
 ```
 
-# ogstools Documentation
+# OGSTools Documentation
 
 ```{toctree}
 ---
@@ -15,7 +15,7 @@ Development <development/index>
 Release notes <releases/index>
 ```
 
-`ogstools` is a collection of Python tools aimed at evolving into a modeling toolchain around [OpenGeoSys](https://www.opengeosys.org), a finite element solver for coupled thermo-hydro-chemo-mechanical problems in the subsurface.
+The `ogstools` pip-package is a collection of Python tools aimed at evolving into a modeling toolchain around [OpenGeoSys](https://www.opengeosys.org), a finite element solver for coupled thermo-hydro-chemo-mechanical problems in the subsurface.
 
 **Date:** {sub-ref}`today` **Version:** {sub-ref}`version`
 

@@ -1,4 +1,4 @@
-# ogstools 0.0.3 Release Notes
+# OGSTools 0.0.3 Release Notes
 
 This is the first release of the `ogstools`-package, a joint effort of OGS users and developers to strengthen the OGS ecosystem!
 
