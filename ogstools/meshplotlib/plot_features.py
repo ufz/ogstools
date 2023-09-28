@@ -141,25 +141,10 @@ def get_aspect(ax: plt.Axes) -> float:
     return disp_ratio / data_ratio
 
 
-# def plot_contour(
-#
-#     ax_id: int,
-#     vtu_path: str,
-#     origin: np.ndarray,
-#     slice: bool,
-#     style: str,
-#     lw: int,
-# ):
-#     vtu = pv.XMLUnstructuredGridReader(vtu_path).read()
-#     if dim == 2:
-#         contour_vtu = vtu.extract_surface().strip(join=True)
-#     else:
-#         if slice:
-#             vtu = vtu.slice(normal=ax_normals[ax_id], origin=origin)
-#         else:
-#             vtu = vtu.extract_feature_edges()
-#         contour_vtu = vtu.strip(join=True)
-
-#     x_id, y_id = np.delete([0, 1, 2], ax_normal_id[ax_id])
-#     x, y = 1e-3 * contour_vtu.points[contour_vtu.lines[1:]].T[[x_id, y_id]]
-#     fig.axes[ax_id].plot(x, y, style, lw=lw)
+def plot_contour(
+    ax: plt.Axes, mesh: pv.DataSet, style: str, lw: int, projection: int = 2
+):
+    contour = mesh.extract_surface().strip(join=True)
+    x_id, y_id = np.delete([0, 1, 2], projection)
+    x, y = 1e-3 * contour.points[contour.lines[1:]].T[[x_id, y_id]]
+    ax.plot(x, y, style, lw=lw)
