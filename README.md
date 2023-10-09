@@ -1,4 +1,4 @@
-![ogstools](https://ogs.ogs.xyz/tools/ogstools/_static/logo.png "ogstools")
+![OGS workflow overview](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
 is a:
 
@@ -6,7 +6,7 @@ is a:
 - set of interconnected modules for pre- and postprocessing of simulations with [OpenGeoSys](https://www.opengeosys.org),
 - valuable resource that includes documentation, Jupyter notebooks, and workflows for guidance and reference.
 
-![OGS workflow overview](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
+
 
 # Overview
 
