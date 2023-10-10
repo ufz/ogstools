@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Literal
 from typing import Optional as Opt
 
+from . import defaults
 from .property import MatrixProperty, Property, ScalarProperty, VectorProperty
 
 
@@ -23,7 +24,7 @@ class PropertyCollection:
 
     def __init__(self):
         """Initialize the PropertyCollection with default attributes."""
-        self.material_id = ScalarProperty("MaterialIDs")
+        self.material_id = defaults.material_id
 
     def get_properties(self, dim: Opt[Literal[2, 3]] = None) -> list[Property]:
         """Return all scalar-, vector- or matrix properties."""

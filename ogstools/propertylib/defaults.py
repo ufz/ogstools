@@ -12,6 +12,7 @@ H_mask = "pressure_active"
 M_mask = "displacement_active"
 
 # fmt: off
+material_id = Scalar("MaterialIDs")
 displacement = Vector("displacement", "m", "m", mask=M_mask)
 effective_pressure = Scalar("sigma", "Pa", "MPa", "effective_pressure", M_mask, v2s.effective_pressure)
 heatflowrate = Scalar("HeatFlowRate", mask=T_mask)
