@@ -32,7 +32,7 @@ def xin_cell_data(mesh: pv.UnstructuredGrid, property: Property) -> bool:
 
 
 def _q_zero_line(property: Property, levels: np.ndarray):
-    return property.is_component() or (
+    return property.bilinear_cmap or (
         property.data_name == "temperature" and levels[0] < 0 < levels[-1]
     )
 
@@ -54,7 +54,7 @@ def get_cmap_norm(
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the property field."""
     vmin, vmax = (levels[0], levels[-1])
-    bilinear = property.is_component() and vmin <= 0.0 <= vmax
+    bilinear = property.bilinear_cmap and vmin <= 0.0 <= vmax
     cmap_str = setup.cmap_str(property)
     if property.is_mask():
         conti_cmap = mcolors.ListedColormap(cmap_str)
@@ -212,7 +212,11 @@ def subplot(
 
     ax.axis(setup.scale_type)
 
-    if property.mask in mesh.cell_data and len(mesh.cell_data[property.mask]):
+    if (
+        not property.is_mask()
+        and property.mask in mesh.cell_data
+        and len(mesh.cell_data[property.mask])
+    ):
         subplot(mesh, property.get_mask(), ax)
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
 

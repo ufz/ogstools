@@ -6,8 +6,7 @@ via pint.
 """
 
 from dataclasses import dataclass, replace
-from enum import Enum
-from typing import Any, Callable, Literal, Union
+from typing import Any, Callable, Union
 
 import numpy as np
 from pint import UnitRegistry
@@ -23,14 +22,7 @@ u_reg.default_format = "~.12g"
 u_reg.setup_matplotlib(True)
 
 
-class TagType(Enum):
-    """Enum for property tag types."""
-
-    mask = "mask"
-    component = "component"
-    unit_dim_const = "unit_dim_const"
-
-
+# TODO: rename to BaseProperty?? / GenericProperty
 @dataclass
 class Property:
     """Represent a property of a dataset."""
@@ -53,20 +45,12 @@ class Property:
         Callable[[Any], Any],
     ] = identity
     """The function to be applied on the data."""
-    tag: Union[
-        TagType, Literal["mask", "component", "unit_dim_const"], None
-    ] = None
-    """A tag to signify special meanings of the property."""
+    bilinear_cmap: bool = False
+    """Should this property be displayed with a bilinear cmap?"""
 
     def __post_init__(self):
         if not self.output_name:
             self.output_name = self.data_name
-        if isinstance(self.tag, TagType) or self.tag is None:
-            return
-        tag_vals = [tag_type.value for tag_type in TagType]
-        if self.tag not in tag_vals:
-            msg = f"Unknown {self.tag=}. Allowed are {tag_vals}."
-            raise ValueError(msg)
 
     def replace(self, **changes):
         """
@@ -92,8 +76,8 @@ class Property:
         :returns: The values with units.
         """
         Q_, _du, _ou = u_reg.Quantity, self.data_unit, self.output_unit
-        if self.tag in [TagType.unit_dim_const, TagType.component]:
-            return Q_(self.func(Q_(vals, _du).magnitude), _du).to(_ou)
+        if Q_(0, _du).dimensionality == Q_(0, _ou).dimensionality:
+            return Q_(self.func(np.asarray(vals)), _du).to(_ou)
         return Q_(self.func(Q_(vals, _du)), _ou)
 
     def values(self, vals: np.ndarray) -> np.ndarray:
@@ -117,27 +101,19 @@ class Property:
         """
         return "%" if self.output_unit == "percent" else self.output_unit
 
-    def is_component(self) -> bool:
-        """
-        Check if the property is a component (using tag).
-
-        :returns: True if the property is a component, False otherwise.
-        """
-        return self.tag == TagType.component
-
     def is_mask(self) -> bool:
         """
-        Check if the property is a mask (using tag).
+        Check if the property is a mask.
 
         :returns: True if the property is a mask, False otherwise.
         """
-        return self.tag == TagType.mask
+        return self.data_name == self.mask
 
     def get_mask(self):
         """
         :returns: A property representing this properties mask.
         """
-        return Property(data_name=self.mask, tag=TagType.mask)
+        return Property(data_name=self.mask, mask=self.mask)
 
 
 @dataclass
@@ -166,8 +142,9 @@ class VectorProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + f"_{suffix[0 <= index <= 2]}",
+            mask=self.mask,
             func=lambda x: np.array(x)[..., index],
-            tag=TagType.component,
+            bilinear_cmap=True,
         )
 
     @property
@@ -178,8 +155,8 @@ class VectorProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + "_magnitude",
+            mask=self.mask,
             func=lambda x: np.linalg.norm(x, axis=-1),
-            tag=TagType.unit_dim_const,
         )
 
     @property
@@ -190,7 +167,6 @@ class VectorProperty(Property):
             output_name=self.output_name + "_log10",
             mask=self.mask,
             func=lambda x: np.log10(np.linalg.norm(x, axis=-1)),
-            tag=TagType.unit_dim_const,
         )
 
 
@@ -215,8 +191,9 @@ class MatrixProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + f"_{suffix[0 <= index <= 5]}",
+            mask=self.mask,
             func=lambda x: np.array(x)[..., index],
-            tag=TagType.component,
+            bilinear_cmap=True,
         )
 
     @property
@@ -227,8 +204,8 @@ class MatrixProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + "_magnitude",
+            mask=self.mask,
             func=lambda x: np.linalg.norm(sym_tensor_to_mat(x), axis=(-2, -1)),
-            tag=TagType.unit_dim_const,
         )
 
     @property
@@ -239,6 +216,6 @@ class MatrixProperty(Property):
             data_unit=self.data_unit,
             output_unit=self.output_unit,
             output_name=self.output_name + "_trace",
+            mask=self.mask,
             func=trace,
-            tag=TagType.unit_dim_const,
         )

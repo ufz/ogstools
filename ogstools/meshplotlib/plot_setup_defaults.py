@@ -36,8 +36,8 @@ setup_dict = {
         "velocity": "coolwarm",
         "MaterialIDs": "tab20",
     },
-    "cmap_dict_if_component": {"displacement": "PRGn"},
-    "cmap_if_mask": ["yellow", "green"],
+    "cmap_dict_if_bilinear": {"displacement": "PRGn"},
+    "cmap_if_mask": ["lightgrey", "green"],
     "rcParams": {
         "font.weight": "normal",
         "font.family": "sans-serif",
