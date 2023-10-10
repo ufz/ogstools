@@ -23,9 +23,7 @@ from ogstools.meshlib.region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-from ogstools.propertylib import ScalarProperty  # For visualization only
 
-material_id = ScalarProperty("MaterialIDs")
 mpl.setup.reset()
 mpl.setup.length.output_unit = "km"
 mpl.setup.figsize = [24, 12]
@@ -62,7 +60,7 @@ tm = to_region_tetraeder(layer_set1, resolution=200).mesh
 
 mesh = pm
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="y")), (2, 2))
-fig = mpl.plot(slices, property=material_id)
+fig = mpl.plot(slices, "MaterialIDs")
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
 
@@ -78,6 +76,6 @@ names = [
 ]
 
 x_slices = np.reshape([mesh.slice("x") for mesh in meshes], (-1, 1))
-fig = mpl.plot(x_slices, property=material_id)
+fig = mpl.plot(x_slices, "MaterialIDs")
 for ax, name in zip(fig.axes, names):
     ax.set_title(name)

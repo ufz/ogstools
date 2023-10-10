@@ -19,7 +19,6 @@ from ogstools.meshlib.region import (
 )
 
 # See other examples for different meshing algorithms
-from ogstools.propertylib import ScalarProperty  # For visualization only
 
 # %%
 # Define a simple surface
@@ -36,7 +35,7 @@ mesh = to_region_tetraeder(ls, 40).mesh
 # Visualize the prism mesh
 
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="y")), (2, 2))
-fig = mpl.plot(slices, property=ScalarProperty("MaterialIDs"))
+fig = mpl.plot(slices, "MaterialIDs")
 
 
 # %%

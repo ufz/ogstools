@@ -19,14 +19,14 @@ mpl.setup.reset()
 mpl.setup.length.output_unit = "km"
 mpl.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
 mesh = meshseries_THM_2D.read(1)
-fig = mpl.plot(mesh, property=THM.material_id)
+fig = mpl.plot(mesh, THM.material_id)
 
 # %%
 # Now, let's plot the temperature field (point_data) at the first timestep.
 # The default temperature property from the `propertylib` reads the temperature
 # data as Kelvin and converts them to degrees Celsius.
 
-fig = mpl.plot(mesh, property=THM.temperature)
+fig = mpl.plot(mesh, THM.temperature)
 
 # %%
 # This example has hydraulically deactivated subdomains:
