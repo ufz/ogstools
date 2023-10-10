@@ -4,6 +4,8 @@
 from dataclasses import dataclass
 from typing import Literal, Union
 
+from matplotlib.colors import Colormap
+
 from ogstools.propertylib.property import Property, ScalarProperty
 
 from .plot_setup_defaults import setup_dict
@@ -18,6 +20,8 @@ class PlotSetup:
     :obj:`ogstools.meshplotlib.plot_setup_defaults`.
     """
 
+    custom_cmap: Colormap
+    "If provided, this colormap will be used for any plot."
     cmap_dict_if_bilinear: dict
     "A dictionary that maps bilinear colormaps to properties."
     cmap_dict: dict
@@ -120,6 +124,7 @@ class PlotSetup:
             log_scaled=obj["log_scaled"],
             length=ScalarProperty("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
+            custom_cmap=obj["custom_cmap"],
             cmap_dict=obj["cmap_dict"],
             cmap_dict_if_bilinear=obj["cmap_dict_if_bilinear"],
             cmap_if_mask=obj["cmap_if_mask"],

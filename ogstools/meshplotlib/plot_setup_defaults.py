@@ -29,6 +29,7 @@ setup_dict = {
     "x_label": None,
     "y_label": None,
     "log_scaled": False,
+    "custom_cmap": None,
     "cmap_dict": {
         "displacement": "Greens",
         "temperature": ["Blues", "plasma"],
