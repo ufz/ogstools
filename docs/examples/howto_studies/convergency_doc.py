@@ -1,17 +1,27 @@
+"""
+Features of studies
+=====================================
+
+.. sectionauthor:: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
+
+``studies`` provides a utility function to compose studies from multiple simulation runs
+"""
+
+
 # %%
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from ogstools.propertylib import defaults
-from ogstools.study.convergence import convergence, plot_convergence
+from ogstools.propertylib.defaults import temperature
+from ogstools.studies.convergence import convergence, plot_convergence
 
 # %%
 # Run multiple simulations with different mesh discretization, keep everything else constant
-# The coarse the time_step the more visible
-# Adapt solver tolerance when needed
+# Choice of time-stepping settings and solver tolerance significantly influences convergence
 # ogs_dir =
 
+# ToDo Replace below by liquid flow example
 # "Tests/Data/Parabolic/HT/SimpleSynthetics/XDMF/CoupledPressureParabolicTemperatureParabolicStaggered.prj"
 
 # The results
@@ -24,11 +34,11 @@ from ogstools.study.convergence import convergence, plot_convergence
 # %%
 timeseries_files = []
 ts = 100
-defaults.temperature.data_name = "Temperature"
-properties = [defaults.temperature]
+temperature.data_name = "Temperature"
+properties = [temperature]
 
 # %%
-conv = convergence(timeseries_files, 100, [defaults.temperature])
+conv = convergence(timeseries_files, 100, [temperature])
 print(conv)
 
 # %%
