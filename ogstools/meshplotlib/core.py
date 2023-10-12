@@ -204,6 +204,7 @@ def add_colorbar(
             else:
                 region_names += [mat_id]
         cb.ax.set_yticklabels(region_names)
+        cb.ax.set_ylabel("")
     elif all_int:
         cb.ax.set_yticklabels(levels.astype(int))
 
@@ -404,7 +405,8 @@ def _plot_on_figure(
     np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
     np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
     np_axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
-    plt.tight_layout()
+    # make extra space for the upper limit of the colorbar
+    plt.tight_layout(pad=1.4)
     add_colorbar(fig, property, levels)
 
     return fig

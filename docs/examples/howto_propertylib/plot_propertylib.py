@@ -21,7 +21,7 @@ import ogstools.propertylib as ptl
 
 tab = pd.DataFrame(ptl.defaults.all_properties).set_index("output_name")
 tab["type"] = [type(p).__name__ for p in ptl.defaults.all_properties]
-tab.drop(["tag", "func"], axis=1).sort_values(["mask", "data_name"])
+tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
 
 # %%
 # You can access properties either form the entire collection or from a subset

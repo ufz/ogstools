@@ -77,7 +77,7 @@ class Property:
         """
         Q_, _du, _ou = u_reg.Quantity, self.data_unit, self.output_unit
         if Q_(0, _du).dimensionality == Q_(0, _ou).dimensionality:
-            return Q_(self.func(np.asarray(vals)), _du).to(_ou)
+            return Q_(Q_(self.func(np.asarray(vals)), _du), _ou)
         return Q_(self.func(Q_(vals, _du)), _ou)
 
     def values(self, vals: np.ndarray) -> np.ndarray:
