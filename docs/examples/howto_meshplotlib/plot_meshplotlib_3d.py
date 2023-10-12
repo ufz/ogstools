@@ -21,15 +21,14 @@ from ogstools.propertylib import ScalarProperty
 
 mpl.setup.reset()
 mesh = examples.load_channels()
-# commented out bc the isometric view for the 3D mesh here, would render a
-# native pyvista plot, which fails inside a docker container.
-fig = mpl.plot(mesh, ScalarProperty("facies"))
+property = ScalarProperty("facies", categoric=True)
+fig = mpl.plot(mesh, property)
 
 # %%
 # Now, let's create multiple slices along the z axis and plot them in a 2 by 2 grid.
 
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
-fig = mpl.plot(slices, ScalarProperty("facies"))
+fig = mpl.plot(slices, property)
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
 
@@ -37,7 +36,7 @@ for ax, slice in zip(fig.axes, np.ravel(slices)):
 # We can also slice along the y-axis and plot the meshes in one row.
 
 slices = np.reshape(mesh.slice_along_axis(n=3, axis="y"), (1, -1))
-fig = mpl.plot(slices, ScalarProperty("facies"))
+fig = mpl.plot(slices, property)
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"y = {slice.center[1]:.1f} {mpl.setup.length.data_unit}")
 
@@ -45,4 +44,4 @@ for ax, slice in zip(fig.axes, np.ravel(slices)):
 # Arbitrary oriented slices are also possible.
 # They get projected to the cardinal plane, from which they have the least rotational offset.
 
-fig = mpl.plot(mesh.slice([1, -2, 0]), ScalarProperty("facies"))
+fig = mpl.plot(mesh.slice([1, -2, 0]), property)

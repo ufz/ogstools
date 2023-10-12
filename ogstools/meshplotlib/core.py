@@ -75,8 +75,7 @@ def get_cmap_norm(
         bilinear = vmin < 0 < vmax
     if bilinear:
         vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
-    all_int = all(level.is_integer() for level in levels)
-    if all_int:
+    if property.categoric:
         vmin += 0.5
         vmax += 0.5
     conti_norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
@@ -85,7 +84,7 @@ def get_cmap_norm(
     cmap = mcolors.ListedColormap(colors, name="custom")
     if setup.custom_cmap is not None:
         cmap = setup.custom_cmap
-    boundaries = get_level_boundaries(levels) if all_int else levels
+    boundaries = get_level_boundaries(levels) if property.categoric else levels
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=True
     )
@@ -149,14 +148,17 @@ def add_colorbar(
         levels *= 10 ** (-scale_exp)
         norm.vmin *= 10 ** (-scale_exp)
         norm.vmax *= 10 ** (-scale_exp)
-    all_int = all(level.is_integer() for level in levels)
-    if all_int:
+    categoric = property.categoric or (len(levels) == 2)
+    if categoric:
         bounds = get_level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
     else:
-        ticks = levels[1:-1]
+        bin_sizes = np.diff(levels)
+        bot_extra = int(bin_sizes[0] != bin_sizes[1]) or None
+        top_extra = -int(bin_sizes[-1] != bin_sizes[-2]) or None
+        ticks = levels[bot_extra:top_extra]
     _axs = np.ravel(fig.axes).tolist()
-    spacing = "uniform" if all_int else "proportional"
+    spacing = "uniform" if categoric else "proportional"
     kwargs = {"location": "right", "spacing": spacing, "pad": 0.02}
     cb = fig.colorbar(
         cm, norm=norm, ax=_axs, ticks=ticks, drawedges=True, **kwargs
@@ -165,13 +167,15 @@ def add_colorbar(
         cb.ax.invert_yaxis()
     if property.is_mask():
         cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
-    if not all_int:
+    if not categoric:
         kwargs = {"transform": cb.ax.transAxes, "ha": "left"}
         if setup.log_scaled:
             levels = 10**levels
-        lim_ids = [-1, 0] if setup.invert_colorbar else [0, -1]
-        cb.ax.text(0, -0.02, f"{levels[lim_ids[0]]:.3g}", **kwargs, va="top")
-        cb.ax.text(0, 1.02, f"{levels[lim_ids[1]]:.3g}", **kwargs, va="bottom")
+        ids = [-1, 0] if setup.invert_colorbar else [0, -1]
+        if [bot_extra, top_extra][ids[0]]:
+            cb.ax.text(0, -0.02, f"{levels[ids[0]]:.3g}", **kwargs, va="top")
+        if [bot_extra, top_extra][ids[1]]:
+            cb.ax.text(0, 1.02, f"{levels[ids[1]]:.3g}", **kwargs, va="bottom")
 
     factor_str = rf"$10^{{{int(scale_exp)}}}$" if abs(scale_exp) >= 3 else ""
     if property.get_output_unit():
@@ -205,7 +209,7 @@ def add_colorbar(
                 region_names += [mat_id]
         cb.ax.set_yticklabels(region_names)
         cb.ax.set_ylabel("")
-    elif all_int:
+    elif property.categoric:
         cb.ax.set_yticklabels(levels.astype(int))
 
 

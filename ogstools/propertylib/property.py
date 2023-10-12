@@ -47,6 +47,8 @@ class Property:
     """The function to be applied on the data."""
     bilinear_cmap: bool = False
     """Should this property be displayed with a bilinear cmap?"""
+    categoric: bool = False
+    """Does this property only have categoric values?"""
 
     def __post_init__(self):
         if not self.output_name:
@@ -113,7 +115,7 @@ class Property:
         """
         :returns: A property representing this properties mask.
         """
-        return Property(data_name=self.mask, mask=self.mask)
+        return Property(data_name=self.mask, mask=self.mask, categoric=True)
 
 
 @dataclass
