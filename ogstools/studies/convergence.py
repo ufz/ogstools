@@ -83,35 +83,32 @@ def plot_convergence(
     return axs
 
 
+# TODO: add grid convergence Index GCI
+
+
 def richardson_extrapolation(
-    mesh1: pv.DataSet, mesh2: pv.DataSet, property: Property
+    mesh1: pv.DataSet, mesh2: pv.DataSet, property: Property, r: float
 ):
     """
-    Perform Richardson Extrapolation to estimate a property on a refined mesh.
+    Estimate a more accurate approximation of a property on a mesh.
 
-    Richardson Extrapolation is a numerical technique used to improve the accuracy of
-    numerical approximations by comparing results on two meshes, one refined (mesh2)
-    and one coarser (mesh1).
+    This function assumes that both mesh1 and mesh2 are compatible, meaning they
+    share the same structure and topology, but their data should correspond to
+    different discretizations, suggestively sampled on the base topology.
+    See <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html> for
+    more info on the topic.
 
-    :param mesh1:       The coarser mesh with the property of interest.
-    :param mesh2:       The refined mesh with the property of interest.
+    :param mesh1:       The mesh with data from coarser discretization.
+    :param mesh2:       The mesh with data from finer discretization.
     :param property:    The property to be extrapolated.
+    :param r:           The refinement ratio of the underlying discretizations.
 
     :returns:           A new DataSet with the extrapolated property values
                         based on Richardson Extrapolation.
-
-    References:
-    - NASA Glenn Research Center. "Spatial Convergence." NASA Glenn Research Center.
-      https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
-
-    Note:
-    - This function assumes that both mesh1 and mesh2 are compatible, meaning they
-      share the same structure and topology.
     """
     rich_ex = deepcopy(mesh1)
     f1 = mesh1.point_data[property.data_name]
     f2 = mesh2.point_data[property.data_name]
-    r = element_length_mean(mesh2) / element_length_mean(mesh1)
     rich_ex.point_data[property.data_name] = f2 + (f1 - f2) / (r * r - 1)
     return rich_ex
 
@@ -128,12 +125,12 @@ def convergence(
     # dictionary suitable for direct converting to pandas
     # pandas.DataFrame(d)
 
-    convergence_dict = {
-        _element_length_key: [element_length_mean(mesh) for mesh in meshes]
-    }
+    mean_lengts = [element_length_mean(mesh) for mesh in meshes]
+    convergence_dict = {_element_length_key: mean_lengts}
+    ref_ratio = mean_lengts[-2] / mean_lengts[-1]
     for property in properties:
         rich_ex = richardson_extrapolation(
-            meshes_sampled[-2], meshes_sampled[-1], property
+            meshes_sampled[-2], meshes_sampled[-1], property, ref_ratio
         )
         convergence_dict[property.data_name] = [
             error(mesh_sampled, rich_ex, property)
