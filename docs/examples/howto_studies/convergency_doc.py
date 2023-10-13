@@ -1,5 +1,5 @@
 """
-Features of studies
+Convergence study
 =====================================
 
 .. sectionauthor:: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
@@ -25,20 +25,22 @@ from ogstools.studies.convergence import convergence, plot_convergence
 # "Tests/Data/Parabolic/HT/SimpleSynthetics/XDMF/CoupledPressureParabolicTemperatureParabolicStaggered.prj"
 
 # The results
-# path = "/home/meisel/gitlabrepos/thedi-workflow/results/sim/hostrock-clay_dim-2_invtype-DWR-UOX_depth-600_gtgradient-0.02_refinement-{refinement}/transient/result_result.xdmf"
-# timeseries_files = [
-#    path.format(refinement=refinement) for refinement in [0, 1, 2]
-# ]
+path = "/home/meisel/gitlabrepos/thedi-workflow/results/sim/hostrock-clay_dim-2_invtype-DWR-UOX_depth-600_gtgradient-0.02_refinement-{refinement}/transient/result_result.xdmf"
+timeseries_files = [
+    path.format(refinement=refinement) for refinement in [0, 1, 2]
+]
 
 
 # %%
-timeseries_files = []
+# timeseries_files = []
 ts = 100
 temperature.data_name = "Temperature"
 properties = [temperature]
 
 # %%
-conv = convergence(timeseries_files, 100, [temperature])
+conv = convergence(
+    timeseries_files[-1], timeseries_files[:-1], 100, [temperature]
+)
 print(conv)
 
 # %%
@@ -51,8 +53,7 @@ plt.ioff()
 fig, axs = plt.subplots(
     dpi=200, figsize=[5, 3], facecolor="white", nrows=len(properties)
 )
-if not isinstance(axs, list):
-    axs = [axs]
+
 
 plot_convergence(timeseries_files, 100, properties, axs)
 

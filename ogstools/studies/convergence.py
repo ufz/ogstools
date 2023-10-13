@@ -13,8 +13,7 @@ from ogstools.propertylib import (
 _element_length_key = "element_length_mean"
 
 
-def sampled_meshes(meshes: list[pv.DataSet]):
-    reference_mesh = meshes[0]
+def sampled_meshes(reference_mesh, meshes: list[pv.DataSet]):
     sim_results_sampled = []
     for mesh in meshes:
         mesh_temp = deepcopy(reference_mesh)
@@ -46,13 +45,11 @@ def error(mesh: pv.DataSet, mesh_reference: pv.DataSet, property: Property):
     )
 
 
-# ToDo max_value = (max(_p_val.values(mesh_reference.point_data[property.data_name])))
-
-
-def plot_property(property: Property, convergence_data: dict, ax=0):
+# ToDo different properties which are based on the same data_name, the convergence_data dictionary could run into trouble
+def plot_property(property: Property, convergence_data, ax=0):
     errors_per_mesh = convergence_data[property.data_name]
     e_lengths = convergence_data[_element_length_key]
-    lin_refs_per_mesh = [
+    linear_refs_per_mesh = [
         (errors_per_mesh[0] / e_lengths[0]) * el**1 for el in e_lengths
     ]  # to plot
     quadratic_refs_per_mesh = [
@@ -60,7 +57,7 @@ def plot_property(property: Property, convergence_data: dict, ax=0):
     ]  # to plot
 
     ax.loglog(e_lengths, errors_per_mesh, "-o")
-    ax.loglog(e_lengths, lin_refs_per_mesh, "--", c="k")
+    ax.loglog(e_lengths, linear_refs_per_mesh, "--", c="k")
     ax.loglog(e_lengths, quadratic_refs_per_mesh, ":", c="k")
     # ax.set_title(title, loc="center", y=1.02)
     ax.set_xlabel("mean element length / m")
@@ -71,10 +68,18 @@ def plot_property(property: Property, convergence_data: dict, ax=0):
     return ax
 
 
-def plot_convergence(sim_result_files, ts, properties: list[Property], axs):
-    d = convergence(sim_result_files, ts, properties)
+def plot_convergence(
+    refence_sim_result,
+    sim_result_files,
+    ts,
+    properties: list[Property],
+    axs,
+):
+    if not isinstance(axs, list):
+        axs = [axs]
+    metrics = convergence(refence_sim_result, sim_result_files, ts, properties)
     for pos, property in enumerate(properties):
-        plot_property(property, d, axs[pos])
+        plot_property(property, metrics, axs[pos])
     return axs
 
 
@@ -89,15 +94,18 @@ def richardson_extrapolation(
     f1 = mesh1.point_data[property.data_name]
     f2 = mesh2.point_data[property.data_name]
     r = element_length_mean(mesh2) / element_length_mean(mesh1)
-    rich_ex.point_data[property.data_name] = f1 + (f1 - f2) / (r * r - 1)
+    rich_ex.point_data[property.data_name] = f2 + (f1 - f2) / (r * r - 1)
     return rich_ex
 
 
-def convergence(sim_result_files, ts, properties: list[Property]):
+def convergence(
+    sim_result_reference, sim_result_files, ts, properties: list[Property]
+):
+    reference_mesh = MeshSeries(sim_result_reference).read(ts)
     meshes = [
         MeshSeries(sim_result).read(ts) for sim_result in sim_result_files
     ]
-    meshes_sampled = sampled_meshes(meshes)
+    meshes_sampled = sampled_meshes(reference_mesh, meshes)
 
     # dictionary suitable for direct converting to pandas
     # pandas.DataFrame(d)
@@ -107,9 +115,7 @@ def convergence(sim_result_files, ts, properties: list[Property]):
     }
     for property in properties:
         # ToDo refinement_ratio with elength[-1]/elength[-2] as input to richardson_extrapolation
-        rich_ex = richardson_extrapolation(
-            meshes_sampled[-2], meshes_sampled[-1], property
-        )
+        rich_ex = richardson_extrapolation(meshes[-2], meshes[-1], property)
         convergence_dict[property.data_name] = [
             error(mesh_sampled, rich_ex, property)
             for mesh_sampled in meshes_sampled

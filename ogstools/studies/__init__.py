@@ -2,7 +2,7 @@
 """meshplotlib utilities for simple access."""
 
 
-from .studies import convergence
+from . import convergence
 
 __all__ = [
     "convergence",
