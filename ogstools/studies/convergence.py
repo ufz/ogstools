@@ -13,7 +13,7 @@ from ogstools.propertylib import (
 _element_length_key = "element_length_mean"
 
 
-def sampled_meshes(reference_mesh, meshes: list[pv.DataSet]):
+def sampled_meshes(reference_mesh: pv.DataSet, meshes: list[pv.DataSet]):
     sim_results_sampled = []
     for mesh in meshes:
         mesh_temp = deepcopy(reference_mesh)
@@ -45,7 +45,7 @@ def error(mesh: pv.DataSet, mesh_reference: pv.DataSet, property: Property):
     )
 
 
-# ToDo different properties which are based on the same data_name, the convergence_data dictionary could run into trouble
+# TODO: different properties based on the same data_name -> need other key
 def plot_property(property: Property, convergence_data, ax=0):
     errors_per_mesh = convergence_data[property.data_name]
     e_lengths = convergence_data[_element_length_key]
@@ -83,13 +83,31 @@ def plot_convergence(
     return axs
 
 
-# ToDo refinement_ratio to be removed
 def richardson_extrapolation(
     mesh1: pv.DataSet, mesh2: pv.DataSet, property: Property
 ):
-    # https://www.sd.rub.de/downloads/Convergence_FEM.pdf
+    """
+    Perform Richardson Extrapolation to estimate a property on a refined mesh.
 
-    # check that there are at least 3 meshes
+    Richardson Extrapolation is a numerical technique used to improve the accuracy of
+    numerical approximations by comparing results on two meshes, one refined (mesh2)
+    and one coarser (mesh1).
+
+    :param mesh1:       The coarser mesh with the property of interest.
+    :param mesh2:       The refined mesh with the property of interest.
+    :param property:    The property to be extrapolated.
+
+    :returns:           A new DataSet with the extrapolated property values
+                        based on Richardson Extrapolation.
+
+    References:
+    - NASA Glenn Research Center. "Spatial Convergence." NASA Glenn Research Center.
+      https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
+
+    Note:
+    - This function assumes that both mesh1 and mesh2 are compatible, meaning they
+      share the same structure and topology.
+    """
     rich_ex = deepcopy(mesh1)
     f1 = mesh1.point_data[property.data_name]
     f2 = mesh2.point_data[property.data_name]
@@ -114,8 +132,9 @@ def convergence(
         _element_length_key: [element_length_mean(mesh) for mesh in meshes]
     }
     for property in properties:
-        # ToDo refinement_ratio with elength[-1]/elength[-2] as input to richardson_extrapolation
-        rich_ex = richardson_extrapolation(meshes[-2], meshes[-1], property)
+        rich_ex = richardson_extrapolation(
+            meshes_sampled[-2], meshes_sampled[-1], property
+        )
         convergence_dict[property.data_name] = [
             error(mesh_sampled, rich_ex, property)
             for mesh_sampled in meshes_sampled
