@@ -275,7 +275,12 @@ def subplot(
 
 
 def _get_rows_cols(
-    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid]
+    meshes: Union[
+        list[pv.UnstructuredGrid],
+        np.ndarray,
+        pv.UnstructuredGrid,
+        pv.MultiBlock,
+    ]
 ) -> tuple[int, ...]:
     if isinstance(meshes, np.ndarray):
         if meshes.ndim in [1, 2]:
@@ -284,6 +289,8 @@ def _get_rows_cols(
         raise ValueError(msg)
     if isinstance(meshes, list):
         return (1, len(meshes))
+    if isinstance(meshes, pv.MultiBlock):
+        return (1, meshes.n_blocks)
     return (1, 1)
 
 
