@@ -17,7 +17,6 @@ from ogstools.feflowlib import (
     update_geometry,
 )
 from ogstools.feflowlib.examples import path_2layers_model
-from ogstools.propertylib import ScalarProperty
 
 # Load a FEFLOW model (.fem) or FEFLOW results file (.dac) as a FEFLOW document.
 feflow_model = ifm.loadDocument(path_2layers_model)
@@ -37,4 +36,4 @@ print(pv_mesh)
 pv_mesh.save("2layers_model.vtu")
 # %%
 # 4. As the converted mesh is a pyvista.UnstructuredGrid, we can plot it using meshplotlib.
-fig = mpl.plot(pv_mesh, ScalarProperty("P_HEAD"))
+fig = mpl.plot(pv_mesh.slice_orthogonal(), "P_HEAD")
