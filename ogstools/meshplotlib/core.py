@@ -3,7 +3,6 @@ from typing import Optional as Opt
 from typing import Union
 
 import numpy as np
-import PIL.Image as Image
 import pyvista as pv
 from matplotlib import cm as mcm
 from matplotlib import colormaps, rcParams
@@ -15,12 +14,10 @@ from matplotlib.patches import Rectangle as Rect
 
 from ogstools.propertylib import THM, Property
 from ogstools.propertylib import MatrixProperty as Matrix
-from ogstools.propertylib import ScalarProperty as Scalar
 from ogstools.propertylib import VectorProperty as Vector
 
 from . import plot_features as pf
 from . import setup
-from .image_tools import trim
 from .levels import get_levels
 
 
@@ -30,15 +27,12 @@ def _q_zero_line(property: Property, levels: np.ndarray):
     )
 
 
-# TODO: when isometric plot is gone, this can already return the property data
-def get_data(
-    mesh: pv.UnstructuredGrid, property: Property
-) -> pv.DataSetAttributes:
+def get_data(mesh: pv.UnstructuredGrid, property: Property) -> np.ndarray:
     """Get the data associated with a scalar or vector property from a mesh."""
     if property.data_name in mesh.point_data:
-        return mesh.point_data
+        return mesh.point_data[property.data_name]
     if property.data_name in mesh.cell_data:
-        return mesh.cell_data
+        return mesh.cell_data[property.data_name]
     msg = f"Property not found in mesh {mesh}."
     raise IndexError(msg)
 
@@ -89,49 +83,6 @@ def get_cmap_norm(
         boundaries=boundaries, ncolors=len(boundaries), clip=True
     )
     return cmap, norm
-
-
-def plot_isometric(
-    mesh: pv.UnstructuredGrid,
-    property: Union[Property, str],
-    levels: Opt[np.ndarray] = None,
-) -> Image.Image:
-    """Plot an isometric view of the property field on the mesh."""
-    mesh = mesh.copy()
-    property = get_property(property)
-    if property.mask in mesh.cell_data and len(mesh.cell_data[property.mask]):
-        mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
-
-    get_data(mesh, property).active_scalars_name = property.data_name
-    # data = get_data(mesh, property)[property.data_name]
-    _p_val = (
-        property.magnitude
-        if isinstance(property, (Vector, Matrix))
-        else property
-    )
-
-    data = get_data(mesh, property)[property.data_name]
-    get_data(mesh, property)[property.data_name] = _p_val.values(data)
-
-    if levels is None:
-        num_levels = min(setup.num_levels, len(np.unique(data)))
-        levels = get_levels(np.nanmin(data), np.nanmax(data), num_levels)
-    cmap = get_cmap_norm(levels, property)[0]
-
-    # add arg show_edges=True if you want to see the cell edges
-    # mesh = mesh.scale([1.0, 1.0, 15.0], inplace=False)
-    pv.set_plot_theme("document")
-    p = pv.Plotter(off_screen=True)
-    p.add_mesh(mesh, cmap=cmap, clim=[levels[0], levels[-1]], lighting=False)
-    p.add_mesh(mesh.extract_feature_edges(), color="black")
-    mesh_surf = mesh.extract_surface()
-    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
-        for mat_id in np.unique(mesh.cell_data["MaterialIDs"]):
-            mesh_id = mesh_surf.threshold(mat_id, "MaterialIDs")
-            p.add_mesh(mesh_id.extract_feature_edges(), color="k")
-    p.camera.azimuth += 270
-    p.remove_scalar_bar()
-    return trim(Image.fromarray(p.screenshot(filename=None)), 50)
 
 
 def add_colorbar(
@@ -227,12 +178,10 @@ def subplot(
     Custom levels and a colormap string can be provided.
     """
 
-    property = get_property(property)
+    property = resolve_property(property)
     if mesh.get_cell(0).dimension == 3:
-        # TODO: slice per default? or throw error?
-        ax.imshow(plot_isometric(mesh, property, levels))
-        ax.axis("off")
-        return
+        msg = "meshplotlib is for 2D meshes only, but found 3D elements."
+        raise TypeError(msg)
 
     ax.axis(setup.scale_type)
 
@@ -260,7 +209,7 @@ def subplot(
         if isinstance(property, (Vector, Matrix))
         else property
     )
-    values = _property.values(get_data(surf_tri, property)[property.data_name])
+    values = _property.values(get_data(surf_tri, property))
     if setup.log_scaled:
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -348,9 +297,9 @@ def _fig_init(rows: int, cols: int) -> mfigure.Figure:
 
 
 def get_combined_levels(
-    meshes: np.ndarray, property_or_str: Union[Property, str]
+    meshes: np.ndarray, property: Union[Property, str]
 ) -> np.ndarray:
-    property = get_property(property_or_str)
+    property = resolve_property(property)
     _p_val = (
         property.magnitude
         if isinstance(property, (Vector, Matrix))
@@ -359,8 +308,8 @@ def get_combined_levels(
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = _p_val.values(get_data(mesh, property)[property.data_name])
-        if setup.log_scaled:  # TODO
+        values = _p_val.values(get_data(mesh, property))
+        if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
         p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
@@ -376,14 +325,11 @@ def get_combined_levels(
     return get_levels(p_min, p_max, setup.num_levels)
 
 
-def get_property(property: Union[Property, str]) -> Property:
+def resolve_property(property: Union[Property, str]) -> Property:
     if isinstance(property, Property):
         return property
     prop = THM.find_property(property)
-    if prop is not None:
-        return prop
-    # TODO: Determine Property type by actual data
-    return Scalar(property)
+    return prop if prop else Property(property)
 
 
 def _plot_on_figure(
@@ -432,7 +378,7 @@ def plot(
     :param property:    The property field to be visualized on all meshes
     """
 
-    property = get_property(property)
+    property = resolve_property(property)
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
     fig = _fig_init(*shape)
