@@ -81,12 +81,10 @@ class MeshplotlibTest(unittest.TestCase):
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
-        # TODO: find alternative for isometric plot with pyvista
-        plot(mesh, ScalarProperty("Spatial Point Data"))
-        plot(mesh.slice((1, 1, 0)), ScalarProperty("Spatial Point Data"))
+        plot(mesh.slice((1, 1, 0)), "Spatial Point Data")
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
-        plot(meshes, ScalarProperty("Spatial Point Data"))
-        plot(mesh.slice([1, -2, 0]), ScalarProperty("Spatial Point Data"))
+        plot(meshes, "Spatial Point Data")
+        plot(mesh.slice([1, -2, 0]), "Spatial Point Data")
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
