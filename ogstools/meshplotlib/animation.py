@@ -14,7 +14,7 @@ from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property
 
 from . import setup
-from .core import _plot, plot, plt
+from .core import _plot_on_figure, plot, plt
 
 
 def timeline(ax: plt.Axes, x: float, xticks: list[float]) -> None:
@@ -76,7 +76,7 @@ def animate(
             mesh = mesh_series.read_interp(i, True)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            fig = _plot(fig, mesh, property)
+            fig = _plot_on_figure(fig, mesh, property)
             x = i / len(ts) if isinstance(i, int) else t_frac(i)
             timeline(fig.axes[0], x, xticks)
 

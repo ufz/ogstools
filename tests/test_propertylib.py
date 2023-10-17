@@ -75,7 +75,7 @@ class PhysicalPropertyTest(unittest.TestCase):
         for i in range(len(u)):
             self.equality(M.displacement[i], u, Q_(i, "mm"))
             self.equality(M.displacement[i], [u, u], Q_([i, i], "mm"))
-        assert M.strain[0].is_component
+        assert M.strain[0].bilinear_cmap is True
 
     def test_von_mises(self):
         """Test von_mises_stress property."""

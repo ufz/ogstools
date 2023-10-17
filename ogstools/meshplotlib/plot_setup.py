@@ -4,6 +4,8 @@
 from dataclasses import dataclass
 from typing import Literal, Union
 
+from matplotlib.colors import Colormap
+
 from ogstools.propertylib.property import Property, ScalarProperty
 
 from .plot_setup_defaults import setup_dict
@@ -18,8 +20,10 @@ class PlotSetup:
     :obj:`ogstools.meshplotlib.plot_setup_defaults`.
     """
 
-    cmap_dict_if_component: dict
-    "A dictionary that maps colormaps to property components."
+    custom_cmap: Colormap
+    "If provided, this colormap will be used for any plot."
+    cmap_dict_if_bilinear: dict
+    "A dictionary that maps bilinear colormaps to properties."
     cmap_dict: dict
     "A dictionary that maps colormaps to properties."
     cmap_if_mask: list
@@ -72,14 +76,16 @@ class PlotSetup:
     "A boolean indicating whether the scaling should be logarithmic."
     show_region_bounds: bool
     "Controls the display of region (MaterialIDs) edges."
+    embedded_region_names_color: str
+    "Color of the embedded region names inside the plot."
 
     def cmap_str(self, property: Property) -> Union[str, list]:
         """Get the colormap string for a given property."""
         if property.is_mask():
             return self.cmap_if_mask
-        if property.is_component():
-            if property.data_name in self.cmap_dict_if_component:
-                return self.cmap_dict_if_component[property.data_name]
+        if property.bilinear_cmap:
+            if property.data_name in self.cmap_dict_if_bilinear:
+                return self.cmap_dict_if_bilinear[property.data_name]
         elif property.data_name in self.cmap_dict:
             return self.cmap_dict[property.data_name]
         return self.default_cmap
@@ -109,6 +115,7 @@ class PlotSetup:
             show_region_bounds=obj["show_region_bounds"],
             show_element_edges=obj["show_element_edges"],
             show_aspect_ratio=obj["show_aspect_ratio"],
+            embedded_region_names_color=obj["embedded_region_names_color"],
             title_center=obj["title_center"],
             title_left=obj["title_left"],
             title_right=obj["title_right"],
@@ -117,8 +124,9 @@ class PlotSetup:
             log_scaled=obj["log_scaled"],
             length=ScalarProperty("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
+            custom_cmap=obj["custom_cmap"],
             cmap_dict=obj["cmap_dict"],
-            cmap_dict_if_component=obj["cmap_dict_if_component"],
+            cmap_dict_if_bilinear=obj["cmap_dict_if_bilinear"],
             cmap_if_mask=obj["cmap_if_mask"],
             default_cmap=obj["default_cmap"],
             rcParams=obj["rcParams"],

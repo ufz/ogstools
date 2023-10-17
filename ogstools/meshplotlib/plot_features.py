@@ -37,16 +37,26 @@ def plot_layer_boundaries(
         ha = "left" if mat_id % 2 == 0 else "right"
         x_b_lim = x_b.min() if mat_id % 2 == 0 else x_b.max()
         y_pos = np.mean(y_b[x_b == x_b_lim])
-
+        if not setup.embedded_region_names_color:
+            continue
         if setup.material_names is not None and mat_id in setup.material_names:
+            c = setup.embedded_region_names_color
+            m = ">" if mat_id % 2 == 0 else "<"
             outline = [patheffects.withStroke(linewidth=1, foreground="k")]
+            plt.scatter(
+                round(x_pos) + 0.2 * (x_pos - round(x_pos)),
+                y_pos,
+                transform=btf(ax.transAxes, ax.transData),
+                color=c,
+                marker=m,
+            )
             plt.text(
                 x_pos,
                 y_pos,
                 setup.material_names[mat_id],
                 fontsize=plt.rcParams["font.size"] * 0.75,
                 transform=btf(ax.transAxes, ax.transData),
-                color="w",
+                color=c,
                 weight="bold",
                 ha=ha,
                 va="center",
@@ -141,25 +151,10 @@ def get_aspect(ax: plt.Axes) -> float:
     return disp_ratio / data_ratio
 
 
-# def plot_contour(
-#
-#     ax_id: int,
-#     vtu_path: str,
-#     origin: np.ndarray,
-#     slice: bool,
-#     style: str,
-#     lw: int,
-# ):
-#     vtu = pv.XMLUnstructuredGridReader(vtu_path).read()
-#     if dim == 2:
-#         contour_vtu = vtu.extract_surface().strip(join=True)
-#     else:
-#         if slice:
-#             vtu = vtu.slice(normal=ax_normals[ax_id], origin=origin)
-#         else:
-#             vtu = vtu.extract_feature_edges()
-#         contour_vtu = vtu.strip(join=True)
-
-#     x_id, y_id = np.delete([0, 1, 2], ax_normal_id[ax_id])
-#     x, y = 1e-3 * contour_vtu.points[contour_vtu.lines[1:]].T[[x_id, y_id]]
-#     fig.axes[ax_id].plot(x, y, style, lw=lw)
+def plot_contour(
+    ax: plt.Axes, mesh: pv.DataSet, style: str, lw: int, projection: int = 2
+):
+    contour = mesh.extract_surface().strip(join=True)
+    x_id, y_id = np.delete([0, 1, 2], projection)
+    x, y = 1e-3 * contour.points[contour.lines[1:]].T[[x_id, y_id]]
+    ax.plot(x, y, style, lw=lw)

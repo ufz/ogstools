@@ -53,8 +53,8 @@ class MeshplotlibTest(unittest.TestCase):
         setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
         meshseries = examples.meshseries_THM_2D
         mesh = meshseries.read(1)
-        plot(mesh, property=THM.material_id)
-        plot(mesh, property=THM.temperature)
+        plot(mesh, THM.material_id)
+        plot(mesh, THM.temperature)
         plot(mesh, ScalarProperty("pressure_active"))
         plot(mesh.threshold((1, 3), "MaterialIDs"), THM.velocity)
         fig = plot(mesh, THM.displacement[0])
@@ -81,12 +81,10 @@ class MeshplotlibTest(unittest.TestCase):
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
-        # TODO: find alternative for isometric plot with pyvista
-        plot(mesh, ScalarProperty("Spatial Point Data"))
-        plot(mesh.slice((1, 1, 0)), ScalarProperty("Spatial Point Data"))
+        plot(mesh.slice((1, 1, 0)), "Spatial Point Data")
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
-        plot(meshes, ScalarProperty("Spatial Point Data"))
-        plot(mesh.slice([1, -2, 0]), ScalarProperty("Spatial Point Data"))
+        plot(meshes, "Spatial Point Data")
+        plot(mesh.slice([1, -2, 0]), "Spatial Point Data")
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
@@ -102,7 +100,7 @@ class MeshplotlibTest(unittest.TestCase):
             f"{THIS_DIR}/data/meshplotlib/"
             "2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
-        plot(mesh, property=THM.temperature)
+        plot(mesh, THM.temperature)
 
 
 if __name__ == "__main__":
