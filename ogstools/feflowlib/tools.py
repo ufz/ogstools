@@ -63,8 +63,8 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
         "2ND": "Neumann",
         "3RD": "Robin",
         "4TH": "NodalSourceTerm",
-        "P_IOFLOW": "Neumann?",
-        "P_SOUF": "Neumann?",
+        "P_IOFLOW": "Neumann",
+        "P_SOUF": "volumentric source term",
     }
     mesh_name = mesh_name.replace(".vtu", "")
     xml_meshes = ET.Element("meshes")
@@ -134,7 +134,7 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
             filtered_points = mesh.extract_points(
                 [not np.isnan(x) for x in mesh[point_data]],
                 adjacent_cells=False,
-                include_cells=True,
+                include_cells=False,
             )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
@@ -169,19 +169,27 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     :type mesh: pyvista.UnstructuredGrid
     """
     BC_mesh = mesh.copy()
+    BC_mesh["orig_indices"] = np.arange(BC_mesh.n_points, dtype=np.uint64)
+    BC_mesh.cell_data["bulk_element_ids"] = np.arange(
+        BC_mesh.n_cells, dtype=np.uint64
+    )
     for cd in [
         cell_data
         for cell_data in BC_mesh.cell_data
-        if cell_data not in ["P_SOUF", "P_IOFLOW"]
+        if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
     ]:
         BC_mesh.cell_data.remove(cd)
     # Only cell data are needed
-    BC_mesh.point_data.clear()
     # get the topsurface since there are the cells of interest
     # TODO: Allow a generic definition of the normal vector for the filter condition.
     topsurf = get_specific_surface(
         BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
     )
+    # remove data of BC that are of no value for this part of the mesh
+    for pt_data in topsurf.point_data:
+        if pt_data != "orig_indices":
+            topsurf.point_data.remove(pt_data)
+    topsurf.rename_array("orig_indices", "bulk_node_ids")
     topsurf.save("topsurface_" + mesh_name)
     # create the xml-file
     write_xml(
@@ -189,3 +197,93 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
         topsurf.cell_data,
         "MeshElement",
     )
+
+
+def include_xml_snippet_in_prj_file(
+    in_prj_file: str, out_prj_file: str, xml_snippet: str
+):
+    """
+    Includes an xml snippet in a project-file. It only works if there is already a subelement in
+    the project file that has the same tag/name as the root element of the xml-snippet to be included.
+
+    :param in_prj_file: path of the input projectfile
+    :type in_prj_file: str
+    :param out_prj_file: path of the output projectfile
+    :type out_prj_file: str
+    :param xml_snippet: path of the xml-snippet
+    :type xml_snippet: str
+    """
+    tree = ET.parse(in_prj_file)
+    root = tree.getroot()
+    # parse the XML file to be included
+    include_tree = ET.parse(xml_snippet)
+    include_root = include_tree.getroot()
+    subelement = root.find(include_root.tag)
+
+    # add the include root as a child of the subelement
+    subelement.extend(include_root)  # type: ignore[union-attr]
+
+    # write the modified tree to a file
+    tree.write(out_prj_file)
+
+
+def write_material_properties_to_xml(material_properties: dict):
+    """
+    Writes the material properties of a model that has data arrays according to FEFLOW syntax, as an xml snippet.
+    This xml snippet can be included to OGS prj-file to set up a simulation.
+
+    :param material_properties: properties referring to materials
+    :type material_properties: dict
+    """
+    root = ET.Element("media")
+    for material_id in material_properties:
+        medium = ET.SubElement(root, "medium", {"id": str(material_id)})
+        properties = ET.SubElement(medium, "properties")
+        diffusion = ET.SubElement(properties, "property")
+        reference_temperature = ET.SubElement(properties, "property")
+        ET.SubElement(diffusion, "name").text = "diffusion"
+        ET.SubElement(diffusion, "type").text = "Constant"
+        ET.SubElement(diffusion, "value").text = str(
+            material_properties[material_id]
+        )
+        ET.SubElement(
+            reference_temperature, "name"
+        ).text = "reference_temperature"
+        ET.SubElement(reference_temperature, "type").text = "Constant"
+        ET.SubElement(reference_temperature, "value").text = "293.15"
+
+    ET.indent(root, space="\t", level=0)
+    ET.ElementTree(root).write("material_properties.xml")
+
+
+def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
+    """
+    Get the material properties of the mesh converted from FEFLOW. There are several methods available
+    to access the material properties. Either they are accessible with the FEFLOW API(ifm) or with brute-force methods,
+    which check each element.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param property: property
+    :type property: str
+    """
+    material_ids = mesh.cell_data["MaterialIDs"]
+    material_properties = {}
+    for material_id in np.unique(material_ids):
+        indices = np.where(material_ids == material_id)
+        property_of_material = mesh.cell_data[property][indices]
+        all_properties_equal = np.all(
+            property_of_material == property_of_material[0]
+        )
+        if all_properties_equal:
+            material_properties[material_id] = [property_of_material[0] / 86400]
+        else:
+            print(
+                "WARNING: the property "
+                + property
+                + " in material "
+                + str(material_id)
+                + " does not refer to a constant value"
+            )
+
+    return material_properties
