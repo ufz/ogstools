@@ -22,6 +22,15 @@ class ConvergenceTest(unittest.TestCase):
         richardson = richardson_extrapolation(meshes[-2], meshes[-1], pressure)
         analytical = analytical_solution(target_mesh)
         conv = convergence(target_mesh, meshes, analytical, pressure)
+        pressure_expected = [
+            0.030989251445358995,
+            0.004311496211867697,
+            0.0010968159126094655,
+            0.00026568946729398736,
+            6.283264310009035e-05,
+            1.2467294614441292e-05,
+        ]
+        self.assertAlmostEqual(conv["pressure"], pressure_expected, places=5)
         pd.DataFrame(conv)
         _, axs = plt.subplots(dpi=200, figsize=[5, 3], nrows=1)
         _ = plot_convergence(target_mesh, meshes, richardson, pressure, axs)
