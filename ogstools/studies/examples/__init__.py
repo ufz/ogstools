@@ -30,6 +30,7 @@ def _h(points):
 
 def analytical_solution(target_mesh: pv.DataSet) -> pv.DataSet:
     new_mesh = deepcopy(target_mesh)
+    new_mesh.point_data.clear()
     points = new_mesh.points
     new_mesh.point_data["pressure"] = _h(points)
     return new_mesh

@@ -13,9 +13,11 @@ https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/
 # First import the dependencies.
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
-from ogstools.propertylib.defaults import pressure, velocity
+import ogstools.meshplotlib as mpl
+import ogstools.propertylib as ppl
 from ogstools.studies.convergence import (
     convergence,
     plot_convergence,
@@ -29,11 +31,19 @@ from ogstools.studies.examples import analytical_solution, meshes
 # but even without we can calculate the Richardson extrapolation from the two
 # finest meshes to create a reference results to compare against.
 
-target_mesh = meshes[0]
-velocity.data_name = "v"
-data = [pressure, velocity]
+mpl.setup.show_element_edges = True
+hy_head = ppl.ScalarProperty("pressure", "m", "m", "hydraulic head")
+velocity = ppl.VectorProperty("v")
+data = [hy_head, velocity]
+target_mesh = meshes[-1]
 richardson = richardson_extrapolation(meshes[-2], meshes[-1], data)
 analytical = analytical_solution(target_mesh)
+
+# %%
+fig = mpl.plot(np.reshape(meshes, (2, -1)), hy_head)
+
+# %%
+fig = mpl.plot(richardson, velocity.magnitude)
 
 # %%
 # We can run the convergence study and visualize it in a tabular format by
@@ -45,14 +55,15 @@ pd.DataFrame(conv)
 # Finally, let's visualize the convergence by plotting the error (L2-Norm)
 # of the pressure field between the different discretizations against the
 # analytical solution...
+plt.rcdefaults()
 fig, axs = plt.subplots(dpi=200, figsize=[5, 3], facecolor="white", nrows=1)
-plot_convergence(target_mesh, meshes, analytical, pressure, axs)
+plot_convergence(target_mesh, meshes, analytical, hy_head, axs)
 _ = axs.set_title("convergence against the analytical solution")
 
 # %%
 # and against the Richardson extrapolation.
 fig, axs = plt.subplots(dpi=200, figsize=[5, 3], facecolor="white", nrows=1)
-plot_convergence(target_mesh, meshes, richardson, pressure, axs)
+plot_convergence(target_mesh, meshes, richardson, hy_head, axs)
 _ = axs.set_title("convergence against the Richardson extrapolation")
 
 # %%
