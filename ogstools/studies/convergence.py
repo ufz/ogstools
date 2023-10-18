@@ -28,7 +28,14 @@ def sampled_meshes(target_topology: pv.DataSet, meshes: list[pv.DataSet]):
 
 
 def element_length_mean(mesh: pv.DataSet):
-    return np.mean(np.sqrt(mesh.compute_cell_sizes().cell_data["Area"]))
+    if mesh.get_cell(0).dimension == 1:
+        return np.mean(mesh.compute_cell_sizes().cell_data["Length"])
+    if mesh.get_cell(0).dimension == 2:
+        return np.mean(np.sqrt(mesh.compute_cell_sizes().cell_data["Area"]))
+    # if mesh.get_cell(0).dimension == 3:
+    #     return np.mean(mesh.compute_cell_sizes().cell_data["Volume"]**(1/3))
+    msg = f"Dimension {mesh.get_cell(0).dimension} not yet supported"
+    raise ValueError(msg)
 
 
 def error(mesh: pv.DataSet, mesh_reference: pv.DataSet, property: Property):
@@ -95,8 +102,8 @@ def plot_convergence(
 
 
 def richardson_extrapolation(
-    mesh1: pv.DataSet,
-    mesh2: pv.DataSet,
+    mesh_coarse: pv.DataSet,
+    mesh_fine: pv.DataSet,
     properties: Union[Property, list[Property]],
 ):
     """
@@ -104,24 +111,24 @@ def richardson_extrapolation(
 
     This function calculates the Richardson Extrapolation based on the change
     in the discretization and the results of the two given meshes.
-    The result is given on the topology of mesh1.
+    The result is given on the topology of mesh_fine.
     See <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html> for
     more information on this topic.
 
-    :param mesh1:       The mesh with the coarser discretization.
-    :param mesh2:       The mesh with the finer discretization.
+    :param mesh_coarse:       The mesh with the coarser discretization.
+    :param mesh_fine:       The mesh with the finer discretization.
     :param properties:  The properties to be extrapolated.
 
-    :returns:           The topology of mesh1 with the properties values
+    :returns:           The topology of mesh_coarse with the properties values
                         based on Richardson Extrapolation.
     """
-    rich_ex = deepcopy(mesh1)
-    r = element_length_mean(mesh1) / element_length_mean(mesh2)
+    rich_ex = deepcopy(mesh_fine)
+    r = element_length_mean(mesh_coarse) / element_length_mean(mesh_fine)
     if not isinstance(properties, list):
         properties = [properties]
     for property in properties:
-        f1 = mesh1.point_data[property.data_name]
-        f2 = mesh1.sample(mesh2).point_data[property.data_name]
+        f1 = mesh_fine.sample(mesh_coarse).point_data[property.data_name]
+        f2 = mesh_fine.point_data[property.data_name]
         rich_ex.point_data[property.data_name] = f2 + (f1 - f2) / (r * r - 1)
     return rich_ex
 
