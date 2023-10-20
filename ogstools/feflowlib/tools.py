@@ -78,7 +78,6 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
             "bulk_node_ids",
             "bulk_element_ids",
             "vtkOriginalPointIds",
-            "orig_indices",
         ]:
             ET.SubElement(xml_meshes, "mesh").text = parameter_name
 
@@ -105,6 +104,20 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
     ET.ElementTree(xml_parameter).write("parameter_" + mesh_name + ".xml")
 
 
+def assign_bulk_ids(mesh: pv.UnstructuredGrid):
+    """
+    assign an array with integer of the indices of the original mesh
+
+    :param mesh_name: name of the mesh
+    :type mesh_name: str
+    """
+
+    mesh["bulk_node_ids"] = np.arange(mesh.n_points, dtype=np.uint64)
+    mesh.cell_data["bulk_element_ids"] = np.arange(
+        mesh.n_cells, dtype=np.uint64
+    )
+
+
 def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     """
     Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
@@ -118,19 +131,16 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     """
 
     # assign an array with integer of the indices of the original mesh
-    mesh["orig_indices"] = np.arange(mesh.n_points, dtype=np.uint64)
-    mesh.cell_data["bulk_element_ids"] = np.arange(
-        mesh.n_cells, dtype=np.uint64
-    )
+    assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     mesh = mesh.extract_surface()
     # remove all the point data that are not of interest
     for point_data in mesh.point_data:
-        if not all(["_BC" in point_data]) and point_data != "orig_indices":
+        if not all(["_BC" in point_data]) and point_data != "bulk_node_ids":
             mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
     for point_data in mesh.point_data:
-        if point_data != "orig_indices":
+        if point_data != "bulk_node_ids":
             filtered_points = mesh.extract_points(
                 [not np.isnan(x) for x in mesh[point_data]],
                 adjacent_cells=False,
@@ -142,11 +152,10 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
                     filtered_points.cell_data.remove(cell_data)
             # remove data of BC that are of no value for this part of the mesh
             for pt_data in mesh.point_data:
-                if pt_data != point_data and pt_data != "orig_indices":
+                if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
 
             # Only "bulk_node_ids" can be read by ogs
-            filtered_points.rename_array("orig_indices", "bulk_node_ids")
             filtered_points.save(point_data + ".vtu")
             # pv.save_meshio(
             #    point_data + ".vtu", filtered_points, file_format="vtu"
@@ -168,28 +177,24 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
-    BC_mesh = mesh.copy()
-    BC_mesh["orig_indices"] = np.arange(BC_mesh.n_points, dtype=np.uint64)
-    BC_mesh.cell_data["bulk_element_ids"] = np.arange(
-        BC_mesh.n_cells, dtype=np.uint64
-    )
+    # mesh = mesh.copy()
+    assign_bulk_ids(mesh)
     for cd in [
         cell_data
-        for cell_data in BC_mesh.cell_data
+        for cell_data in mesh.cell_data
         if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
     ]:
-        BC_mesh.cell_data.remove(cd)
+        mesh.cell_data.remove(cd)
     # Only cell data are needed
     # get the topsurface since there are the cells of interest
     # TODO: Allow a generic definition of the normal vector for the filter condition.
     topsurf = get_specific_surface(
-        BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
+        mesh.extract_surface(), lambda normals: normals[:, 2] > 0
     )
     # remove data of BC that are of no value for this part of the mesh
     for pt_data in topsurf.point_data:
-        if pt_data != "orig_indices":
+        if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    topsurf.rename_array("orig_indices", "bulk_node_ids")
     topsurf.save("topsurface_" + mesh_name)
     # create the xml-file
     write_xml(
