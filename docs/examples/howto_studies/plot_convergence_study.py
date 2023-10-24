@@ -7,6 +7,7 @@ convergence of numerical simulations. It uses data from the following benchmark
 with multiple discretizations to evaluate the accuracy of the numerical
 solutions.
 https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/
+
 Here is some theoretical background for the Richardson extrapolation:
 https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
 """
@@ -32,14 +33,17 @@ mpl.setup.show_element_edges = True
 mpl.setup.ax_aspect_ratio = 1
 
 # %%
-# First we inspect the primary variable, in this case the hydraulic head.
-mesh_property = ScalarProperty("pressure", "m", "m", "hydraulic head")
-
-# %%
 # Let's have a look at the different discretizations. The 3 finest will be used
-# for the Richadson extrapolation. The coarsest of those 3 will be used for the
-# topology to evaluate the results.
+# for the Richadson extrapolation. The coarsest of those will be used for the
+# topology to evaluate the results. We inspect the primary variable,
+# in this case the hydraulic head.
 
+mesh_property = ScalarProperty(
+    data_name="pressure",
+    data_unit="m",
+    output_unit="m",
+    output_name="hydraulic head",
+)
 fig = mpl.plot(np.reshape(examples.meshes, (2, 3)), mesh_property)
 
 # %%

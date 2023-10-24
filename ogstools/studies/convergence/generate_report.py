@@ -10,7 +10,7 @@ from ogstools.studies.convergence.examples import mesh_paths
 if __name__ == "__main__":
     parent = Path(__file__).resolve().parent
 
-    nb = jupytext.read(str(parent) + "/convergence_study.py")
+    nb = jupytext.read(str(parent) + "/convergence_study_template.md")
     # TODO: make temporary
     jupytext.write(nb, "convergence_study.ipynb", fmt="py:percent")
 

@@ -77,7 +77,7 @@ To the API reference
 
 :::
 
-:::{grid-item-card} Devleloper guide
+:::{grid-item-card} Developer guide
 :text-align: center
 
 Learn how to setup a development environment and how contribute your code to

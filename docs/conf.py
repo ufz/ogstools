@@ -83,11 +83,7 @@ panels_add_bootstrap_css = False
 ### apidoc / autodoc settings ###
 apidoc_module_dir = "../ogstools"
 apidoc_output_dir = "reference"
-apidoc_excluded_paths = [
-    "../**/examples/**",
-    "./**/tests/**",
-    ".**/convergence_study**",
-]
+apidoc_excluded_paths = ["../**/examples/**", "./**/tests/**"]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["--force", "--implicit-namespaces"]
