@@ -203,22 +203,16 @@ def plot_convergence(metrics: pd.DataFrame, property: Property) -> plt.Figure:
 def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
     "Plot the relative errors of the convergence metrics in loglog scale."
     plot_df = metrics.replace(0.0, np.nan)
-    x_vals = plot_df.iloc[:, 0]
-    max_p, max_fit = log_fit(x_vals, plot_df.iloc[:, 3])
-    min_p, min_fit = log_fit(x_vals, plot_df.iloc[:, 4])
-    l2n_p, l2n_fit = log_fit(x_vals, plot_df.iloc[:, 5])
-    labels = [
-        f"$\\varepsilon_{{rel}}^{{max}} (p={max_p:.2f})$",
-        f"$\\varepsilon_{{rel}}^{{min}} (p={min_p:.2f})$",
-        f"$\\varepsilon_{{rel}}^{{L2}} (p={l2n_p:.2f})$",
-    ]
+    x_vals = plot_df.iloc[:, 0].to_numpy()
     fig, ax = plt.subplots()
-    args = dict(grid=True, loglog=True)  # noqa: C408
-    plot_df.plot(ax=ax, x=0, y=3, c="r", style="o", **args, label=labels[0])
-    plot_df.plot(ax=ax, x=0, y=4, c="b", style="o", **args, label=labels[1])
-    plot_df.plot(ax=ax, x=0, y=5, c="g", style="o", **args, label=labels[2])
-    ax.loglog(x_vals, max_fit, "r--")
-    ax.loglog(x_vals, min_fit, "b--")
-    ax.loglog(x_vals, l2n_fit, "g--")
+    for i, c in enumerate("rbg"):
+        j = i + 3
+        order_p, fit_vals = log_fit(x_vals, plot_df.iloc[:, j].to_numpy())
+        err_str = ["max", "min", "L2"][i]
+        label = f"$\\varepsilon_{{rel}}^{err_str} (p={order_p:.2f})$"
+        plot_df.plot(
+            ax=ax, x=0, y=j, c=c, style="o", grid=True, loglog=True, label=label
+        )
+        ax.loglog(x_vals, fit_vals, c + "--")
     fig.tight_layout()
     return fig
