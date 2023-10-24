@@ -2,7 +2,7 @@
 
 
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Union
 
 from matplotlib.colors import Colormap
 
@@ -54,10 +54,9 @@ class PlotSetup:
     rcParams: dict
     """Matplotlib runtime configuration. See
     :obj:`ogstools.meshplotlib.plot_setup_defaults`"""
-    scale_type: Literal["equal", "scaled", "tight", "auto", "image", "square"]
-    "The type of scaling for the plot."
-    show_aspect_ratio: bool
-    "A boolean indicating whether to display the aspect ratio."
+    ax_aspect_ratio: float
+    """The aspect ratio of all subplots. If None, subplots will be scaled
+    according to data limits"""
     show_element_edges: Union[bool, str]
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
@@ -105,16 +104,15 @@ class PlotSetup:
         return cls(
             fig_scale=obj["fig_scale"],
             figsize=obj["figsize"],
+            ax_aspect_ratio=obj["ax_aspect_ratio"],
             invert_colorbar=obj["invert_colorbar"],
             dpi=obj["dpi"],
             num_levels=obj["num_levels"],
             num_streamline_interp_pts=obj["num_streamline_interp_pts"],
             p_min=obj["p_min"],
             p_max=obj["p_max"],
-            scale_type=obj["scale_type"],
             show_region_bounds=obj["show_region_bounds"],
             show_element_edges=obj["show_element_edges"],
-            show_aspect_ratio=obj["show_aspect_ratio"],
             embedded_region_names_color=obj["embedded_region_names_color"],
             title_center=obj["title_center"],
             title_left=obj["title_left"],

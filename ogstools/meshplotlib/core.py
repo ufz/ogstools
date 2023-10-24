@@ -13,12 +13,14 @@ from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
 
 from ogstools.propertylib import THM, Property
-from ogstools.propertylib import MatrixProperty as Matrix
 from ogstools.propertylib import VectorProperty as Vector
 
 from . import plot_features as pf
 from . import setup
 from .levels import get_levels
+
+# TODO: toggle colorbar per ax
+# TODO: define default data_name for regions in setup
 
 
 def _q_zero_line(property: Property, levels: np.ndarray):
@@ -95,7 +97,7 @@ def add_colorbar(
     cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
     scale_mag = np.median(np.abs(np.diff(levels)))
     scale_exp = np.ceil(np.log10(scale_mag)) if scale_mag > 1e-12 else 0
-    if abs(scale_exp) >= 3:
+    if scale_exp >= 3:
         levels *= 10 ** (-scale_exp)
         norm.vmin *= 10 ** (-scale_exp)
         norm.vmax *= 10 ** (-scale_exp)
@@ -124,11 +126,13 @@ def add_colorbar(
             levels = 10**levels
         ids = [-1, 0] if setup.invert_colorbar else [0, -1]
         if [bot_extra, top_extra][ids[0]]:
-            cb.ax.text(0, -0.02, f"{levels[ids[0]]:.3g}", **kwargs, va="top")
+            cb.ax.text(1.8, -0.02, f"{levels[ids[0]]:.5g}", **kwargs, va="top")
         if [bot_extra, top_extra][ids[1]]:
-            cb.ax.text(0, 1.02, f"{levels[ids[1]]:.3g}", **kwargs, va="bottom")
+            cb.ax.text(
+                1.8, 1.02, f"{levels[ids[1]]:.5g}", **kwargs, va="bottom"
+            )
 
-    factor_str = rf"$10^{{{int(scale_exp)}}}$" if abs(scale_exp) >= 3 else ""
+    factor_str = rf"$10^{{{int(scale_exp)}}}$" if scale_exp >= 3 else ""
     if property.get_output_unit():
         unit_str = f" / {factor_str} {property.get_output_unit()}"
     else:
@@ -150,7 +154,6 @@ def add_colorbar(
     if setup.log_scaled:
         cb.ax.set_yticklabels(10**ticks)
 
-    # TODO: define default data_name for regions in setup
     if property.data_name == "MaterialIDs" and setup.material_names is not None:
         region_names = []
         for mat_id in levels:
@@ -183,7 +186,7 @@ def subplot(
         msg = "meshplotlib is for 2D meshes only, but found 3D elements."
         raise TypeError(msg)
 
-    ax.axis(setup.scale_type)
+    ax.axis("auto")
 
     if (
         not property.is_mask()
@@ -202,14 +205,9 @@ def subplot(
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
-    x, y = setup.length.values(surf_tri.points.T[[x_id, y_id]])
+    x, y = setup.length.strip_units(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
-    _property = (
-        property.magnitude
-        if isinstance(property, (Vector, Matrix))
-        else property
-    )
-    values = _property.values(get_data(surf_tri, property))
+    values = property.magnitude.strip_units(get_data(surf_tri, property))
     if setup.log_scaled:
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -307,15 +305,10 @@ def get_combined_levels(
     meshes: np.ndarray, property: Union[Property, str]
 ) -> np.ndarray:
     property = resolve_property(property)
-    _p_val = (
-        property.magnitude
-        if isinstance(property, (Vector, Matrix))
-        else property
-    )
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = _p_val.values(get_data(mesh, property))
+        values = property.magnitude.strip_units(get_data(mesh, property))
         if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
@@ -388,5 +381,13 @@ def plot(
     property = resolve_property(property)
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
-    fig = _fig_init(*shape)
-    return _plot_on_figure(fig, meshes, property)
+    _fig = _fig_init(*shape)
+    fig = _plot_on_figure(_fig, meshes, property)
+    for ax in fig.axes[:-1]:
+        aspect = setup.ax_aspect_ratio
+        if aspect is None:
+            xlims = ax.get_xlim()
+            ylims = ax.get_ylim()
+            aspect = abs(xlims[1] - xlims[0]) / abs(ylims[1] - ylims[0])
+        ax.set_aspect(aspect)
+    return fig

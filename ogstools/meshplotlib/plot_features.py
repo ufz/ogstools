@@ -28,7 +28,7 @@ def plot_layer_boundaries(
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
             edges = segment.extract_surface().strip(True, 10000)
-            x_b, y_b = setup.length.values(
+            x_b, y_b = setup.length.strip_units(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
             lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
@@ -72,7 +72,7 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         cell_pts = [
             cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
         ]
-        verts = setup.length.values(np.delete(cell_pts, projection, -1))
+        verts = setup.length.strip_units(np.delete(cell_pts, projection, -1))
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
         pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
@@ -103,7 +103,8 @@ def plot_streamlines(
             grid.point_data[property.data_name], projection, 1
         )
     val = np.reshape(
-        property.values(grid.point_data[property.data_name]), (n_pts, n_pts, 2)
+        property.strip_units(grid.point_data[property.data_name]),
+        (n_pts, n_pts, 2),
     )
 
     if property.mask in grid.point_data:
@@ -113,7 +114,7 @@ def plot_streamlines(
     lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
 
-    x_g, y_g = setup.length.values(np.meshgrid(x, y))
+    x_g, y_g = setup.length.strip_units(np.meshgrid(x, y))
     ax.streamplot(x_g, y_g, val[..., 0], val[..., 1], color="k", linewidth=lw)
 
 
@@ -127,28 +128,19 @@ def plot_on_top(
     projection = int(np.argmax(normal))
 
     XYZ = surf.extract_feature_edges().points
-    df_pts = pd.DataFrame(np.delete(XYZ, projection, axis=1))
-    x_vals = df_pts.groupby([0])[0].agg(np.mean).to_numpy()
-    y_vals = df_pts.groupby([0])[1].agg(np.max).to_numpy()
+    df_pts = pd.DataFrame(
+        np.delete(XYZ, projection, axis=1), columns=["x", "y"]
+    )
+    x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
+    y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
     contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
-    ax.set_ylim(top=setup.length.values(np.max(contour_vals)))
+    ax.set_ylim(top=setup.length.strip_units(np.max(contour_vals)))
     ax.fill_between(
-        setup.length.values(x_vals),
-        setup.length.values(y_vals),
-        setup.length.values(contour_vals),
+        setup.length.strip_units(x_vals),
+        setup.length.strip_units(y_vals),
+        setup.length.strip_units(contour_vals),
         facecolor="lightgrey",
     )
-
-
-def get_aspect(ax: plt.Axes) -> float:
-    """Return the aspect ratio of a matplotlib axis."""
-    figW, figH = ax.get_figure().get_size_inches()
-    _, _, w, h = ax.get_position().bounds
-    disp_ratio = (figH * h) / (figW * w)
-    data_ratio = (ax.get_ylim()[1] - ax.get_ylim()[0]) / (
-        ax.get_xlim()[1] - ax.get_xlim()[0]
-    )
-    return disp_ratio / data_ratio
 
 
 def plot_contour(
