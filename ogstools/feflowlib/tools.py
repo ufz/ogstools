@@ -1,5 +1,6 @@
 import argparse
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 import numpy as np
 import pyvista as pv
@@ -285,6 +286,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
         if all_properties_equal:
             material_properties[material_id] = [property_of_material[0] / 86400]
         else:
+            material_properties[material_id] = ["non_constant"]
             print(
                 "WARNING: the property "
                 + property
@@ -294,3 +296,55 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
             )
 
     return material_properties
+
+
+def combine_material_properties(
+    mesh: pv.UnstructuredGrid, properties_list: list
+):
+    """
+    Combine multiple material properties. The combined properties are returned
+    as list of values in a dictionary.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param properties_list: list of properties to be combined
+    :type properties_list: list
+    """
+    material_properties: defaultdict[str, list[float]] = defaultdict(list)
+
+    for property in properties_list:
+        for material, property_value in get_material_properties(
+            mesh, property
+        ).items():
+            material_properties[material].extend(property_value)
+
+    return material_properties
+
+
+def write_mesh_of_combined_properties(
+    mesh: pv.UnstructuredGrid,
+    property_list: list,
+    new_property: str,
+    material: int,
+):
+    """
+    Writes a separate mesh-file with a specific material that does not have constant property values
+    within the material group. It can also be used to write multiple properties
+    into a "new property" data array. For example, write a data array for a tensor defined by
+    data arrays representing values of different spatial directions. Nevertheless it can still be
+    be used to write the non-constant values of a single property into a separate mesh-file.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param property_list: list of properties
+    :type property_list: list
+    :param new_property: name of the combined properties
+    :type new_property: str
+    :param material: material with non-constant properties
+    :type material: int
+    """
+    mask = mesh.cell_data["MaterialIDs"] == material
+    material_mesh = mesh.extract_cells(mask)
+    zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
+    material_mesh[new_property] = zipped
+    material_mesh.save(str(material) + ".vtu")
