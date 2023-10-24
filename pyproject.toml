@@ -12,6 +12,7 @@ readme = "README.md"
 requires-python = '>=3.9'
 dependencies = [
   "h5py>=3.9.0",
+  "jupytext>=1.15.2",
   "meshio==5.3.4",
   "matplotlib>=3.7.1",
   "pyvista>=0.39.1",
@@ -20,6 +21,7 @@ dependencies = [
   "Pint>=0.22",
   "Pillow>=9.5.0",
   "pandas>=2.0.3",
+  "papermill>=2.4.0",
   "ogs>=6.4.5.dev0",
 ]
 

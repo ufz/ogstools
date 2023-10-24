@@ -328,8 +328,7 @@ def get_combined_levels(
 def resolve_property(property: Union[Property, str]) -> Property:
     if isinstance(property, Property):
         return property
-    prop = THM.find_property(property)
-    return prop if prop else Property(property)
+    return THM.find_property(property)
 
 
 def _plot_on_figure(

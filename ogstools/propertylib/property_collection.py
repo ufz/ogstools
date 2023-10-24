@@ -43,7 +43,7 @@ class PropertyCollection:
 
     def find_property(
         self, output_name: str, dim: Opt[Literal[2, 3]] = None
-    ) -> Opt[Property]:
+    ) -> Property:
         """Return predefined property with given output_name."""
         for prop in self.get_properties(dim):
             if prop.output_name == output_name:
@@ -52,4 +52,4 @@ class PropertyCollection:
         for prop in self.get_properties(dim):
             if prop.data_name == output_name:
                 return prop
-        return None
+        return Property(output_name)
