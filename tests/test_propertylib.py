@@ -105,7 +105,7 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_values(self):
         """Test values functionality."""
-        self.assertEqual(T.temperature.values(273.15), 0.0)
+        self.assertEqual(T.temperature.strip_units(273.15), 0.0)
 
     def test_units(self):
         """Test get_output_unit functionality."""

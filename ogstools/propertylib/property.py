@@ -82,7 +82,7 @@ class Property:
             return Q_(Q_(self.func(np.asarray(vals)), _du), _ou)
         return Q_(self.func(Q_(vals, _du)), _ou)
 
-    def values(self, vals: np.ndarray) -> np.ndarray:
+    def strip_units(self, vals: np.ndarray) -> np.ndarray:
         """
         Return transformed values without units.
 
@@ -116,6 +116,10 @@ class Property:
         :returns: A property representing this properties mask.
         """
         return Property(data_name=self.mask, mask=self.mask, categoric=True)
+
+    @property
+    def magnitude(self) -> "Property":
+        return self
 
 
 @dataclass
