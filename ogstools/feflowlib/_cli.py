@@ -14,6 +14,8 @@ from ogstools.feflowlib import (
     convert_geometry_mesh,
     extract_cell_boundary_conditions,
     helpFormat,
+    combine_material_properties,
+    setup_prj_file,
     update_geometry,
     write_point_boundary_conditions,
 )
@@ -96,5 +98,12 @@ def cli():
     write_point_boundary_conditions(Path(args.output).parent, mesh)
     topsurface = extract_cell_boundary_conditions(Path(args.output), mesh)
     topsurface[1].save(topsurface[0])
+
+    # create a prj-file, which is not complete. Manual extensions are needed.
+    setup_prj_file(
+        Path(args.output),
+        mesh,
+        combine_material_properties(mesh, ["P_CONDX", "P_CONDY", "P_CONDZ"]),
+    )
 
     return 0

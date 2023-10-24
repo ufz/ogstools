@@ -15,17 +15,20 @@ from .tools import (
     extract_cell_boundary_conditions,
     get_specific_surface,
     helpFormat,
+    setup_prj_file,
     write_point_boundary_conditions,
     write_xml,
 )
 
 __all__ = [
+    "combine_material_properties",
     "get_specific_surface",
     "helpFormat",
     "convert_geometry_mesh",
     "convert_properties_mesh",
     "update_geometry",
     "extract_cell_boundary_conditions",
+    "setup_prj_file",
     "write_point_boundary_conditions",
     "write_xml",
 ]

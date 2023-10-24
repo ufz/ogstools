@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+from ogs6py import ogs
 
 # log configuration
 logger = log.getLogger(__name__)
@@ -129,7 +130,6 @@ def extract_point_boundary_conditions(
     """
     Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
-    This function also writes then the corresponding xml-files using the function "write_xml"
 
     :param out_mesh_path: path of the output mesh
     :type out_mesh_path: Path
@@ -187,7 +187,6 @@ def extract_cell_boundary_conditions(
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
-    This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
     be used in the future.
     TODO: Allow a generic definition of the normal vector for the filter condition.
@@ -216,15 +215,18 @@ def extract_cell_boundary_conditions(
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
     # create the xml-file
+    """
     write_xml(
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf.cell_data,
         "MeshElement",
     )
+    """
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
     )
+    
 
 
 def include_xml_snippet_in_prj_file(
@@ -392,6 +394,124 @@ def write_mesh_of_combined_properties(
             material_mesh.cell_data.remove(cell_data)
     material_mesh.save(filename)
     return filename
+
+
+def setup_prj_file(
+    bulk_mesh: Path,
+    mesh: pv.UnstructuredGrid,
+    material_properties: dict,
+):
+    """
+    Sets up a prj-file for ogs simulations using ogs6py.
+
+
+    """
+    prjfile = bulk_mesh.with_suffix(".prj")
+    model = ogs.OGS(PROJECT_FILE=prjfile)
+
+    BC_type_dict = {
+        "_BC_": "Dirichlet",
+        "2ND": "Neumann",
+        "3RD": "Robin",
+        "4TH": "NodalSourceTerm",
+        "P_IOFLOW": "Neumann",
+        "P_SOUF": "volumetric source term",
+    }
+
+    model.mesh.add_mesh(filename=bulk_mesh.name)
+    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh.name)
+    # Pr
+    model.processes.add_process_variable(
+        process_variable="pressure", process_variable_name="HEAD_OGS"
+    )
+    model.processvars.set_ic(
+        process_variable_name="HEAD_OGS",
+        components=1,
+        order=1,
+        initial_condition="p0",
+    )
+    model.parameters.add_parameter(name="p0", type="Constant", value=0)
+
+    for i in mesh.point_data:
+        if i[0:4] == "P_BC":
+            # Add boundary conditions
+            model.processvars.add_bc(
+                process_variable_name="HEAD_OGS",
+                type=next(val for key, val in BC_type_dict.items() if key in i),
+                parameter=i,
+                mesh=i,
+            )
+            # Every point boundary condition refers to a separate mesh
+            model.mesh.add_mesh(filename=i + ".vtu")
+            # Every point boundary condition refers to a parameter with the same name
+            model.parameters.add_parameter(
+                name=i, type="MeshNode", field_name=i, mesh=i
+            )
+
+    for cell_data in mesh.cell_data:
+        if cell_data in ["P_IOFLOW", "P_SOUF"]:
+            # Add boundary conditions
+            model.processvars.add_bc(
+                process_variable_name="HEAD_OGS",
+                type=next(
+                    val for key, val in BC_type_dict.items() if key in cell_data
+                ),
+                parameter=cell_data,
+                mesh=cell_data,
+            )
+            # Every point boundary condition refers to a parameter with the same name
+            model.parameters.add_parameter(
+                name=cell_data,
+                type="MeshElement",
+                field_name=cell_data,
+                mesh="topsurface_" + bulk_mesh.stem,
+            )
+
+    # include material properties in the prj-file
+    for material, property_value in material_properties.items():
+        if any(prop == "non_constant" for prop in property_value):
+            write_mesh_of_combined_properties(
+                mesh,
+                ["P_CONDX", "P_CONDY", "P_CONDZ"],
+                "KF",
+                material,
+                bulk_mesh,
+            )
+            model.media.add_property(
+                medium_id=material,
+                name="diffusion",
+                type="Parameter",
+                parameter_name="diffusion_" + str(material),
+            )
+            model.mesh.add_mesh(filename=str(material) + ".vtu")
+            model.parameters.add_parameter(
+                name="diffusion_" + str(material),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material),
+            )
+            model.media.add_property(
+                medium_id=material,
+                name="reference_temperature",
+                type="Constant",
+                value=293.15,
+            )
+        else:
+            model.media.add_property(
+                medium_id=material,
+                name="diffusion",
+                type="Constant",
+                value=" ".join(str(element) for element in property_value),
+            )
+            model.media.add_property(
+                medium_id=material,
+                name="reference_temperature",
+                type="Constant",
+                value=293.15,
+            )
+
+    model.write_input()
+    return prjfile
 
 
 def deactivate_cells(mesh: pv.UnstructuredGrid):
