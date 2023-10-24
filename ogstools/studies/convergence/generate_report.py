@@ -11,5 +11,7 @@ parent = Path(__file__).resolve().parent
 property_name = "pressure"
 params = {"mesh_paths": mesh_paths, "property_name": property_name}
 pm.execute_notebook(
-    str(parent) + "/template.ipynb", "report.ipynb", parameters=params
+    input_path=str(parent) + "/template.ipynb",
+    output_path="convergence_study_" + property_name + ".ipynb",
+    parameters=params,
 )
