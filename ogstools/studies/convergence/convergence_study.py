@@ -42,6 +42,9 @@ mpl.setup.reset()
 mpl.setup.show_element_edges = True
 mpl.setup.ax_aspect_ratio = 1
 
+if mesh_paths is None:
+    exit()
+
 # %% [markdown]
 # Read the meshes, get Property object from property name, define topology and calculate Richardson extrapolation.
 
