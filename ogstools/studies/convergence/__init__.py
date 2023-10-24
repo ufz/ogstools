@@ -1,5 +1,5 @@
 # Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-"""functions to genearte a convergence study."""
+"""functions to generate a convergence study."""
 
 from .convergence import (
     convergence_metrics,
