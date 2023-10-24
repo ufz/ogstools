@@ -48,4 +48,8 @@ class PropertyCollection:
         for prop in self.get_properties(dim):
             if prop.output_name == output_name:
                 return prop
+        # if not found by output name, find by data_name
+        for prop in self.get_properties(dim):
+            if prop.data_name == output_name:
+                return prop
         return None

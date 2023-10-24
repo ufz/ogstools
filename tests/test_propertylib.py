@@ -128,6 +128,10 @@ class PhysicalPropertyTest(unittest.TestCase):
         self.assertEqual(data_names(TM), data_names(T) | data_names(M))
         self.assertEqual(data_names(THM), data_names(TH) | data_names(M))
 
+    def test_find_property(self):
+        """Test find property function."""
+        self.assertEqual(THM.find_property("pressure"), THM.pressure)
+
     def test_copy_ctor(self):
         """Test replace constructor."""
 
