@@ -73,7 +73,7 @@ fig.show()
 # Now we can compute some convergence metrics and display them in a table, ...
 
 metrics = convergence_metrics(examples.meshes, richardson, mesh_property)
-metrics.style.format("{:,.4g}").hide()
+metrics.style.format("{:,.5g}").hide()
 
 # %%
 # ... plot the converging values in absolute scale ...

@@ -19,7 +19,8 @@ convergence of numerical simulations.
 Below are the custom parameters for this report.
 
 ```python tags=["parameters"]
-mesh_paths: "pv.DataSet" = None
+mesh_paths: str = ""
+timestep: int = 0
 property_name: str = ""
 ```
 
@@ -29,6 +30,7 @@ Import required modules and setup plots.
 import pyvista as pv  # noqa: E402
 
 import ogstools.meshplotlib as mpl  # noqa: E402
+from ogstools.meshlib import MeshSeries # noqa: E402
 from ogstools.propertylib import THM  # noqa: E402
 from ogstools.studies.convergence import (  # noqa: E402
     convergence_metrics,
@@ -40,17 +42,24 @@ from ogstools.studies.convergence import (  # noqa: E402
 mpl.setup.reset()
 mpl.setup.show_element_edges = True
 mpl.setup.ax_aspect_ratio = 1
+mpl.setup.fig_scale = 0.5
 ```
 
 Read the meshes, get Property object from property name, define topology and calculate Richardson extrapolation.
 
 ```python
-meshes = [pv.read(mesh_path) for mesh_path in mesh_paths]
+meshes = []
+for mesh_path in mesh_paths:
+  if mesh_path.split(".")[-1] in ["xdmf", "pvd"]:
+    meshes += [MeshSeries(mesh_path).read(timestep)]
+  else:
+    meshes += [pv.read(mesh_path)]
+     
 mesh_property = THM.find_property(property_name)
 mesh_property.output_unit = ""
 mesh_property.data_unit = ""
 topology = meshes[-3]
-richardson = richardson_extrapolation(meshes, mesh_property, topology)
+richardson = richardson_extrapolation(meshes, mesh_property, topology, 2.)
 ```
 
 Plotting the grid convergence.
@@ -76,7 +85,7 @@ Table of convergence metrics.
 ```python
 mpl.core.plt.rcdefaults()
 metrics = convergence_metrics(meshes, richardson, mesh_property)
-metrics.style.format("{:,.4g}").hide()
+metrics.style.format("{:,.5g}").hide()
 ```
 
 Absolute convergence metrics.
