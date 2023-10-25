@@ -179,18 +179,20 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     """
     # mesh = mesh.copy()
     assign_bulk_ids(mesh)
-    for cd in [
-        cell_data
-        for cell_data in mesh.cell_data
-        if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
-    ]:
-        mesh.cell_data.remove(cd)
-    # Only cell data are needed
-    # get the topsurface since there are the cells of interest
-    # TODO: Allow a generic definition of the normal vector for the filter condition.
     topsurf = get_specific_surface(
         mesh.extract_surface(), lambda normals: normals[:, 2] > 0
     )
+
+    for cd in [
+        cell_data
+        for cell_data in topsurf.cell_data
+        if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
+    ]:
+        topsurf.cell_data.remove(cd)
+    # Only cell data are needed
+    # get the topsurface since there are the cells of interest
+    # TODO: Allow a generic definition of the normal vector for the filter condition.
+
     # remove data of BC that are of no value for this part of the mesh
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
