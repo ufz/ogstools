@@ -142,10 +142,11 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     # remove all points with point data that are of "nan"-value
     for point_data in mesh.point_data:
         if point_data != "bulk_node_ids":
+            dirichlet_bool = "_BC_" not in point_data
             filtered_points = mesh.extract_points(
                 [not np.isnan(x) for x in mesh[point_data]],
                 adjacent_cells=False,
-                include_cells=False,
+                include_cells=dirichlet_bool,
             )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
