@@ -4,10 +4,11 @@ from copy import deepcopy
 import numpy as np
 import pyvista as pv
 
-meshes = [
-    pv.read(str(pkg_resources.files(__name__) / f"square_1e0_neumann_{i}.vtu"))
+mesh_paths = [
+    str(pkg_resources.files(__name__) / f"square_1e0_neumann_{i}.vtu")
     for i in range(6)
 ]
+meshes = [pv.read(mesh_path) for mesh_path in mesh_paths]
 
 
 def _c_k(k):
@@ -30,7 +31,7 @@ def _h(points):
 
 def analytical_solution(target_mesh: pv.DataSet) -> pv.DataSet:
     new_mesh = deepcopy(target_mesh)
-    new_mesh.point_data.clear()
+    new_mesh.clear_point_data()
     points = new_mesh.points
     new_mesh.point_data["pressure"] = _h(points)
     return new_mesh

@@ -105,7 +105,7 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_values(self):
         """Test values functionality."""
-        self.assertEqual(T.temperature.values(273.15), 0.0)
+        self.assertEqual(T.temperature.strip_units(273.15), 0.0)
 
     def test_units(self):
         """Test get_output_unit functionality."""
@@ -127,6 +127,10 @@ class PhysicalPropertyTest(unittest.TestCase):
         self.assertEqual(data_names(HM), data_names(H) | data_names(M))
         self.assertEqual(data_names(TM), data_names(T) | data_names(M))
         self.assertEqual(data_names(THM), data_names(TH) | data_names(M))
+
+    def test_find_property(self):
+        """Test find property function."""
+        self.assertEqual(THM.find_property("pressure"), THM.pressure)
 
     def test_copy_ctor(self):
         """Test replace constructor."""

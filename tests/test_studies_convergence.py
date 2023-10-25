@@ -2,38 +2,49 @@
 
 import unittest
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
 
-from ogstools.propertylib.defaults import pressure
+from ogstools.propertylib import ScalarProperty
 from ogstools.studies.convergence import (
-    convergence,
+    convergence_metrics,
+    grid_convergence,
+    log_fit,
     plot_convergence,
+    plot_convergence_errors,
     richardson_extrapolation,
 )
-from ogstools.studies.examples import analytical_solution, meshes
+from ogstools.studies.convergence.examples import analytical_solution, meshes
 
 
 class ConvergenceTest(unittest.TestCase):
-    """Test case for meshplotlib."""
+    """Test case for convergent meshes."""
 
     def test_square_neumann_benchmark(self):
-        target_mesh = meshes[0]
-        richardson = richardson_extrapolation(meshes[-2], meshes[-1], pressure)
-        analytical = analytical_solution(target_mesh)
-        conv = convergence(target_mesh, meshes, analytical, pressure)
-        pressure_expected = [
-            0.030989251445358995,
-            0.004311496211867697,
-            0.0010968159126094655,
-            0.00026568946729398736,
-            6.283264310009035e-05,
-            1.2467294614441292e-05,
-        ]
-        self.assertAlmostEqual(conv["pressure"], pressure_expected, places=5)
-        pd.DataFrame(conv)
-        _, axs = plt.subplots(dpi=200, figsize=[5, 3], nrows=1)
-        _ = plot_convergence(target_mesh, meshes, richardson, pressure, axs)
+        topology = meshes[-3]
+        mesh_property = ScalarProperty("pressure", "m", "m")
+        conv = grid_convergence(
+            meshes, mesh_property, topology, refinement_ratio=2.0
+        )
+        richardson = richardson_extrapolation(meshes, mesh_property, topology)
+        np.testing.assert_allclose(conv["r"], richardson["r"], rtol=1e-10)
+        analytical = analytical_solution(topology)
+        np.testing.assert_allclose(
+            richardson[mesh_property.data_name],
+            analytical[mesh_property.data_name],
+            rtol=2e-3,
+            verbose=True,
+        )
+        metrics = convergence_metrics(meshes, richardson, mesh_property)
+        el_len = metrics["mean element length"].to_numpy()[:-1]
+        re_max = metrics["rel. error (max)"].to_numpy()[:-1]
+        ratio = re_max[:-1] / re_max[1:]
+        np.testing.assert_array_less(np.ones(ratio.shape) * 2.0, ratio)
+
+        order, _ = log_fit(el_len, re_max)
+        self.assertGreater(order, 2.0)
+
+        _ = plot_convergence(metrics, mesh_property)
+        _ = plot_convergence_errors(metrics)
 
 
 if __name__ == "__main__":
