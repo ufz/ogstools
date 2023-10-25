@@ -9,9 +9,11 @@ from .convergence import (
     plot_convergence_errors,
     richardson_extrapolation,
 )
+from .generate_report import execute_convergence_study
 
 __all__ = [
     "convergence_metrics",
+    "execute_convergence_study",
     "grid_convergence",
     "log_fit",
     "plot_convergence",

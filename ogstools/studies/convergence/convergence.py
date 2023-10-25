@@ -209,7 +209,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
         j = i + 3
         order_p, fit_vals = log_fit(x_vals, plot_df.iloc[:, j].to_numpy())
         err_str = ["max", "min", "L2"][i]
-        label = f"$\\varepsilon_{{rel}}^{err_str} (p={order_p:.2f})$"
+        label = f"$\\varepsilon_{{rel}}^{{{err_str}}} (p={order_p:.2f})$"
         plot_df.plot(
             ax=ax, x=0, y=j, c=c, style="o", grid=True, loglog=True, label=label
         )
