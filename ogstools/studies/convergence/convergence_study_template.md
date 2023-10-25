@@ -59,7 +59,7 @@ mesh_property = THM.find_property(property_name)
 mesh_property.output_unit = ""
 mesh_property.data_unit = ""
 topology = meshes[-3]
-richardson = richardson_extrapolation(meshes, mesh_property, topology, 2.)
+richardson = richardson_extrapolation(meshes, mesh_property, topology)
 ```
 
 Plotting the grid convergence.
