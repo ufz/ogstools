@@ -70,6 +70,7 @@ html_theme_options = {
             "type": "fontawesome",
         }
     ],
+    "navigation_with_keys": True,
 }
 
 nitpick_ignore_regex = [("py:class", r".*")]
