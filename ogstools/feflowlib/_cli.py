@@ -6,6 +6,7 @@ Created on Tue Mar 14 2023
 
 import logging as log
 from argparse import ArgumentParser
+from pathlib import Path
 from sys import stdout
 
 import ifm_contrib as ifm
@@ -65,6 +66,10 @@ log.basicConfig(
 def cli():
     args = parser.parse_args()
 
+    if not Path(args.input).exists():
+        print("The input files does not exist.")
+        return
+
     doc = ifm.loadDocument(args.input)
 
     mesh = read_geometry(doc)
@@ -88,5 +93,5 @@ def cli():
     if "properties" not in args.case or args.BC != "BC":
         return
 
-    write_point_boundary_conditions(args.output, mesh)
-    write_cell_boundary_conditions(args.output, mesh)
+    write_point_boundary_conditions(Path(args.output), mesh)
+    write_cell_boundary_conditions(Path(args.output), mesh)

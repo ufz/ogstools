@@ -1,6 +1,7 @@
 import argparse
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 import pyvista as pv
@@ -47,12 +48,12 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     return specific_cells
 
 
-def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
+def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
     """
     Writes three xml-files, one for parameters, one for boundary conditions and one for meshes (geometry).
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param out_mesh_path: name of the mesh
+    :type out_mesh_path: Path
     :param data: point or cell data
     :type data: pyvista.DataSetAttributes
     :param mesh_type: type of the mesh (MeshNode or MeshElement)
@@ -67,14 +68,13 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
         "P_IOFLOW": "Neumann",
         "P_SOUF": "volumentric source term",
     }
-    mesh_name = mesh_name.replace(".vtu", "")
     xml_meshes = ET.Element("meshes")
-    ET.SubElement(xml_meshes, "mesh").text = mesh_name
+    ET.SubElement(xml_meshes, "mesh").text = out_mesh_path.stem
     xml_bc = ET.Element("boundary_conditions")
     xml_parameter = ET.Element("parameters")
     for parameter_name in data:
-        if mesh_name == "":
-            mesh_name = parameter_name
+        if out_mesh_path.stem == "":
+            out_mesh_path = parameter_name
         if parameter_name not in [
             "bulk_node_ids",
             "bulk_element_ids",
@@ -98,11 +98,17 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
             ET.SubElement(parameter, "mesh").text = parameter_name
 
     ET.indent(xml_meshes, space="\t", level=0)
-    ET.ElementTree(xml_meshes).write("mesh_" + mesh_name + ".xml")
+    ET.ElementTree(xml_meshes).write(
+        out_mesh_path.with_name("mesh_" + out_mesh_path.stem + ".xml")
+    )
     ET.indent(xml_bc, space="\t", level=0)
-    ET.ElementTree(xml_bc).write("BC_" + mesh_name + ".xml")
+    ET.ElementTree(xml_bc).write(
+        out_mesh_path.with_name("BC_" + out_mesh_path.stem + ".xml")
+    )
     ET.indent(xml_parameter, space="\t", level=0)
-    ET.ElementTree(xml_parameter).write("parameter_" + mesh_name + ".xml")
+    ET.ElementTree(xml_parameter).write(
+        out_mesh_path.with_name("parameter_" + out_mesh_path.stem + ".xml")
+    )
 
 
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
@@ -119,14 +125,16 @@ def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     )
 
 
-def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
+def write_point_boundary_conditions(
+    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
     """
     Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
     This function also writes then the corresponding xml-files using the function "write_xml"
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param out_mesh_path: path of the output mesh
+    :type out_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
@@ -158,15 +166,17 @@ def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
                     filtered_points.point_data.remove(pt_data)
 
             # Only "bulk_node_ids" can be read by ogs
-            filtered_points.save(point_data + ".vtu")
+            filtered_points.save(str(out_mesh_path.with_stem(point_data)))
             # pv.save_meshio(
             #    point_data + ".vtu", filtered_points, file_format="vtu"
             # )
     # create the xml-file
-    write_xml(mesh_name, mesh.point_data, "MeshNode")
+    write_xml(out_mesh_path, mesh.point_data, "MeshNode")
 
 
-def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
+def write_cell_boundary_conditions(
+    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
     """
     Writes the cell boundary condition of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
@@ -174,8 +184,8 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
     be used in the future.
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param out_mesh_path: name of the mesh
+    :type out_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
@@ -199,10 +209,10 @@ def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    topsurf.save("topsurface_" + mesh_name)
+    topsurf.save(out_mesh_path.with_stem("topsurface_" + out_mesh_path.stem))
     # create the xml-file
     write_xml(
-        "topsurface_" + mesh_name,
+        out_mesh_path.with_stem("topsurface_" + out_mesh_path.stem),
         topsurf.cell_data,
         "MeshElement",
     )
@@ -327,6 +337,7 @@ def write_mesh_of_combined_properties(
     property_list: list,
     new_property: str,
     material: int,
+    saving_path: Path,
 ):
     """
     Writes a separate mesh-file with a specific material that does not have constant property values
@@ -343,9 +354,14 @@ def write_mesh_of_combined_properties(
     :type new_property: str
     :param material: material with non-constant properties
     :type material: int
+    :param saving_path: path to save the mesh
+    :type saving_path: Path
     """
     mask = mesh.cell_data["MaterialIDs"] == material
     material_mesh = mesh.extract_cells(mask)
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
-    material_mesh.save(str(material) + ".vtu")
+    filename = str(saving_path.with_name(str(material) + ".vtu"))
+    material_mesh.save(filename)
+    return filename
+
