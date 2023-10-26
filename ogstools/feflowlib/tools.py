@@ -509,6 +509,24 @@ def setup_prj_file(
                 type="Constant",
                 value=293.15,
             )
+    # add deactivated subdomains if existing
+    if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
+        deactivate_cells(mesh)
+        tags = ["time_interval", "material_ids"]
+        material_ids = mesh.cell_data["MaterialIDs"]
+        deactivated_materials = set(material_ids[material_ids < 0])
+        values = [
+            "to be inserted",
+            " ".join(str(material) for material in deactivated_materials),
+        ]
+        xpath = "./process_variables/process_variable"
+        model.add_element(parent_xpath=xpath, tag="deactivated_subdomains")
+        model.add_block(
+            blocktag="deactivated_subdomain",
+            parent_xpath=xpath + "/deactivated_subdomains",
+            taglist=tags,
+            textlist=values,
+        )
 
     model.write_input()
     return prjfile
