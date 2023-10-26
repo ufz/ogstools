@@ -365,3 +365,13 @@ def write_mesh_of_combined_properties(
     material_mesh.save(filename)
     return filename
 
+
+def deactivate_cells(mesh: pv.UnstructuredGrid):
+    """
+    Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
+    Therefore, the input mesh is modified.
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
+    inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
+    mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
