@@ -1,7 +1,6 @@
 import argparse
-import logging as log
-import xml.etree.ElementTree as ET
 from collections import defaultdict
+import logging as log
 from pathlib import Path
 
 import numpy as np
@@ -45,69 +44,6 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     surface_mesh.cell_data.remove("Normals")
     # Extract cells that meet the filter condition
     return surface_mesh.extract_cells(ids)
-
-
-def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
-    """
-    Writes three xml-files, one for parameters, one for boundary conditions and one for meshes (geometry).
-
-    :param out_mesh_path: name of the mesh
-    :type out_mesh_path: Path
-    :param data: point or cell data
-    :type data: pyvista.DataSetAttributes
-    :param mesh_type: type of the mesh (MeshNode or MeshElement)
-    :type mesh_type: str
-    """
-
-    BC_type_dict = {
-        "_BC_": "Dirichlet",
-        "2ND": "Neumann",
-        "3RD": "Robin",
-        "4TH": "NodalSourceTerm",
-        "P_IOFLOW": "Neumann",
-        "P_SOUF": "volumentric source term",
-    }
-    xml_meshes = ET.Element("meshes")
-    ET.SubElement(xml_meshes, "mesh").text = out_mesh_path.stem
-    xml_bc = ET.Element("boundary_conditions")
-    xml_parameter = ET.Element("parameters")
-    for parameter_name in data:
-        if out_mesh_path.stem == "":
-            out_mesh_path = parameter_name
-        if parameter_name not in [
-            "bulk_node_ids",
-            "bulk_element_ids",
-            "vtkOriginalPointIds",
-        ]:
-            ET.SubElement(xml_meshes, "mesh").text = parameter_name
-
-            bc = ET.SubElement(xml_bc, "boundary_condition")
-            ET.SubElement(bc, "mesh").text = parameter_name
-            ET.SubElement(bc, "type").text = next(
-                val
-                for key, val in BC_type_dict.items()
-                if key in parameter_name
-            )
-            ET.SubElement(bc, "parameter").text = parameter_name
-
-            parameter = ET.SubElement(xml_parameter, "parameter")
-            ET.SubElement(parameter, "name").text = parameter_name
-            ET.SubElement(parameter, "type").text = mesh_type
-            ET.SubElement(parameter, "field_name").text = parameter_name
-            ET.SubElement(parameter, "mesh").text = parameter_name
-
-    ET.indent(xml_meshes, space="\t", level=0)
-    ET.ElementTree(xml_meshes).write(
-        out_mesh_path.with_name("mesh_" + out_mesh_path.stem + ".xml")
-    )
-    ET.indent(xml_bc, space="\t", level=0)
-    ET.ElementTree(xml_bc).write(
-        out_mesh_path.with_name("BC_" + out_mesh_path.stem + ".xml")
-    )
-    ET.indent(xml_parameter, space="\t", level=0)
-    ET.ElementTree(xml_parameter).write(
-        out_mesh_path.with_name("parameter_" + out_mesh_path.stem + ".xml")
-    )
 
 
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
@@ -163,8 +99,6 @@ def extract_point_boundary_conditions(
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
-    # create the xml-file
-    write_xml(out_mesh_path, mesh.point_data, "MeshNode")
     return dict_of_point_boundary_conditions
 
 
@@ -214,78 +148,11 @@ def extract_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    # create the xml-file
-    """
-    write_xml(
-        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
-        topsurf.cell_data,
-        "MeshElement",
-    )
-    """
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
     )
     
-
-
-def include_xml_snippet_in_prj_file(
-    in_prj_file: str, out_prj_file: str, xml_snippet: str
-):
-    """
-    Includes an xml snippet in a project-file. It only works if there is already a subelement in
-    the project file that has the same tag/name as the root element of the xml-snippet to be included.
-    Attention: If there are multiple matching subelements in the prj file, the inclusion happens at the first such subelement.
-
-
-    :param in_prj_file: path of the input project-file
-    :type in_prj_file: str
-    :param out_prj_file: path of the output project-file
-    :type out_prj_file: str
-    :param xml_snippet: path of the xml-snippet
-    :type xml_snippet: str
-    """
-    tree = ET.parse(in_prj_file)
-    root = tree.getroot()
-    # parse the XML file to be included
-    include_tree = ET.parse(xml_snippet)
-    include_root = include_tree.getroot()
-    subelement = root.find(include_root.tag)
-
-    # add the include root as a child of the subelement
-    subelement.extend(include_root)  # type: ignore[union-attr]
-
-    # write the modified tree to a file
-    tree.write(out_prj_file)
-
-
-def write_material_properties_to_xml(material_properties: dict):
-    """
-    Writes the material properties of a model that has data arrays according to FEFLOW syntax, as an xml snippet.
-    This xml snippet can be included to OGS prj-file to set up a simulation.
-
-    :param material_properties: properties referring to materials
-    :type material_properties: dict
-    """
-    root = ET.Element("media")
-    for material_id in material_properties:
-        medium = ET.SubElement(root, "medium", {"id": str(material_id)})
-        properties = ET.SubElement(medium, "properties")
-        diffusion = ET.SubElement(properties, "property")
-        reference_temperature = ET.SubElement(properties, "property")
-        ET.SubElement(diffusion, "name").text = "diffusion"
-        ET.SubElement(diffusion, "type").text = "Constant"
-        ET.SubElement(diffusion, "value").text = str(
-            material_properties[material_id]
-        )
-        ET.SubElement(
-            reference_temperature, "name"
-        ).text = "reference_temperature"
-        ET.SubElement(reference_temperature, "type").text = "Constant"
-        ET.SubElement(reference_temperature, "value").text = "293.15"
-
-    ET.indent(root, space="\t", level=0)
-    ET.ElementTree(root).write("material_properties.xml")
 
 
 def get_material_properties(mesh: pv.UnstructuredGrid, property: str):

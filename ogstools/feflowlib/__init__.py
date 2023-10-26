@@ -17,7 +17,6 @@ from .tools import (
     helpFormat,
     setup_prj_file,
     write_point_boundary_conditions,
-    write_xml,
 )
 
 __all__ = [
@@ -30,7 +29,6 @@ __all__ = [
     "extract_cell_boundary_conditions",
     "setup_prj_file",
     "write_point_boundary_conditions",
-    "write_xml",
 ]
 
 # log configuration
