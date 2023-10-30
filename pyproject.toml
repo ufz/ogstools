@@ -24,6 +24,7 @@ dependencies = [
   "pandas>=2.0.3",
   "papermill>=2.4.0",
   "ogs>=6.4.5.dev0",
+  "ogs6py",
 ]
 
 [project.urls]

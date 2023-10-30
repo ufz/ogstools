@@ -324,7 +324,7 @@ def setup_prj_file(
                     val for key, val in BC_type_dict.items() if key in cell_data
                 ),
                 parameter=cell_data,
-                mesh=cell_data,
+                mesh="topsurface_" + bulk_mesh.stem,
             )
             # Every point boundary condition refers to a parameter with the same name
             model.parameters.add_parameter(
@@ -378,7 +378,6 @@ def setup_prj_file(
             )
     # add deactivated subdomains if existing
     if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
-        deactivate_cells(mesh)
         tags = ["time_interval", "material_ids"]
         material_ids = mesh.cell_data["MaterialIDs"]
         deactivated_materials = set(material_ids[material_ids < 0])

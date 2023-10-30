@@ -13,6 +13,8 @@ from .feflowlib import (
 )
 from .tools import (
     extract_cell_boundary_conditions,
+    combine_material_properties,
+    deactivate_cells,
     get_specific_surface,
     helpFormat,
     setup_prj_file,
@@ -22,6 +24,7 @@ from .tools import (
 __all__ = [
     "combine_material_properties",
     "get_specific_surface",
+    "deactivate_cells",
     "helpFormat",
     "convert_geometry_mesh",
     "convert_properties_mesh",
