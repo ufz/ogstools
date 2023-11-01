@@ -37,15 +37,9 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     ids = np.arange(surface_mesh.n_cells)[
         filter_condition(surface_mesh["Normals"])
     ]
-    # Rename cell arrays to satisfy ogs-convention
-    surface_mesh.rename_array("vtkOriginalPointIds", "bulk_node_ids")
-    surface_mesh.rename_array("vtkOriginalCellIds", "bulk_element_ids")
     surface_mesh.cell_data.remove("Normals")
     # Extract cells that meet the filter condition
-    specific_cells = surface_mesh.extract_cells(ids)
-    specific_cells.cell_data.remove("vtkOriginalCellIds")
-    specific_cells.point_data.remove("vtkOriginalPointIds")
-    return specific_cells
+    return surface_mesh.extract_cells(ids)
 
 
 def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
@@ -191,9 +185,12 @@ def write_cell_boundary_conditions(
     """
     # mesh = mesh.copy()
     assign_bulk_ids(mesh)
-    topsurf = get_specific_surface(
-        mesh.extract_surface(), lambda normals: normals[:, 2] > 0
-    )
+    if mesh.volume != 0:
+        topsurf = get_specific_surface(
+            mesh.extract_surface(), lambda normals: normals[:, 2] > 0
+        )
+    else:
+        topsurf = mesh
 
     for cd in [
         cell_data

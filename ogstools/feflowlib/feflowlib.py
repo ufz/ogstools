@@ -5,7 +5,7 @@ Created on Tue Mar 14 2023
 """
 
 import logging as log
-from sys import stdout
+from sys import exit, stdout
 
 import ifm_contrib as ifm
 import numpy as np
@@ -48,6 +48,7 @@ def points_and_cells(doc: ifm.FeflowDoc):
             8: pv.CellType.HEXAHEDRON,
         },
     }
+    dimension = doc.getNumberOfDimensions()
     # 1. get a list of all cells/elements and reverse it for correct node order in OGS
     elements = np.fliplr(np.array(doc.c.mesh.get_imatrix())).tolist()
     # 2. write the amount of nodes per element to the first entry of each list
@@ -58,13 +59,24 @@ def points_and_cells(doc: ifm.FeflowDoc):
     for element in elements:
         nElement = len(element)
         element.insert(0, nElement)
-        celltypes.append(cell_type_dict[doc.getNumberOfDimensions()][nElement])
+        celltypes.append(cell_type_dict[dimension][nElement])
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
     # 4 .write the list for all points and their global coordinates
-    points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
-    pts = points[["X", "Y", "Z"]].to_numpy()
+    if dimension == 2:
+        points = doc.c.mesh.df.nodes(global_cos=True)
+        pts = points[["X", "Y"]].to_numpy()
+        # A 0 is appended since in pyvista points must be given in 3D.
+        # So we set the Z-coordinate to 0.
+        pts = [np.append(pt, 0) for pt in pts]
+    elif dimension == 3:
+        points = doc.c.mesh.df.nodes(
+            global_cos=True, par={"Z": ifm.Enum.P_ELEV}
+        )
+        pts = points[["X", "Y", "Z"]].to_numpy()
+    else:
+        exit("The input data is neither 2D nor 3D, which it needs to be.")
 
     # 5. log information
     log.info(
@@ -72,7 +84,6 @@ def points_and_cells(doc: ifm.FeflowDoc):
         len(pts),
         len(celltypes),
     )
-
     return pts, cells, celltypes
 
 
