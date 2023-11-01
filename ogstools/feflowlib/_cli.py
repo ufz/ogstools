@@ -87,7 +87,7 @@ def cli():
     # save meshio changes node order -> not compatible with OGS
     # in the future meshio is desired for saving ! -> pv.save_meshio(args.output, mesh)
     log.info(
-        "The %s of the input mesh has been successfully converted.",
+        "The conversion of the %s was successful.",
         msg[args.case],
     )
     if "properties" not in args.case or args.BC != "BC":
