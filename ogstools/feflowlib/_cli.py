@@ -7,7 +7,6 @@ Created on Tue Mar 14 2023
 import logging as log
 from argparse import ArgumentParser
 from pathlib import Path
-from sys import stdout
 
 import ifm_contrib as ifm
 
@@ -54,16 +53,17 @@ parser.add_argument(
 
 
 # log configuration
-log.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    encoding="utf-8",
-    level=log.DEBUG,
-    stream=stdout,
-    datefmt="%d/%m/%Y %H:%M:%S",
-)
+logger = log.getLogger(__name__)
 
 
 def cli():
+    # log feflow version
+    logger.info(
+        "The converter is working with FEFLOW %s (build %s).",
+        ifm.getKernelVersion() / 1000,
+        ifm.getKernelRevision(),
+    )
+
     args = parser.parse_args()
 
     if not Path(args.input).exists():
@@ -86,7 +86,7 @@ def cli():
     mesh.save(args.output)
     # save meshio changes node order -> not compatible with OGS
     # in the future meshio is desired for saving ! -> pv.save_meshio(args.output, mesh)
-    log.info(
+    logger.info(
         "The conversion of the %s was successful.",
         msg[args.case],
     )

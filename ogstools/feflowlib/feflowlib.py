@@ -3,31 +3,17 @@ Created on Tue Mar 14 2023
 
 @author: heinzej
 """
-
 import logging as log
-from sys import exit, stdout
+from sys import exit
 
 import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
 
-# log configuration
-log.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    encoding="utf-8",
-    level=log.INFO,
-    stream=stdout,
-    datefmt="%d/%m/%Y %H:%M:%S",
-)
-
 ifm.forceLicense("Viewer")
 
-# log feflow version
-log.info(
-    "The converter is working with FEFLOW %s (build %s).",
-    ifm.getKernelVersion() / 1000,
-    ifm.getKernelRevision(),
-)
+# log configuration
+logger = log.getLogger(__name__)
 
 
 def points_and_cells(doc: ifm.FeflowDoc):
@@ -79,7 +65,7 @@ def points_and_cells(doc: ifm.FeflowDoc):
         exit("The input data is neither 2D nor 3D, which it needs to be.")
 
     # 5. log information
-    log.info(
+    logger.info(
         "There are %s number of points and %s number of cells to be converted.",
         len(pts),
         len(celltypes),
@@ -134,7 +120,7 @@ def material_ids_from_selections(doc: ifm.FeflowDoc):
             mat_ids_mesh[element] = value
 
     # 4. log the dictionary of the MaterialIDs
-    log.info("MaterialIDs refer to: %s", dict_matid)
+    logger.info("MaterialIDs refer to: %s", dict_matid)
     # MaterialIDs must be int32
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
@@ -196,9 +182,13 @@ def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     ]
 
     # 8. log the data arrays
-    log.info("These data arrays refer to point data: %s", list(pt_data.keys()))
-    log.info("These data arrays refer to cell data: %s", list(cell_data.keys()))
-    log.info(
+    logger.info(
+        "These data arrays refer to point data: %s", list(pt_data.keys())
+    )
+    logger.info(
+        "These data arrays refer to cell data: %s", list(cell_data.keys())
+    )
+    logger.info(
         "These data arrays have been neglected as they are full of nans: %s",
         nan_arrays,
     )

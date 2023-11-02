@@ -1,10 +1,14 @@
 import argparse
+import logging as log
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+
+# log configuration
+logger = log.getLogger(__name__)
 
 
 class helpFormat(
@@ -33,7 +37,7 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     surface_mesh = surface_mesh.compute_normals(
         cell_normals=True, point_normals=False
     )
-    # Get list of cell IDs that meet condition
+    # Get list of cell IDs that meet the filter condition
     ids = np.arange(surface_mesh.n_cells)[
         filter_condition(surface_mesh["Normals"])
     ]
@@ -112,7 +116,7 @@ def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     :param mesh_name: name of the mesh
     :type mesh_name: str
     """
-
+    # The format must be unsigned integer, as it is required by OGS
     mesh["bulk_node_ids"] = np.arange(mesh.n_points, dtype=np.uint64)
     mesh.cell_data["bulk_element_ids"] = np.arange(
         mesh.n_cells, dtype=np.uint64
@@ -154,12 +158,10 @@ def write_point_boundary_conditions(
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
                     filtered_points.cell_data.remove(cell_data)
-            # remove data of BC that are of no value for this part of the mesh
             for pt_data in mesh.point_data:
                 if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
 
-            # Only "bulk_node_ids" can be read by ogs
             filtered_points.save(str(out_mesh_path.with_stem(point_data)))
             # pv.save_meshio(
             #    point_data + ".vtu", filtered_points, file_format="vtu"
@@ -177,32 +179,28 @@ def write_cell_boundary_conditions(
     This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
     be used in the future.
+    TODO: Allow a generic definition of the normal vector for the filter condition.
 
     :param out_mesh_path: name of the mesh
     :type out_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
-    # mesh = mesh.copy()
     assign_bulk_ids(mesh)
     if mesh.volume != 0:
+        # get the topsurface since there are the cells of interest
         topsurf = get_specific_surface(
             mesh.extract_surface(), lambda normals: normals[:, 2] > 0
         )
     else:
         topsurf = mesh
-
+    # Only selected cell data is needed -> clear all point data instead of the bulk_node_ids
     for cd in [
         cell_data
         for cell_data in topsurf.cell_data
         if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
     ]:
         topsurf.cell_data.remove(cd)
-    # Only cell data are needed
-    # get the topsurface since there are the cells of interest
-    # TODO: Allow a generic definition of the normal vector for the filter condition.
-
-    # remove data of BC that are of no value for this part of the mesh
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
@@ -222,9 +220,9 @@ def include_xml_snippet_in_prj_file(
     Includes an xml snippet in a project-file. It only works if there is already a subelement in
     the project file that has the same tag/name as the root element of the xml-snippet to be included.
 
-    :param in_prj_file: path of the input projectfile
+    :param in_prj_file: path of the input project-file
     :type in_prj_file: str
-    :param out_prj_file: path of the output projectfile
+    :param out_prj_file: path of the output project-file
     :type out_prj_file: str
     :param xml_snippet: path of the xml-snippet
     :type xml_snippet: str
@@ -276,7 +274,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     """
     Get the material properties of the mesh converted from FEFLOW. There are several methods available
     to access the material properties. Either they are accessible with the FEFLOW API(ifm) or with brute-force methods,
-    which check each element.
+    which check each element, like this function.
 
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
@@ -292,15 +290,16 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
             property_of_material == property_of_material[0]
         )
         if all_properties_equal:
+            # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
+            # WARNING: This is not a generic method at the moment. A dictionary with all the
+            # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
             material_properties[material_id] = [property_of_material[0] / 86400]
         else:
             material_properties[material_id] = ["non_constant"]
-            print(
-                "WARNING: the property "
-                + property
-                + " in material "
-                + str(material_id)
-                + " does not refer to a constant value"
+            logger.info(
+                "The property %s in material %s is not constant",
+                property,
+                material_id,
             )
 
     return material_properties
@@ -318,6 +317,8 @@ def combine_material_properties(
     :param properties_list: list of properties to be combined
     :type properties_list: list
     """
+    # Use a default dict because it allows to extend the values in the list.
+    # Also it initializes the value if there is an empty list.
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
