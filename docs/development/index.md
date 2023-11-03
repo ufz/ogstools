@@ -138,31 +138,6 @@ We use [pre-commit](https://pre-commit.com) to run various checks (shortcut `mak
 pre-commit run --all-files
 ```
 
-## Testing with `tox`
-
-To test for different Python version you can use [`tox`](https://tox.wiki).
-
-To run the tests:
-
-```bash
-tox
-```
-
-:::{note}
-You can parallelize the tox tests with `tox -p`.
-:::
-
-You can also run a single test environment with e.g.:
-
-```bash
-tox -e py39
-```
-
-The following environments are available:
-
-```{command-output} tox list
-```
-
 ## Create a package
 
 ```bash
