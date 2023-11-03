@@ -61,10 +61,7 @@ tests win:
     - .venv\Scripts\Activate.ps1
     - pip install -e ".[dev,test]"
   script:
-    - tox -p
-    # Bug: -e docs only works on Windows when called from docs/-dir.
-    - cd docs
-    - tox -e docs
+    - pytest
 
 .docs-script: &docs-script
   - make setup_devcontainer
