@@ -4,45 +4,64 @@ Tests (pytest) for msh2vtu
 import os
 import runpy
 import subprocess
+from itertools import product
 from pathlib import Path
 
 import meshio
 
 import ogstools.msh2vtu as msh2vtu
+import ogstools.msh2vtu.examples.gmsh as examples
 
 
 def test_cli():
     subprocess.run(["msh2vtu", "--help"], check=True)
 
 
-def test_howto_gmsh(tmp_path):
-    working_dir = Path(tmp_path)
-    os.chdir(working_dir)
+def test_unit_square(tmp_path: Path):
+    msh_file = Path(tmp_path, "unit_square.msh")
+    permutations = product([0.5, 0.2], [True, False], [1, 2])
+    for size, structured, order in permutations:
+        examples.unit_square(
+            out_name=msh_file,
+            structured_grid=structured,
+            element_size=size,
+            order=order,
+        )
+        assert msh2vtu.run(msh_file, path=tmp_path, prefix="unit_square") == 0
 
+
+def test_unit_cube(tmp_path: Path):
+    msh_file = Path(tmp_path, "unit_cube.msh")
+    permutations = product([1.0, 0.5], [True, False], [1, 2])
+    for size, structured, order in permutations:
+        examples.unit_cube(
+            out_name=msh_file,
+            structured_grid=structured,
+            element_size=size,
+            order=order,
+        )
+        assert msh2vtu.run(msh_file, path=tmp_path, prefix="unit_cube") == 0
+
+
+def test_howto_gmsh(tmp_path: Path):
+    os.chdir(tmp_path)
     for script in [
-        "cube_tet.py",
         "cube_mixed.py",
-        "square_tri.py",
-        "square_quad.py",
         # no script for square_with_circular_hole.msh
         "quarter_rectangle_with_hole.py",
-        "cube_hex.py",
         "line.py",
     ]:
-        runpy.run_module(
-            f"ogstools.msh2vtu.examples.howto_gmsh.{Path(script).stem}"
-        )
-        msh_file = f"{Path(script).stem}.msh"
+        runpy.run_module(f"ogstools.msh2vtu.examples.gmsh.{Path(script).stem}")
+        prefix = str(Path(script).stem)
+        msh_file = Path(tmp_path, prefix + ".msh")
         error_code = msh2vtu.run(
-            filename=msh_file, output=str(Path(msh_file).stem)
+            filename=msh_file, path=tmp_path, prefix=prefix
         )
         assert error_code == 0
 
-    glob_vtu_files = Path().glob("*.vtu")
-    for vtu_file in glob_vtu_files:
-        ErrorCode = 0
+    for vtu_file in Path().glob("*.vtu"):
         try:
             meshio.read(vtu_file)
         except Exception:
-            ErrorCode = 1
-        assert ErrorCode == 0, "Generated vtu-files are erroneous."
+            msg = "Generated vtu-files are erroneous."
+            raise ValueError(msg) from None
