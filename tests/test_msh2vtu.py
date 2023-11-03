@@ -1,8 +1,6 @@
 """
 Tests (pytest) for msh2vtu
 """
-import argparse
-import glob
 import os
 import runpy
 import subprocess
@@ -35,19 +33,12 @@ def test_howto_gmsh(tmp_path):
             f"ogstools.msh2vtu.examples.howto_gmsh.{Path(script).stem}"
         )
         msh_file = f"{Path(script).stem}.msh"
-        args = argparse.Namespace(
-            filename=msh_file,
-            output=str(Path(msh_file).stem),
-            dim=0,
-            delz=False,
-            swapxy=False,
-            rdcd=True,
-            ogs=True,
-            ascii=False,
+        error_code = msh2vtu.run(
+            filename=msh_file, output=str(Path(msh_file).stem)
         )
-        assert msh2vtu.run(args) == 0
+        assert error_code == 0
 
-    glob_vtu_files = glob.glob("*.vtu")
+    glob_vtu_files = Path().glob("*.vtu")
     for vtu_file in glob_vtu_files:
         ErrorCode = 0
         try:

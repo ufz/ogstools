@@ -87,7 +87,16 @@ def cli():
     """command line use"""
     args = argparser().parse_args()
 
-    ErrorCode = run(args)
+    ErrorCode = run(
+        args.filename,
+        args.output,
+        args.dim,
+        args.delz,
+        args.swapxy,
+        args.rdcd,
+        args.ogs,
+        args.ascii,
+    )
     if ErrorCode == 0:
         print("msh2vtu successfully finished")
     else:
