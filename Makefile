@@ -29,7 +29,6 @@ test:  ## Runs the unit tests
 
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest
-	coverage combine
 	coverage report --no-skip-covered
 	coverage html
 	coverage xml
