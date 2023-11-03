@@ -1,7 +1,6 @@
 import subprocess
 import unittest
 import xml.etree.ElementTree as ET
-from os import chdir
 from pathlib import Path
 
 import numpy as np
@@ -19,7 +18,8 @@ from ogstools.feflowlib import (  # noqa: E402
 )
 from ogstools.feflowlib.feflowlib import points_and_cells  # noqa: E402
 from ogstools.feflowlib.tools import (  # noqa: E402
-    include_xml_snippet_in_prj_file,
+    get_material_properties,
+    setup_prj_file,
 )
 
 
@@ -31,7 +31,16 @@ current_dir = Path(__file__).parent
 
 
 class TestConverter(unittest.TestCase):
-    def test_converter(self):
+    def setUp(self):
+        # Variables for the following tests:
+        self.path_data = Path(current_dir / "data/feflowlib/")
+        self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
+        self.pv_mesh = read_properties(self.doc)
+
+    def test_geometry(self):
+        """
+        Test if geometry can be converted correctly.
+        """
         doc = ifm.loadDocument(
             str(Path(current_dir / "data/feflowlib/2layers_model.fem"))
         )
@@ -40,61 +49,107 @@ class TestConverter(unittest.TestCase):
         assert len(celltypes) == 32
         assert celltypes[0] == pv.CellType.HEXAHEDRON
 
-
-class TestToymodel(unittest.TestCase):
-    def test_toymodel(self):
-        chdir("tests/data/feflowlib/")
-        doc = ifm.loadDocument(str(Path("box_3D_neumann.fem")))
-
+    def test_toymodel_mesh_conversion(self):
+        """
+        Test if geometry of a toymodel is converted correctly.
+        """
         # 1. Test if geometry is fine
-        points, cells, celltypes = points_and_cells(doc)
+        points, cells, celltypes = points_and_cells(self.doc)
         assert len(points) == 6768
         assert len(celltypes) == 11462
         assert celltypes[0] == pv.CellType.WEDGE
 
-        # 2. Test if data on mesh is fine
-        pv_mesh = read_properties(doc)
+        # 2. Test data arrays
+        self.pv_mesh.save(str(self.path_data / "boxNeumann.vtu"))
+        pv_mesh = pv.read(str(self.path_data / "boxNeumann.vtu"))
         assert len(pv_mesh.cell_data) == 12
         assert len(pv_mesh.point_data) == 11
-        pv_mesh.save("boxNeumann.vtu")
 
-        # 3. Test boundary condition and xml-writing
-        # 3.1 Test xml-writing
-        write_point_boundary_conditions("boxNeumann", pv_mesh)
-        mesh_tree = ET.parse("mesh_boxNeumann.xml")
-        BC_tree = ET.parse("BC_boxNeumann.xml")
-        parameter_tree = ET.parse("parameter_boxNeumann.xml")
-        assert mesh_tree.getroot().tag == "meshes"
-        assert BC_tree.getroot().tag == "boundary_conditions"
-        assert parameter_tree.getroot().tag == "parameters"
-
-        # 3.2 Test boundary mesh-files
-        bc_flow = pv.read("P_BC_FLOW.vtu")
+    def test_toymodel_boundary_condition(self):
+        """
+        Test if separate meshes for boundary condition are written correctly.
+        """
+        write_point_boundary_conditions(
+            self.path_data / "boxNeumann.vtu", self.pv_mesh
+        )
+        bc_flow = pv.read(str(self.path_data / "P_BC_FLOW.vtu"))
         assert bc_flow.n_points == 66
         assert len(bc_flow.point_data) == 2
-        bc_flow_2nd = pv.read("P_BCFLOW_2ND.vtu")
+        bc_flow_2nd = pv.read(str(self.path_data / "P_BCFLOW_2ND.vtu"))
         assert bc_flow_2nd.n_points == 66
         assert len(bc_flow_2nd.point_data) == 2
 
-        # 4.Run ogs simulation with ogs6py and compare Simulation results.
-        include_xml_snippet_in_prj_file(
-            "inBoxNeumann.prj", "boxNeumann.prj", "parameter_boxNeumann.xml"
+    def test_toymodel_prj_file(self):
+        """
+        Test the prj_file that can be written
+        """
+        setup_prj_file(
+            self.path_data / "boxNeumann_.vtu",
+            self.pv_mesh,
+            get_material_properties(self.pv_mesh, "P_CONDX"),
+        )
+        prjfile_root = ET.parse(
+            str(self.path_data / "boxNeumann_.prj")
+        ).getroot()
+        elements = list(prjfile_root)
+        assert len(elements) == 8
+        # Test if the meshes are correct
+        meshes = prjfile_root.find("meshes")
+        meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
+        meshes_list_expected = [
+            "boxNeumann_.vtu",
+            "topsurface_boxNeumann_.vtu",
+            "P_BC_FLOW.vtu",
+            "P_BCFLOW_2ND.vtu",
+        ]
+        for mesh, mesh_expected in zip(meshes_list, meshes_list_expected):
+            assert mesh == mesh_expected
+        # Test if the parameters are correct
+        parameters = prjfile_root.find("parameters")
+        parameters_list = [
+            parameter.find("name").text
+            for parameter in parameters.findall("parameter")
+        ]
+        parameters_list_expected = [
+            "p0",
+            "P_BC_FLOW",
+            "P_BCFLOW_2ND",
+            "P_IOFLOW",
+            "P_SOUF",
+        ]
+
+        for parameter, parameter_expected in zip(
+            parameters_list, parameters_list_expected
+        ):
+            assert parameter == parameter_expected
+        """
+        boundary_conditions = root.find('process_variables/process_variable/boundary_conditions')
+        boundary_condtitions_list = [boundary_condition.find('parameter').text for boundary_condition in boundary_conditions.findall('parameter')]
+        """
+        diffusion_value = prjfile_root.find(
+            "media/medium[@id='0']/properties/property[name='diffusion']/value"
+        ).text
+        assert float(diffusion_value) == float(
+            self.pv_mesh.cell_data["P_CONDX"][0] / 86400
         )
 
-        model = ogs.OGS(
-            PROJECT_FILE="boxNeumann2.prj", INPUT_FILE="boxNeumann.prj"
-        )
-        model.add_include(parent_xpath=".", file="mesh_boxNeumann.xml")
-        model.add_include(
-            parent_xpath="./process_variables/process_variable",
-            file="BC_boxNeumann.xml",
-        )
-        model.write_input(keep_includes=True)
-        model.run_model()
+    def test_toymodel_ogs_simulation(self):
+        """
+        Test if ogs simulation results are similar to FEFLOW simulation results.
+        """
+        # Run ogs
+        prjfile = str(self.path_data / "boxNeumann_test.prj")
+        model = ogs.OGS(PROJECT_FILE=prjfile)
+        model.run_model(logfile="tests/data/feflowlib/out.log")
 
-        # 4.1 Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read("xxx_ts_2_t_86400.000000.vtu")
-        dif = ogs_sim_res.point_data["pressure"] + pv_mesh.point_data["P_HEAD"]
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(self.path_data / "sim_box_ts_2_t_86400.000000.vtu")
+        )
+        dif = (
+            ogs_sim_res.point_data["pressure"]
+            + self.pv_mesh.point_data["P_HEAD"]
+        )
         assert np.all(np.abs(dif) < 5e-6)
         assert np.allclose(dif, 0, atol=5e-6, rtol=0)
 
