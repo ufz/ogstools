@@ -1,6 +1,7 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
 import warnings
 from pathlib import Path
+from typing import Union
 
 import meshio
 import numpy as np
@@ -91,7 +92,9 @@ def find_cells_at_nodes(cells, node_count, cell_start_index):
 
 
 # function to find out to which domain elements a boundary element belongs
-def find_connected_domain_cells(boundary_cells_values, domain_cells_at_node):
+def find_connected_domain_cells(
+    boundary_cells_values, domain_cells_at_node
+) -> tuple[np.ndarray, np.ndarray]:
     warned_gt1 = False  # to avoid flood of warnings
     warned_lt1 = False  # to avoid flood of warnings
     number_of_boundary_cells = len(boundary_cells_values)
@@ -503,8 +506,9 @@ def run(
         # preliminary, as there may be cells of boundary dimension inside domain
         # (i.e. which are no boundary cells)
         boundary_cells_values = cells_dict[boundary_cell_type]
-        connected_cells, connected_cells_count = np.uint64(
-            find_connected_domain_cells(
+        connected_cells, connected_cells_count = (
+            np.asarray(np.uint64(t))
+            for t in find_connected_domain_cells(
                 boundary_cells_values, domain_cells_at_node
             )
         )
@@ -647,6 +651,7 @@ def run(
 
                 # cell data
                 if ogs:
+                    selection_cell_data_values: Union[np.int32, np.uint64]
                     if subdomain_dim == boundary_dim:
                         (
                             connected_cells,
