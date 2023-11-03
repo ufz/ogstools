@@ -51,7 +51,13 @@ def argparser():
     )
     parser.add_argument(
         "-o",
-        "--output",
+        "--output_path",
+        default="",
+        help=("path of output files; if not given, then it defaults to cwd"),
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
         default="",
         help=(
             "basename of output files; if not given, then it defaults to"
@@ -88,14 +94,15 @@ def cli():
     args = argparser().parse_args()
 
     ErrorCode = run(
-        args.filename,
-        args.output,
-        args.dim,
-        args.delz,
-        args.swapxy,
-        args.rdcd,
-        args.ogs,
-        args.ascii,
+        filename=args.filename,
+        path=args.output_path,
+        prefix=args.prefix,
+        dim=args.dim,
+        delz=args.delz,
+        swapxy=args.swapxy,
+        rdcd=args.rdcd,
+        ogs=args.ogs,
+        ascii=args.ascii,
     )
     if ErrorCode == 0:
         print("msh2vtu successfully finished")

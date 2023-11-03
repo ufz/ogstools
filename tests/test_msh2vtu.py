@@ -4,13 +4,16 @@ Tests (pytest) for msh2vtu
 import os
 import runpy
 import subprocess
+import sys
 from itertools import product
 from pathlib import Path
+from unittest.mock import patch
 
 import meshio
 
 import ogstools.msh2vtu as msh2vtu
 import ogstools.msh2vtu.examples.gmsh as examples
+from ogstools.msh2vtu._cli import cli
 
 
 def test_cli():
@@ -43,7 +46,7 @@ def test_unit_cube(tmp_path: Path):
         assert msh2vtu.run(msh_file, path=tmp_path, prefix="unit_cube") == 0
 
 
-def test_howto_gmsh(tmp_path: Path):
+def test_gmsh(tmp_path: Path):
     os.chdir(tmp_path)
     for script in [
         "cube_mixed.py",
@@ -58,8 +61,11 @@ def test_howto_gmsh(tmp_path: Path):
             filename=msh_file, path=tmp_path, prefix=prefix
         )
         assert error_code == 0
+    testargs = ["msh2vtu", str(msh_file), "-o", str(tmp_path), "-p", prefix]
+    with patch.object(sys, "argv", testargs):
+        cli()
 
-    for vtu_file in Path().glob("*.vtu"):
+    for vtu_file in tmp_path.glob("*.vtu"):
         try:
             meshio.read(vtu_file)
         except Exception:
