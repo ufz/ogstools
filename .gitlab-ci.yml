@@ -38,6 +38,7 @@ tests (arch):
   tags: [shell, envinf]
   needs: []
   script:
+    - pre-commit run --all-files
     - *setup-headless
     - make test
 
@@ -59,7 +60,7 @@ tests win:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[dev,test]"
+    - pip install -e ".[dev,test,docs]"
   script:
     - pytest
 
