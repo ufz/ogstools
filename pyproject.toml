@@ -43,7 +43,7 @@ msh2vtu = 'ogstools.msh2vtu._cli:cli'
 feflow2ogs = 'ogstools.feflowlib._cli:cli'
 
 [project.optional-dependencies]
-dev = ["pre-commit>=2.20", "tox>=4.1", "build", "black"]
+dev = ["pre-commit>=2.20", "build", "black"]
 test = ["pytest", "coverage", "gmsh"]
 docs = [
   "sphinx",

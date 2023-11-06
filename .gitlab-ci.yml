@@ -38,6 +38,7 @@ tests (arch):
   tags: [shell, envinf]
   needs: []
   script:
+    - pre-commit run --all-files
     - *setup-headless
     - make test
 
@@ -59,12 +60,9 @@ tests win:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[dev,test]"
+    - pip install -e ".[dev,test,docs]"
   script:
-    - tox -p
-    # Bug: -e docs only works on Windows when called from docs/-dir.
-    - cd docs
-    - tox -e docs
+    - pytest
 
 .docs-script: &docs-script
   - make setup_devcontainer
