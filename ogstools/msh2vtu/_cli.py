@@ -1,7 +1,7 @@
 import argparse
 
 from ogstools import __version__
-from ogstools.msh2vtu import run
+from ogstools.msh2vtu import msh2vtu
 
 
 def argparser():
@@ -51,7 +51,13 @@ def argparser():
     )
     parser.add_argument(
         "-o",
-        "--output",
+        "--output_path",
+        default="",
+        help=("path of output files; if not given, then it defaults to cwd"),
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
         default="",
         help=(
             "basename of output files; if not given, then it defaults to"
@@ -87,7 +93,17 @@ def cli():
     """command line use"""
     args = argparser().parse_args()
 
-    ErrorCode = run(args)
+    ErrorCode = msh2vtu(
+        input_filename=args.filename,
+        output_path=args.output_path,
+        output_prefix=args.prefix,
+        dim=args.dim,
+        delz=args.delz,
+        swapxy=args.swapxy,
+        rdcd=args.rdcd,
+        ogs=args.ogs,
+        ascii=args.ascii,
+    )
     if ErrorCode == 0:
         print("msh2vtu successfully finished")
     else:
