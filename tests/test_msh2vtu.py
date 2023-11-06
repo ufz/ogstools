@@ -11,9 +11,9 @@ from unittest.mock import patch
 
 import meshio
 
-import ogstools.msh2vtu as msh2vtu
-import ogstools.msh2vtu.examples.gmsh as examples
+from ogstools.msh2vtu import msh2vtu
 from ogstools.msh2vtu._cli import cli
+from ogstools.msh2vtu.examples import gmsh as examples
 
 
 def test_cli():
@@ -30,7 +30,7 @@ def test_unit_square(tmp_path: Path):
             element_size=size,
             order=order,
         )
-        assert msh2vtu.run(msh_file, path=tmp_path, prefix="unit_square") == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix="unit_square") == 0
 
 
 def test_unit_cube(tmp_path: Path):
@@ -43,7 +43,7 @@ def test_unit_cube(tmp_path: Path):
             element_size=size,
             order=order,
         )
-        assert msh2vtu.run(msh_file, path=tmp_path, prefix="unit_cube") == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix="unit_cube") == 0
 
 
 def test_gmsh(tmp_path: Path):
@@ -57,10 +57,7 @@ def test_gmsh(tmp_path: Path):
         runpy.run_module(f"ogstools.msh2vtu.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
-        error_code = msh2vtu.run(
-            filename=msh_file, path=tmp_path, prefix=prefix
-        )
-        assert error_code == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0
     testargs = ["msh2vtu", str(msh_file), "-o", str(tmp_path), "-p", prefix]
     with patch.object(sys, "argv", testargs):
         cli()

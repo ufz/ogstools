@@ -12,7 +12,7 @@ __all__ = [
     "print_info",
     "find_cells_at_nodes",
     "find_connected_domain_cells",
-    "run",
+    "msh2vtu",
 ]
 
 
@@ -148,10 +148,10 @@ def find_connected_domain_cells(
     return domain_cells_array, domain_cells_number
 
 
-def run(
-    filename: str,
-    path: Path = Path(),
-    prefix: str = "",
+def msh2vtu(
+    input_filename: Path,
+    output_path: Path = Path(),
+    output_prefix: str = "",
     dim: int = 0,
     delz: bool = False,
     swapxy: bool = False,
@@ -159,6 +159,7 @@ def run(
     ogs: bool = True,
     ascii: bool = False,
 ):
+    input_filename = Path(input_filename)
     # some variable declarations
     ph_index = 0  # to access physical group id in field data
     geo_index = 1  # to access geometrical dimension in field data
@@ -205,23 +206,25 @@ def run(
     ogs_boundary_cell_data_key = "bulk_elem_ids"
 
     # check if input file exists and is in gmsh-format
-    if not Path(filename).is_file():
+    if not input_filename.is_file():
         warnings.warn("No input file (mesh) found.", stacklevel=2)
         # raise FileNotFoundError
         return 1
 
-    if Path(filename).suffix != ".msh":
+    if input_filename.suffix != ".msh":
         warnings.warn(
             "Warning, input file seems not to be in gmsh-format (*.msh)",
             stacklevel=2,
         )
 
     # if no parameter given, use same basename as input file
-    output_basename = Path(filename).stem if prefix == "" else prefix
+    output_basename = (
+        input_filename.stem if output_prefix == "" else output_prefix
+    )
     print(f"Output: {output_basename}")
 
     # read in mesh (be aware of shallow copies, i.e. by reference)
-    mesh: meshio.Mesh = meshio.read(filename)
+    mesh: meshio.Mesh = meshio.read(str(input_filename))
     points, point_data = mesh.points, mesh.point_data
     cells_dict, cell_data, cell_data_dict = (
         mesh.cells_dict,
@@ -425,7 +428,7 @@ def run(
                 stacklevel=2,
             )
         meshio.write(
-            Path(path, output_basename + "_domain.vtu"),
+            Path(output_path, output_basename + "_domain.vtu"),
             domain_mesh,
             binary=not ascii,
         )
@@ -577,7 +580,7 @@ def run(
         my_remove_orphaned_nodes(boundary_mesh)
 
         meshio.write(
-            Path(path, output_basename + "_boundary.vtu"),
+            Path(output_path, output_basename + "_boundary.vtu"),
             boundary_mesh,
             binary=not ascii,
         )
@@ -721,7 +724,9 @@ def run(
             outputfilename = (
                 output_basename + "_physical_group_" + name + ".vtu"
             )
-            meshio.write(Path(path, outputfilename), submesh, binary=not ascii)
+            meshio.write(
+                Path(output_path, outputfilename), submesh, binary=not ascii
+            )
             print("Submesh " + name + " (written)")
             print_info(submesh)
         else:

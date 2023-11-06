@@ -1,7 +1,7 @@
 import argparse
 
 from ogstools import __version__
-from ogstools.msh2vtu import run
+from ogstools.msh2vtu import msh2vtu
 
 
 def argparser():
@@ -93,10 +93,10 @@ def cli():
     """command line use"""
     args = argparser().parse_args()
 
-    ErrorCode = run(
-        filename=args.filename,
-        path=args.output_path,
-        prefix=args.prefix,
+    ErrorCode = msh2vtu(
+        input_filename=args.filename,
+        output_path=args.output_path,
+        output_prefix=args.prefix,
         dim=args.dim,
         delz=args.delz,
         swapxy=args.swapxy,
