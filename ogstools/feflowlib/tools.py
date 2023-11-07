@@ -158,7 +158,7 @@ def write_point_boundary_conditions(
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
                     filtered_points.cell_data.remove(cell_data)
-            for pt_data in mesh.point_data:
+            for pt_data in filtered_points.point_data:
                 if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
 
