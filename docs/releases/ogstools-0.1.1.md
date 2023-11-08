@@ -6,5 +6,3 @@ The second release of the `ogstools`-package brings lots of new library function
 
 [`studies`](../user-guide/studies.md) a new package that provides utility functions to compose studies from multiple simulation
 runs. Now it contains functions to perform convergence studies.
-
-
