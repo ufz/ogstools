@@ -1,11 +1,10 @@
 import pathlib
-from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
 
 
-def layer_names(folder: str) -> Callable[[pd.Series], pathlib.Path]:
+def layer_names(folder: str):
     def layer_names_folder(row):
         txt = "{layer_id:02d}_{model_unit}.vtu"
 
@@ -33,9 +32,7 @@ def dataframe_from_csv(
         raise Exception(msg)
     dfm = pd.read_csv(parameters_csvfile, delimiter=",")
     model_df = dfs.merge(dfm)
-    vtu_names = model_df.apply(
-        layer_names(str(surfaces_folder)), axis=1
-    ).to_numpy()
+    vtu_names = model_df.apply(layer_names(str(surfaces_folder)), axis=1)
     model_df["filename"] = vtu_names
     model_df.sort_values(by=["layer_id"])
     interest = ["material_id", "filename", "resolution"]
