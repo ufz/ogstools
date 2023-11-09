@@ -20,6 +20,8 @@ class PlotSetup:
     :obj:`ogstools.meshplotlib.plot_setup_defaults`.
     """
 
+    combined_colorbar: bool
+    "Whether all subplots share on colorbar or have one each."
     custom_cmap: Colormap
     "If provided, this colormap will be used for any plot."
     cmap_dict_if_bilinear: dict
@@ -34,10 +36,13 @@ class PlotSetup:
     "The resolution (dots per inch) for the figure."
     fig_scale: float
     "A scaling factor for the figure."
-    figsize: list[int]
-    "The size of the figure as a list of integers [width, height]."
+    aspect_limits: list[float]
+    "Lower and upper limit of aspect ratios. For meshes with data ratios"
+    "outside these bounds the aspect ratio gets clamped."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
+    layout: str
+    "Layout of the figure"
     length: Scalar
     "A property to set data and output unit of a models spatial extension."
     material_names: dict
@@ -54,9 +59,6 @@ class PlotSetup:
     rcParams: dict
     """Matplotlib runtime configuration. See
     :obj:`ogstools.meshplotlib.plot_setup_defaults`"""
-    ax_aspect_ratio: float
-    """The aspect ratio of all subplots. If None, subplots will be scaled
-    according to data limits"""
     show_element_edges: Union[bool, str]
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
@@ -103,8 +105,7 @@ class PlotSetup:
         """Create a PlotSetup instance from a dictionary."""
         return cls(
             fig_scale=obj["fig_scale"],
-            figsize=obj["figsize"],
-            ax_aspect_ratio=obj["ax_aspect_ratio"],
+            aspect_limits=obj["aspect_limits"],
             invert_colorbar=obj["invert_colorbar"],
             dpi=obj["dpi"],
             num_levels=obj["num_levels"],
@@ -120,8 +121,10 @@ class PlotSetup:
             x_label=obj["x_label"],
             y_label=obj["y_label"],
             log_scaled=obj["log_scaled"],
+            layout=obj["layout"],
             length=Scalar("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
+            combined_colorbar=obj["combined_colorbar"],
             custom_cmap=obj["custom_cmap"],
             cmap_dict=obj["cmap_dict"],
             cmap_dict_if_bilinear=obj["cmap_dict_if_bilinear"],

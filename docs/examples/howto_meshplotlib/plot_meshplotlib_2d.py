@@ -34,13 +34,12 @@ fig = mpl.plot(mesh, presets.temperature)
 fig = mpl.plot(mesh, presets.pressure.get_mask())
 
 # %%
-# Let's plot the fluid velocity field on the hydraulically active part of the model.
-mesh_H = mesh.threshold((1, 3), "MaterialIDs")
-fig = mpl.plot(mesh_H, presets.velocity)
+# Let's plot the fluid velocity field.
+fig = mpl.plot(mesh, presets.velocity)
 
 # %%
 # It is also possible to plot a shape on top, e.g. to display an overburden.
-mpl.plot_on_top(fig.axes[0], mesh_H, lambda x: min(max(0, 0.1 * (x - 3)), 100))
+mpl.plot_on_top(fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100))
 fig  # noqa: B018
 
 

@@ -45,6 +45,7 @@ def animate(
                       if sequence of float: the timevalues to animate
     :param titles: the title on top of the animation for each frame
     """
+    setup.layout = "tight"
 
     ts = mesh_series.timesteps if timesteps is None else timesteps
     tv = mesh_series.timevalues
@@ -65,7 +66,7 @@ def animate(
         end = "\n" if index == (len(ts) - 1) else "\r"
         print(f"progress: |{bar}| {progress:.2f}% complete", end=end)
 
-        fig.axes[-1].remove()  # remove colorbar (necessary bc of tight layout)
+        fig.axes[-1].remove()  # remove colorbar
         for ax in np.ravel(fig.axes):
             ax.clear()
         if titles is not None:

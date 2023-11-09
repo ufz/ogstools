@@ -30,6 +30,8 @@ def nice_range(lower: float, upper: float, n_ticks: float) -> np.ndarray:
 
 
 def adaptive_rounding(vals: np.ndarray, precision: int):
+    if vals.size == 0:
+        return vals
     log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))
     exponents = np.floor(log).astype(int)
     median_exp = int(np.median(exponents))
@@ -43,7 +45,7 @@ def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     The length of the arrays will be close to n_ticks.
     At the boundaries the tickspacing may differ from the remaining array.
     """
-    if np.abs(upper - lower) <= 1e-12:
-        return lower + np.array([0.0, 1e-12])
+    if np.abs(upper - lower) <= 1e-6:
+        return lower + np.array([0.0, 1e-6])
     levels = nice_range(lower, upper, n_ticks)
     return np.append(np.append(lower, adaptive_rounding(levels, 6)), upper)

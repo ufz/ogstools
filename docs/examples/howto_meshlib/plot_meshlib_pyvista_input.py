@@ -34,12 +34,9 @@ mesh = to_region_tetraeder(ls, 40).mesh
 # %%
 # Visualize the prism mesh
 
-slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="y")), (2, 2))
+slices = np.reshape(mesh.slice_along_axis(n=4, axis="y"), (1, -1))
+mpl.setup.aspect_limits = [0.2, 5.0]
 fig = mpl.plot(slices, "MaterialIDs")
-
-
-# %%
-# Visualize for all types
-
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
+_ = fig
