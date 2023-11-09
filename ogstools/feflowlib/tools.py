@@ -1,6 +1,6 @@
 import argparse
-from collections import defaultdict
 import logging as log
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -148,12 +148,13 @@ def extract_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
+    # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
+    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"] / 86400
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
     )
     
-
 
 def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     """
@@ -267,14 +268,14 @@ def setup_prj_file(
     bulk_mesh: Path,
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
+    model=None,
 ):
     """
     Sets up a prj-file for ogs simulations using ogs6py.
-
-
     """
     prjfile = bulk_mesh.with_suffix(".prj")
-    model = ogs.OGS(PROJECT_FILE=prjfile)
+    if model is None:
+        model = ogs.OGS(PROJECT_FILE=prjfile)
 
     BC_type_dict = {
         "_BC_": "Dirichlet",
@@ -282,14 +283,14 @@ def setup_prj_file(
         "3RD": "Robin",
         "4TH": "NodalSourceTerm",
         "P_IOFLOW": "Neumann",
-        "P_SOUF": "volumetric source term",
+        "P_SOUF": "Volumetric",
     }
 
     model.mesh.add_mesh(filename=bulk_mesh.name)
     model.mesh.add_mesh(filename="topsurface_" + bulk_mesh.name)
     # Pr
     model.processes.add_process_variable(
-        process_variable="pressure", process_variable_name="HEAD_OGS"
+        process_variable="process_variable", process_variable_name="HEAD_OGS"
     )
     model.processvars.set_ic(
         process_variable_name="HEAD_OGS",
@@ -317,15 +318,29 @@ def setup_prj_file(
 
     for cell_data in mesh.cell_data:
         if cell_data in ["P_IOFLOW", "P_SOUF"]:
-            # Add boundary conditions
-            model.processvars.add_bc(
-                process_variable_name="HEAD_OGS",
-                type=next(
-                    val for key, val in BC_type_dict.items() if key in cell_data
-                ),
-                parameter=cell_data,
-                mesh="topsurface_" + bulk_mesh.stem,
-            )
+            if cell_data in ["P_IOFLOW"]:
+                # Add boundary conditions
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in cell_data
+                    ),
+                    parameter=cell_data,
+                    mesh="topsurface_" + bulk_mesh.stem,
+                )
+            elif cell_data in ["P_SOUF"]:
+                model.processvars.add_st(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in cell_data
+                    ),
+                    parameter=cell_data,
+                    mesh="topsurface_" + bulk_mesh.stem,
+                )
             # Every point boundary condition refers to a parameter with the same name
             model.parameters.add_parameter(
                 name=cell_data,
@@ -378,11 +393,10 @@ def setup_prj_file(
             )
     # add deactivated subdomains if existing
     if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
-        tags = ["time_interval", "material_ids"]
+        tags = ["material_ids"]
         material_ids = mesh.cell_data["MaterialIDs"]
         deactivated_materials = set(material_ids[material_ids < 0])
         values = [
-            "to be inserted",
             " ".join(str(material) for material in deactivated_materials),
         ]
         xpath = "./process_variables/process_variable"
@@ -392,6 +406,13 @@ def setup_prj_file(
             parent_xpath=xpath + "/deactivated_subdomains",
             taglist=tags,
             textlist=values,
+        )
+        model.add_block(
+            blocktag="time_interval",
+            parent_xpath=xpath
+            + "/deactivated_subdomains/deactivated_subdomain",
+            taglist=["start", "end"],
+            textlist=["0", "1"],
         )
 
     model.write_input()
