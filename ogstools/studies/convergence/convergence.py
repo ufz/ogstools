@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,29 +25,15 @@ def add_grid_spacing(mesh: pv.DataSet) -> pv.DataSet:
     dim = mesh.get_cell(0).dimension
     key = ["Length", "Area", "Volume"][dim - 1]
     _mesh = mesh.compute_cell_sizes()
-    _mesh["grid_spacing"] = _mesh.cell_data[key] ** (1.0 / dim)
+    _mesh.cell_data["grid_spacing"] = _mesh.cell_data[key] ** (1.0 / dim)
     return _mesh
-
-
-def get_refinement_ratio(
-    meshes: list[pv.DataSet], topology: pv.DataSet
-) -> pv.DataSet:
-    _meshes = resample(topology, [add_grid_spacing(mesh) for mesh in meshes])
-    spacings = np.stack([mesh["grid_spacing"] for mesh in _meshes], axis=0)
-    refinement_ratios = spacings[:-1] / spacings[1:]
-    mean_ratios = np.mean(refinement_ratios, axis=0)
-    result = deepcopy(topology)
-    result.clear_point_data()
-    result.clear_cell_data()
-    result["refinement_ratio"] = mean_ratios
-    return result
 
 
 def grid_convergence(
     meshes: list[pv.DataSet],
     property: Property,
     topology: pv.DataSet,
-    refinement_ratio: Optional[float] = None,
+    refinement_ratio: float,
 ) -> pv.DataSet:
     """
     Calculate the grid convergence field for the given meshes on the topology.
@@ -73,16 +58,14 @@ def grid_convergence(
     f3 = cast(_meshes[-3].point_data[property.data_name])
     f2 = cast(_meshes[-2].point_data[property.data_name])
     f1 = cast(_meshes[-1].point_data[property.data_name])
-    if refinement_ratio is None:
-        r = get_refinement_ratio(meshes, topology)["refinement_ratio"]
-    else:
-        r = np.ones(f1.shape) * refinement_ratio
+    r = np.ones(f1.shape) * refinement_ratio
     a = f3 - f2
     b = f2 - f1
     zeros = np.zeros_like
     ones = np.ones_like
     c = np.divide(a, b, out=ones(a), where=(b != 0))
-    p = np.log(np.abs(c)) / np.log(r)
+    with np.errstate(divide="ignore"):
+        p = np.log(np.abs(c)) / np.log(r)
     rpm1 = r**p - 1
     _gci23 = np.divide(np.abs(a), f3, out=zeros(a), where=(f3 != 0.0))
     _gci12 = np.divide(np.abs(b), f2, out=zeros(a), where=(f2 != 0.0))
@@ -105,7 +88,7 @@ def richardson_extrapolation(
     meshes: list[pv.DataSet],
     property: Property,
     topology: pv.DataSet,
-    refinement_ratio: Optional[float] = None,
+    refinement_ratio: float,
 ) -> pv.DataSet:
     """
     Estimate a better approximation of a property on a mesh.
@@ -118,7 +101,7 @@ def richardson_extrapolation(
     :param meshes:              At least three meshes with constant refinement.
     :param property:            The property to be extrapolated.
     :param topology:            The topology on which the extrapolation is done.
-    :param refinement_ratio:    If not given, it is calculated automatically
+    :param refinement_ratio:    Refinement ratio (spatial or temporal).
 
     :returns:                   Richardson extrapolation of the given property.
     """
@@ -155,9 +138,13 @@ def convergence_metrics(
     def _data(m: pv.DataSet):
         return property.magnitude.strip_units(m.point_data[property.data_name])
 
-    el_lens = [
-        np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes
-    ] + [0.0]
+    if np.all(["timestep_size" in mesh.field_data for mesh in meshes]):
+        x = [mesh.field_data["timestep_size"][0] for mesh in meshes]
+        x_str = "time step size"
+    else:
+        x = [np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes]
+        x_str = "mean element length"
+    x += [0.0]
     _meshes = meshes + [reference]
     maxs = [np.max(_data(m)) for m in _meshes]
     mins = [np.min(_data(m)) for m in _meshes]
@@ -170,9 +157,9 @@ def convergence_metrics(
             / np.linalg.norm(_data(reference), axis=0, ord=2)
         ]
     data = np.column_stack(
-        (el_lens, maxs, mins, rel_errs_max, rel_errs_min, rel_errs_l2)
+        (x, maxs, mins, rel_errs_max, rel_errs_min, rel_errs_l2)
     )
-    columns = ["mean element length", "maximum", "minimum"] + [
+    columns = [x_str, "maximum", "minimum"] + [
         f"rel. error ({x})" for x in ["max", "min", "L2 norm"]
     ]
 
@@ -182,8 +169,9 @@ def convergence_metrics(
 def log_fit(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
     if np.all(np.isnan(y)):
         return 0.0, y
-    _x = x[np.invert(np.isnan(x))]
-    _y = y[np.invert(np.isnan(y))]
+    indices = np.invert(np.isnan(x))
+    _x = x[indices]
+    _y = y[indices]
     params = np.polyfit(np.log10(_x), np.log10(_y), 1)
     fit_vals = 10 ** (params[0] * np.log10(x) + params[1])
     return params[0], fit_vals
@@ -192,8 +180,12 @@ def log_fit(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
 def plot_convergence(metrics: pd.DataFrame, property: Property) -> plt.Figure:
     "Plot the absolute values of the convergence metrics."
     fig, axes = plt.subplots(2, 1, sharex=True)
-    metrics.plot(ax=axes[0], x=0, y=1, c="r", style="-o", grid=True)
-    metrics.plot(ax=axes[1], x=0, y=2, c="b", style="-o", grid=True)
+    metrics.iloc[:-1].plot(ax=axes[0], x=0, y=1, c="r", style="-o", grid=True)
+    axes[0].plot(metrics.iloc[-1, 0], metrics.iloc[-1, 1], "r^")
+    axes[0].legend(["maximum", "Richardson\nextrapolation"])
+    metrics.iloc[:-1].plot(ax=axes[1], x=0, y=2, c="b", style="-o", grid=True)
+    axes[1].plot(metrics.iloc[-1, 0], metrics.iloc[-1, 2], "b^")
+    axes[1].legend(["minimum", "Richardson\nextrapolation"])
     y_label = property.output_name + " / " + property.output_unit
     fig.supylabel(y_label, fontsize="medium")
     fig.tight_layout()
@@ -203,6 +195,7 @@ def plot_convergence(metrics: pd.DataFrame, property: Property) -> plt.Figure:
 def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
     "Plot the relative errors of the convergence metrics in loglog scale."
     plot_df = metrics.replace(0.0, np.nan)
+    plot_df[plot_df < 1e-12] = np.nan
     x_vals = plot_df.iloc[:, 0].to_numpy()
     fig, ax = plt.subplots()
     for i, c in enumerate("rbg"):

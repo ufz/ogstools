@@ -1,0 +1,135 @@
+"""
+Convergence study (spatial refinement)
+======================================
+
+This example shows one possible implementation of how to do a convergence study.
+It uses data from the following benchmark with multiple discretizations to
+evaluate the accuracy of the numerical solutions.
+https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/
+
+Here is some theoretical background for the topic of grid convergence:
+https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
+
+At least three meshes of increasing refinement are required for the convergence
+study. The three finest meshes are used to calculated the Richardson
+extrapolation. It is recommended to use the third coarsest mesh for the topology
+to evaluate the results. The finer meshes should share the same nodes of the
+chosen topology, otherwise interpolation will influence the results. With
+unstructured grids this can be achieved as well with refinement by splitting.
+
+First, the required packages are imported and an output directory is created:
+"""
+
+# %%
+from pathlib import Path
+from shutil import rmtree
+from tempfile import mkdtemp
+
+from IPython.display import HTML
+from ogs6py import ogs
+
+from ogstools import meshlib, msh2vtu, studies, workflow
+from ogstools.studies.convergence.examples import (
+    steady_state_diffusion_analytical_solution,
+)
+
+temp_dir = Path(mkdtemp())
+report_name = str(temp_dir / "report.ipynb")
+result_paths = []
+
+# %% [markdown]
+# The meshes and their boundaries are generated easily via gmsh and msh2vtu.
+# Then we run the different simulations with increasingly fine spatial
+# discretization via ogs6py and store the results for the convergence study.
+
+# %%
+for i in range(6):
+    msh_path = temp_dir / "square.msh"
+    meshlib.gmsh_meshing.rect_mesh(
+        n_edge_cells=2**i, structured_grid=True, out_name=msh_path
+    )
+    msh2vtu.msh2vtu(
+        input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
+    )
+
+    model = ogs.OGS(
+        PROJECT_FILE=temp_dir / "default.prj",
+        INPUT_FILE=studies.convergence.examples.steady_state_diffusion_prj,
+    )
+    model.write_input()
+    ogs_args = f"-m {temp_dir} -o {temp_dir}"
+    model.run_model(write_logs=False, args=ogs_args)
+
+    result = meshlib.MeshSeries(
+        str(temp_dir / "steady_state_diffusion.pvd")
+    ).read(-1)
+    result_path = temp_dir / f"steady_state_diffusion_{i}.vtu"
+    result.save(result_path)
+    result_paths += [str(result_path)]
+
+# %% [markdown]
+# Here we choose the topology to evaluate the reults on and calculate the
+# analytical solution on it:
+
+# %%
+topology_path = result_paths[-3]
+analytical_solution_path = temp_dir / "analytical_solution.vtu"
+steady_state_diffusion_analytical_solution(topology_path).save(
+    analytical_solution_path
+)
+
+# %% [markdown]
+# Hydraulic pressure convergence
+# ------------------------------
+#
+# The pressure field of this model is converging well. The convergence ratio
+# is approximately 1 on the whole mesh and looking at the relative errors we
+# see a quadratic convergence behavior.
+
+# %%
+studies.convergence.run_convergence_study(
+    output_name=report_name,
+    mesh_paths=result_paths,
+    topology_path=topology_path,
+    property_name="hydraulic_height",
+    refinement_ratio=2.0,
+    reference_solution_path=str(analytical_solution_path),
+)
+HTML(workflow.jupyter_to_html(report_name, show_input=False))
+
+# %% [markdown]
+# Darcy velocity convergence
+# --------------------------
+#
+# For the velocity we some discrepancy of the convergence ratio in the bottom
+# right corner. Thus we know, at these points the mesh isn't properly
+# converging (at least for the velocity field).
+
+# We see, that in the bottom right corner, the velocity magnitude seems to be
+# steadily increasing, which is also reflected in the Richardson extrapolation,
+# which shows an anomalous high value in this spot, hinting at a singularity
+# there. This is explained by the notion in the benchmark's documentation of
+# "incompatible boundary conditions imposed on the bottom right corner of the
+# domain." Regardless of this, the benchmark gives a convergent solution for
+# the pressure field.
+
+# %%
+
+studies.convergence.run_convergence_study(
+    output_name=report_name,
+    mesh_paths=result_paths,
+    topology_path=topology_path,
+    refinement_ratio=2.0,
+    property_name="velocity",
+)
+HTML(workflow.jupyter_to_html(report_name, show_input=True))
+
+# %%
+
+# sphinx_gallery_start_ignore
+
+# Removing the created files to keep the code repository clean for developers.
+# If you want to use the created jupyter notebook further, skip this step.
+rmtree(temp_dir)
+
+# sphinx_gallery_end_ignore
