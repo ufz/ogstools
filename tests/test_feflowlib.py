@@ -14,6 +14,7 @@ import ifm_contrib as ifm  # noqa: E402
 
 from ogstools.feflowlib import (  # noqa: E402
     read_properties,
+    write_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
 from ogstools.feflowlib.feflowlib import points_and_cells  # noqa: E402
@@ -66,7 +67,7 @@ class TestConverter(unittest.TestCase):
         assert len(pv_mesh.cell_data) == 12
         assert len(pv_mesh.point_data) == 11
 
-    def test_toymodel_boundary_condition(self):
+    def test_toymodel_point_boundary_condition(self):
         """
         Test if separate meshes for boundary condition are written correctly.
         """
@@ -79,6 +80,23 @@ class TestConverter(unittest.TestCase):
         bc_flow_2nd = pv.read(str(self.path_data / "P_BCFLOW_2ND.vtu"))
         assert bc_flow_2nd.n_points == 66
         assert len(bc_flow_2nd.point_data) == 2
+
+    def test_toymodel_cell_boundary_condition(self):
+        """
+        Test if separate meshes for boundary condition are written correctly.
+        """
+        write_cell_boundary_conditions(
+            self.path_data / "boxNeumann.vtu", self.pv_mesh
+        )
+        topsurface = pv.read(str(self.path_data / "topsurface_boxNeumann.vtu"))
+        cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
+        cell_data_list = list(topsurface.cell_data)
+        for cell_data, cell_data_expected in zip(
+            cell_data_list, cell_data_list_expected
+        ):
+            assert cell_data == cell_data_expected
+        assert topsurface.n_points == 564
+        assert topsurface.n_cells == 1042
 
     def test_toymodel_prj_file(self):
         """
