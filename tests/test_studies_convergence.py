@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from ogstools.propertylib import ScalarProperty
+from ogstools.propertylib import Scalar
 from ogstools.studies.convergence import (
     convergence_metrics,
     grid_convergence,
@@ -21,7 +21,7 @@ class ConvergenceTest(unittest.TestCase):
 
     def test_square_neumann_benchmark(self):
         topology = meshes[-3]
-        mesh_property = ScalarProperty("pressure", "m", "m")
+        mesh_property = Scalar("pressure", "m", "m")
         conv = grid_convergence(
             meshes, mesh_property, topology, refinement_ratio=2.0
         )

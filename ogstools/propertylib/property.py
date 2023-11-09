@@ -1,6 +1,6 @@
-"""Defines the ScalarProperty, VectorProperty and MatrixProperty classes.
+"""Defines the Scalar, Vector and Matrix Property classes.
 
-It serves as a base class to handle common physical properties in a systematic
+They serve as classes to handle common physical properties in a systematic
 way (e.g. temperature, pressure, displacement, …). Unit conversion is handled
 via pint.
 """
@@ -123,18 +123,19 @@ class Property:
 
 
 @dataclass
-class ScalarProperty(Property):
+class Scalar(Property):
     "Represent a scalar property of a dataset."
 
 
 @dataclass
-class VectorProperty(Property):
+class Vector(Property):
     """Represent a vector property of a dataset.
 
     Vector properties should contain either 2 (2D) or 3 (3D) components.
+    Vector components can be accesses with brackets e.g. displacement[0]
     """
 
-    def __getitem__(self, index: int) -> ScalarProperty:
+    def __getitem__(self, index: int) -> Scalar:
         """
         Get a scalar property as a specific component of the vector property.
 
@@ -143,7 +144,7 @@ class VectorProperty(Property):
         :returns: A scalar property as a vector component.
         """
         suffix = {False: index, True: ["x", "y", "z"][index]}
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             data_unit=self.data_unit,
             output_unit=self.output_unit,
@@ -154,9 +155,9 @@ class VectorProperty(Property):
         )
 
     @property
-    def magnitude(self) -> ScalarProperty:
+    def magnitude(self) -> Scalar:
         ":returns: A scalar property as the magnitude of the vector."
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             data_unit=self.data_unit,
             output_unit=self.output_unit,
@@ -166,9 +167,9 @@ class VectorProperty(Property):
         )
 
     @property
-    def log_magnitude(self) -> ScalarProperty:
+    def log_magnitude(self) -> Scalar:
         ":returns: A scalar property as the log-magnitude of the vector."
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             output_name=self.output_name + "_log10",
             mask=self.mask,
@@ -177,13 +178,14 @@ class VectorProperty(Property):
 
 
 @dataclass
-class MatrixProperty(Property):
+class Matrix(Property):
     """Represent a matrix property of a dataset.
 
     Matrix properties should contain either 4 (2D) or 6 (3D) components.
+    Matrix components can be accesses with brackets e.g. stress[0]
     """
 
-    def __getitem__(self, index: int) -> ScalarProperty:
+    def __getitem__(self, index: int) -> Scalar:
         """
         Get a scalar property as a specific component of the matrix property.
 
@@ -192,7 +194,7 @@ class MatrixProperty(Property):
         :returns: A scalar property as a matrix component.
         """
         suffix = {False: index, True: ["x", "y", "z", "xy", "yz", "xz"][index]}
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             data_unit=self.data_unit,
             output_unit=self.output_unit,
@@ -203,9 +205,9 @@ class MatrixProperty(Property):
         )
 
     @property
-    def magnitude(self) -> ScalarProperty:
+    def magnitude(self) -> Scalar:
         ":returns: A scalar property as the frobenius norm of the matrix."
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             data_unit=self.data_unit,
             output_unit=self.output_unit,
@@ -215,9 +217,9 @@ class MatrixProperty(Property):
         )
 
     @property
-    def trace(self) -> ScalarProperty:
+    def trace(self) -> Scalar:
         ":returns: A scalar property as the trace of the matrix."
-        return ScalarProperty(
+        return Scalar(
             data_name=self.data_name,
             data_unit=self.data_unit,
             output_unit=self.output_unit,

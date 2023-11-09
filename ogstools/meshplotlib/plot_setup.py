@@ -6,7 +6,7 @@ from typing import Union
 
 from matplotlib.colors import Colormap
 
-from ogstools.propertylib.property import Property, ScalarProperty
+from ogstools.propertylib.property import Property, Scalar
 
 from .plot_setup_defaults import setup_dict
 
@@ -38,7 +38,7 @@ class PlotSetup:
     "The size of the figure as a list of integers [width, height]."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
-    length: ScalarProperty
+    length: Scalar
     "A property to set data and output unit of a models spatial extension."
     material_names: dict
     "A dictionary that maps material names to regions (MaterialIDs)."
@@ -120,7 +120,7 @@ class PlotSetup:
             x_label=obj["x_label"],
             y_label=obj["y_label"],
             log_scaled=obj["log_scaled"],
-            length=ScalarProperty("", obj["length"][0], obj["length"][1], ""),
+            length=Scalar("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
             custom_cmap=obj["custom_cmap"],
             cmap_dict=obj["cmap_dict"],

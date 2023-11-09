@@ -17,11 +17,11 @@ import numpy as np
 from pyvista import examples
 
 import ogstools.meshplotlib as mpl
-from ogstools.propertylib import ScalarProperty
+from ogstools.propertylib import Scalar
 
 mpl.setup.reset()
 mesh = examples.load_channels()
-data = ScalarProperty("facies", categoric=True)
+data = Scalar("facies", categoric=True)
 mesh.plot(cmap="bwr")
 
 # %%

@@ -12,8 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
 
-from ogstools.propertylib import THM, Property
-from ogstools.propertylib import VectorProperty as Vector
+from ogstools.propertylib import Property, Vector, presets
 
 from . import plot_features as pf
 from . import setup
@@ -328,7 +327,7 @@ def get_combined_levels(
 def resolve_property(property: Union[Property, str]) -> Property:
     if isinstance(property, Property):
         return property
-    return THM.find_property(property)
+    return presets.find_property(property)
 
 
 def _plot_on_figure(

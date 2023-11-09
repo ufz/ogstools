@@ -14,13 +14,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import ogstools.propertylib as ptl
+from ogstools.propertylib import presets
 
 # %%
 # There are some predefined default properties:
 
-tab = pd.DataFrame(ptl.defaults.all_properties).set_index("output_name")
-tab["type"] = [type(p).__name__ for p in ptl.defaults.all_properties]
+tab = pd.DataFrame(presets.all_properties).set_index("output_name")
+tab["type"] = [type(p).__name__ for p in presets.all_properties]
 tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
 
 # %%
@@ -29,13 +29,8 @@ tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
 # Calling a property converts the argument from data_unit to output_unit and
 # applies a function if specified.
 
-print(ptl.defaults.temperature(273.15))  # access from the entire collection
-print(ptl.M.strain(0.01))  # access from Mechanics collection
-
-# %%
-# Available processes are:
-
-print([type(p).__name__ for p in ptl.processes])
+print(presets.temperature(273.15))  # access from the entire collection
+print(presets.strain(0.01))  # access from Mechanics collection
 
 # %%
 # VectorProperties and MatrixProperties contain other Properties which represent
@@ -47,22 +42,22 @@ print([type(p).__name__ for p in ptl.processes])
 # %%
 # Element 1 (counting from 0) of a 3D displacement vector:
 
-print(ptl.M.displacement[1]([0.01, 0.02, 0.03]))
+print(presets.displacement[1]([0.01, 0.02, 0.03]))
 
 # %%
 # Magnitude of a 2D displacement vector from:
 
-print(ptl.M.displacement.magnitude([0.03, 0.04]))
+print(presets.displacement.magnitude([0.03, 0.04]))
 
 # %%
 # Log of Magnitude of a 2D velocity vector from the Hydraulics collection:
-print(ptl.H.velocity.log_magnitude(np.sqrt([50, 50])))
+print(presets.velocity.log_magnitude(np.sqrt([50, 50])))
 
 # %%
 # Magnitude and trace of a 3D strain matrix:
 eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
-print(ptl.M.strain.magnitude(eps))
-print(ptl.M.strain.trace(eps))
+print(presets.strain.magnitude(eps))
+print(presets.strain.trace(eps))
 
 # %%
 # You can change the attributes of the defaults.
@@ -71,7 +66,7 @@ print(ptl.M.strain.trace(eps))
 
 temp = np.linspace(273.15, 373.15, 10)
 fig, axs = plt.subplots(2)
-axs[0].plot(ptl.T.temperature(temp), color="r")
-ptl.defaults.temperature.output_unit = "°F"
-axs[1].plot(ptl.T.temperature(temp), color="b")
+axs[0].plot(presets.temperature(temp), color="r")
+presets.temperature.output_unit = "°F"
+axs[1].plot(presets.temperature(temp), color="b")
 fig.show()

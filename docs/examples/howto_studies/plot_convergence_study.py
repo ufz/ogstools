@@ -18,7 +18,7 @@ https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
 import numpy as np
 
 import ogstools.meshplotlib as mpl
-from ogstools.propertylib import ScalarProperty, VectorProperty
+from ogstools.propertylib import Scalar, Vector
 from ogstools.studies.convergence import (
     convergence_metrics,
     examples,
@@ -38,7 +38,7 @@ mpl.setup.ax_aspect_ratio = 1
 # topology to evaluate the results. We inspect the primary variable,
 # in this case the hydraulic head.
 
-mesh_property = ScalarProperty(
+mesh_property = Scalar(
     data_name="pressure",
     data_unit="m",
     output_unit="m",
@@ -93,7 +93,7 @@ fig = plot_convergence_errors(metrics)
 # Now let's inspect the velocity field. We see, that in the bottom right corner,
 # the velocity magnitude seems to be steadily increasing.
 
-mesh_property = VectorProperty("v", "m/s", "m/s", "velocity")
+mesh_property = Vector("v", "m/s", "m/s", "velocity")
 mpl.setup.num_streamline_interp_pts = None
 fig = mpl.plot(np.reshape(examples.meshes, (2, 3)), mesh_property)
 
