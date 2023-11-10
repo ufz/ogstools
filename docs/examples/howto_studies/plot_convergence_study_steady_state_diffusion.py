@@ -35,6 +35,7 @@ from ogstools.studies.convergence.examples import (
     steady_state_diffusion_analytical_solution,
 )
 
+meshplotlib.setup.reset()
 temp_dir = Path(mkdtemp())
 report_name = str(temp_dir / "report.ipynb")
 result_paths = []

@@ -15,6 +15,7 @@ from ogstools.meshplotlib import examples, setup
 from ogstools.meshplotlib.animation import animate
 from ogstools.propertylib import Scalar
 
+setup.reset()
 mesh_series = examples.meshseries_CT_2D
 # alternatively:
 # from ogstools.meshlib import MeshSeries
