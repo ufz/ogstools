@@ -161,7 +161,7 @@ def write_point_boundary_conditions(
                 if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
 
-            filtered_points.save(str(out_mesh_path.with_stem(point_data)))
+            filtered_points.save(str(out_mesh_path / point_data) + ".vtu")
             # pv.save_meshio(
             #    point_data + ".vtu", filtered_points, file_format="vtu"
             # )
@@ -170,7 +170,7 @@ def write_point_boundary_conditions(
 
 
 def write_cell_boundary_conditions(
-    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+    bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
 ):
     """
     Writes the cell boundary condition of the mesh. It works by iterating all cell data and looking for
@@ -180,8 +180,8 @@ def write_cell_boundary_conditions(
     be used in the future.
     TODO: Allow a generic definition of the normal vector for the filter condition.
 
-    :param out_mesh_path: name of the mesh
-    :type out_mesh_path: Path
+    :param bulk_mesh_path: name of the mesh
+    :type bulk_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
@@ -203,10 +203,10 @@ def write_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    topsurf.save(out_mesh_path.with_stem("topsurface_" + out_mesh_path.stem))
+    topsurf.save(bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem))
     # create the xml-file
     write_xml(
-        out_mesh_path.with_stem("topsurface_" + out_mesh_path.stem),
+        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf.cell_data,
         "MeshElement",
     )

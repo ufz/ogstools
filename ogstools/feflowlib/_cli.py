@@ -93,7 +93,7 @@ def cli():
     if "properties" not in args.case or args.BC != "BC":
         return 0
 
-    write_point_boundary_conditions(Path(args.output), mesh)
+    write_point_boundary_conditions(Path(args.output).parent, mesh)
     write_cell_boundary_conditions(Path(args.output), mesh)
 
     return 0
