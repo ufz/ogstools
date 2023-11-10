@@ -45,7 +45,7 @@ feflow2ogs = 'ogstools.feflowlib._cli:cli'
 
 [project.optional-dependencies]
 dev = ["pre-commit>=2.20", "build", "black"]
-test = ["pytest", "coverage", "gmsh"]
+test = ["pytest", "coverage", "gmsh", "ogs6py"]
 docs = [
   "sphinx",
   "sphinx-argparse",
@@ -57,6 +57,8 @@ docs = [
   "myst_nb",
   "sphinx-design",
   "sphinx_gallery",
+  "ogs6py",
+  "VTUinterface @ https://github.com/joergbuchwald/VTUinterface/archive/refs/heads/master.zip",
 ]
 feflow = [
   "ifm_contrib==0.2.0",
