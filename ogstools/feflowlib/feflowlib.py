@@ -4,7 +4,6 @@ Created on Tue Mar 14 2023
 @author: heinzej
 """
 import logging as log
-from sys import exit
 
 import ifm_contrib as ifm
 import numpy as np
@@ -62,7 +61,8 @@ def points_and_cells(doc: ifm.FeflowDoc):
         )
         pts = points[["X", "Y", "Z"]].to_numpy()
     else:
-        exit("The input data is neither 2D nor 3D, which it needs to be.")
+        msg = "The input data is neither 2D nor 3D, which it needs to be."
+        raise ValueError(msg)
 
     # 5. log information
     logger.info(
