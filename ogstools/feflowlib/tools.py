@@ -111,7 +111,7 @@ def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
 
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     """
-    assign an array with integer of the indices of the original mesh
+    Add fields bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
     :param mesh_name: name of the mesh
     :type mesh_name: str
@@ -137,7 +137,6 @@ def write_point_boundary_conditions(
     :type mesh: pyvista.UnstructuredGrid
     """
 
-    # assign an array with integer of the indices of the original mesh
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     mesh = mesh.extract_surface()
@@ -283,6 +282,8 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
+    # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
+    assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
     for material_id in np.unique(material_ids):
         indices = np.where(material_ids == material_id)
         property_of_material = mesh.cell_data[property][indices]
@@ -295,9 +296,9 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
             # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
             material_properties[material_id] = [property_of_material[0] / 86400]
         else:
-            material_properties[material_id] = ["non_constant"]
+            material_properties[material_id] = ["inhomogeneous"]
             logger.info(
-                "The property %s in material %s is not constant",
+                "The property %s in material %s is inhomogeneously distributed.",
                 property,
                 material_id,
             )
@@ -322,10 +323,10 @@ def combine_material_properties(
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
-        for material, property_value in get_material_properties(
+        for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
-            material_properties[material].extend(property_value)
+            material_properties[material_id].extend(property_value)
 
     return material_properties
 
@@ -334,15 +335,15 @@ def write_mesh_of_combined_properties(
     mesh: pv.UnstructuredGrid,
     property_list: list,
     new_property: str,
-    material: int,
+    material_id: int,
     saving_path: Path,
 ):
     """
-    Writes a separate mesh-file with a specific material that does not have constant property values
+    Writes a separate mesh-file with a specific material that has inhomogeneous property values
     within the material group. It can also be used to write multiple properties
     into a "new property" data array. For example, write a data array for a tensor defined by
     data arrays representing values of different spatial directions. Nevertheless it can still be
-    be used to write the non-constant values of a single property into a separate mesh-file.
+    be used to write the inhomogeneous values of a single property into a separate mesh-file.
 
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
@@ -350,16 +351,16 @@ def write_mesh_of_combined_properties(
     :type property_list: list
     :param new_property: name of the combined properties
     :type new_property: str
-    :param material: material with non-constant properties
+    :param material: material with inhomogeneous properties
     :type material: int
     :param saving_path: path to save the mesh
     :type saving_path: Path
     """
-    mask = mesh.cell_data["MaterialIDs"] == material
+    mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
-    filename = str(saving_path.with_name(str(material) + ".vtu"))
+    filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.save(filename)
     return filename
 
