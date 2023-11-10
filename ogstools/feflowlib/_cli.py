@@ -68,7 +68,7 @@ def cli():
 
     if not Path(args.input).exists():
         print("The input files does not exist.")
-        return
+        return 1
 
     doc = ifm.loadDocument(args.input)
 
@@ -91,7 +91,9 @@ def cli():
         msg[args.case],
     )
     if "properties" not in args.case or args.BC != "BC":
-        return
+        return 0
 
     write_point_boundary_conditions(Path(args.output), mesh)
     write_cell_boundary_conditions(Path(args.output), mesh)
+
+    return 0

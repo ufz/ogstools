@@ -1,4 +1,4 @@
-# feflow converter library
+# FEFLOW converter library
 
 See the documentation for more info:
 
