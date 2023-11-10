@@ -1,4 +1,5 @@
 import subprocess
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -32,10 +33,58 @@ def test_cli():
 current_dir = Path(__file__).parent
 
 
+class TestSimulation(unittest.TestCase):
+    def setUp(self):
+        self.path_data = Path(current_dir / "data/feflowlib/")
+        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
+        self.pv_mesh = read_properties(self.doc)
+        self.pv_mesh.save(str(self.path_writing / "boxNeumann.vtu"))
+        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        write_cell_boundary_conditions(
+            self.path_writing / "boxNeumann.vtu", self.pv_mesh
+        )
+
+    def test_toymodel_ogs_simulation(self):
+        """
+        Test if ogs simulation results are similar to FEFLOW simulation results.
+        """
+        # Run ogs
+        prjfile = str(self.path_writing / "boxNeumann_test.prj")
+        model = steady_state_diffusion(
+            str(self.path_writing / "sim_boxNeumann"),
+            ogs.OGS(PROJECT_FILE=prjfile),
+        )
+
+        setup_prj_file(
+            self.path_writing / "boxNeumann.vtu",
+            self.pv_mesh,
+            get_material_properties(self.pv_mesh, "P_CONDX"),
+            model,
+        )
+        model.replace_medium_property_value(
+            mediumid=0, name="diffusion", value="1"
+        )
+        model.write_input(prjfile)
+        model.run_model(logfile=str(self.path_writing / "out.log"))
+
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(self.path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+        )
+        dif = (
+            ogs_sim_res.point_data["HEAD_OGS"]
+            + self.pv_mesh.point_data["P_HEAD"]
+        )
+        assert np.all(np.abs(dif) < 5e-5)
+        assert np.allclose(dif, 0, atol=5e-5, rtol=0)
+
+
 class TestConverter(unittest.TestCase):
     def setUp(self):
         # Variables for the following tests:
         self.path_data = Path(current_dir / "data/feflowlib/")
+        self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = read_properties(self.doc)
 
@@ -62,22 +111,18 @@ class TestConverter(unittest.TestCase):
         assert celltypes[0] == pv.CellType.WEDGE
 
         # 2. Test data arrays
-        self.pv_mesh.save(str(self.path_data / "boxNeumann.vtu"))
-        pv_mesh = pv.read(str(self.path_data / "boxNeumann.vtu"))
-        assert len(pv_mesh.cell_data) == 12
-        assert len(pv_mesh.point_data) == 11
+        assert len(self.pv_mesh.cell_data) == 12
+        assert len(self.pv_mesh.point_data) == 11
 
     def test_toymodel_point_boundary_condition(self):
         """
         Test if separate meshes for boundary condition are written correctly.
         """
-        write_point_boundary_conditions(
-            self.path_data / "boxNeumann.vtu", self.pv_mesh
-        )
-        bc_flow = pv.read(str(self.path_data / "P_BC_FLOW.vtu"))
+        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        bc_flow = pv.read(str(self.path_writing / "P_BC_FLOW.vtu"))
         assert bc_flow.n_points == 66
         assert len(bc_flow.point_data) == 2
-        bc_flow_2nd = pv.read(str(self.path_data / "P_BCFLOW_2ND.vtu"))
+        bc_flow_2nd = pv.read(str(self.path_writing / "P_BCFLOW_2ND.vtu"))
         assert bc_flow_2nd.n_points == 66
         assert len(bc_flow_2nd.point_data) == 2
 
@@ -86,9 +131,11 @@ class TestConverter(unittest.TestCase):
         Test if separate meshes for boundary condition are written correctly.
         """
         write_cell_boundary_conditions(
-            self.path_data / "boxNeumann.vtu", self.pv_mesh
+            self.path_writing / "boxNeumann.vtu", self.pv_mesh
         )
-        topsurface = pv.read(str(self.path_data / "topsurface_boxNeumann.vtu"))
+        topsurface = pv.read(
+            str(self.path_writing / "topsurface_boxNeumann.vtu")
+        )
         cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
         cell_data_list = list(topsurface.cell_data)
         for cell_data, cell_data_expected in zip(
@@ -103,12 +150,12 @@ class TestConverter(unittest.TestCase):
         Test the prj_file that can be written
         """
         setup_prj_file(
-            self.path_data / "boxNeumann_.vtu",
+            self.path_writing / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
         )
         prjfile_root = ET.parse(
-            str(self.path_data / "boxNeumann_.prj")
+            str(self.path_writing / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
         assert len(elements) == 8
@@ -150,39 +197,6 @@ class TestConverter(unittest.TestCase):
         assert float(diffusion_value) == float(
             self.pv_mesh.cell_data["P_CONDX"][0] / 86400
         )
-
-    def test_toymodel_ogs_simulation(self):
-        """
-        Test if ogs simulation results are similar to FEFLOW simulation results.
-        """
-        # Run ogs
-        prjfile = str(self.path_data / "boxNeumann_test2.prj")
-        model = steady_state_diffusion(
-            "tests/data/feflowlib/sim_boxNeumann", ogs.OGS(PROJECT_FILE=prjfile)
-        )
-
-        setup_prj_file(
-            self.path_data / "boxNeumann.vtu",
-            self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
-            model,
-        )
-        model.replace_medium_property_value(
-            mediumid=0, name="diffusion", value="1"
-        )
-        model.write_input(prjfile)
-        model.run_model(logfile="tests/data/feflowlib/out.log")
-
-        # Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read(
-            str(self.path_data / "sim_boxNeumann_ts_1_t_1.000000.vtu")
-        )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            + self.pv_mesh.point_data["P_HEAD"]
-        )
-        assert np.all(np.abs(dif) < 5e-5)
-        assert np.allclose(dif, 0, atol=5e-5, rtol=0)
 
 
 if __name__ == "__main__":
