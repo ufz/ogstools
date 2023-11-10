@@ -58,7 +58,7 @@ docs = [
   "sphinx-design",
   "sphinx_gallery",
   "ogs6py",
-  "VTUinterface @ https://github.com/joergbuchwald/VTUinterface/archive/refs/heads/master.zip",
+  "VTUinterface",
 ]
 feflow = [
   "ifm_contrib==0.2.0",
