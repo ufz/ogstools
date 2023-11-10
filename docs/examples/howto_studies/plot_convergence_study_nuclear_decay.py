@@ -9,6 +9,7 @@ The heat source is generated with the `nuclearwasteheat` model.
 
 Here is some theoretical background for the topic of grid convergence:
 https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
+https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/
 
 At least three meshes from simulations of increasing temporal refinement are
 required for the convergence study. The topology has to stay the same.
@@ -42,17 +43,16 @@ temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
 # %%
 n_refinements = 4
-t_end = 180
-sec_per_yr = 365.25 * 86400
-time = np.append(0, np.geomspace(1, t_end, num=100)) * sec_per_yr
+t_end = 180.0
+sec_per_yr = 365.25 * 86400.0
+time = np.append(0.0, np.geomspace(1.0, t_end, num=100)) * sec_per_yr
 heat = physics.nuclearwasteheat.repo_2020_conservative.heat
 fig, ax = plt.subplots(figsize=(8, 4))
-# print(heat(time))
 ax.plot(time / sec_per_yr, heat(time) / 1e3, lw=2, label="reference", color="k")
 
 for r in range(n_refinements):
     dt = 30.0 / (2.0**r)
-    time = np.linspace(0, t_end, int(t_end / dt) + 1) * sec_per_yr
+    time = np.linspace(0.0, t_end, int(t_end / dt) + 1) * sec_per_yr
     edges = np.append(0, time) / sec_per_yr
     ax.stairs(heat(time) / 1e3, edges, label=f"{dt=}", baseline=None, lw=1.5)
 ax.set_xlabel("time / yrs")
@@ -65,7 +65,7 @@ fig.show()
 
 # %%
 msh_path = temp_dir / "square.msh"
-meshlib.rect_mesh(lengths=100, n_edge_cells=[10, 1], out_name=msh_path)
+meshlib.rect_mesh(lengths=100.0, n_edge_cells=[10, 1], out_name=msh_path)
 _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
 
 # %% [markdown]

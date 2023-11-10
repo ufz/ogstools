@@ -3,12 +3,13 @@ Convergence study (spatial refinement)
 ======================================
 
 This example shows one possible implementation of how to do a convergence study.
-It uses data from the following benchmark with multiple discretizations to
-evaluate the accuracy of the numerical solutions.
+It uses the project file from the following benchmark with multiple
+discretizations to evaluate the accuracy of the numerical solutions.
 https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/
 
 Here is some theoretical background for the topic of grid convergence:
 https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
+https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/
 
 At least three meshes of increasing refinement are required for the convergence
 study. The three finest meshes are used to calculated the Richardson
@@ -28,7 +29,8 @@ from tempfile import mkdtemp
 from IPython.display import HTML
 from ogs6py import ogs
 
-from ogstools import meshlib, msh2vtu, studies, workflow
+from ogstools import meshlib, meshplotlib, msh2vtu, propertylib, workflow
+from ogstools.studies import convergence
 from ogstools.studies.convergence.examples import (
     steady_state_diffusion_analytical_solution,
 )
@@ -54,7 +56,7 @@ for i in range(6):
 
     model = ogs.OGS(
         PROJECT_FILE=temp_dir / "default.prj",
-        INPUT_FILE=studies.convergence.examples.steady_state_diffusion_prj,
+        INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
     )
     model.write_input()
     ogs_args = f"-m {temp_dir} -o {temp_dir}"
@@ -74,9 +76,10 @@ for i in range(6):
 # %%
 topology_path = result_paths[-3]
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
-steady_state_diffusion_analytical_solution(topology_path).save(
-    analytical_solution_path
-)
+solution = steady_state_diffusion_analytical_solution(topology_path)
+meshplotlib.setup.show_element_edges = True
+fig = meshplotlib.plot(solution, propertylib.presets.hydraulic_height)
+solution.save(analytical_solution_path)
 
 # %% [markdown]
 # Hydraulic pressure convergence
@@ -87,7 +90,7 @@ steady_state_diffusion_analytical_solution(topology_path).save(
 # see a quadratic convergence behavior.
 
 # %%
-studies.convergence.run_convergence_study(
+convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
     topology_path=topology_path,
@@ -104,7 +107,6 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # For the velocity we some discrepancy of the convergence ratio in the bottom
 # right corner. Thus we know, at these points the mesh isn't properly
 # converging (at least for the velocity field).
-
 # We see, that in the bottom right corner, the velocity magnitude seems to be
 # steadily increasing, which is also reflected in the Richardson extrapolation,
 # which shows an anomalous high value in this spot, hinting at a singularity
@@ -112,10 +114,11 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # "incompatible boundary conditions imposed on the bottom right corner of the
 # domain." Regardless of this, the benchmark gives a convergent solution for
 # the pressure field.
+# The code cells from the templated notebook are show here for transparency.
 
 # %%
 
-studies.convergence.run_convergence_study(
+convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
     topology_path=topology_path,

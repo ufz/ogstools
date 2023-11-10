@@ -40,7 +40,8 @@ def grid_convergence(
 
     The calculation is based on the last three of the given meshes.
     For more information on this topic see
-    <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html>.
+    <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html> or
+    <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
     :param meshes:              At least three meshes with constant refinement.
     :param property:            The property to be extrapolated.
@@ -96,7 +97,8 @@ def richardson_extrapolation(
     This function calculates the Richardson Extrapolation based on the change
     in results in the last three of the given meshes.
     For more information on this topic see
-    <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html>.
+    <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html> or
+    <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
     :param meshes:              At least three meshes with constant refinement.
     :param property:            The property to be extrapolated.
