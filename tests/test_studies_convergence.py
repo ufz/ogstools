@@ -78,7 +78,3 @@ class ConvergenceTest(unittest.TestCase):
         _ = convergence.plot_convergence_errors(metrics)
 
         rmtree(temp_dir)
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)

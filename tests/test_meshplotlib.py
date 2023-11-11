@@ -99,7 +99,3 @@ class MeshplotlibTest(unittest.TestCase):
             "2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
         plot(mesh, presets.temperature)
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)
