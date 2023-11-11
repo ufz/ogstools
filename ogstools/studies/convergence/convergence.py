@@ -125,7 +125,10 @@ def richardson_extrapolation(
 
 
 def convergence_metrics(
-    meshes: list[pv.DataSet], reference: pv.DataSet, property: Property
+    meshes: list[pv.DataSet],
+    reference: pv.DataSet,
+    property: Property,
+    timestep_sizes: list[float],
 ) -> pd.DataFrame:
     """
     Calculate convergence metrics for a given reference and property.
@@ -140,12 +143,11 @@ def convergence_metrics(
     def _data(m: pv.DataSet):
         return property.magnitude.strip_units(m.point_data[property.data_name])
 
-    if np.all(["timestep_size" in mesh.field_data for mesh in meshes]):
-        x = [mesh.field_data["timestep_size"][0] for mesh in meshes]
+    x = [np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes]
+    x_str = "mean element length"
+    if all(xi == x[0] for xi in x):
+        x = timestep_sizes
         x_str = "time step size"
-    else:
-        x = [np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes]
-        x_str = "mean element length"
     x += [0.0]
     _meshes = meshes + [reference]
     maxs = [np.max(_data(m)) for m in _meshes]

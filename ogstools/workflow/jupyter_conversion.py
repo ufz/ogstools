@@ -20,6 +20,15 @@ import papermill as pm
 
 
 def jupyter_to_html(input_path: Path, show_input: bool = False) -> str:
+    """
+    Converts a Jupyter notebook to HTML format.
+
+    :param input_path:  The path to the Jupyter notebook file.
+    :param show_input:  If True, includes input cells in the HTML output.
+                        Defaults to False, hiding input cells.
+
+    returns:    The generated HTML representation of the Jupyter notebook.
+    """
     conf = Config()
     conf.TagRemovePreprocessor.remove_cell_tags = ("remove_cell",)
     hide_input_tags = ["injected-parameters"]
@@ -39,8 +48,22 @@ def jupytext_to_jupyter(
     output_name: Path,
     params: dict,
     prepare_only: bool = False,
-    progress_bar: bool = False,
+    show_progress: bool = False,
 ) -> None:
+    """
+    Convert a Jupytext-formatted notebook to a Jupyter notebook and execute it.
+
+    :param template_path:   The path to the Jupytext-formatted notebook.
+    :param output_name:     The desired path for the resulting Jupyter notebook.
+    :param params:          Parameters passed to the notebook during execution.
+    :param prepare_only:    If True, don't execute the notebook.
+                            Defaults to False, executing the notebook.
+    :param show_progress:   If True, display a progress bar during execution.
+                            Defaults to False.
+
+    Returns:
+        None: The function does not return a value, but generates the Jupyter notebook.
+    """
     nb = jupytext.read(template_path)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb") as temp:
         jupytext.write(nb, temp.name)
@@ -49,6 +72,6 @@ def jupytext_to_jupyter(
             output_path=output_name,
             parameters=params,
             prepare_only=prepare_only,
-            progress_bar=progress_bar,
+            progress_bar=show_progress,
         )
         Path(temp.name).unlink()

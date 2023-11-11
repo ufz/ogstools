@@ -10,7 +10,7 @@ setup_dict = {
     "default_cmap": "RdBu_r",
     "dpi": 200,
     "fig_scale": 1.0,
-    "aspect_limits": [0.5, 2.0],
+    "aspect_limits": (0.5, 2.0),
     "invert_colorbar": False,
     "layout": "constrained",
     "length": ["m", "m"],

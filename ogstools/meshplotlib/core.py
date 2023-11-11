@@ -15,7 +15,7 @@ from matplotlib import transforms as mtransforms
 from matplotlib.patches import Rectangle as Rect
 
 from ogstools.propertylib import Property, Vector
-from ogstools.propertylib.presets import resolve_property
+from ogstools.propertylib.presets import _resolve_property
 
 from . import plot_features as pf
 from . import setup
@@ -90,7 +90,7 @@ def get_cmap_norm(
 
 # to fix scientific offset position
 # https://github.com/matplotlib/matplotlib/issues/4476#issuecomment-105627334
-def monkey_patch(axis, func):
+def fix_scientific_offset_position(axis, func):
     axis._update_offset_text_position = types.MethodType(func, axis)
 
 
@@ -134,9 +134,9 @@ def add_colorbars(
     if not categoric and setup.log_scaled:
         levels = 10**levels
 
-    unit_str = ""
-    if property.get_output_unit():
-        unit_str = f" / {property.get_output_unit()}"
+    unit_str = (
+        f" / {property.get_output_unit()}" if property.get_output_unit() else ""
+    )
     cb.set_label(
         property.output_name.replace("_", " ") + unit_str,
         size=setup.rcParams_scaled["font.size"],
@@ -147,7 +147,7 @@ def add_colorbars(
     mf = mticker.ScalarFormatter(useMathText=True, useOffset=True)
     mf.set_scientific(True)
     mf.set_powerlimits([-3, 3])
-    monkey_patch(cb.ax.yaxis, y_update_offset_text_position)
+    fix_scientific_offset_position(cb.ax.yaxis, y_update_offset_text_position)
     cb.ax.yaxis.set_offset_position("left")
     cb.ax.yaxis.set_major_formatter(mf)
 
@@ -187,10 +187,10 @@ def subplot(
 
     if isinstance(property, str):
         data_shape = mesh[property].shape
-        property = resolve_property(property, data_shape)
+        property = _resolve_property(property, data_shape)
     if mesh.get_cell(0).dimension == 3:
         msg = "meshplotlib is for 2D meshes only, but found 3D elements."
-        raise TypeError(msg)
+        raise ValueError(msg)
 
     ax.axis("auto")
 
@@ -328,9 +328,12 @@ def _fig_init(rows: int, cols: int, ax_aspect: float = 1.0) -> mfigure.Figure:
 def get_combined_levels(
     meshes: np.ndarray, property: Union[Property, str]
 ) -> np.ndarray:
+    """
+    Calculate well spaced levels for the encompassing property range in meshes.
+    """
     if isinstance(property, str):
         data_shape = meshes[0][property].shape
-        property = resolve_property(property, data_shape)
+        property = _resolve_property(property, data_shape)
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
@@ -399,6 +402,9 @@ def _plot_on_figure(
 
 
 def get_data_aspect(mesh: pv.DataSet) -> float:
+    """
+    Calculate the data aspect ratio of a 2D mesh.
+    """
     mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
     projection = int(np.argmax(mean_normal))
     x_id, y_id = 2 * np.delete([0, 1, 2], projection)
@@ -427,7 +433,7 @@ def plot(
     _meshes = np.reshape(meshes, shape).flatten()
     if isinstance(property, str):
         data_shape = _meshes[0][property].shape
-        property = resolve_property(property, data_shape)
+        property = _resolve_property(property, data_shape)
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
 
     clamped_aspects = np.clip(data_aspects, *setup.aspect_limits)

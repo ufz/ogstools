@@ -30,7 +30,7 @@ von_mises_stress = Scalar("sigma", "Pa", "MPa", "von_Mises_stress", M_mask, v2s.
 all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
 
-def find_property(property_name: str) -> Optional[Property]:
+def find_property_preset(property_name: str) -> Optional[Property]:
     """Return predefined property with given output_name."""
     for prop in all_properties:
         if prop.output_name == property_name:
@@ -42,8 +42,8 @@ def find_property(property_name: str) -> Optional[Property]:
     return None
 
 
-def resolve_property(property_name: str, shape: tuple) -> Property:
-    if found_property := find_property(property_name):
+def _resolve_property(property_name: str, shape: tuple) -> Property:
+    if found_property := find_property_preset(property_name):
         return found_property
     if len(shape) == 1:
         return Scalar(property_name)

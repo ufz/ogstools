@@ -36,7 +36,7 @@ from ogstools.studies.convergence.examples import (
 )
 
 meshplotlib.setup.reset()
-temp_dir = Path(mkdtemp())
+temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
 report_name = str(temp_dir / "report.ipynb")
 result_paths = []
 
@@ -46,10 +46,12 @@ result_paths = []
 # discretization via ogs6py and store the results for the convergence study.
 
 # %%
-for i in range(6):
+refinements = 6
+edge_cells = [2**i for i in range(refinements)]
+for n_edge_cells in edge_cells:
     msh_path = temp_dir / "square.msh"
-    meshlib.gmsh_meshing.rect_mesh(
-        n_edge_cells=2**i, structured_grid=True, out_name=msh_path
+    meshlib.gmsh_meshing.rect(
+        n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
     msh2vtu.msh2vtu(
         input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
@@ -59,25 +61,21 @@ for i in range(6):
         PROJECT_FILE=temp_dir / "default.prj",
         INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
     )
+    prefix = "steady_state_diffusion_" + str(n_edge_cells)
+    model.replace_text(prefix, ".//prefix")
     model.write_input()
     ogs_args = f"-m {temp_dir} -o {temp_dir}"
     model.run_model(write_logs=False, args=ogs_args)
-
-    result = meshlib.MeshSeries(
-        str(temp_dir / "steady_state_diffusion.pvd")
-    ).read(-1)
-    result_path = temp_dir / f"steady_state_diffusion_{i}.vtu"
-    result.save(result_path)
-    result_paths += [str(result_path)]
+    result_paths += [str(temp_dir / (prefix + ".pvd"))]
 
 # %% [markdown]
-# Here we choose the topology to evaluate the reults on and calculate the
-# analytical solution on it:
+# Here we calculate the analytical solution on one of the meshes:
 
 # %%
-topology_path = result_paths[-3]
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
-solution = steady_state_diffusion_analytical_solution(topology_path)
+solution = steady_state_diffusion_analytical_solution(
+    meshlib.MeshSeries(result_paths[-1]).read(0)
+)
 meshplotlib.setup.show_element_edges = True
 fig = meshplotlib.plot(solution, propertylib.presets.hydraulic_height)
 solution.save(analytical_solution_path)
@@ -94,8 +92,8 @@ solution.save(analytical_solution_path)
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
-    topology_path=topology_path,
     property_name="hydraulic_height",
+    timevalue=1,
     refinement_ratio=2.0,
     reference_solution_path=str(analytical_solution_path),
 )
@@ -122,9 +120,9 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
-    topology_path=topology_path,
-    refinement_ratio=2.0,
     property_name="velocity",
+    timevalue=1,
+    refinement_ratio=2.0,
 )
 HTML(workflow.jupyter_to_html(report_name, show_input=True))
 

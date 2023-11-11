@@ -29,7 +29,13 @@ def nice_range(lower: float, upper: float, n_ticks: float) -> np.ndarray:
     return res[(res > lower) & (res < upper)]
 
 
-def adaptive_rounding(vals: np.ndarray, precision: int):
+def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
+    """
+    Return the given values rounded to significant digits.
+
+    The significant digits are based of the median decimal exponent and the
+    given precision.
+    """
     if vals.size == 0:
         return vals
     log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))

@@ -21,8 +21,9 @@ from ogstools.propertylib import Scalar
 
 mpl.setup.reset()
 mesh = examples.load_channels()
-data = Scalar("facies", categoric=True)
 mesh.plot(cmap="bwr")
+
+data = Scalar("facies", categoric=True)
 
 # %%
 # Now, let's create multiple slices along the z axis and plot them

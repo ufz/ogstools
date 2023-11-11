@@ -1,7 +1,7 @@
 from .boundary import Boundary, Layer, LocationFrame, Raster
 from .boundary_set import LayerSet
 from .boundary_subset import Surface
-from .gmsh_meshing import cuboid_mesh, rect_mesh
+from .gmsh_meshing import cuboid, rect
 from .mesh_series import MeshSeries
 
 __all__ = [
@@ -12,6 +12,6 @@ __all__ = [
     "Boundary",
     "MeshSeries",
     "LayerSet",
-    "rect_mesh",
-    "cuboid_mesh",
+    "rect",
+    "cuboid",
 ]

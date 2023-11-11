@@ -54,6 +54,10 @@ class Property:
         if not self.output_name:
             self.output_name = self.data_name
 
+    @property
+    def type_name(self):
+        return type(self).__name__
+
     def replace(self, **changes):
         """
         Create a new Property object with modified attributes.

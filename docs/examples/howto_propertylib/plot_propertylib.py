@@ -20,7 +20,7 @@ from ogstools.propertylib import presets
 # There are some predefined default properties:
 
 tab = pd.DataFrame(presets.all_properties).set_index("output_name")
-tab["type"] = [type(p).__name__ for p in presets.all_properties]
+tab["type"] = [p.type_name for p in presets.all_properties]
 tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
 
 # %%

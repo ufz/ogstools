@@ -151,8 +151,10 @@ class MeshSeries:
             self._pvd_reader = pv.PVDReader(filepath)
         elif self._data_type == "xdmf":
             self._xdmf_reader = TimeSeriesReader(filepath)
+        elif self._data_type == "vtu":
+            self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
         else:
-            msg = "Can only read 'pvd' or 'xdmf' files."
+            msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
@@ -177,6 +179,8 @@ class MeshSeries:
             mesh = self._read_pvd(timestep)
         elif self._data_type == "xdmf":
             mesh = self._read_xdmf(timestep)
+        elif self._data_type == "vtu":
+            mesh = self._vtu_reader.read()
         if lazy_eval:
             self._data[timestep] = mesh
         return mesh
@@ -187,6 +191,8 @@ class MeshSeries:
     @property
     def timesteps(self) -> range:
         """Return the timesteps of the timeseries data."""
+        if self._data_type == "vtu":
+            return range(0)
         if self._data_type == "pvd":
             return range(self._pvd_reader.number_time_points)
         # elif self._data_type == "xdmf":
@@ -195,6 +201,8 @@ class MeshSeries:
     @property
     def timevalues(self) -> list[float]:
         """Return the timevalues of the timeseries data."""
+        if self._data_type == "vtu":
+            return [0]
         if self._data_type == "pvd":
             return self._pvd_reader.time_values
         # elif self._data_type == "xdmf":

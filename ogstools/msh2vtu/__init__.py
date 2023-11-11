@@ -151,6 +151,7 @@ def find_connected_domain_cells(
     return domain_cells_array, domain_cells_number
 
 
+# TODO: rename
 def msh2vtu(
     input_filename: Path,
     output_path: Path = Path(),

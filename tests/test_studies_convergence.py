@@ -6,7 +6,6 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
-import pyvista as pv
 from ogs6py import ogs
 
 from ogstools import meshlib, msh2vtu, propertylib
@@ -19,31 +18,32 @@ from ogstools.studies.convergence.examples import (
 class ConvergenceTest(unittest.TestCase):
     """Test case for convergent meshes."""
 
-    def test_square_neumann_benchmark(self):
-        temp_dir = Path(mkdtemp())
+    def test_steady_state_diffusion(self):
+        temp_dir = Path(mkdtemp(prefix="test_steady_state_diffusion"))
         sim_results = []
-        for i in range(3, 6):
+        edge_cells = [2**i for i in range(3, 6)]
+        for n_edge_cells in edge_cells:
             msh_path = temp_dir / "square.msh"
-            meshlib.gmsh_meshing.rect_mesh(
-                n_edge_cells=2**i,
+            meshlib.gmsh_meshing.rect(
+                n_edge_cells=n_edge_cells,
                 structured_grid=True,
                 out_name=msh_path,
             )
-            msh2vtu.msh2vtu(input_filename=msh_path, output_path=temp_dir)
+            msh2vtu.msh2vtu(
+                input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
+            )
             model = ogs.OGS(
                 PROJECT_FILE=temp_dir / "default.prj",
                 INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
             )
+            prefix = "steady_state_diffusion_" + str(n_edge_cells)
+            model.replace_text(prefix, ".//prefix")
             model.write_input()
             ogs_args = f"-m {temp_dir} -o {temp_dir}"
             model.run_model(write_logs=False, args=ogs_args)
-
-            result = meshlib.MeshSeries(
-                str(temp_dir / "steady_state_diffusion.pvd")
-            ).read(-1)
-            result_path = temp_dir / f"steady_state_diffusion_{i}.vtu"
-            result.save(result_path)
-            sim_results += [pv.read(result_path)]
+            sim_results += [
+                meshlib.MeshSeries(str(temp_dir / (prefix + ".pvd"))).read(-1)
+            ]
 
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
@@ -64,7 +64,7 @@ class ConvergenceTest(unittest.TestCase):
             verbose=True,
         )
         metrics = convergence.convergence_metrics(
-            sim_results, richardson, mesh_property
+            sim_results, richardson, mesh_property, []
         )
         el_len = metrics["mean element length"].to_numpy()[:-1]
         re_max = metrics["rel. error (max)"].to_numpy()[:-1]

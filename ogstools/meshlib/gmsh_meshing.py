@@ -35,7 +35,7 @@ def _geo_square(
         geo.mesh.setRecombine(dim=2, tag=1)
 
 
-def rect_mesh(
+def rect(
     lengths: Union[float, list[float]] = 1.0,
     n_edge_cells: Union[int, list[int]] = 1,
     structured_grid: bool = True,
@@ -69,7 +69,7 @@ def rect_mesh(
     gmsh.finalize()
 
 
-def cuboid_mesh(
+def cuboid(
     lengths: Union[float, list[float]] = 1.0,
     n_edge_cells: Union[int, list[int]] = 1,
     structured_grid: bool = True,

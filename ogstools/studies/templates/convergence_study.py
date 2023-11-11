@@ -13,16 +13,15 @@
 # %% tags=["parameters", "remove_cell"]
 # These are placeholders and get replaced with injected parameters.
 mesh_paths = [""]
-topology_path = None
-timestep: int = 0
+timevalue: float = 0.0
 property_name: str = ""
 refinement_ratio: float = None
 reference_solution_path = None
 
 # %% tags=["remove_input"]
 # Import required modules and customize plot settings.
-from copy import deepcopy  # noqa: E402
 
+import numpy as np  # noqa: E402
 import pyvista as pv  # noqa: E402
 
 from ogstools import meshlib, meshplotlib, propertylib, studies  # noqa: E402
@@ -38,18 +37,16 @@ meshplotlib.setup.combined_colorbar = False
 # The 3 finest meshes of those provided will be used for the Richardson
 # extrapolation.
 
-meshes: list[pv.DataSet] = []
-for mesh_path in mesh_paths:
-    if mesh_path.split(".")[-1] in ["xdmf", "pvd"]:
-        meshes += [meshlib.MeshSeries(mesh_path).read(timestep)]
-    else:
-        meshes += [pv.read(mesh_path)]
-topology: pv.DataSet = pv.read(topology_path)
-if property_name in meshes[0].point_data:
-    data_shape = meshes[0][property_name].shape
-else:
-    data_shape = None
-mesh_property = propertylib.presets.resolve_property(property_name, data_shape)
+mesh_series = [meshlib.MeshSeries(mesh_path) for mesh_path in mesh_paths]
+timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
+meshes = [ms.read_closest(timevalue) for ms in mesh_series]
+topology: pv.DataSet = meshes[-3]
+data_shape = (
+    meshes[0][property_name].shape
+    if property_name in meshes[0].point_data
+    else None
+)
+mesh_property = propertylib.presets._resolve_property(property_name, data_shape)
 richardson = studies.convergence.richardson_extrapolation(
     meshes, mesh_property, topology, refinement_ratio
 )
@@ -82,20 +79,15 @@ fig = meshplotlib.plot(meshes[-3:], mesh_property)
 # %% tags=["remove_input"]
 fig = meshplotlib.plot(richardson, mesh_property)
 
+data_key = mesh_property.data_name
 if reference_solution_path is None:
-    reference_solution = richardson
-    diff = deepcopy(topology.sample(meshes[-1]))
+    diff = richardson[data_key] - topology.sample(meshes[-1])[data_key]
 else:
-    if reference_solution_path.split(".")[-1] in ["xdmf", "pvd"]:
-        reference_solution = meshlib.MeshSeries(reference_solution_path).read(
-            timestep
-        )
-    else:
-        reference_solution = pv.read(reference_solution_path)
-    diff = deepcopy(richardson)
-diff["difference"] = (
-    reference_solution[mesh_property.data_name] - diff[mesh_property.data_name]
-)
+    reference_solution = topology.sample(
+        meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
+    )
+    diff = reference_solution[data_key] - richardson[data_key]
+richardson["difference"] = diff
 diff_unit = (mesh_property(1) - mesh_property(1)).units
 diff_property = type(mesh_property)(
     data_name="difference",
@@ -103,14 +95,14 @@ diff_property = type(mesh_property)(
     output_unit=diff_unit,
     output_name=mesh_property.output_name + " difference",
 )
-fig = meshplotlib.plot(diff, diff_property)
+fig = meshplotlib.plot(richardson, diff_property)
 
 # %% [markdown]
 # ## Convergence metrics
 
 # %% tags=["remove_input"]
 metrics = studies.convergence.convergence_metrics(
-    meshes, richardson, mesh_property
+    meshes, richardson, mesh_property, timestep_sizes
 )
 metrics.style.format("{:,.5g}").hide()
 

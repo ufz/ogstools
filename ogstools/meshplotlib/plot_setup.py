@@ -21,7 +21,7 @@ class PlotSetup:
     """
 
     combined_colorbar: bool
-    "Whether all subplots share on colorbar or have one each."
+    "True if all subplots share on colorbar, else each has its own colorbar."
     custom_cmap: Colormap
     "If provided, this colormap will be used for any plot."
     cmap_dict_if_bilinear: dict
@@ -36,8 +36,8 @@ class PlotSetup:
     "The resolution (dots per inch) for the figure."
     fig_scale: float
     "A scaling factor for the figure."
-    aspect_limits: list[float]
-    "Lower and upper limit of aspect ratios. For meshes with data ratios"
+    aspect_limits: tuple[float, float]
+    "Lower and upper limit of aspect ratio. For meshes with data ratios"
     "outside these bounds the aspect ratio gets clamped."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
