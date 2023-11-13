@@ -59,7 +59,3 @@ class SurfaceTest(unittest.TestCase):
         with outfile.open() as f:
             lines = f.readlines()
             self.assertTrue("cellsize" in lines[4])
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)

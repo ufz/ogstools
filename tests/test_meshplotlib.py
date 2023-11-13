@@ -13,7 +13,7 @@ from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
-from ogstools.propertylib import THM, ScalarProperty, VectorProperty
+from ogstools.propertylib import Scalar, Vector, presets
 
 THIS_DIR = Path(__file__).parent
 
@@ -42,9 +42,7 @@ class MeshplotlibTest(unittest.TestCase):
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        self.assertRaises(
-            IndexError, plot, mesh, ScalarProperty("missing_data")
-        )
+        self.assertRaises(IndexError, plot, mesh, Scalar("missing_data"))
 
     def test_plot_2D(self):
         """Test creation of 2D plots."""
@@ -53,11 +51,11 @@ class MeshplotlibTest(unittest.TestCase):
         setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
         meshseries = examples.meshseries_THM_2D
         mesh = meshseries.read(1)
-        plot(mesh, THM.material_id)
-        plot(mesh, THM.temperature)
-        plot(mesh, ScalarProperty("pressure_active"))
-        plot(mesh.threshold((1, 3), "MaterialIDs"), THM.velocity)
-        fig = plot(mesh, THM.displacement[0])
+        plot(mesh, presets.material_id)
+        plot(mesh, presets.temperature)
+        plot(mesh, Scalar("pressure_active"))
+        plot(mesh.threshold((1, 3), "MaterialIDs"), presets.velocity)
+        fig = plot(mesh, presets.displacement[0])
         plot_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
@@ -67,14 +65,14 @@ class MeshplotlibTest(unittest.TestCase):
         meshseries = examples.meshseries_THM_2D
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         titles = [str(tv) for tv in timevalues]
-        anim = animate(meshseries, THM.temperature, timevalues, titles)
+        anim = animate(meshseries, presets.temperature, timevalues, titles)
         anim.to_jshtml()
 
     def test_save_animation(self):
         """Test creation of animation."""
         meshseries = examples.meshseries_THM_2D
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
-        anim = animate(meshseries, THM.temperature, timevalues)
+        anim = animate(meshseries, presets.temperature, timevalues)
         if not save_animation(anim, mkstemp()[1], 5):
             self.skipTest("Saving animation failed.")
 
@@ -90,9 +88,9 @@ class MeshplotlibTest(unittest.TestCase):
         """Test creation of 2D plots from xdmf data."""
         filename = pv_examples.download_meshio_xdmf(load=False)
         mesh = MeshSeries(filename).read(0)
-        plot(mesh, ScalarProperty("phi"))
-        plot(mesh, VectorProperty("u"))
-        plot(mesh, ScalarProperty("a"))
+        plot(mesh, Scalar("phi"))
+        plot(mesh, Vector("u"))
+        plot(mesh, Scalar("a"))
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
@@ -100,8 +98,4 @@ class MeshplotlibTest(unittest.TestCase):
             f"{THIS_DIR}/data/meshplotlib/"
             "2D_single_fracture_HT_2D_single_fracture.xdmf"
         ).read(0)
-        plot(mesh, THM.temperature)
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)
+        plot(mesh, presets.temperature)

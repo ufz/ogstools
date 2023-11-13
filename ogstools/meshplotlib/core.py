@@ -1,4 +1,5 @@
 """Meshplotlib core utilitites."""
+import types
 from typing import Optional as Opt
 from typing import Union
 
@@ -10,16 +11,16 @@ from matplotlib import colors as mcolors
 from matplotlib import figure as mfigure
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
+from matplotlib import transforms as mtransforms
 from matplotlib.patches import Rectangle as Rect
 
-from ogstools.propertylib import THM, Property
-from ogstools.propertylib import VectorProperty as Vector
+from ogstools.propertylib import Property, Vector
+from ogstools.propertylib.presets import _resolve_property
 
 from . import plot_features as pf
 from . import setup
 from .levels import get_levels
 
-# TODO: toggle colorbar per ax
 # TODO: define default data_name for regions in setup
 
 
@@ -87,56 +88,55 @@ def get_cmap_norm(
     return cmap, norm
 
 
-def add_colorbar(
+# to fix scientific offset position
+# https://github.com/matplotlib/matplotlib/issues/4476#issuecomment-105627334
+def fix_scientific_offset_position(axis, func):
+    axis._update_offset_text_position = types.MethodType(func, axis)
+
+
+def y_update_offset_text_position(self, bboxes, bboxes2):  # noqa: ARG001
+    x, y = self.offsetText.get_position()
+    # y in axes coords, x in display coords
+    self.offsetText.set_transform(
+        mtransforms.blended_transform_factory(
+            self.axes.transAxes, mtransforms.IdentityTransform()
+        )
+    )
+    top = self.axes.bbox.ymax
+    y = top + 2 * self.OFFSETTEXTPAD * self.figure.dpi / 72.0
+    self.offsetText.set_position((x, y))
+
+
+def add_colorbars(
     fig: mfigure.Figure,
+    ax: Union[plt.Axes, list[plt.Axes]],
     property: Property,
     levels: np.ndarray,
+    pad: float = 0.05,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     cmap, norm = get_cmap_norm(levels, property)
     cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
-    scale_mag = np.median(np.abs(np.diff(levels)))
-    scale_exp = np.ceil(np.log10(scale_mag)) if scale_mag > 1e-12 else 0
-    if scale_exp >= 3:
-        levels *= 10 ** (-scale_exp)
-        norm.vmin *= 10 ** (-scale_exp)
-        norm.vmax *= 10 ** (-scale_exp)
     categoric = property.categoric or (len(levels) == 2)
     if categoric:
         bounds = get_level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
     else:
-        bin_sizes = np.diff(levels)
-        bot_extra = int(bin_sizes[0] != bin_sizes[1]) or None
-        top_extra = -int(bin_sizes[-1] != bin_sizes[-2]) or None
-        ticks = levels[bot_extra:top_extra]
-    _axs = np.ravel(fig.axes).tolist()
-    spacing = "uniform" if categoric else "proportional"
-    kwargs = {"location": "right", "spacing": spacing, "pad": 0.02}
+        ticks = levels
     cb = fig.colorbar(
-        cm, norm=norm, ax=_axs, ticks=ticks, drawedges=True, **kwargs
+        cm, norm=norm, ax=ax, ticks=ticks, drawedges=True, location="right",
+        spacing="uniform", pad=pad, format="%.3g"  # fmt: skip
     )
     if setup.invert_colorbar:
         cb.ax.invert_yaxis()
     if property.is_mask():
         cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
-    if not categoric:
-        kwargs = {"transform": cb.ax.transAxes, "ha": "left"}
-        if setup.log_scaled:
-            levels = 10**levels
-        ids = [-1, 0] if setup.invert_colorbar else [0, -1]
-        if [bot_extra, top_extra][ids[0]]:
-            cb.ax.text(1.8, -0.02, f"{levels[ids[0]]:.5g}", **kwargs, va="top")
-        if [bot_extra, top_extra][ids[1]]:
-            cb.ax.text(
-                1.8, 1.02, f"{levels[ids[1]]:.5g}", **kwargs, va="bottom"
-            )
+    if not categoric and setup.log_scaled:
+        levels = 10**levels
 
-    factor_str = rf"$10^{{{int(scale_exp)}}}$" if scale_exp >= 3 else ""
-    if property.get_output_unit():
-        unit_str = f" / {factor_str} {property.get_output_unit()}"
-    else:
-        unit_str = factor_str
+    unit_str = (
+        f" / {property.get_output_unit()}" if property.get_output_unit() else ""
+    )
     cb.set_label(
         property.output_name.replace("_", " ") + unit_str,
         size=setup.rcParams_scaled["font.size"],
@@ -144,8 +144,12 @@ def add_colorbar(
     cb.ax.tick_params(
         labelsize=setup.rcParams_scaled["font.size"], direction="out"
     )
-    cb.ax.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
-    cb.ax.ticklabel_format(useOffset=False, style="plain")
+    mf = mticker.ScalarFormatter(useMathText=True, useOffset=True)
+    mf.set_scientific(True)
+    mf.set_powerlimits([-3, 3])
+    fix_scientific_offset_position(cb.ax.yaxis, y_update_offset_text_position)
+    cb.ax.yaxis.set_offset_position("left")
+    cb.ax.yaxis.set_major_formatter(mf)
 
     if _q_zero_line(property, levels):
         cb.ax.axhline(
@@ -181,10 +185,12 @@ def subplot(
     Custom levels and a colormap string can be provided.
     """
 
-    property = resolve_property(property)
+    if isinstance(property, str):
+        data_shape = mesh[property].shape
+        property = _resolve_property(property, data_shape)
     if mesh.get_cell(0).dimension == 3:
         msg = "meshplotlib is for 2D meshes only, but found 3D elements."
-        raise TypeError(msg)
+        raise ValueError(msg)
 
     ax.axis("auto")
 
@@ -261,6 +267,7 @@ def subplot(
                 sec_labels += [f"{sec_mesh.bounds[2 * projection]:.1f}"]
             else:
                 sec_labels += [""]
+        # TODO: use a function to make this short
         secax = ax.secondary_xaxis("top")
         secax.xaxis.set_major_locator(mticker.FixedLocator(ax.get_xticks()))
         secax.set_xticklabels(sec_labels)
@@ -292,10 +299,27 @@ def _get_rows_cols(
     return (1, 1)
 
 
-def _fig_init(rows: int, cols: int) -> mfigure.Figure:
-    figsize = np.array(setup.figsize) * setup.fig_scale
+# TODO: fixed_figure_size -> ax aspect automatic
+
+
+def _fig_init(rows: int, cols: int, ax_aspect: float = 1.0) -> mfigure.Figure:
+    nx_cb = 1 if setup.combined_colorbar else cols
+    default_size = 8
+    cb_width = 4
+    figsize = setup.fig_scale * np.asarray(
+        [
+            default_size * cols * ax_aspect + cb_width * nx_cb,
+            default_size * rows,
+        ]
+    )
     fig, _ = plt.subplots(
-        rows, cols, dpi=setup.dpi * setup.fig_scale, figsize=figsize
+        rows,
+        cols,
+        dpi=setup.dpi * setup.fig_scale,
+        figsize=figsize,
+        layout=setup.layout,
+        sharex=True,
+        sharey=True,
     )
     fig.patch.set_alpha(1)
     return fig
@@ -304,7 +328,12 @@ def _fig_init(rows: int, cols: int) -> mfigure.Figure:
 def get_combined_levels(
     meshes: np.ndarray, property: Union[Property, str]
 ) -> np.ndarray:
-    property = resolve_property(property)
+    """
+    Calculate well spaced levels for the encompassing property range in meshes.
+    """
+    if isinstance(property, str):
+        data_shape = meshes[0][property].shape
+        property = _resolve_property(property, data_shape)
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
@@ -325,12 +354,6 @@ def get_combined_levels(
     return get_levels(p_min, p_max, setup.num_levels)
 
 
-def resolve_property(property: Union[Property, str]) -> Property:
-    if isinstance(property, Property):
-        return property
-    return THM.find_property(property)
-
-
 def _plot_on_figure(
     fig: mfigure.Figure,
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
@@ -345,20 +368,48 @@ def _plot_on_figure(
     shape = _get_rows_cols(meshes)
     np_meshes = np.reshape(meshes, shape)
     np_axs = np.reshape(fig.axes, shape)
-    levels = get_combined_levels(np_meshes, property)
+    if setup.combined_colorbar:
+        combined_levels = get_combined_levels(np_meshes, property)
 
     for i in range(shape[0]):
         for j in range(shape[1]):
-            subplot(np_meshes[i, j], property, np_axs[i, j], levels)
+            _levels = (
+                combined_levels
+                if setup.combined_colorbar
+                else get_combined_levels(np_meshes[i, j], property)
+            )
+            subplot(np_meshes[i, j], property, np_axs[i, j], _levels)
 
     np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
     np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
     np_axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
     # make extra space for the upper limit of the colorbar
-    plt.tight_layout(pad=1.4)
-    add_colorbar(fig, property, levels)
+    if setup.layout == "tight":
+        plt.tight_layout(pad=1.4)
+
+    if setup.combined_colorbar:
+        cb_axs = np.ravel(fig.axes).tolist()
+        add_colorbars(
+            fig, cb_axs, property, combined_levels, pad=0.05 / shape[1]
+        )
+    else:
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                _levels = get_combined_levels(np_meshes[i, j], property)
+                add_colorbars(fig, np_axs[i, j], property, _levels)
 
     return fig
+
+
+def get_data_aspect(mesh: pv.DataSet) -> float:
+    """
+    Calculate the data aspect ratio of a 2D mesh.
+    """
+    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
+    projection = int(np.argmax(mean_normal))
+    x_id, y_id = 2 * np.delete([0, 1, 2], projection)
+    lims = mesh.bounds
+    return abs(lims[x_id + 1] - lims[x_id]) / abs(lims[y_id + 1] - lims[y_id])
 
 
 # TODO: add as arguments: cmap, limits
@@ -377,16 +428,27 @@ def plot(
     :param property:    The property field to be visualized on all meshes
     """
 
-    property = resolve_property(property)
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
-    _fig = _fig_init(*shape)
+    _meshes = np.reshape(meshes, shape).flatten()
+    if isinstance(property, str):
+        data_shape = _meshes[0][property].shape
+        property = _resolve_property(property, data_shape)
+    data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
+
+    clamped_aspects = np.clip(data_aspects, *setup.aspect_limits)
+    ax_aspects = data_aspects / clamped_aspects
+    _fig = _fig_init(
+        rows=shape[0], cols=shape[1], ax_aspect=np.mean(ax_aspects)
+    )
+    n_axs = shape[0] * shape[1]
+    # setting the aspect twice is intended
+    # the first time results in properly spaced ticks
+    # the second time fixes any deviations from the set aspect due to
+    # additional colorbar(s) or secondary axes.
+    for ax, aspect in zip(_fig.axes[: n_axs + 1], clamped_aspects):
+        ax.set_aspect(aspect)
     fig = _plot_on_figure(_fig, meshes, property)
-    for ax in fig.axes[:-1]:
-        aspect = setup.ax_aspect_ratio
-        if aspect is None:
-            xlims = ax.get_xlim()
-            ylims = ax.get_ylim()
-            aspect = abs(xlims[1] - xlims[0]) / abs(ylims[1] - ylims[0])
+    for ax, aspect in zip(fig.axes[: n_axs + 1], clamped_aspects):
         ax.set_aspect(aspect)
     return fig

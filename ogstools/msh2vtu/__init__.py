@@ -1,10 +1,12 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
-import warnings
+import logging
 from pathlib import Path
 from typing import Union
 
 import meshio
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 # For more info on __all__ see: https://stackoverflow.com/a/35710527/80480
 __all__ = [
@@ -16,7 +18,7 @@ __all__ = [
 ]
 
 
-def my_remove_orphaned_nodes(my_mesh):
+def my_remove_orphaned_nodes(my_mesh: meshio.Mesh):
     """Auxiliary function to remove points not belonging to any cell"""
 
     # find connected points and derive mapping from all points to them
@@ -53,17 +55,17 @@ def my_remove_orphaned_nodes(my_mesh):
 
 
 # print info for mesh: statistics and data field names
-def print_info(mesh):
+def print_info(mesh: meshio.Mesh):
     N, D = mesh.points.shape
-    print(str(N) + " points in " + str(D) + " dimensions", end="; ")
+    logging.info("%d points in %d dimensions", N, D)
     cell_info = "cells: "
     for cell_type, cell_values in mesh.cells_dict.items():
         cell_info += str(len(cell_values)) + " " + cell_type + ", "
-    print(cell_info[0:-2], end="; ")
-    print("point_data=" + str(list(mesh.point_data)), end="; ")
-    print("cell_data=" + str(list(mesh.cell_data)), end="; ")
-    print("cell_sets=" + str(list(mesh.cell_sets)))
-    print("##")
+    logging.info(cell_info[0:-2])
+    logging.info("point_data=%s", str(list(mesh.point_data)))
+    logging.info("cell_data=%s", str(list(mesh.cell_data)))
+    logging.info("cell_sets=%s", str(list(mesh.cell_sets)))
+    logging.info("##")
 
 
 # function to create node connectivity list, i.e. store for each node (point) to
@@ -86,8 +88,8 @@ def find_cells_at_nodes(cells, node_count, cell_start_index):
             for node in range(node_count)
             if node_connectivity[node] == set()
         ]
-        print("Points not connected with domain cells:")
-        print(unconnected_nodes)
+        logging.info("Points not connected with domain cells:")
+        logging.info(unconnected_nodes)
     return node_connectivity
 
 
@@ -123,31 +125,33 @@ def find_connected_domain_cells(
                 common_domain_cells.pop()
             )  # assign only one (unique) connected dmain cell
         elif number_of_connected_domain_cells < 1 and not warned_lt1:
-            print(
-                "find_connected_domain_cells: cell "
-                + str(cell_index)
-                + " of boundary dimension does not belong to any domain cell!"
+            logging.warning(
+                "find_connected_domain_cells: cell %s"
+                " of boundary dimension does not belong to any domain cell!",
+                str(cell_index),
             )
             # domain_cell in domain_cells_array remains zero, as there is no
             # cell to assign
             warned_lt1 = True
-            print("Possibly more cells may not belong to any domain cell.")
+            logging.warning(
+                "Possibly more cells may not belong to any domain cell."
+            )
         elif not warned_gt1:
-            print(
-                "find_connected_domain_cells: cell "
-                + str(cell_index)
-                + " of boundary dimension belongs to more than one domain cell!"
+            logging.warning(
+                "find_connected_domain_cells: cell %s"
+                " of boundary dimension belongs to more than one domain cell!"
             )
             # domain_cell in domain_cells_array remains zero, because structure
             # is 1D and only the boundary case is relevant for further use
             warned_gt1 = True
-            print(
-                "Possibly more cells may belong to  more than one domain cell."
+            logging.warning(
+                "Possibly more cells may belong to more than one domain cell."
             )
 
     return domain_cells_array, domain_cells_number
 
 
+# TODO: rename
 def msh2vtu(
     input_filename: Path,
     output_path: Path = Path(),
@@ -158,7 +162,9 @@ def msh2vtu(
     rdcd: bool = True,
     ogs: bool = True,
     ascii: bool = False,
+    log_level: Union[int, str] = "DEBUG",
 ):
+    logging.getLogger().setLevel(log_level)
     input_filename = Path(input_filename)
     # some variable declarations
     ph_index = 0  # to access physical group id in field data
@@ -207,21 +213,20 @@ def msh2vtu(
 
     # check if input file exists and is in gmsh-format
     if not input_filename.is_file():
-        warnings.warn("No input file (mesh) found.", stacklevel=2)
+        logging.warning("No input file (mesh) found.")
         # raise FileNotFoundError
         return 1
 
     if input_filename.suffix != ".msh":
-        warnings.warn(
-            "Warning, input file seems not to be in gmsh-format (*.msh)",
-            stacklevel=2,
+        logging.warning(
+            "Warning, input file seems not to be in gmsh-format (*.msh)"
         )
 
     # if no parameter given, use same basename as input file
     output_basename = (
         input_filename.stem if output_prefix == "" else output_prefix
     )
-    print(f"Output: {output_basename}")
+    logging.info("Output: %s", output_basename)
 
     # read in mesh (be aware of shallow copies, i.e. by reference)
     mesh: meshio.Mesh = meshio.read(str(input_filename))
@@ -235,8 +240,8 @@ def msh2vtu(
     number_of_original_points = len(points)
     existing_cell_types = set(mesh.cells_dict.keys())  # elements found in mesh
 
-    print("Original mesh (read)")
-    print_info(mesh)
+    logging.info("Original mesh (read)")
+    logging.info(mesh)
 
     # check if element types are supported in current version of this script
     all_available_cell_types: set[str] = set()
@@ -244,9 +249,7 @@ def msh2vtu(
         all_available_cell_types = all_available_cell_types.union(cell_types)
     for cell_type in existing_cell_types:
         if cell_type not in all_available_cell_types:
-            warnings.warn(
-                "Cell type " + str(cell_type) + " not supported", stacklevel=2
-            )
+            logging.warning("Cell type %s not supported", str(cell_type))
 
     # set spatial dimension of mesh
     if dim == 0:
@@ -259,25 +262,25 @@ def msh2vtu(
             ):
                 _dim = test_dim
 
-        print("Detected mesh dimension: " + str(_dim))
-        print("##")
+        logging.info("Detected mesh dimension: %s", str(_dim))
+        logging.info("##")
     else:
         _dim = dim  # trust the user
 
     # delete third dimension if wanted by user
     if delz:
         if _dim <= dim2:
-            print("Remove z coordinate of all points.")
+            logging.info("Remove z coordinate of all points.")
             points = mesh.points[:, :2]
         else:
-            print(
+            logging.info(
                 "Mesh seems to be in 3D, z-coordinate cannot be removed. Option"
                 " -z ignored."
             )
 
     # special case in 2D workflow
     if swapxy:
-        print("Swapping x- and y-coordinate")
+        logging.info("Swapping x- and y-coordinate")
         points[:, 0], points[:, 1] = points[:, 1], -points[:, 0]
 
     # boundary and domain cell types depend on dimension
@@ -291,9 +294,7 @@ def msh2vtu(
             available_cell_types[domain_dim]
         )
     else:
-        warnings.warn(
-            "Error, invalid dimension dim=" + str(_dim) + "!", stacklevel=2
-        )
+        logging.warning("Error, invalid dimension dim=%s!", str(_dim))
         return 1  # sys.exit()
 
     # Check for existence of physical groups
@@ -341,7 +342,7 @@ def msh2vtu(
                 )  # ..then find minimal physical id
 
     else:
-        print("No physical groups found.")
+        logging.info("No physical groups found.")
         physical_groups_found = False
 
     ############################################################################
@@ -406,7 +407,7 @@ def msh2vtu(
             domain_cell_data_values = np.zeros(
                 (number_of_domain_cells), dtype=int
             )
-            print(
+            logging.info(
                 "Some domain cells are not in a physical group, their"
                 " PhysicalID/MaterialID is set to zero."
             )
@@ -422,17 +423,16 @@ def msh2vtu(
         my_remove_orphaned_nodes(domain_mesh)
 
         if len(domain_mesh.points) != number_of_original_points:
-            warnings.warn(
+            logging.warning(
                 "There are nodes out of the domain mesh. If ogs option is set,"
-                " then no bulk_node_id can be assigned to these nodes.",
-                stacklevel=2,
+                " then no bulk_node_id can be assigned to these nodes."
             )
         meshio.write(
             Path(output_path, output_basename + "_domain.vtu"),
             domain_mesh,
             binary=not ascii,
         )
-        print("Domain mesh (written)")
+        logging.info("Domain mesh (written)")
         print_info(domain_mesh)
 
         if ogs:
@@ -473,7 +473,7 @@ def msh2vtu(
                 total_list.update(block_list)
 
     else:
-        print("Empty domain mesh, nothing written to file.")
+        logging.info("Empty domain mesh, nothing written to file.")
 
     ############################################################################
     # Extract boundary mesh
@@ -518,24 +518,22 @@ def msh2vtu(
         # a boundary cell is connected with exactly one domain cell
         boundary_index = connected_cells_count == 1
         if not boundary_index.all():
-            print(
+            logging.info(
                 "For information, there are cells of boundary dimension not on"
                 " the boundary (e.g. inside domain)."
             )
             multi_connection_index = connected_cells_count > 1
-            print(
-                "Cells of type "
-                + boundary_cell_type
-                + " connected to more than one domain cell:"
+            logging.info(
+                "Cells of type %s connected to more than one domain cell:",
+                boundary_cell_type,
             )
-            print(boundary_cells_values[multi_connection_index])
+            logging.info(boundary_cells_values[multi_connection_index])
             zero_connection_index = connected_cells_count < 1
-            print(
-                "Cells of type "
-                + boundary_cell_type
-                + " not connected to any domain cell:"
+            logging.info(
+                "Cells of type %s not connected to any domain cell:",
+                boundary_cell_type,
             )
-            print(boundary_cells_values[zero_connection_index])
+            logging.info(boundary_cells_values[zero_connection_index])
 
         boundary_cells_values = boundary_cells_values[
             boundary_index
@@ -562,7 +560,7 @@ def msh2vtu(
                 boundary_cell_data_values = np.zeros(
                     (number_of_boundary_cells), dtype=int
                 )
-                print(
+                logging.info(
                     "Some boundary cells are not in a physical group, their"
                     " PhysicalID is set to zero."
                 )
@@ -584,10 +582,10 @@ def msh2vtu(
             boundary_mesh,
             binary=not ascii,
         )
-        print("Boundary mesh (written)")
+        logging.info("Boundary mesh (written)")
         print_info(boundary_mesh)
     else:
-        print("No boundary elements detected.")
+        logging.info("No boundary elements detected.")
 
     ############################################################################
     # Now we want to extract subdomains given by physical groups in gmsh
@@ -604,9 +602,7 @@ def msh2vtu(
                 available_cell_types[subdomain_dim]
             )
         else:
-            warnings.warn(
-                "Invalid dimension found in physical groups.", stacklevel=2
-            )
+            logging.warning("Invalid dimension found in physical groups.")
             continue
 
         all_points = np.copy(points)
@@ -667,16 +663,16 @@ def msh2vtu(
                         boundary_index = connected_cells_count == 1
                         selection_cell_data_values = np.uint64(connected_cells)
                         if not boundary_index.all():
-                            print(
-                                "In physical group "
-                                + name
-                                + " are bulk_elem_ids not uniquely defined,"
+                            logging.info(
+                                "In physical group %s"
+                                " are bulk_elem_ids not uniquely defined,"
                                 " e.g. for cells of boundary dimension inside"
                                 " the domain, and thus not written. If"
                                 " bulk_elem_ids should be written for a"
                                 " physical group, then make sure all its"
                                 " cells of boundary dimension are located at"
-                                " the boundary."
+                                " the boundary.",
+                                name,
                             )
                             subdomain_cell_data_trouble = True
                     elif subdomain_dim == domain_dim:
@@ -727,9 +723,9 @@ def msh2vtu(
             meshio.write(
                 Path(output_path, outputfilename), submesh, binary=not ascii
             )
-            print("Submesh " + name + " (written)")
+            logging.info("Submesh %s (written)", name)
             print_info(submesh)
         else:
-            print("Submesh " + name + " empty (not written)")
+            logging.info("Submesh %s empty (not written)", name)
 
     return 0  # successfully finished

@@ -58,7 +58,8 @@ class RegionSet:
 
 
 def to_boundary(
-    surface_mesh: pv.PolyData, filter_condition: Callable[[list], list]
+    surface_mesh: pv.PolyData,
+    filter_condition: Callable[[np.ndarray], np.ndarray],
 ) -> pv.UnstructuredGrid:
     """
     Extract cells from a surface mesh that meet a filter condition for normals.
@@ -66,9 +67,10 @@ def to_boundary(
     This function takes a surface mesh represented by a `pv.PolyData` object and extracts
     cells that match a specified filter condition based on the normals of the mesh.
 
-    :param surface_mesh (pv.PolyData):                  The input surface mesh.
-    :param filter_condition (Callable[[list], list]):   A callable filter condition that takes
-                                                        a list of normals as input and returns a list indicating whether the condition is met.
+    :param surface_mesh:        The input surface mesh.
+    :param filter_condition:    A callable filter condition that takes an array
+                                of normals as input and returns an array
+                                indicating whether the condition is met.
 
     Returns:
         pv.UnstructuredGrid: A mesh containing only the cells that meet the filter condition.

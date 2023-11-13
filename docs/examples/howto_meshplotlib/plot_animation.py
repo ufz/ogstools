@@ -13,8 +13,9 @@ import numpy as np
 
 from ogstools.meshplotlib import examples, setup
 from ogstools.meshplotlib.animation import animate
-from ogstools.propertylib import ScalarProperty
+from ogstools.propertylib import Scalar
 
+setup.reset()
 mesh_series = examples.meshseries_CT_2D
 # alternatively:
 # from ogstools.meshlib import MeshSeries
@@ -39,7 +40,7 @@ timevalues = np.linspace(
 # Note that rendering many frames in conjunction with large meshes might take
 # a really long time.
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-si = ScalarProperty("Si", "", "%", "Saturation")
+si = Scalar("Si", "", "%", "Saturation")
 anim = animate(mesh_series, si, timevalues, titles)
 # the animation can be saved (as mp4) like so:
 # from ogstools.meshplotlib.animation import save_animation

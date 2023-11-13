@@ -26,7 +26,7 @@ from ogstools.meshlib.region import (
 
 mpl.setup.reset()
 mpl.setup.length.output_unit = "km"
-mpl.setup.figsize = [24, 12]
+mpl.setup.aspect_limits = [0.2, 5.0]
 
 # %%
 # The loaded surfaces are defined within VTU files and adhere to properties such as non-intersecting boundaries with consistent x and y bounds. Alternatively, surfaces can also be created using PyVista with the same properties.
@@ -59,7 +59,7 @@ tm = to_region_tetraeder(layer_set1, resolution=200).mesh
 # Visualize the prism mesh
 
 mesh = pm
-slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="y")), (2, 2))
+slices = np.reshape(mesh.slice_along_axis(n=4, axis="y"), (-1, 1))
 fig = mpl.plot(slices, "MaterialIDs")
 for ax, slice in zip(fig.axes, np.ravel(slices)):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")

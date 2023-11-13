@@ -10,7 +10,7 @@ from matplotlib import patheffects
 from matplotlib.collections import PolyCollection
 from matplotlib.transforms import blended_transform_factory as btf
 
-from ogstools.propertylib.property import VectorProperty
+from ogstools.propertylib.property import Vector
 
 from . import setup
 
@@ -79,7 +79,7 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
 
 
 def plot_streamlines(
-    ax: plt.Axes, surf: pv.DataSet, property: VectorProperty, projection: int
+    ax: plt.Axes, surf: pv.DataSet, property: Vector, projection: int
 ) -> None:
     """Plot vector streamlines on a matplotlib axis."""
     if (n_pts := setup.num_streamline_interp_pts) is None:

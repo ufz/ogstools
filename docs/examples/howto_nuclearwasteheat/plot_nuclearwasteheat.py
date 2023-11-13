@@ -13,18 +13,18 @@ import numpy as np
 
 import ogstools.physics.nuclearwasteheat as nuclear
 
-# units for user input and heat output
-nuclear.units.time = "yrs"  # default is s
-nuclear.units.power = "kW"  # default is W
-
 repo = nuclear.repo_2020_conservative
+units = {"time_unit": "yrs", "power_unit": "kW"}  # default is s and W
 print("Heat at start of deposition (1 nuclear waste bundle): ")
-print(f"{0:6n} yrs: {repo.heat(t=0):10.1f} kW")
+print(f"{0:6n} yrs: {repo.heat(t=0, **units):10.1f} kW")
 print("Heat after deposition complete (all nuclear waste bundles): ")
-print(f"{repo.time_deposit:6n} yrs: {repo.heat(t=repo.time_deposit):10.1f} kW")
+print(
+    f"{repo.time_deposit('yrs'):6n} yrs: "
+    f"{repo.heat(t=repo.time_deposit('yrs'), **units):10.1f} kW"
+)
 print("Heat for a timeseries: ")
 time = np.geomspace(1, 1e5, num=6)
-heat = repo.heat(t=time)
+heat = repo.heat(t=time, **units)
 print(*[f"{t:6n} yrs: {q:10.1f} kW" for t, q in zip(time, heat)], sep="\n")
 
 
@@ -38,8 +38,8 @@ ls = ["-", "--", "-.", ":", (0, (1, 10))]
 
 
 def format_ax(ax: plt.Axes):
-    ax.set_xlabel(f"time [{nuclear.units.time}]")
-    ax.set_ylabel(f"heat [{nuclear.units.power }]")
+    ax.set_xlabel("time / yrs")
+    ax.set_ylabel("heat / kW")
     ax.grid(True, which="major", linestyle="-")
     ax.grid(True, which="minor", linestyle="--", alpha=0.2)
     ax.legend()
@@ -52,7 +52,7 @@ def format_ax(ax: plt.Axes):
 
 fig, ax = plt.subplots(figsize=(8, 4))
 for model in models:
-    q = model.heat(time, baseline=True)
+    q = model.heat(time, baseline=True, **units)
     ax.loglog(time, q, label=model.name, lw=2.5)
 format_ax(ax)
 ax.set_ylim([1e-4, 5])
@@ -72,10 +72,10 @@ axs: list[plt.Axes] = np.reshape(axs, (-1))
 
 colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 for ax, model, color in zip(axs, models, colors):
-    q = model.heat(time, baseline=True)
+    q = model.heat(time, baseline=True, **units)
     ax.loglog(time, q, label=model.name, lw=2.5, c=color)
     for i in range(len(model.nuclide_powers)):
-        q = model.heat(time, baseline=True, ncl_id=i)
+        q = model.heat(time, baseline=True, ncl_id=i, **units)
         ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c=color, ls=ls[i])
     format_ax(ax)
     ax.set_ylim([1e-4, 20])
@@ -90,12 +90,15 @@ plt.show()
 
 fig, ax = plt.subplots(figsize=(8, 4))
 
-be_ha_heat = nuclear.repo_be_ha_2016.heat(time)
-dwr_heat = nuclear.repo_2020.heat(time)
-dwr_con_heat = nuclear.repo_2020_conservative.heat(time)
-ax.loglog(time, dwr_con_heat, "k", label="DWR-Mix conservative", lw=2, ls=ls[0])
-ax.loglog(time, dwr_heat, "k", label="DWR-Mix + WWER + CSD", lw=2, ls=ls[1])
-ax.loglog(time, be_ha_heat, "k", label="RK-BE + RK-HA", lw=2, ls=ls[2])
+repos = [
+    nuclear.repo_2020_conservative,
+    nuclear.repo_2020,
+    nuclear.repo_be_ha_2016,
+]
+repo_heat = [repo.heat(time, **units) for repo in repos]
+ax.loglog(time, repo_heat[0], "k", label="DWR-Mix conservative", lw=2, ls=ls[0])
+ax.loglog(time, repo_heat[1], "k", label="DWR-Mix + WWER + CSD", lw=2, ls=ls[1])
+ax.loglog(time, repo_heat[2], "k", label="RK-BE + RK-HA", lw=2, ls=ls[2])
 format_ax(ax)
 ax.set_ylim([9, 25000])
 plt.show()
@@ -104,9 +107,9 @@ plt.show()
 # %%
 fig, ax = plt.subplots(figsize=(8, 2))
 
-ax.loglog(time, dwr_con_heat, label="DWR-Mix", lw=2, c="k")
+ax.loglog(time, repo_heat[0], label="DWR-Mix", lw=2, c="k")
 for i in range(len(nuclear.repo_2020_conservative.waste[0].nuclide_powers)):
-    q = nuclear.repo_2020_conservative.heat(time, ncl_id=i)
+    q = nuclear.repo_2020_conservative.heat(time, ncl_id=i, **units)
     ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c="k", ls=ls[i])
 format_ax(ax)
 ax.set_ylim([9, 25000])
