@@ -127,6 +127,7 @@ def cli():
             combine_material_properties(
                 mesh, ["P_CONDX", "P_CONDY", "P_CONDZ"]
             ),
+            process="steady state diffusion",
         )
         log.info(
             "A prj file has been created but needs to be completed in order to run an OGS simulation"

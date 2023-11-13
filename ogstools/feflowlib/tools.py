@@ -264,16 +264,166 @@ def write_mesh_of_combined_properties(
     return filename
 
 
-def setup_prj_file(
-    bulk_mesh: Path,
+def materials_in_steady_state_diffusion(
+    bulk_mesh_path: Path,
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     model=None,
 ):
     """
-    Sets up a prj-file for ogs simulations using ogs6py.
+    Create the section for material properties for steady state diffusion processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
     """
-    prjfile = bulk_mesh.with_suffix(".prj")
+
+    for material_id, property_value in material_properties.items():
+        if any(prop == "inhomogeneous" for prop in property_value):
+            write_mesh_of_combined_properties(
+                mesh,
+                ["P_CONDX", "P_CONDY", "P_CONDZ"],
+                "KF",
+                material_id,
+                bulk_mesh_path,
+            )
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Parameter",
+                parameter_name="diffusion_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="diffusion_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Constant",
+                value=" ".join(str(element) for element in property_value),
+            )
+        model.media.add_property(
+            medium_id=material_id,
+            name="reference_temperature",
+            type="Constant",
+            value=293.15,
+        )
+
+
+def materials_in_liquid_flow(
+    bulk_mesh_path: Path,
+    mesh: pv.UnstructuredGrid,
+    material_properties: dict,
+    model=None,
+):
+    """
+    Create the section for material properties in liquid flow processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    """
+
+    for material_id, property_value in material_properties.items():
+        if any(prop == "inhomogeneous" for prop in property_value):
+            write_mesh_of_combined_properties(
+                mesh,
+                ["P_CONDX", "P_CONDY", "P_CONDZ"],
+                "KF",
+                material_id,
+                bulk_mesh_path,
+            )
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Parameter",
+                parameter_name="permeability_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="permeability_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=" ".join(str(element) for element in property_value),
+            )
+        model.media.add_property(
+            medium_id=material_id,
+            name="reference_temperature",
+            type="Constant",
+            value=293.15,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="storage",
+            type="Constant",
+            value=0,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=1,
+        )
+
+
+def setup_prj_file(
+    bulk_mesh_path: Path,
+    mesh: pv.UnstructuredGrid,
+    material_properties: dict,
+    process: str,
+    model=None,
+):
+    """
+    Sets up a prj-file for ogs simulations using ogs6py.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param process: the process to be prepared
+    :type process: str
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    """
+    prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
 
@@ -286,8 +436,8 @@ def setup_prj_file(
         "P_SOUF": "Volumetric",
     }
 
-    model.mesh.add_mesh(filename=bulk_mesh.name)
-    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh.name)
+    model.mesh.add_mesh(filename=bulk_mesh_path.name)
+    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
     # Pr
     model.processes.add_process_variable(
         process_variable="process_variable", process_variable_name="HEAD_OGS"
@@ -328,7 +478,7 @@ def setup_prj_file(
                         if key in cell_data
                     ),
                     parameter=cell_data,
-                    mesh="topsurface_" + bulk_mesh.stem,
+                    mesh="topsurface_" + bulk_mesh_path.stem,
                 )
             elif cell_data in ["P_SOUF"]:
                 model.processvars.add_st(
@@ -339,58 +489,29 @@ def setup_prj_file(
                         if key in cell_data
                     ),
                     parameter=cell_data,
-                    mesh="topsurface_" + bulk_mesh.stem,
+                    mesh="topsurface_" + bulk_mesh_path.stem,
                 )
             # Every point boundary condition refers to a parameter with the same name
             model.parameters.add_parameter(
                 name=cell_data,
                 type="MeshElement",
                 field_name=cell_data,
-                mesh="topsurface_" + bulk_mesh.stem,
+                mesh="topsurface_" + bulk_mesh_path.stem,
             )
 
     # include material properties in the prj-file
-    for material, property_value in material_properties.items():
-        if any(prop == "non_constant" for prop in property_value):
-            write_mesh_of_combined_properties(
-                mesh,
-                ["P_CONDX", "P_CONDY", "P_CONDZ"],
-                "KF",
-                material,
-                bulk_mesh,
-            )
-            model.media.add_property(
-                medium_id=material,
-                name="diffusion",
-                type="Parameter",
-                parameter_name="diffusion_" + str(material),
-            )
-            model.mesh.add_mesh(filename=str(material) + ".vtu")
-            model.parameters.add_parameter(
-                name="diffusion_" + str(material),
-                type="MeshElement",
-                field_name="KF",
-                mesh=str(material),
-            )
-            model.media.add_property(
-                medium_id=material,
-                name="reference_temperature",
-                type="Constant",
-                value=293.15,
-            )
-        else:
-            model.media.add_property(
-                medium_id=material,
-                name="diffusion",
-                type="Constant",
-                value=" ".join(str(element) for element in property_value),
-            )
-            model.media.add_property(
-                medium_id=material,
-                name="reference_temperature",
-                type="Constant",
-                value=293.15,
-            )
+    if process == "steady state diffusion":
+        materials_in_steady_state_diffusion(
+            bulk_mesh_path, mesh, material_properties, model
+        )
+    elif process == "liquid flow":
+        materials_in_liquid_flow(
+            bulk_mesh_path, mesh, material_properties, model
+        )
+    else:
+        logger.info(
+            "No material properties could be defined. At the moment only material properties of 'steady state diffusion' or 'liquid flow' processes are supported."
+        )
     # add deactivated subdomains if existing
     if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
         tags = ["material_ids"]
