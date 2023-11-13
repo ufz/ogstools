@@ -5,17 +5,23 @@ Convergence study (temporal refinement)
 This example shows one possible implementation of how to do a convergence study
 with temporal refinement. For this, a simple model using a time dependent heat
 source on one side and constant temperature on the opposite side was set up.
-The heat source is generated with the `nuclearwasteheat` model.
+The heat source is generated with the
+:py:mod:`ogstools.physics.nuclearwasteheat` model.
 
 Here is some theoretical background for the topic of grid convergence:
-https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
-https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/
+
+`Nasa convergence reference
+<https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html>`_
+
+`More comprehensive reference
+<https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>`_
 
 At least three meshes from simulations of increasing temporal refinement are
 required for the convergence study. The topology has to stay the same.
 
-The below code cells will generate the simulation results and are evaluated for
-convergence at the end.
+The results to analyze are generated on the fly with the following code. If you
+are only interested in the convergence study, please skip to
+`Temperature convergence at maximum heat production (t=30 yrs)`_.
 
 First, the required packages are imported and an output directory is created:
 """
@@ -61,7 +67,8 @@ ax.legend()
 fig.show()
 
 # %% [markdown]
-# The mesh and its boundaries are generated easily via gmsh and msh2vtu:
+# The mesh and its boundaries are generated easily via gmsh and
+# :py:mod:`ogstools.msh2vtu`:
 
 # %%
 msh_path = temp_dir / "square.msh"

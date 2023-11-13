@@ -5,18 +5,27 @@ Convergence study (spatial refinement)
 This example shows one possible implementation of how to do a convergence study.
 It uses the project file from the following benchmark with multiple
 discretizations to evaluate the accuracy of the numerical solutions.
-https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/
+`ogs: elliptic neumann benchmark
+<https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/>`_
 
 Here is some theoretical background for the topic of grid convergence:
-https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html
-https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/
+
+`Nasa convergence reference
+<https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html>`_
+
+`More comprehensive reference
+<https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>`_
 
 At least three meshes of increasing refinement are required for the convergence
 study. The three finest meshes are used to calculated the Richardson
-extrapolation. It is recommended to use the third coarsest mesh for the topology
-to evaluate the results. The finer meshes should share the same nodes of the
-chosen topology, otherwise interpolation will influence the results. With
+extrapolation. The third coarsest mesh will be used for the topology
+to evaluate the results. Its nodes should be shared by the finer meshes,
+otherwise interpolation will influence the results. With
 unstructured grids this can be achieved as well with refinement by splitting.
+
+The results to analyze are generated on the fly with the following code. If you
+are only interested in the convergence study, please skip to
+`Hydraulic pressure convergence`_.
 
 First, the required packages are imported and an output directory is created:
 """
@@ -41,7 +50,8 @@ report_name = str(temp_dir / "report.ipynb")
 result_paths = []
 
 # %% [markdown]
-# The meshes and their boundaries are generated easily via gmsh and msh2vtu.
+# The meshes and their boundaries are generated easily via gmsh and
+# :py:mod:`ogstools.msh2vtu`.
 # Then we run the different simulations with increasingly fine spatial
 # discretization via ogs6py and store the results for the convergence study.
 

@@ -15,7 +15,7 @@
 mesh_paths = [""]
 timevalue: float = 0.0
 property_name: str = ""
-refinement_ratio: float = None
+refinement_ratio: float = 2.0
 reference_solution_path = None
 
 # %% tags=["remove_input"]
@@ -33,7 +33,7 @@ meshplotlib.setup.combined_colorbar = False
 
 # %% tags=["remove_input"]
 # Here, the meshes are read, a Property object is created from the property
-# name, the topology is read and the Richardson extrapolation calculated.
+# name and the Richardson extrapolation calculated.
 # The 3 finest meshes of those provided will be used for the Richardson
 # extrapolation.
 
@@ -71,10 +71,10 @@ fig = meshplotlib.plot(meshes[-3:], mesh_property)
 # %% [markdown]
 # ## Richardson extrapolation.
 #
-# Visualizing the Richardson extrapolation of the requested mesh property on
-# the chosen topology. If a reference solution is provided, the difference
-# between the two is shown as well. Otherwise the difference between the
-# finest discretization and the Richardson extrapolation is shown.
+# Visualizing the Richardson extrapolation of the requested mesh property.
+# If a reference solution is provided, the difference between the two is shown
+# as well. Otherwise the difference between the finest discretization and
+# the Richardson extrapolation is shown.
 
 # %% tags=["remove_input"]
 fig = meshplotlib.plot(richardson, mesh_property)
