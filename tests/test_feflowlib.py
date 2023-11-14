@@ -19,7 +19,10 @@ from ogstools.feflowlib import (  # noqa: E402
     write_point_boundary_conditions,
 )
 from ogstools.feflowlib.feflowlib import points_and_cells  # noqa: E402
-from ogstools.feflowlib.templates import steady_state_diffusion  # noqa: E402
+from ogstools.feflowlib.templates import (  # noqa: E402
+    liquid_flow,
+    steady_state_diffusion,
+)
 from ogstools.feflowlib.tools import (  # noqa: E402
     get_material_properties,
     setup_prj_file,
@@ -45,9 +48,10 @@ class TestSimulation(unittest.TestCase):
             self.path_writing / "boxNeumann.vtu", self.pv_mesh
         )
 
-    def test_toymodel_ogs_simulation(self):
+    def test_toymodel_ogs_steady_state_diffusion(self):
         """
-        Test if ogs simulation results are similar to FEFLOW simulation results.
+        Test if ogs simulation for a steady state diffusion results
+        are similar to FEFLOW simulation results.
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxNeumann_test.prj")
@@ -55,15 +59,50 @@ class TestSimulation(unittest.TestCase):
             str(self.path_writing / "sim_boxNeumann"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
-
         setup_prj_file(
             self.path_writing / "boxNeumann.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
+            "steady state diffusion",
             model,
         )
         model.replace_medium_property_value(
             mediumid=0, name="diffusion", value="1"
+        )
+        model.write_input(prjfile)
+        model.run_model(logfile=str(self.path_writing / "out.log"))
+
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(self.path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+        )
+        dif = (
+            ogs_sim_res.point_data["HEAD_OGS"]
+            + self.pv_mesh.point_data["P_HEAD"]
+        )
+        assert np.all(np.abs(dif) < 5e-5)
+        assert np.allclose(dif, 0, atol=5e-5, rtol=0)
+
+    def test_toymodel_ogs_liquid_flow(self):
+        """
+        Test if ogs simulation with liquid flow results
+        are similar to FEFLOW simulation results.
+        """
+        # Run ogs
+        prjfile = str(self.path_writing / "boxNeumann_test.prj")
+        model = liquid_flow(
+            str(self.path_writing / "sim_boxNeumann"),
+            ogs.OGS(PROJECT_FILE=prjfile),
+        )
+        setup_prj_file(
+            self.path_writing / "boxNeumann.vtu",
+            self.pv_mesh,
+            get_material_properties(self.pv_mesh, "P_CONDX"),
+            "liquid flow",
+            model,
+        )
+        model.replace_medium_property_value(
+            mediumid=0, name="permeability", value="1"
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -153,6 +192,7 @@ class TestConverter(unittest.TestCase):
             self.path_writing / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
+            "steady state diffusion",
         )
         prjfile_root = ET.parse(
             str(self.path_writing / "boxNeumann_.prj")
