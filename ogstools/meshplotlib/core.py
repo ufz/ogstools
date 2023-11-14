@@ -306,12 +306,18 @@ def _fig_init(rows: int, cols: int, ax_aspect: float = 1.0) -> mfigure.Figure:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
     cb_width = 4
+    y_label_width = 2
+    x_label_height = 1
     figsize = setup.fig_scale * np.asarray(
         [
-            default_size * cols * ax_aspect + cb_width * nx_cb,
-            default_size * rows,
+            default_size * cols * ax_aspect + cb_width * nx_cb + y_label_width,
+            default_size * rows + x_label_height,
         ]
     )
+    if figsize[0] / figsize[1] > setup.fig_aspect_limits[1]:
+        figsize[0] = figsize[1] * setup.fig_aspect_limits[1]
+    elif figsize[0] / figsize[1] < setup.fig_aspect_limits[0]:
+        figsize[0] = figsize[1] * setup.fig_aspect_limits[0]
     fig, _ = plt.subplots(
         rows,
         cols,
@@ -435,8 +441,11 @@ def plot(
         data_shape = _meshes[0][property].shape
         property = _resolve_property(property, data_shape)
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
-
-    clamped_aspects = np.clip(data_aspects, *setup.aspect_limits)
+    data_aspects[
+        (data_aspects > setup.ax_aspect_limits[0])
+        & (data_aspects < setup.ax_aspect_limits[1])
+    ] = 1.0
+    clamped_aspects = np.clip(data_aspects, *setup.ax_aspect_limits)
     ax_aspects = data_aspects / clamped_aspects
     _fig = _fig_init(
         rows=shape[0], cols=shape[1], ax_aspect=np.mean(ax_aspects)

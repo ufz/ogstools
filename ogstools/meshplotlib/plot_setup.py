@@ -36,9 +36,13 @@ class PlotSetup:
     "The resolution (dots per inch) for the figure."
     fig_scale: float
     "A scaling factor for the figure."
-    aspect_limits: tuple[float, float]
-    "Lower and upper limit of aspect ratio. For meshes with data ratios"
-    "outside these bounds the aspect ratio gets clamped."
+    ax_aspect_limits: tuple[float, float]
+    "Lower and upper limit of the ax aspect ratio. For meshes with data ratios"
+    "outside these bounds the aspect ratio gets clamped. Inside these bounds,"
+    "the axes keep an aspect ratio of 1 (units are equally long on both axes)."
+    fig_aspect_limits: tuple[float, float]
+    "Lower and upper limit of the figure aspect ratio. If a figure would exceed"
+    "them, they get clipped to prevent overly long or wide figures."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
     layout: str
@@ -105,7 +109,8 @@ class PlotSetup:
         """Create a PlotSetup instance from a dictionary."""
         return cls(
             fig_scale=obj["fig_scale"],
-            aspect_limits=obj["aspect_limits"],
+            ax_aspect_limits=obj["ax_aspect_limits"],
+            fig_aspect_limits=obj["fig_aspect_limits"],
             invert_colorbar=obj["invert_colorbar"],
             dpi=obj["dpi"],
             num_levels=obj["num_levels"],
