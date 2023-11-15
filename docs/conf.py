@@ -6,6 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
 from datetime import datetime
 
 import pyvista
@@ -55,6 +56,14 @@ html_static_path = ["_static"]
 html_css_files = ["ogstools.css"]
 html_context = {"default_mode": "light"}
 
+# Set up the version switcher.  The versions.json is stored in the doc repo.
+if os.environ.get("CI_MERGE_REQUEST_IID", False):
+    switcher_version = f"!{os.environ['CI_MERGE_REQUEST_IID']}"
+elif ".dev" in version:
+    switcher_version = "dev"
+else:
+    switcher_version = f"{version}"
+
 html_theme_options = {
     "logo": {
         # "text": "OGSTools",
@@ -71,6 +80,12 @@ html_theme_options = {
         }
     ],
     "navigation_with_keys": True,
+    "switcher": {
+        "version_match": switcher_version,
+        "json_url": "https://ogstools.opengeosys.org/_static/versions.json",
+    },
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "show_version_warning_banner": True,
 }
 
 nitpick_ignore_regex = [("py:class", r".*")]
