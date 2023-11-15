@@ -1,4 +1,4 @@
-# FEFLOW converter library
+# FEFLOWlib - FEFLOW to ogs converter
 
 See the documentation for more info:
 
