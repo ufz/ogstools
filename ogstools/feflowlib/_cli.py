@@ -11,10 +11,10 @@ from pathlib import Path
 import ifm_contrib as ifm
 
 from ogstools.feflowlib import (
+    convert_geometry_mesh,
+    extract_cell_boundary_conditions,
     helpFormat,
-    read_geometry,
     update_geometry,
-    write_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
 
@@ -72,7 +72,7 @@ def cli():
 
     doc = ifm.loadDocument(args.input)
 
-    mesh = read_geometry(doc)
+    mesh = convert_geometry_mesh(doc)
 
     if "properties" in args.case:
         update_geometry(mesh, doc)
@@ -94,6 +94,7 @@ def cli():
         return 0
 
     write_point_boundary_conditions(Path(args.output).parent, mesh)
-    write_cell_boundary_conditions(Path(args.output), mesh)
+    topsurface = extract_cell_boundary_conditions(Path(args.output), mesh)
+    topsurface[1].save(topsurface[0])
 
     return 0

@@ -196,7 +196,7 @@ def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     return pt_data, cell_data
 
 
-def read_geometry(doc: ifm.FeflowDoc):
+def convert_geometry_mesh(doc: ifm.FeflowDoc):
     """
     Get the geometric construction of the mesh.
 
@@ -229,7 +229,7 @@ def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     return mesh
 
 
-def read_properties(doc: ifm.FeflowDoc):
+def convert_properties_mesh(doc: ifm.FeflowDoc):
     """
     Get the mesh with point and cell properties.
 
@@ -238,6 +238,6 @@ def read_properties(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    mesh = read_geometry(doc)
+    mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)
     return mesh

@@ -123,11 +123,11 @@ def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     )
 
 
-def write_point_boundary_conditions(
+def extract_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
 ):
     """
-    Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
+    Returns the point boundary condition of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
     This function also writes then the corresponding xml-files using the function "write_xml"
 
@@ -136,7 +136,7 @@ def write_point_boundary_conditions(
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
-
+    dict_of_point_boundary_conditions = {}
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     mesh = mesh.extract_surface()
@@ -160,20 +160,32 @@ def write_point_boundary_conditions(
             for pt_data in filtered_points.point_data:
                 if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
-
-            filtered_points.save(str(out_mesh_path / point_data) + ".vtu")
-            # pv.save_meshio(
-            #    point_data + ".vtu", filtered_points, file_format="vtu"
-            # )
+            dict_of_point_boundary_conditions[
+                str(out_mesh_path / point_data) + ".vtu"
+            ] = filtered_points
     # create the xml-file
     write_xml(out_mesh_path, mesh.point_data, "MeshNode")
+    return dict_of_point_boundary_conditions
 
 
-def write_cell_boundary_conditions(
+def write_point_boundary_conditions(
+    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
+    """
+    Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
+    """
+    point_boundary_conditions_dict = extract_point_boundary_conditions(
+        out_mesh_path, mesh
+    )
+    for path, boundary_condition in point_boundary_conditions_dict.items():
+        boundary_condition.save(path)
+
+
+def extract_cell_boundary_conditions(
     bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
 ):
     """
-    Writes the cell boundary condition of the mesh. It works by iterating all cell data and looking for
+    Returns the cell boundary condition of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
     This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
@@ -203,12 +215,15 @@ def write_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    topsurf.save(bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem))
     # create the xml-file
     write_xml(
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf.cell_data,
         "MeshElement",
+    )
+    return (
+        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
+        topsurf,
     )
 
 
