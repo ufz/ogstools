@@ -14,8 +14,8 @@ pytest.importorskip("ifm")
 import ifm_contrib as ifm  # noqa: E402
 
 from ogstools.feflowlib import (  # noqa: E402
-    read_properties,
-    write_cell_boundary_conditions,
+    convert_properties_mesh,
+    extract_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
 from ogstools.feflowlib.feflowlib import points_and_cells  # noqa: E402
@@ -41,12 +41,13 @@ class TestSimulation(unittest.TestCase):
         self.path_data = Path(current_dir / "data/feflowlib/")
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
-        self.pv_mesh = read_properties(self.doc)
+        self.pv_mesh = convert_properties_mesh(self.doc)
         self.pv_mesh.save(str(self.path_writing / "boxNeumann.vtu"))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
-        write_cell_boundary_conditions(
+        topsurface = extract_cell_boundary_conditions(
             self.path_writing / "boxNeumann.vtu", self.pv_mesh
         )
+        topsurface[1].save(topsurface[0])
 
     def test_toymodel_ogs_steady_state_diffusion(self):
         """
@@ -125,7 +126,7 @@ class TestConverter(unittest.TestCase):
         self.path_data = Path(current_dir / "data/feflowlib/")
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
-        self.pv_mesh = read_properties(self.doc)
+        self.pv_mesh = convert_properties_mesh(self.doc)
 
     def test_geometry(self):
         """
@@ -169,12 +170,9 @@ class TestConverter(unittest.TestCase):
         """
         Test if separate meshes for boundary condition are written correctly.
         """
-        write_cell_boundary_conditions(
+        topsurface = extract_cell_boundary_conditions(
             self.path_writing / "boxNeumann.vtu", self.pv_mesh
-        )
-        topsurface = pv.read(
-            str(self.path_writing / "topsurface_boxNeumann.vtu")
-        )
+        )[1]
         cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
         cell_data_list = list(topsurface.cell_data)
         for cell_data, cell_data_expected in zip(
