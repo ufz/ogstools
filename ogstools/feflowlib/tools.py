@@ -154,7 +154,7 @@ def extract_cell_boundary_conditions(
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
     )
-    
+
 
 def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     """

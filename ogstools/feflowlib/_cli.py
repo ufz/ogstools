@@ -11,12 +11,11 @@ from pathlib import Path
 import ifm_contrib as ifm
 
 from ogstools.feflowlib import (
+    combine_material_properties,
     convert_geometry_mesh,
-    extract_cell_boundary_conditions,
-    combine_material_properties,
     deactivate_cells,
+    extract_cell_boundary_conditions,
     helpFormat,
-    combine_material_properties,
     setup_prj_file,
     update_geometry,
     write_point_boundary_conditions,
@@ -101,8 +100,8 @@ def cli():
     ) or args.BC != "BC":
         mesh.save(args.output)
         logger.info(
-        "The conversion of the %s was successful.",
-        msg[args.case],
+            "The conversion of the %s was successful.",
+            msg[args.case],
         )
         return 0
     # create separate meshes for the boundary condition

@@ -12,9 +12,9 @@ from .feflowlib import (
     update_geometry,
 )
 from .tools import (
-    extract_cell_boundary_conditions,
     combine_material_properties,
     deactivate_cells,
+    extract_cell_boundary_conditions,
     get_specific_surface,
     helpFormat,
     setup_prj_file,
