@@ -18,6 +18,7 @@ from .tools import (
     get_specific_surface,
     helpFormat,
     setup_prj_file,
+    write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
 
@@ -31,6 +32,7 @@ __all__ = [
     "update_geometry",
     "extract_cell_boundary_conditions",
     "setup_prj_file",
+    "write_mesh_of_combined_properties",
     "write_point_boundary_conditions",
 ]
 

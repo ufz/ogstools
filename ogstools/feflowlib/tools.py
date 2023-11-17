@@ -265,10 +265,8 @@ def write_mesh_of_combined_properties(
 
 
 def materials_in_steady_state_diffusion(
-    bulk_mesh_path: Path,
-    mesh: pv.UnstructuredGrid,
     material_properties: dict,
-    model=None,
+    model,
 ):
     """
     Create the section for material properties for steady state diffusion processes in the prj-file.
@@ -282,16 +280,8 @@ def materials_in_steady_state_diffusion(
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
     """
-
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
-            write_mesh_of_combined_properties(
-                mesh,
-                ["P_CONDX", "P_CONDY", "P_CONDZ"],
-                "KF",
-                material_id,
-                bulk_mesh_path,
-            )
             model.media.add_property(
                 medium_id=material_id,
                 name="diffusion",
@@ -318,13 +308,12 @@ def materials_in_steady_state_diffusion(
             type="Constant",
             value=293.15,
         )
+    return model
 
 
 def materials_in_liquid_flow(
-    bulk_mesh_path: Path,
-    mesh: pv.UnstructuredGrid,
     material_properties: dict,
-    model=None,
+    model,
 ):
     """
     Create the section for material properties in liquid flow processes in the prj-file.
@@ -338,16 +327,8 @@ def materials_in_liquid_flow(
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
     """
-
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
-            write_mesh_of_combined_properties(
-                mesh,
-                ["P_CONDX", "P_CONDY", "P_CONDZ"],
-                "KF",
-                material_id,
-                bulk_mesh_path,
-            )
             model.media.add_property(
                 medium_id=material_id,
                 name="permeability",
@@ -400,6 +381,7 @@ def materials_in_liquid_flow(
             type="Constant",
             value=1,
         )
+    return model
 
 
 def setup_prj_file(
@@ -423,6 +405,7 @@ def setup_prj_file(
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
     """
+
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
@@ -438,7 +421,6 @@ def setup_prj_file(
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
     model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
-    # Pr
     model.processes.add_process_variable(
         process_variable="process_variable", process_variable_name="HEAD_OGS"
     )
@@ -501,17 +483,13 @@ def setup_prj_file(
 
     # include material properties in the prj-file
     if process == "steady state diffusion":
-        materials_in_steady_state_diffusion(
-            bulk_mesh_path, mesh, material_properties, model
-        )
+        materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
-        materials_in_liquid_flow(
-            bulk_mesh_path, mesh, material_properties, model
-        )
+        materials_in_liquid_flow(material_properties, model)
     else:
-        logger.info(
-            "No material properties could be defined. At the moment only material properties of 'steady state diffusion' or 'liquid flow' processes are supported."
-        )
+        msg = "Only 'steady state diffusion' and 'liquid flow' processes are supported."
+        raise ValueError(msg)
+
     # add deactivated subdomains if existing
     if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
         tags = ["material_ids"]
@@ -536,8 +514,7 @@ def setup_prj_file(
             textlist=["0", "1"],
         )
 
-    model.write_input()
-    return prjfile
+    return model
 
 
 def deactivate_cells(mesh: pv.UnstructuredGrid):

@@ -18,6 +18,7 @@ from ogstools.feflowlib import (
     helpFormat,
     setup_prj_file,
     update_geometry,
+    write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
 
@@ -130,14 +131,24 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
             "Inactive cells in FEFLOW are assigned to a MaterialID multiplied by -1."
         )
         # create a prj-file, which is not complete. Manual extensions are needed.
+        property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
+        material_properties = combine_material_properties(mesh, property_list)
+        for material_id, property_value in material_properties.items():
+            if any(prop == "inhomogeneous" for prop in property_value):
+                write_mesh_of_combined_properties(
+                    mesh,
+                    property_list,
+                    "KF",
+                    material_id,
+                    Path(output),
+                )
         ogs_model = setup_prj_file(
             Path(output),
             mesh,
-            combine_material_properties(
-                mesh, ["P_CONDX", "P_CONDY", "P_CONDZ"]
-            ),
+            material_properties,
             process="steady state diffusion",
         )
+
         ogs_model.write_input()
         log.info(
             "A prj file has been created but needs to be completed in order to run an OGS simulation"
