@@ -376,6 +376,13 @@ def write_mesh_of_combined_properties(
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
+    material_mesh.point_data.remove("vtkOriginalPointIds")
+    for pt_data in material_mesh.point_data:
+        if pt_data != "bulk_node_ids":
+            material_mesh.point_data.remove(pt_data)
+    for cell_data in material_mesh.cell_data:
+        if cell_data not in ["bulk_element_ids", new_property]:
+            material_mesh.cell_data.remove(cell_data)
     material_mesh.save(filename)
     return filename
 
