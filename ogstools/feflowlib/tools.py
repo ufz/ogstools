@@ -127,7 +127,7 @@ def extract_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
 ):
     """
-    Returns the point boundary condition of the mesh. It works by iterating all point data and looking for
+    Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
     This function also writes then the corresponding xml-files using the function "write_xml"
 
@@ -185,7 +185,7 @@ def extract_cell_boundary_conditions(
     bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
 ):
     """
-    Returns the cell boundary condition of the mesh. It works by iterating all cell data and looking for
+    Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
     This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
@@ -233,6 +233,8 @@ def include_xml_snippet_in_prj_file(
     """
     Includes an xml snippet in a project-file. It only works if there is already a subelement in
     the project file that has the same tag/name as the root element of the xml-snippet to be included.
+    Attention: If there are multiple matching subelements in the prj file, the inclusion happens at the first such subelement.
+
 
     :param in_prj_file: path of the input project-file
     :type in_prj_file: str

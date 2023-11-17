@@ -67,7 +67,7 @@ def cli():
     args = parser.parse_args()
 
     if not Path(args.input).exists():
-        print("The input files does not exist.")
+        print("The input file does not exist.")
         return 1
 
     doc = ifm.loadDocument(args.input)
