@@ -54,9 +54,8 @@ parser.add_argument(
     choices=["BC", "no_BC"],
     default="BC",
     type=str,
-    help="This argument specifies whether the boundary conditions\n"
-    "is extracted and a corresponding xml file is written. It\n"
-    "should only be used if the input data consists of 3D.\n"
+    help="This argument specifies whether the boundary conditions is written. It\n"
+    "should only be used if the input data is 3D.\n"
     "The boundary condition need to be extracted, when a OGS simulation wants to be setup.",
     nargs="?",
     const=1,
@@ -67,7 +66,20 @@ parser.add_argument(
 logger = log.getLogger(__name__)
 
 
-def cli():
+def feflow_converter(input: str, output: str, case: str, BC: str):
+    """
+    This function summarizes main functionality of the feflowlib. It show examplary how a
+    workflow could look like to achieve the conversion of FEFLOW data to a vtu-file.
+
+    :param input: input path to FEFLOW data
+    :type input: str
+    :param output: output path of vtu-file
+    :type output: str
+    :param case: option for conversion process
+    :type case: str
+    :param BC: option if boundary condition shall be extracted or not
+    :type BC: str
+    """
     # log feflow version
     logger.info(
         "The converter is working with FEFLOW %s (build %s).",
@@ -79,7 +91,7 @@ def cli():
         "geometry": "geometry",
         "properties_surface": "surface with properties",
         "properties": "mesh with its properties",
-        "prepare_OGS": "mesh with its properties and boundary condition",
+        "prepare_OGS": "mesh with its properties and boundary condition(s)",
     }
 
     args = parser.parse_args()
@@ -88,31 +100,29 @@ def cli():
         print("The input file does not exist.")
         return 1
 
-    doc = ifm.loadDocument(args.input)
+    doc = ifm.loadDocument(input)
 
     mesh = convert_geometry_mesh(doc)
 
-    if "properties" in args.case or "prepare_OGS" in args.case:
+    if "properties" in case or "prepare_OGS" in case:
         update_geometry(mesh, doc)
-    mesh = mesh.extract_surface() if "surface" in args.case else mesh
-    if (
-        "properties" not in args.case and "prepare_OGS" not in args.case
-    ) or args.BC != "BC":
-        mesh.save(args.output)
+    mesh = mesh.extract_surface() if "surface" in case else mesh
+    if ("properties" not in case and "prepare_OGS" not in case) or BC != "BC":
+        mesh.save(output)
         logger.info(
             "The conversion of the %s was successful.",
-            msg[args.case],
+            msg[case],
         )
         return 0
     # create separate meshes for the boundary condition
-    write_point_boundary_conditions(Path(args.output).parent, mesh)
-    topsurface = extract_cell_boundary_conditions(Path(args.output), mesh)
+    write_point_boundary_conditions(Path(output).parent, mesh)
+    topsurface = extract_cell_boundary_conditions(Path(output), mesh)
     topsurface[1].save(topsurface[0])
 
     log.info(
         "Boundary conditions have been written to separate mesh vtu-files."
     )
-    if "prepare_OGS" in args.case:
+    if "prepare_OGS" in case:
         # deactivate cells, all the cells that are inactive in FEFLOW, will be assigned to a
         # the same MaterialID multiplied by -1.
         deactivate_cells(mesh)
@@ -120,20 +130,26 @@ def cli():
             "Inactive cells in FEFLOW are assigned to a MaterialID multiplied by -1."
         )
         # create a prj-file, which is not complete. Manual extensions are needed.
-        setup_prj_file(
-            Path(args.output),
+        ogs_model = setup_prj_file(
+            Path(output),
             mesh,
             combine_material_properties(
                 mesh, ["P_CONDX", "P_CONDY", "P_CONDZ"]
             ),
             process="steady state diffusion",
         )
+        ogs_model.write_input()
         log.info(
             "A prj file has been created but needs to be completed in order to run an OGS simulation"
         )
-    mesh.save(args.output)
+    mesh.save(output)
     logger.info(
         "The conversion of the %s was successful.",
-        msg[args.case],
+        msg[case],
     )
     return 0
+
+
+def cli():
+    args = parser.parse_args()
+    feflow_converter(args.input, args.output, args.case, args.BC)
