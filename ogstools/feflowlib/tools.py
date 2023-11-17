@@ -377,6 +377,8 @@ def write_mesh_of_combined_properties(
     material_mesh = mesh.extract_cells(mask)
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
+    # correct the unit
+    material_mesh[new_property] = material_mesh[new_property] / 86400
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.point_data.remove("vtkOriginalPointIds")
     for pt_data in material_mesh.point_data:
