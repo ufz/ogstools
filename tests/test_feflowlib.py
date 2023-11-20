@@ -60,7 +60,7 @@ class TestSimulation(unittest.TestCase):
             str(self.path_writing / "sim_boxNeumann"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
-        setup_prj_file(
+        model = setup_prj_file(
             self.path_writing / "boxNeumann.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
@@ -186,12 +186,13 @@ class TestConverter(unittest.TestCase):
         """
         Test the prj_file that can be written
         """
-        setup_prj_file(
+        model = setup_prj_file(
             self.path_writing / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
         )
+        model.write_input(self.path_writing / "boxNeumann_.prj")
         prjfile_root = ET.parse(
             str(self.path_writing / "boxNeumann_.prj")
         ).getroot()
