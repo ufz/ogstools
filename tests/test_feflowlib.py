@@ -67,9 +67,6 @@ class TestSimulation(unittest.TestCase):
             "steady state diffusion",
             model,
         )
-        model.replace_medium_property_value(
-            mediumid=0, name="diffusion", value="1"
-        )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
 
@@ -79,7 +76,7 @@ class TestSimulation(unittest.TestCase):
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
-            + self.pv_mesh.point_data["P_HEAD"]
+            - self.pv_mesh.point_data["P_HEAD"]
         )
         assert np.all(np.abs(dif) < 5e-5)
         assert np.allclose(dif, 0, atol=5e-5, rtol=0)
@@ -102,9 +99,6 @@ class TestSimulation(unittest.TestCase):
             "liquid flow",
             model,
         )
-        model.replace_medium_property_value(
-            mediumid=0, name="permeability", value="1"
-        )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
 
@@ -114,7 +108,7 @@ class TestSimulation(unittest.TestCase):
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
-            + self.pv_mesh.point_data["P_HEAD"]
+            - self.pv_mesh.point_data["P_HEAD"]
         )
         assert np.all(np.abs(dif) < 5e-5)
         assert np.allclose(dif, 0, atol=5e-5, rtol=0)
