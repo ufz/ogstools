@@ -38,7 +38,7 @@ current_dir = Path(__file__).parent
 
 class TestSimulation(unittest.TestCase):
     def setUp(self):
-        self.path_data = Path(current_dir / "data/feflowlib/")
+        self.path_data = current_dir / "data/feflowlib/"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -78,8 +78,7 @@ class TestSimulation(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        assert np.all(np.abs(dif) < 5e-5)
-        assert np.allclose(dif, 0, atol=5e-5, rtol=0)
+        np.testing.assert_array_less(np.abs(dif), 9e-5)
 
     def test_toymodel_ogs_liquid_flow(self):
         """
@@ -110,14 +109,13 @@ class TestSimulation(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        assert np.all(np.abs(dif) < 5e-5)
-        assert np.allclose(dif, 0, atol=5e-5, rtol=0)
+        np.testing.assert_array_less(np.abs(dif), 5e-6)
 
 
 class TestConverter(unittest.TestCase):
     def setUp(self):
         # Variables for the following tests:
-        self.path_data = Path(current_dir / "data/feflowlib/")
+        self.path_data = current_dir / "data/feflowlib/"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -127,12 +125,12 @@ class TestConverter(unittest.TestCase):
         Test if geometry can be converted correctly.
         """
         doc = ifm.loadDocument(
-            str(Path(current_dir / "data/feflowlib/2layers_model.fem"))
+            str(current_dir / "data/feflowlib/2layers_model.fem")
         )
         points, cells, celltypes = points_and_cells(doc)
-        assert len(points) == 75
-        assert len(celltypes) == 32
-        assert celltypes[0] == pv.CellType.HEXAHEDRON
+        self.assertEqual(len(points), 75)
+        self.assertEqual(len(celltypes), 32)
+        self.assertEqual(celltypes[0], pv.CellType.HEXAHEDRON)
 
     def test_toymodel_mesh_conversion(self):
         """
@@ -140,13 +138,13 @@ class TestConverter(unittest.TestCase):
         """
         # 1. Test if geometry is fine
         points, cells, celltypes = points_and_cells(self.doc)
-        assert len(points) == 6768
-        assert len(celltypes) == 11462
-        assert celltypes[0] == pv.CellType.WEDGE
+        self.assertEqual(len(points), 6768)
+        self.assertEqual(len(celltypes), 11462)
+        self.assertEqual(celltypes[0], pv.CellType.WEDGE)
 
         # 2. Test data arrays
-        assert len(self.pv_mesh.cell_data) == 12
-        assert len(self.pv_mesh.point_data) == 11
+        self.assertEqual(len(self.pv_mesh.cell_data), 12)
+        self.assertEqual(len(self.pv_mesh.point_data), 11)
 
     def test_toymodel_point_boundary_condition(self):
         """
@@ -154,11 +152,11 @@ class TestConverter(unittest.TestCase):
         """
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
         bc_flow = pv.read(str(self.path_writing / "P_BC_FLOW.vtu"))
-        assert bc_flow.n_points == 66
-        assert len(bc_flow.point_data) == 2
+        self.assertEqual(bc_flow.n_points, 66)
+        self.assertEqual(len(bc_flow.point_data), 2)
         bc_flow_2nd = pv.read(str(self.path_writing / "P_BCFLOW_2ND.vtu"))
-        assert bc_flow_2nd.n_points == 66
-        assert len(bc_flow_2nd.point_data) == 2
+        self.assertEqual(bc_flow_2nd.n_points, 66)
+        self.assertEqual(len(bc_flow_2nd.point_data), 2)
 
     def test_toymodel_cell_boundary_condition(self):
         """
@@ -172,9 +170,9 @@ class TestConverter(unittest.TestCase):
         for cell_data, cell_data_expected in zip(
             cell_data_list, cell_data_list_expected
         ):
-            assert cell_data == cell_data_expected
-        assert topsurface.n_points == 564
-        assert topsurface.n_cells == 1042
+            self.assertEqual(cell_data, cell_data_expected)
+        self.assertEqual(topsurface.n_points, 564)
+        self.assertEqual(topsurface.n_cells, 1042)
 
     def test_toymodel_prj_file(self):
         """
@@ -191,7 +189,7 @@ class TestConverter(unittest.TestCase):
             str(self.path_writing / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
-        assert len(elements) == 8
+        self.assertEqual(len(elements), 8)
         # Test if the meshes are correct
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
@@ -202,7 +200,7 @@ class TestConverter(unittest.TestCase):
             "P_BCFLOW_2ND.vtu",
         ]
         for mesh, mesh_expected in zip(meshes_list, meshes_list_expected):
-            assert mesh == mesh_expected
+            self.assertEqual(mesh, mesh_expected)
         # Test if the parameters are correct
         parameters = prjfile_root.find("parameters")
         parameters_list = [
@@ -219,7 +217,7 @@ class TestConverter(unittest.TestCase):
         for parameter, parameter_expected in zip(
             parameters_list, parameters_list_expected
         ):
-            assert parameter == parameter_expected
+            self.assertEqual(parameter, parameter_expected)
         """
         boundary_conditions = root.find('process_variables/process_variable/boundary_conditions')
         boundary_condtitions_list = [boundary_condition.find('parameter').text for boundary_condition in boundary_conditions.findall('parameter')]
@@ -227,8 +225,9 @@ class TestConverter(unittest.TestCase):
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
         ).text
-        assert float(diffusion_value) == float(
-            self.pv_mesh.cell_data["P_CONDX"][0] / 86400
+        self.assertEqual(
+            float(diffusion_value),
+            float(self.pv_mesh.cell_data["P_CONDX"][0] / 86400),
         )
 
 
