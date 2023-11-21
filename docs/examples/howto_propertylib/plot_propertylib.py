@@ -67,6 +67,6 @@ print(presets.strain.trace(eps))
 temp = np.linspace(273.15, 373.15, 10)
 fig, axs = plt.subplots(2)
 axs[0].plot(presets.temperature(temp), color="r")
-presets.temperature.output_unit = "°F"
-axs[1].plot(presets.temperature(temp), color="b")
+temperature_F = presets.temperature.replace(output_unit="°F")
+axs[1].plot(temperature_F(temp), color="b")
 fig.show()
