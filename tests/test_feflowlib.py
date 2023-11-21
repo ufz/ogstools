@@ -34,7 +34,7 @@ def test_cli():
 current_dir = Path(__file__).parent
 
 
-class TestSimulation(unittest.TestCase):
+class TestSimulation_Neumann(unittest.TestCase):
     def setUp(self):
         self.path_data = current_dir / "data/feflowlib/"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
@@ -47,7 +47,7 @@ class TestSimulation(unittest.TestCase):
         )
         topsurface[1].save(topsurface[0])
 
-    def test_toymodel_ogs_steady_state_diffusion(self):
+    def test_Neumann_ogs_steady_state_diffusion(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -78,7 +78,7 @@ class TestSimulation(unittest.TestCase):
         )
         np.testing.assert_array_less(np.abs(dif), 9e-5)
 
-    def test_toymodel_ogs_liquid_flow(self):
+    def test_Neumann_ogs_liquid_flow(self):
         """
         Test if ogs simulation with liquid flow results
         are similar to FEFLOW simulation results.
@@ -108,6 +108,84 @@ class TestSimulation(unittest.TestCase):
             - self.pv_mesh.point_data["P_HEAD"]
         )
         np.testing.assert_array_less(np.abs(dif), 5e-6)
+
+
+class TestSimulation_Robin(unittest.TestCase):
+    def setUp(self):
+        self.path_data = current_dir / "data/feflowlib/"
+        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.doc = ifm.loadDocument(
+            str(self.path_data / "box_3D_cauchy_areal.fem")
+        )
+        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh.save(str(self.path_writing / "boxRobin.vtu"))
+        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        topsurface = extract_cell_boundary_conditions(
+            self.path_writing / "boxRobin.vtu", self.pv_mesh
+        )
+        topsurface[1].save(topsurface[0])
+
+    def test_Robin_ogs_steady_state_diffusion(self):
+        """
+        Test if ogs simulation for a steady state diffusion results
+        are similar to FEFLOW simulation results.
+        """
+        # Run ogs
+        prjfile = str(self.path_writing / "boxRobin_test.prj")
+        model = steady_state_diffusion(
+            str(self.path_writing / "sim_boxRobin"),
+            ogs.OGS(PROJECT_FILE=prjfile),
+        )
+        model = setup_prj_file(
+            self.path_writing / "boxRobin.vtu",
+            self.pv_mesh,
+            get_material_properties(self.pv_mesh, "P_CONDX"),
+            "steady state diffusion",
+            model,
+        )
+        model.write_input(prjfile)
+        model.run_model(logfile=str(self.path_writing / "out.log"))
+
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(self.path_writing / "sim_boxRobin_ts_1_t_1.000000.vtu")
+        )
+        dif = (
+            ogs_sim_res.point_data["HEAD_OGS"]
+            - self.pv_mesh.point_data["P_HEAD"]
+        )
+        np.testing.assert_array_less(np.abs(dif), 9e-5)
+
+    def test_Robin_ogs_liquid_flow(self):
+        """
+        Test if ogs simulation for a steady state diffusion results
+        are similar to FEFLOW simulation results.
+        """
+        # Run ogs
+        prjfile = str(self.path_writing / "boxRobin_test.prj")
+        model = liquid_flow(
+            str(self.path_writing / "sim_boxRobin"),
+            ogs.OGS(PROJECT_FILE=prjfile),
+        )
+        model = setup_prj_file(
+            self.path_writing / "boxRobin.vtu",
+            self.pv_mesh,
+            get_material_properties(self.pv_mesh, "P_CONDX"),
+            "liquid flow",
+            model,
+        )
+        model.write_input(prjfile)
+        model.run_model(logfile=str(self.path_writing / "out.log"))
+
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(self.path_writing / "sim_boxRobin_ts_1_t_1.000000.vtu")
+        )
+        dif = (
+            ogs_sim_res.point_data["HEAD_OGS"]
+            - self.pv_mesh.point_data["P_HEAD"]
+        )
+        np.testing.assert_array_less(np.abs(dif), 9e-5)
 
 
 class TestConverter(unittest.TestCase):

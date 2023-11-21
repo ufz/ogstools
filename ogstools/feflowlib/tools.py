@@ -456,22 +456,48 @@ def setup_prj_file(
         initial_condition="p0",
     )
     model.parameters.add_parameter(name="p0", type="Constant", value=0)
-
-    for i in mesh.point_data:
-        if i[0:4] == "P_BC":
-            # Add boundary conditions
-            model.processvars.add_bc(
-                process_variable_name="HEAD_OGS",
-                type=next(val for key, val in BC_type_dict.items() if key in i),
-                parameter=i,
-                mesh=i,
-            )
+    for point_data in mesh.point_data:
+        if point_data[0:4] == "P_BC":
             # Every point boundary condition refers to a separate mesh
-            model.mesh.add_mesh(filename=i + ".vtu")
-            # Every point boundary condition refers to a parameter with the same name
-            model.parameters.add_parameter(
-                name=i, type="MeshNode", field_name=i, mesh=i
-            )
+            model.mesh.add_mesh(filename=point_data + ".vtu")
+            if "3RD" not in point_data:
+                # Add boundary conditions
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in point_data
+                    ),
+                    parameter=point_data,
+                    mesh=point_data,
+                )
+                # Every point boundary condition refers to a parameter with the same name
+                model.parameters.add_parameter(
+                    name=point_data,
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
+            else:
+                model.parameters.add_parameter(
+                    name="u_0",
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
+                model.parameters.add_parameter(
+                    name="alpha",
+                    type="Constant",
+                    value=np.unique(mesh.cell_data["P_TRAF_IN"])[1] / 86400,
+                )
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type="Robin",
+                    alpha="alpha",
+                    u_0="u_0",
+                    mesh=point_data,
+                )
 
     for cell_data in mesh.cell_data:
         if cell_data in ["P_IOFLOW", "P_SOUF"]:
@@ -548,6 +574,13 @@ def deactivate_cells(mesh: pv.UnstructuredGrid):
     Therefore, the input mesh is modified.
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
+    :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
+    :rytpe: int
     """
     inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
-    mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+    if len(inactive_cells[0]) == 0:
+        return_int = 0
+    else:
+        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+        return_int = 1
+    return return_int
