@@ -1,6 +1,11 @@
 def steady_state_diffusion(saving_path, model=None):
     """
     A template for steady state diffusion process to be simulated in ogs.
+
+    :param saving_path: path of ogs simulation results
+    :type saving_path: str
+    :param model: ogs model, which shall be used with the template
+    :type model: ogs6py.ogs.OGS
     """
     model.processes.set_process(
         name="SteadyStateDiffusion",
@@ -66,6 +71,11 @@ def steady_state_diffusion(saving_path, model=None):
 def liquid_flow(saving_path, model=None):
     """
     A template for steady state diffusion process to be simulated in ogs.
+
+    :param saving_path: path of ogs simulation results
+    :type saving_path: str
+    :param model: ogs model, which shall be used with the template
+    :type model: ogs6py.ogs.OGS
     """
     model.processes.set_process(
         name="LiquidFlow",

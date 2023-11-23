@@ -6,12 +6,13 @@ if find_spec("ifm") is None:
     msg = "Could not import ifm. A working FEFLOW Python setup is required!"
     raise ImportError(msg)
 
-from .feflowlib import (
+from ._feflowlib import (
     convert_geometry_mesh,
     convert_properties_mesh,
+    points_and_cells,
     update_geometry,
 )
-from .templates import steady_state_diffusion
+from .templates import liquid_flow, steady_state_diffusion
 from .tools import (
     combine_material_properties,
     deactivate_cells,
@@ -25,16 +26,18 @@ from .tools import (
 
 __all__ = [
     "combine_material_properties",
-    "get_specific_surface",
-    "deactivate_cells",
-    "helpFormat",
     "convert_geometry_mesh",
     "convert_properties_mesh",
-    "update_geometry",
+    "deactivate_cells",
     "extract_cell_boundary_conditions",
+    "get_specific_surface",
+    "helpFormat",
+    "liquid_flow",
+    "points_and_cells",
     "setup_prj_file",
-    "write_mesh_of_combined_properties",
     "steady_state_diffusion",
+    "update_geometry",
+    "write_mesh_of_combined_properties",
     "write_point_boundary_conditions",
 ]
 

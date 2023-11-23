@@ -16,16 +16,14 @@ import ifm_contrib as ifm  # noqa: E402
 from ogstools.feflowlib import (  # noqa: E402
     convert_properties_mesh,
     extract_cell_boundary_conditions,
-    write_point_boundary_conditions,
-)
-from ogstools.feflowlib.feflowlib import points_and_cells  # noqa: E402
-from ogstools.feflowlib.templates import (  # noqa: E402
     liquid_flow,
+    points_and_cells,
+    setup_prj_file,
     steady_state_diffusion,
+    write_point_boundary_conditions,
 )
 from ogstools.feflowlib.tools import (  # noqa: E402
     get_material_properties,
-    setup_prj_file,
 )
 
 
