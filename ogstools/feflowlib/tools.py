@@ -340,6 +340,7 @@ def combine_material_properties(
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
+        assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
         for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
@@ -375,6 +376,8 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
+    for prop in property_list:
+        assert prop in ["P_CONDX", "P_CONDY", "P_CONDZ"]
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
