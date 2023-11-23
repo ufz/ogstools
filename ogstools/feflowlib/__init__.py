@@ -11,6 +11,7 @@ from .feflowlib import (
     convert_properties_mesh,
     update_geometry,
 )
+from .templates import steady_state_diffusion
 from .tools import (
     combine_material_properties,
     deactivate_cells,
@@ -33,6 +34,7 @@ __all__ = [
     "extract_cell_boundary_conditions",
     "setup_prj_file",
     "write_mesh_of_combined_properties",
+    "steady_state_diffusion",
     "write_point_boundary_conditions",
 ]
 

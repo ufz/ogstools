@@ -96,6 +96,10 @@ def extract_point_boundary_conditions(
             for pt_data in filtered_points.point_data:
                 if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
+            # In OGS Neumann and Robin boundary condition have a different sign than in FEFLOW!
+            # Also in FEFOW the Neumann BC for flow is in m/d and ogs works with SI-units (m/s)
+            if "2ND" in point_data:
+                filtered_points[point_data] *= -1 / 86400
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
