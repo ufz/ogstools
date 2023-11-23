@@ -1,11 +1,11 @@
 import argparse
 import logging as log
-import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+from ogs6py import ogs
 
 # log configuration
 logger = log.getLogger(__name__)
@@ -46,69 +46,6 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     return surface_mesh.extract_cells(ids)
 
 
-def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
-    """
-    Writes three xml-files, one for parameters, one for boundary conditions and one for meshes (geometry).
-
-    :param out_mesh_path: name of the mesh
-    :type out_mesh_path: Path
-    :param data: point or cell data
-    :type data: pyvista.DataSetAttributes
-    :param mesh_type: type of the mesh (MeshNode or MeshElement)
-    :type mesh_type: str
-    """
-
-    BC_type_dict = {
-        "_BC_": "Dirichlet",
-        "2ND": "Neumann",
-        "3RD": "Robin",
-        "4TH": "NodalSourceTerm",
-        "P_IOFLOW": "Neumann",
-        "P_SOUF": "volumentric source term",
-    }
-    xml_meshes = ET.Element("meshes")
-    ET.SubElement(xml_meshes, "mesh").text = out_mesh_path.stem
-    xml_bc = ET.Element("boundary_conditions")
-    xml_parameter = ET.Element("parameters")
-    for parameter_name in data:
-        if out_mesh_path.stem == "":
-            out_mesh_path = parameter_name
-        if parameter_name not in [
-            "bulk_node_ids",
-            "bulk_element_ids",
-            "vtkOriginalPointIds",
-        ]:
-            ET.SubElement(xml_meshes, "mesh").text = parameter_name
-
-            bc = ET.SubElement(xml_bc, "boundary_condition")
-            ET.SubElement(bc, "mesh").text = parameter_name
-            ET.SubElement(bc, "type").text = next(
-                val
-                for key, val in BC_type_dict.items()
-                if key in parameter_name
-            )
-            ET.SubElement(bc, "parameter").text = parameter_name
-
-            parameter = ET.SubElement(xml_parameter, "parameter")
-            ET.SubElement(parameter, "name").text = parameter_name
-            ET.SubElement(parameter, "type").text = mesh_type
-            ET.SubElement(parameter, "field_name").text = parameter_name
-            ET.SubElement(parameter, "mesh").text = parameter_name
-
-    ET.indent(xml_meshes, space="\t", level=0)
-    ET.ElementTree(xml_meshes).write(
-        out_mesh_path.with_name("mesh_" + out_mesh_path.stem + ".xml")
-    )
-    ET.indent(xml_bc, space="\t", level=0)
-    ET.ElementTree(xml_bc).write(
-        out_mesh_path.with_name("BC_" + out_mesh_path.stem + ".xml")
-    )
-    ET.indent(xml_parameter, space="\t", level=0)
-    ET.ElementTree(xml_parameter).write(
-        out_mesh_path.with_name("parameter_" + out_mesh_path.stem + ".xml")
-    )
-
-
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     """
     Add fields bulk_node_ids and bulk_element_ids to the given bulk mesh.
@@ -129,7 +66,6 @@ def extract_point_boundary_conditions(
     """
     Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
-    This function also writes then the corresponding xml-files using the function "write_xml"
 
     :param out_mesh_path: path of the output mesh
     :type out_mesh_path: Path
@@ -163,8 +99,6 @@ def extract_point_boundary_conditions(
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
-    # create the xml-file
-    write_xml(out_mesh_path, mesh.point_data, "MeshNode")
     return dict_of_point_boundary_conditions
 
 
@@ -187,7 +121,6 @@ def extract_cell_boundary_conditions(
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
-    This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
     be used in the future.
     TODO: Allow a generic definition of the normal vector for the filter condition.
@@ -215,75 +148,12 @@ def extract_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    # create the xml-file
-    write_xml(
-        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
-        topsurf.cell_data,
-        "MeshElement",
-    )
+    # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
+    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"] / 86400
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
     )
-
-
-def include_xml_snippet_in_prj_file(
-    in_prj_file: str, out_prj_file: str, xml_snippet: str
-):
-    """
-    Includes an xml snippet in a project-file. It only works if there is already a subelement in
-    the project file that has the same tag/name as the root element of the xml-snippet to be included.
-    Attention: If there are multiple matching subelements in the prj file, the inclusion happens at the first such subelement.
-
-
-    :param in_prj_file: path of the input project-file
-    :type in_prj_file: str
-    :param out_prj_file: path of the output project-file
-    :type out_prj_file: str
-    :param xml_snippet: path of the xml-snippet
-    :type xml_snippet: str
-    """
-    tree = ET.parse(in_prj_file)
-    root = tree.getroot()
-    # parse the XML file to be included
-    include_tree = ET.parse(xml_snippet)
-    include_root = include_tree.getroot()
-    subelement = root.find(include_root.tag)
-
-    # add the include root as a child of the subelement
-    subelement.extend(include_root)  # type: ignore[union-attr]
-
-    # write the modified tree to a file
-    tree.write(out_prj_file)
-
-
-def write_material_properties_to_xml(material_properties: dict):
-    """
-    Writes the material properties of a model that has data arrays according to FEFLOW syntax, as an xml snippet.
-    This xml snippet can be included to OGS prj-file to set up a simulation.
-
-    :param material_properties: properties referring to materials
-    :type material_properties: dict
-    """
-    root = ET.Element("media")
-    for material_id in material_properties:
-        medium = ET.SubElement(root, "medium", {"id": str(material_id)})
-        properties = ET.SubElement(medium, "properties")
-        diffusion = ET.SubElement(properties, "property")
-        reference_temperature = ET.SubElement(properties, "property")
-        ET.SubElement(diffusion, "name").text = "diffusion"
-        ET.SubElement(diffusion, "type").text = "Constant"
-        ET.SubElement(diffusion, "value").text = str(
-            material_properties[material_id]
-        )
-        ET.SubElement(
-            reference_temperature, "name"
-        ).text = "reference_temperature"
-        ET.SubElement(reference_temperature, "type").text = "Constant"
-        ET.SubElement(reference_temperature, "value").text = "293.15"
-
-    ET.indent(root, space="\t", level=0)
-    ET.ElementTree(root).write("material_properties.xml")
 
 
 def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
@@ -392,6 +262,259 @@ def write_mesh_of_combined_properties(
             material_mesh.cell_data.remove(cell_data)
     material_mesh.save(filename)
     return filename
+
+
+def materials_in_steady_state_diffusion(
+    material_properties: dict,
+    model,
+):
+    """
+    Create the section for material properties for steady state diffusion processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    """
+    for material_id, property_value in material_properties.items():
+        if any(prop == "inhomogeneous" for prop in property_value):
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Parameter",
+                parameter_name="diffusion_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="diffusion_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Constant",
+                value=" ".join(str(element) for element in property_value),
+            )
+        model.media.add_property(
+            medium_id=material_id,
+            name="reference_temperature",
+            type="Constant",
+            value=293.15,
+        )
+    return model
+
+
+def materials_in_liquid_flow(
+    material_properties: dict,
+    model,
+):
+    """
+    Create the section for material properties in liquid flow processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    """
+    for material_id, property_value in material_properties.items():
+        if any(prop == "inhomogeneous" for prop in property_value):
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Parameter",
+                parameter_name="permeability_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="permeability_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=" ".join(str(element) for element in property_value),
+            )
+        model.media.add_property(
+            medium_id=material_id,
+            name="reference_temperature",
+            type="Constant",
+            value=293.15,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="storage",
+            type="Constant",
+            value=0,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=1,
+        )
+    return model
+
+
+def setup_prj_file(
+    bulk_mesh_path: Path,
+    mesh: pv.UnstructuredGrid,
+    material_properties: dict,
+    process: str,
+    model=None,
+):
+    """
+    Sets up a prj-file for ogs simulations using ogs6py.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param process: the process to be prepared
+    :type process: str
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    """
+
+    prjfile = bulk_mesh_path.with_suffix(".prj")
+    if model is None:
+        model = ogs.OGS(PROJECT_FILE=prjfile)
+
+    BC_type_dict = {
+        "_BC_": "Dirichlet",
+        "2ND": "Neumann",
+        "3RD": "Robin",
+        "4TH": "NodalSourceTerm",
+        "P_IOFLOW": "Neumann",
+        "P_SOUF": "Volumetric",
+    }
+
+    model.mesh.add_mesh(filename=bulk_mesh_path.name)
+    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
+    model.processes.add_process_variable(
+        process_variable="process_variable", process_variable_name="HEAD_OGS"
+    )
+    model.processvars.set_ic(
+        process_variable_name="HEAD_OGS",
+        components=1,
+        order=1,
+        initial_condition="p0",
+    )
+    model.parameters.add_parameter(name="p0", type="Constant", value=0)
+
+    for i in mesh.point_data:
+        if i[0:4] == "P_BC":
+            # Add boundary conditions
+            model.processvars.add_bc(
+                process_variable_name="HEAD_OGS",
+                type=next(val for key, val in BC_type_dict.items() if key in i),
+                parameter=i,
+                mesh=i,
+            )
+            # Every point boundary condition refers to a separate mesh
+            model.mesh.add_mesh(filename=i + ".vtu")
+            # Every point boundary condition refers to a parameter with the same name
+            model.parameters.add_parameter(
+                name=i, type="MeshNode", field_name=i, mesh=i
+            )
+
+    for cell_data in mesh.cell_data:
+        if cell_data in ["P_IOFLOW", "P_SOUF"]:
+            if cell_data in ["P_IOFLOW"]:
+                # Add boundary conditions
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in cell_data
+                    ),
+                    parameter=cell_data,
+                    mesh="topsurface_" + bulk_mesh_path.stem,
+                )
+            elif cell_data in ["P_SOUF"]:
+                model.processvars.add_st(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in cell_data
+                    ),
+                    parameter=cell_data,
+                    mesh="topsurface_" + bulk_mesh_path.stem,
+                )
+            # Every point boundary condition refers to a parameter with the same name
+            model.parameters.add_parameter(
+                name=cell_data,
+                type="MeshElement",
+                field_name=cell_data,
+                mesh="topsurface_" + bulk_mesh_path.stem,
+            )
+
+    # include material properties in the prj-file
+    if process == "steady state diffusion":
+        materials_in_steady_state_diffusion(material_properties, model)
+    elif process == "liquid flow":
+        materials_in_liquid_flow(material_properties, model)
+    else:
+        msg = "Only 'steady state diffusion' and 'liquid flow' processes are supported."
+        raise ValueError(msg)
+
+    # add deactivated subdomains if existing
+    if 0 in mesh.cell_data["P_INACTIVE_ELE"]:
+        tags = ["material_ids"]
+        material_ids = mesh.cell_data["MaterialIDs"]
+        deactivated_materials = set(material_ids[material_ids < 0])
+        values = [
+            " ".join(str(material) for material in deactivated_materials),
+        ]
+        xpath = "./process_variables/process_variable"
+        model.add_element(parent_xpath=xpath, tag="deactivated_subdomains")
+        model.add_block(
+            blocktag="deactivated_subdomain",
+            parent_xpath=xpath + "/deactivated_subdomains",
+            taglist=tags,
+            textlist=values,
+        )
+        model.add_block(
+            blocktag="time_interval",
+            parent_xpath=xpath
+            + "/deactivated_subdomains/deactivated_subdomain",
+            taglist=["start", "end"],
+            textlist=["0", "1"],
+        )
+
+    return model
 
 
 def deactivate_cells(mesh: pv.UnstructuredGrid):
