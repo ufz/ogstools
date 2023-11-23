@@ -54,7 +54,7 @@ def points_and_cells(doc: ifm.FeflowDoc):
         pts = points[["X", "Y"]].to_numpy()
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
-        pts = [np.append(pt, 0) for pt in pts]
+        pts = np.pad(pts, [(0, 0), (0, 1)])
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}

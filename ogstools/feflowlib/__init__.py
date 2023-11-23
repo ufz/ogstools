@@ -36,5 +36,5 @@ log.basicConfig(
     encoding="utf-8",
     level=log.INFO,
     stream=stdout,
-    datefmt="%d/%m/%Y %H:%M:%S",
+    datefmt="%d.%m.%Y %H:%M:%S",
 )
