@@ -6,15 +6,15 @@ Created on Tue Mar 14 2023
 
 import logging as log
 from argparse import ArgumentParser
-from sys import stdout
+from pathlib import Path
 
 import ifm_contrib as ifm
 
 from ogstools.feflowlib import (
+    convert_geometry_mesh,
+    extract_cell_boundary_conditions,
     helpFormat,
-    read_geometry,
     update_geometry,
-    write_cell_boundary_conditions,
     write_point_boundary_conditions,
 )
 
@@ -53,21 +53,26 @@ parser.add_argument(
 
 
 # log configuration
-log.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    encoding="utf-8",
-    level=log.DEBUG,
-    stream=stdout,
-    datefmt="%d/%m/%Y %H:%M:%S",
-)
+logger = log.getLogger(__name__)
 
 
 def cli():
+    # log feflow version
+    logger.info(
+        "The converter is working with FEFLOW %s (build %s).",
+        ifm.getKernelVersion() / 1000,
+        ifm.getKernelRevision(),
+    )
+
     args = parser.parse_args()
+
+    if not Path(args.input).exists():
+        print("The input file does not exist.")
+        return 1
 
     doc = ifm.loadDocument(args.input)
 
-    mesh = read_geometry(doc)
+    mesh = convert_geometry_mesh(doc)
 
     if "properties" in args.case:
         update_geometry(mesh, doc)
@@ -81,12 +86,15 @@ def cli():
     mesh.save(args.output)
     # save meshio changes node order -> not compatible with OGS
     # in the future meshio is desired for saving ! -> pv.save_meshio(args.output, mesh)
-    log.info(
-        "The %s of the input mesh has been successfully converted.",
+    logger.info(
+        "The conversion of the %s was successful.",
         msg[args.case],
     )
     if "properties" not in args.case or args.BC != "BC":
-        return
+        return 0
 
-    write_point_boundary_conditions(args.output, mesh)
-    write_cell_boundary_conditions(args.output, mesh)
+    write_point_boundary_conditions(Path(args.output).parent, mesh)
+    topsurface = extract_cell_boundary_conditions(Path(args.output), mesh)
+    topsurface[1].save(topsurface[0])
+
+    return 0

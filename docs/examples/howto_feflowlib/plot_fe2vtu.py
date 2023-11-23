@@ -13,14 +13,14 @@ import ifm_contrib as ifm
 
 import ogstools.meshplotlib as mpl
 from ogstools.feflowlib import (
-    read_geometry,
+    convert_geometry_mesh,
     update_geometry,
 )
 from ogstools.feflowlib.examples import path_2layers_model
 
 # Load a FEFLOW model (.fem) or FEFLOW results file (.dac) as a FEFLOW document.
 feflow_model = ifm.loadDocument(path_2layers_model)
-pv_mesh = read_geometry(feflow_model)
+pv_mesh = convert_geometry_mesh(feflow_model)
 pv_mesh.plot(show_edges=True, off_screen=True)
 # %%
 # 2. To this mesh we add point and cell data.
@@ -36,4 +36,4 @@ print(pv_mesh)
 pv_mesh.save("2layers_model.vtu")
 # %%
 # 4. As the converted mesh is a pyvista.UnstructuredGrid, we can plot it using meshplotlib.
-fig = mpl.plot(pv_mesh.slice_orthogonal(), "P_HEAD")
+fig = mpl.plot(pv_mesh.slice("z"), "P_HEAD")

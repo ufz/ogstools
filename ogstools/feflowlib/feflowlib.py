@@ -3,31 +3,16 @@ Created on Tue Mar 14 2023
 
 @author: heinzej
 """
-
 import logging as log
-from sys import stdout
 
 import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
 
-# log configuration
-log.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    encoding="utf-8",
-    level=log.INFO,
-    stream=stdout,
-    datefmt="%d/%m/%Y %H:%M:%S",
-)
-
 ifm.forceLicense("Viewer")
 
-# log feflow version
-log.info(
-    "The converter is working with FEFLOW %s (build %s).",
-    ifm.getKernelVersion() / 1000,
-    ifm.getKernelRevision(),
-)
+# log configuration
+logger = log.getLogger(__name__)
 
 
 def points_and_cells(doc: ifm.FeflowDoc):
@@ -48,6 +33,7 @@ def points_and_cells(doc: ifm.FeflowDoc):
             8: pv.CellType.HEXAHEDRON,
         },
     }
+    dimension = doc.getNumberOfDimensions()
     # 1. get a list of all cells/elements and reverse it for correct node order in OGS
     elements = np.fliplr(np.array(doc.c.mesh.get_imatrix())).tolist()
     # 2. write the amount of nodes per element to the first entry of each list
@@ -58,21 +44,32 @@ def points_and_cells(doc: ifm.FeflowDoc):
     for element in elements:
         nElement = len(element)
         element.insert(0, nElement)
-        celltypes.append(cell_type_dict[doc.getNumberOfDimensions()][nElement])
+        celltypes.append(cell_type_dict[dimension][nElement])
 
     # 3. bring the elements to the right format for pyvista
     cells = np.array(elements).ravel()
     # 4 .write the list for all points and their global coordinates
-    points = doc.c.mesh.df.nodes(global_cos=True, par={"Z": ifm.Enum.P_ELEV})
-    pts = points[["X", "Y", "Z"]].to_numpy()
+    if dimension == 2:
+        points = doc.c.mesh.df.nodes(global_cos=True)
+        pts = points[["X", "Y"]].to_numpy()
+        # A 0 is appended since in pyvista points must be given in 3D.
+        # So we set the Z-coordinate to 0.
+        pts = np.pad(pts, [(0, 0), (0, 1)])
+    elif dimension == 3:
+        points = doc.c.mesh.df.nodes(
+            global_cos=True, par={"Z": ifm.Enum.P_ELEV}
+        )
+        pts = points[["X", "Y", "Z"]].to_numpy()
+    else:
+        msg = "The input data is neither 2D nor 3D, which it needs to be."
+        raise ValueError(msg)
 
     # 5. log information
-    log.info(
+    logger.info(
         "There are %s number of points and %s number of cells to be converted.",
         len(pts),
         len(celltypes),
     )
-
     return pts, cells, celltypes
 
 
@@ -123,7 +120,7 @@ def material_ids_from_selections(doc: ifm.FeflowDoc):
             mat_ids_mesh[element] = value
 
     # 4. log the dictionary of the MaterialIDs
-    log.info("MaterialIDs refer to: %s", dict_matid)
+    logger.info("MaterialIDs refer to: %s", dict_matid)
     # MaterialIDs must be int32
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
@@ -185,9 +182,13 @@ def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     ]
 
     # 8. log the data arrays
-    log.info("These data arrays refer to point data: %s", list(pt_data.keys()))
-    log.info("These data arrays refer to cell data: %s", list(cell_data.keys()))
-    log.info(
+    logger.info(
+        "These data arrays refer to point data: %s", list(pt_data.keys())
+    )
+    logger.info(
+        "These data arrays refer to cell data: %s", list(cell_data.keys())
+    )
+    logger.info(
         "These data arrays have been neglected as they are full of nans: %s",
         nan_arrays,
     )
@@ -195,7 +196,7 @@ def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     return pt_data, cell_data
 
 
-def read_geometry(doc: ifm.FeflowDoc):
+def convert_geometry_mesh(doc: ifm.FeflowDoc):
     """
     Get the geometric construction of the mesh.
 
@@ -228,7 +229,7 @@ def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     return mesh
 
 
-def read_properties(doc: ifm.FeflowDoc):
+def convert_properties_mesh(doc: ifm.FeflowDoc):
     """
     Get the mesh with point and cell properties.
 
@@ -237,6 +238,6 @@ def read_properties(doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    mesh = read_geometry(doc)
+    mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)
     return mesh

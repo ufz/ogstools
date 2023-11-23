@@ -1,8 +1,14 @@
 import argparse
+import logging as log
 import xml.etree.ElementTree as ET
+from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+
+# log configuration
+logger = log.getLogger(__name__)
 
 
 class helpFormat(
@@ -31,27 +37,21 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     surface_mesh = surface_mesh.compute_normals(
         cell_normals=True, point_normals=False
     )
-    # Get list of cell IDs that meet condition
+    # Get list of cell IDs that meet the filter condition
     ids = np.arange(surface_mesh.n_cells)[
         filter_condition(surface_mesh["Normals"])
     ]
-    # Rename cell arrays to satisfy ogs-convention
-    surface_mesh.rename_array("vtkOriginalPointIds", "bulk_node_ids")
-    surface_mesh.rename_array("vtkOriginalCellIds", "bulk_element_ids")
     surface_mesh.cell_data.remove("Normals")
     # Extract cells that meet the filter condition
-    specific_cells = surface_mesh.extract_cells(ids)
-    specific_cells.cell_data.remove("vtkOriginalCellIds")
-    specific_cells.point_data.remove("vtkOriginalPointIds")
-    return specific_cells
+    return surface_mesh.extract_cells(ids)
 
 
-def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
+def write_xml(out_mesh_path: Path, data: pv.DataSetAttributes, mesh_type: str):
     """
     Writes three xml-files, one for parameters, one for boundary conditions and one for meshes (geometry).
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param out_mesh_path: name of the mesh
+    :type out_mesh_path: Path
     :param data: point or cell data
     :type data: pyvista.DataSetAttributes
     :param mesh_type: type of the mesh (MeshNode or MeshElement)
@@ -63,22 +63,20 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
         "2ND": "Neumann",
         "3RD": "Robin",
         "4TH": "NodalSourceTerm",
-        "P_IOFLOW": "Neumann?",
-        "P_SOUF": "Neumann?",
+        "P_IOFLOW": "Neumann",
+        "P_SOUF": "volumentric source term",
     }
-    mesh_name = mesh_name.replace(".vtu", "")
     xml_meshes = ET.Element("meshes")
-    ET.SubElement(xml_meshes, "mesh").text = mesh_name
+    ET.SubElement(xml_meshes, "mesh").text = out_mesh_path.stem
     xml_bc = ET.Element("boundary_conditions")
     xml_parameter = ET.Element("parameters")
     for parameter_name in data:
-        if mesh_name == "":
-            mesh_name = parameter_name
+        if out_mesh_path.stem == "":
+            out_mesh_path = parameter_name
         if parameter_name not in [
             "bulk_node_ids",
             "bulk_element_ids",
             "vtkOriginalPointIds",
-            "orig_indices",
         ]:
             ET.SubElement(xml_meshes, "mesh").text = parameter_name
 
@@ -98,94 +96,310 @@ def write_xml(mesh_name: str, data: pv.DataSetAttributes, mesh_type: str):
             ET.SubElement(parameter, "mesh").text = parameter_name
 
     ET.indent(xml_meshes, space="\t", level=0)
-    ET.ElementTree(xml_meshes).write("mesh_" + mesh_name + ".xml")
+    ET.ElementTree(xml_meshes).write(
+        out_mesh_path.with_name("mesh_" + out_mesh_path.stem + ".xml")
+    )
     ET.indent(xml_bc, space="\t", level=0)
-    ET.ElementTree(xml_bc).write("BC_" + mesh_name + ".xml")
+    ET.ElementTree(xml_bc).write(
+        out_mesh_path.with_name("BC_" + out_mesh_path.stem + ".xml")
+    )
     ET.indent(xml_parameter, space="\t", level=0)
-    ET.ElementTree(xml_parameter).write("parameter_" + mesh_name + ".xml")
+    ET.ElementTree(xml_parameter).write(
+        out_mesh_path.with_name("parameter_" + out_mesh_path.stem + ".xml")
+    )
 
 
-def write_point_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
+def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     """
-    Writes the point boundary condition of the mesh. It works by iterating all point data and looking for
-    data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
-    This function also writes then the corresponding xml-files using the function "write_xml"
+    Add fields bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
     :param mesh_name: name of the mesh
     :type mesh_name: str
-    :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     """
-
-    # assign an array with integer of the indices of the original mesh
-    mesh["orig_indices"] = np.arange(mesh.n_points, dtype=np.uint64)
+    # The format must be unsigned integer, as it is required by OGS
+    mesh["bulk_node_ids"] = np.arange(mesh.n_points, dtype=np.uint64)
     mesh.cell_data["bulk_element_ids"] = np.arange(
         mesh.n_cells, dtype=np.uint64
     )
+
+
+def extract_point_boundary_conditions(
+    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
+    """
+    Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
+    data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
+    This function also writes then the corresponding xml-files using the function "write_xml"
+
+    :param out_mesh_path: path of the output mesh
+    :type out_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
+    dict_of_point_boundary_conditions = {}
+    assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     mesh = mesh.extract_surface()
     # remove all the point data that are not of interest
     for point_data in mesh.point_data:
-        if not all(["_BC" in point_data]) and point_data != "orig_indices":
+        if not all(["_BC" in point_data]) and point_data != "bulk_node_ids":
             mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
     for point_data in mesh.point_data:
-        if point_data != "orig_indices":
+        if point_data != "bulk_node_ids":
+            dirichlet_bool = "_BC_" not in point_data
             filtered_points = mesh.extract_points(
                 [not np.isnan(x) for x in mesh[point_data]],
                 adjacent_cells=False,
-                include_cells=True,
+                include_cells=dirichlet_bool,
             )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
                     filtered_points.cell_data.remove(cell_data)
-            # remove data of BC that are of no value for this part of the mesh
-            for pt_data in mesh.point_data:
-                if pt_data != point_data and pt_data != "orig_indices":
+            for pt_data in filtered_points.point_data:
+                if pt_data != point_data and pt_data != "bulk_node_ids":
                     filtered_points.point_data.remove(pt_data)
-
-            # Only "bulk_node_ids" can be read by ogs
-            filtered_points.rename_array("orig_indices", "bulk_node_ids")
-            filtered_points.save(point_data + ".vtu")
-            # pv.save_meshio(
-            #    point_data + ".vtu", filtered_points, file_format="vtu"
-            # )
+            dict_of_point_boundary_conditions[
+                str(out_mesh_path / point_data) + ".vtu"
+            ] = filtered_points
     # create the xml-file
-    write_xml(mesh_name, mesh.point_data, "MeshNode")
+    write_xml(out_mesh_path, mesh.point_data, "MeshNode")
+    return dict_of_point_boundary_conditions
 
 
-def write_cell_boundary_conditions(mesh_name: str, mesh: pv.UnstructuredGrid):
+def write_point_boundary_conditions(
+    out_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
     """
-    Writes the cell boundary condition of the mesh. It works by iterating all cell data and looking for
+    Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
+    """
+    point_boundary_conditions_dict = extract_point_boundary_conditions(
+        out_mesh_path, mesh
+    )
+    for path, boundary_condition in point_boundary_conditions_dict.items():
+        boundary_condition.save(path)
+
+
+def extract_cell_boundary_conditions(
+    bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
+):
+    """
+    Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
     This function also writes then the corresponding xml-files using the function "write_xml".
     +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
     be used in the future.
+    TODO: Allow a generic definition of the normal vector for the filter condition.
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param bulk_mesh_path: name of the mesh
+    :type bulk_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
     """
-    BC_mesh = mesh.copy()
+    assign_bulk_ids(mesh)
+    if mesh.volume != 0:
+        # get the topsurface since there are the cells of interest
+        topsurf = get_specific_surface(
+            mesh.extract_surface(), lambda normals: normals[:, 2] > 0
+        )
+    else:
+        topsurf = mesh
+    # Only selected cell data is needed -> clear all point data instead of the bulk_node_ids
     for cd in [
         cell_data
-        for cell_data in BC_mesh.cell_data
-        if cell_data not in ["P_SOUF", "P_IOFLOW"]
+        for cell_data in topsurf.cell_data
+        if cell_data not in ["P_SOUF", "P_IOFLOW", "bulk_element_ids"]
     ]:
-        BC_mesh.cell_data.remove(cd)
-    # Only cell data are needed
-    BC_mesh.point_data.clear()
-    # get the topsurface since there are the cells of interest
-    # TODO: Allow a generic definition of the normal vector for the filter condition.
-    topsurf = get_specific_surface(
-        BC_mesh.extract_surface(), lambda normals: normals[:, 2] > 0
-    )
-    topsurf.save("topsurface_" + mesh_name)
+        topsurf.cell_data.remove(cd)
+    for pt_data in topsurf.point_data:
+        if pt_data != "bulk_node_ids":
+            topsurf.point_data.remove(pt_data)
     # create the xml-file
     write_xml(
-        "topsurface_" + mesh_name,
+        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf.cell_data,
         "MeshElement",
     )
+    return (
+        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
+        topsurf,
+    )
+
+
+def include_xml_snippet_in_prj_file(
+    in_prj_file: str, out_prj_file: str, xml_snippet: str
+):
+    """
+    Includes an xml snippet in a project-file. It only works if there is already a subelement in
+    the project file that has the same tag/name as the root element of the xml-snippet to be included.
+    Attention: If there are multiple matching subelements in the prj file, the inclusion happens at the first such subelement.
+
+
+    :param in_prj_file: path of the input project-file
+    :type in_prj_file: str
+    :param out_prj_file: path of the output project-file
+    :type out_prj_file: str
+    :param xml_snippet: path of the xml-snippet
+    :type xml_snippet: str
+    """
+    tree = ET.parse(in_prj_file)
+    root = tree.getroot()
+    # parse the XML file to be included
+    include_tree = ET.parse(xml_snippet)
+    include_root = include_tree.getroot()
+    subelement = root.find(include_root.tag)
+
+    # add the include root as a child of the subelement
+    subelement.extend(include_root)  # type: ignore[union-attr]
+
+    # write the modified tree to a file
+    tree.write(out_prj_file)
+
+
+def write_material_properties_to_xml(material_properties: dict):
+    """
+    Writes the material properties of a model that has data arrays according to FEFLOW syntax, as an xml snippet.
+    This xml snippet can be included to OGS prj-file to set up a simulation.
+
+    :param material_properties: properties referring to materials
+    :type material_properties: dict
+    """
+    root = ET.Element("media")
+    for material_id in material_properties:
+        medium = ET.SubElement(root, "medium", {"id": str(material_id)})
+        properties = ET.SubElement(medium, "properties")
+        diffusion = ET.SubElement(properties, "property")
+        reference_temperature = ET.SubElement(properties, "property")
+        ET.SubElement(diffusion, "name").text = "diffusion"
+        ET.SubElement(diffusion, "type").text = "Constant"
+        ET.SubElement(diffusion, "value").text = str(
+            material_properties[material_id]
+        )
+        ET.SubElement(
+            reference_temperature, "name"
+        ).text = "reference_temperature"
+        ET.SubElement(reference_temperature, "type").text = "Constant"
+        ET.SubElement(reference_temperature, "value").text = "293.15"
+
+    ET.indent(root, space="\t", level=0)
+    ET.ElementTree(root).write("material_properties.xml")
+
+
+def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
+    """
+    Get the material properties of the mesh converted from FEFLOW. There are several methods available
+    to access the material properties. Either they are accessible with the FEFLOW API(ifm) or with brute-force methods,
+    which check each element, like this function.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param property: property
+    :type property: str
+    """
+    material_ids = mesh.cell_data["MaterialIDs"]
+    material_properties = {}
+    # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
+    assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+    for material_id in np.unique(material_ids):
+        indices = np.where(material_ids == material_id)
+        property_of_material = mesh.cell_data[property][indices]
+        all_properties_equal = np.all(
+            property_of_material == property_of_material[0]
+        )
+        if all_properties_equal:
+            # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
+            # WARNING: This is not a generic method at the moment. A dictionary with all the
+            # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
+            material_properties[material_id] = [property_of_material[0] / 86400]
+        else:
+            material_properties[material_id] = ["inhomogeneous"]
+            logger.info(
+                "The property %s in material %s is inhomogeneously distributed.",
+                property,
+                material_id,
+            )
+
+    return material_properties
+
+
+def combine_material_properties(
+    mesh: pv.UnstructuredGrid, properties_list: list
+):
+    """
+    Combine multiple material properties. The combined properties are returned
+    as list of values in a dictionary.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param properties_list: list of properties to be combined
+    :type properties_list: list
+    """
+    # Use a default dict because it allows to extend the values in the list.
+    # Also it initializes the value if there is an empty list.
+    material_properties: defaultdict[str, list[float]] = defaultdict(list)
+
+    for property in properties_list:
+        assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+        for material_id, property_value in get_material_properties(
+            mesh, property
+        ).items():
+            material_properties[material_id].extend(property_value)
+
+    return material_properties
+
+
+def write_mesh_of_combined_properties(
+    mesh: pv.UnstructuredGrid,
+    property_list: list,
+    new_property: str,
+    material_id: int,
+    saving_path: Path,
+):
+    """
+    Writes a separate mesh-file with a specific material that has inhomogeneous property values
+    within the material group. It can also be used to write multiple properties
+    into a "new property" data array. For example, write a data array for a tensor defined by
+    data arrays representing values of different spatial directions. Nevertheless it can still be
+    be used to write the inhomogeneous values of a single property into a separate mesh-file.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param property_list: list of properties
+    :type property_list: list
+    :param new_property: name of the combined properties
+    :type new_property: str
+    :param material: material with inhomogeneous properties
+    :type material: int
+    :param saving_path: path to save the mesh
+    :type saving_path: Path
+    """
+    mask = mesh.cell_data["MaterialIDs"] == material_id
+    material_mesh = mesh.extract_cells(mask)
+    for prop in property_list:
+        assert prop in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+    zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
+    material_mesh[new_property] = zipped
+    # correct the unit
+    material_mesh[new_property] = material_mesh[new_property] / 86400
+    filename = str(saving_path.with_name(str(material_id) + ".vtu"))
+    material_mesh.point_data.remove("vtkOriginalPointIds")
+    for pt_data in material_mesh.point_data:
+        if pt_data != "bulk_node_ids":
+            material_mesh.point_data.remove(pt_data)
+    for cell_data in material_mesh.cell_data:
+        if cell_data not in ["bulk_element_ids", new_property]:
+            material_mesh.cell_data.remove(cell_data)
+    material_mesh.save(filename)
+    return filename
+
+
+def deactivate_cells(mesh: pv.UnstructuredGrid):
+    """
+    Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
+    Therefore, the input mesh is modified.
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
+    inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
+    mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
