@@ -71,6 +71,8 @@ def extract_point_boundary_conditions(
     :type out_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
+    :return: dict_of_point_boundary_conditions
+    :rtype: dict
     """
     dict_of_point_boundary_conditions = {}
     assign_bulk_ids(mesh)
@@ -111,6 +113,11 @@ def write_point_boundary_conditions(
 ):
     """
     Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
+
+    :param out_mesh_path: path for writing
+    :type out_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
     """
     point_boundary_conditions_dict = extract_point_boundary_conditions(
         out_mesh_path, mesh
@@ -133,6 +140,8 @@ def extract_cell_boundary_conditions(
     :type bulk_mesh_path: Path
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
+    :return: path with name of mesh, topsurface mesh with cell boundary conditions
+    :rtype: tuple
     """
     assign_bulk_ids(mesh)
     if mesh.volume != 0:
@@ -170,6 +179,8 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     :type mesh: pyvista.UnstructuredGrid
     :param property: property
     :type property: str
+    :return: material_properties
+    :rtype: dict
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
@@ -208,6 +219,8 @@ def combine_material_properties(
     :type mesh: pyvista.UnstructuredGrid
     :param properties_list: list of properties to be combined
     :type properties_list: list
+    :return: material_properties
+    :rtype: collections.defaultdict
     """
     # Use a default dict because it allows to extend the values in the list.
     # Also it initializes the value if there is an empty list.
@@ -247,6 +260,8 @@ def write_mesh_of_combined_properties(
     :type material: int
     :param saving_path: path to save the mesh
     :type saving_path: Path
+    :return: filename
+    :rtype: str
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
@@ -283,6 +298,8 @@ def materials_in_steady_state_diffusion(
     :type material_properties: dict
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
+    :return: model
+    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -330,6 +347,8 @@ def materials_in_liquid_flow(
     :type material_properties: dict
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
+    :return: model
+    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -408,6 +427,8 @@ def setup_prj_file(
     :type process: str
     :param model: model to setup prj-file
     :type model: ogs6py.OGS
+    :return: model
+    :rtype: ogs6py.OGS
     """
 
     prjfile = bulk_mesh_path.with_suffix(".prj")
