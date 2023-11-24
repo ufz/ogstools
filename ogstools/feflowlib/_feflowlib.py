@@ -1,8 +1,3 @@
-"""
-Created on Tue Mar 14 2023
-
-@author: heinzej
-"""
 import logging as log
 
 import ifm_contrib as ifm
@@ -73,7 +68,7 @@ def points_and_cells(doc: ifm.FeflowDoc):
     return pts, cells, celltypes
 
 
-def material_ids_from_selections(doc: ifm.FeflowDoc):
+def _material_ids_from_selections(doc: ifm.FeflowDoc):
     """
     Get MaterialIDs from the FEFLOW data. Only applicable if they are
     saved in doc.c.sel.selections().
@@ -125,7 +120,7 @@ def material_ids_from_selections(doc: ifm.FeflowDoc):
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
-def point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
+def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
     cell data.
@@ -220,8 +215,8 @@ def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     :return: mesh
     :rtype: pyvista.UnstructuredGrid
     """
-    MaterialIDs = material_ids_from_selections(doc)
-    point_data, cell_data = point_and_cell_data(MaterialIDs, doc)
+    MaterialIDs = _material_ids_from_selections(doc)
+    point_data, cell_data = _point_and_cell_data(MaterialIDs, doc)
     for i in point_data:
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
