@@ -10,17 +10,27 @@ The converter is used to convert data stored in FEFLOW binary format to VTK form
 This converter was developed in the Python language and interacts with the Python API of FEFLOW.
 It allows the use of `pyvista` especially for the creation of unstructured grids.
 But it can also be used as a library to easily access FEFLOW data in Python.
+With the usage of `ogs6py` it is possible to create a `prj-file` from the converted model to enable simulations with `OGS`.
+At the moment only `steady state diffusion` and `liquid flow` processes are supported to set up the `prj-file`.
 
 ## Features
 
-- write point, cells and celltypes to array according to pyvista convention
+All in all, the converter can be used to convert steady state diffusion and liquid flow processes from FEFLOW.
+This includes the conversion of the bulk mesh together with the boundary conditions, as well as the creation of the corresponding mesh `vtk-files`. In addition, (in)complete `prj files` can be created automatically.
+The `prj file` is set up of a model-specific part and a part that is read from a template and defines the solver and process configuration.
+The current status enables:
+
+- get point, cells and celltypes to array according to pyvista convention
 - write MaterialIDs to a dictionary
 - write point and cell data with MaterialIDs to dictionaries that match the points and cells of the input data
-- read only the geometry of input data
+- convert only the geometry of input data
 - update the geometry with point and cell data
-- read the geometry with point and cell data
+- convert the geometry with point and cell data
+- extraction and writing of material specific meshes that represent inhomogeneous material properties
 - prepare FEFLOW data for ogs simulation with tools that allow:
-  - writing of xml-snippets
+  - creation of (in)complete `prj-files` for `OGS`
+    - model specific elements refer to mesh, material properties, parameter, boundary conditions
+    - templates define the solver, time loop, process, output
   - writing of boundary conditions to separate `.vtu`-files
 
 ## Requirements
