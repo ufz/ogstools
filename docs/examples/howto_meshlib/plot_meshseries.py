@@ -43,7 +43,7 @@ mesh_ts10.plot(show_edges=True)
 
 # %%
 # MeshSeries from PVD file
-# =======================
+# =========================
 ms = MeshSeries(pvd_file)
 ms.read(0).plot()
 
