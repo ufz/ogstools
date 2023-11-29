@@ -92,7 +92,6 @@ def extract_point_boundary_conditions(
                     adjacent_cells=False,
                     include_cells=False,
                 )
-                filtered_points[point_data] *= -1 / 86400
             else:
                 filtered_points = surf_mesh.extract_points(
                     [not np.isnan(x) for x in surf_mesh[point_data]],
@@ -108,8 +107,6 @@ def extract_point_boundary_conditions(
                     filtered_points.point_data.remove(pt_data)
             # In OGS Neumann and Robin boundary condition have a different sign than in FEFLOW!
             # Also in FEFOW the Neumann BC for flow is in m/d and ogs works with SI-units (m/s)
-            if "2ND" in point_data:
-                filtered_points[point_data] *= -1 / 86400
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
@@ -170,7 +167,7 @@ def extract_cell_boundary_conditions(
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
     # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
-    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"] / 86400
+    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
@@ -204,7 +201,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
             # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
             # WARNING: This is not a generic method at the moment. A dictionary with all the
             # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
-            material_properties[material_id] = [property_of_material[0] / 86400]
+            material_properties[material_id] = [property_of_material[0]]
         else:
             material_properties[material_id] = ["inhomogeneous"]
             logger.info(
@@ -278,7 +275,7 @@ def write_mesh_of_combined_properties(
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
-    material_mesh[new_property] = material_mesh[new_property] / 86400
+    material_mesh[new_property] = material_mesh[new_property]
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.point_data.remove("vtkOriginalPointIds")
     for pt_data in material_mesh.point_data:
@@ -478,7 +475,7 @@ def setup_prj_file(
                 model.parameters.add_parameter(
                     name="alpha",
                     type="Constant",
-                    value=np.unique(mesh.cell_data["P_TRAF_IN"])[1] / 86400,
+                    value=np.unique(mesh.cell_data["P_TRAF_IN"])[1],
                 )
                 model.processvars.add_bc(
                     process_variable_name="HEAD_OGS",

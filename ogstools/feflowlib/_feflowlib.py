@@ -191,6 +191,27 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     return pt_data, cell_data
 
 
+def _convert_to_SI_units(mesh: pv.UnstructuredGrid):
+    """
+    FEFLOW often uses days as unit for time. In OGS SI-units are used. This is why
+    days must be converted to seconds.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    """
+
+    arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND"]
+    for data in list(mesh.point_data) + list(mesh.cell_data):
+        if any(
+            to_be_converted in data
+            for to_be_converted in arrays_to_be_converted
+        ):
+            mesh[data] *= 1 / 86400
+        if "4TH" in data or "2ND" in data:
+            mesh[data] *= -1 / 86400
+    return mesh
+
+
 def convert_geometry_mesh(doc: ifm.FeflowDoc):
     """
     Get the geometric construction of the mesh.
@@ -221,7 +242,7 @@ def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
         mesh.cell_data.update({i: cell_data[i][0]})
-    return mesh
+    return _convert_to_SI_units(mesh)
 
 
 def convert_properties_mesh(doc: ifm.FeflowDoc):

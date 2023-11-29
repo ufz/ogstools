@@ -40,6 +40,8 @@ class TestSimulation_Neumann(unittest.TestCase):
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
+        neumann = np.array(self.pv_mesh["P_BCFLOW_2ND"])
+        neumann = neumann[~np.isnan(neumann)]
         self.pv_mesh.save(str(self.path_writing / "boxNeumann.vtu"))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
         topsurface = extract_cell_boundary_conditions(
@@ -76,7 +78,7 @@ class TestSimulation_Neumann(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-5)
+        np.testing.assert_array_less(np.abs(dif), 9e-6)
 
     def test_Neumann_ogs_liquid_flow(self):
         """
@@ -107,7 +109,7 @@ class TestSimulation_Neumann(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        np.testing.assert_array_less(np.abs(dif), 5e-6)
+        np.testing.assert_array_less(np.abs(dif), 9e-6)
 
 
 class TestSimulation_Robin(unittest.TestCase):
@@ -221,7 +223,6 @@ class TestSimulation_Well(unittest.TestCase):
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
-
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
             str(self.path_writing / "sim_boxWell_ts_1_t_1.000000.vtu")
@@ -230,7 +231,7 @@ class TestSimulation_Well(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-5)
+        np.testing.assert_array_less(np.abs(dif), 9e-8)
 
     def test_Well_ogs_liquid_flow(self):
         """
@@ -261,7 +262,7 @@ class TestSimulation_Well(unittest.TestCase):
             ogs_sim_res.point_data["HEAD_OGS"]
             - self.pv_mesh.point_data["P_HEAD"]
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-5)
+        np.testing.assert_array_less(np.abs(dif), 1e-9)
 
 
 class TestConverter(unittest.TestCase):
@@ -379,7 +380,7 @@ class TestConverter(unittest.TestCase):
         ).text
         self.assertEqual(
             float(diffusion_value),
-            float(self.pv_mesh.cell_data["P_CONDX"][0] / 86400),
+            float(self.pv_mesh.cell_data["P_CONDX"][0]),
         )
 
 
