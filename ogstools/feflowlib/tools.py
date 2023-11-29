@@ -77,20 +77,28 @@ def extract_point_boundary_conditions(
     dict_of_point_boundary_conditions = {}
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
-    mesh = mesh.extract_surface()
+    surf_mesh = mesh.extract_surface()
     # remove all the point data that are not of interest
-    for point_data in mesh.point_data:
+    for point_data in surf_mesh.point_data:
         if not all(["_BC" in point_data]) and point_data != "bulk_node_ids":
-            mesh.point_data.remove(point_data)
+            surf_mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
-    for point_data in mesh.point_data:
+    for point_data in surf_mesh.point_data:
         if point_data != "bulk_node_ids":
             dirichlet_bool = "_BC_" not in point_data
-            filtered_points = mesh.extract_points(
-                [not np.isnan(x) for x in mesh[point_data]],
-                adjacent_cells=False,
-                include_cells=dirichlet_bool,
-            )
+            if "_4TH" in point_data:
+                filtered_points = mesh.extract_points(
+                    [not np.isnan(x) for x in mesh[point_data]],
+                    adjacent_cells=False,
+                    include_cells=False,
+                )
+                filtered_points[point_data] *= -1 / 86400
+            else:
+                filtered_points = surf_mesh.extract_points(
+                    [not np.isnan(x) for x in surf_mesh[point_data]],
+                    adjacent_cells=False,
+                    include_cells=dirichlet_bool,
+                )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
@@ -460,26 +468,7 @@ def setup_prj_file(
         if point_data[0:4] == "P_BC":
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
-            if "3RD" not in point_data:
-                # Add boundary conditions
-                model.processvars.add_bc(
-                    process_variable_name="HEAD_OGS",
-                    type=next(
-                        val
-                        for key, val in BC_type_dict.items()
-                        if key in point_data
-                    ),
-                    parameter=point_data,
-                    mesh=point_data,
-                )
-                # Every point boundary condition refers to a parameter with the same name
-                model.parameters.add_parameter(
-                    name=point_data,
-                    type="MeshNode",
-                    field_name=point_data,
-                    mesh=point_data,
-                )
-            else:
+            if "3RD" in point_data:
                 model.parameters.add_parameter(
                     name="u_0",
                     type="MeshNode",
@@ -496,6 +485,38 @@ def setup_prj_file(
                     type="Robin",
                     alpha="alpha",
                     u_0="u_0",
+                    mesh=point_data,
+                )
+            elif "4TH" in point_data:
+                model.parameters.add_parameter(
+                    name=point_data,
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
+                model.processvars.add_st(
+                    process_variable_name="HEAD_OGS",
+                    type="Nodal",
+                    mesh=point_data,
+                    parameter=point_data,
+                )
+            else:
+                # Add boundary conditions
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in point_data
+                    ),
+                    parameter=point_data,
+                    mesh=point_data,
+                )
+                # Every point boundary condition refers to a parameter with the same name
+                model.parameters.add_parameter(
+                    name=point_data,
+                    type="MeshNode",
+                    field_name=point_data,
                     mesh=point_data,
                 )
 
