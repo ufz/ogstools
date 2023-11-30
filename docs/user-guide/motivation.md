@@ -10,26 +10,31 @@ OGSTools is for OpenGeoSys users and developers aiming to effectively automate t
 
 ## Functionality and unique features
 
-OGSTools consists of features designed specifically for [OpenGeoSys](https://www.opengeosys.org) but can be applied broadly across multiple [OpenGeoSys](https://www.opengeosys.org)-specific projects. The functionality is grouped  thematically into sub-libraries that are developed to  collaborate with each other. 
+OGSTools consists of features designed specifically for [OpenGeoSys](https://www.opengeosys.org) but can be applied broadly across multiple [OpenGeoSys](https://www.opengeosys.org)-specific projects. The functionality is grouped  thematically into sub-libraries that are developed to  collaborate with each other.
 
 ## Versatility and Flexibility
-All Sub-Libraries either 
+
+All Sub-Libraries either
+
 - transform from [OpenGeoSys](https://www.opengeosys.org) specific data into data structure of common python libraries
 - transform from data structures of common libraries to [OpenGeoSys](https://www.opengeosys.org) specific data
-This compatibility enables [OpenGeoSys](https://www.opengeosys.org) users to harness the full potential of Python's extensive ecosystem.
+  This compatibility enables [OpenGeoSys](https://www.opengeosys.org) users to harness the full potential of Python's extensive ecosystem.
+
+![](concept_ogstools.png)
 
 ## Community Support and Maintenance
 
 OGSTools is part of the core development (with a dedicated team of developers). Progress is  mainly made by project-specific requests. It is ready for broader adoption with the OGS Community.
 
 ## Use Cases or Case Studies
-- [AREHS](https://www.ufz.de/index.php?en=47155) - within a [snakemake](https://snakemake.readthedocs.io) based complex workflow
-- [OpenWorkflow](https://www.ufz.de/index.php?en=48378) - within a workflow for thermal dimensioning of a deep geological repository
+
+- [AREHS](https://www.ufz.de/index.php?en=47155) - OGSTools extracted from and used within a [snakemake](https://snakemake.readthedocs.io) based complex workflow
+- [OpenWorkflow](https://www.ufz.de/index.php?en=48378) - OGSTools used within a workflow for thermal dimensioning of a deep geological repository, OGSTools as blueprint (similar infrastructure)
 - [OpenGeoSys - Benchmarks](https://www.opengeosys.org/docs/benchmarks/)
 
 ## Future Development and Roadmap
-- 2024:
-	- integration of existing [OGS log file parser](https://github.com/joergbuchwald/ogs6py/tree/master/ogs6py/log_parser)
-	- integration of [ogs6py](https://github.com/ufz/ogs6py)
-	- integration of [VTUInterface](https://github.com/ufz/vtuinterface)
-	- scalability study
+
+- Integration of existing [OGS log file parser](https://github.com/joergbuchwald/ogs6py/tree/master/ogs6py/log_parser)
+- Integration of [ogs6py](https://github.com/ufz/ogs6py)
+- Integration of [VTUInterface](https://github.com/ufz/vtuinterface)
+- Scalability study
