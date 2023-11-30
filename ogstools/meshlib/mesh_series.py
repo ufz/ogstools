@@ -1,5 +1,8 @@
 """A class to handle Meshseries data."""
 
+from pathlib import Path
+from typing import Union
+
 import meshio
 import numpy as np
 import pyvista as pv
@@ -144,7 +147,9 @@ class MeshSeries:
     Will be replaced by own module in ogstools with similar interface.
     """
 
-    def __init__(self, filepath: str) -> None:
+    def __init__(self, filepath: Union[str, Path]) -> None:
+        if isinstance(filepath, Path):
+            filepath = str(filepath)
         self._data: dict[int, pv.UnstructuredGrid] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":

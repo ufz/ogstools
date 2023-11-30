@@ -1,0 +1,1758 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="3.0">
+<Domain>
+<Information Name="OGS_VERSION" Value="6.4.4-676-ge3dd66aa"/>
+<Grid CollectionType="Temporal" GridType="Collection" Name="Collection">
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="0"/>
+
+	<Geometry Origin="" Type="XYZ">
+		<DataItem DataType="Float" Dimensions="190 3" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/geometry|0 0 0:1 1 1:1 190 3:97 190 3</DataItem>
+	</Geometry>
+
+	<Topology Dimensions="846" Type="Mixed">
+		<DataItem DataType="Int" Dimensions="846" Format="HDF" Precision="4">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/topology|0 0:1 1:1 846:97 846</DataItem>
+	</Topology>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|0 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|0 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|0 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|1 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|1 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|1 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="1800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|2 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|2 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|2 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="2700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|3 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|3 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|3 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="3600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|4 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|4 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|4 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="4500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|5 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|5 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|5 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="5400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|6 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|6 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|6 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="6300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|7 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|7 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|7 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="7200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|8 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|8 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|8 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="8100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|9 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|9 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|9 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="9000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|10 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|10 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|10 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="9900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|11 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|11 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|11 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="10800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|12 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|12 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|12 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="11700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|13 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|13 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|13 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="12600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|14 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|14 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|14 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="13500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|15 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|15 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|15 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="14400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|16 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|16 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|16 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="15300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|17 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|17 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|17 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="16200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|18 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|18 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|18 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="17100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|19 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|19 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|19 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="18000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|20 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|20 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|20 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="18900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|21 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|21 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|21 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="19800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|22 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|22 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|22 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="20700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|23 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|23 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|23 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="21600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|24 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|24 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|24 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="22500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|25 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|25 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|25 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="23400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|26 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|26 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|26 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="24300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|27 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|27 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|27 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="25200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|28 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|28 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|28 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="26100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|29 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|29 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|29 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="27000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|30 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|30 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|30 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="27900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|31 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|31 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|31 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="28800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|32 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|32 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|32 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="29700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|33 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|33 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|33 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="30600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|34 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|34 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|34 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="31500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|35 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|35 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|35 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="32400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|36 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|36 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|36 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="33300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|37 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|37 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|37 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="34200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|38 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|38 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|38 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="35100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|39 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|39 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|39 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="36000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|40 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|40 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|40 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="36900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|41 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|41 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|41 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="37800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|42 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|42 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|42 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="38700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|43 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|43 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|43 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="39600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|44 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|44 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|44 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="40500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|45 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|45 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|45 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="41400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|46 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|46 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|46 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="42300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|47 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|47 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|47 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="43200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|48 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|48 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|48 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="44100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|49 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|49 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|49 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="45000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|50 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|50 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|50 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="45900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|51 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|51 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|51 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="46800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|52 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|52 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|52 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="47700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|53 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|53 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|53 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="48600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|54 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|54 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|54 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="49500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|55 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|55 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|55 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="50400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|56 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|56 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|56 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="51300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|57 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|57 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|57 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="52200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|58 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|58 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|58 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="53100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|59 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|59 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|59 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="54000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|60 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|60 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|60 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="54900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|61 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|61 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|61 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="55800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|62 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|62 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|62 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="56700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|63 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|63 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|63 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="57600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|64 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|64 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|64 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="58500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|65 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|65 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|65 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="59400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|66 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|66 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|66 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="60300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|67 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|67 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|67 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="61200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|68 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|68 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|68 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="62100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|69 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|69 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|69 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="63000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|70 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|70 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|70 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="63900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|71 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|71 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|71 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="64800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|72 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|72 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|72 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="65700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|73 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|73 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|73 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="66600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|74 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|74 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|74 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="67500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|75 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|75 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|75 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="68400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|76 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|76 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|76 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="69300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|77 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|77 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|77 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="70200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|78 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|78 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|78 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="71100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|79 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|79 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|79 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="72000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|80 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|80 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|80 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="72900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|81 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|81 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|81 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="73800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|82 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|82 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|82 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="74700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|83 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|83 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|83 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="75600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|84 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|84 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|84 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="76500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|85 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|85 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|85 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="77400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|86 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|86 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|86 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="78300"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|87 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|87 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|87 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="79200"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|88 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|88 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|88 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="80100"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|89 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|89 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|89 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="81000"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|90 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|90 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|90 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="81900"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|91 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|91 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|91 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="82800"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|92 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|92 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|92 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="83700"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|93 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|93 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|93 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="84600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|94 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|94 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|94 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="85500"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|95 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|95 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|95 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="86400"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="darcy_velocity" Type="None">
+		<DataItem DataType="Float" Dimensions="190 2" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/darcy_velocity|96 0 0:1 1 1:1 190 2:97 190 2</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="pressure" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/pressure|96 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature" Type="None">
+		<DataItem DataType="Float" Dimensions="190" Format="HDF" Precision="8">2D_single_fracture_HT.h5:/meshes/2D_single_fracture/temperature|96 0:1 1:1 190:97 190</DataItem>
+	</Attribute>
+</Grid>
+</Grid>
+</Domain>
+</Xdmf>
