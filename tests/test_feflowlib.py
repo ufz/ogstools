@@ -55,7 +55,7 @@ class TestSimulation(unittest.TestCase):
         # Run ogs
         prjfile = str(self.path_writing / "boxNeumann_test.prj")
         model = steady_state_diffusion(
-            str(self.path_writing / "sim_boxNeumann"),
+            self.path_writing / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -86,7 +86,7 @@ class TestSimulation(unittest.TestCase):
         # Run ogs
         prjfile = str(self.path_writing / "boxNeumann_test.prj")
         model = liquid_flow(
-            str(self.path_writing / "sim_boxNeumann"),
+            self.path_writing / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         setup_prj_file(

@@ -33,46 +33,48 @@ from ogstools.feflowlib.tools import (
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
 feflow_model = ifm.loadDocument(path_box_Neumann)
-pv_mesh = convert_properties_mesh(feflow_model)
-pv_mesh.plot(
+pyvista_mesh = convert_properties_mesh(feflow_model)
+pyvista_mesh.plot(
     show_edges=True, off_screen=True, scalars="P_HEAD", cpos=[0, 1, 0.5]
 )
-print(pv_mesh)
+print(pyvista_mesh)
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-pv_mesh.save(str(path_writing / "boxNeumann.vtu"))
+path_mesh = path_writing / "boxNeumann.vtu"
+pyvista_mesh.save(str(path_mesh))
 # %%
 # 2. Extract the point and cell boundary conditions and write them to a temporary directory.
-point_BC_dict = extract_point_boundary_conditions(path_writing, pv_mesh)
+point_BC_dict = extract_point_boundary_conditions(path_writing, pyvista_mesh)
 # Since there can be multiple point boundary conditions on the bulk mesh,
 # they are saved and plotted iteratively.
 for path, boundary_condition in point_BC_dict.items():
     boundary_condition.save(path)
     boundary_condition.plot()
-topsurface = extract_cell_boundary_conditions(
-    path_writing / "boxNeumann.vtu", pv_mesh
+path_topsurface, topsurface = extract_cell_boundary_conditions(
+    path_mesh, pyvista_mesh
 )
-topsurface[1].save(topsurface[0])
-topsurface[1].plot()
+topsurface.save(path_topsurface)
+topsurface.plot()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
-prjfile = str(path_writing / "boxNeumann_test.prj")
+path_prjfile = str(path_mesh.with_suffix(".prj"))
+prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
 # Get the template prj-file configurations for a steady state diffusion process
 model = steady_state_diffusion(
-    str(path_writing / "sim_boxNeumann"),
-    ogs.OGS(PROJECT_FILE=prjfile),
+    path_writing / "sim_boxNeumann",
+    prjfile,
 )
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
-    path_writing / "boxNeumann.vtu",
-    pv_mesh,
-    get_material_properties(pv_mesh, "P_CONDX"),
+    path_mesh,
+    pyvista_mesh,
+    get_material_properties(pyvista_mesh, "P_CONDX"),
     "steady state diffusion",
     model,
 )
 # The model must be written before it can be run.
-model.write_input(prjfile)
+model.write_input(str(path_prjfile))
 # Simply print the prj-file as an example.
-read_model = ET.parse(prjfile)
+read_model = ET.parse(str(path_prjfile))
 root = read_model.getroot()
 ET.dump(root)
 # %%
@@ -84,3 +86,12 @@ ogs_sim_res = read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
 ogs_sim_res.plot(
     show_edges=True, off_screen=True, scalars="HEAD_OGS", cpos=[0, 1, 0.5]
 )
+
+# %%
+# 6. Calculate the difference to the FEFLOW simulation and plot it.
+diff = pyvista_mesh["P_HEAD"] - ogs_sim_res["HEAD_OGS"]
+pyvista_mesh["diff_HEAD"] = diff
+pyvista_mesh.plot(
+    show_edges=True, off_screen=True, scalars="diff_HEAD", cpos=[0, 1, 0.5]
+)
+# %%

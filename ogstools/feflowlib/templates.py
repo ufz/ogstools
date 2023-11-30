@@ -32,7 +32,11 @@ def steady_state_diffusion(saving_path, model=None):
         delta_t="0.25",
     )
     model.timeloop.add_output(
-        type="VTK", prefix=saving_path, repeat="1", each_steps="1", variables=[]
+        type="VTK",
+        prefix=str(saving_path),
+        repeat="1",
+        each_steps="1",
+        variables=[],
     )
     model.nonlinsolvers.add_non_lin_solver(
         name="basic_picard",
@@ -105,7 +109,7 @@ def liquid_flow(saving_path, model=None):
     )
     model.timeloop.add_output(
         type="VTK",
-        prefix=saving_path,
+        prefix=str(saving_path),
         repeat="1",
         each_steps="1",
         variables=[],
