@@ -34,6 +34,9 @@ Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the 
 
 You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/blob/release-notes/donation.md) your existing code snippets.
 
+# Motivation
+To gain a deeper insight into the rationale behind the development of this Python library, find a comprehensive motivation section available [here](motivation.md).
+
 # Related projects
 
 - [ogs](https://pypi.org/project/ogs)
