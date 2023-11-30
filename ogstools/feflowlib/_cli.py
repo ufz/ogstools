@@ -39,18 +39,18 @@ parser.add_argument(
         "geometry",
         "properties",
         "properties_surface",
-        "prepare_OGS_ssd",
-        "prepare_OGS_lqf",
+        "OGS_steady_state_diffusion",
+        "OGS_liquid_flow",
     ],
-    default="prepare_OGS_ssd",
+    default="OGS_steady_state_diffusion",
     type=str,
     help="Different cases can be chosen for the conversion: \n"
     '1. "geometry" to convert only the geometries of the mesh.\n'
     '2. "properties" to convert all the mesh properties to nodes and cells.\n'
     '3. "surface" to convert only the surface of the mesh.\n'
     '4. "properties_surface" to convert the surface with properties.\n'
-    '5. "prepare_OGS_ssd" to prepare a OGS-project according to a steady state diffusion process.\n'
-    '6. "prepare_OGS_lqf" to prepare a OGS-project according to a liquid flow process.\n',
+    '5. "OGS_steady_state_diffusion" to prepare a OGS-project according to a steady state diffusion process.\n'
+    '6. "OGS_liquid_flow" to prepare a OGS-project according to a liquid flow process.\n',
     nargs="?",
     const=1,
 )
@@ -97,8 +97,8 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
         "geometry": "geometry",
         "properties_surface": "surface with properties",
         "properties": "mesh with its properties",
-        "prepare_OGS_ssd": "mesh with its properties and boundary condition(s)",
-        "prepare_OGS_lqf": "mesh with its properties and boundary condition(s)",
+        "OGS_steady_state_diffusion": "mesh with its properties and boundary condition(s)",
+        "OGS_liquid_flow": "mesh with its properties and boundary condition(s)",
     }
 
     args = parser.parse_args()
@@ -111,10 +111,10 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
 
     mesh = convert_geometry_mesh(doc)
 
-    if "properties" in case or "prepare_OGS" in case:
+    if "properties" in case or "OGS" in case:
         update_geometry(mesh, doc)
     mesh = mesh.extract_surface() if "surface" in case else mesh
-    if ("properties" not in case and "prepare_OGS" not in case) or BC != "BC":
+    if ("properties" not in case and "OGS" not in case) or BC != "BC":
         mesh.save(output)
         logger.info(
             "The conversion of the %s was successful.",
@@ -123,13 +123,15 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
         return 0
     # create separate meshes for the boundary condition
     write_point_boundary_conditions(Path(output).parent, mesh)
-    topsurface = extract_cell_boundary_conditions(Path(output), mesh)
-    topsurface[1].save(topsurface[0])
+    path_topsurface, topsurface = extract_cell_boundary_conditions(
+        Path(output), mesh
+    )
+    topsurface.save(path_topsurface)
 
     log.info(
         "Boundary conditions have been written to separate mesh vtu-files."
     )
-    if "prepare_OGS" in case:
+    if "OGS" in case:
         # deactivate cells, all the cells that are inactive in FEFLOW, will be assigned to a
         # the same MaterialID multiplied by -1.
         if deactivate_cells(mesh):
@@ -148,20 +150,20 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
                     material_id,
                     Path(output),
                 )
-        if "ssd" in case:
+        if "steady_state_diffusion" in case:
             template_model = steady_state_diffusion(
                 str(Path(output).name),
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
             )
             process = "steady state diffusion"
-        elif "lq" in case:
+        elif "liquid_flow" in case:
             template_model = liquid_flow(
                 str(Path(output).name),
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
             )
             process = "liquid flow"
         else:
-            error_msg = "Either you select 'prepare_OGS_ssd' to prepare a OGS project file for a steady state diffusion process or 'prepare_OGS_lqf' for a liquid flow process."
+            error_msg = "Either you select 'OGS_steady_state_diffusion' to prepare a OGS project file for a steady state diffusion process or 'OGS_liquid_flow' for a liquid flow process."
             raise ValueError(error_msg)
 
         ogs_model = setup_prj_file(

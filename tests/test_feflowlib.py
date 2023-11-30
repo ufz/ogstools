@@ -44,10 +44,10 @@ class TestSimulation_Neumann(unittest.TestCase):
         neumann = neumann[~np.isnan(neumann)]
         self.pv_mesh.save(str(self.path_writing / "boxNeumann.vtu"))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
-        topsurface = extract_cell_boundary_conditions(
+        path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.path_writing / "boxNeumann.vtu", self.pv_mesh
         )
-        topsurface[1].save(topsurface[0])
+        topsurface.save(path_topsurface)
 
     def test_Neumann_ogs_steady_state_diffusion(self):
         """
@@ -122,10 +122,10 @@ class TestSimulation_Robin(unittest.TestCase):
         self.pv_mesh = convert_properties_mesh(self.doc)
         self.pv_mesh.save(str(self.path_writing / "boxRobin.vtu"))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
-        topsurface = extract_cell_boundary_conditions(
+        path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.path_writing / "boxRobin.vtu", self.pv_mesh
         )
-        topsurface[1].save(topsurface[0])
+        topsurface.save(path_topsurface)
 
     def test_Robin_ogs_steady_state_diffusion(self):
         """
@@ -198,10 +198,10 @@ class TestSimulation_Well(unittest.TestCase):
         self.pv_mesh = convert_properties_mesh(self.doc)
         self.pv_mesh.save(str(self.path_writing / "boxWell.vtu"))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
-        topsurface = extract_cell_boundary_conditions(
+        path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.path_writing / "boxWell.vtu", self.pv_mesh
         )
-        topsurface[1].save(topsurface[0])
+        topsurface.save(path_topsurface)
 
     def test_Well_ogs_steady_state_diffusion(self):
         """
@@ -378,6 +378,8 @@ class TestConverter(unittest.TestCase):
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
         ).text
+        # The index [0] is because I need to compare one value from the list. And all
+        # values are the same.
         self.assertEqual(
             float(diffusion_value),
             float(self.pv_mesh.cell_data["P_CONDX"][0]),
