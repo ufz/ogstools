@@ -31,7 +31,7 @@ OGSTools is part of the core development (with a dedicated team of developers). 
 ### Projects
 
 - [AREHS](https://www.ufz.de/index.php?en=47155) - OGSTools extracted from and used within a [snakemake](https://snakemake.readthedocs.io) based complex workflow
-+- [OpenWorkflow](https://www.ufz.de/index.php?en=48378) - OGSTools used within a workflow for thermal dimensioning of a deep geological repository, OGSTools infrastructure setup was used as a template (e.g. for project setup, testing, documentation generation, ...)
+  +- [OpenWorkflow](https://www.ufz.de/index.php?en=48378) - OGSTools used within a workflow for thermal dimensioning of a deep geological repository, OGSTools infrastructure setup was used as a template (e.g. for project setup, testing, documentation generation, ...)
 - [OpenGeoSys - Benchmarks](https://www.opengeosys.org/docs/benchmarks/)
 
 ### Workflows
