@@ -355,7 +355,11 @@ def get_combined_levels(
     p_max = setup.p_max if setup.p_max is not None else p_max
     if p_min == p_max:
         return np.array([p_min, p_max + 1e-12])
-    if all(val.is_integer() for val in unique_vals):
+    if (
+        all(val.is_integer() for val in unique_vals)
+        and setup.p_min is None
+        and setup.p_max is not None
+    ):
         return unique_vals[(p_min <= unique_vals) & (unique_vals <= p_max)]
     return get_levels(p_min, p_max, setup.num_levels)
 
