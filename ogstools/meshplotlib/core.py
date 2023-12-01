@@ -358,7 +358,7 @@ def get_combined_levels(
     if (
         all(val.is_integer() for val in unique_vals)
         and setup.p_min is None
-        and setup.p_max is not None
+        and setup.p_max is None
     ):
         return unique_vals[(p_min <= unique_vals) & (unique_vals <= p_max)]
     return get_levels(p_min, p_max, setup.num_levels)

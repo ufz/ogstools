@@ -85,19 +85,20 @@ heat = repo.heat(time, time_unit="yrs", power_unit="kW")
 fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
-for sim_result in sim_results:
+for sim_result, dt in zip(sim_results, time_step_sizes):
     mesh_series = meshlib.MeshSeries(sim_result)
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
         mesh = mesh_series.read(ts)
-        results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
     max_T = propertylib.presets.temperature(results["temperature"]).magnitude
     # times 2 due to symmetry, area of repo, to kW
-    applied_heat = np.asarray(results["heat_flux"]) * 2 * 1500**2 / 1e3
+    results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues) / sec_per_yr
-    edges = np.append(0, tv)
     ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")
+    edges = np.append(0, tv)
+    mean_t = 0.5 * (edges[1:] + edges[:-1])
+    applied_heat = repo.heat(mean_t, time_unit="yrs", power_unit="kW")
     ax2.stairs(applied_heat, edges, lw=1.5, label=f"{dt=}", baseline=None)
 ax2.set_xlabel("time / yrs")
 ax1.set_ylabel("max T / °C")
