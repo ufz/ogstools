@@ -11,18 +11,29 @@ except ModuleNotFoundError:
 import ogstools.physics.nuclearwasteheat as nuclear
 
 
-class T_RepositorySourceTerm(OpenGeoSys.SourceTerm):
+class T_RepositorySourceTerm(OpenGeoSys.BoundaryCondition):
+    t_prev: float = 0.0
+    t_current: float = 0.0
+    use_leapfrog: bool = False
+    repo = nuclear.repo_2020_conservative
+
+    def update_t_prev(self, t):
+        if self.t_current != t:
+            self.t_prev = self.t_current
+            self.t_current = t
+
+    def leapfrog(self, t, split: float = 0.5):
+        return self.t_prev + split * (t - self.t_prev)
+
     def getFlux(self, t, coords, primary_vars):  # noqa: ARG002
+        self.update_t_prev(t)
         boundary_len = 1500  # m
         repo_edge_len = 1500  # m
-        value = (
-            nuclear.repo_2020_conservative.heat(t)
-            / repo_edge_len
-            / boundary_len
-            / 2.0  # due to symmetry
-        )
-        derivative = [0.0] * len(primary_vars)
-        return (value, derivative)
+        _t = self.leapfrog(t) if self.use_leapfrog else t
+        value = self.repo.heat(_t) / repo_edge_len / boundary_len / 2.0
+        # / 2.0 due to symmetry
+        return (True, value, [0.0])
 
 
 T_source_term = T_RepositorySourceTerm()
+T_source_term.use_leapfrog = True

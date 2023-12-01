@@ -282,7 +282,7 @@ def plot_convergence_error_evolution(
     for i, c in enumerate("rbg"):
         j = i * 2 + 1
         label = ["max", "min", "L2"][i]
-        evolution_metrics.replace(0.0, np.nan).plot(
+        evolution_metrics.plot(
             ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
         )
     ax.set_ylabel("relative error $\\varepsilon_{{rel}}$")
@@ -299,7 +299,7 @@ def plot_convergence_order_evolution(
     for i, c in enumerate("rbg"):
         j = i * 2 + 2
         label = ["max", "min", "L2"][i]
-        evolution_metrics.replace(0.0, np.nan).plot(
+        evolution_metrics.plot(
             ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
         )
     ax.set_ylabel("convergence order p")

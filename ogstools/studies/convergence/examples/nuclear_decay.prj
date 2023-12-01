@@ -91,11 +91,6 @@
             <type>Constant</type>
             <value>300</value>
         </parameter>
-        <parameter>
-            <name>HeatSource</name>
-            <type>Constant</type>
-            <value>1</value>
-        </parameter>
     </parameters>
     <process_variables>
         <process_variable>
@@ -109,14 +104,12 @@
                     <type>Dirichlet</type>
                     <parameter>T0</parameter>
                 </boundary_condition>
-            </boundary_conditions>
-            <source_terms>
-                <source_term>
+                <boundary_condition>
                     <mesh>square_physical_group_left</mesh>
 					<type>Python</type>
-                    <source_term_object>T_source_term</source_term_object>
-                </source_term>
-            </source_terms>
+                    <bc_object>T_source_term</bc_object>
+                </boundary_condition>
+            </boundary_conditions>
         </process_variable>
     </process_variables>
     <nonlinear_solvers>

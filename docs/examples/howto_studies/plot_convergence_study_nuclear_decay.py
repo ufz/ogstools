@@ -1,11 +1,11 @@
 """
-Convergence study (temporal refinement)
-=======================================
+Convergence study (spatial & temporal refinement)
+=================================================
 
 This example shows one possible implementation of how to do a convergence study
-with temporal refinement. For this, a simple model using a time dependent heat
-source on one side and constant temperature on the opposite side was set up.
-The heat source is generated with the
+with spatial and temporal refinement. For this, a simple model using a time
+dependent heat source on one side and constant temperature on the opposite side
+was set up. The heat source is generated with the
 :py:mod:`ogstools.physics.nuclearwasteheat` model.
 
 Here is some theoretical background for the topic of grid convergence:
@@ -16,14 +16,16 @@ Here is some theoretical background for the topic of grid convergence:
 `More comprehensive reference
 <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>`_
 
-At least three meshes from simulations of increasing temporal refinement are
-required for the convergence study. The topology has to stay the same.
+At least three meshes from simulations of increasing refinement are
+required for the convergence study. The third finest mesh is chosen per default
+as the topology to evaluate the results on.
 
 The results to analyze are generated on the fly with the following code. If you
 are only interested in the convergence study, please skip to
 `Temperature convergence at maximum heat production (t=30 yrs)`_.
 
-First, the required packages are imported and an output directory is created:
+First, the required packages are imported and a temporary output directory is
+created:
 """
 
 # %%
@@ -43,71 +45,64 @@ from ogstools import meshlib, msh2vtu, physics, propertylib, studies, workflow
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
 # %% [markdown]
-# Let's Visualize the temporal evolution of the source term and it's
-# discretization in the simulations. We see, that with coarse time steps, the
-# applied heat will be overestimated at first and underestimated once the heat
-# curve has reached its maximum. The same is true for the resulting temperature.
+# Let's run the different simulations with increasingly fine spatial and
+# temporal discretization via ogs6py. The mesh and its boundaries are generated
+# easily via gmsh and :py:mod:`ogstools.msh2vtu`. First some definitions:
 
 # %%
 n_refinements = 4
 time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
-t_end = 180.0
-time = np.append(0.0, np.geomspace(1.0, t_end, num=100)) * sec_per_yr
-heat = physics.nuclearwasteheat.repo_2020_conservative.heat
-fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(time / sec_per_yr, heat(time) / 1e3, lw=2, label="reference", color="k")
-
-for dt in time_step_sizes:
-    time = np.linspace(0.0, t_end, int(t_end / dt) + 1) * sec_per_yr
-    edges = np.append(0, time) / sec_per_yr
-    ax.stairs(heat(time) / 1e3, edges, label=f"{dt=}", baseline=None, lw=1.5)
-ax.set_xlabel("time / yrs")
-ax.set_ylabel("heat / kW")
-ax.legend()
-fig.show()
+pvds = []
+msh_path = temp_dir / "square.msh"
+script_path = Path(studies.convergence.examples.nuclear_decay_bc).parent
+prj_path = studies.convergence.examples.nuclear_decay_prj
+ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
+edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %% [markdown]
-# The mesh and its boundaries are generated easily via gmsh and
-# :py:mod:`ogstools.msh2vtu`:
+# Now the actual simulations:
 
 # %%
-msh_path = temp_dir / "square.msh"
-meshlib.rect(lengths=100.0, n_edge_cells=[10, 1], out_name=msh_path)
-_ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
+for dt, n_cells in zip(time_step_sizes, edge_cells):
+    meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
+    _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
 
-# %% [markdown]
-# Let's run the different simulations with increasingly fine temporal
-# discretization via ogs6py, extract the temperature evolution via vtuIO and
-# plot it:
-
-# %% tags=[toggle]
-fig, ax = plt.subplots(figsize=(8, 4))
-pvds = []
-
-for dt in time_step_sizes:
-    model = ogs.OGS(
-        PROJECT_FILE=temp_dir / "default.prj",
-        INPUT_FILE=studies.convergence.examples.nuclear_decay_prj,
-    )
+    model = ogs.OGS(PROJECT_FILE=temp_dir / "default.prj", INPUT_FILE=prj_path)
     model.replace_text(str(dt * sec_per_yr), ".//delta_t")
     prefix = "nuclear_decay_" + str(dt * sec_per_yr)
     model.replace_text(prefix, ".//prefix")
     model.write_input()
-    script_path = Path(studies.convergence.examples.nuclear_decay_bc).parent
-    ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
-    model.run_model(write_logs=False, args=ogs_args)
+    model.run_model(write_logs=True, args=ogs_args)
+    pvds += [str(temp_dir / (prefix + ".pvd"))]
 
-    pvd_path = str(temp_dir / (prefix + ".pvd"))
-    pvds += [pvd_path]
-    pvdio = vtuIO.PVDIO(pvd_path, dim=2, interpolation_backend="vtk")
-    max_temperature = propertylib.presets.temperature(
-        pvdio.read_time_series("temperature", {"pt0": [0, 0, 0]})["pt0"]
-    )
+# %% plotting:
+# Let's extract the temperature evolution and the applied heat via vtuIO and
+# plot both:
+
+# %%
+time = np.append(0.0, np.geomspace(1.0, 180.0, num=100))
+repo = physics.nuclearwasteheat.repo_2020_conservative
+heat = repo.heat(time, time_unit="yrs", power_unit="kW")
+fig, (ax1, ax2) = plt.subplots(figsize=(8, 4), nrows=2, sharex=True)
+ax2.plot(time, heat, lw=2, label="reference", color="k")
+
+for pvd in pvds:
+    pvdio = vtuIO.PVDIO(pvd, dim=2, interpolation_backend="vtk")
+    results = pvdio.read_time_series(
+        ["temperature", "heat_flux"], {"pt0": [0, 0, 0]}
+    )["pt0"]
+    max_T = propertylib.presets.temperature(results["temperature"])
+    # times 2 due to symmetry, area of repo, to kW
+    applied_heat = results["heat_flux"][:, 0] * 2 * 1500**2 / 1e3
     ts = pvdio.timesteps / sec_per_yr
-    ax.plot(ts, max_temperature, lw=1.5, label=f"{dt=}")
-ax.set_xlabel("time / yrs")
-ax.set_ylabel("max T / °C")
-ax.legend()
+    edges = np.append(0, ts)
+    ax1.plot(ts, max_T, lw=1.5, label=f"{dt=}")
+    ax2.stairs(applied_heat, edges, lw=1.5, label=f"{dt=}", baseline=None)
+ax1.set_xlabel("time / yrs")
+ax1.set_ylabel("max T / °C")
+ax2.set_ylabel("heat / kW")
+ax1.legend()
+ax2.legend()
 fig.show()
 
 # %% [markdown]
@@ -117,10 +112,10 @@ fig.show()
 # The grid convergence at this timepoint deviates significantly from 1,
 # meaning the convergence is suboptimal (at least on the left boundary where the
 # heating happens). The chosen timesteps are still to coarse to reach an
-# asymptotic rate of convergence. The model behavior at this early part of the
+# asymptotic range of convergence. The model behavior at this early part of the
 # simulation is still very dynamic and needs finer timesteps to be captured with
-# great accuracy. Nevertheless, the maximum temperature converges (sublinearly)
-# from overestimated values, as expected.
+# great accuracy. Nevertheless, the maximum temperature converges quadratically,
+# as expected.
 
 # %%
 report_name = str(temp_dir / "report.ipynb")
@@ -137,12 +132,9 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # Temperature convergence at maximum temperature (t=150 yrs)
 # ----------------------------------------------------------
 #
-# The temperature convergence at this timepoint is much closer to 1, signifying
-# a good convergence behaviour. The temperature gradient at this point in time
-# is already settled and can be the solution convergences to a good degree with
-# the chosen timesteps. Despite the good grid convergence, the maximum
-# temperature converges only sublinearly, but as expected, from underestimated
-# values.
+# The temperature convergence at this timevalue is much closer to 1, indicating
+# a better convergence behaviour, which is due to the temperature gradient now
+# changing only slowly. Convergence order is again quadratic.
 
 # %%
 studies.convergence.run_convergence_study(
@@ -154,7 +146,35 @@ studies.convergence.run_convergence_study(
 )
 HTML(workflow.jupyter_to_html(report_name, show_input=False))
 
+# %% [markdown]
+# Convergence evolution over all timesteps
+# ----------------------------------------------------------
+#
+# We can also run the convergence evaluation on all timesteps and look at the
+# relative errors (between finest discretization and Richardson extrapolation)
+# and the convergence order over time to get a better picture of the transient
+# model behavior.
+
 # %%
+mesh_series = [meshlib.MeshSeries(pvd) for pvd in pvds]
+evolution_metrics = studies.convergence.convergence_evolution_metrics(
+    mesh_series, propertylib.presets.temperature, units=["s", "yrs"]
+)
+
+# %% [markdown]
+# Looking at the relative errors, we see a higher error right at the beginning.
+# This is likely due to the more dynamic behavior at the beginning.
+
+# %%
+fig = studies.convergence.plot_convergence_error_evolution(evolution_metrics)
+
+# %% [markdown]
+# A look at the convergence order evolution shows almost quadratic convergence
+# over the whole timeframe. For the maximum temperature we even get better than
+# quadratic behavior, which is coincidentally and most likely model dependent.
+
+# %%
+fig = studies.convergence.plot_convergence_order_evolution(evolution_metrics)
 
 # sphinx_gallery_start_ignore
 
