@@ -2,7 +2,7 @@
 
 is a:
 
-- python library for streamlined usage of [OpenGeoSys](https://www.opengeosys.org),
+- Python library for streamlined usage of [OpenGeoSys](https://www.opengeosys.org) that aims to enable [OpenGeoSys](https://www.opengeosys.org) users to harness the full potential of Python's extensive ecosystem.
 - set of interconnected modules for pre- and postprocessing of simulations with [OpenGeoSys](https://www.opengeosys.org),
 - valuable resource that includes documentation, Jupyter notebooks, and workflows for guidance and reference.
 
