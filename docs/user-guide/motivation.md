@@ -26,11 +26,19 @@ All Sub-Libraries either
 
 OGSTools is part of the core development (with a dedicated team of developers). Progress is  mainly made by project-specific requests. It is ready for broader adoption with the OGS Community.
 
-## Use Cases or Case Studies
+## Use Cases
+
+### Projects
 
 - [AREHS](https://www.ufz.de/index.php?en=47155) - OGSTools extracted from and used within a [snakemake](https://snakemake.readthedocs.io) based complex workflow
 - [OpenWorkflow](https://www.ufz.de/index.php?en=48378) - OGSTools used within a workflow for thermal dimensioning of a deep geological repository, OGSTools as blueprint (similar infrastructure)
 - [OpenGeoSys - Benchmarks](https://www.opengeosys.org/docs/benchmarks/)
+
+### Workflows
+
+Larger workflows have been constructed using the workflow manager [snakemake](https://snakemake.readthedocs.io). Within its main building blocks, called [rules](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html) the functionality of OGSTools is combined with generic Python libraries or [OGS Command Line Tools](https://www.opengeosys.org/docs/tools/getting-started/overview/). We see that workflows are specific to the project but should be assembled from components that are generic. Ideally, the amount of project-specific code is significantly smaller than the generic project code. Therefore, we tend to invest a considerable portion of our development effort in establishing a robust foundation for the software stack described in the image below. Other python workflow manager like [Parsl](https://parsl-project.org/) and [AiiDA](https://www.aiida.net/).
+
+![](concept_ogstools.png)
 
 ## Future Development and Roadmap
 
