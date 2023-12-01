@@ -35,7 +35,6 @@ from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
 import numpy as np
-import vtuIO
 from IPython.display import HTML
 from ogs6py import ogs
 from scipy.constants import Julian_year as sec_per_yr
@@ -52,8 +51,9 @@ temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 # %%
 n_refinements = 4
 time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
-pvds = []
-msh_path = temp_dir / "square.msh"
+prefix = "stepsize_{0}"
+sim_results = []
+msh_path = temp_dir / "rect.msh"
 script_path = Path(studies.convergence.examples.nuclear_decay_bc).parent
 prj_path = studies.convergence.examples.nuclear_decay_prj
 ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
@@ -69,11 +69,10 @@ for dt, n_cells in zip(time_step_sizes, edge_cells):
 
     model = ogs.OGS(PROJECT_FILE=temp_dir / "default.prj", INPUT_FILE=prj_path)
     model.replace_text(str(dt * sec_per_yr), ".//delta_t")
-    prefix = "nuclear_decay_" + str(dt * sec_per_yr)
-    model.replace_text(prefix, ".//prefix")
+    model.replace_text(prefix.format(dt), ".//prefix")
     model.write_input()
-    model.run_model(write_logs=True, args=ogs_args)
-    pvds += [str(temp_dir / (prefix + ".pvd"))]
+    model.run_model(write_logs=False, args=ogs_args)
+    sim_results += [temp_dir / (prefix.format(dt) + "_rect_domain.xdmf")]
 
 # %% plotting:
 # Let's extract the temperature evolution and the applied heat via vtuIO and
@@ -83,22 +82,24 @@ for dt, n_cells in zip(time_step_sizes, edge_cells):
 time = np.append(0.0, np.geomspace(1.0, 180.0, num=100))
 repo = physics.nuclearwasteheat.repo_2020_conservative
 heat = repo.heat(time, time_unit="yrs", power_unit="kW")
-fig, (ax1, ax2) = plt.subplots(figsize=(8, 4), nrows=2, sharex=True)
+fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
-for pvd in pvds:
-    pvdio = vtuIO.PVDIO(pvd, dim=2, interpolation_backend="vtk")
-    results = pvdio.read_time_series(
-        ["temperature", "heat_flux"], {"pt0": [0, 0, 0]}
-    )["pt0"]
-    max_T = propertylib.presets.temperature(results["temperature"])
+for sim_result in sim_results:
+    mesh_series = meshlib.MeshSeries(sim_result)
+    results = {"heat_flux": [], "temperature": []}
+    for ts in mesh_series.timesteps:
+        mesh = mesh_series.read(ts)
+        results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
+        results["temperature"] += [np.max(mesh.point_data["temperature"])]
+    max_T = propertylib.presets.temperature(results["temperature"]).magnitude
     # times 2 due to symmetry, area of repo, to kW
-    applied_heat = results["heat_flux"][:, 0] * 2 * 1500**2 / 1e3
-    ts = pvdio.timesteps / sec_per_yr
-    edges = np.append(0, ts)
-    ax1.plot(ts, max_T, lw=1.5, label=f"{dt=}")
+    applied_heat = np.asarray(results["heat_flux"]) * 2 * 1500**2 / 1e3
+    tv = np.asarray(mesh_series.timevalues) / sec_per_yr
+    edges = np.append(0, tv)
+    ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")
     ax2.stairs(applied_heat, edges, lw=1.5, label=f"{dt=}", baseline=None)
-ax1.set_xlabel("time / yrs")
+ax2.set_xlabel("time / yrs")
 ax1.set_ylabel("max T / °C")
 ax2.set_ylabel("heat / kW")
 ax1.legend()
@@ -118,10 +119,10 @@ fig.show()
 # as expected.
 
 # %%
-report_name = str(temp_dir / "report.ipynb")
+report_name = temp_dir / "report.ipynb"
 studies.convergence.run_convergence_study(
     output_name=report_name,
-    mesh_paths=pvds,
+    mesh_paths=sim_results,
     timevalue=30 * sec_per_yr,
     property_name="temperature",
     refinement_ratio=2.0,
@@ -139,7 +140,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # %%
 studies.convergence.run_convergence_study(
     output_name=report_name,
-    mesh_paths=pvds,
+    mesh_paths=sim_results,
     timevalue=150 * sec_per_yr,
     property_name="temperature",
     refinement_ratio=2.0,
@@ -156,7 +157,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # model behavior.
 
 # %%
-mesh_series = [meshlib.MeshSeries(pvd) for pvd in pvds]
+mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_evolution_metrics(
     mesh_series, propertylib.presets.temperature, units=["s", "yrs"]
 )

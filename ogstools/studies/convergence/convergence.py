@@ -186,6 +186,7 @@ def log_fit(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
 
 
 def convergence_order(metrics: pd.DataFrame) -> pd.DataFrame:
+    "Calculates the convergence order for given convergence metrics."
     columns = [
         f"{t} ({x})"
         for x in ["max", "min", "L2 norm"]
@@ -244,6 +245,19 @@ def convergence_evolution_metrics(
     refinement_ratio: float = 2.0,
     units: tuple[str, str] = ("s", "s"),
 ) -> pd.DataFrame:
+    """
+    Calculate convergence evolution metrics for given mesh series.
+
+    Contains convergence order and the relative error to the Richardson
+    extrapolation for each timestep of the coarsest mesh series.
+    and a property
+
+    :param meshes_series:       The List of mesh series to be analyzed.
+    :param property:            The property of interest.
+    :param refinement_ratio:    Refinement ratio between the discretizations.
+
+    :returns:   A pandas Dataframe containing all metrics.
+    """
     all_timevalues = [ms.timevalues for ms in mesh_series]
     common_timevalues = sorted(
         set(all_timevalues[0]).intersection(*all_timevalues[1:])
@@ -276,14 +290,14 @@ def convergence_evolution_metrics(
 def plot_convergence_error_evolution(
     evolution_metrics: pd.DataFrame,
 ) -> plt.Figure:
-    "Plot the evolution of relative errors in loglog scale."
+    "Plot the evolution of relative errors."
     ax: plt.Axes
     fig, ax = plt.subplots()
-    for i, c in enumerate("rbg"):
-        j = i * 2 + 1
-        label = ["max", "min", "L2"][i]
+    for index, color in enumerate("rbg"):
+        column = index * 2 + 1
+        label = ["max", "min", "L2"][index]
         evolution_metrics.plot(
-            ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
+            ax=ax, x=0, y=column, c=color, style="o-", grid=True, label=label
         )
     ax.set_ylabel("relative error $\\varepsilon_{{rel}}$")
     fig.tight_layout()
@@ -293,14 +307,14 @@ def plot_convergence_error_evolution(
 def plot_convergence_order_evolution(
     evolution_metrics: pd.DataFrame,
 ) -> plt.Figure:
-    "Plot the evolution of convergence orders in loglog scale."
+    "Plot the evolution of convergence orders."
     ax: plt.Axes
     fig, ax = plt.subplots()
-    for i, c in enumerate("rbg"):
-        j = i * 2 + 2
-        label = ["max", "min", "L2"][i]
+    for index, color in enumerate("rbg"):
+        column = index * 2 + 2
+        label = ["max", "min", "L2"][index]
         evolution_metrics.plot(
-            ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
+            ax=ax, x=0, y=column, c=color, style="o-", grid=True, label=label
         )
     ax.set_ylabel("convergence order p")
     fig.tight_layout()
