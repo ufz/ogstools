@@ -4,8 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyvista as pv
+from pint import UnitRegistry
 
-from ogstools.propertylib import Property
+from ogstools import meshlib, propertylib
+
+u_reg: UnitRegistry = UnitRegistry()
+u_reg.default_format = "~.3g"
 
 
 def resample(
@@ -31,7 +35,7 @@ def add_grid_spacing(mesh: pv.DataSet) -> pv.DataSet:
 
 def grid_convergence(
     meshes: list[pv.DataSet],
-    property: Property,
+    property: propertylib.Property,
     topology: pv.DataSet,
     refinement_ratio: float,
 ) -> pv.DataSet:
@@ -87,7 +91,7 @@ def grid_convergence(
 
 def richardson_extrapolation(
     meshes: list[pv.DataSet],
-    property: Property,
+    property: propertylib.Property,
     topology: pv.DataSet,
     refinement_ratio: float,
 ) -> pv.DataSet:
@@ -127,7 +131,7 @@ def richardson_extrapolation(
 def convergence_metrics(
     meshes: list[pv.DataSet],
     reference: pv.DataSet,
-    property: Property,
+    property: propertylib.Property,
     timestep_sizes: list[float],
 ) -> pd.DataFrame:
     """
@@ -146,7 +150,7 @@ def convergence_metrics(
     x = [np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes]
     x_str = "mean element length"
     if all(xi == x[0] for xi in x):
-        x = timestep_sizes
+        x = deepcopy(timestep_sizes)
         x_str = "time step size"
     x += [0.0]
     _meshes = meshes + [reference]
@@ -181,7 +185,26 @@ def log_fit(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
     return params[0], fit_vals
 
 
-def plot_convergence(metrics: pd.DataFrame, property: Property) -> plt.Figure:
+def convergence_order(metrics: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        f"{t} ({x})"
+        for x in ["max", "min", "L2 norm"]
+        for t in ["rel. error", "p"]
+    ]
+    fit_df = metrics.replace(0.0, np.nan)
+    fit_df[fit_df < 1e-12] = np.nan
+    data = []
+    for col in [-3, -2, -1]:
+        p, _ = log_fit(
+            fit_df.iloc[:, 0].to_numpy(), fit_df.iloc[:, col].to_numpy()
+        )
+        data += [metrics.iloc[-2, col], p]
+    return pd.DataFrame([data], columns=columns)
+
+
+def plot_convergence(
+    metrics: pd.DataFrame, property: propertylib.Property
+) -> plt.Figure:
     "Plot the absolute values of the convergence metrics."
     fig, axes = plt.subplots(2, 1, sharex=True)
     metrics.iloc[:-1].plot(ax=axes[0], x=0, y=1, c="r", style="-o", grid=True)
@@ -211,5 +234,74 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
             ax=ax, x=0, y=j, c=c, style="o", grid=True, loglog=True, label=label
         )
         ax.loglog(x_vals, fit_vals, c + "--")
+    fig.tight_layout()
+    return fig
+
+
+def convergence_evolution_metrics(
+    mesh_series: list[meshlib.MeshSeries],
+    property: propertylib.Property,
+    refinement_ratio: float = 2.0,
+    units: tuple[str, str] = ("s", "s"),
+) -> pd.DataFrame:
+    all_timevalues = [ms.timevalues for ms in mesh_series]
+    common_timevalues = sorted(
+        set(all_timevalues[0]).intersection(*all_timevalues[1:])
+    )
+
+    p_metrics_per_t = np.empty((0, 6))
+
+    timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
+    for timevalue in common_timevalues:
+        meshes = [ms.read_closest(timevalue) for ms in mesh_series]
+        reference = richardson_extrapolation(
+            meshes, property, meshes[-3], refinement_ratio
+        )
+        metrics = convergence_metrics(
+            meshes, reference, property, timestep_sizes
+        )
+        p_metrics = convergence_order(metrics)
+        p_metrics_per_t = np.vstack((p_metrics_per_t, p_metrics.to_numpy()))
+
+    time_vals = (
+        u_reg.Quantity(np.array(common_timevalues), units[0])
+        .to(units[1])
+        .magnitude
+    )
+    p_metrics_per_t = np.concatenate(([time_vals], p_metrics_per_t.T)).T
+    columns = ["timevalue"] + list(p_metrics.columns)
+    return pd.DataFrame(p_metrics_per_t, columns=columns)
+
+
+def plot_convergence_error_evolution(
+    evolution_metrics: pd.DataFrame,
+) -> plt.Figure:
+    "Plot the evolution of relative errors in loglog scale."
+    ax: plt.Axes
+    fig, ax = plt.subplots()
+    for i, c in enumerate("rbg"):
+        j = i * 2 + 1
+        label = ["max", "min", "L2"][i]
+        evolution_metrics.replace(0.0, np.nan).plot(
+            ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
+        )
+    ax.set_ylabel("relative error $\\varepsilon_{{rel}}$")
+    fig.tight_layout()
+    return fig
+
+
+def plot_convergence_order_evolution(
+    evolution_metrics: pd.DataFrame,
+) -> plt.Figure:
+    "Plot the evolution of convergence orders in loglog scale."
+    ax: plt.Axes
+    fig, ax = plt.subplots()
+    for i, c in enumerate("rbg"):
+        j = i * 2 + 2
+        label = ["max", "min", "L2"][i]
+        evolution_metrics.replace(0.0, np.nan).plot(
+            ax=ax, x=0, y=j, c=c, style="o-", grid=True, label=label
+        )
+    ax.set_ylabel("convergence order p")
     fig.tight_layout()
     return fig
