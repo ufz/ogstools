@@ -20,7 +20,7 @@ All sub-libraries either
 - transform from data structures of common libraries to [OpenGeoSys](https://www.opengeosys.org) specific data
   This compatibility enables [OpenGeoSys](https://www.opengeosys.org) users to harness the full potential of Python's extensive ecosystem.
 
-![](concept_ogstools.png)
+<img src="concept_ogstools.png" width="50%"/>
 
 ## Community Support and Maintenance
 
@@ -38,7 +38,7 @@ OGSTools is part of the core development (with a dedicated team of developers). 
 
 Larger workflows have been constructed using the workflow manager [snakemake](https://snakemake.readthedocs.io). Within its main building blocks, called [rules](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html) the functionality of OGSTools is combined with generic Python libraries or [OGS Command Line Tools](https://www.opengeosys.org/docs/tools/getting-started/overview/). We see that workflows are specific to the project but should be assembled from components that are generic. Ideally, the amount of project-specific code is significantly smaller than the generic project code. Therefore, we tend to invest a considerable portion of our development effort in establishing a robust foundation for the software stack described in the image below. We have basic experience with other workflow managers (e.g. [Parsl](https://parsl-project.org/) and [AiiDA](https://www.aiida.net/)) to confirm compatibility and ensure that our code will function seamlessly across different workflow manager environments.
 
-![](concept_ogstools.png)
+<img src="architecture_projects.png" width="200"/>
 
 ## Future Development and Roadmap
 
