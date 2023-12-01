@@ -36,8 +36,7 @@ You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/og
 
 # Motivation
 
-To gain a deeper insight into the rationale behind the development of this Python library, find a comprehensive motivation section available [here](motivation.md).
-
+To gain a deeper insight into the rationale behind the development of this Python library, find a comprehensive motivation section available [here](docs/user-guide/motivation.md).
 # Related projects
 
 - [ogs](https://pypi.org/project/ogs)
