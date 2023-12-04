@@ -33,7 +33,7 @@ In addition, it may be used as Python module:
 ```python
 from ogstools.msh2vtu import msh2vtu
 
-def msh2vtu(
+msh2vtu(
     input_filename="my_mesh.msh",
     output_path="",
     output_prefix="my_meshname",
