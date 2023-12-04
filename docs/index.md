@@ -13,7 +13,7 @@ Examples <auto_examples/index>
 API reference <reference/index>
 Development <development/index>
 Release notes <releases/index>
-Motivation <user-guide/motivation>
+Motivation <user-guide/introduction/motivation>
 ```
 
 The `ogstools` pip-package is a collection of Python tools aimed at evolving into a modeling toolchain around [OpenGeoSys](https://www.opengeosys.org), a finite element solver for coupled thermo-hydro-chemo-mechanical problems in the subsurface.
