@@ -1,4 +1,4 @@
-# OGSTools 0.1.1 Release Notes
+# OGSTools 0.2.0 Release Notes
 
 ## Library
 
