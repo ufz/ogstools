@@ -31,24 +31,20 @@ prog: msh2vtu
 In addition, it may be used as Python module:
 
 ```python
-from ogstools.msh2vtu import run  # to run mesh conversion
-import argparse
+from ogstools.msh2vtu import msh2vtu
 
-parser = argparse.ArgumentParser()
-
-# generate a mesh, e.g. my_mesh.msh with Gmsh
-
-args = argparse.Namespace(
-    filename="my_mesh.msh",
-    output="",
+msh2vtu(
+    input_filename="my_mesh.msh",
+    output_path="",
+    output_prefix="my_meshname",
     dim=0,
     delz=False,
     swapxy=False,
     rdcd=True,
     ogs=True,
     ascii=False,
+    log_level="DEBUG",
 )
-run(args)
 ```
 
 ______________________________________________________________________
