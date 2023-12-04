@@ -1,5 +1,5 @@
 """
-How to work with FEFLOW data in pyvista.
+How to convert a FEFLOW model and simulate it in OGS.
 ========================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
