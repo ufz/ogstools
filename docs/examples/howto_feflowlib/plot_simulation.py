@@ -1,6 +1,6 @@
 """
 How to convert a FEFLOW model and simulate it in OGS.
-========================================
+=====================================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
@@ -52,8 +52,9 @@ for path, boundary_condition in point_BC_dict.items():
 path_topsurface, topsurface = extract_cell_boundary_conditions(
     path_mesh, pyvista_mesh
 )
+# On the topsurface can be cell based boundary condition.
+# The boundary conditions on the topsurface of the model are required for generalization.
 topsurface.save(path_topsurface)
-topsurface.plot()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
 path_prjfile = str(path_mesh.with_suffix(".prj"))
