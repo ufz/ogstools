@@ -1,4 +1,4 @@
-# FEFLOW converter - feflow2ogs
+# feflowlib - feflow2ogs
 
 ```{eval-rst}
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
@@ -16,7 +16,8 @@ At the moment only `steady state diffusion` and `liquid flow` processes are supp
 ## Features
 
 All in all, the converter can be used to convert steady state diffusion and liquid flow processes from FEFLOW.
-This includes the conversion of the bulk mesh together with the boundary conditions, as well as the creation of the corresponding mesh `vtk-files`. In addition, (in)complete `prj files` can be created automatically.
+This includes the conversion of the bulk mesh together with the boundary conditions, as well as the creation of the corresponding mesh `vtk-files`.
+In addition, (in)complete `prj files` can be created automatically.
 The `prj file` is set up of a model-specific part and a part that is read from a template and defines the solver and process configuration.
 The current status enables:
 

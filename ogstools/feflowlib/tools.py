@@ -77,20 +77,27 @@ def extract_point_boundary_conditions(
     dict_of_point_boundary_conditions = {}
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
-    mesh = mesh.extract_surface()
+    surf_mesh = mesh.extract_surface()
     # remove all the point data that are not of interest
-    for point_data in mesh.point_data:
+    for point_data in surf_mesh.point_data:
         if not all(["_BC" in point_data]) and point_data != "bulk_node_ids":
-            mesh.point_data.remove(point_data)
+            surf_mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
-    for point_data in mesh.point_data:
+    for point_data in surf_mesh.point_data:
         if point_data != "bulk_node_ids":
             dirichlet_bool = "_BC_" not in point_data
-            filtered_points = mesh.extract_points(
-                [not np.isnan(x) for x in mesh[point_data]],
-                adjacent_cells=False,
-                include_cells=dirichlet_bool,
-            )
+            if "_4TH" in point_data:
+                filtered_points = mesh.extract_points(
+                    [not np.isnan(x) for x in mesh[point_data]],
+                    adjacent_cells=False,
+                    include_cells=False,
+                )
+            else:
+                filtered_points = surf_mesh.extract_points(
+                    [not np.isnan(x) for x in surf_mesh[point_data]],
+                    adjacent_cells=False,
+                    include_cells=dirichlet_bool,
+                )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
@@ -100,8 +107,6 @@ def extract_point_boundary_conditions(
                     filtered_points.point_data.remove(pt_data)
             # In OGS Neumann and Robin boundary condition have a different sign than in FEFLOW!
             # Also in FEFOW the Neumann BC for flow is in m/d and ogs works with SI-units (m/s)
-            if "2ND" in point_data:
-                filtered_points[point_data] *= -1 / 86400
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
@@ -162,7 +167,7 @@ def extract_cell_boundary_conditions(
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
     # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
-    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"] / 86400
+    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
@@ -196,7 +201,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
             # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
             # WARNING: This is not a generic method at the moment. A dictionary with all the
             # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
-            material_properties[material_id] = [property_of_material[0] / 86400]
+            material_properties[material_id] = [property_of_material[0]]
         else:
             material_properties[material_id] = ["inhomogeneous"]
             logger.info(
@@ -270,7 +275,7 @@ def write_mesh_of_combined_properties(
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
-    material_mesh[new_property] = material_mesh[new_property] / 86400
+    material_mesh[new_property] = material_mesh[new_property]
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.point_data.remove("vtkOriginalPointIds")
     for pt_data in material_mesh.point_data:
@@ -456,22 +461,61 @@ def setup_prj_file(
         initial_condition="p0",
     )
     model.parameters.add_parameter(name="p0", type="Constant", value=0)
-
-    for i in mesh.point_data:
-        if i[0:4] == "P_BC":
-            # Add boundary conditions
-            model.processvars.add_bc(
-                process_variable_name="HEAD_OGS",
-                type=next(val for key, val in BC_type_dict.items() if key in i),
-                parameter=i,
-                mesh=i,
-            )
+    for point_data in mesh.point_data:
+        if point_data[0:4] == "P_BC":
             # Every point boundary condition refers to a separate mesh
-            model.mesh.add_mesh(filename=i + ".vtu")
-            # Every point boundary condition refers to a parameter with the same name
-            model.parameters.add_parameter(
-                name=i, type="MeshNode", field_name=i, mesh=i
-            )
+            model.mesh.add_mesh(filename=point_data + ".vtu")
+            if "3RD" in point_data:
+                model.parameters.add_parameter(
+                    name="u_0",
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
+                model.parameters.add_parameter(
+                    name="alpha",
+                    type="Constant",
+                    value=np.unique(mesh.cell_data["P_TRAF_IN"])[1],
+                )
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type="Robin",
+                    alpha="alpha",
+                    u_0="u_0",
+                    mesh=point_data,
+                )
+            elif "4TH" in point_data:
+                model.parameters.add_parameter(
+                    name=point_data,
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
+                model.processvars.add_st(
+                    process_variable_name="HEAD_OGS",
+                    type="Nodal",
+                    mesh=point_data,
+                    parameter=point_data,
+                )
+            else:
+                # Add boundary conditions
+                model.processvars.add_bc(
+                    process_variable_name="HEAD_OGS",
+                    type=next(
+                        val
+                        for key, val in BC_type_dict.items()
+                        if key in point_data
+                    ),
+                    parameter=point_data,
+                    mesh=point_data,
+                )
+                # Every point boundary condition refers to a parameter with the same name
+                model.parameters.add_parameter(
+                    name=point_data,
+                    type="MeshNode",
+                    field_name=point_data,
+                    mesh=point_data,
+                )
 
     for cell_data in mesh.cell_data:
         if cell_data in ["P_IOFLOW", "P_SOUF"]:
@@ -548,6 +592,13 @@ def deactivate_cells(mesh: pv.UnstructuredGrid):
     Therefore, the input mesh is modified.
     :param mesh: mesh
     :type mesh: pyvista.UnstructuredGrid
+    :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
+    :rytpe: int
     """
     inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
-    mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+    if len(inactive_cells[0]) == 0:
+        return_int = 0
+    else:
+        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+        return_int = 1
+    return return_int
