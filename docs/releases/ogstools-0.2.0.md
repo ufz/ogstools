@@ -3,8 +3,9 @@
 ## Library
 
 [`studies`](../user-guide/studies.md) a new package that provides utility functions to compose studies from multiple simulation
-runs.
-Now it contains functions to perform convergence studies.
+runs. For now it contains functions to perform convergence studies on simulation results (with increasing spatial/temporal discretization) for specific timesteps or over all timesteps.
+
+[`msh2vtu`](../user-guide/msh2vtu.md) got a cleaner python interface without the need to run argparse in between.
 
 [`feflowlib`](../user-guide/feflowlib.md) has been updated with new functionalities.
 In particular, material properties can now be taken into account when converting and creating OGS models.
