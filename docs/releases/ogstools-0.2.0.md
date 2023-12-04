@@ -3,7 +3,8 @@
 ## Library
 
 [`studies`](../user-guide/studies.md) a new package that provides utility functions to compose studies from multiple simulation
-runs. Now it contains functions to perform convergence studies.
+runs.
+Now it contains functions to perform convergence studies.
 
 [`feflowlib`](../user-guide/feflowlib.md) has been updated with new functionalities.
 In particular, material properties can now be taken into account when converting and creating OGS models.
@@ -16,4 +17,5 @@ With these changes the conversion of FEFLOW models for `steady state diffusion` 
 
 ## Infrastructure & Development
 
-Web documentation for releases is now available on [ogstools.opengeosys.org](https://ogstools.opengeosys.org). Documentation for previous releases will be available in the future and can be selected with a version dropdown in the navigation bar.
+Web documentation for releases is now available on [ogstools.opengeosys.org](https://ogstools.opengeosys.org).
+Documentation for previous releases will be available in the future and can be selected with a version dropdown in the navigation bar.
