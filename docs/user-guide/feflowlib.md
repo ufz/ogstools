@@ -86,7 +86,7 @@ The installation is according to the official website.
 ::::
 
 The installation of the FEFLOW converter with `ogstools` is optional.
-The option can be be selected with the following `pip`-command.
+The option can be selected with the following `pip`-command.
 
 ```
 pip install ogstools[feflow]
