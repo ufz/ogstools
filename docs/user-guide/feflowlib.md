@@ -43,6 +43,30 @@ The current status enables:
     - templates define the solver, time loop, process, output
   - writing of boundary conditions to separate `.vtu`-files
 
+```{mermaid}
+graph TD
+    FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_PRJ:::InputStyle
+    FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_BULK:::InputStyle
+    FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_BOUNDARY:::InputStyle
+    FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_SOURCE:::InputStyle
+    FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_INHOMOGENEOUS:::InputStyle
+    SSD(steady state diffusion <br> liquid flow):::TemplateStyle -->|template| OGS_PRJ:::InputStyle
+    OGS_PRJ[project file]:::InputStyle -->|xml format| OGS
+    OGS_BULK[bulk mesh]:::InputStyle -->|vtu format| OGS
+    OGS_BOUNDARY[boundary meshes]:::InputStyle -->|vtu format| OGS
+    OGS_INHOMOGENEOUS[inhomogeneous material mesh]:::InputStyle -->|vtu format| OGS
+    OGS_SOURCE[source term meshes]:::InputStyle -->|vtu format| OGS
+    OGS(OpenGeoSys):::OGSStyle -->|vtu format| OGS_PRESSURE[simulation results: Hydraulic Head]:::OGSOutputStyle
+    OGS -->|vtu format| OGS_VELO[simulation results: Darcy velocity]:::OGSOutputStyle
+
+classDef InputStyle fill:#9090ff
+classDef OGSStyle fill:#104eb2, color:#ffffff
+classDef FEFLOWStyle fill:#1e690a, color:#ffffff
+classDef feflowlibStyle fill:#081f6a, color:#ffffff
+classDef OGSOutputStyle fill:#a0a0f0
+classDef TemplateStyle fill:#009c21, color:#ffffff
+```
+
 ## Requirements
 
 - Running via [Docker](./docker.md)
