@@ -147,12 +147,16 @@ def convergence_metrics(
     def _data(m: pv.DataSet):
         return property.magnitude.strip_units(m.point_data[property.data_name])
 
-    x = [np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes]
-    x_str = "mean element length"
-    if all(xi == x[0] for xi in x):
-        x = deepcopy(timestep_sizes)
-        x_str = "time step size"
-    x += [0.0]
+    grid_spacings = [
+        np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes
+    ]
+    discretization_label = "mean element length"
+    if all(x == grid_spacings[0] for x in grid_spacings):
+        discretization = deepcopy(timestep_sizes)
+        discretization_label = "time step size"
+    else:
+        discretization = grid_spacings
+    discretization += [0.0]
     _meshes = meshes + [reference]
     maxs = [np.max(_data(m)) for m in _meshes]
     mins = [np.min(_data(m)) for m in _meshes]
@@ -165,9 +169,9 @@ def convergence_metrics(
             / np.linalg.norm(_data(reference), axis=0, ord=2)
         ]
     data = np.column_stack(
-        (x, maxs, mins, rel_errs_max, rel_errs_min, rel_errs_l2)
+        (discretization, maxs, mins, rel_errs_max, rel_errs_min, rel_errs_l2)
     )
-    columns = [x_str, "maximum", "minimum"] + [
+    columns = [discretization_label, "maximum", "minimum"] + [
         f"rel. error ({x})" for x in ["max", "min", "L2 norm"]
     ]
 
@@ -239,7 +243,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def convergence_evolution_metrics(
+def convergence_metrics_evolution(
     mesh_series: list[meshlib.MeshSeries],
     property: propertylib.Property,
     refinement_ratio: float = 2.0,

@@ -159,7 +159,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 
 # %%
 mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
-evolution_metrics = studies.convergence.convergence_evolution_metrics(
+evolution_metrics = studies.convergence.convergence_metrics_evolution(
     mesh_series, propertylib.presets.temperature, units=["s", "yrs"]
 )
 

@@ -4,8 +4,8 @@
 from . import examples
 from .convergence import (
     add_grid_spacing,
-    convergence_evolution_metrics,
     convergence_metrics,
+    convergence_metrics_evolution,
     grid_convergence,
     log_fit,
     plot_convergence,
@@ -18,8 +18,8 @@ from .study import run_convergence_study
 
 __all__ = [
     "add_grid_spacing",
-    "convergence_evolution_metrics",
     "convergence_metrics",
+    "convergence_metrics_evolution",
     "examples",
     "grid_convergence",
     "log_fit",
