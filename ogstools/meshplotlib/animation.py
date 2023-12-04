@@ -97,7 +97,11 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
     """
     start_time = time.time()
     print("Start saving animation...")
-    codec_args = "-crf 28 -preset ultrafast -pix_fmt yuv420p".split(" ")
+    codec_args = (
+        "-crf 28 -preset ultrafast -pix_fmt yuv420p "
+        "-vf crop='iw-mod(iw,2)':'ih-mod(ih,2)'"
+    ).split(" ")
+
     writer = None
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
