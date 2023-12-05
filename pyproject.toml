@@ -53,6 +53,7 @@ docs = [
   "sphinx-argparse",
   "sphinxcontrib-programoutput",
   "sphinxcontrib-apidoc",
+  "sphinxcontrib-mermaid",
   "livereload",
   "pydata-sphinx-theme",
   "myst-parser",

@@ -27,6 +27,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinxarg.ext",
     "sphinxcontrib.apidoc",
+    "sphinxcontrib.mermaid",
     "sphinxcontrib.programoutput",
     "myst_nb",
     "sphinx_design",
