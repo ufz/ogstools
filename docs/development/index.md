@@ -205,3 +205,9 @@ pytest
 ```
 
 :::
+
+# Release procedure
+
+- Make sure there is a complete changelog at `docs/releases` and added to the corresponding `index.md`.
+- Create a tag.
+- Wait for the tag pipeline to complete. Copy the output of the `pages`-job to a new directory in the [ogs/tools/ogstools-docs](https://gitlab.opengeosys.org/ogs/tools/ogstools-docs)-repo.
