@@ -136,7 +136,7 @@ prog: feflow2ogs
 
 ## API usage
 
-In addition, it may be used as Python module.
+In addition, it may be used as Python package.
 Further information can be found at: [](../reference/ogstools.feflowlib).
 
 ## Example
