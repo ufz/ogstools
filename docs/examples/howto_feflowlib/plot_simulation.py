@@ -16,7 +16,7 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 from ogs6py import ogs
-from pyvista import read
+from pyvista import global_theme, read
 
 from ogstools.feflowlib import (
     convert_properties_mesh,
@@ -34,8 +34,14 @@ from ogstools.feflowlib.tools import (
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
 feflow_model = ifm.loadDocument(path_box_Neumann)
 pyvista_mesh = convert_properties_mesh(feflow_model)
+
+global_theme.colorbar_orientation = "vertical"
 pyvista_mesh.plot(
-    show_edges=True, off_screen=True, scalars="P_HEAD", cpos=[0, 1, 0.5]
+    show_edges=True,
+    off_screen=True,
+    scalars="P_HEAD",
+    cpos=[0, 1, 0.5],
+    scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 print(pyvista_mesh)
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
@@ -48,7 +54,10 @@ point_BC_dict = extract_point_boundary_conditions(path_writing, pyvista_mesh)
 # they are saved and plotted iteratively.
 for path, boundary_condition in point_BC_dict.items():
     boundary_condition.save(path)
-    boundary_condition.plot()
+    boundary_condition.plot(
+        scalars=Path(path).stem,
+        scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
+    )
 path_topsurface, topsurface = extract_cell_boundary_conditions(
     path_mesh, pyvista_mesh
 )
@@ -85,7 +94,11 @@ model.run_model(logfile=str(path_writing / "out.log"))
 # 5. Read the results and plot them.
 ogs_sim_res = read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
 ogs_sim_res.plot(
-    show_edges=True, off_screen=True, scalars="HEAD_OGS", cpos=[0, 1, 0.5]
+    show_edges=True,
+    off_screen=True,
+    scalars="HEAD_OGS",
+    cpos=[0, 1, 0.5],
+    scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 
 # %%
@@ -93,6 +106,10 @@ ogs_sim_res.plot(
 diff = pyvista_mesh["P_HEAD"] - ogs_sim_res["HEAD_OGS"]
 pyvista_mesh["diff_HEAD"] = diff
 pyvista_mesh.plot(
-    show_edges=True, off_screen=True, scalars="diff_HEAD", cpos=[0, 1, 0.5]
+    show_edges=True,
+    off_screen=True,
+    scalars="diff_HEAD",
+    cpos=[0, 1, 0.5],
+    scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 # %%
