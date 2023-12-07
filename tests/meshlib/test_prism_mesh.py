@@ -1,15 +1,17 @@
 import unittest
 
+from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.region import to_region_prism
-from ogstools.meshlib.tests import MeshPath
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class PrismMeshTest(unittest.TestCase):
-    layerset = MeshPath("data/compose_geomodel/layersets.csv")
-    materialset = MeshPath("data/compose_geomodel/materialset.csv")
-    surfacedata = MeshPath("data/mesh1/surface_data/")
+    layerset = meshpath / "compose_geomodel/layersets.csv"
+    materialset = meshpath / "compose_geomodel/materialset.csv"
+    surfacedata = meshpath / "mesh1/surface_data/"
 
     def test_Mesh_fineXY_coarseZ(self):
         mesh1_df = dataframe_from_csv(

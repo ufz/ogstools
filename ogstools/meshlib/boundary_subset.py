@@ -30,15 +30,18 @@ class Surface:
         if isinstance(input, Path):
             self.filename = input
             if self.filename.exists() is False:
-                print(self.filename, "does not exist.")
-                raise ValueError
+                msg = f"{self.filename} does not exist."
+                raise ValueError(msg)
             self.mesh = pv.get_reader(self.filename).read()
         elif isinstance(input, pv.DataSet):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
             pv.save_meshio(self.filename, self.mesh, file_format="vtu")
         else:
-            raise ValueError
+            msg = "{} given, must be either Path or pyvista Dataset.".format(
+                self.filename
+            )
+            raise ValueError(msg)
 
         self.mesh.cell_data["MaterialIDs"] = (
             np.ones(self.mesh.n_cells) * self.material_id
