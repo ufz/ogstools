@@ -97,12 +97,27 @@ def extract_point_boundary_conditions(
     for point_data in surf_mesh.point_data:
         if point_data != "bulk_node_ids":
             BC_2nd_or_3rd = "2ND" in point_data or "3RD" in point_data
+            include_cells_bool = BC_2nd_or_3rd and mesh.celltypes[0] not in [
+                5,
+                9,
+            ]
             filter_mesh = mesh if "_4TH" in point_data else surf_mesh
             filtered_points = filter_mesh.extract_points(
                 [not np.isnan(x) for x in filter_mesh[point_data]],
                 adjacent_cells=False,
-                include_cells=BC_2nd_or_3rd,
+                include_cells=include_cells_bool,
             )
+            # If the mesh is 2D (mesh.celltypes[0] in [5, 9]) and BC are of 2nd or 3rd order, line elements
+            # will be included in the boundary mesh.
+            if BC_2nd_or_3rd and mesh.celltypes[0] in [5, 9]:
+                filtered_points_new = pv.lines_from_points(
+                    filtered_points.points
+                ).cast_to_unstructured_grid()
+                filtered_points_new[point_data] = filtered_points[point_data]
+                filtered_points_new["bulk_node_ids"] = filtered_points[
+                    "bulk_node_ids"
+                ]
+                filtered_points = filtered_points_new.copy()
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
@@ -199,7 +214,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
     # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
-    assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+    assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
     for material_id in np.unique(material_ids):
         indices = np.where(material_ids == material_id)
         property_of_material = mesh.cell_data[property][indices]
@@ -241,7 +256,7 @@ def combine_material_properties(
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
-        assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+        assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
         for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
@@ -280,7 +295,7 @@ def write_mesh_of_combined_properties(
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
     for prop in property_list:
-        assert prop in ["P_CONDX", "P_CONDY", "P_CONDZ"]
+        assert prop in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
