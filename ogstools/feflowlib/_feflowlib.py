@@ -50,6 +50,15 @@ def points_and_cells(doc: ifm.FeflowDoc):
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
         pts = np.pad(pts, [(0, 0), (0, 1)])
+        # order of points in the cells needs to be flipped
+        if nElement == 3:
+            cells = cells.reshape(-1, 4)
+            cells[:, -3:] = np.flip(cells[:, -3:], axis=1)
+            np.concatenate(cells)
+        if nElement == 4:
+            cells = cells.reshape(-1, 5)
+            cells[:, -4:] = np.flip(cells[:, -4:], axis=1)
+            np.concatenate(cells)
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}
