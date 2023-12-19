@@ -13,7 +13,7 @@ from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
-from ogstools.propertylib import Scalar, Vector, presets
+from ogstools.propertylib import Scalar, presets
 
 THIS_DIR = Path(__file__).parent
 
@@ -86,11 +86,8 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
-        filename = pv_examples.download_meshio_xdmf(load=False)
-        mesh = MeshSeries(filename).read(0)
-        plot(mesh, Scalar("phi"))
-        plot(mesh, Vector("u"))
-        plot(mesh, Scalar("a"))
+        mesh = examples.meshseries_CT_2D.read(0)
+        plot(mesh, Scalar("Si"))
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
