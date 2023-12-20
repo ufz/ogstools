@@ -123,10 +123,11 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
         return 0
     # create separate meshes for the boundary condition
     write_point_boundary_conditions(Path(output).parent, mesh)
-    path_topsurface, topsurface = extract_cell_boundary_conditions(
-        Path(output), mesh
-    )
-    topsurface.save(path_topsurface)
+    if doc.getNumberOfDimensions == 3:
+        path_topsurface, topsurface = extract_cell_boundary_conditions(
+            Path(output), mesh
+        )
+        topsurface.save(path_topsurface)
 
     log.info(
         "Boundary conditions have been written to separate mesh vtu-files."
@@ -139,7 +140,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
                 "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
             )
         # create a prj-file, which is not complete. Manual extensions are needed.
-        property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
+        property_list = ["P_COND"]
         material_properties = combine_material_properties(mesh, property_list)
         for material_id, property_value in material_properties.items():
             if any(prop == "inhomogeneous" for prop in property_value):

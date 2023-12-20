@@ -192,10 +192,19 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     # 5. change format of cell data to a dictionary of lists
     cell_data = {key: [cell_data[key]] for key in cell_data}
 
-    # 6. add materialIDs to cell data
+    # 6. add MaterialIDs to cell data
     cell_data[str(list(MaterialIDs.keys())[0])] = [
         list(MaterialIDs.values())[0]
     ]
+
+    # if MaterialIDs are not saved in selections but in P_LOOKUP_REGION
+    # then take them from P_LOOK_UP:
+    if "P_LOOKUP_REGION" in cell_data and len(
+        np.unique(MaterialIDs.values())
+    ) < len(np.unique(cell_data["P_LOOKUP_REGION"])):
+        cell_data["MaterialIDs"] = np.array(
+            cell_data.pop("P_LOOKUP_REGION")
+        ).astype(np.int32)
 
     # 7. write a list of all properties that have been dropped due to nans
     nan_arrays = [
