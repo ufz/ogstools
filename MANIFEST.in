@@ -1,0 +1,11 @@
+recursive-include ogstools *.csv
+recursive-include ogstools *.grd
+recursive-include ogstools *.h5
+recursive-include ogstools *.md
+recursive-include ogstools *.msh
+recursive-include ogstools *.prj
+recursive-include ogstools *.pvd
+recursive-include ogstools *.py
+recursive-include ogstools *.sh
+recursive-include ogstools *.vtu
+recursive-include ogstools *.xdmf
