@@ -294,8 +294,8 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
         raise ValueError
     ret_tetgen = cli.tetgen("-pkABEFN", smesh_file)
     if ret_tetgen:
-        print("Tetgen returns: ", ret_tetgen)
-        raise ValueError
+        msg = print("Tetgen returns: ", ret_tetgen)
+        raise ValueError(msg)
 
     outfile = smesh_file.with_suffix(".1.vtk")
     if not outfile.exists():

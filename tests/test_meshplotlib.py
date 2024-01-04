@@ -2,20 +2,16 @@
 
 import unittest
 from functools import partial
-from pathlib import Path
 from tempfile import mkstemp
 
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshlib import MeshSeries
 from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
-from ogstools.propertylib import Scalar, Vector, presets
-
-THIS_DIR = Path(__file__).parent
+from ogstools.propertylib import Scalar, presets
 
 equality = partial(np.testing.assert_allclose, rtol=1e-7, verbose=True)
 
@@ -86,16 +82,10 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
-        filename = pv_examples.download_meshio_xdmf(load=False)
-        mesh = MeshSeries(filename).read(0)
-        plot(mesh, Scalar("phi"))
-        plot(mesh, Vector("u"))
-        plot(mesh, Scalar("a"))
+        mesh = examples.meshseries_CT_2D.read(0)
+        plot(mesh, Scalar("Si"))
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = MeshSeries(
-            f"{THIS_DIR}/data/meshplotlib/"
-            "2D_single_fracture_HT_2D_single_fracture.xdmf"
-        ).read(0)
-        plot(mesh, presets.temperature)
+        mesh = examples.meshseries_XDMF.read(0)
+        plot(mesh, presets.pressure)
