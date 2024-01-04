@@ -7,8 +7,6 @@ from tempfile import mkstemp
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshlib import MeshSeries
-from ogstools.meshlib import examples as meshlib_examples
 from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
@@ -89,5 +87,5 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = MeshSeries(meshlib_examples.xdmf_file).read(0)
-        plot(mesh, presets.temperature)
+        mesh = examples.meshseries_XDMF.read(0)
+        plot(mesh, presets.pressure)
