@@ -6,8 +6,7 @@ Read mesh from file (vtu or xdmf) into pyvista mesh
 
 # %%
 from ogstools.meshlib import MeshSeries
-from ogstools.meshlib.examples import xdmf_file
-from ogstools.meshplotlib.examples import THM_2D_file as pvd_file
+from ogstools.meshlib.examples import pvd_file, xdmf_file
 
 # %%
 # MeshSeries takes as mandatory argument a str OR pathlib.Path that represents the location of the pvd or xdmf file.
