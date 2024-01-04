@@ -15,8 +15,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import ifm_contrib as ifm
+import pyvista as pv
 from ogs6py import ogs
-from pyvista import global_theme, read
 
 from ogstools.feflowlib import (
     convert_properties_mesh,
@@ -35,7 +35,7 @@ from ogstools.feflowlib.tools import (
 feflow_model = ifm.loadDocument(path_box_Neumann)
 pyvista_mesh = convert_properties_mesh(feflow_model)
 
-global_theme.colorbar_orientation = "vertical"
+pv.global_theme.colorbar_orientation = "vertical"
 pyvista_mesh.plot(
     show_edges=True,
     off_screen=True,
@@ -52,12 +52,12 @@ pyvista_mesh.save(str(path_mesh))
 point_BC_dict = extract_point_boundary_conditions(path_writing, pyvista_mesh)
 # Since there can be multiple point boundary conditions on the bulk mesh,
 # they are saved and plotted iteratively.
-for path, boundary_condition in point_BC_dict.items():
+plotter = pv.Plotter(shape=(len(point_BC_dict), 1))
+for i, (path, boundary_condition) in enumerate(point_BC_dict.items()):
     boundary_condition.save(path)
-    boundary_condition.plot(
-        scalars=Path(path).stem,
-        scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
-    )
+    plotter.subplot(i, 0)
+    plotter.add_mesh(boundary_condition, scalars=Path(path).stem)
+plotter.show()
 path_topsurface, topsurface = extract_cell_boundary_conditions(
     path_mesh, pyvista_mesh
 )
@@ -92,7 +92,7 @@ ET.dump(root)
 model.run_model(logfile=str(path_writing / "out.log"))
 # %%
 # 5. Read the results and plot them.
-ogs_sim_res = read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
+ogs_sim_res = pv.read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
 ogs_sim_res.plot(
     show_edges=True,
     off_screen=True,

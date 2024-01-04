@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 
 import pyvista
+from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
 
 import ogstools
 
@@ -30,6 +31,7 @@ extensions = [
     "sphinxcontrib.mermaid",
     "sphinxcontrib.programoutput",
     "myst_nb",
+    "pyvista.ext.viewer_directive",
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
 ]
@@ -125,7 +127,7 @@ sphinx_gallery_conf = {
     "gallery_dirs": ["auto_examples"],
     "show_signature": False,
     "download_all_examples": False,
-    "image_scrapers": ("matplotlib", "pyvista"),
+    "image_scrapers": ("matplotlib", DynamicScraper()),
     "matplotlib_animations": True,
 }
 
