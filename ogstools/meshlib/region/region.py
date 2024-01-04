@@ -88,12 +88,10 @@ def to_boundary(
         filter_condition(surface_mesh["Normals"])
     ]
 
-    surface_mesh.rename_array("vtkOriginalPointIds", "BULK_NODE_ID")
-    surface_mesh.rename_array("vtkOriginalCellIds", "BULK_ELEMENT_ID")
-    surface_mesh.cell_data.remove("Normals")
     specific_cells = surface_mesh.extract_cells(ids)
-    specific_cells.cell_data.remove("vtkOriginalCellIds")
-    specific_cells.point_data.remove("vtkOriginalPointIds")
+    specific_cells.rename_array("vtkOriginalPointIds", "BULK_NODE_ID")
+    specific_cells.rename_array("vtkOriginalCellIds", "BULK_ELEMENT_ID")
+    specific_cells.cell_data.remove("Normals")
     return specific_cells
 
 
