@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
+from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib.boundary import Layer, LocationFrame, Raster
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Gaussian2D, Surface
@@ -15,7 +16,8 @@ from ogstools.meshlib.region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-from ogstools.meshlib.tests import MeshPath
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class LayerTest(unittest.TestCase):
@@ -25,11 +27,11 @@ class LayerTest(unittest.TestCase):
         """
         layer1 = Layer(
             top=Surface(
-                MeshPath("data/mesh1/surface_data/00_KB.vtu"),
+                meshpath / "mesh1/surface_data/00_KB.vtu",
                 0,
             ),
             bottom=Surface(
-                MeshPath("data/mesh1/surface_data/01_q.vtu"),
+                meshpath / "mesh1/surface_data/01_q.vtu",
                 1,
             ),
             material_id=0,

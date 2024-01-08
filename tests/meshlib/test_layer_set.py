@@ -1,16 +1,18 @@
 import unittest
 
+from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Surface
-from ogstools.meshlib.tests import MeshPath
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class LayerSetTest(unittest.TestCase):
-    layerset = MeshPath("data/compose_geomodel/layersets.csv")
-    materialset = MeshPath("data/compose_geomodel/materialset.csv")
-    surfacedata = MeshPath("data/mesh1/surface_data/")
+    layerset = meshpath / "compose_geomodel/layersets.csv"
+    materialset = meshpath / "compose_geomodel/materialset.csv"
+    surfacedata = meshpath / "mesh1/surface_data/"
 
     def test_create_with_3_intermediate(self):
         mesh3_df = dataframe_from_csv(
@@ -36,15 +38,15 @@ class LayerSetTest(unittest.TestCase):
     def test_create_with_no_intermediate(self):
         resolution = 300
         surface1 = Surface(
-            MeshPath("data/mesh1/surface_data/00_KB.vtu"),
+            meshpath / "mesh1/surface_data/00_KB.vtu",
             0,
         )
         surface2 = Surface(
-            MeshPath("data/mesh1/surface_data/01_q.vtu"),
+            meshpath / "mesh1/surface_data/01_q.vtu",
             1,
         )
         surface3 = Surface(
-            MeshPath("data/mesh1/surface_data/02_krl.vtu"),
+            meshpath / "mesh1/surface_data/02_krl.vtu",
             1,
         )
 

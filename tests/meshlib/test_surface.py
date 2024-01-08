@@ -3,8 +3,10 @@ import unittest
 import numpy as np
 import pyvista as pv
 
+from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib.boundary_subset import Surface
-from ogstools.meshlib.tests import MeshPath
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class SurfaceTest(unittest.TestCase):
@@ -16,7 +18,7 @@ class SurfaceTest(unittest.TestCase):
         """
         OK if file can be loaded - if not it raises an exception
         """
-        filename = MeshPath("data/mesh1/surface_data/00_KB.vtu")
+        filename = meshpath / "mesh1/surface_data/00_KB.vtu"
         s = Surface(filename, 0)  # checks
         self.assertEqual(s.filename, filename)
 
@@ -44,14 +46,14 @@ class SurfaceTest(unittest.TestCase):
         self.assertRaises(
             Exception,
             Surface.__init__,
-            MeshPath("data/mesh1/surface_data/notexisting.vtu"),
+            meshpath / "mesh1/surface_data/notexisting.vtu",
             0,
             0,
         )
 
     def testsurfaceToRaster(self):
         s1 = Surface(
-            MeshPath("data/mesh1/surface_data/00_KB.vtu"),
+            meshpath / "mesh1/surface_data/00_KB.vtu",
             0,
         )
         outfile = s1.create_raster_file(10)

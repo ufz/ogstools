@@ -1,16 +1,19 @@
 import unittest
 
+from ogstools.definitions import TESTS_DIR
+from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.region import (
     to_region_simplified,
 )
-from ogstools.meshlib.tests import MeshPath, dataframe_from_csv
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class RegionTest(unittest.TestCase):
-    layerset = MeshPath("data/compose_geomodel/layersets.csv")
-    materialset = MeshPath("data/compose_geomodel/materialset.csv")
-    surfacedata = MeshPath("data/mesh1/surface_data/")
+    layerset = meshpath / "compose_geomodel/layersets.csv"
+    materialset = meshpath / "compose_geomodel/materialset.csv"
+    surfacedata = meshpath / "mesh1/surface_data/"
 
     def test_top_boundary(self):
         mesh_df_coarseZ = dataframe_from_csv(

@@ -1,6 +1,7 @@
 import unittest
 from collections import Counter
 
+from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Gaussian2D, Surface
@@ -10,26 +11,27 @@ from ogstools.meshlib.region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-from ogstools.meshlib.tests import MeshPath
+
+meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 class DemoTest(unittest.TestCase):
     def test_allcompare(self):
         # To define a mesh with 3 layers from example input, create 4 surfaces (3 bottom surface + 1 top surface)
         surface1 = Surface(
-            MeshPath("data/mesh1/surface_data/00_KB.vtu"),
+            meshpath / "mesh1/surface_data/00_KB.vtu",
             material_id=0,
         )
         surface2 = Surface(
-            MeshPath("data/mesh1/surface_data/01_q.vtu"),
+            meshpath / "mesh1/surface_data/01_q.vtu",
             material_id=5,
         )
         surface3 = Surface(
-            MeshPath("data/mesh1/surface_data/02_krl.vtu"),
+            meshpath / "mesh1/surface_data/02_krl.vtu",
             material_id=2,
         )
         surface4 = Surface(
-            MeshPath("data/mesh1/surface_data/03_S3.vtu"),
+            meshpath / "mesh1/surface_data/03_S3.vtu",
             material_id=3,
         )
         layer1 = Layer(top=surface1, bottom=surface2, num_subdivisions=2)
