@@ -214,7 +214,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
     # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
-    assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
+    # assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
     for material_id in np.unique(material_ids):
         indices = np.where(material_ids == material_id)
         property_of_material = mesh.cell_data[property][indices]
@@ -436,6 +436,126 @@ def materials_in_liquid_flow(
     return model
 
 
+def materials_in_HT(
+    material_properties: dict,
+    model,
+):
+    """
+    Create the section for material properties for HT processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :type bulk_mesh_path: Path
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :param material_properties: material properties
+    :type material_properties: dict
+    :param model: model to setup prj-file
+    :type model: ogs6py.OGS
+    :return: model
+    :rtype: ogs6py.OGS
+    """
+    for material_id in material_properties:
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="specific_heat_capacity",
+            type="Constant",
+            value=material_properties[material_id][
+                "specific_heat_capacity_fluid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="thermal_conductivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_conductivity_fluid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="storage",
+            type="Constant",
+            value=material_properties[material_id]["storage"],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="specific_heat_capacity",
+            type="Constant",
+            value=material_properties[material_id][
+                "specific_heat_capacity_solid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="thermal_conductivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_conductivity_solid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="permeability",
+            type="Constant",
+            value=material_properties[material_id]["permeability"],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=material_properties[material_id]["porosity"],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_conductivity",
+            type="EffectiveThermalConductivityPorosityMixing",
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_transversal_dispersivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_transversal_dispersivity"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_longitudinal_dispersivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_longitudinal_dispersivity"
+            ],
+        )
+
+    return model
+
+
 def setup_prj_file(
     bulk_mesh_path: Path,
     mesh: pv.UnstructuredGrid,
@@ -579,6 +699,8 @@ def setup_prj_file(
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
         materials_in_liquid_flow(material_properties, model)
+    elif process == "HT":
+        materials_in_HT(material_properties, model)
     else:
         msg = "Only 'steady state diffusion' and 'liquid flow' processes are supported."
         raise ValueError(msg)
