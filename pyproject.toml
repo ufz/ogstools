@@ -25,6 +25,7 @@ dependencies = [
   "papermill>=2.4.0",
   "ogs>=6.5.0",
   "ogs6py>=0.370",
+  "tqdm>=4.60",
 ]
 
 [project.urls]

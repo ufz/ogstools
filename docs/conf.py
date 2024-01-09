@@ -122,6 +122,9 @@ autodoc_typehints = "description"
 pyvista.BUILDING_GALLERY = True
 pyvista.OFF_SCREEN = True
 
+# Disable progress bars in sphinx
+os.environ["TQDM_DISABLE"] = "1"
+
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],
     "gallery_dirs": ["auto_examples"],

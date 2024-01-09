@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pyvista as pv
 from pint import UnitRegistry
+from tqdm.auto import tqdm
 
 from ogstools import meshlib, propertylib
 
@@ -270,7 +271,7 @@ def convergence_metrics_evolution(
     p_metrics_per_t = np.empty((0, 6))
 
     timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
-    for timevalue in common_timevalues:
+    for timevalue in tqdm(common_timevalues):
         meshes = [ms.read_closest(timevalue) for ms in mesh_series]
         reference = richardson_extrapolation(
             meshes, property, meshes[-3], refinement_ratio
