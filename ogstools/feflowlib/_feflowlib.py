@@ -244,8 +244,10 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid):
             for to_be_converted in arrays_to_be_converted
         ):
             mesh[data] *= 1 / 86400
-        if "4TH" in data or "2ND" in data:
+        elif "4TH" in data or "2ND" in data:
             mesh[data] *= -1 / 86400
+        elif "HEAT" in data or "TEMP" in data:
+            mesh[data] = mesh[data] + [273.15] * len(mesh[data])
     return mesh
 
 
