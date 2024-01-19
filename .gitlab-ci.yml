@@ -64,10 +64,12 @@ tests win:
   script:
     - pytest
 
+# Remove -j 1 when this is resolved:
+# https://github.com/pydata/pydata-sphinx-theme/issues/1643
 .docs-script: &docs-script
   - make setup_devcontainer
   - source .venv-devcontainer/bin/activate
-  - make docs SPHINXOPTS="-W --keep-going -n -j auto"
+  - make docs SPHINXOPTS="-W --keep-going -n -j 1"
   - mv docs/_build/html public
 
 docs preview:
