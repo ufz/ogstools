@@ -478,7 +478,7 @@ def materials_in_HT(
             phase_type="AqueousLiquid",
             name="viscosity",
             type="Constant",
-            value=0.001124,
+            value=1,
         )
         model.media.add_property(
             medium_id=material_id,
@@ -523,7 +523,12 @@ def materials_in_HT(
             medium_id=material_id,
             name="permeability",
             type="Constant",
-            value=material_properties[material_id]["permeability"],
+            value=str(material_properties[material_id]["permeability"])
+            + " "
+            + str(
+                material_properties[material_id]["permeability"]
+                * material_properties[material_id]["anisotropy"]
+            ),
         )
         model.media.add_property(
             medium_id=material_id,
