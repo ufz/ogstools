@@ -237,6 +237,53 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     return material_properties
 
 
+def get_materials_of_HT_model(mesh: pv.UnstructuredGrid):
+    """
+    Get a dictionary of all necessaray parameter values for a HT problem for each material in the mesh.
+
+    :param mesh: mesh
+    :type mesh: pyvista.UnstructuredGrid
+    :return: material_properties
+    :rtype: collections.defaultdict
+    """
+    parameters_feflow = [
+        "P_ANGL",
+        "P_ANIS",
+        "P_CAPACF",
+        "P_CAPACS",
+        "P_COMP",
+        "P_COND",
+        "P_CONDUCF",
+        "P_CONDUCS",
+        "P_POROH",
+        "P_LDISH",
+        "P_TDISH",
+        "P_ANIS",
+    ]
+    parameters_ogs = [
+        "anisotropy_angle",
+        "anisotropy_factor",
+        "specific_heat_capacity_fluid",
+        "specific_heat_capacity_solid",
+        "storage",
+        "permeability",
+        "thermal_conductivity_fluid",
+        "thermal_conductivity_solid",
+        "porosity",
+        "thermal_longitudinal_dispersivity",
+        "thermal_transversal_dispersivity",
+    ]
+    material_properties: defaultdict = defaultdict(dict)
+    for parameter_feflow, parameter_ogs in zip(
+        parameters_feflow, parameters_ogs
+    ):
+        for material_id, property_value in get_material_properties(
+            mesh, parameter_feflow
+        ).items():
+            material_properties[material_id][parameter_ogs] = property_value[0]
+    return material_properties
+
+
 def combine_material_properties(
     mesh: pv.UnstructuredGrid, properties_list: list
 ):
@@ -527,7 +574,7 @@ def materials_in_HT(
             + " "
             + str(
                 material_properties[material_id]["permeability"]
-                * material_properties[material_id]["anisotropy"]
+                * material_properties[material_id]["anisotropy_factor"]
             ),
         )
         model.media.add_property(
