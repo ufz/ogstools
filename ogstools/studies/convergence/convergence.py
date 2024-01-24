@@ -164,19 +164,17 @@ def convergence_metrics(
     mins = [np.min(_data(m)) for m in _meshes]
     rel_errs_max = np.abs(1.0 - maxs / maxs[-1])
     rel_errs_min = np.abs(1.0 - mins / mins[-1])
-    rel_errs_l2 = []
-    for mesh in resample(reference, _meshes):
-        rel_errs_l2 += [
-            np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
-            / np.linalg.norm(_data(reference), axis=0, ord=2)
-        ]
+    rel_errs_l2 = [
+        np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
+        / np.linalg.norm(_data(reference), axis=0, ord=2)
+        for mesh in resample(reference, _meshes)
+    ]
     abs_errs_max = maxs - maxs[-1]
     abs_errs_min = mins - mins[-1]
-    abs_errs_l2 = []
-    for mesh in resample(reference, _meshes):
-        abs_errs_l2 += [
-            np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
-        ]
+    abs_errs_l2 = [
+        np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
+        for mesh in resample(reference, _meshes)
+    ]
     data = np.column_stack(
         (
             discretization,
