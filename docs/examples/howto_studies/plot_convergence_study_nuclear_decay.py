@@ -164,11 +164,18 @@ evolution_metrics = studies.convergence.convergence_metrics_evolution(
 )
 
 # %% [markdown]
-# Looking at the relative errors, we see a higher error right at the beginning.
+# Looking at the errors, we see a higher error right at the beginning.
 # This is likely due to the more dynamic behavior at the beginning.
 
 # %%
-fig = studies.convergence.plot_convergence_error_evolution(evolution_metrics)
+fig = studies.convergence.plot_convergence_error_evolution(
+    evolution_metrics, error_type="absolute"
+)
+
+# %%
+fig = studies.convergence.plot_convergence_error_evolution(
+    evolution_metrics, error_type="relative"
+)
 
 # %% [markdown]
 # A look at the convergence order evolution shows almost quadratic convergence
