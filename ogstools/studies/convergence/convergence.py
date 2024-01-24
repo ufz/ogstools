@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -163,18 +164,35 @@ def convergence_metrics(
     mins = [np.min(_data(m)) for m in _meshes]
     rel_errs_max = np.abs(1.0 - maxs / maxs[-1])
     rel_errs_min = np.abs(1.0 - mins / mins[-1])
-    rel_errs_l2 = []
-    for mesh in resample(reference, _meshes):
-        rel_errs_l2 += [
-            np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
-            / np.linalg.norm(_data(reference), axis=0, ord=2)
-        ]
-    data = np.column_stack(
-        (discretization, maxs, mins, rel_errs_max, rel_errs_min, rel_errs_l2)
-    )
-    columns = [discretization_label, "maximum", "minimum"] + [
-        f"rel. error ({x})" for x in ["max", "min", "L2 norm"]
+    rel_errs_l2 = [
+        np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
+        / np.linalg.norm(_data(reference), axis=0, ord=2)
+        for mesh in resample(reference, _meshes)
     ]
+    abs_errs_max = maxs - maxs[-1]
+    abs_errs_min = mins - mins[-1]
+    abs_errs_l2 = [
+        np.linalg.norm(_data(reference) - _data(mesh), axis=0, ord=2)
+        for mesh in resample(reference, _meshes)
+    ]
+    data = np.column_stack(
+        (
+            discretization,
+            maxs,
+            mins,
+            abs_errs_max,
+            abs_errs_min,
+            abs_errs_l2,
+            rel_errs_max,
+            rel_errs_min,
+            rel_errs_l2,
+        )
+    )
+    columns = (
+        [discretization_label, "maximum", "minimum"]
+        + [f"abs. error ({x})" for x in ["max", "min", "L2 norm"]]
+        + [f"rel. error ({x})" for x in ["max", "min", "L2 norm"]]
+    )
 
     return pd.DataFrame(data, columns=columns)
 
@@ -192,20 +210,15 @@ def log_fit(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
 
 def convergence_order(metrics: pd.DataFrame) -> pd.DataFrame:
     "Calculates the convergence order for given convergence metrics."
-    columns = [
-        f"{t} ({x})"
-        for x in ["max", "min", "L2 norm"]
-        for t in ["rel. error", "p"]
-    ]
     fit_df = metrics.replace(0.0, np.nan)
     fit_df[fit_df < 1e-12] = np.nan
-    data = []
+    data = metrics.iloc[-2, 3:].to_numpy()
     for col in [-3, -2, -1]:
         p, _ = log_fit(
             fit_df.iloc[:, 0].to_numpy(), fit_df.iloc[:, col].to_numpy()
         )
-        data += [metrics.iloc[-2, col], p]
-    return pd.DataFrame([data], columns=columns)
+        data = np.append(data, p)
+    return data
 
 
 def plot_convergence(
@@ -232,7 +245,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
     x_vals = plot_df.iloc[:, 0].to_numpy()
     fig, ax = plt.subplots()
     for i, c in enumerate("rbg"):
-        j = i + 3
+        j = i + 6
         order_p, fit_vals = log_fit(x_vals, plot_df.iloc[:, j].to_numpy())
         err_str = ["max", "min", "L2"][i]
         label = f"$\\varepsilon_{{rel}}^{{{err_str}}} (p={order_p:.2f})$"
@@ -268,7 +281,7 @@ def convergence_metrics_evolution(
         set(all_timevalues[0]).intersection(*all_timevalues[1:])
     )
 
-    p_metrics_per_t = np.empty((0, 6))
+    p_metrics_per_t = np.empty((0, 9))
 
     timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
     for timevalue in tqdm(common_timevalues):
@@ -280,7 +293,7 @@ def convergence_metrics_evolution(
             meshes, reference, property, timestep_sizes
         )
         p_metrics = convergence_order(metrics)
-        p_metrics_per_t = np.vstack((p_metrics_per_t, p_metrics.to_numpy()))
+        p_metrics_per_t = np.vstack((p_metrics_per_t, p_metrics))
 
     time_vals = (
         u_reg.Quantity(np.array(common_timevalues), units[0])
@@ -288,23 +301,30 @@ def convergence_metrics_evolution(
         .magnitude
     )
     p_metrics_per_t = np.concatenate(([time_vals], p_metrics_per_t.T)).T
-    columns = ["timevalue"] + list(p_metrics.columns)
+    columns = ["timevalue"] + [
+        f"{t} ({x})"
+        for t in ["abs. error", "rel. error", "p"]
+        for x in ["max", "min", "L2 norm"]
+    ]
     return pd.DataFrame(p_metrics_per_t, columns=columns)
 
 
 def plot_convergence_error_evolution(
     evolution_metrics: pd.DataFrame,
+    error_type: Literal["relative", "absolute"] = "relative",
 ) -> plt.Figure:
     "Plot the evolution of relative errors."
     ax: plt.Axes
     fig, ax = plt.subplots()
+    column_offset = 4 if error_type == "relative" else 1
     for index, color in enumerate("rbg"):
-        column = index * 2 + 1
+        column = index + column_offset
         label = ["max", "min", "L2"][index]
         evolution_metrics.plot(
             ax=ax, x=0, y=column, c=color, style="o-", grid=True, label=label
         )
-    ax.set_ylabel("relative error $\\varepsilon_{{rel}}$")
+    shorthand = error_type[:3]
+    ax.set_ylabel(error_type + f" error $\\varepsilon_{{{shorthand}}}$")
     fig.tight_layout()
     return fig
 
@@ -316,7 +336,7 @@ def plot_convergence_order_evolution(
     ax: plt.Axes
     fig, ax = plt.subplots()
     for index, color in enumerate("rbg"):
-        column = index * 2 + 2
+        column = -3 + index
         label = ["max", "min", "L2"][index]
         evolution_metrics.plot(
             ax=ax, x=0, y=column, c=color, style="o-", grid=True, label=label
