@@ -84,7 +84,7 @@ xfail_strict = true
 # tests
 #filterwarnings = ["error"]
 log_cli_level = "info"
-testpaths = ["tests", "ogstools/meshlib/tests"]
+testpaths = ["tests"]
 
 [tool.black]
 line-length = 80
