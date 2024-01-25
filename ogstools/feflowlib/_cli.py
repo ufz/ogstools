@@ -16,7 +16,9 @@ from ogstools.feflowlib import (
     convert_geometry_mesh,
     deactivate_cells,
     extract_cell_boundary_conditions,
+    get_materials_of_HT_model,
     helpFormat,
+    hydro_thermal,
     liquid_flow,
     setup_prj_file,
     steady_state_diffusion,
@@ -41,6 +43,7 @@ parser.add_argument(
         "properties_surface",
         "OGS_steady_state_diffusion",
         "OGS_liquid_flow",
+        "OGS_hydro_thermal",
     ],
     default="OGS_steady_state_diffusion",
     type=str,
@@ -50,7 +53,8 @@ parser.add_argument(
     '3. "surface" to convert only the surface of the mesh.\n'
     '4. "properties_surface" to convert the surface with properties.\n'
     '5. "OGS_steady_state_diffusion" to prepare a OGS-project according to a steady state diffusion process.\n'
-    '6. "OGS_liquid_flow" to prepare a OGS-project according to a liquid flow process.\n',
+    '6. "OGS_liquid_flow" to prepare a OGS-project according to a liquid flow process.\n'
+    '7. "OGS_hydro_thermal" to prepare a OGS-project according to a hydro_thermal process.\n',
     nargs="?",
     const=1,
 )
@@ -99,6 +103,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
         "properties": "mesh with its properties",
         "OGS_steady_state_diffusion": "mesh with its properties and boundary condition(s)",
         "OGS_liquid_flow": "mesh with its properties and boundary condition(s)",
+        "OGS_hydro_thermal": "mesh with its properties and boundary condition(s)",
     }
 
     args = parser.parse_args()
@@ -140,8 +145,14 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
                 "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
             )
         # create a prj-file, which is not complete. Manual extensions are needed.
-        property_list = ["P_COND"]
-        material_properties = combine_material_properties(mesh, property_list)
+        if "hydro_thermal" not in case:
+            property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
+            material_properties = combine_material_properties(
+                mesh, property_list
+            )
+        elif "hydro_thermal" in case:
+            material_properties = get_materials_of_HT_model(mesh)
+
         for material_id, property_value in material_properties.items():
             if any(prop == "inhomogeneous" for prop in property_value):
                 write_mesh_of_combined_properties(
@@ -163,8 +174,17 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
             )
             process = "liquid flow"
+        elif "hydro_thermal" in case:
+            if doc.getNumberOfDimensions() == 2:
+                dimension2D = True
+            template_model = hydro_thermal(
+                str(Path(output).name),
+                ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
+            )
+            process = "hydro thermal"
         else:
-            error_msg = "Either you select 'OGS_steady_state_diffusion' to prepare a OGS project file for a steady state diffusion process or 'OGS_liquid_flow' for a liquid flow process."
+            error_msg = """Either you select 'OGS_steady_state_diffusion' to prepare a OGS project file for a steady state diffusion process,\n
+            'OGS_liquid_flow' for a liquid flow process or 'OGS_hydro_thermal' for a hydro thermal process."""
             raise ValueError(error_msg)
 
         ogs_model = setup_prj_file(

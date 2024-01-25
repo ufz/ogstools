@@ -12,12 +12,13 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from .templates import liquid_flow, steady_state_diffusion
+from .templates import hydro_thermal, liquid_flow, steady_state_diffusion
 from .tools import (
     combine_material_properties,
     deactivate_cells,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
+    get_materials_of_HT_model,
     get_specific_surface,
     helpFormat,
     setup_prj_file,
@@ -32,8 +33,10 @@ __all__ = [
     "deactivate_cells",
     "extract_cell_boundary_conditions",
     "extract_point_boundary_conditions",
+    "get_materials_of_HT_model",
     "get_specific_surface",
     "helpFormat",
+    "hydro_thermal",
     "liquid_flow",
     "points_and_cells",
     "setup_prj_file",
