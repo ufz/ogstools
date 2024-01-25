@@ -646,7 +646,9 @@ def setup_prj_file(
     }
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
-    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
+    # this if condition checks if the mesh is 3D. If so the topsurface will be considered.
+    if mesh.celltypes[0] not in [5, 9]:
+        model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
     if "thermal" in process:
         model.processes.add_process_variable(
             process_variable="temperature",
@@ -738,7 +740,11 @@ def setup_prj_file(
                 )
 
     for cell_data in mesh.cell_data:
-        if cell_data in ["P_IOFLOW", "P_SOUF"]:
+        if (
+            cell_data in ["P_IOFLOW", "P_SOUF"]
+            and np.unique(mesh.cell_data[cell_data]) != 0
+            and mesh.celltypes[0] not in [5, 9]
+        ):
             if cell_data in ["P_IOFLOW"]:
                 # Add boundary conditions
                 model.processvars.add_bc(
@@ -775,7 +781,7 @@ def setup_prj_file(
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
         materials_in_liquid_flow(material_properties, model)
-    elif process == "hydro_thermal":
+    elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
     else:
         msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
