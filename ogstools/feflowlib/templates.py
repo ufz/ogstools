@@ -179,8 +179,19 @@ def hydro_thermal(saving_path, model=None):
         type="FixedTimeStepping",
         t_initial="0",
         t_end="1e13",
-        repeat=["10,10,1"],
-        delta_t=["1e8,1e9,1e10"],
+        repeat="10",
+        delta_t="1e8",
+    )
+    model.timeloop.add_time_stepping_pair(
+        process="HydroThermal",
+        repeat="10",
+        delta_t="1e9",
+    )
+
+    model.timeloop.add_time_stepping_pair(
+        process="HydroThermal",
+        repeat="1",
+        delta_t="1e10",
     )
     model.timeloop.add_output(
         type="VTK",
@@ -207,6 +218,6 @@ def hydro_thermal(saving_path, model=None):
         name="general_linear_solver",
         kind="eigen",
         solver_type="SparseLU",
-        scaling=1,
+        scaling="true",
     )
     return model

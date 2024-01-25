@@ -647,9 +647,29 @@ def setup_prj_file(
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
     model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
-    model.processes.add_process_variable(
-        process_variable="process_variable", process_variable_name="HEAD_OGS"
-    )
+    if "thermal" in process:
+        model.processes.add_process_variable(
+            process_variable="temperature",
+            process_variable_name="temperature",
+        )
+        model.processvars.set_ic(
+            process_variable_name="temperature",
+            components=1,
+            order=1,
+            initial_condition="T0",
+        )
+        # Initial condition should be read from the FEFLOW file!
+        # But for this the initial condition should still be on the FEFLOW file.
+        # FEFLOW overwrites the initial condition, if the model was simulated.
+        model.parameters.add_parameter(name="T0", type="Constant", value=273.15)
+        model.processes.add_process_variable(
+            process_variable="pressure", process_variable_name="HEAD_OGS"
+        )
+    else:
+        model.processes.add_process_variable(
+            process_variable="process_variable",
+            process_variable_name="HEAD_OGS",
+        )
     model.processvars.set_ic(
         process_variable_name="HEAD_OGS",
         components=1,
@@ -661,6 +681,10 @@ def setup_prj_file(
         if point_data[0:4] == "P_BC":
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
+            if "HEAT" in point_data:
+                process_var = "temperature"
+            elif "FLOW" in point_data:
+                process_var = "HEAD_OGS"
             if "3RD" in point_data:
                 model.parameters.add_parameter(
                     name="u_0",
@@ -674,7 +698,7 @@ def setup_prj_file(
                     value=np.unique(mesh.cell_data["P_TRAF_IN"])[1],
                 )
                 model.processvars.add_bc(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type="Robin",
                     alpha="alpha",
                     u_0="u_0",
@@ -688,7 +712,7 @@ def setup_prj_file(
                     mesh=point_data,
                 )
                 model.processvars.add_st(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type="Nodal",
                     mesh=point_data,
                     parameter=point_data,
@@ -696,7 +720,7 @@ def setup_prj_file(
             else:
                 # Add boundary conditions
                 model.processvars.add_bc(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type=next(
                         val
                         for key, val in BC_type_dict.items()
@@ -751,10 +775,10 @@ def setup_prj_file(
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
         materials_in_liquid_flow(material_properties, model)
-    elif process == "HT":
+    elif process == "hydro_thermal":
         materials_in_HT(material_properties, model)
     else:
-        msg = "Only 'steady state diffusion' and 'liquid flow' processes are supported."
+        msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
         raise ValueError(msg)
 
     # add deactivated subdomains if existing
