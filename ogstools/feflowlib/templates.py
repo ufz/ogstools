@@ -72,7 +72,7 @@ def steady_state_diffusion(saving_path, model=None):
     return model
 
 
-def liquid_flow(saving_path, model=None):
+def liquid_flow(saving_path, model=None, dimension2D=False):
     """
     A template for a steady liquid flow process to be simulated in ogs.
 
@@ -81,11 +81,12 @@ def liquid_flow(saving_path, model=None):
     :param model: ogs model, which shall be used with the template
     :type model: ogs6py.ogs.OGS
     """
+    gravity = "0 0" if dimension2D else "0 0 0"
     model.processes.set_process(
         name="LiquidFlow",
         type="LIQUID_FLOW",
         integration_order="2",
-        specific_body_force="0 0 0",
+        specific_body_force=gravity,
         linear="true",
     )
     model.processes.add_process_variable(
@@ -148,7 +149,7 @@ def liquid_flow(saving_path, model=None):
     return model
 
 
-def hydro_thermal(saving_path, model=None):
+def hydro_thermal(saving_path, model=None, dimension2D=False):
     """
     A template for a hydro-thermal process to be simulated in ogs.
 
@@ -157,11 +158,12 @@ def hydro_thermal(saving_path, model=None):
     :param model: ogs model, which shall be used with the template
     :type model: ogs6py.ogs.OGS
     """
+    gravity = "0 0" if dimension2D else "0 0 0"
     model.processes.set_process(
         name="HydroThermal",
         type="HT",
         integration_order="3",
-        specific_body_force="0 0 0",
+        specific_body_force=gravity,
     )
     model.processes.add_process_variable(
         secondary_variable="darcy_velocity", output_name="v"
@@ -178,16 +180,10 @@ def hydro_thermal(saving_path, model=None):
         process="HydroThermal",
         type="FixedTimeStepping",
         t_initial="0",
-        t_end="1e13",
-        repeat="10",
-        delta_t="1e8",
+        t_end="1e11",
+        repeat="1",
+        delta_t="1e10",
     )
-    model.timeloop.add_time_stepping_pair(
-        process="HydroThermal",
-        repeat="10",
-        delta_t="1e9",
-    )
-
     model.timeloop.add_time_stepping_pair(
         process="HydroThermal",
         repeat="1",

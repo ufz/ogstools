@@ -180,6 +180,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str):
             template_model = hydro_thermal(
                 str(Path(output).name),
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
+                dimension2D,
             )
             process = "hydro thermal"
         else:
