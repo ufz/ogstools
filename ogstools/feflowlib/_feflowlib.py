@@ -141,7 +141,8 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     items_cell = doc.c.mesh.df.get_available_items(Type="elemental")[
         "Name"
     ].to_dict()
-
+    # also get user data that can be assigned manually in the FEFLOW file
+    user_data = ifm.contrib_lib.user.UserPd(doc).distributions().to_numpy()
     # 2. swap key and values in these dictionaries to have
     #  the name of the ifm.Enum value as key
     pts_dict = {y: x for x, y in items_pts.items()}
@@ -149,12 +150,34 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
 
     # 3. get all the nodal and elemental properties of the mesh as pandas
     # Dataframe and drop nans if a column is full of nans for all the properties
-    pt_prop = doc.c.mesh.df.nodes(global_cos=True, par=pts_dict).dropna(
-        axis=1, how="all"
-    )
-    cell_prop = doc.c.mesh.df.elements(global_cos=True, par=cell_dict).dropna(
-        axis=1, how="all"
-    )
+    pt_prop = doc.c.mesh.df.nodes(
+        global_cos=True,
+        par=pts_dict,
+        distr=[
+            dist[1]
+            for dist in user_data
+            if dist[3] == "NODAL" and dist[2] == "DISTRIBUTION"
+        ],
+        expr=[
+            dist[1]
+            for dist in user_data
+            if dist[3] == "NODAL" and dist[2] == "EXPRESSION"
+        ],
+    ).dropna(axis=1, how="all")
+    cell_prop = doc.c.mesh.df.elements(
+        global_cos=True,
+        par=cell_dict,
+        distr=[
+            dist[1]
+            for dist in user_data
+            if dist[3] == "ELEMENTAL" and dist[2] == "DISTRIBUTION"
+        ],
+        expr=[
+            dist[1]
+            for dist in user_data
+            if dist[3] == "ELEMENTAL" and dist[2] == "EXPRESSION"
+        ],
+    ).dropna(axis=1, how="all")
 
     # 4. write the pandas Dataframe of nodal and elemental properties to
     #  a dictionary
