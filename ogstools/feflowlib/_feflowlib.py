@@ -120,6 +120,14 @@ def _material_ids_from_selections(doc: ifm.FeflowDoc):
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
+def fetch_user_data(user_data, geom_type, val_type):
+    return [
+        data[1]
+        for data in user_data
+        if data[3] == geom_type and data[2] == val_type
+    ]
+
+
 def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
@@ -141,8 +149,12 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     items_cell = doc.c.mesh.df.get_available_items(Type="elemental")[
         "Name"
     ].to_dict()
-    # also get user data that can be assigned manually in the FEFLOW file
-    user_data = ifm.contrib_lib.user.UserPd(doc).distributions().to_numpy()
+    # Get user data, which can be assigned manually in the FEFLOW file.
+    # The exception is only needed, if there are no user data assigned.
+    try:
+        user_data = ifm.contrib_lib.user.UserPd(doc).distributions().to_numpy()
+    except KeyError:
+        user_data = []
     # 2. swap key and values in these dictionaries to have
     #  the name of the ifm.Enum value as key
     pts_dict = {y: x for x, y in items_pts.items()}
@@ -153,30 +165,14 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     pt_prop = doc.c.mesh.df.nodes(
         global_cos=True,
         par=pts_dict,
-        distr=[
-            dist[1]
-            for dist in user_data
-            if dist[3] == "NODAL" and dist[2] == "DISTRIBUTION"
-        ],
-        expr=[
-            dist[1]
-            for dist in user_data
-            if dist[3] == "NODAL" and dist[2] == "EXPRESSION"
-        ],
+        distr=fetch_user_data(user_data, "NODAL", "DISTRIBUTION"),
+        expr=fetch_user_data(user_data, "NODAL", "EXPRESSION"),
     ).dropna(axis=1, how="all")
     cell_prop = doc.c.mesh.df.elements(
         global_cos=True,
         par=cell_dict,
-        distr=[
-            dist[1]
-            for dist in user_data
-            if dist[3] == "ELEMENTAL" and dist[2] == "DISTRIBUTION"
-        ],
-        expr=[
-            dist[1]
-            for dist in user_data
-            if dist[3] == "ELEMENTAL" and dist[2] == "EXPRESSION"
-        ],
+        distr=fetch_user_data(user_data, "ELEMENTAL", "DISTRIBUTION"),
+        expr=fetch_user_data(user_data, "ELEMENTAL", "EXPRESSION"),
     ).dropna(axis=1, how="all")
 
     # 4. write the pandas Dataframe of nodal and elemental properties to
