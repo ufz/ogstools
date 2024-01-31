@@ -1,11 +1,12 @@
-def steady_state_diffusion(saving_path, model=None):
+from ogs6py import ogs
+
+
+def steady_state_diffusion(saving_path: str, model: ogs.OGS = None) -> ogs.OGS:
     """
     A template for a steady state diffusion process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
-    :type saving_path: str
     :param model: ogs model, which shall be used with the template
-    :type model: ogs6py.ogs.OGS
     """
     model.processes.set_process(
         name="SteadyStateDiffusion",
@@ -72,14 +73,14 @@ def steady_state_diffusion(saving_path, model=None):
     return model
 
 
-def liquid_flow(saving_path, model=None, dimension2D=False):
+def liquid_flow(
+    saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
+) -> ogs.OGS:
     """
     A template for a steady liquid flow process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
-    :type saving_path: str
     :param model: ogs model, which shall be used with the template
-    :type model: ogs6py.ogs.OGS
     """
     gravity = "0 0" if dimension2D else "0 0 0"
     model.processes.set_process(
@@ -149,14 +150,15 @@ def liquid_flow(saving_path, model=None, dimension2D=False):
     return model
 
 
-def hydro_thermal(saving_path, model=None, dimension2D=False):
+def hydro_thermal(
+    saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
+) -> ogs.OGS:
     """
     A template for a hydro-thermal process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
-    :type saving_path: str
     :param model: ogs model, which shall be used with the template
-    :type model: ogs6py.ogs.OGS
+    :param dimension2D: to known if the model is 2D or not
     """
     gravity = "0 0" if dimension2D else "0 0 0"
     model.processes.set_process(

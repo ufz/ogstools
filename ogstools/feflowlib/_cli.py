@@ -76,19 +76,16 @@ parser.add_argument(
 logger = log.getLogger(__name__)
 
 
-def feflow_converter(input: str, output: str, case: str, BC: str):
+def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     """
     This function summarizes main functionality of the feflowlib. It show examplary how a
     workflow could look like to achieve the conversion of FEFLOW data to a vtu-file.
 
     :param input: input path to FEFLOW data
-    :type input: str
     :param output: output path of vtu-file
-    :type output: str
     :param case: option for conversion process
-    :type case: str
     :param BC: option if boundary condition shall be extracted or not
-    :type BC: str
+    :return: error code if function failed (1) or was successful (0)
     """
     # log feflow version
     logger.info(

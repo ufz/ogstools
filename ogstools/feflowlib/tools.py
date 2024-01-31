@@ -19,7 +19,9 @@ class helpFormat(
     """
 
 
-def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
+def get_specific_surface(
+    surface_mesh: pv.PolyData, filter_condition
+) -> pv.UnstructuredGrid:
     """
     Return only cells that match the filter condition for the normals of the
     input-surface mesh. A standard use case could be to extract the cells that
@@ -27,11 +29,8 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     filter condition would then be: `lambda normals: normals[:, 2] > 0`.
 
     :param surface_mesh: The surface mesh.
-    :type surface_mesh: pyvista.PolyData
     :param filter_condition: A condition to set up the filter for the normals.
-    :type filter_condition: Callable [[list], [list]]
     :return: specific_cells
-    :rtype: pyvista.UnstructuredGird
     """
     # Compute the normals of the surface mesh
     surface_mesh = surface_mesh.compute_normals(
@@ -71,17 +70,14 @@ def remove_bulk_ids(mesh: pv.UnstructuredGrid):
 
 def extract_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> dict:
     """
     Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
 
     :param out_mesh_path: path of the output mesh
-    :type out_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: dict_of_point_boundary_conditions
-    :rtype: dict
     """
     dict_of_point_boundary_conditions = {}
     # Assigning bulk node ids because format needs to be unsigned integer for OGS.
@@ -142,9 +138,7 @@ def write_point_boundary_conditions(
     Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
 
     :param out_mesh_path: path for writing
-    :type out_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     """
     point_boundary_conditions_dict = extract_point_boundary_conditions(
         out_mesh_path, mesh
@@ -164,9 +158,7 @@ def extract_cell_boundary_conditions(
     TODO: Allow a generic definition of the normal vector for the filter condition.
 
     :param bulk_mesh_path: name of the mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: path with name of mesh, topsurface mesh with cell boundary conditions
     :rtype: tuple
     """
@@ -198,18 +190,15 @@ def extract_cell_boundary_conditions(
     )
 
 
-def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
+def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     """
     Get the material properties of the mesh converted from FEFLOW. There are several methods available
     to access the material properties. Either they are accessible with the FEFLOW API(ifm) or with brute-force methods,
     which check each element, like this function.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param property: property
-    :type property: str
     :return: material_properties
-    :rtype: dict
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
@@ -237,14 +226,14 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     return material_properties
 
 
-def get_materials_of_HT_model(mesh: pv.UnstructuredGrid):
+def get_materials_of_HT_model(
+    mesh: pv.UnstructuredGrid,
+) -> defaultdict:
     """
     Get a dictionary of all necessaray parameter values for a HT problem for each material in the mesh.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: material_properties
-    :rtype: collections.defaultdict
     """
     parameters_feflow = [
         "P_ANGL",
@@ -286,17 +275,14 @@ def get_materials_of_HT_model(mesh: pv.UnstructuredGrid):
 
 def combine_material_properties(
     mesh: pv.UnstructuredGrid, properties_list: list
-):
+) -> defaultdict:
     """
     Combine multiple material properties. The combined properties are returned
     as list of values in a dictionary.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param properties_list: list of properties to be combined
-    :type properties_list: list
     :return: material_properties
-    :rtype: collections.defaultdict
     """
     # Use a default dict because it allows to extend the values in the list.
     # Also it initializes the value if there is an empty list.
@@ -318,7 +304,7 @@ def write_mesh_of_combined_properties(
     new_property: str,
     material_id: int,
     saving_path: Path,
-):
+) -> str:
     """
     Writes a separate mesh-file with a specific material that has inhomogeneous property values
     within the material group. It can also be used to write multiple properties
@@ -327,17 +313,11 @@ def write_mesh_of_combined_properties(
     be used to write the inhomogeneous values of a single property into a separate mesh-file.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param property_list: list of properties
-    :type property_list: list
     :param new_property: name of the combined properties
-    :type new_property: str
     :param material: material with inhomogeneous properties
-    :type material: int
     :param saving_path: path to save the mesh
-    :type saving_path: Path
     :return: filename
-    :rtype: str
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
@@ -362,20 +342,15 @@ def write_mesh_of_combined_properties(
 def materials_in_steady_state_diffusion(
     material_properties: dict,
     model,
-):
+) -> ogs.OGS:
     """
     Create the section for material properties for steady state diffusion processes in the prj-file.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -411,20 +386,15 @@ def materials_in_steady_state_diffusion(
 def materials_in_liquid_flow(
     material_properties: dict,
     model,
-):
+) -> ogs.OGS:
     """
     Create the section for material properties in liquid flow processes in the prj-file.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -486,20 +456,15 @@ def materials_in_liquid_flow(
 def materials_in_HT(
     material_properties: dict,
     model,
-):
+) -> ogs.OGS:
     """
     Create the section for material properties for HT processes in the prj-file.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
     for material_id in material_properties:
         model.media.add_property(
@@ -614,22 +579,16 @@ def setup_prj_file(
     material_properties: dict,
     process: str,
     model=None,
-):
+) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param process: the process to be prepared
-    :type process: str
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
 
     prjfile = bulk_mesh_path.with_suffix(".prj")
@@ -814,14 +773,12 @@ def setup_prj_file(
     return model
 
 
-def deactivate_cells(mesh: pv.UnstructuredGrid):
+def deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
     """
     Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
     Therefore, the input mesh is modified.
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
-    :rytpe: int
     """
     inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
     if len(inactive_cells[0]) == 0:
