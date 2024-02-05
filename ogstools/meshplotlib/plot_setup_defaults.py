@@ -34,12 +34,15 @@ setup_dict = {
     "custom_cmap": None,
     "cmap_dict": {
         "displacement": "Greens",
-        "temperature": ["Blues", "plasma"],
+        "temperature": "plasma",
         "pressure": "Blues",
         "velocity": "coolwarm",
         "MaterialIDs": "tab20",
     },
-    "cmap_dict_if_bilinear": {"displacement": "PRGn"},
+    "cmap_dict_if_bilinear": {
+        "displacement": "PRGn",
+        "temperature": ["Blues", "plasma"],
+    },
     "cmap_if_mask": ["lightgrey", "green"],
     "rcParams": {
         "font.weight": "normal",

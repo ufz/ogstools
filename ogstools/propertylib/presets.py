@@ -22,7 +22,7 @@ hydraulic_height = Scalar("pressure", "m", "m", "hydraulic_height", H_mask)
 qp_ratio = Scalar("sigma", "Pa", "percent", "QP_ratio", M_mask, v2s.qp_ratio)
 strain = Matrix("epsilon", "", "percent", "strain", M_mask)
 stress = Matrix("sigma", "Pa", "MPa", "stress", M_mask)
-temperature = Scalar("temperature", "K", "°C", mask=T_mask)
+temperature = Scalar("temperature", "K", "°C", mask=T_mask, bilinear_cmap=True)
 velocity = Vector("velocity", "m/s", "m/s", "darcy_velocity", H_mask)
 von_mises_stress = Scalar("sigma", "Pa", "MPa", "von_Mises_stress", M_mask, v2s.von_mises)
 # fmt: on
