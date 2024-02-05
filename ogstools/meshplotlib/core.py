@@ -113,6 +113,7 @@ def add_colorbars(
     property: Property,
     levels: np.ndarray,
     pad: float = 0.05,
+    labelsize: Opt[float] = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     cmap, norm = get_cmap_norm(levels, property)
@@ -137,13 +138,13 @@ def add_colorbars(
     unit_str = (
         f" / {property.get_output_unit()}" if property.get_output_unit() else ""
     )
+    labelsize = (
+        setup.rcParams_scaled["font.size"] if labelsize is None else labelsize
+    )
     cb.set_label(
-        property.output_name.replace("_", " ") + unit_str,
-        size=setup.rcParams_scaled["font.size"],
+        property.output_name.replace("_", " ") + unit_str, size=labelsize
     )
-    cb.ax.tick_params(
-        labelsize=setup.rcParams_scaled["font.size"], direction="out"
-    )
+    cb.ax.tick_params(labelsize=labelsize, direction="out")
     mf = mticker.ScalarFormatter(useMathText=True, useOffset=True)
     mf.set_scientific(True)
     mf.set_powerlimits([-3, 3])
