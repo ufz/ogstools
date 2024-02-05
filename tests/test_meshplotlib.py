@@ -7,7 +7,7 @@ from tempfile import mkstemp
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshplotlib import examples, plot, setup
+from ogstools.meshplotlib import examples, plot, plot_diff, plot_limit, setup
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
@@ -57,6 +57,17 @@ class MeshplotlibTest(unittest.TestCase):
         plot_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
+
+    def test_diff_plots(self):
+        """Test creation of difference plots."""
+        meshseries = examples.meshseries_CT_2D
+        plot_diff(meshseries.read(0), meshseries.read(1), "Si")
+
+    def test_limit_plots(self):
+        """Test creation of difference plots."""
+        meshseries = examples.meshseries_CT_2D
+        plot_limit(meshseries, "Si", "min")
+        plot_limit(meshseries, "Si", "max")
 
     def test_animation(self):
         """Test creation of animation."""
