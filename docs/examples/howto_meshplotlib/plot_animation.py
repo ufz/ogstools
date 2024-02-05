@@ -41,7 +41,9 @@ timevalues = np.linspace(
 # Note that rendering many frames in conjunction with large meshes might take
 # a really long time.
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-si = Scalar("Si", "", "%", "Saturation")
+si = Scalar(
+    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
+)
 anim = animate(mesh_series, si, timevalues, titles)
 # the animation can be saved (as mp4) like so:
 # from ogstools.meshplotlib.animation import save_animation
