@@ -1,7 +1,7 @@
 """A class to handle Meshseries data."""
 
 from pathlib import Path
-from typing import Union
+from typing import Callable, Union
 
 import meshio
 import numpy as np
@@ -11,6 +11,7 @@ from meshio.xdmf.time_series import (
     cell_data_from_raw,
     xdmf_to_numpy_type,
 )
+from tqdm.auto import tqdm
 
 
 class TimeSeriesReader(meshio.xdmf.TimeSeriesReader):
@@ -257,4 +258,23 @@ class MeshSeries:
             mesh.point_data[key] = mesh1.point_data[key] + slope * (
                 timevalue - t_vals[ts1]
             )
+        return mesh
+
+    def reduce_with(self, func: Callable, data_name: str) -> pv.DataSet:
+        """
+        Reduce the data in the MeshSeries with a function.
+
+        :param func:        The function by which the data is reduced.
+                            Must contain `out` and `axis` as arguments,
+                            e.g. np.max.
+        :param data_name:   Name of the data in the MeshSeries.
+
+        :returns:   A pyvista Mesh containing the reduced data.
+        """
+        mesh = self.read(0).copy()
+        if self._data_type == "xdmf":
+            vals = self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
+        if self._data_type == "pvd":
+            vals = [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+        func(vals, out=mesh[data_name], axis=0)
         return mesh
