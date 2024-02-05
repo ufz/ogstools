@@ -8,7 +8,9 @@ from tempfile import mkdtemp
 import numpy as np
 from ogs6py import ogs
 
-from ogstools import meshlib, msh2vtu, propertylib
+from ogstools.meshlib import MeshSeries, gmsh_meshing
+from ogstools.msh2vtu import msh2vtu
+from ogstools.propertylib import Scalar
 from ogstools.studies import convergence
 from ogstools.studies.convergence.examples import (
     steady_state_diffusion_analytical_solution,
@@ -24,12 +26,12 @@ class ConvergenceTest(unittest.TestCase):
         edge_cells = [2**i for i in range(3, 6)]
         for n_edge_cells in edge_cells:
             msh_path = temp_dir / "square.msh"
-            meshlib.gmsh_meshing.rect(
+            gmsh_meshing.rect(
                 n_edge_cells=n_edge_cells,
                 structured_grid=True,
                 out_name=msh_path,
             )
-            msh2vtu.msh2vtu(
+            msh2vtu(
                 input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
             )
             model = ogs.OGS(
@@ -42,13 +44,13 @@ class ConvergenceTest(unittest.TestCase):
             ogs_args = f"-m {temp_dir} -o {temp_dir}"
             model.run_model(write_logs=False, args=ogs_args)
             sim_results += [
-                meshlib.MeshSeries(str(temp_dir / (prefix + ".pvd"))).read(-1)
+                MeshSeries(str(temp_dir / (prefix + ".pvd"))).read(-1)
             ]
 
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
         np.testing.assert_array_less(0.0, spacing)
-        mesh_property = propertylib.Scalar("pressure", "m", "m")
+        mesh_property = Scalar("pressure", "m", "m")
         conv = convergence.grid_convergence(
             sim_results, mesh_property, topology, refinement_ratio=2.0
         )

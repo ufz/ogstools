@@ -1,4 +1,3 @@
-import time
 import warnings
 from collections.abc import Sequence
 from functools import partial
@@ -79,7 +78,6 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
     :param filename:    the name of the resulting file
     :param fps:         the number of frames per second
     """
-    start_time = time.time()
     print("Start saving animation...")
     codec_args = (
         "-crf 28 -preset ultrafast -pix_fmt yuv420p "
@@ -102,8 +100,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
             )
     try:
         anim.save(filename, writer=writer)
-        print("\ndone!")
-        print(f"Elapsed time: {(time.time() - start_time):.2f}")
+        print("Successful!")
         return True
     except Exception as err:
         print("\nSaving Animation failed with the following error:")

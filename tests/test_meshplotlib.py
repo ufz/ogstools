@@ -34,6 +34,8 @@ class MeshplotlibTest(unittest.TestCase):
         equality(get_levels(1e-3, 1.2, 5), [1e-3, *np.arange(0.2, 1.4, 0.2)])
         equality(get_levels(1e5, 9e6, 20), [1e5, *np.arange(5e5, 9.5e6, 5e5)])
         equality(get_levels(1, 40, 20), [1, *range(2, 42, 2)])
+        equality(get_levels(0.0, 0.0, 10), [0.0, 1e-6])
+        equality(get_levels(1e9, 1e9, 10), [1e9, 1e9 + 1e-6])
 
     def test_missing_data(self):
         """Test missing data in mesh."""

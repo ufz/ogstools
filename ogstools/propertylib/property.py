@@ -9,17 +9,11 @@ from dataclasses import dataclass, replace
 from typing import Any, Callable, Union
 
 import numpy as np
-from pint import UnitRegistry
 from pint.facets.plain import PlainQuantity
 
+from .unit_registry import u_reg
 from .utils import identity, sym_tensor_to_mat
 from .vector2scalar import trace
-
-u_reg: UnitRegistry = UnitRegistry(
-    preprocessors=[lambda s: s.replace("%", "percent")]
-)
-u_reg.default_format = "~.12g"
-u_reg.setup_matplotlib(True)
 
 
 # TODO: rename to BaseProperty?? / GenericProperty

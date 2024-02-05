@@ -11,7 +11,8 @@ from unittest.mock import patch
 
 import meshio
 
-from ogstools import meshlib, msh2vtu
+from ogstools.meshlib import gmsh_meshing
+from ogstools.msh2vtu import msh2vtu
 from ogstools.msh2vtu._cli import cli
 
 
@@ -24,14 +25,14 @@ def test_rect(tmp_path: Path):
     msh_file = Path(tmp_path, "rect.msh")
     permutations = product([1.0, 2.0], [1, 2], [True, False], [1, 2])
     for edge_length, n_edge_cells, structured, order in permutations:
-        meshlib.gmsh_meshing.rect(
+        gmsh_meshing.rect(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             structured_grid=structured,
             order=order,
             out_name=msh_file,
         )
-        assert msh2vtu.msh2vtu(msh_file, tmp_path, output_prefix="rect") == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix="rect") == 0
 
 
 def test_cuboid(tmp_path: Path):
@@ -39,14 +40,14 @@ def test_cuboid(tmp_path: Path):
     msh_file = Path(tmp_path, "cuboid.msh")
     permutations = product([1.0, 2.0], [1, 2], [True, False], [1, 2])
     for edge_length, n_edge_cells, structured, order in permutations:
-        meshlib.gmsh_meshing.cuboid(
+        gmsh_meshing.cuboid(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             structured_grid=structured,
             order=order,
             out_name=msh_file,
         )
-        assert msh2vtu.msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
 
 
 def test_gmsh(tmp_path: Path):
@@ -60,7 +61,7 @@ def test_gmsh(tmp_path: Path):
         runpy.run_module(f"ogstools.msh2vtu.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
-        assert msh2vtu.msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0
+        assert msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0
     testargs = ["msh2vtu", str(msh_file), "-o", str(tmp_path), "-p", prefix]
     with patch.object(sys, "argv", testargs):
         cli()

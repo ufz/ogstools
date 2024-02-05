@@ -31,7 +31,7 @@ def plot_layer_boundaries(
             x_b, y_b = setup.length.strip_units(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
-            lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
+            lw = setup.rcParams_scaled["lines.linewidth"]
             ax.plot(x_b, y_b, "-k", lw=lw)
         x_pos = 0.01 if mat_id % 2 == 0 else 0.99
         ha = "left" if mat_id % 2 == 0 else "right"
