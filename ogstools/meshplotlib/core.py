@@ -69,7 +69,6 @@ def get_cmap_norm(
         conti_cmap = mcolors.LinearSegmentedColormap.from_list(
             "temperature_cmap", np.vstack((cool_colors, warm_colors))
         )
-        bilinear = vmin < 0 < vmax
     if bilinear:
         vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
     if property.categoric:
