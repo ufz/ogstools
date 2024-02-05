@@ -3,7 +3,7 @@
 
 from .plot_setup import _setup as setup  # noqa: I001: noqa
 
-from .core import plot, subplot
+from .core import plot_limit, plot, subplot
 from .plot_features import plot_contour, plot_on_top
 
 __all__ = [
@@ -11,5 +11,6 @@ __all__ = [
     "plot",
     "plot_on_top",
     "plot_contour",
+    "plot_limit",
     "subplot",
 ]

@@ -1,7 +1,7 @@
 """Meshplotlib core utilitites."""
 import types
+from typing import Literal, Union
 from typing import Optional as Opt
-from typing import Union
 
 import numpy as np
 import pyvista as pv
@@ -14,6 +14,7 @@ from matplotlib import ticker as mticker
 from matplotlib import transforms as mtransforms
 from matplotlib.patches import Rectangle as Rect
 
+from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property, Vector
 from ogstools.propertylib.presets import _resolve_property
 
@@ -464,3 +465,29 @@ def plot(
     for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
         ax.set_aspect(1.0 / aspect)
     return fig
+
+
+def plot_limit(
+    mesh_series: MeshSeries,
+    property: Union[Property, str],
+    limit: Literal["min", "max"],
+) -> mfigure.Figure:
+    """
+    Plot the property limits through all timesteps of a MeshSeries.
+
+    :param mesh_series: MeshSeries object containing the data to be plotted
+    :param property:    The property field to be evaluated
+    :param limit:       Type of limit to be computed
+
+    :returns:   A matplotlib Figure
+    """
+    mesh = mesh_series.read(0)
+    if isinstance(property, str):
+        data_shape = mesh[property].shape
+        property = _resolve_property(property, data_shape)
+    func = {"min": np.min, "max": np.max}[limit]
+    mesh = mesh_series.reduce_with(func, property.data_name)
+    limit_property = property.replace(
+        output_name=limit + " " + property.output_name
+    )
+    return plot(mesh, limit_property)
