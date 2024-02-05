@@ -256,6 +256,53 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     return mesh
 
 
+def _add_components_to_mesh(
+    doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
+) -> tuple(dict, dict):
+    """
+    FEFLOW often uses days as unit for time. In OGS SI-units are used. This is why
+    days must be converted to seconds.
+
+    :param doc: The FEFLOW data.
+    :param mesh: mesh
+    :return: Dictonaries of point and cell species-specific data.
+    """
+
+    comp_parameter = [
+        "P_SORP",
+        "P_PORO",
+        "P_LDIS",
+        "P_TRAT_IN",
+        "P_TRAT_OUT",
+        "P_TDIS",
+        "P_DIFF",
+        "P_DECA",
+        "P_BC_MASS",
+        "P_BCMASS_2ND",
+        "P_BCMASS_3RD",
+        "P_BCMASS_4TH",
+    ]
+    components_point_dict = {}
+    components_cell_dict = {}
+    for point_data in mesh.point_data:
+        if point_data in comp_parameter:
+            for i in range(doc.getNumberOfSpecies()):
+                component = doc.getSpeciesName(i)
+                par = doc.getParameter(getattr(ifm.Enum, point_data), component)
+                components_point_dict[component + "_" + point_data] = np.array(
+                    doc.getParamValues(par)
+                )
+    for cell_data in mesh.cell_data:
+        if cell_data in comp_parameter:
+            for i in range(doc.getNumberOfSpecies()):
+                component = doc.getSpeciesName(i)
+                par = doc.getParameter(getattr(ifm.Enum, cell_data), component)
+                components_cell_dict[component + "_" + cell_data] = np.array(
+                    doc.getParamValues(par)
+                )
+    return components_point_dict, components_cell_dict
+
+
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     Get the geometric construction of the mesh.
@@ -283,6 +330,15 @@ def update_geometry(
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
         mesh.cell_data.update({i: cell_data[i][0]})
+    if doc.getProblemClass() in [1, 3]:
+        component_point_data, component_cell_data = _add_components_to_mesh(
+            doc, mesh
+        )
+        for i in component_point_data:
+            mesh.point_data.update({i: component_point_data[i]})
+        for i in component_cell_data:
+            mesh.cell_data.update({i: component_cell_data[i][0]})
+
     return _convert_to_SI_units(mesh)
 
 
