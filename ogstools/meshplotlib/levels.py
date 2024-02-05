@@ -51,7 +51,10 @@ def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     The length of the arrays will be close to n_ticks.
     At the boundaries the tickspacing may differ from the remaining array.
     """
-    if np.abs(upper - lower) <= 1e-6:
-        return lower + np.array([0.0, 1e-6])
+    n_digits = 6
+    if lower * (1 - 10**-n_digits) <= upper <= lower * (1 + 10**-n_digits):
+        return lower + np.array([0.0, 10**-n_digits])
     levels = nice_range(lower, upper, n_ticks)
-    return np.append(np.append(lower, adaptive_rounding(levels, 6)), upper)
+    return np.unique(
+        np.append(np.append(lower, adaptive_rounding(levels, n_digits)), upper)
+    )
