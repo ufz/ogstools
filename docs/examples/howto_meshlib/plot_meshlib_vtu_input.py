@@ -10,9 +10,6 @@ For this example we create meshes from surface layers.
 # %%
 from pathlib import Path  # To get example vtu files
 
-import numpy as np  # For visualization only
-
-import ogstools.meshplotlib as mpl  # For visualization only
 from ogstools.definitions import TESTS_DIR  # To get example vtu files
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
@@ -23,10 +20,6 @@ from ogstools.meshlib.region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-
-mpl.setup.reset()
-mpl.setup.length.output_unit = "km"
-mpl.setup.aspect_limits = [0.2, 5.0]
 
 # %%
 # The loaded surfaces are defined within VTU files and adhere to properties such as non-intersecting boundaries with consistent x and y bounds. Alternatively, surfaces can also be created using PyVista with the same properties.
@@ -54,28 +47,30 @@ pm = to_region_prism(layer_set1, resolution=200).mesh
 vm = to_region_voxel(layer_set1, resolution=[200, 200, 50]).mesh
 tm = to_region_tetraeder(layer_set1, resolution=200).mesh
 
-
+# %% [markdown]
+# Simplified mesh
+# ---------------
 # %%
-# Visualize the prism mesh
+sm["regions"] = [str(m) for m in sm["MaterialIDs"]]
+sm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
 
-mesh = pm
-slices = np.reshape(mesh.slice_along_axis(n=4, axis="y"), (-1, 1))
-fig = mpl.plot(slices, "MaterialIDs")
-for ax, slice in zip(fig.axes, np.ravel(slices)):
-    ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
-
+# %% [markdown]
+# Voxel mesh
+# ---------------
 # %%
-# Visualize meshes with different meshing algorithm
+vm["regions"] = [str(m) for m in vm["MaterialIDs"]]
+vm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
 
-meshes = [sm, vm, pm, tm]
-names = [
-    "to_region_simplified",
-    "to_region_voxel",
-    "to_region_prism",
-    "to_region_tetraeder",
-]
+# %% [markdown]
+# Prism mesh
+# ---------------
+# %%
+pm["regions"] = [str(m) for m in pm["MaterialIDs"]]
+pm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
 
-x_slices = np.reshape([mesh.slice("x") for mesh in meshes], (-1, 1))
-fig = mpl.plot(x_slices, "MaterialIDs")
-for ax, name in zip(fig.axes, names):
-    ax.set_title(name)
+# %% [markdown]
+# Tetraeder mesh
+# ---------------
+# %%
+tm["regions"] = [str(m) for m in tm["MaterialIDs"]]
+tm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)

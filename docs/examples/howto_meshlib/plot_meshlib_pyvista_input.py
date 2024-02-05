@@ -8,15 +8,10 @@ For this example we create meshes from pyvista surfaces.
 """
 
 # %%
-import numpy as np  # For visualization only
-
-import ogstools.meshplotlib as mpl  # For visualization only
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Gaussian2D, Surface
-from ogstools.meshlib.region import (
-    to_region_tetraeder,
-)
+from ogstools.meshlib.region import to_region_tetraeder
 
 # See other examples for different meshing algorithms
 
@@ -30,13 +25,9 @@ surface3 = Surface(Gaussian2D(**args, height_offset=-200), material_id=2)
 
 ls = LayerSet([Layer(surface1, surface2), Layer(surface2, surface3)])
 mesh = to_region_tetraeder(ls, 40).mesh
+# interprets values as categories
+mesh["regions"] = [str(m) for m in mesh["MaterialIDs"]]
 
 # %%
 # Visualize the prism mesh
-
-slices = np.reshape(mesh.slice_along_axis(n=4, axis="y"), (1, -1))
-mpl.setup.aspect_limits = [0.2, 5.0]
-fig = mpl.plot(slices, "MaterialIDs")
-for ax, slice in zip(fig.axes, np.ravel(slices)):
-    ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
-_ = fig
+mesh.plot(scalars="regions", show_edges=True)
