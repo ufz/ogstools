@@ -258,7 +258,7 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
 
 def get_components(
     doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
-) -> tuple[dict, dict]:
+) -> tuple[dict, dict, dict]:
     """
     Components are saved as species in FEFLOW and can only be read with a subID as second argument
     in the ifm.getParameter() function.
@@ -284,9 +284,10 @@ def get_components(
     ]
     components_point_dict = {}
     components_cell_dict = {}
+    obsolete_data = {}
     for point_data in mesh.point_data:
-        mesh.point_data.remove(point_data)
         if point_data in comp_parameter:
+            obsolete_data[point_data] = "point"
             for i in range(doc.getNumberOfSpecies()):
                 component = doc.getSpeciesName(i)
                 par = doc.getParameter(getattr(ifm.Enum, point_data), component)
@@ -295,14 +296,14 @@ def get_components(
                 )
     for cell_data in mesh.cell_data:
         if cell_data in comp_parameter:
-            mesh.point_data.remove(point_data)
+            obsolete_data[cell_data] = "cell"
             for i in range(doc.getNumberOfSpecies()):
                 component = doc.getSpeciesName(i)
                 par = doc.getParameter(getattr(ifm.Enum, cell_data), component)
                 components_cell_dict[component + "_" + cell_data] = np.array(
                     doc.getParamValues(par)
                 )
-    return components_point_dict, components_cell_dict
+    return components_point_dict, components_cell_dict, obsolete_data
 
 
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
@@ -333,11 +334,24 @@ def update_geometry(
     for i in cell_data:
         mesh.cell_data.update({i: cell_data[i][0]})
     if doc.getProblemClass() in [1, 3]:
-        component_point_data, component_cell_data = get_components(doc, mesh)
+        (
+            component_point_data,
+            component_cell_data,
+            obsolete_data,
+        ) = get_components(doc, mesh)
         for i in component_point_data:
             mesh.point_data.update({i: component_point_data[i]})
         for i in component_cell_data:
             mesh.cell_data.update({i: component_cell_data[i][0]})
+        for data, geometry in obsolete_data.items():
+            if geometry == "point":
+                mesh.point_data.remove(data)
+            elif geometry == "cell":
+                mesh.cell_data.remove(data)
+            else:
+                logger.error(
+                    "Unknown geometry to remove obsolet data after conversion of chemical components."
+                )
 
     return _convert_to_SI_units(mesh)
 
