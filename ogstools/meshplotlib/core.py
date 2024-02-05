@@ -240,14 +240,14 @@ def subplot(
 
     surf = mesh.extract_surface()
 
-    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
-        pf.plot_layer_boundaries(ax, surf, projection)
-
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
         show_edges = setup.show_element_edges == property.data_name
     if show_edges:
         pf.plot_element_edges(ax, surf, projection)
+
+    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
+        pf.plot_layer_boundaries(ax, surf, projection)
 
     if isinstance(property, Vector):
         pf.plot_streamlines(ax, surf_tri, property, projection)
