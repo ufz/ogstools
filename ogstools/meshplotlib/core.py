@@ -340,7 +340,17 @@ def get_combined_levels(
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = property.magnitude.strip_units(get_data(mesh, property))
+        if (
+            not property.is_mask()
+            and property.mask in mesh.cell_data
+            and len(mesh.cell_data[property.mask])
+        ):
+            _mesh = mesh.ctp(True).threshold(
+                value=[1, 1], scalars=property.mask
+            )
+            values = property.magnitude.strip_units(get_data(_mesh, property))
+        else:
+            values = property.magnitude.strip_units(get_data(mesh, property))
         if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
