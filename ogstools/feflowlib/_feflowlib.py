@@ -256,12 +256,12 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     return mesh
 
 
-def _add_components_to_mesh(
+def get_components(
     doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
-) -> tuple(dict, dict):
+) -> tuple[dict, dict]:
     """
-    FEFLOW often uses days as unit for time. In OGS SI-units are used. This is why
-    days must be converted to seconds.
+    Components are saved as species in FEFLOW and can only be read with a subID as second argument
+    in the ifm.getParameter() function.
 
     :param doc: The FEFLOW data.
     :param mesh: mesh
@@ -285,6 +285,7 @@ def _add_components_to_mesh(
     components_point_dict = {}
     components_cell_dict = {}
     for point_data in mesh.point_data:
+        mesh.point_data.remove(point_data)
         if point_data in comp_parameter:
             for i in range(doc.getNumberOfSpecies()):
                 component = doc.getSpeciesName(i)
@@ -294,6 +295,7 @@ def _add_components_to_mesh(
                 )
     for cell_data in mesh.cell_data:
         if cell_data in comp_parameter:
+            mesh.point_data.remove(point_data)
             for i in range(doc.getNumberOfSpecies()):
                 component = doc.getSpeciesName(i)
                 par = doc.getParameter(getattr(ifm.Enum, cell_data), component)
@@ -331,9 +333,7 @@ def update_geometry(
     for i in cell_data:
         mesh.cell_data.update({i: cell_data[i][0]})
     if doc.getProblemClass() in [1, 3]:
-        component_point_data, component_cell_data = _add_components_to_mesh(
-            doc, mesh
-        )
+        component_point_data, component_cell_data = get_components(doc, mesh)
         for i in component_point_data:
             mesh.point_data.update({i: component_point_data[i]})
         for i in component_cell_data:
