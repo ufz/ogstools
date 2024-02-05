@@ -302,7 +302,7 @@ def _get_rows_cols(
 # TODO: fixed_figure_size -> ax aspect automatic
 
 
-def _fig_init(rows: int, cols: int, ax_aspect: float = 1.0) -> mfigure.Figure:
+def _fig_init(rows: int, cols: int, aspect: float = 1.0) -> mfigure.Figure:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
     cb_width = 4
@@ -310,14 +310,10 @@ def _fig_init(rows: int, cols: int, ax_aspect: float = 1.0) -> mfigure.Figure:
     x_label_height = 1
     figsize = setup.fig_scale * np.asarray(
         [
-            default_size * cols * ax_aspect + cb_width * nx_cb + y_label_width,
+            default_size * cols * aspect + cb_width * nx_cb + y_label_width,
             default_size * rows + x_label_height,
         ]
     )
-    if figsize[0] / figsize[1] > setup.fig_aspect_limits[1]:
-        figsize[0] = figsize[1] * setup.fig_aspect_limits[1]
-    elif figsize[0] / figsize[1] < setup.fig_aspect_limits[0]:
-        figsize[0] = figsize[1] * setup.fig_aspect_limits[0]
     fig, _ = plt.subplots(
         rows,
         cols,
@@ -445,23 +441,16 @@ def plot(
         data_shape = _meshes[0][property].shape
         property = _resolve_property(property, data_shape)
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
-    data_aspects[
-        (data_aspects > setup.ax_aspect_limits[0])
-        & (data_aspects < setup.ax_aspect_limits[1])
-    ] = 1.0
-    clamped_aspects = np.clip(data_aspects, *setup.ax_aspect_limits)
-    ax_aspects = data_aspects / clamped_aspects
-    _fig = _fig_init(
-        rows=shape[0], cols=shape[1], ax_aspect=np.mean(ax_aspects)
-    )
+    if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
+        fig_aspect = np.mean(data_aspects)
+    else:
+        fig_aspect = np.mean(
+            np.clip(data_aspects, setup.min_ax_aspect, setup.max_ax_aspect)
+        )
+    ax_aspects = fig_aspect / data_aspects
+    _fig = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
     n_axs = shape[0] * shape[1]
-    # setting the aspect twice is intended
-    # the first time results in properly spaced ticks
-    # the second time fixes any deviations from the set aspect due to
-    # additional colorbar(s) or secondary axes.
-    for ax, aspect in zip(_fig.axes[: n_axs + 1], clamped_aspects):
-        ax.set_aspect(aspect)
     fig = _plot_on_figure(_fig, meshes, property)
-    for ax, aspect in zip(fig.axes[: n_axs + 1], clamped_aspects):
-        ax.set_aspect(aspect)
+    for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        ax.set_aspect(1.0 / aspect)
     return fig
