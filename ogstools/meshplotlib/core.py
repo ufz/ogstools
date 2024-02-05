@@ -1,5 +1,7 @@
 """Meshplotlib core utilitites."""
+
 import types
+from copy import deepcopy
 from typing import Literal, Union
 from typing import Optional as Opt
 
@@ -465,6 +467,27 @@ def plot(
     for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
         ax.set_aspect(1.0 / aspect)
     return fig
+
+
+def plot_diff(
+    mesh1: pv.UnstructuredGrid,
+    mesh2: pv.UnstructuredGrid,
+    property: Union[Property, str],
+) -> mfigure.Figure:
+    if isinstance(property, str):
+        data_shape = mesh1[property].shape
+        property = _resolve_property(property, data_shape)
+    diff_mesh = deepcopy(mesh1)
+    diff_mesh[property.data_name] -= mesh2[property.data_name]
+    data_property = property.replace(output_unit=property.data_unit)
+    diff_unit = (data_property(1) - data_property(1)).units
+    diff_property = property.replace(
+        data_unit=diff_unit,
+        output_unit=diff_unit,
+        output_name=property.output_name + " difference",
+        bilinear_cmap=True,
+    )
+    return plot(diff_mesh, diff_property)
 
 
 def plot_limit(
