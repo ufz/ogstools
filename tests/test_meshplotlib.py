@@ -64,7 +64,7 @@ class MeshplotlibTest(unittest.TestCase):
         plot_diff(meshseries.read(0), meshseries.read(1), "Si")
 
     def test_limit_plots(self):
-        """Test creation of difference plots."""
+        """Test creation of limit plots."""
         meshseries = examples.meshseries_CT_2D
         plot_limit(meshseries, "Si", "min")
         plot_limit(meshseries, "Si", "max")
@@ -78,7 +78,7 @@ class MeshplotlibTest(unittest.TestCase):
         anim.to_jshtml()
 
     def test_save_animation(self):
-        """Test creation of animation."""
+        """Test saving of an animation."""
         meshseries = examples.meshseries_THM_2D
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = animate(meshseries, presets.temperature, timevalues)
