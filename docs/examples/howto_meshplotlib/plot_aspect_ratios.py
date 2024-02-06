@@ -39,19 +39,35 @@ def custom_mesh(dx: float, dy: float):
 
 # sphinx_gallery_end_ignore
 
+# %% [markdown]
+# The following fits inside the defined limits and gets displayed with true
+# proportions.
 
 # %%
 fig = plot(custom_mesh(np.pi * 2, np.pi), "example")
+# %% [markdown]
+# This one would be too wide and thus and gets compressed to fit the maximum
+# aspect ratio.
+
 # %%
 fig = plot(custom_mesh(np.pi * 4, np.pi), "example")
+# %% [markdown]
+# When plotting multiple meshes together, this applies to each subplot.
+# So here each subplot has true proportions again since each one fits the limits.
+
 # %%
 fig = plot(
     [custom_mesh(np.pi * 2, np.pi), custom_mesh(np.pi * 2, np.pi)], "example"
 )
+# %% [markdown]
+# The following figure would be to tall and is clipped to the minimum aspect
+# ratio.
+
 # %%
 fig = plot(custom_mesh(np.pi, np.pi * 2), "example")
-# %%
-fig = plot(custom_mesh(np.pi, np.pi * 4), "example")
+# %% [markdown]
+# The same is true here:
+
 # %%
 fig = plot(
     [custom_mesh(np.pi, np.pi * 2), custom_mesh(np.pi, np.pi * 2)], "example"
@@ -59,12 +75,16 @@ fig = plot(
 
 # %% [markdown]
 # You can enforce true proportions regardless of the resulting figures
-# dimensions, by setting the limiting values to None.
+# dimensions, by setting the limiting values to None. In this case we get a
+# very wide figure.
 
 # %%
 setup.min_ax_aspect = None
 setup.max_ax_aspect = None
 fig = plot(custom_mesh(np.pi * 3, np.pi), "example")
+
+# %% [markdown]
+# And in this case we get a very tall figure.
 
 # %%
 fig = plot(custom_mesh(np.pi, np.pi * 3), "example")
