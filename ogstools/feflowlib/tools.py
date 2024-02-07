@@ -110,6 +110,9 @@ def extract_point_boundary_conditions(
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
+    # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
+    mesh.point_data.remove("bulk_node_ids")
+    mesh.cell_data.remove("bulk_element_ids")
     return dict_of_point_boundary_conditions
 
 
@@ -168,6 +171,9 @@ def extract_cell_boundary_conditions(
             topsurf.point_data.remove(pt_data)
     # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
     topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
+    # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
+    mesh.point_data.remove("bulk_node_ids")
+    mesh.cell_data.remove("bulk_element_ids")
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
