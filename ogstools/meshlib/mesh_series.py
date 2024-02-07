@@ -158,8 +158,6 @@ class MeshSeries:
         elif self._data_type == "xdmf":
             self._xdmf_reader = TimeSeriesReader(filepath)
             self._read_xdmf(0)  # necessary to initialize hdf5_files
-            # We assume there is only one h5 file
-            self.hdf5 = next(iter(self._xdmf_reader.hdf5_files.values()))
             meshes = self.hdf5["meshes"]
             self.hdf5_bulk_name = list(meshes.keys())[
                 np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
@@ -169,6 +167,11 @@ class MeshSeries:
         else:
             msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
+
+    @property
+    def hdf5(self):
+        # We assume there is only one h5 file
+        return next(iter(self._xdmf_reader.hdf5_files.values()))
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
