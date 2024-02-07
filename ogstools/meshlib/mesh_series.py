@@ -1,7 +1,7 @@
 """A class to handle Meshseries data."""
 
 from pathlib import Path
-from typing import Callable, Union
+from typing import Union
 
 import meshio
 import numpy as np
@@ -263,21 +263,17 @@ class MeshSeries:
             )
         return mesh
 
-    def reduce_with(self, func: Callable, data_name: str) -> pv.DataSet:
+    def values(self, data_name: str) -> np.ndarray:
         """
-        Reduce the data in the MeshSeries with a function.
+        Get the data in the MeshSeries for all timesteps.
 
-        :param func:        The function by which the data is reduced.
-                            Must contain `out` and `axis` as arguments,
-                            e.g. np.max.
         :param data_name:   Name of the data in the MeshSeries.
 
-        :returns:   A pyvista Mesh containing the reduced data.
+        :returns:   A numpy array of the requested data for all timesteps
         """
         mesh = self.read(0).copy()
         if self._data_type == "xdmf":
-            vals = self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
+            return self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
         if self._data_type == "pvd":
-            vals = [self.read(t)[data_name] for t in tqdm(self.timesteps)]
-        func(vals, out=mesh[data_name], axis=0)
-        return mesh
+            return [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+        return mesh[data_name]
