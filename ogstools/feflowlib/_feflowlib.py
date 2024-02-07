@@ -288,8 +288,8 @@ def get_components(
     for point_data in mesh.point_data:
         if point_data in comp_parameter:
             obsolete_data[point_data] = "point"
-            for i in range(doc.getNumberOfSpecies()):
-                component = doc.getSpeciesName(i)
+            for species_id in range(doc.getNumberOfSpecies()):
+                component = doc.getSpeciesName(species_id)
                 par = doc.getParameter(getattr(ifm.Enum, point_data), component)
                 components_point_dict[component + "_" + point_data] = np.array(
                     doc.getParamValues(par)
@@ -297,13 +297,13 @@ def get_components(
     for cell_data in mesh.cell_data:
         if cell_data in comp_parameter:
             obsolete_data[cell_data] = "cell"
-            for i in range(doc.getNumberOfSpecies()):
-                component = doc.getSpeciesName(i)
+            for species_id in range(doc.getNumberOfSpecies()):
+                component = doc.getSpeciesName(species_id)
                 par = doc.getParameter(getattr(ifm.Enum, cell_data), component)
                 components_cell_dict[component + "_" + cell_data] = np.array(
                     doc.getParamValues(par)
                 )
-    return components_point_dict, components_cell_dict, obsolete_data
+    return (components_point_dict, components_cell_dict, obsolete_data)
 
 
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
@@ -333,6 +333,8 @@ def update_geometry(
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
         mesh.cell_data.update({i: cell_data[i][0]})
+    # If the FEFLOW problem class refers to a mass problem,
+    # the following if statement will be true.
     if doc.getProblemClass() in [1, 3]:
         (
             component_point_data,
