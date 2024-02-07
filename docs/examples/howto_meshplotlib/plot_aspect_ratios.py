@@ -24,9 +24,9 @@ print(f"{setup.max_ax_aspect=}")
 
 # sphinx_gallery_start_ignore
 def custom_mesh(dx: float, dy: float):
-    n = 50
-    x = np.linspace(0, dx, num=n)
-    y = np.linspace(0, dy, num=n)
+    number_of_points = 50
+    x = np.linspace(0, dx, num=number_of_points)
+    y = np.linspace(0, dy, num=number_of_points)
     xx, yy = np.meshgrid(x, y)
     zz = np.zeros(xx.shape)
     points = np.c_[xx.reshape(-1), yy.reshape(-1), zz.reshape(-1)]
