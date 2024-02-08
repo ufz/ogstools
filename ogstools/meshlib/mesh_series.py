@@ -291,7 +291,9 @@ class MeshSeries:
         if self._data_type == "xdmf":
             return self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
         if self._data_type == "pvd":
-            return [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+            return np.asarray(
+                [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+            )
         return mesh[data_name]
 
     def _probe_pvd(
