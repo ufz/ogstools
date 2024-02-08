@@ -1,7 +1,7 @@
 """A class to handle Meshseries data."""
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import meshio
 import numpy as np
@@ -148,9 +148,22 @@ class MeshSeries:
     Will be replaced by own module in ogstools with similar interface.
     """
 
-    def __init__(self, filepath: Union[str, Path]) -> None:
+    def __init__(
+        self,
+        filepath: Union[str, Path],
+        time_unit: Optional[Optional[str]] = None,
+    ) -> None:
+        """
+        Initialize a MeshSeries object
+
+            :param filepath:    Path to the PVD or XDMF file.
+            :param time_unit:   Data unit of the timevalues.
+
+            :returns:           A MeshSeries object
+        """
         if isinstance(filepath, Path):
             filepath = str(filepath)
+        self.time_unit = time_unit
         self._data: dict[int, pv.UnstructuredGrid] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
