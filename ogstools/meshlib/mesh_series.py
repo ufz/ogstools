@@ -11,6 +11,7 @@ from meshio.xdmf.time_series import (
     cell_data_from_raw,
     xdmf_to_numpy_type,
 )
+from tqdm.auto import tqdm
 
 
 class TimeSeriesReader(meshio.xdmf.TimeSeriesReader):
@@ -156,11 +157,21 @@ class MeshSeries:
             self._pvd_reader = pv.PVDReader(filepath)
         elif self._data_type == "xdmf":
             self._xdmf_reader = TimeSeriesReader(filepath)
+            self._read_xdmf(0)  # necessary to initialize hdf5_files
+            meshes = self.hdf5["meshes"]
+            self.hdf5_bulk_name = list(meshes.keys())[
+                np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
+            ]
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
         else:
             msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
+
+    @property
+    def hdf5(self):
+        # We assume there is only one h5 file
+        return next(iter(self._xdmf_reader.hdf5_files.values()))
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
@@ -251,3 +262,18 @@ class MeshSeries:
                 timevalue - t_vals[ts1]
             )
         return mesh
+
+    def values(self, data_name: str) -> np.ndarray:
+        """
+        Get the data in the MeshSeries for all timesteps.
+
+        :param data_name:   Name of the data in the MeshSeries.
+
+        :returns:   A numpy array of the requested data for all timesteps
+        """
+        mesh = self.read(0).copy()
+        if self._data_type == "xdmf":
+            return self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
+        if self._data_type == "pvd":
+            return [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+        return mesh[data_name]

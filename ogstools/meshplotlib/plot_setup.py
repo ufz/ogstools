@@ -1,6 +1,5 @@
 """Plot configuration setup."""
 
-
 from dataclasses import dataclass
 from typing import Union
 
@@ -36,13 +35,10 @@ class PlotSetup:
     "The resolution (dots per inch) for the figure."
     fig_scale: float
     "A scaling factor for the figure."
-    ax_aspect_limits: tuple[float, float]
-    "Lower and upper limit of the ax aspect ratio. For meshes with data ratios"
-    "outside these bounds the aspect ratio gets clamped. Inside these bounds,"
-    "the axes keep an aspect ratio of 1 (units are equally long on both axes)."
-    fig_aspect_limits: tuple[float, float]
-    "Lower and upper limit of the figure aspect ratio. If a figure would exceed"
-    "them, they get clipped to prevent overly long or wide figures."
+    min_ax_aspect: float
+    "Minimum aspect ratio of subplots."
+    max_ax_aspect: float
+    "Maximum aspect ratio of subplots."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
     layout: str
@@ -109,8 +105,8 @@ class PlotSetup:
         """Create a PlotSetup instance from a dictionary."""
         return cls(
             fig_scale=obj["fig_scale"],
-            ax_aspect_limits=obj["ax_aspect_limits"],
-            fig_aspect_limits=obj["fig_aspect_limits"],
+            min_ax_aspect=obj["min_ax_aspect"],
+            max_ax_aspect=obj["max_ax_aspect"],
             invert_colorbar=obj["invert_colorbar"],
             dpi=obj["dpi"],
             num_levels=obj["num_levels"],

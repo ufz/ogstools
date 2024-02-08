@@ -37,11 +37,6 @@ fig = mpl.plot(mesh, presets.pressure.get_mask())
 # Let's plot the fluid velocity field.
 fig = mpl.plot(mesh, presets.velocity)
 
-# %%
-# It is also possible to plot a shape on top, e.g. to display an overburden.
-mpl.plot_on_top(fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100))
-fig  # noqa: B018
-
 
 # %%
 # We can also plot components of vector property:

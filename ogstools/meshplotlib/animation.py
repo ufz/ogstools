@@ -1,8 +1,7 @@
 import warnings
 from collections.abc import Sequence
 from functools import partial
-from typing import Optional as Opt
-from typing import Union
+from typing import Optional, Union
 
 import matplotlib as mpl
 import numpy as np
@@ -20,8 +19,8 @@ from .core import _plot_on_figure, plot
 def animate(
     mesh_series: MeshSeries,
     property: Property,
-    timesteps: Opt[Sequence] = None,
-    titles: Opt[list[str]] = None,
+    timesteps: Optional[Sequence] = None,
+    titles: Optional[list[str]] = None,
 ) -> FuncAnimation:
     """
     Create an animation for a property of a mesh series with given timesteps.
