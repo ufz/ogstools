@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional as Opt
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from pint.facets.plain import PlainQuantity
@@ -31,7 +30,7 @@ class NuclearWaste:
         self,
         t: Union[PlainQuantity, float, np.ndarray],
         baseline: bool = False,
-        ncl_id: Opt[int] = None,
+        ncl_id: Optional[int] = None,
         time_unit: str = "s",
         power_unit: str = "W",
     ) -> Union[float, np.ndarray]:
@@ -84,7 +83,7 @@ class Repository:
         self,
         t: Union[PlainQuantity, float, np.ndarray],
         baseline: bool = False,
-        ncl_id: Opt[int] = None,
+        ncl_id: Optional[int] = None,
         time_unit: str = "s",
         power_unit: str = "W",
     ) -> Union[float, np.ndarray]:

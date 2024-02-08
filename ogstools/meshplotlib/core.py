@@ -2,8 +2,7 @@
 
 import types
 from copy import deepcopy
-from typing import Literal, Union
-from typing import Optional as Opt
+from typing import Literal, Optional, Union
 
 import numpy as np
 import pyvista as pv
@@ -115,7 +114,7 @@ def add_colorbars(
     property: Property,
     levels: np.ndarray,
     pad: float = 0.05,
-    labelsize: Opt[float] = None,
+    labelsize: Optional[float] = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     cmap, norm = get_cmap_norm(levels, property)
@@ -178,7 +177,7 @@ def subplot(
     mesh: pv.UnstructuredGrid,
     property: Union[Property, str],
     ax: plt.Axes,
-    levels: Opt[np.ndarray] = None,
+    levels: Optional[np.ndarray] = None,
 ) -> None:
     """
     Plot the property field of a mesh on a matplotlib.axis.
