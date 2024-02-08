@@ -7,7 +7,14 @@ from tempfile import mkstemp
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshplotlib import examples, plot, plot_diff, plot_limit, setup
+from ogstools.meshplotlib import (
+    examples,
+    plot,
+    plot_diff,
+    plot_limit,
+    plot_probe,
+    setup,
+)
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
@@ -82,6 +89,15 @@ class MeshplotlibTest(unittest.TestCase):
         meshseries = examples.meshseries_CT_2D
         plot_limit(meshseries, "Si", "min")
         plot_limit(meshseries, "Si", "max")
+
+    def test_plot_probe(self):
+        """Test creation of probe plots."""
+        setup.reset()
+        mesh_series = examples.meshseries_THM_2D
+        points = mesh_series.read(0).center
+        plot_probe(mesh_series, points, presets.temperature)
+        points = mesh_series.read(0).points[[0, -1]]
+        plot_probe(mesh_series, points, presets.temperature)
 
     def test_animation(self):
         """Test creation of animation."""
