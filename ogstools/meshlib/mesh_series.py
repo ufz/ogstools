@@ -215,23 +215,23 @@ class MeshSeries:
         return range(len(self.timevalues))
 
     @property
-    def timevalues(self) -> list[float]:
+    def timevalues(self) -> np.ndarray:
         """Return the timevalues of the timeseries data."""
         if self._data_type == "vtu":
-            return [0]
+            return np.zeros(1)
         if self._data_type == "pvd":
-            return self._pvd_reader.time_values
+            return np.asarray(self._pvd_reader.time_values)
         # elif self._data_type == "xdmf":
         time_values = []
         for collection_i in self._xdmf_reader.collection:
             for element in collection_i:
                 if element.tag == "Time":
                     time_values += [float(element.attrib["Value"])]
-        return time_values
+        return np.asarray(time_values)
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(np.array(self.timevalues) - timevalue)))
+        return int(np.argmin(np.abs(self.timevalues - timevalue)))
 
     def closest_timevalue(self, timevalue: float) -> float:
         """Return the closest timevalue to a timevalue."""
@@ -245,7 +245,7 @@ class MeshSeries:
         self, timevalue: float, lazy_eval: bool = True
     ) -> pv.UnstructuredGrid:
         """Return the temporal interpolated mesh for a given timevalue."""
-        t_vals = np.array(self.timevalues)
+        t_vals = self.timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
