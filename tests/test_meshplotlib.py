@@ -7,10 +7,18 @@ from tempfile import mkstemp
 import numpy as np
 from pyvista import examples as pv_examples
 
-from ogstools.meshplotlib import examples, plot, plot_diff, plot_limit, setup
+from ogstools.meshplotlib import (
+    examples,
+    plot,
+    plot_diff,
+    plot_limit,
+    plot_probe,
+    setup,
+)
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
+from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar, presets
 
 equality = partial(np.testing.assert_allclose, rtol=1e-7, verbose=True)
@@ -36,6 +44,19 @@ class MeshplotlibTest(unittest.TestCase):
         equality(get_levels(1, 40, 20), [1, *range(2, 42, 2)])
         equality(get_levels(0.0, 0.0, 10), [0.0, 1e-6])
         equality(get_levels(1e9, 1e9, 10), [1e9, 1e9 + 1e-6])
+
+    def test_justified_labels(self):
+        points = np.asarray(
+            [
+                [x, y, z]
+                for x in np.linspace(-1, 0, 3)
+                for y in np.linspace(-10, 10, 5)
+                for z in np.linspace(1e-6, 1e6, 7)
+            ]
+        )
+        labels = justified_labels(points)
+        str_lens = np.asarray([len(label) for label in labels])
+        self.assertTrue(np.all(str_lens == str_lens[0]))
 
     def test_missing_data(self):
         """Test missing data in mesh."""
@@ -68,6 +89,19 @@ class MeshplotlibTest(unittest.TestCase):
         meshseries = examples.meshseries_CT_2D
         plot_limit(meshseries, "Si", "min")
         plot_limit(meshseries, "Si", "max")
+
+    def test_plot_probe(self):
+        """Test creation of probe plots."""
+        mesh_series = examples.meshseries_THM_2D
+        points = mesh_series.read(0).center
+        plot_probe(mesh_series, points, presets.temperature)
+        points = mesh_series.read(0).points[[0, -1]]
+        plot_probe(mesh_series, points, presets.temperature)
+        mesh_series = examples.meshseries_XDMF
+        points = mesh_series.read(0).center
+        plot_probe(mesh_series, points, presets.temperature)
+        mesh_property = presets.velocity.replace(data_name="darcy_velocity")
+        plot_probe(mesh_series, points, mesh_property)
 
     def test_animation(self):
         """Test creation of animation."""
