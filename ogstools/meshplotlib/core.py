@@ -23,7 +23,7 @@ from ogstools.propertylib.unit_registry import u_reg
 from . import plot_features as pf
 from . import setup
 from .levels import get_levels
-from .utils import get_style_cycler, justified_labels
+from .utils import get_style_cycler
 
 # TODO: define default data_name for regions in setup
 
@@ -571,13 +571,13 @@ def plot_probe(
     else:
         fig = None
     ax.set_prop_cycle(get_style_cycler(len(points), colors, linestyles))
-
-    if labels is None:
-        j_labels = justified_labels(points)
-        labels = [f"{i}: {label}" for i, label in enumerate(j_labels)]
     ax.plot(times, values, label=labels, **kwargs)
-    ax.legend(facecolor="white", framealpha=1, prop={"family": "monospace"})
+    if labels is not None:
+        ax.legend(facecolor="white", framealpha=1, prop={"family": "monospace"})
     time_label = f"time / {time_unit}" if time_unit else "time"
+    ax.set_axisbelow(True)
+    ax.grid(which="major", color="lightgrey", linestyle="-")
+    ax.grid(which="minor", color="0.95", linestyle="--")
     unit_str = (
         f" / {mesh_property.get_output_unit()}"
         if mesh_property.get_output_unit()
@@ -586,7 +586,6 @@ def plot_probe(
     y_label = mesh_property.output_name.replace("_", " ") + unit_str
     ax.set_xlabel(time_label)
     ax.set_ylabel(y_label)
-    ax.grid(which="major", color="lightgrey", linestyle="-")
-    ax.grid(which="minor", color="0.95", linestyle="--")
+    ax.label_outer()
     ax.minorticks_on()
     return fig

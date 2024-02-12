@@ -13,8 +13,9 @@ def justified_labels(points: np.ndarray) -> list[str]:
     col_lens = np.max(
         [[len(fmt(coord)) for coord in point] for point in points], axis=0
     )
+    dim = points.shape[1]
     return [
-        ",".join(fmt(point[i]).rjust(col_lens[i]) for i in range(3))
+        ",".join(fmt(point[i]).rjust(col_lens[i]) for i in range(dim))
         for point in points
     ]
 

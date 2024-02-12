@@ -98,6 +98,11 @@ class MeshplotlibTest(unittest.TestCase):
         plot_probe(mesh_series, points, presets.temperature)
         points = mesh_series.read(0).points[[0, -1]]
         plot_probe(mesh_series, points, presets.temperature)
+        mesh_series = examples.meshseries_XDMF
+        points = mesh_series.read(0).center
+        plot_probe(mesh_series, points, presets.temperature)
+        mesh_property = presets.velocity.replace(data_name="darcy_velocity")
+        plot_probe(mesh_series, points, mesh_property)
 
     def test_animation(self):
         """Test creation of animation."""

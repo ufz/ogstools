@@ -192,6 +192,7 @@ class MeshSeries:
     ):
         values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
         geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
+        values = np.swapaxes(values, 0, 1)
 
         # remove flat dimensions for interpolation
         for index, axis in enumerate(geom.T):
@@ -202,11 +203,11 @@ class MeshSeries:
         if interp_method is None:
             interp_method = "linear"
         interp = {
-            "nearest": NearestNDInterpolator(geom, values.T),
-            "linear": LinearNDInterpolator(geom, values.T, np.nan),
+            "nearest": NearestNDInterpolator(geom, values),
+            "linear": LinearNDInterpolator(geom, values, np.nan),
         }[interp_method]
 
-        return interp(points).T
+        return np.swapaxes(interp(points), 0, 1)
 
     def probe(
         self,
