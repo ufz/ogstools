@@ -92,7 +92,6 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
-        setup.reset()
         mesh_series = examples.meshseries_THM_2D
         points = mesh_series.read(0).center
         plot_probe(mesh_series, points, presets.temperature)

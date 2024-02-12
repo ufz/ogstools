@@ -21,9 +21,7 @@ class MeshSeries:
     """
 
     def __init__(
-        self,
-        filepath: Union[str, Path],
-        time_unit: Optional[Optional[str]] = None,
+        self, filepath: Union[str, Path], time_unit: Optional[str] = "s"
     ) -> None:
         """
         Initialize a MeshSeries object

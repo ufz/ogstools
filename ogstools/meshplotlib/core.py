@@ -526,7 +526,7 @@ def plot_probe(
     points: np.ndarray,
     mesh_property: Union[Property, str],
     labels: Optional[list[str]] = None,
-    time_unit: Optional[str] = None,
+    time_unit: Optional[str] = "s",
     interp_method: Optional[Literal["nearest", "linear", "probefilter"]] = None,
     interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
     colors: Optional[list] = None,
@@ -546,7 +546,8 @@ def plot_probe(
                                 `linear` for xdmf MeshSeries and `probefilter`
                                 for pvd MeshSeries.
         :param interp_backend:  Interpolation backend for PVD MeshSeries.
-        :param kwargs:          Keyword arguments passed to the plot function.
+        :param kwargs:          Keyword arguments passed to matplotlib's plot
+                                function.
 
         :returns:   A matplotlib Figure
     """
