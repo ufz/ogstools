@@ -8,7 +8,7 @@ In this example we plot the data values on observation points over all
 timesteps. Since requested observation points don't necessarily coincide with
 actual nodes of the mesh different interpolation options are available. See
 :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.probe` for more details.
-Here again, we use a component transport example from the ogs benchmark gallery
+Here we use a component transport example from the ogs benchmark gallery
 (https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
 """
 
@@ -17,6 +17,7 @@ Here again, we use a component transport example from the ogs benchmark gallery
 # sphinx_gallery_start_ignore
 
 # sphinx_gallery_thumbnail_number = 2
+# fmt:off
 
 # sphinx_gallery_end_ignore
 
@@ -25,6 +26,7 @@ import numpy as np
 
 from ogstools import meshplotlib
 from ogstools.meshplotlib.examples import meshseries_CT_2D as mesh_series
+from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar
 
 meshplotlib.setup.reset()
@@ -39,7 +41,10 @@ si = Scalar(
 # Let's define 4 observation points and plot them on the mesh.
 
 # %%
-points = np.asarray([[x, 0, 60] for x in [0, 40, 80, 120]])
+points = np.asarray(
+    [[x, 0, 60] for x in [0, 40, 80, 120]]
+    + [[x, 0, 40] for x in [0, 40, 80, 120]]
+)
 fig = meshplotlib.plot(mesh_series.read(0), si)
 fig.axes[0].scatter(points[:, 0], points[:, 2], s=50, fc="none", ec="r", lw=3)
 for i, point in enumerate(points):
@@ -50,10 +55,11 @@ plt.rcdefaults()
 # And now probe the points and the values over time:
 
 # %%
+labels = [f"{i}: {label}" for i, label in enumerate(justified_labels(points))]
 fig = meshplotlib.plot_probe(
-    mesh_series=mesh_series, points=points, mesh_property=si, time_unit="a"
+    mesh_series=mesh_series, points=points[:4], mesh_property=si,
+    time_unit="a", labels=labels[:4]
 )
-
 # %% [markdown]
 # You can also pass create your own matplotlib figure and pass the axes object.
 # Additionally, you can pass any keyword arguments which are known by
@@ -64,11 +70,9 @@ fig = meshplotlib.plot_probe(
 # %%
 fig, axs = plt.subplots(nrows=2, figsize=[10, 5])
 meshplotlib.plot_probe(
-    mesh_series, points, si, time_unit="a", ax=axs[0], colors=["k", "b"],
-    marker="."  # fmt: skip
-)
-points_2 = np.asarray([[50, 0, z] for z in [60, 50, 40, 30]])
+    mesh_series, points[:4], si, time_unit="a", ax=axs[0], colors=["k"],
+    labels=labels[:4], marker=".")
 meshplotlib.plot_probe(
-    mesh_series, points_2, si, time_unit="a", ax=axs[1], linestyles=["-"],
-    linewidth=1  # fmt: skip
+    mesh_series, points[4:], si, time_unit="a", ax=axs[1], linestyles=["-"],
+    labels=labels[4:], linewidth=1,
 )
