@@ -281,6 +281,7 @@ def get_components(
         "P_BCMASS_2ND",
         "P_BCMASS_3RD",
         "P_BCMASS_4TH",
+        "P_CONC",
     ]
     components_point_dict = {}
     components_cell_dict = {}
