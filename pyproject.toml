@@ -26,6 +26,7 @@ dependencies = [
   "ogs>=6.5.1.dev0",
   "ogs6py>=0.370",
   "tqdm>=4.60",
+  "VTUinterface>=0.704",
 ]
 
 [project.urls]
@@ -62,7 +63,6 @@ docs = [
   "sphinx-design",
   "sphinx_gallery",
   "ogs6py",
-  "VTUinterface",
   "trame-vtk>=2.6.0",
 ]
 feflow = [
