@@ -6,23 +6,25 @@ from typing import Optional
 from . import vector2scalar as v2s
 from .property import Matrix, Property, Scalar, Vector
 
+from .custom_colormaps import temperature_cmap
+
 T_mask = "temperature_active"
 H_mask = "pressure_active"
 M_mask = "displacement_active"
 
 # fmt: off
-material_id = Scalar("MaterialIDs", categoric=True)
-displacement = Vector("displacement", "m", "m", mask=M_mask)
+material_id = Scalar("MaterialIDs", categoric=True, cmap="tab20")
+displacement = Vector("displacement", "m", "m", mask=M_mask, cmap="PRGn")
 effective_pressure = Scalar("sigma", "Pa", "MPa", "effective_pressure", M_mask, v2s.effective_pressure)
 heatflowrate = Scalar("HeatFlowRate", mask=T_mask)
 massflowrate = Scalar("MassFlowRate", mask=H_mask)
 nodal_forces = Vector("NodalForces", mask=M_mask)
-pressure = Scalar("pressure", "Pa", "MPa", "pore_pressure", H_mask)
-hydraulic_height = Scalar("pressure", "m", "m", "hydraulic_height", H_mask)
+pressure = Scalar("pressure", "Pa", "MPa", "pore_pressure", H_mask, cmap="Blues")
+hydraulic_height = Scalar("pressure", "m", "m", "hydraulic_height", H_mask, cmap="Blues")
 qp_ratio = Scalar("sigma", "Pa", "percent", "QP_ratio", M_mask, v2s.qp_ratio)
 strain = Matrix("epsilon", "", "percent", "strain", M_mask)
 stress = Matrix("sigma", "Pa", "MPa", "stress", M_mask)
-temperature = Scalar("temperature", "K", "°C", mask=T_mask, bilinear_cmap=True)
+temperature = Scalar("temperature", "K", "°C", mask=T_mask, cmap=temperature_cmap, bilinear_cmap=True)
 velocity = Vector("velocity", "m/s", "m/s", "darcy_velocity", H_mask)
 von_mises_stress = Scalar("sigma", "Pa", "MPa", "von_Mises_stress", M_mask, v2s.von_mises)
 # fmt: on

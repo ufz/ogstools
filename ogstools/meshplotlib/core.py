@@ -2,6 +2,7 @@
 
 import types
 from copy import deepcopy
+from math import nextafter
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -74,31 +75,27 @@ def get_cmap_norm(
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the property field."""
     vmin, vmax = (levels[0], levels[-1])
-    bilinear = property.bilinear_cmap and vmin <= 0.0 <= vmax
-    cmap_str = setup.cmap_str(property)
-    if property.is_mask():
-        conti_cmap = mcolors.ListedColormap(cmap_str)
-    elif isinstance(cmap_str, list):
-        conti_cmap = [colormaps[c] for c in cmap_str]
-    else:
-        conti_cmap = colormaps[cmap_str]
-    if property.data_name == "temperature":
-        cool_colors = conti_cmap[0](np.linspace(0, 0.75, 128 * (vmin < 0)))
-        warm_colors = conti_cmap[1](np.linspace(0, 1, 128 * (vmax >= 0)))
-        conti_cmap = mcolors.LinearSegmentedColormap.from_list(
-            "temperature_cmap", np.vstack((cool_colors, warm_colors))
-        )
-    if bilinear:
-        vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
     if property.categoric:
         vmin += 0.5
         vmax += 0.5
-    conti_norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+
+    if property.bilinear_cmap:
+        if vmin <= 0.0 <= vmax:
+            vcenter = 0.0
+            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
+        else:
+            # only use one half of the diverging colormap
+            vcenter = nextafter(*sorted([vmin, vmax], reverse=(vmin <= 0.0)))
+        conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
+    else:
+        conti_norm = mcolors.Normalize(vmin, vmax)
+    if isinstance(property.cmap, str):
+        continuous_cmap = colormaps[property.cmap]
+    else:
+        continuous_cmap = property.cmap
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
-    colors = [conti_cmap(conti_norm(m_l)) for m_l in mid_levels]
+    colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
     cmap = mcolors.ListedColormap(colors, name="custom")
-    if setup.custom_cmap is not None:
-        cmap = setup.custom_cmap
     boundaries = get_level_boundaries(levels) if property.categoric else levels
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=True

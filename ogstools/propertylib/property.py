@@ -9,8 +9,10 @@ from dataclasses import dataclass, replace
 from typing import Any, Callable, Union
 
 import numpy as np
+from matplotlib.colors import Colormap
 from pint.facets.plain import PlainQuantity
 
+from .custom_colormaps import mask_cmap
 from .unit_registry import u_reg
 from .utils import identity, sym_tensor_to_mat
 from .vector2scalar import trace
@@ -39,6 +41,8 @@ class Property:
         Callable[[Any], Any],
     ] = identity
     """The function to be applied on the data."""
+    cmap: Union[Colormap, str] = "coolwarm"
+    """Colormap to use for plotting."""
     bilinear_cmap: bool = False
     """Should this property be displayed with a bilinear cmap?"""
     categoric: bool = False
@@ -113,7 +117,9 @@ class Property:
         """
         :returns: A property representing this properties mask.
         """
-        return Property(data_name=self.mask, mask=self.mask, categoric=True)
+        return Property(
+            data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
+        )
 
     @property
     def magnitude(self) -> "Property":
@@ -149,6 +155,7 @@ class Vector(Property):
             output_name=self.output_name + f"_{suffix[0 <= index <= 2]}",
             mask=self.mask,
             func=lambda x: np.array(x)[..., index],
+            cmap=self.cmap,
             bilinear_cmap=True,
         )
 
@@ -162,6 +169,7 @@ class Vector(Property):
             output_name=self.output_name + "_magnitude",
             mask=self.mask,
             func=lambda x: np.linalg.norm(x, axis=-1),
+            cmap=self.cmap,
         )
 
     @property
@@ -172,6 +180,7 @@ class Vector(Property):
             output_name=self.output_name + "_log10",
             mask=self.mask,
             func=lambda x: np.log10(np.linalg.norm(x, axis=-1)),
+            cmap=self.cmap,
         )
 
 
@@ -200,6 +209,7 @@ class Matrix(Property):
             mask=self.mask,
             func=lambda x: np.array(x)[..., index],
             bilinear_cmap=True,
+            cmap=self.cmap,
         )
 
     @property
@@ -212,6 +222,7 @@ class Matrix(Property):
             output_name=self.output_name + "_magnitude",
             mask=self.mask,
             func=lambda x: np.linalg.norm(sym_tensor_to_mat(x), axis=(-2, -1)),
+            cmap=self.cmap,
         )
 
     @property
