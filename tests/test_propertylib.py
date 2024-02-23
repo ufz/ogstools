@@ -47,12 +47,6 @@ class PhysicalPropertyTest(unittest.TestCase):
         self.equality(
             pp.velocity.magnitude, [[3, 4], [1, 0]], qty([5, 1], "m/s")
         )
-        self.equality(pp.velocity.log_magnitude, np.sqrt([50, 50]), qty(1, ""))
-        self.equality(
-            pp.velocity.log_magnitude,
-            [np.sqrt([50, 50]), [10, 0]],
-            qty([1, 1], ""),
-        )
 
     def test_displacement(self):
         """Test displacement property."""

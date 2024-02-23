@@ -50,10 +50,6 @@ print(presets.displacement[1]([0.01, 0.02, 0.03]))
 print(presets.displacement.magnitude([0.03, 0.04]))
 
 # %%
-# Log of Magnitude of a 2D velocity vector from the Hydraulics collection:
-print(presets.velocity.log_magnitude(np.sqrt([50, 50])))
-
-# %%
 # Magnitude and trace of a 3D strain matrix:
 eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
 print(presets.strain.magnitude(eps))
