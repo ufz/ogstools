@@ -52,20 +52,26 @@ def get_cmap_norm(
         vmin += 0.5
         vmax += 0.5
 
-    if property.bilinear_cmap:
-        if vmin <= 0.0 <= vmax:
-            vcenter = 0.0
-            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
-        else:
-            # only use one half of the diverging colormap
-            vcenter = nextafter(*sorted([vmin, vmax], reverse=(vmin <= 0.0)))
-        conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
-    else:
-        conti_norm = mcolors.Normalize(vmin, vmax)
     if isinstance(property.cmap, str):
         continuous_cmap = colormaps[property.cmap]
     else:
         continuous_cmap = property.cmap
+    if property.bilinear_cmap:
+        if vmin <= 0.0 <= vmax:
+            vcenter = 0.0
+            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
+            conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
+        else:
+            # only use one half of the diverging colormap
+            col_range = np.linspace(0.0, nextafter(0.5, -np.inf), 128)
+            if vmax > 0.0:
+                col_range += 0.5
+            continuous_cmap = mcolors.LinearSegmentedColormap.from_list(
+                "half_cmap", continuous_cmap(col_range)
+            )
+            conti_norm = mcolors.Normalize(vmin, vmax)
+    else:
+        conti_norm = mcolors.Normalize(vmin, vmax)
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
     colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
     cmap = mcolors.ListedColormap(colors, name="custom")
@@ -119,10 +125,14 @@ def add_colorbars(
     # formatting the colorbar ticks
 
     cb.ax.tick_params(labelsize=labelsize, direction="out")
-    cb.ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.3g"))
+    # "+ 0" prevents output of negative zero, i.e. "-0"
     tick_labels = [
-        f"{round(tick, POWER_LIMIT):.{POWER_LIMIT}g}" for tick in ticks
+        f"{round(tick, POWER_LIMIT) + 0:.{POWER_LIMIT}g}" for tick in ticks
     ]
+    if tick_labels[0] == tick_labels[1]:
+        tick_labels[0] = f"{ticks[0]:.2e}"
+    if tick_labels[-2] == tick_labels[-1]:
+        tick_labels[-1] = f"{ticks[-1]:.1e}"
     if property.data_name == "MaterialIDs" and setup.material_names is not None:
         tick_labels = [
             setup.material_names.get(mat_id, mat_id) for mat_id in levels
