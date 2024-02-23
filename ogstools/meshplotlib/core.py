@@ -320,7 +320,7 @@ def _get_rows_cols(
 def _fig_init(rows: int, cols: int, aspect: float = 1.0) -> mfigure.Figure:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
-    cb_width = 4
+    cb_width = 3
     y_label_width = 2
     x_label_height = 1
     figsize = setup.fig_scale * np.asarray(
@@ -525,6 +525,7 @@ def plot_probe(
     mesh_series: MeshSeries,
     points: np.ndarray,
     mesh_property: Union[Property, str],
+    mesh_property_abscissa: Optional[Union[Property, str]] = None,
     labels: Optional[list[str]] = None,
     time_unit: Optional[str] = "s",
     interp_method: Optional[Literal["nearest", "linear", "probefilter"]] = None,
@@ -532,6 +533,7 @@ def plot_probe(
     colors: Optional[list] = None,
     linestyles: Optional[list] = None,
     ax: Optional[plt.Axes] = None,
+    fill_between: bool = False,
     **kwargs,
 ) -> mfigure.Figure:
     """
@@ -566,16 +568,48 @@ def plot_probe(
         values = values.flatten()
     Q_ = u_reg.Quantity
     time_unit_conversion = Q_(Q_(mesh_series.time_unit), time_unit).magnitude
-    times = time_unit_conversion * mesh_series.timevalues
+    if mesh_property_abscissa is None:
+        x_values = time_unit_conversion * mesh_series.timevalues
+        x_label = f"time / {time_unit}" if time_unit else "time"
+    else:
+        if isinstance(mesh_property_abscissa, str):
+            data_shape = mesh_series.read(0)[mesh_property_abscissa].shape
+            mesh_property_abscissa = _resolve_property(
+                mesh_property_abscissa, data_shape
+            )
+        x_values = mesh_property_abscissa.magnitude.strip_units(
+            mesh_series.probe(
+                points,
+                mesh_property_abscissa.data_name,
+                interp_method,
+                interp_backend_pvd,
+            )
+        )
+        x_unit_str = (
+            f" / {mesh_property_abscissa.get_output_unit()}"
+            if mesh_property_abscissa.get_output_unit()
+            else ""
+        )
+        x_label = (
+            mesh_property_abscissa.output_name.replace("_", " ") + x_unit_str
+        )
     if ax is None:
         fig, ax = plt.subplots()
     else:
         fig = None
     ax.set_prop_cycle(get_style_cycler(len(points), colors, linestyles))
-    ax.plot(times, values, label=labels, **kwargs)
+    if fill_between:
+        ax.fill_between(
+            x_values,
+            np.min(values, axis=-1),
+            np.max(values, axis=-1),
+            label=labels,
+            **kwargs,
+        )
+    else:
+        ax.plot(x_values, values, label=labels, **kwargs)
     if labels is not None:
         ax.legend(facecolor="white", framealpha=1, prop={"family": "monospace"})
-    time_label = f"time / {time_unit}" if time_unit else "time"
     ax.set_axisbelow(True)
     ax.grid(which="major", color="lightgrey", linestyle="-")
     ax.grid(which="minor", color="0.95", linestyle="--")
@@ -585,7 +619,7 @@ def plot_probe(
         else ""
     )
     y_label = mesh_property.output_name.replace("_", " ") + unit_str
-    ax.set_xlabel(time_label)
+    ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.label_outer()
     ax.minorticks_on()
