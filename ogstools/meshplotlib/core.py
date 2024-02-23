@@ -1,6 +1,5 @@
 """Meshplotlib core utilitites."""
 
-import types
 from copy import deepcopy
 from math import nextafter
 from typing import Literal, Optional, Union
@@ -13,7 +12,6 @@ from matplotlib import colors as mcolors
 from matplotlib import figure as mfigure
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
-from matplotlib import transforms as mtransforms
 from matplotlib.patches import Rectangle as Rect
 
 from ogstools.meshlib import MeshSeries
@@ -23,7 +21,7 @@ from ogstools.propertylib.unit_registry import u_reg
 
 from . import plot_features as pf
 from . import setup
-from .levels import get_levels
+from .levels import get_levels, get_median_exponent
 from .utils import get_style_cycler
 
 # TODO: define default data_name for regions in setup
@@ -51,7 +49,7 @@ def get_data(
         property.data_name not in mesh.point_data
         and property.data_name not in mesh.cell_data
     ):
-        msg = f"Property not found in mesh {mesh}."
+        msg = f"Property {property.data_name} not found in mesh."
         raise IndexError(msg)
     if masked:
         return mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)[
@@ -103,25 +101,6 @@ def get_cmap_norm(
     return cmap, norm
 
 
-# to fix scientific offset position
-# https://github.com/matplotlib/matplotlib/issues/4476#issuecomment-105627334
-def fix_scientific_offset_position(axis, func):
-    axis._update_offset_text_position = types.MethodType(func, axis)
-
-
-def y_update_offset_text_position(self, bboxes, bboxes2):  # noqa: ARG001
-    x, y = self.offsetText.get_position()
-    # y in axes coords, x in display coords
-    self.offsetText.set_transform(
-        mtransforms.blended_transform_factory(
-            self.axes.transAxes, mtransforms.IdentityTransform()
-        )
-    )
-    top = self.axes.bbox.ymax
-    y = top + 2 * self.OFFSETTEXTPAD * self.figure.dpi / 72.0
-    self.offsetText.set_position((x, y))
-
-
 def add_colorbars(
     fig: mfigure.Figure,
     ax: Union[plt.Axes, list[plt.Axes]],
@@ -131,60 +110,63 @@ def add_colorbars(
     labelsize: Optional[float] = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
-    cmap, norm = get_cmap_norm(levels, property)
-    cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
-    categoric = property.categoric or (len(levels) == 2)
-    if categoric:
+    ticks = levels
+    if property.categoric or (len(levels) == 2):
         bounds = get_level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
-    else:
-        ticks = levels
+
+    cmap, norm = get_cmap_norm(levels, property)
+    cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
+
     cb = fig.colorbar(
         cm, norm=norm, ax=ax, ticks=ticks, drawedges=True, location="right",
         spacing="uniform", pad=pad, format="%.3g"  # fmt: skip
     )
-    if setup.invert_colorbar:
-        cb.ax.invert_yaxis()
-    if property.is_mask():
-        cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
-    if not categoric and setup.log_scaled:
-        levels = 10**levels
-
-    unit_str = (
-        f" / {property.get_output_unit()}" if property.get_output_unit() else ""
-    )
+    # Formatting the colorbar label
+    cb_label = property.output_name.replace("_", " ") + " / "
+    POWER_LIMIT = 3
+    if (
+        abs(median_exponent := get_median_exponent(ticks)) > POWER_LIMIT
+    ) and not (np.isclose(ticks[0], ticks[-1]) or setup.log_scaled):
+        ticks = ticks * 10**-median_exponent
+        cb_label += f"10$^{{{median_exponent}}}$ "
+    if unit := property.get_output_unit():
+        cb_label += f"{unit}"
+    if cb_label[-3:] == " / ":
+        cb_label = cb_label[:-3]
+    if setup.log_scaled:
+        cb_label = f"log$_{{10}}$( {cb_label} )"
     labelsize = (
         setup.rcParams_scaled["font.size"] if labelsize is None else labelsize
     )
-    cb.set_label(
-        property.output_name.replace("_", " ") + unit_str, size=labelsize
-    )
-    cb.ax.tick_params(labelsize=labelsize, direction="out")
-    mf = mticker.ScalarFormatter(useMathText=True, useOffset=True)
-    mf.set_scientific(True)
-    mf.set_powerlimits([-3, 3])
-    fix_scientific_offset_position(cb.ax.yaxis, y_update_offset_text_position)
-    cb.ax.yaxis.set_offset_position("left")
-    cb.ax.yaxis.set_major_formatter(mf)
+    cb.set_label(cb_label, size=labelsize)
 
-    if _q_zero_line(property, levels):
+    # formatting the colorbar ticks
+
+    cb.ax.tick_params(labelsize=labelsize, direction="out")
+    cb.ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.3g"))
+    tick_labels = [
+        f"{round(tick, POWER_LIMIT):.{POWER_LIMIT}g}" for tick in ticks
+    ]
+    if property.data_name == "MaterialIDs" and setup.material_names is not None:
+        tick_labels = [
+            setup.material_names.get(mat_id, mat_id) for mat_id in levels
+        ]
+        cb.ax.set_ylabel("")
+    elif property.categoric:
+        tick_labels = [str(level) for level in levels.astype(int)]
+    cb.ax.set_yticklabels(tick_labels)
+
+    # miscellaneous
+
+    if property.is_mask():
+        cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
+    if setup.invert_colorbar:
+        cb.ax.invert_yaxis()
+    if _q_zero_line(property, ticks):
         cb.ax.axhline(
             y=0, color="w", lw=2 * setup.rcParams_scaled["lines.linewidth"]
         )
-    if setup.log_scaled:
-        cb.ax.set_yticklabels(10**ticks)
-
-    if property.data_name == "MaterialIDs" and setup.material_names is not None:
-        region_names = []
-        for mat_id in levels:
-            if mat_id in setup.material_names:
-                region_names += [setup.material_names[mat_id]]
-            else:
-                region_names += [mat_id]
-        cb.ax.set_yticklabels(region_names)
-        cb.ax.set_ylabel("")
-    elif property.categoric:
-        cb.ax.set_yticklabels(levels.astype(int))
 
 
 def subplot(

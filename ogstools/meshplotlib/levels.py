@@ -1,5 +1,7 @@
 """Utilities to create nicely spaced levels."""
 
+from math import nextafter
+
 import numpy as np
 
 
@@ -21,27 +23,12 @@ def nice_range(lower: float, upper: float, n_ticks: float) -> np.ndarray:
 
     The length of the arrays will be close to n_ticks.
     """
-    nice_range = nice_num(upper - lower)
-    tick_spacing = nice_num(nice_range / (n_ticks - 1.0))
+    base = nice_num(upper - lower)
+    tick_spacing = nice_num(base / (n_ticks - 1.0))
     nice_lower = np.ceil(lower / tick_spacing) * tick_spacing
     nice_upper = np.ceil(upper / tick_spacing) * tick_spacing
     res = np.arange(nice_lower, nice_upper, tick_spacing)
     return res[(res > lower) & (res < upper)]
-
-
-def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
-    """
-    Return the given values rounded to significant digits.
-
-    The significant digits are based of the median decimal exponent and the
-    given precision.
-    """
-    if vals.size == 0:
-        return vals
-    log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))
-    exponents = np.floor(log).astype(int)
-    median_exp = int(np.median(exponents))
-    return np.stack([np.round(v, precision - median_exp) for v in vals])
 
 
 def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
@@ -51,10 +38,14 @@ def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     The length of the arrays will be close to n_ticks.
     At the boundaries the tickspacing may differ from the remaining array.
     """
-    n_digits = 6
-    if lower * (1 - 10**-n_digits) <= upper <= lower * (1 + 10**-n_digits):
-        return lower + np.array([0.0, 10**-n_digits])
+    if lower == upper:
+        return np.asarray([lower, nextafter(lower, np.inf)])
     levels = nice_range(lower, upper, n_ticks)
-    return np.unique(
-        np.append(np.append(lower, adaptive_rounding(levels, n_digits)), upper)
-    )
+    return np.unique(np.append(np.append(lower, levels), upper))
+
+
+def get_median_exponent(vals: np.ndarray) -> int:
+    "Get the median exponent from an array of numbers."
+    log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))
+    exponents = np.floor(log).astype(int)
+    return int(np.median(exponents))

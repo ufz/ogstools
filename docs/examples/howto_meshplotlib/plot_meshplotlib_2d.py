@@ -39,6 +39,14 @@ fig = mpl.plot(mesh, presets.velocity)
 
 
 # %%
+# Let's plot it again, this time log-scaled.
+mpl.setup.log_scaled = True
+mpl.setup.p_min = -8
+fig = mpl.plot(mesh, presets.velocity)
+mpl.setup.p_min = None
+mpl.setup.log_scaled = False
+
+# %%
 # We can also plot components of vector property:
 
 fig = mpl.plot(mesh, presets.displacement[0])
