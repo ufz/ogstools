@@ -57,7 +57,7 @@ def grid_convergence(
     returns:                    Grid convergence field of the given property.
     """
     assert len(meshes) >= 3
-    cast = property.magnitude.strip_units
+    cast = property.magnitude
     result = deepcopy(topology)
     result.clear_point_data()
     result.clear_cell_data()

@@ -91,7 +91,7 @@ for sim_result, dt in zip(sim_results, time_step_sizes):
     for ts in mesh_series.timesteps:
         mesh = mesh_series.read(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
-    max_T = propertylib.presets.temperature(results["temperature"]).magnitude
+    max_T = propertylib.presets.temperature(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues) / sec_per_yr
