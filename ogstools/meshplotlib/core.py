@@ -16,7 +16,7 @@ from matplotlib.patches import Rectangle as Rect
 
 from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property, Vector
-from ogstools.propertylib.presets import _resolve_property
+from ogstools.propertylib.presets import get_preset
 from ogstools.propertylib.unit_registry import u_reg
 
 from . import plot_features as pf
@@ -27,9 +27,9 @@ from .utils import get_style_cycler
 # TODO: define default data_name for regions in setup
 
 
-def _q_zero_line(property: Property, levels: np.ndarray):
-    return property.bilinear_cmap or (
-        property.data_name == "temperature" and levels[0] < 0 < levels[-1]
+def _q_zero_line(mesh_property: Property, levels: np.ndarray):
+    return mesh_property.bilinear_cmap or (
+        mesh_property.data_name == "temperature" and levels[0] < 0 < levels[-1]
     )
 
 
@@ -44,19 +44,19 @@ def get_level_boundaries(levels: np.ndarray):
 
 
 def get_cmap_norm(
-    levels: np.ndarray, property: Property
+    levels: np.ndarray, mesh_property: Property
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the property field."""
     vmin, vmax = (levels[0], levels[-1])
-    if property.categoric:
+    if mesh_property.categoric:
         vmin += 0.5
         vmax += 0.5
 
-    if isinstance(property.cmap, str):
-        continuous_cmap = colormaps[property.cmap]
+    if isinstance(mesh_property.cmap, str):
+        continuous_cmap = colormaps[mesh_property.cmap]
     else:
-        continuous_cmap = property.cmap
-    if property.bilinear_cmap:
+        continuous_cmap = mesh_property.cmap
+    if mesh_property.bilinear_cmap:
         if vmin <= 0.0 <= vmax:
             vcenter = 0.0
             vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
@@ -75,7 +75,9 @@ def get_cmap_norm(
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
     colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
     cmap = mcolors.ListedColormap(colors, name="custom")
-    boundaries = get_level_boundaries(levels) if property.categoric else levels
+    boundaries = (
+        get_level_boundaries(levels) if mesh_property.categoric else levels
+    )
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=True
     )
@@ -85,33 +87,33 @@ def get_cmap_norm(
 def add_colorbars(
     fig: mfigure.Figure,
     ax: Union[plt.Axes, list[plt.Axes]],
-    property: Property,
+    mesh_property: Property,
     levels: np.ndarray,
     pad: float = 0.05,
     labelsize: Optional[float] = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     ticks = levels
-    if property.categoric or (len(levels) == 2):
+    if mesh_property.categoric or (len(levels) == 2):
         bounds = get_level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
-    cmap, norm = get_cmap_norm(levels, property)
+    cmap, norm = get_cmap_norm(levels, mesh_property)
     cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
 
     cb = fig.colorbar(
         cm, norm=norm, ax=ax, ticks=ticks, drawedges=True, location="right",
-        spacing="uniform", pad=pad, format="%.3g"  # fmt: skip
+        spacing="uniform", pad=pad  # fmt: skip
     )
     # Formatting the colorbar label
-    cb_label = property.output_name.replace("_", " ") + " / "
+    cb_label = mesh_property.output_name.replace("_", " ") + " / "
     POWER_LIMIT = 3
     if (
         abs(median_exponent := get_median_exponent(ticks)) > POWER_LIMIT
     ) and not (np.isclose(ticks[0], ticks[-1]) or setup.log_scaled):
         ticks = ticks * 10**-median_exponent
         cb_label += f"10$^{{{median_exponent}}}$ "
-    if unit := property.get_output_unit():
+    if unit := mesh_property.get_output_unit():
         cb_label += f"{unit}"
     if cb_label[-3:] == " / ":
         cb_label = cb_label[:-3]
@@ -133,22 +135,25 @@ def add_colorbars(
         tick_labels[0] = f"{ticks[0]:.2e}"
     if tick_labels[-2] == tick_labels[-1]:
         tick_labels[-1] = f"{ticks[-1]:.1e}"
-    if property.data_name == "MaterialIDs" and setup.material_names is not None:
+    if (
+        mesh_property.data_name == "MaterialIDs"
+        and setup.material_names is not None
+    ):
         tick_labels = [
             setup.material_names.get(mat_id, mat_id) for mat_id in levels
         ]
         cb.ax.set_ylabel("")
-    elif property.categoric:
+    elif mesh_property.categoric:
         tick_labels = [str(level) for level in levels.astype(int)]
     cb.ax.set_yticklabels(tick_labels)
 
     # miscellaneous
 
-    if property.is_mask():
+    if mesh_property.is_mask():
         cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
     if setup.invert_colorbar:
         cb.ax.invert_yaxis()
-    if _q_zero_line(property, ticks):
+    if _q_zero_line(mesh_property, ticks):
         cb.ax.axhline(
             y=0, color="w", lw=2 * setup.rcParams_scaled["lines.linewidth"]
         )
@@ -156,7 +161,7 @@ def add_colorbars(
 
 def subplot(
     mesh: pv.UnstructuredGrid,
-    property: Union[Property, str],
+    mesh_property: Union[Property, str],
     ax: plt.Axes,
     levels: Optional[np.ndarray] = None,
 ) -> None:
@@ -168,18 +173,20 @@ def subplot(
     Custom levels and a colormap string can be provided.
     """
 
-    if isinstance(property, str):
-        data_shape = mesh[property].shape
-        property = _resolve_property(property, data_shape)
+    if isinstance(mesh_property, str):
+        data_shape = mesh[mesh_property].shape
+        mesh_property = get_preset(mesh_property, data_shape)
     if mesh.get_cell(0).dimension == 3:
         msg = "meshplotlib is for 2D meshes only, but found 3D elements."
         raise ValueError(msg)
 
     ax.axis("auto")
 
-    if property.mask_used(mesh):
-        subplot(mesh, property.get_mask(), ax)
-        mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
+    if mesh_property.mask_used(mesh):
+        subplot(mesh, mesh_property.get_mask(), ax)
+        mesh = mesh.ctp(True).threshold(
+            value=[1, 1], scalars=mesh_property.mask
+        )
 
     surf_tri = mesh.triangulate().extract_surface()
 
@@ -192,7 +199,7 @@ def subplot(
     # removed with this reshaping and slicing to get the array of tri's
     x, y = setup.length(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
-    values = property.magnitude(surf_tri)
+    values = mesh_property.magnitude(surf_tri)
     if setup.log_scaled:
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -201,34 +208,34 @@ def subplot(
     if levels is None:
         num_levels = min(setup.num_levels, len(np.unique(values)))
         levels = get_levels(p_min, p_max, num_levels)
-    cmap, norm = get_cmap_norm(levels, property)
+    cmap, norm = get_cmap_norm(levels, mesh_property)
 
     if (
-        property.data_name in mesh.cell_data
-        and property.data_name not in mesh.point_data
+        mesh_property.data_name in mesh.cell_data
+        and mesh_property.data_name not in mesh.point_data
     ):
         ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
-        if property.is_mask():
+        if mesh_property.is_mask():
             ax.tripcolor(x, y, tri, facecolors=values, mask=(values == 1),
                          cmap=cmap, norm=norm, hatch="/")  # fmt: skip
     else:
         ax.tricontourf(x, y, tri, values, levels=levels, cmap=cmap, norm=norm)
-        if _q_zero_line(property, levels):
+        if _q_zero_line(mesh_property, levels):
             ax.tricontour(x, y, tri, values, levels=[0], colors="w")
 
     surf = mesh.extract_surface()
 
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
-        show_edges = setup.show_element_edges == property.data_name
+        show_edges = setup.show_element_edges == mesh_property.data_name
     if show_edges:
         pf.plot_element_edges(ax, surf, projection)
 
     if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
         pf.plot_layer_boundaries(ax, surf, projection)
 
-    if isinstance(property, Vector):
-        pf.plot_streamlines(ax, surf_tri, property, projection)
+    if isinstance(mesh_property, Vector):
+        pf.plot_streamlines(ax, surf_tri, mesh_property, projection)
 
     ax.margins(0, 0)  # otherwise it shrinks the plot content
 
@@ -307,18 +314,18 @@ def _fig_init(rows: int, cols: int, aspect: float = 1.0) -> mfigure.Figure:
 
 
 def get_combined_levels(
-    meshes: np.ndarray, property: Union[Property, str]
+    meshes: np.ndarray, mesh_property: Union[Property, str]
 ) -> np.ndarray:
     """
     Calculate well spaced levels for the encompassing property range in meshes.
     """
-    if isinstance(property, str):
-        data_shape = meshes[0][property].shape
-        property = _resolve_property(property, data_shape)
+    if isinstance(mesh_property, str):
+        data_shape = meshes[0][mesh_property].shape
+        mesh_property = get_preset(mesh_property, data_shape)
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = property.magnitude(mesh)
+        values = mesh_property.magnitude(mesh)
         if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
@@ -342,7 +349,7 @@ def get_combined_levels(
 def _plot_on_figure(
     fig: mfigure.Figure,
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
-    property: Property,
+    mesh_property: Property,
 ) -> mfigure.Figure:
     """
     Plot the property field of meshes on existing figure.
@@ -354,16 +361,16 @@ def _plot_on_figure(
     np_meshes = np.reshape(meshes, shape)
     np_axs = np.reshape(fig.axes, shape)
     if setup.combined_colorbar:
-        combined_levels = get_combined_levels(np_meshes, property)
+        combined_levels = get_combined_levels(np_meshes, mesh_property)
 
     for i in range(shape[0]):
         for j in range(shape[1]):
             _levels = (
                 combined_levels
                 if setup.combined_colorbar
-                else get_combined_levels(np_meshes[i, j], property)
+                else get_combined_levels(np_meshes[i, j], mesh_property)
             )
-            subplot(np_meshes[i, j], property, np_axs[i, j], _levels)
+            subplot(np_meshes[i, j], mesh_property, np_axs[i, j], _levels)
 
     np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
     np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
@@ -375,13 +382,13 @@ def _plot_on_figure(
     if setup.combined_colorbar:
         cb_axs = np.ravel(fig.axes).tolist()
         add_colorbars(
-            fig, cb_axs, property, combined_levels, pad=0.05 / shape[1]
+            fig, cb_axs, mesh_property, combined_levels, pad=0.05 / shape[1]
         )
     else:
         for i in range(shape[0]):
             for j in range(shape[1]):
-                _levels = get_combined_levels(np_meshes[i, j], property)
-                add_colorbars(fig, np_axs[i, j], property, _levels)
+                _levels = get_combined_levels(np_meshes[i, j], mesh_property)
+                add_colorbars(fig, np_axs[i, j], mesh_property, _levels)
 
     return fig
 
@@ -401,7 +408,7 @@ def get_data_aspect(mesh: pv.DataSet) -> float:
 # TODO: num_levels should be min_levels
 def plot(
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
-    property: Union[Property, str],
+    mesh_property: Union[Property, str],
 ) -> mfigure.Figure:
     """
     Plot the property field of meshes with default settings.
@@ -416,9 +423,9 @@ def plot(
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).flatten()
-    if isinstance(property, str):
-        data_shape = _meshes[0][property].shape
-        property = _resolve_property(property, data_shape)
+    if isinstance(mesh_property, str):
+        data_shape = _meshes[0][mesh_property].shape
+        mesh_property = get_preset(mesh_property, data_shape)
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
         fig_aspect = np.mean(data_aspects)
@@ -429,7 +436,7 @@ def plot(
     ax_aspects = fig_aspect / data_aspects
     _fig = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
     n_axs = shape[0] * shape[1]
-    fig = _plot_on_figure(_fig, meshes, property)
+    fig = _plot_on_figure(_fig, meshes, mesh_property)
     for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
         ax.set_aspect(1.0 / aspect)
     return fig
@@ -438,21 +445,21 @@ def plot(
 def plot_diff(
     mesh1: pv.UnstructuredGrid,
     mesh2: pv.UnstructuredGrid,
-    property: Union[Property, str],
+    mesh_property: Union[Property, str],
 ) -> mfigure.Figure:
-    if isinstance(property, str):
-        data_shape = mesh1[property].shape
-        property = _resolve_property(property, data_shape)
+    if isinstance(mesh_property, str):
+        data_shape = mesh1[mesh_property].shape
+        mesh_property = get_preset(mesh_property, data_shape)
     diff_mesh = deepcopy(mesh1)
-    diff_mesh[property.data_name] -= mesh2[property.data_name]
-    data_property = property.replace(output_unit=property.data_unit)
+    diff_mesh[mesh_property.data_name] -= mesh2[mesh_property.data_name]
+    data_property = mesh_property.replace(output_unit=mesh_property.data_unit)
     diff_unit = (
         data_property(1, strip_unit=False) - data_property(1, strip_unit=False)
     ).units
-    diff_property = property.replace(
+    diff_property = mesh_property.replace(
         data_unit=diff_unit,
         output_unit=diff_unit,
-        output_name=property.output_name + " difference",
+        output_name=mesh_property.output_name + " difference",
         bilinear_cmap=True,
     )
     return plot(diff_mesh, diff_property)
@@ -460,7 +467,7 @@ def plot_diff(
 
 def plot_limit(
     mesh_series: MeshSeries,
-    property: Union[Property, str],
+    mesh_property: Union[Property, str],
     limit: Literal["min", "max"],
 ) -> mfigure.Figure:
     """
@@ -473,14 +480,14 @@ def plot_limit(
     :returns:   A matplotlib Figure
     """
     mesh = mesh_series.read(0)
-    if isinstance(property, str):
-        data_shape = mesh[property].shape
-        property = _resolve_property(property, data_shape)
+    if isinstance(mesh_property, str):
+        data_shape = mesh[mesh_property].shape
+        mesh_property = get_preset(mesh_property, data_shape)
     func = {"min": np.min, "max": np.max}[limit]
-    vals = mesh_series.values(property.data_name)
-    func(vals, out=mesh[property.data_name], axis=0)
-    limit_property = property.replace(
-        output_name=limit + " " + property.output_name
+    vals = mesh_series.values(mesh_property.data_name)
+    func(vals, out=mesh[mesh_property.data_name], axis=0)
+    limit_property = mesh_property.replace(
+        output_name=limit + " " + mesh_property.output_name
     )
     return plot(mesh, limit_property)
 
@@ -522,7 +529,7 @@ def plot_probe(
         points = points[np.newaxis]
     if isinstance(mesh_property, str):
         data_shape = mesh_series.read(0)[mesh_property].shape
-        mesh_property = _resolve_property(mesh_property, data_shape)
+        mesh_property = get_preset(mesh_property, data_shape)
     values = mesh_property.magnitude(
         mesh_series.probe(
             points, mesh_property.data_name, interp_method, interp_backend_pvd
@@ -538,7 +545,7 @@ def plot_probe(
     else:
         if isinstance(mesh_property_abscissa, str):
             data_shape = mesh_series.read(0)[mesh_property_abscissa].shape
-            mesh_property_abscissa = _resolve_property(
+            mesh_property_abscissa = get_preset(
                 mesh_property_abscissa, data_shape
             )
         x_values = mesh_property_abscissa.magnitude(
