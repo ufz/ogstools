@@ -1,68 +1,92 @@
 """
-Features of propertylib
-=====================================
+Property Presets
+================
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-``propertylib`` provides a common interface for other modules to structure
-reading, conversion and output of mesh data.
+:py:mod:`ogstools.propertylib` provides classes (Scalar, Vector, Matrix) which
+encapsulate unit handling and data transformation for simplified processing of
+mesh data. There are several predefined properties stored under the module
+:py:mod:`ogstools.propertylib.presets`.
 """
 
 # %%
 
-import matplotlib.pyplot as plt
-import numpy as np
+# sphinx_gallery_start_ignore
+
 import pandas as pd
 
+from ogstools.meshplotlib import examples, plot
 from ogstools.propertylib import presets
 
-# %%
-# There are some predefined default properties:
+data = ["preset,data_name,data_unit,output_unit,output_name,type".split(",")]
+for preset_name in dir(presets):
+    if isinstance(preset := presets.__dict__[preset_name], presets.Property):
+        data += [
+            [
+                preset_name,
+                preset.data_name,
+                preset.data_unit,
+                preset.output_unit,
+                preset.output_name,
+                preset.type_name,
+            ]
+        ]
 
-tab = pd.DataFrame(presets.all_properties).set_index("output_name")
-tab["type"] = [p.type_name for p in presets.all_properties]
-tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
+pd.DataFrame(data[1:], columns=data[0]).sort_values(
+    ["data_name", "preset"]
+).set_index("preset")
 
-# %%
-# You can access properties either form the entire collection or from a subset
-# which only contains properties available to a specific OGS process.
+# sphinx_gallery_end_ignore
+
+# %% [markdown]
 # Calling a property converts the argument from data_unit to output_unit and
-# applies a function if specified.
-
-print(presets.temperature(273.15))  # access from the entire collection
-print(presets.strain(0.01))  # access from Mechanics collection
+# applies a function if specified. In this case we convert from K to °C:
 
 # %%
-# VectorProperties and MatrixProperties contain other Properties which represent
-# the result of an applied function on itself. Components can be accessed with
-# brackets. VectorProperties should be of length 2 or 3 corresponding to the
-# dimension. MatrixProperties likewise should be of length 4 [xx, yy, zz, xy]
-# or 6 [xx, yy, zz, xy, yz, xz].
+presets.temperature(273.15)
+
+# %% [markdown]
+# You can also create your own properties:
 
 # %%
-# Element 1 (counting from 0) of a 3D displacement vector:
+custom_temperature = presets.Scalar(
+    data_name="temperature", data_unit="K", output_unit="°F"
+)
+custom_temperature(273.15)
 
-print(presets.displacement[1]([0.01, 0.02, 0.03]))
+# %% [markdown]
+# Or modify existing ones:
+presets.temperature.replace(output_unit="°F")(273.15)
+
+# %% [markdown]
+# Components of Vector properties and Matrix properties can be accessed with
+# bracket indexing. :py:mod:`ogstools.propertylib.Vector` properties should be
+# of length 2 or 3 corresponding to the dimension.
+# :py:mod:`ogstools.propertylib.Matrix` properties likewise should be of length
+# 4 [xx, yy, zz, xy] or 6 [xx, yy, zz, xy, yz, xz].
 
 # %%
-# Magnitude of a 2D displacement vector from:
-
-print(presets.displacement.magnitude([0.03, 0.04]))
+presets.displacement[1]([0.01, 0.02, 0.03])
 
 # %%
-# Magnitude and trace of a 3D strain matrix:
-eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
-print(presets.strain.magnitude(eps))
-print(presets.strain.trace(eps))
+presets.strain["xx"]([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
+
+# %% [markdown]
+# Magnitude of a 2D displacement vector:
 
 # %%
-# You can change the attributes of the defaults.
-# For example for temperature from the Thermal Collection from the default
-# output_unit °C to °F:
+presets.displacement.magnitude([0.03, 0.04])
 
-temp = np.linspace(273.15, 373.15, 10)
-fig, axs = plt.subplots(2)
-axs[0].plot(presets.temperature(temp), color="r")
-temperature_F = presets.temperature.replace(output_unit="°F")
-axs[1].plot(temperature_F(temp), color="b")
-fig.show()
+# %% [markdown]
+# The main benefit of having specified how these properties should be
+# transformed is when making use of these in post processing. When plotting
+# with :py:mod:`ogstools.meshplotlib` we can use these presets to simplify the
+# task of processing the data (e.g. calculate the von Mises stress):
+
+# %%
+fig = plot(examples.mesh_mechanics, presets.stress.von_Mises)
+
+# %% [markdown]
+# Have a look at
+# :ref:`sphx_glr_auto_examples_howto_meshplotlib` for more examples.
