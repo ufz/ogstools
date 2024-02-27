@@ -5,8 +5,11 @@ import unittest
 import numpy as np
 from pint.facets.plain import PlainQuantity
 
+from ogstools.meshplotlib.examples import mesh_mechanics
 from ogstools.propertylib import presets as pp
+from ogstools.propertylib.matrix import Matrix
 from ogstools.propertylib.property import Scalar, u_reg
+from ogstools.propertylib.vector import Vector
 
 qty = u_reg.Quantity
 
@@ -77,10 +80,10 @@ class PhysicalPropertyTest(unittest.TestCase):
     def test_von_mises(self):
         """Test von_mises_stress property."""
         sig_3D = np.array([3, 1, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.von_mises_stress, sig_3D, qty(2, "MPa"))
-        self.equality(pp.von_mises_stress, [sig_3D, sig_3D], qty([2, 2], "MPa"))
+        self.equality(pp.stress.von_Mises, sig_3D, qty(2, "MPa"))
+        self.equality(pp.stress.von_Mises, [sig_3D, sig_3D], qty([2, 2], "MPa"))
         sig_2D = np.array([2, 1, 1, 1]) * 1e6
-        self.equality(pp.von_mises_stress, sig_2D, qty(1, "MPa"))
+        self.equality(pp.stress.von_Mises, sig_2D, qty(1, "MPa"))
 
     def test_eff_pressure(self):
         """Test effective_pressure property."""
@@ -91,13 +94,39 @@ class PhysicalPropertyTest(unittest.TestCase):
     def test_qp_ratio(self):
         """Test qp_ratio property."""
         sig = np.array([4, 4, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.qp_ratio, sig, qty(-100, "percent"))
-        self.equality(pp.qp_ratio, [sig] * 2, qty([-100] * 2, "percent"))
+        self.equality(pp.stress.qp_ratio, sig, qty(-100, "percent"))
+        self.equality(pp.stress.qp_ratio, [sig] * 2, qty([-100] * 2, "percent"))
 
-    def test_dilatancy(self):
-        """Test dilatancy property."""
+    def test_integrity_criteria(self):
+        """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
-        self.assertRaises(TypeError, pp.dilatancy_alkan_eff, sig)
+        #  not working for arrays (only works for meshes)
+        self.assertRaises(TypeError, pp.dilatancy_alkan, sig)
+        self.assertGreater(np.max(pp.dilatancy_alkan(mesh_mechanics)), 0)
+        self.assertGreater(np.max(pp.dilatancy_alkan_eff(mesh_mechanics)), 0)
+        self.assertGreater(np.max(pp.dilatancy_critescu(mesh_mechanics)), 0)
+        self.assertGreater(np.max(pp.dilatancy_critescu_eff(mesh_mechanics)), 0)
+        self.assertGreater(np.max(pp.fluid_pressure_crit(mesh_mechanics)), 0)
+
+    def test_tensor_attributes(self):
+        """Test that the access of tensor attributes works."""
+        # data needs to be a 2D array
+        sig = np.asarray([[4, 1, 2, 1, 1, 1]]) * 1e6
+        self.assertTrue(np.all(pp.stress.eigenvalues(sig) >= 0))
+        for i in range(3):
+            np.testing.assert_allclose(
+                pp.stress.eigenvectors[i].magnitude(sig), 1.0
+            )
+        self.assertGreater(pp.stress.det(sig), 0)
+        self.assertGreater(pp.stress.I1(sig), 0)
+        self.assertGreater(pp.stress.I2(sig), 0)
+        self.assertGreater(pp.stress.I3(sig), 0)
+        self.assertGreater(pp.stress.mean(sig), 0)
+        self.assertGreater(pp.stress.deviator.magnitude(sig), 0)
+        self.assertGreater(pp.stress.J1(sig), 0)
+        self.assertGreater(pp.stress.J2(sig), 0)
+        self.assertGreater(pp.stress.J3(sig), 0)
+        self.assertGreater(pp.stress.octahedral_shear(sig), 0)
 
     def test_simple(self):
         """Test call functionality."""
