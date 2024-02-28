@@ -16,6 +16,7 @@ from ogstools.meshplotlib import (
     setup,
 )
 from ogstools.meshplotlib.animation import animate, save_animation
+from ogstools.meshplotlib.core import get_ticklabels
 from ogstools.meshplotlib.levels import get_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.meshplotlib.utils import justified_labels
@@ -46,6 +47,43 @@ class MeshplotlibTest(unittest.TestCase):
         equality(get_levels(1, 40, 20), [1, *range(2, 42, 2)])
         equality(get_levels(0.0, 0.0, 10), [0.0, 0.0])
         equality(get_levels(1e9, 1e9, 10), [1e9, 1e9])
+
+    def test_ticklabels(self):
+        def compare(array: np.ndarray, ref_labels: list[str], ref_offset=None):
+            labels, offset = get_ticklabels(np.asarray(array))
+            self.assertTrue(np.all(labels == ref_labels))
+            self.assertEqual(offset, ref_offset)
+
+        compare([1, 4, 7, 10], ["1", "4", "7", "10"])
+        compare([1, 4, 7, 10, 10.01], ["1", "4", "7", "10", "10.01"])
+        compare([1, 4, 7, 10, 10.001], ["1", "4", "7", "10", "10.001"])
+        compare([100, 150, 200, 200.1], ["100", "150", "200", "200.1"])
+        compare(
+            [-0.00012345, 1e-15, 1, 2, 2.000012345],
+            ["-0.000123", "0", "1", "2", "2.00001"],
+        )
+        compare(
+            [0.99987655, 1, 2, 2.000012345], ["0.9999", "1", "2", "2.00001"]
+        )
+        compare(
+            [100, 100.004, 100.008, 100.012],
+            ["0", "0.004", "0.008", "0.012"],
+            "100",
+        )
+        compare(
+            [100, 100.0004, 100.0008, 100.0012],
+            ["0.0e+00", "4.0e-04", "8.0e-04", "1.2e-03"],
+            "100",
+        )
+        compare(
+            [110000.0, 140000.0, 1700000.0, 1900010.0],
+            ["1.1e+05", "1.4e+05", "1.7e+06", "1.9e+06"],
+        )
+        compare(
+            [1000000.0, 1000004.0, 1000008.0, 1000012.0],
+            ["0", "4", "8", "12"],
+            "1e+06",
+        )
 
     def test_justified_labels(self):
         points = np.asarray(
