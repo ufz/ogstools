@@ -147,7 +147,7 @@ def convergence_metrics(
     """
 
     def _data(m: pv.DataSet):
-        return property.magnitude.strip_units(m.point_data[property.data_name])
+        return property.magnitude(m.point_data[property.data_name])
 
     grid_spacings = [
         np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes

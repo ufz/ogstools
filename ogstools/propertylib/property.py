@@ -5,20 +5,19 @@ way (e.g. temperature, pressure, displacement, …). Unit conversion is handled
 via pint.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 import numpy as np
+import pyvista as pv
 from matplotlib.colors import Colormap
-from pint.facets.plain import PlainQuantity
 
 from .custom_colormaps import mask_cmap
+from .tensor_math import identity
 from .unit_registry import u_reg
-from .utils import identity, sym_tensor_to_mat
-from .vector2scalar import trace
 
 
-# TODO: rename to BaseProperty?? / GenericProperty
 @dataclass
 class Property:
     """Represent a property of a dataset."""
@@ -33,14 +32,12 @@ class Property:
     """The output name of the property."""
     mask: str = ""
     """The name of the mask data in the dataset."""
-    func: Union[
-        Callable[
-            [Union[float, np.ndarray, PlainQuantity]],
-            Union[float, np.ndarray, PlainQuantity],
-        ],
-        Callable[[Any], Any],
-    ] = identity
+    func: Callable = identity
     """The function to be applied on the data."""
+    mesh_dependent: bool = False
+    """If the function to be applied is dependent on the mesh itself"""
+    process_with_units: bool = False
+    """If true, apply the function on values with units."""
     cmap: Union[Colormap, str] = "coolwarm"
     """Colormap to use for plotting."""
     bilinear_cmap: bool = False
@@ -69,33 +66,52 @@ class Property:
         """
         return replace(self, **changes)
 
-    def __call__(self, vals: np.ndarray) -> PlainQuantity:
+    @classmethod
+    def from_property(cls, new_property: "Property", **changes):
+        "Create a new Property object with modified attributes."
+        return cls(
+            data_name=new_property.data_name,
+            data_unit=new_property.data_unit,
+            output_unit=new_property.output_unit,
+            output_name=new_property.output_name,
+            mask=new_property.mask,
+            func=new_property.func,
+            mesh_dependent=new_property.mesh_dependent,
+            process_with_units=new_property.process_with_units,
+            cmap=new_property.cmap,
+            categoric=new_property.categoric,
+        ).replace(**changes)
+
+    def __call__(
+        self,
+        data: Union[int, float, np.ndarray, pv.DataSet, Sequence],
+        strip_unit: bool = True,
+    ) -> np.ndarray:
         """
-        Return transformed values with units.
-
-        Apply property function and convert from data_unit to output_unit
-
-        :param vals: The input values.
-
-        :returns: The values with units.
-        """
-        Q_, _du, _ou = u_reg.Quantity, self.data_unit, self.output_unit
-        if Q_(0, _du).dimensionality == Q_(0, _ou).dimensionality:
-            return Q_(Q_(self.func(np.asarray(vals)), _du), _ou)
-        return Q_(self.func(Q_(vals, _du)), _ou)
-
-    def strip_units(self, vals: np.ndarray) -> np.ndarray:
-        """
-        Return transformed values without units.
+        Return the transformed data values.
 
         Apply property function, convert from data_unit to output_unit and
-        strip the unit.
+        return the values, optionally with the unit.
 
-        :param vals: The input values.
+        :param vals: The input data values.
 
-        :returns: The values without units.
+        :returns: The transformed data values.
         """
-        return self(vals).magnitude
+        qty, _du, _ou = u_reg.Quantity, self.data_unit, self.output_unit
+        if self.mesh_dependent:
+            if isinstance(data, pv.DataSet):
+                result = qty(self.func(data, self), _ou)
+            else:
+                msg = "This property can only be evaluated on a mesh."
+                raise TypeError(msg)
+        else:
+            if isinstance(data, pv.DataSet):
+                result = qty(self.func(qty(self.get_data(data), _du)), _ou)
+            elif self.process_with_units:
+                result = qty(self.func(qty(data, _du)), _ou)
+            else:
+                result = qty(qty(self.func(np.asarray(data)), _du), _ou)
+        return result.magnitude if strip_unit else result
 
     def get_output_unit(self) -> str:
         """
@@ -125,114 +141,30 @@ class Property:
     def magnitude(self) -> "Property":
         return self
 
+    def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
+        return (
+            not self.is_mask()
+            and self.mask in mesh.cell_data
+            and (len(mesh.cell_data[self.mask]) != 0)
+        )
+
+    def get_data(
+        self, mesh: pv.UnstructuredGrid, masked: bool = True
+    ) -> pv.UnstructuredGrid:
+        """Get the data associated with a scalar or vector property from a mesh."""
+        if (
+            self.data_name not in mesh.point_data
+            and self.data_name not in mesh.cell_data
+        ):
+            msg = f"Property {self.data_name} not found in mesh."
+            raise IndexError(msg)
+        if masked and self.mask_used(mesh):
+            return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
+                self.data_name
+            ]
+        return mesh[self.data_name]
+
 
 @dataclass
 class Scalar(Property):
     "Represent a scalar property of a dataset."
-
-
-@dataclass
-class Vector(Property):
-    """Represent a vector property of a dataset.
-
-    Vector properties should contain either 2 (2D) or 3 (3D) components.
-    Vector components can be accesses with brackets e.g. displacement[0]
-    """
-
-    def __getitem__(self, index: int) -> Scalar:
-        """
-        Get a scalar property as a specific component of the vector property.
-
-        :param index: The index of the component.
-
-        :returns: A scalar property as a vector component.
-        """
-        suffix = {False: index, True: ["x", "y", "z"][index]}
-        return Scalar(
-            data_name=self.data_name,
-            data_unit=self.data_unit,
-            output_unit=self.output_unit,
-            output_name=self.output_name + f"_{suffix[0 <= index <= 2]}",
-            mask=self.mask,
-            func=lambda x: np.array(x)[..., index],
-            cmap=self.cmap,
-            bilinear_cmap=True,
-        )
-
-    @property
-    def magnitude(self) -> Scalar:
-        ":returns: A scalar property as the magnitude of the vector."
-        return Scalar(
-            data_name=self.data_name,
-            data_unit=self.data_unit,
-            output_unit=self.output_unit,
-            output_name=self.output_name + "_magnitude",
-            mask=self.mask,
-            func=lambda x: np.linalg.norm(x, axis=-1),
-            cmap=self.cmap,
-        )
-
-    @property
-    def log_magnitude(self) -> Scalar:
-        ":returns: A scalar property as the log-magnitude of the vector."
-        return Scalar(
-            data_name=self.data_name,
-            output_name=self.output_name + "_log10",
-            mask=self.mask,
-            func=lambda x: np.log10(np.linalg.norm(x, axis=-1)),
-            cmap=self.cmap,
-        )
-
-
-@dataclass
-class Matrix(Property):
-    """Represent a matrix property of a dataset.
-
-    Matrix properties should contain either 4 (2D) or 6 (3D) components.
-    Matrix components can be accesses with brackets e.g. stress[0]
-    """
-
-    def __getitem__(self, index: int) -> Scalar:
-        """
-        Get a scalar property as a specific component of the matrix property.
-
-        :param index: The index of the component.
-
-        :returns: A scalar property as a matrix component.
-        """
-        suffix = {False: index, True: ["x", "y", "z", "xy", "yz", "xz"][index]}
-        return Scalar(
-            data_name=self.data_name,
-            data_unit=self.data_unit,
-            output_unit=self.output_unit,
-            output_name=self.output_name + f"_{suffix[0 <= index <= 5]}",
-            mask=self.mask,
-            func=lambda x: np.array(x)[..., index],
-            bilinear_cmap=True,
-            cmap=self.cmap,
-        )
-
-    @property
-    def magnitude(self) -> Scalar:
-        ":returns: A scalar property as the frobenius norm of the matrix."
-        return Scalar(
-            data_name=self.data_name,
-            data_unit=self.data_unit,
-            output_unit=self.output_unit,
-            output_name=self.output_name + "_magnitude",
-            mask=self.mask,
-            func=lambda x: np.linalg.norm(sym_tensor_to_mat(x), axis=(-2, -1)),
-            cmap=self.cmap,
-        )
-
-    @property
-    def trace(self) -> Scalar:
-        ":returns: A scalar property as the trace of the matrix."
-        return Scalar(
-            data_name=self.data_name,
-            data_unit=self.data_unit,
-            output_unit=self.output_unit,
-            output_name=self.output_name + "_trace",
-            mask=self.mask,
-            func=trace,
-        )

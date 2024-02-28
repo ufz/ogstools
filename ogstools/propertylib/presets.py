@@ -1,53 +1,168 @@
 # flake8: noqa: E501
-"Predefined properties."
+"""Predefined properties.
+
+".. seealso:: :py:mod:`ogstools.propertylib.tensor_math`"
+"""
 
 from typing import Optional
 
-from . import vector2scalar as v2s
-from .property import Matrix, Property, Scalar, Vector
+from . import mesh_dependent, tensor_math
+from .custom_colormaps import integrity_cmap, temperature_cmap
+from .matrix import Matrix
+from .property import Property, Scalar
+from .vector import Vector
 
-from .custom_colormaps import temperature_cmap
+T_MASK = "temperature_active"
+H_MASK = "pressure_active"
+M_MASK = "displacement_active"
 
-T_mask = "temperature_active"
-H_mask = "pressure_active"
-M_mask = "displacement_active"
+# general
+material_id = Scalar(data_name="MaterialIDs", categoric=True, cmap="tab20")
 
-# fmt: off
-material_id = Scalar("MaterialIDs", categoric=True, cmap="tab20")
-displacement = Vector("displacement", "m", "m", mask=M_mask, cmap="PRGn")
-effective_pressure = Scalar("sigma", "Pa", "MPa", "effective_pressure", M_mask, v2s.effective_pressure)
-heatflowrate = Scalar("HeatFlowRate", mask=T_mask)
-massflowrate = Scalar("MassFlowRate", mask=H_mask)
-nodal_forces = Vector("NodalForces", mask=M_mask)
-pressure = Scalar("pressure", "Pa", "MPa", "pore_pressure", H_mask, cmap="Blues")
-hydraulic_height = Scalar("pressure", "m", "m", "hydraulic_height", H_mask, cmap="Blues")
-qp_ratio = Scalar("sigma", "Pa", "percent", "QP_ratio", M_mask, v2s.qp_ratio)
-strain = Matrix("epsilon", "", "percent", "strain", M_mask)
-stress = Matrix("sigma", "Pa", "MPa", "stress", M_mask)
-temperature = Scalar("temperature", "K", "°C", mask=T_mask, cmap=temperature_cmap, bilinear_cmap=True)
-velocity = Vector("velocity", "m/s", "m/s", "darcy_velocity", H_mask)
-von_mises_stress = Scalar("sigma", "Pa", "MPa", "von_Mises_stress", M_mask, v2s.von_mises)
-# fmt: on
+# thermal
+temperature = Scalar(
+    data_name="temperature",
+    data_unit="K",
+    output_name="temperature",
+    output_unit="°C",
+    mask=T_MASK,
+    cmap=temperature_cmap,
+    bilinear_cmap=True,
+)
+heatflowrate = Scalar(data_name="HeatFlowRate", mask=T_MASK)
+
+# hydraulic
+pressure = Scalar(
+    data_name="pressure",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="pore_pressure",
+    mask=H_MASK,
+    cmap="Blues",
+)
+hydraulic_height = Scalar(
+    data_name="pressure",
+    data_unit="m",
+    output_unit="m",
+    output_name="hydraulic_height",
+    mask=H_MASK,
+    cmap="Blues",
+)
+velocity = Vector(
+    data_name="velocity",
+    data_unit="m/s",
+    output_unit="m/s",
+    output_name="darcy_velocity",
+    mask=H_MASK,
+)
+massflowrate = Scalar(data_name="MassFlowRate", mask=H_MASK)
+
+# mechanical
+displacement = Vector(
+    data_name="displacement",
+    data_unit="m",
+    output_unit="m",
+    mask=M_MASK,
+    cmap="PRGn",
+    bilinear_cmap=True,
+)
+strain = Matrix(
+    data_name="epsilon",
+    data_unit="",
+    output_unit="percent",
+    output_name="strain",
+    mask=M_MASK,
+)
+stress = Matrix(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="stress",
+    mask=M_MASK,
+)
+effective_pressure = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="effective_pressure",
+    mask=M_MASK,
+    func=tensor_math.effective_pressure,
+)
+dilatancy_critescu = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="",
+    output_name="dilatancy_criterion",
+    mask=M_MASK,
+    func=mesh_dependent.dilatancy_critescu,
+    mesh_dependent=True,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+dilatancy_critescu_eff = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="",
+    output_name="effective_dilatancy_criterion",
+    mask=M_MASK,
+    func=mesh_dependent.dilatancy_critescu_eff,
+    mesh_dependent=True,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+dilatancy_alkan = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="dilatancy_criterion",
+    mask=M_MASK,
+    func=mesh_dependent.dilatancy_alkan,
+    mesh_dependent=True,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+dilatancy_alkan_eff = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="effective_dilatancy_criterion",
+    mask=M_MASK,
+    func=mesh_dependent.dilatancy_alkan_eff,
+    mesh_dependent=True,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+fluid_pressure_crit = Scalar(
+    data_name="sigma",
+    data_unit="Pa",
+    output_unit="MPa",
+    output_name="fluid_pressure_criterion",
+    mask=M_MASK,
+    func=mesh_dependent.fluid_pressure_criterion,
+    mesh_dependent=True,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
+
 
 all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
 
-def find_property_preset(property_name: str) -> Optional[Property]:
-    """Return predefined property with given output_name."""
+def get_preset(property_name: str, shape: Optional[tuple] = None) -> Property:
+    """
+    Returns a Property preset or create one with correct type.
+
+    Searches for presets by data_name and output_name and returns if found.
+    Otherwise create Scalar, Vector or Matrix Property depending on shape.
+    """
     for prop in all_properties:
         if prop.output_name == property_name:
             return prop
-    # if not found by output name, find by data_name
     for prop in all_properties:
         if prop.data_name == property_name:
             return prop
-    return None
-
-
-def _resolve_property(property_name: str, shape: tuple) -> Property:
-    if found_property := find_property_preset(property_name):
-        return found_property
-    if len(shape) == 1:
+    if shape is None or len(shape) == 1:
         return Scalar(property_name)
     if shape[1] in [2, 3]:
         return Vector(property_name)

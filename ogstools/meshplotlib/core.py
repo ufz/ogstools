@@ -33,31 +33,6 @@ def _q_zero_line(property: Property, levels: np.ndarray):
     )
 
 
-def has_masked_values(mesh: pv.UnstructuredGrid, property: Property) -> bool:
-    return (
-        not property.is_mask()
-        and property.mask in mesh.cell_data
-        and (len(mesh.cell_data[property.mask]) != 0)
-    )
-
-
-def get_data(
-    mesh: pv.UnstructuredGrid, property: Property, masked: bool = False
-) -> np.ndarray:
-    """Get the data associated with a scalar or vector property from a mesh."""
-    if (
-        property.data_name not in mesh.point_data
-        and property.data_name not in mesh.cell_data
-    ):
-        msg = f"Property {property.data_name} not found in mesh."
-        raise IndexError(msg)
-    if masked:
-        return mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)[
-            property.data_name
-        ]
-    return mesh[property.data_name]
-
-
 def get_level_boundaries(levels: np.ndarray):
     return np.array(
         [
@@ -192,7 +167,7 @@ def subplot(
 
     ax.axis("auto")
 
-    if has_masked_values(mesh, property):
+    if property.mask_used(mesh):
         subplot(mesh, property.get_mask(), ax)
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=property.mask)
 
@@ -205,9 +180,9 @@ def subplot(
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
-    x, y = setup.length.strip_units(surf_tri.points.T[[x_id, y_id]])
+    x, y = setup.length(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
-    values = property.magnitude.strip_units(get_data(surf_tri, property))
+    values = property.magnitude(surf_tri)
     if setup.log_scaled:
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -333,9 +308,7 @@ def get_combined_levels(
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = property.magnitude.strip_units(
-            get_data(mesh, property, masked=has_masked_values(mesh, property))
-        )
+        values = property.magnitude(mesh)
         if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
@@ -463,7 +436,9 @@ def plot_diff(
     diff_mesh = deepcopy(mesh1)
     diff_mesh[property.data_name] -= mesh2[property.data_name]
     data_property = property.replace(output_unit=property.data_unit)
-    diff_unit = (data_property(1) - data_property(1)).units
+    diff_unit = (
+        data_property(1, strip_unit=False) - data_property(1, strip_unit=False)
+    ).units
     diff_property = property.replace(
         data_unit=diff_unit,
         output_unit=diff_unit,
@@ -538,7 +513,7 @@ def plot_probe(
     if isinstance(mesh_property, str):
         data_shape = mesh_series.read(0)[mesh_property].shape
         mesh_property = _resolve_property(mesh_property, data_shape)
-    values = mesh_property.magnitude.strip_units(
+    values = mesh_property.magnitude(
         mesh_series.probe(
             points, mesh_property.data_name, interp_method, interp_backend_pvd
         )
@@ -556,7 +531,7 @@ def plot_probe(
             mesh_property_abscissa = _resolve_property(
                 mesh_property_abscissa, data_shape
             )
-        x_values = mesh_property_abscissa.magnitude.strip_units(
+        x_values = mesh_property_abscissa.magnitude(
             mesh_series.probe(
                 points,
                 mesh_property_abscissa.data_name,

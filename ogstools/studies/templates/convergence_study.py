@@ -46,7 +46,7 @@ data_shape = (
     if property_name in meshes[0].point_data
     else None
 )
-mesh_property = propertylib.presets._resolve_property(property_name, data_shape)
+mesh_property = propertylib.presets.get_preset(property_name, data_shape)
 richardson = studies.convergence.richardson_extrapolation(
     meshes, mesh_property, topology, refinement_ratio
 )
