@@ -23,7 +23,7 @@ stress analysis:
 
 from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.plot_features import plot_streamlines
-from ogstools.propertylib import presets
+from ogstools.propertylib import mesh_dependent, presets
 
 setup.reset()
 setup.length.output_unit = "km"
@@ -91,6 +91,27 @@ fig = plot(mesh, presets.stress.octahedral_shear)
 # e.g. for a hypothetical water column proportional to the depth. Presets which
 # fall under this category make use of
 # :py:mod:`ogstools.propertylib.mesh_dependent`.
+
+# %% [markdown]
+# The hypothetical water column used in the integrity criteria would at first
+# use existing "pressure" data in the mesh, else it is automatically
+# calculated as the following:
+
+# %%
+mesh["pressure"] = mesh_dependent.p_fluid(mesh)
+fig = plot(mesh, presets.pressure)
+
+# %% [markdown]
+# But since this assumes that the top of the model is equal to the ground
+# surface, the resulting pressure is underestimated. In this case we have to
+# correct the depth manually. Then the pressure is calculated correctly:
+
+# %%
+del mesh.point_data["pressure"]
+mesh["depth"] = mesh_dependent.depth(mesh) + 450  # in m
+fig = plot(mesh, "depth")
+mesh["pressure"] = mesh_dependent.p_fluid(mesh)
+fig = plot(mesh, presets.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
