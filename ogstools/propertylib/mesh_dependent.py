@@ -16,6 +16,11 @@ ValType = Union[PlainQuantity, np.ndarray]
 
 # TODO: find smart way to choose between y values and depth
 def depth(mesh: pv.UnstructuredGrid) -> np.ndarray:
+    """Return the depth values of the mesh.
+
+    This assumes the y-axes is the vertical axis. For each point, the shortest
+    distance to the top boundary is returned.
+    """
     # return -mesh.points[:, 1]
     edges = mesh.extract_feature_edges()
     cell_bounds = np.asarray([cell.bounds for cell in edges.cell])
@@ -31,7 +36,16 @@ def depth(mesh: pv.UnstructuredGrid) -> np.ndarray:
 def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
     """Return the fluid pressure in the mesh.
 
-    If not given, calculate by hypothetical water column."""
+    If "pressure" is not given in the mesh, it is calculated by a hypothetical
+    water column defined as:
+
+    .. math::
+
+        p_{fl} = 1000 \\frac{kg}{m^3} 9.81 \\frac{m}{s^2} h
+
+    where `h` is the depth below surface. If "depth" is not given in the mesh,
+    it is calculated via :py:func:`ogstools.propertylib.mesh_dependent.depth`.
+    """
     qty = u_reg.Quantity
     if "pressure" in mesh.point_data:
         return qty(mesh["pressure"], "Pa")
@@ -42,7 +56,18 @@ def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
 def fluid_pressure_criterion(
     mesh: pv.UnstructuredGrid, mesh_property: Property
 ) -> PlainQuantity:
-    "Return the fluid pressure criterion."
+    """Return the fluid pressure criterion.
+
+    Defined as the difference between fluid pressure and minimal principal
+    stress (compression positive).
+
+    .. math::
+
+        F_{p} = p_{fl} - \\sigma_{min}
+
+    Fluid pressure is evaluated via
+    :py:func:`ogstools.propertylib.mesh_dependent.p_fluid`.
+    """
 
     qty = u_reg.Quantity
     sigma = -qty(mesh[mesh_property.data_name], mesh_property.data_unit)
@@ -58,7 +83,9 @@ def dilatancy_critescu(
 ) -> PlainQuantity:
     """Return the dilatancy criterion defined as:
 
-    :math:`F_{dil} = \\frac{\\tau}{\\sigma_0} - a \\left( \\frac{\\sigma_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma_m}{\\sigma_0}`
+    .. math::
+
+        F_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma_m}{\\sigma_0}
 
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
     """
@@ -76,6 +103,14 @@ def dilatancy_critescu(
 
 
 dilatancy_critescu_eff = partial(dilatancy_critescu, effective=True)
+"""Return the dilatancy criterion defined as:
+
+.. math::
+
+    F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
+
+<https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
+"""
 
 
 def dilatancy_alkan(
@@ -86,7 +121,9 @@ def dilatancy_alkan(
 ) -> ValType:
     """Return the dilatancy criterion defined as:
 
-    :math:`F_{dil} = \\tau - \\tau_{max} \\cdot b \\frac{\\sigma_m}{\\sigma_0 + b \\cdot \\sigma_m}`
+    .. math::
+
+        F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
 
     <https://www.sciencedirect.com/science/article/pii/S1365160906000979>
     """
@@ -102,3 +139,11 @@ def dilatancy_alkan(
 
 
 dilatancy_alkan_eff = partial(dilatancy_alkan, effective=True)
+"""Return the dilatancy criterion defined as:
+
+.. math::
+
+    F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
+
+<https://www.sciencedirect.com/science/article/pii/S1365160906000979>
+"""
