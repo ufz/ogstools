@@ -149,9 +149,14 @@ def hydrostatic_component(vals: ValType) -> ValType:
 
     :math:`p_{ij} = \\pi \\delta_{ij}`
     """
+    if isinstance(vals, PlainQuantity):
+        unit = vals.units
+        vals = vals.magnitude
+    else:
+        unit = None
     result = vals * 0.0
-    result[..., :3] = np.tile(mean(vals), (3, 1)).T
-    return result
+    result[..., :3] = mean(vals)[..., np.newaxis]
+    return result if unit is None else u_reg.Quantity(result, unit)
 
 
 def deviator(vals: ValType) -> ValType:
