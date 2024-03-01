@@ -24,11 +24,27 @@ def nice_range(lower: float, upper: float, n_ticks: float) -> np.ndarray:
     The length of the arrays will be close to n_ticks.
     """
     base = nice_num(upper - lower)
-    tick_spacing = nice_num(base / (n_ticks - 1.0))
+    tick_spacing = nice_num(base / (n_ticks - 1))
     nice_lower = np.ceil(lower / tick_spacing) * tick_spacing
     nice_upper = np.ceil(upper / tick_spacing) * tick_spacing
     res = np.arange(nice_lower, nice_upper, tick_spacing)
     return res[(res > lower) & (res < upper)]
+
+
+def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
+    """
+    Return the given values rounded to significant digits.
+
+    The significant digits are based of the median decimal exponent and the
+    given precision.
+    """
+    if vals.size == 0:
+        return vals
+    median_exp = median_exponent(vals)
+    rounded_vals = np.stack([np.round(v, precision - median_exp) for v in vals])
+    if len(set(rounded_vals)) > 1:
+        return rounded_vals
+    return adaptive_rounding(vals, 12)
 
 
 def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
@@ -41,11 +57,17 @@ def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     if lower == upper:
         return np.asarray([lower, nextafter(lower, np.inf)])
     levels = nice_range(lower, upper, n_ticks)
-    return np.unique(np.append(np.append(lower, levels), upper))
+    return np.unique(
+        adaptive_rounding(
+            np.append(np.append(lower, levels), upper), precision=3
+        )
+    )
 
 
-def get_median_exponent(vals: np.ndarray) -> int:
+def median_exponent(vals: np.ndarray) -> int:
     "Get the median exponent from an array of numbers."
+    if np.issubdtype(vals.dtype, np.integer):
+        return 0
     log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))
     exponents = np.floor(log).astype(int)
     return int(np.median(exponents))

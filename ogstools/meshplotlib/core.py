@@ -21,7 +21,7 @@ from ogstools.propertylib.unit_registry import u_reg
 
 from . import plot_features as pf
 from . import setup
-from .levels import get_levels, get_median_exponent
+from .levels import get_levels, median_exponent
 from .utils import get_style_cycler
 
 # TODO: define default data_name for regions in setup
@@ -79,7 +79,7 @@ def get_cmap_norm(
         get_level_boundaries(levels) if mesh_property.categoric else levels
     )
     norm = mcolors.BoundaryNorm(
-        boundaries=boundaries, ncolors=len(boundaries), clip=True
+        boundaries=boundaries, ncolors=len(boundaries), clip=False
     )
     return cmap, norm
 
@@ -89,34 +89,38 @@ def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], Optional[str]]:
 
     If all values in ticks are too close together offset notation is used.
     """
-    fmt = ".3g"
-    # "+ 0" prevents output of negative zero, i.e. "-0"
-    tick_labels = [f"{0.0 + round(tick, 12):{fmt}}" for tick in ticks]
-    if len(tick_labels[1:-1]) != len(set(tick_labels[1:-1])) and len(ticks) > 2:
-        label_lens = np.asarray([len(f"{tick:{fmt}}") for tick in ticks])
+    if median_exponent(ticks) >= 2 + median_exponent(ticks[-1] - ticks[0]):
+        # use offset notation
+        label_lens = np.asarray([len(str(tick)) for tick in ticks])
         offset = ticks[np.argmin(label_lens)]
-        new_fmt = (
-            "g" if abs(get_median_exponent(ticks - offset)) <= 2 else ".1e"
+    else:
+        offset = 0
+    if np.issubdtype(ticks.dtype, np.integer):
+        return [str(tick) for tick in ticks], (
+            None if offset == 0 else f"{offset:g}"
         )
-        tick_labels = [
-            f"{0.0 +  round(tick, 14):{new_fmt}}" for tick in ticks - offset
+
+    for precision in [1, 2, 3, 4]:
+        fmt = "f" if abs(median_exponent(ticks - offset)) <= 2 else "e"
+        tick_labels: list[str] = [
+            f"{0.0 + tick:.{precision}{fmt}}" for tick in ticks - offset
         ]
-        return (tick_labels, f"{offset:{fmt}}")
+        if len(tick_labels) == len(set(tick_labels)):
+            break
 
     # pretty hacky but seems to do the job
-    def _get_label(x, precision):
-        return f"{0.0 + round(x, precision)}"
-
     for idx, adj in [(0, 1), (-1, -2)]:
-        if tick_labels[idx] != tick_labels[adj]:
+        if float(tick_labels[idx]) != float(tick_labels[adj]):
             continue
         for precision in range(12):
-            new_ticklabel = _get_label(ticks[idx], precision)
-            adj_ticklabel = _get_label(ticks[adj], precision)
+            new_ticklabel = f"{0.0 + ticks[idx] - offset:.{precision}{fmt}}"
+            adj_ticklabel = f"{0.0 + ticks[adj] - offset:.{precision}{fmt}}"
             if float(new_ticklabel) != float(adj_ticklabel):
                 tick_labels[idx] = new_ticklabel
                 break
-    return tick_labels, None
+    if fmt != "e":
+        tick_labels = [label.rstrip("0").rstrip(".") for label in tick_labels]
+    return tick_labels, None if offset == 0 else f"{offset:g}"
 
 
 def add_colorbars(

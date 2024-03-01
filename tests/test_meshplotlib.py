@@ -49,39 +49,40 @@ class MeshplotlibTest(unittest.TestCase):
         equality(get_levels(1e9, 1e9, 10), [1e9, 1e9])
 
     def test_ticklabels(self):
-        def compare(array: np.ndarray, ref_labels: list[str], ref_offset=None):
-            labels, offset = get_ticklabels(np.asarray(array))
+        def compare(lower, upper, precision, ref_labels, ref_offset=None):
+            labels, offset = get_ticklabels(
+                np.asarray(get_levels(lower, upper, n_ticks=precision))
+            )
             self.assertTrue(np.all(labels == ref_labels))
             self.assertEqual(offset, ref_offset)
 
-        compare([1, 4, 7, 10], ["1", "4", "7", "10"])
-        compare([1, 4, 7, 10, 10.01], ["1", "4", "7", "10", "10.01"])
-        compare([1, 4, 7, 10, 10.001], ["1", "4", "7", "10", "10.001"])
-        compare([100, 150, 200, 200.1], ["100", "150", "200", "200.1"])
+        compare(1, 10, 6, ["1", "2", "4", "6", "8", "10"])
+        compare(1, 10.01, 6, ["1", "2", "4", "6", "8", "10", "10.01"])
+        compare(1, 10.001, 6, ["1", "2", "4", "6", "8", "10", "10.001"])
+        compare(1, 10.0001, 6, ["1", "2", "4", "6", "8", "10"])
         compare(
-            [-0.00012345, 1e-15, 1, 2, 2.000012345],
-            ["-0.000123", "0", "1", "2", "2.00001"],
+            100, 200.1, 6, ["100", "120", "140", "160", "180", "200", "200.1"]
         )
         compare(
-            [0.99987655, 1, 2, 2.000012345], ["0.9999", "1", "2", "2.00001"]
+            *[-1.2345e-3, 2 + 1.2345e-3, 6],
+            ["-0.001", "0", "0.4", "0.8", "1.2", "1.6", "2", "2.001"],
         )
         compare(
-            [100, 100.004, 100.008, 100.012],
-            ["0", "0.004", "0.008", "0.012"],
-            "100",
+            *[-1.2345e-4, 2 + 1.2345e-5, 6],
+            ["0", "0.4", "0.8", "1.2", "1.6", "2"],
         )
         compare(
-            [100, 100.0004, 100.0008, 100.0012],
+            *[100, 100.0012, 4],
             ["0.0e+00", "4.0e-04", "8.0e-04", "1.2e-03"],
             "100",
         )
         compare(
-            [110000.0, 140000.0, 1700000.0, 1900010.0],
-            ["1.1e+05", "1.4e+05", "1.7e+06", "1.9e+06"],
+            *[1.1e5, 1.90001e6, 6],
+            ["1.1e+05", "4.0e+05", "8.0e+05", "1.2e+06", "1.6e+06", "1.9e+06"],
         )
         compare(
-            [1000000.0, 1000004.0, 1000008.0, 1000012.0],
-            ["0", "4", "8", "12"],
+            *[1e6, 1e6 + 12, 6],
+            ["0", "2", "4", "6", "8", "10", "12"],
             "1e+06",
         )
 
@@ -137,6 +138,9 @@ class MeshplotlibTest(unittest.TestCase):
         plot_probe(mesh_series, points, presets.temperature)
         points = mesh_series.read(0).points[[0, -1]]
         plot_probe(mesh_series, points, presets.temperature)
+        plot_probe(mesh_series, points, presets.velocity)
+        plot_probe(mesh_series, points, presets.stress)
+        plot_probe(mesh_series, points, presets.stress.von_Mises)
         mesh_series = examples.meshseries_XDMF
         points = mesh_series.read(0).center
         plot_probe(mesh_series, points, presets.temperature)
