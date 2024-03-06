@@ -43,9 +43,9 @@ def sym_tensor_to_mat(vals: np.ndarray) -> np.ndarray:
     assert np.shape(vals)[-1] in [4, 6]
     shape = list(np.shape(vals))[:-1] + [3, 3]
     mat = np.zeros(shape)
-    idx = {0: [0, 0], 1: [1, 1], 2: [2, 2], 3: [0, 1], 4: [1, 2], 5: [0, 2]}
+    idx = np.asarray([[0, 0], [1, 1], [2, 2], [0, 1], [1, 2], [0, 2]])
     for i in range(np.shape(vals)[-1]):
-        mat[..., idx[i][0], idx[i][1]] = vals[..., i]
+        mat[..., idx[i, 0], idx[i, 1]] = vals[..., i]
     return mat
 
 

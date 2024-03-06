@@ -44,7 +44,7 @@ def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
     rounded_vals = np.stack([np.round(v, precision - median_exp) for v in vals])
     if len(set(rounded_vals)) > 1:
         return rounded_vals
-    return adaptive_rounding(vals, 12)
+    return np.stack([np.round(v, 12 - median_exp) for v in vals])
 
 
 def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:

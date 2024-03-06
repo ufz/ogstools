@@ -17,7 +17,7 @@ mesh data. There are several predefined properties stored under the module
 import pandas as pd
 
 from ogstools.meshplotlib import examples, plot
-from ogstools.propertylib import presets
+from ogstools.propertylib import Scalar, presets
 
 data = ["preset,data_name,data_unit,output_unit,output_name,type".split(",")]
 for preset_name in dir(presets):
@@ -47,17 +47,19 @@ pd.DataFrame(data[1:], columns=data[0]).sort_values(
 presets.temperature(273.15)
 
 # %% [markdown]
-# You can also create your own properties:
+# You can also create your own properties by creating a Scalar, Vector or Matrix
+# property. The following would convert 273.15 K to °F.
 
 # %%
-custom_temperature = presets.Scalar(
+custom_temperature = Scalar(
     data_name="temperature", data_unit="K", output_unit="°F"
 )
 custom_temperature(273.15)
 
 # %% [markdown]
-# Or modify existing ones:
-presets.temperature.replace(output_unit="°F")(273.15)
+# Or us existing presets as a template and replace some parameters:
+custom_temperature = presets.temperature.replace(output_unit="°F")
+custom_temperature(273.15)
 
 # %% [markdown]
 # Components of Vector properties and Matrix properties can be accessed with

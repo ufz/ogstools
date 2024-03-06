@@ -87,14 +87,14 @@ fig = plot(mesh, presets.stress.octahedral_shear)
 # %% [markdown]
 # Integrity criteria
 # ==================
-# Evaluate models regarding their integrity is often dependent on the geometry,
-# e.g. for a hypothetical water column proportional to the depth. Presets which
-# fall under this category make use of
+# Evaluating models regarding their integrity is often dependent on the
+# geometry, e.g. for a hypothetical water column proportional to the depth.
+# Presets which fall under this category make use of
 # :py:mod:`ogstools.propertylib.mesh_dependent`.
 
 # %% [markdown]
-# The hypothetical water column used in the integrity criteria would at first
-# use existing "pressure" data in the mesh, else it is automatically
+# The hypothetical water column used in the integrity criteria would initially
+# use existing "pressure" data in the mesh, otherwise it is automatically
 # calculated as the following:
 
 # %%
