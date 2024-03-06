@@ -3,11 +3,13 @@
 import unittest
 
 import numpy as np
+import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
 from ogstools.meshplotlib.examples import mesh_mechanics
 from ogstools.propertylib import presets as pp
 from ogstools.propertylib.matrix import Matrix
+from ogstools.propertylib.mesh_dependent import depth
 from ogstools.propertylib.property import Scalar, u_reg
 from ogstools.propertylib.vector import Vector
 
@@ -96,6 +98,21 @@ class PhysicalPropertyTest(unittest.TestCase):
         sig = np.array([4, 4, 1, 1, 1, 1]) * 1e6
         self.equality(pp.stress.qp_ratio, sig, qty(-100, "percent"))
         self.equality(pp.stress.qp_ratio, [sig] * 2, qty([-100] * 2, "percent"))
+
+    def test_depth_2D(self):
+        mesh = mesh_mechanics
+        mesh["depth"] = depth(mesh, use_coords=True)
+        # y Axis is vertical axis
+        self.assertTrue(np.all(mesh["depth"] == -mesh.points[..., 1]))
+        mesh["depth"] = depth(mesh)
+        self.assertTrue(np.all(mesh["depth"] < -mesh.points[..., 1]))
+
+    def test_depth_3D(self):
+        mesh = pv.SolidSphere(100, center=(0, 0, -101))
+        mesh["depth"] = depth(mesh, use_coords=True)
+        self.assertTrue(np.all(mesh["depth"] == -mesh.points[..., -1]))
+        mesh["depth"] = depth(mesh)
+        self.assertTrue(np.all(mesh["depth"] < -mesh.points[..., -1]))
 
     def test_integrity_criteria(self):
         """Test integrity criteria."""

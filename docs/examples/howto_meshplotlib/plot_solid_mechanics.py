@@ -108,7 +108,7 @@ fig = plot(mesh, presets.pressure)
 
 # %%
 del mesh.point_data["pressure"]
-mesh["depth"] = mesh_dependent.depth(mesh) + 450  # in m
+mesh["depth"] = mesh_dependent.depth(mesh, use_coords=True)
 fig = plot(mesh, "depth")
 mesh["pressure"] = mesh_dependent.p_fluid(mesh)
 fig = plot(mesh, presets.pressure)

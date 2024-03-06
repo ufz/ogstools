@@ -14,23 +14,51 @@ from .unit_registry import u_reg
 ValType = Union[PlainQuantity, np.ndarray]
 
 
-# TODO: find smart way to choose between y values and depth
-def depth(mesh: pv.UnstructuredGrid) -> np.ndarray:
+def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
     """Return the depth values of the mesh.
 
-    This assumes the y-axes is the vertical axis. For each point, the shortest
-    distance to the top boundary is returned.
+    For 2D, the last non-flat dimension is used as the vertical axis, for 3D,
+    the z-axes is used.
+    If `use_coords` is True, returns the negative coordinate value of the
+    vertical axis. Otherwise, the vertical distance to the top facing edges /
+    surfaces are returned.
     """
-    # return -mesh.points[:, 1]
-    edges = mesh.extract_feature_edges()
-    cell_bounds = np.asarray([cell.bounds for cell in edges.cell])
-    cell_vec = np.abs(cell_bounds[..., 1:2] - cell_bounds[..., :2])
-    ids = np.argmax(cell_vec, axis=-1) == 0
-    ids2 = edges.cell_centers().points[:, 1] > edges.center[1]
-    top = edges.extract_cells(ids & ids2)
-
-    vert_diff = mesh.points[:, 1, None] - top.points[:, 1]
-    return np.abs(np.min(vert_diff, axis=-1))
+    if mesh.volume > 0:
+        # prevents inner edge (from holes) to be detected as a top boundary
+        edges = mesh.extract_surface().connectivity("point_seed", point_ids=[0])
+        top_id = 2
+        if use_coords:
+            return -mesh.points[:, top_id]
+        point_upwards = edges.cell_normals[..., top_id] > 0
+        top_cells = point_upwards
+    else:
+        mean_normal = np.abs(
+            np.mean(mesh.extract_surface().cell_normals, axis=0)
+        )
+        top_id = np.delete([0, 1, 2], int(np.argmax(mean_normal)))[-1]
+        if use_coords:
+            return -mesh.points[:, top_id]
+        # prevents inner edge (from holes) to be detected as a top boundary
+        edges = mesh.extract_feature_edges().connectivity(
+            "point_seed", point_ids=[0]
+        )
+        edge_horizontal_extent = [
+            np.diff(np.reshape(cell.bounds, (-1, 2))).ravel()[0]
+            for cell in edges.cell
+        ]
+        edge_centers = edges.cell_centers().points
+        adj_cells = [mesh.find_closest_cell(point) for point in edge_centers]
+        adj_cell_centers = mesh.extract_cells(adj_cells).cell_centers().points
+        are_above = edge_centers[..., top_id] > adj_cell_centers[..., top_id]
+        are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
+        top_cells = are_above & are_non_vertical
+    top = edges.extract_cells(top_cells)
+    eucl_distance_projected_top_points = np.sum(
+        np.abs(np.delete(mesh.points[:, None] - top.points, top_id, axis=-1)),
+        axis=-1,
+    )
+    matching_top = np.argmin(eucl_distance_projected_top_points, axis=-1)
+    return np.abs(mesh.points[..., top_id] - top.points[matching_top, top_id])
 
 
 def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
