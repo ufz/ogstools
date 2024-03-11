@@ -30,7 +30,7 @@ class PhysicalPropertyTest(unittest.TestCase):
         :param expected_result: The expected result.
         """
         np.testing.assert_allclose(
-            p(vals),
+            p.transform(vals),
             res.to(p.output_unit).magnitude,
             rtol=self.EPS,
             verbose=True,
@@ -118,46 +118,60 @@ class PhysicalPropertyTest(unittest.TestCase):
         """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
         #  not working for arrays (only works for meshes)
-        self.assertRaises(TypeError, pp.dilatancy_alkan, sig)
-        self.assertGreater(np.max(pp.dilatancy_alkan(mesh_mechanics)), 0)
-        self.assertGreater(np.max(pp.dilatancy_alkan_eff(mesh_mechanics)), 0)
-        self.assertGreater(np.max(pp.dilatancy_critescu(mesh_mechanics)), 0)
-        self.assertGreater(np.max(pp.dilatancy_critescu_eff(mesh_mechanics)), 0)
-        self.assertGreater(np.max(pp.fluid_pressure_crit(mesh_mechanics)), 0)
+        self.assertRaises(TypeError, pp.dilatancy_alkan.transform, sig)
+        self.assertGreater(
+            np.max(pp.dilatancy_alkan.transform(mesh_mechanics)), 0
+        )
+        self.assertGreater(
+            np.max(pp.dilatancy_alkan_eff.transform(mesh_mechanics)), 0
+        )
+        self.assertGreater(
+            np.max(pp.dilatancy_critescu_tot.transform(mesh_mechanics)), 0
+        )
+        self.assertGreater(
+            np.max(pp.dilatancy_critescu_eff.transform(mesh_mechanics)), 0
+        )
+        self.assertGreater(
+            np.max(pp.fluid_pressure_crit.transform(mesh_mechanics)), 0
+        )
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
         # data needs to be a 2D array
         sig = np.asarray([[4, 1, 2, 1, 1, 1]]) * 1e6
-        self.assertTrue(np.all(pp.stress.eigenvalues(sig) >= 0))
+        self.assertTrue(np.all(pp.stress.eigenvalues.transform(sig) >= 0))
         for i in range(3):
             np.testing.assert_allclose(
-                pp.stress.eigenvectors[i].magnitude(sig), 1.0
+                pp.stress.eigenvectors[i].magnitude.transform(sig), 1.0
             )
-        self.assertGreater(pp.stress.det(sig), 0)
-        self.assertGreater(pp.stress.invariant_1(sig), 0)
-        self.assertGreater(pp.stress.invariant_2(sig), 0)
-        self.assertGreater(pp.stress.invariant_3(sig), 0)
-        self.assertGreater(pp.stress.mean(sig), 0)
-        self.assertGreater(pp.stress.deviator.magnitude(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_1(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_2(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_3(sig), 0)
-        self.assertGreater(pp.stress.octahedral_shear(sig), 0)
+        self.assertGreater(pp.stress.det.transform(sig), 0)
+        self.assertGreater(pp.stress.invariant_1.transform(sig), 0)
+        self.assertGreater(pp.stress.invariant_2.transform(sig), 0)
+        self.assertGreater(pp.stress.invariant_3.transform(sig), 0)
+        self.assertGreater(pp.stress.mean.transform(sig), 0)
+        self.assertGreater(pp.stress.deviator.magnitude.transform(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_1.transform(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_2.transform(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_3.transform(sig), 0)
+        self.assertGreater(pp.stress.octahedral_shear.transform(sig), 0)
 
     def test_simple(self):
         """Test call functionality."""
-        self.assertEqual(pp.temperature(273.15, strip_unit=False), Qty(0, "°C"))
         self.assertEqual(
-            pp.displacement[0]([1, 2, 3], strip_unit=False), Qty(1, "m")
+            pp.temperature.transform(273.15, strip_unit=False), Qty(0, "°C")
         )
         self.assertEqual(
-            pp.displacement([1, 2, 3], strip_unit=False)[1], Qty(2, "m")
+            pp.displacement[0].transform([1, 2, 3], strip_unit=False),
+            Qty(1, "m"),
+        )
+        self.assertEqual(
+            pp.displacement.transform([1, 2, 3], strip_unit=False)[1],
+            Qty(2, "m"),
         )
 
     def test_values(self):
         """Test values functionality."""
-        self.assertEqual(pp.temperature(273.15), 0.0)
+        self.assertEqual(pp.temperature.transform(273.15), 0.0)
 
     def test_units(self):
         """Test get_output_unit functionality."""

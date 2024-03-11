@@ -91,7 +91,7 @@ effective_pressure = Scalar(
     mask=M_MASK,
     func=tensor_math.effective_pressure,
 )
-dilatancy_critescu = Scalar(
+dilatancy_critescu_tot = Scalar(
     data_name="sigma",
     data_unit="Pa",
     output_unit="",
@@ -102,7 +102,7 @@ dilatancy_critescu = Scalar(
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
-dilatancy_critescu_eff = dilatancy_critescu.replace(
+dilatancy_critescu_eff = dilatancy_critescu_tot.replace(
     output_name="effective_dilatancy_criterion",
     func=partial(mesh_dependent.dilatancy_critescu, effective=True),
 )

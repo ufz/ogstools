@@ -18,12 +18,13 @@ class MechanicsTest(unittest.TestCase):
     """Test case for physical properties."""
 
     rng = np.random.default_rng()
+    TEST_ARGS = ((4,), (6,))
 
     def generate_random_sig(self, symten_len: int):
         """Generate random stress matrix."""
         return self.rng.random((100000, symten_len)) * 1e6
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_frobenius_norm(self, symten_len: int):
         """Test Frobenius norm."""
         sig = self.generate_random_sig(symten_len)
@@ -35,7 +36,7 @@ class MechanicsTest(unittest.TestCase):
         )
         assert_allclose(tensor_math.frobenius_norm(sig), frob2)
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_invariant_1(self, symten_len: int):
         """Test first invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -44,7 +45,7 @@ class MechanicsTest(unittest.TestCase):
             tensor_math.trace(tensor_math.eigenvalues(sig)),
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_invariant_2(self, symten_len: int):
         """Test second invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -54,7 +55,7 @@ class MechanicsTest(unittest.TestCase):
             np.sum(eig_vals * np.roll(eig_vals, 1, axis=-1), axis=-1),
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_invariant_3(self, symten_len: int):
         """Test third invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -63,14 +64,14 @@ class MechanicsTest(unittest.TestCase):
             tensor_math.invariant_3(sig), np.prod(eig_vals, axis=-1)
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_1(self, symten_len: int):
         """Test first deviator invariant."""
         sig = self.generate_random_sig(symten_len)
         j1 = tensor_math.deviator_invariant_1(sig)
         assert_allclose(j1, np.zeros(j1.shape))
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_2(self, symten_len: int):
         """Test second deviator invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -83,7 +84,7 @@ class MechanicsTest(unittest.TestCase):
             ),
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_3(self, symten_len: int):
         """Test third deviator invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -105,7 +106,7 @@ class MechanicsTest(unittest.TestCase):
             ),
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_von_mises(self, symten_len: int):
         """Test von Mises invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -115,7 +116,7 @@ class MechanicsTest(unittest.TestCase):
             np.sqrt(0.5 * np.sum(np.square(ev - np.roll(ev, 1, -1)), -1)),
         )
 
-    @parameterized.expand([(4,), (6,)])
+    @parameterized.expand(TEST_ARGS)
     def test_octahedral_shear_stress(self, symten_len: int):
         """Test octahedral shear stress invariant."""
         sig = self.generate_random_sig(symten_len)

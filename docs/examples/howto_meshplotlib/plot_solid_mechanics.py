@@ -113,7 +113,6 @@ fig = plot(mesh, presets.pressure)
 # correct the depth manually. Then the pressure is calculated correctly:
 
 # %%
-del mesh.point_data["pressure"]
 mesh["depth"] = mesh_dependent.depth(mesh, use_coords=True)
 fig = plot(mesh, "depth")
 mesh["pressure"] = mesh_dependent.p_fluid(mesh)
@@ -125,7 +124,7 @@ fig = plot(mesh, presets.pressure)
 # see: :py:func:`ogstools.propertylib.mesh_dependent.dilatancy_critescu`
 
 # %%
-fig = plot(mesh, presets.dilatancy_critescu)
+fig = plot(mesh, presets.dilatancy_critescu_tot)
 fig = plot(mesh, presets.dilatancy_critescu_eff)
 
 # %% [markdown]

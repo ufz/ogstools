@@ -71,21 +71,26 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
 def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
     """Return the fluid pressure in the mesh.
 
-    If "pressure" is not given in the mesh, it is calculated by a hypothetical
-    water column defined as:
+    If "depth" is given in the mesh's point _data, it is used return a
+    hypothetical water column defined as:
 
     .. math::
 
         p_{fl} = 1000 \\frac{kg}{m^3} 9.81 \\frac{m}{s^2} h
 
-    where `h` is the depth below surface. If "depth" is not given in the mesh,
-    it is calculated via :py:func:`ogstools.propertylib.mesh_dependent.depth`.
+    where `h` is the depth below surface. Otherwise, If "pressure" is given in
+    the mesh, return the "pressure" data of the mesh. If that is also not the
+    case, the hypothetical water column from above is returned with the depth
+    being calculated via :py:func:`ogstools.propertylib.mesh_dependent.depth`.
     """
     Qty = u_reg.Quantity
+    if "depth" in mesh.point_data:
+        return (
+            Qty(1000, "kg/m^3") * Qty(9.81, "m/s^2") * Qty(mesh["depth"], "m")
+        )
     if "pressure" in mesh.point_data:
         return Qty(mesh["pressure"], "Pa")
-    _depth = mesh["depth"] if "depth" in mesh.point_data else depth(mesh)
-    return Qty(1000, "kg/m^3") * Qty(9.81, "m/s^2") * Qty(_depth, "m")
+    return Qty(1000, "kg/m^3") * Qty(9.81, "m/s^2") * Qty(depth(mesh), "m")
 
 
 def fluid_pressure_criterion(

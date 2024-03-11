@@ -226,9 +226,9 @@ def subplot(
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
-    x, y = setup.length(surf_tri.points.T[[x_id, y_id]])
+    x, y = setup.length.transform(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
-    values = mesh_property.magnitude(surf_tri)
+    values = mesh_property.magnitude.transform(surf_tri)
     if setup.log_scaled:
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -354,7 +354,7 @@ def get_combined_levels(
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
-        values = mesh_property.magnitude(mesh)
+        values = mesh_property.magnitude.transform(mesh)
         if setup.log_scaled:  # TODO: can be improved
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
@@ -484,8 +484,8 @@ def plot_diff(
     data_property = mesh_property.replace(output_unit=mesh_property.data_unit)
     diff_unit = str(
         (
-            data_property(1, strip_unit=False)
-            - data_property(1, strip_unit=False)
+            data_property.transform(1, strip_unit=False)
+            - data_property.transform(1, strip_unit=False)
         ).units
     )
     diff_property = mesh_property.replace(
@@ -563,7 +563,7 @@ def plot_probe(
     if isinstance(mesh_property, str):
         data_shape = mesh_series.read(0)[mesh_property].shape
         mesh_property = get_preset(mesh_property, data_shape)
-    values = mesh_property.magnitude(
+    values = mesh_property.magnitude.transform(
         mesh_series.probe(
             points, mesh_property.data_name, interp_method, interp_backend_pvd
         )
@@ -581,7 +581,7 @@ def plot_probe(
             mesh_property_abscissa = get_preset(
                 mesh_property_abscissa, data_shape
             )
-        x_values = mesh_property_abscissa.magnitude(
+        x_values = mesh_property_abscissa.magnitude.transform(
             mesh_series.probe(
                 points,
                 mesh_property_abscissa.data_name,

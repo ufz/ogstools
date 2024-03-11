@@ -37,7 +37,7 @@ def add_grid_spacing(mesh: pv.DataSet) -> pv.DataSet:
 
 def grid_convergence(
     meshes: list[pv.DataSet],
-    property: propertylib.Property,
+    mesh_property: propertylib.Property,
     topology: pv.DataSet,
     refinement_ratio: float,
 ) -> pv.DataSet:
@@ -50,21 +50,21 @@ def grid_convergence(
     <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
     :param meshes:              At least three meshes with constant refinement.
-    :param property:            The property to be extrapolated.
+    :param mesh_property:       The property to be extrapolated.
     :param topology:            The topology to evaluate.
     :param refinement_ratio:    If not given, it is calculated automatically
 
     returns:                    Grid convergence field of the given property.
     """
     assert len(meshes) >= 3
-    cast = property.magnitude
+    cast = mesh_property.magnitude.transform
     result = deepcopy(topology)
     result.clear_point_data()
     result.clear_cell_data()
     _meshes = resample(topology=topology, meshes=meshes)
-    f3 = cast(_meshes[-3].point_data[property.data_name])
-    f2 = cast(_meshes[-2].point_data[property.data_name])
-    f1 = cast(_meshes[-1].point_data[property.data_name])
+    f3 = cast(_meshes[-3].point_data[mesh_property.data_name])
+    f2 = cast(_meshes[-2].point_data[mesh_property.data_name])
+    f1 = cast(_meshes[-1].point_data[mesh_property.data_name])
     r = np.ones(f1.shape) * refinement_ratio
     a = f3 - f2
     b = f2 - f1
@@ -93,7 +93,7 @@ def grid_convergence(
 
 def richardson_extrapolation(
     meshes: list[pv.DataSet],
-    property: propertylib.Property,
+    mesh_property: propertylib.Property,
     topology: pv.DataSet,
     refinement_ratio: float,
 ) -> pv.DataSet:
@@ -107,7 +107,7 @@ def richardson_extrapolation(
     <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
     :param meshes:              At least three meshes with constant refinement.
-    :param property:            The property to be extrapolated.
+    :param mesh_property:       The property to be extrapolated.
     :param topology:            The topology on which the extrapolation is done.
     :param refinement_ratio:    Refinement ratio (spatial or temporal).
 
@@ -116,9 +116,11 @@ def richardson_extrapolation(
     _meshes = resample(topology, meshes[-2:])
     m1 = _meshes[-1]
     m2 = _meshes[-2]
-    f1 = m1.point_data[property.data_name]
-    f2 = m2.point_data[property.data_name]
-    results = grid_convergence(meshes, property, topology, refinement_ratio)
+    f1 = m1.point_data[mesh_property.data_name]
+    f2 = m2.point_data[mesh_property.data_name]
+    results = grid_convergence(
+        meshes, mesh_property, topology, refinement_ratio
+    )
     r = results["r"].astype(np.float64)
     p = results["p"]
     rpm1 = r**p - 1
@@ -126,28 +128,30 @@ def richardson_extrapolation(
     delta = np.divide(
         diff.T, rpm1, out=np.zeros_like(f1.T), where=(rpm1 != 0)
     ).T
-    results.point_data[property.data_name] = f1 + delta
+    results.point_data[mesh_property.data_name] = f1 + delta
     return results
 
 
 def convergence_metrics(
     meshes: list[pv.DataSet],
     reference: pv.DataSet,
-    property: propertylib.Property,
+    mesh_property: propertylib.Property,
     timestep_sizes: list[float],
 ) -> pd.DataFrame:
     """
     Calculate convergence metrics for a given reference and property.
 
-    :param meshes:      The List of meshes which is analyzed for convergence.
-    :param reference:   The reference Dataset to compare against.
-    :param property:    The property of interest.
+    :param meshes:          The List of meshes to be analyzed for convergence.
+    :param reference:       The reference Dataset to compare against.
+    :param mesh_property:   The property of interest.
 
     :returns:           A pandas Dataframe containing all metrics.
     """
 
     def _data(m: pv.DataSet):
-        return property.magnitude(m.point_data[property.data_name])
+        return mesh_property.magnitude.transform(
+            m.point_data[mesh_property.data_name]
+        )
 
     grid_spacings = [
         np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes
@@ -222,7 +226,7 @@ def convergence_order(metrics: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_convergence(
-    metrics: pd.DataFrame, property: propertylib.Property
+    metrics: pd.DataFrame, mesh_property: propertylib.Property
 ) -> plt.Figure:
     "Plot the absolute values of the convergence metrics."
     fig, axes = plt.subplots(2, 1, sharex=True)
@@ -232,7 +236,7 @@ def plot_convergence(
     metrics.iloc[:-1].plot(ax=axes[1], x=0, y=2, c="b", style="-o", grid=True)
     axes[1].plot(metrics.iloc[-1, 0], metrics.iloc[-1, 2], "b^")
     axes[1].legend(["minimum", "Richardson\nextrapolation"])
-    y_label = property.output_name + " / " + property.output_unit
+    y_label = mesh_property.output_name + " / " + mesh_property.output_unit
     fig.supylabel(y_label, fontsize="medium")
     fig.tight_layout()
     return fig
@@ -259,7 +263,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
 
 def convergence_metrics_evolution(
     mesh_series: list[meshlib.MeshSeries],
-    property: propertylib.Property,
+    mesh_property: propertylib.Property,
     refinement_ratio: float = 2.0,
     units: tuple[str, str] = ("s", "s"),
 ) -> pd.DataFrame:
@@ -271,7 +275,7 @@ def convergence_metrics_evolution(
     and a property
 
     :param meshes_series:       The List of mesh series to be analyzed.
-    :param property:            The property of interest.
+    :param mesh_property:       The property of interest.
     :param refinement_ratio:    Refinement ratio between the discretizations.
 
     :returns:   A pandas Dataframe containing all metrics.
@@ -287,10 +291,10 @@ def convergence_metrics_evolution(
     for timevalue in tqdm(common_timevalues):
         meshes = [ms.read_closest(timevalue) for ms in mesh_series]
         reference = richardson_extrapolation(
-            meshes, property, meshes[-3], refinement_ratio
+            meshes, mesh_property, meshes[-3], refinement_ratio
         )
         metrics = convergence_metrics(
-            meshes, reference, property, timestep_sizes
+            meshes, reference, mesh_property, timestep_sizes
         )
         p_metrics = convergence_order(metrics)
         p_metrics_per_t = np.vstack((p_metrics_per_t, p_metrics))

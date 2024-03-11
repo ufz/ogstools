@@ -34,7 +34,7 @@ class Property:
     """The name of the mask data in the dataset."""
     func: Callable = identity
     """The function to be applied on the data.
-       .. seealso:: :meth:`~ogstools.propertylib.Property.__call__`"""
+       .. seealso:: :meth:`~ogstools.propertylib.Property.transform`"""
     mesh_dependent: bool = False
     """If the function to be applied is dependent on the mesh itself"""
     process_with_units: bool = False
@@ -83,7 +83,7 @@ class Property:
             categoric=new_property.categoric,
         ).replace(**changes)
 
-    def __call__(
+    def transform(
         self,
         data: Union[int, float, np.ndarray, pv.DataSet, Sequence],
         strip_unit: bool = True,

@@ -28,7 +28,7 @@ def plot_layer_boundaries(
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
             edges = segment.extract_surface().strip(True, 10000)
-            x_b, y_b = setup.length(
+            x_b, y_b = setup.length.transform(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
             lw = setup.rcParams_scaled["lines.linewidth"]
@@ -72,7 +72,7 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         cell_pts = [
             cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
         ]
-        verts = setup.length(np.delete(cell_pts, projection, -1))
+        verts = setup.length.transform(np.delete(cell_pts, projection, -1))
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
         pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
@@ -118,7 +118,7 @@ def plot_streamlines(
         [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
     )
     grid = grid.sample(_mesh, pass_cell_data=False)
-    values = mesh_property(grid.point_data[mesh_property.data_name])
+    values = mesh_property.transform(grid.point_data[mesh_property.data_name])
     values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
     if np.shape(values)[-1] == 3:
         values = np.delete(values, projection, 1)
@@ -130,7 +130,7 @@ def plot_streamlines(
     val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
     lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
-    x_g, y_g = setup.length(np.meshgrid(x, y))
+    x_g, y_g = setup.length.transform(np.meshgrid(x, y))
     plot_args = [x_g, y_g, val[..., 0], val[..., 1]]
     if plot_type == "streamlines":
         ax.streamplot(*plot_args, color="k", linewidth=lw, density=1.5)
@@ -161,11 +161,11 @@ def plot_on_top(
     x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
     y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
     contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
-    ax.set_ylim(top=setup.length(np.max(contour_vals)))
+    ax.set_ylim(top=setup.length.transform(np.max(contour_vals)))
     ax.fill_between(
-        setup.length(x_vals),
-        setup.length(y_vals),
-        setup.length(contour_vals),
+        setup.length.transform(x_vals),
+        setup.length.transform(y_vals),
+        setup.length.transform(contour_vals),
         facecolor="lightgrey",
     )
 
