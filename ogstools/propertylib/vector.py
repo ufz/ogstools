@@ -12,7 +12,7 @@ ValType = Union[PlainQuantity, np.ndarray]
 
 
 def vector_norm(vals: ValType) -> ValType:
-    "Return the magnitudes."
+    ":returns: The norm of the vector."
     if isinstance(vals, PlainQuantity):
         unit = vals.units
         vals = vals.magnitude
@@ -61,9 +61,7 @@ class VectorList(Property):
     """Represent a list of vector properties of a dataset."""
 
     def __getitem__(self, index: int) -> Vector:
-        """
-        Get a vector property as a component of the vectorlist property.
-        """
+        ":returns: A vector property as a component of the vectorlist property."
         return Vector.from_property(
             self,
             output_name=self.output_name + f"_{index}",

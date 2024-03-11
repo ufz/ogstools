@@ -13,7 +13,7 @@ from ogstools.propertylib.mesh_dependent import depth
 from ogstools.propertylib.property import Scalar, u_reg
 from ogstools.propertylib.vector import Vector
 
-qty = u_reg.Quantity
+Qty = u_reg.Quantity
 
 
 class PhysicalPropertyTest(unittest.TestCase):
@@ -38,66 +38,66 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_temperature(self):
         """Test temperature property."""
-        self.equality(pp.temperature, 293.15, qty(20, "°C"))
-        self.equality(pp.temperature, [293.15, 303.15], qty([20, 30], "°C"))
+        self.equality(pp.temperature, 293.15, Qty(20, "°C"))
+        self.equality(pp.temperature, [293.15, 303.15], Qty([20, 30], "°C"))
 
     def test_pressure(self):
         """Test pressure property."""
-        self.equality(pp.pressure, 1e6, qty(1, "MPa"))
-        self.equality(pp.pressure, [1e6, 2e6], qty([1, 2], "MPa"))
+        self.equality(pp.pressure, 1e6, Qty(1, "MPa"))
+        self.equality(pp.pressure, [1e6, 2e6], Qty([1, 2], "MPa"))
 
     def test_velocity(self):
         """Test velocity property."""
-        self.equality(pp.velocity.magnitude, [3, 4], qty(5, "m/s"))
+        self.equality(pp.velocity.magnitude, [3, 4], Qty(5, "m/s"))
         self.equality(
-            pp.velocity.magnitude, [[3, 4], [1, 0]], qty([5, 1], "m/s")
+            pp.velocity.magnitude, [[3, 4], [1, 0]], Qty([5, 1], "m/s")
         )
 
     def test_displacement(self):
         """Test displacement property."""
-        self.equality(pp.displacement.magnitude, [3e-3, 4e-3], qty(5, "mm"))
+        self.equality(pp.displacement.magnitude, [3e-3, 4e-3], Qty(5, "mm"))
         u = np.array([[2, 3, 6], [1, 4, 8]]) * 1e-3
-        self.equality(pp.displacement.magnitude, u, qty([7.0, 9.0], "mm"))
+        self.equality(pp.displacement.magnitude, u, Qty([7.0, 9.0], "mm"))
 
     def test_strain(self):
         """Test strain property."""
         eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
-        self.equality(pp.strain.magnitude, eps, qty(10, "%"))
-        self.equality(pp.strain.magnitude, [eps, eps], qty([10, 10], "%"))
-        self.equality(pp.strain.trace, eps, qty(13, "%"))
-        self.equality(pp.strain.trace, [eps, eps], qty([13, 13], "%"))
+        self.equality(pp.strain.magnitude, eps, Qty(10, "%"))
+        self.equality(pp.strain.magnitude, [eps, eps], Qty([10, 10], "%"))
+        self.equality(pp.strain.trace, eps, Qty(13, "%"))
+        self.equality(pp.strain.trace, [eps, eps], Qty([13, 13], "%"))
 
     def test_components(self):
         """Test strain components."""
         eps = np.array([0, 1, 2, 3, 4, 5]) * 1e-2
         u = np.array([0, 1, 2]) * 1e-3
         for i in range(len(eps)):
-            self.equality(pp.strain[i], eps, qty(i, "%"))
-            self.equality(pp.strain[i], [eps, eps], qty([i, i], "%"))
+            self.equality(pp.strain[i], eps, Qty(i, "%"))
+            self.equality(pp.strain[i], [eps, eps], Qty([i, i], "%"))
         for i in range(len(u)):
-            self.equality(pp.displacement[i], u, qty(i, "mm"))
-            self.equality(pp.displacement[i], [u, u], qty([i, i], "mm"))
+            self.equality(pp.displacement[i], u, Qty(i, "mm"))
+            self.equality(pp.displacement[i], [u, u], Qty([i, i], "mm"))
         assert pp.strain[0].bilinear_cmap is True
 
     def test_von_mises(self):
         """Test von_mises_stress property."""
         sig_3D = np.array([3, 1, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.von_Mises, sig_3D, qty(2, "MPa"))
-        self.equality(pp.stress.von_Mises, [sig_3D, sig_3D], qty([2, 2], "MPa"))
+        self.equality(pp.stress.von_Mises, sig_3D, Qty(2, "MPa"))
+        self.equality(pp.stress.von_Mises, [sig_3D, sig_3D], Qty([2, 2], "MPa"))
         sig_2D = np.array([2, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.von_Mises, sig_2D, qty(1, "MPa"))
+        self.equality(pp.stress.von_Mises, sig_2D, Qty(1, "MPa"))
 
     def test_eff_pressure(self):
         """Test effective_pressure property."""
         sig = np.array([-1, -2, -3, 1, 1, 1]) * 1e6
-        self.equality(pp.effective_pressure, sig, qty(2, "MPa"))
-        self.equality(pp.effective_pressure, [sig, sig], qty([2, 2], "MPa"))
+        self.equality(pp.effective_pressure, sig, Qty(2, "MPa"))
+        self.equality(pp.effective_pressure, [sig, sig], Qty([2, 2], "MPa"))
 
     def test_qp_ratio(self):
         """Test qp_ratio property."""
         sig = np.array([4, 4, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.qp_ratio, sig, qty(-100, "percent"))
-        self.equality(pp.stress.qp_ratio, [sig] * 2, qty([-100] * 2, "percent"))
+        self.equality(pp.stress.qp_ratio, sig, Qty(-100, "percent"))
+        self.equality(pp.stress.qp_ratio, [sig] * 2, Qty([-100] * 2, "percent"))
 
     def test_depth_2D(self):
         mesh = mesh_mechanics
@@ -135,24 +135,24 @@ class PhysicalPropertyTest(unittest.TestCase):
                 pp.stress.eigenvectors[i].magnitude(sig), 1.0
             )
         self.assertGreater(pp.stress.det(sig), 0)
-        self.assertGreater(pp.stress.I1(sig), 0)
-        self.assertGreater(pp.stress.I2(sig), 0)
-        self.assertGreater(pp.stress.I3(sig), 0)
+        self.assertGreater(pp.stress.invariant_1(sig), 0)
+        self.assertGreater(pp.stress.invariant_2(sig), 0)
+        self.assertGreater(pp.stress.invariant_3(sig), 0)
         self.assertGreater(pp.stress.mean(sig), 0)
         self.assertGreater(pp.stress.deviator.magnitude(sig), 0)
-        self.assertGreater(pp.stress.J1(sig), 0)
-        self.assertGreater(pp.stress.J2(sig), 0)
-        self.assertGreater(pp.stress.J3(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_1(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_2(sig), 0)
+        self.assertGreater(pp.stress.deviator_invariant_3(sig), 0)
         self.assertGreater(pp.stress.octahedral_shear(sig), 0)
 
     def test_simple(self):
         """Test call functionality."""
-        self.assertEqual(pp.temperature(273.15, strip_unit=False), qty(0, "°C"))
+        self.assertEqual(pp.temperature(273.15, strip_unit=False), Qty(0, "°C"))
         self.assertEqual(
-            pp.displacement[0]([1, 2, 3], strip_unit=False), qty(1, "m")
+            pp.displacement[0]([1, 2, 3], strip_unit=False), Qty(1, "m")
         )
         self.assertEqual(
-            pp.displacement([1, 2, 3], strip_unit=False)[1], qty(2, "m")
+            pp.displacement([1, 2, 3], strip_unit=False)[1], Qty(2, "m")
         )
 
     def test_values(self):

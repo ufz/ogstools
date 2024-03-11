@@ -78,32 +78,32 @@ class Matrix(Property):
         )
 
     @property
-    def I1(self) -> Scalar:  # pylint: disable=invalid-name
+    def invariant_1(self) -> Scalar:
         "A scalar property as the first invariant of the matrix."
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_I1",
-            func=lambda x: tensor_math.I1(self.func(x)),
+            func=lambda x: tensor_math.invariant_1(self.func(x)),
         )
 
     @property
-    def I2(self) -> Scalar:  # pylint: disable=invalid-name
+    def invariant_2(self) -> Scalar:
         "A scalar property as the second invariant of the matrix."
         return Scalar.from_property(
             self,
             output_unit=self.output_unit + "^2",
             output_name=self.output_name + "_I2",
-            func=lambda x: tensor_math.I2(self.func(x)),
+            func=lambda x: tensor_math.invariant_2(self.func(x)),
             process_with_units=True,
         )
 
     @property
-    def I3(self) -> Scalar:  # pylint: disable=invalid-name
+    def invariant_3(self) -> Scalar:
         "A scalar property as the third invariant of the matrix."
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_I3",
-            func=lambda x: tensor_math.I3(self.func(x)),
+            func=lambda x: tensor_math.invariant_3(self.func(x)),
         )
 
     @property
@@ -134,30 +134,30 @@ class Matrix(Property):
         )
 
     @property
-    def J1(self) -> Scalar:  # pylint: disable=invalid-name
+    def deviator_invariant_1(self) -> Scalar:
         "A scalar property as the first invariant of the matrix deviator."
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_J1",
-            func=lambda x: tensor_math.J1(self.func(x)),
+            func=lambda x: tensor_math.deviator_invariant_1(self.func(x)),
         )
 
     @property
-    def J2(self) -> Scalar:  # pylint: disable=invalid-name
+    def deviator_invariant_2(self) -> Scalar:
         "A scalar property as the second invariant of the matrix deviator."
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_J2",
-            func=lambda x: tensor_math.J2(self.func(x)),
+            func=lambda x: tensor_math.deviator_invariant_2(self.func(x)),
         )
 
     @property
-    def J3(self) -> Scalar:  # pylint: disable=invalid-name
+    def deviator_invariant_3(self) -> Scalar:
         "A scalar property as the third invariant of the matrix deviator."
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_J3",
-            func=lambda x: tensor_math.J3(self.func(x)),
+            func=lambda x: tensor_math.deviator_invariant_3(self.func(x)),
         )
 
     @property

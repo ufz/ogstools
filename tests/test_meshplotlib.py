@@ -17,12 +17,12 @@ from ogstools.meshplotlib import (
 )
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.core import get_ticklabels
-from ogstools.meshplotlib.levels import get_levels
+from ogstools.meshplotlib.levels import compute_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar, presets
 
-equality = partial(
+assert_allclose = partial(
     np.testing.assert_allclose, rtol=1e-7, atol=1e-100, verbose=True
 )
 
@@ -40,18 +40,26 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_levels(self):
         """Test levels calculation property."""
-        equality(get_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1])
-        equality(get_levels(293, 350, 10), [293, *range(295, 355, 5)])
-        equality(get_levels(1e-3, 1.2, 5), [1e-3, *np.arange(0.2, 1.4, 0.2)])
-        equality(get_levels(1e5, 9e6, 20), [1e5, *np.arange(5e5, 9.5e6, 5e5)])
-        equality(get_levels(1, 40, 20), [1, *range(2, 42, 2)])
-        equality(get_levels(0.0, 0.0, 10), [0.0, 0.0])
-        equality(get_levels(1e9, 1e9, 10), [1e9, 1e9])
+        assert_allclose(
+            compute_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1]
+        )
+        assert_allclose(
+            compute_levels(293, 350, 10), [293, *range(295, 355, 5)]
+        )
+        assert_allclose(
+            compute_levels(1e-3, 1.2, 5), [1e-3, *np.arange(0.2, 1.4, 0.2)]
+        )
+        assert_allclose(
+            compute_levels(1e5, 9e6, 20), [1e5, *np.arange(5e5, 9.5e6, 5e5)]
+        )
+        assert_allclose(compute_levels(1, 40, 20), [1, *range(2, 42, 2)])
+        assert_allclose(compute_levels(0.0, 0.0, 10), [0.0, 0.0])
+        assert_allclose(compute_levels(1e9, 1e9, 10), [1e9, 1e9])
 
     def test_ticklabels(self):
         def compare(lower, upper, precision, ref_labels, ref_offset=None):
             labels, offset = get_ticklabels(
-                np.asarray(get_levels(lower, upper, n_ticks=precision))
+                np.asarray(compute_levels(lower, upper, n_ticks=precision))
             )
             self.assertTrue(np.all(labels == ref_labels))
             self.assertEqual(offset, ref_offset)

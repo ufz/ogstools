@@ -21,7 +21,7 @@ from ogstools.propertylib.unit_registry import u_reg
 
 from . import plot_features as pf
 from . import setup
-from .levels import get_levels, median_exponent
+from .levels import compute_levels, median_exponent
 from .utils import get_style_cycler
 
 # TODO: define default data_name for regions in setup
@@ -236,7 +236,7 @@ def subplot(
 
     if levels is None:
         num_levels = min(setup.num_levels, len(np.unique(values)))
-        levels = get_levels(p_min, p_max, num_levels)
+        levels = compute_levels(p_min, p_max, num_levels)
     cmap, norm = get_cmap_norm(levels, mesh_property)
 
     if (
@@ -372,7 +372,7 @@ def get_combined_levels(
         and setup.p_max is None
     ):
         return unique_vals[(p_min <= unique_vals) & (unique_vals <= p_max)]
-    return get_levels(p_min, p_max, setup.num_levels)
+    return compute_levels(p_min, p_max, setup.num_levels)
 
 
 def _plot_on_figure(

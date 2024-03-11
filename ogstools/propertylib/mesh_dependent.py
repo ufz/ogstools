@@ -1,6 +1,5 @@
 "Functions related to stress analysis which can be only applied to a mesh."
 
-from functools import partial
 from typing import Union
 
 import numpy as np
@@ -17,8 +16,9 @@ ValType = Union[PlainQuantity, np.ndarray]
 def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
     """Return the depth values of the mesh.
 
-    For 2D, the last non-flat dimension is used as the vertical axis, for 3D,
-    the z-axes is used.
+    For 2D, the last axis of the plane wherein the mesh is lying is used as the
+    vertical axis (i.e. y if the mesh is in the xy-plane, z if it is in the
+    xz-plane), for 3D, the z-axes is used.
     If `use_coords` is True, returns the negative coordinate value of the
     vertical axis. Otherwise, the vertical distance to the top facing edges /
     surfaces are returned.
@@ -26,18 +26,18 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
     if mesh.volume > 0:
         # prevents inner edge (from holes) to be detected as a top boundary
         edges = mesh.extract_surface().connectivity("point_seed", point_ids=[0])
-        top_id = 2
+        vertical_dim = 2
         if use_coords:
-            return -mesh.points[:, top_id]
-        point_upwards = edges.cell_normals[..., top_id] > 0
+            return -mesh.points[:, vertical_dim]
+        point_upwards = edges.cell_normals[..., vertical_dim] > 0
         top_cells = point_upwards
     else:
         mean_normal = np.abs(
             np.mean(mesh.extract_surface().cell_normals, axis=0)
         )
-        top_id = np.delete([0, 1, 2], int(np.argmax(mean_normal)))[-1]
+        vertical_dim = np.delete([0, 1, 2], int(np.argmax(mean_normal)))[-1]
         if use_coords:
-            return -mesh.points[:, top_id]
+            return -mesh.points[:, vertical_dim]
         # prevents inner edge (from holes) to be detected as a top boundary
         edges = mesh.extract_feature_edges().connectivity(
             "point_seed", point_ids=[0]
@@ -49,16 +49,23 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
         edge_centers = edges.cell_centers().points
         adj_cells = [mesh.find_closest_cell(point) for point in edge_centers]
         adj_cell_centers = mesh.extract_cells(adj_cells).cell_centers().points
-        are_above = edge_centers[..., top_id] > adj_cell_centers[..., top_id]
+        are_above = (
+            edge_centers[..., vertical_dim]
+            > adj_cell_centers[..., vertical_dim]
+        )
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical
     top = edges.extract_cells(top_cells)
     eucl_distance_projected_top_points = np.sum(
-        np.abs(np.delete(mesh.points[:, None] - top.points, top_id, axis=-1)),
+        np.abs(
+            np.delete(mesh.points[:, None] - top.points, vertical_dim, axis=-1)
+        ),
         axis=-1,
     )
     matching_top = np.argmin(eucl_distance_projected_top_points, axis=-1)
-    return np.abs(mesh.points[..., top_id] - top.points[matching_top, top_id])
+    return np.abs(
+        mesh.points[..., vertical_dim] - top.points[matching_top, vertical_dim]
+    )
 
 
 def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
@@ -74,11 +81,11 @@ def p_fluid(mesh: pv.UnstructuredGrid) -> PlainQuantity:
     where `h` is the depth below surface. If "depth" is not given in the mesh,
     it is calculated via :py:func:`ogstools.propertylib.mesh_dependent.depth`.
     """
-    qty = u_reg.Quantity
+    Qty = u_reg.Quantity
     if "pressure" in mesh.point_data:
-        return qty(mesh["pressure"], "Pa")
+        return Qty(mesh["pressure"], "Pa")
     _depth = mesh["depth"] if "depth" in mesh.point_data else depth(mesh)
-    return qty(1000, "kg/m^3") * qty(9.81, "m/s^2") * qty(_depth, "m")
+    return Qty(1000, "kg/m^3") * Qty(9.81, "m/s^2") * Qty(_depth, "m")
 
 
 def fluid_pressure_criterion(
@@ -97,8 +104,8 @@ def fluid_pressure_criterion(
     :py:func:`ogstools.propertylib.mesh_dependent.p_fluid`.
     """
 
-    qty = u_reg.Quantity
-    sigma = -qty(mesh[mesh_property.data_name], mesh_property.data_unit)
+    Qty = u_reg.Quantity
+    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
     return p_fluid(mesh) - eigenvalues(sigma)[..., 0]
 
 
@@ -115,12 +122,21 @@ def dilatancy_critescu(
 
         F_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma_m}{\\sigma_0}
 
+    for total stresses and defined as:
+
+    .. math::
+
+        F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
+
+    for effective stresses
+    (uses :func:`~ogstools.propertylib.mesh_dependent.p_fluid`).
+
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
     """
 
-    qty = u_reg.Quantity
-    sigma = -qty(mesh[mesh_property.data_name], mesh_property.data_unit)
-    sigma_0 = qty(1, "MPa")
+    Qty = u_reg.Quantity
+    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
+    sigma_0 = Qty(1, "MPa")
     sigma_m = mean(sigma)
     if effective:
         sigma_m -= p_fluid(mesh)
@@ -128,17 +144,6 @@ def dilatancy_critescu(
     return (
         tau_oct / sigma_0 - a * (sigma_m / sigma_0) ** 2 - b * sigma_m / sigma_0
     )
-
-
-dilatancy_critescu_eff = partial(dilatancy_critescu, effective=True)
-"""Return the dilatancy criterion defined as:
-
-.. math::
-
-    F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
-
-<https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
-"""
 
 
 def dilatancy_alkan(
@@ -153,25 +158,23 @@ def dilatancy_alkan(
 
         F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
 
+    for total stresses and defined as:
+
+    .. math::
+
+        F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
+
+    for effective stresses
+    (uses :func:`~ogstools.propertylib.mesh_dependent.p_fluid`).
+
     <https://www.sciencedirect.com/science/article/pii/S1365160906000979>
     """
 
-    qty = u_reg.Quantity
-    sigma = -qty(mesh[mesh_property.data_name], mesh_property.data_unit)
-    tau_max = qty(33, "MPa")
+    Qty = u_reg.Quantity
+    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
+    tau_max = Qty(33, "MPa")
     sigma_m = mean(sigma)
     if effective:
         sigma_m -= p_fluid(mesh)
     tau = octahedral_shear(sigma)
-    return tau - tau_max * (b * sigma_m / (qty(1, "MPa") + b * sigma_m))
-
-
-dilatancy_alkan_eff = partial(dilatancy_alkan, effective=True)
-"""Return the dilatancy criterion defined as:
-
-.. math::
-
-    F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
-
-<https://www.sciencedirect.com/science/article/pii/S1365160906000979>
-"""
+    return tau - tau_max * (b * sigma_m / (Qty(1, "MPa") + b * sigma_m))

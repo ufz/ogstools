@@ -33,7 +33,8 @@ class Property:
     mask: str = ""
     """The name of the mask data in the dataset."""
     func: Callable = identity
-    """The function to be applied on the data."""
+    """The function to be applied on the data.
+       .. seealso:: :meth:`~ogstools.propertylib.Property.__call__`"""
     mesh_dependent: bool = False
     """If the function to be applied is dependent on the mesh itself"""
     process_with_units: bool = False
@@ -90,27 +91,30 @@ class Property:
         """
         Return the transformed data values.
 
-        Apply property function, convert from data_unit to output_unit and
-        return the values, optionally with the unit.
+        Converts the data from data_unit to output_unit and apply a function
+        the transformation function of this property. The result is returned by
+        default without units. if `strip_unit` is False, a quantity is returned.
 
-        :param vals: The input data values.
-
-        :returns: The transformed data values.
+        Note:
+        If `self.mesh_dependent` is True, `self.func` is applied directly to the
+        DataSet. Otherwise, it is determined by `self.process_with_units` if the
+        data is passed to the function with units (i.e. as a pint quantity) or
+        without.
         """
-        qty, _du, _ou = u_reg.Quantity, self.data_unit, self.output_unit
+        Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
         if self.mesh_dependent:
             if isinstance(data, pv.DataSet):
-                result = qty(self.func(data, self), _ou)
+                result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This property can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
             if isinstance(data, pv.DataSet):
-                result = qty(self.func(qty(self.get_data(data), _du)), _ou)
+                result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
-                result = qty(self.func(qty(data, _du)), _ou)
+                result = Qty(self.func(Qty(data, d_u)), o_u)
             else:
-                result = qty(qty(self.func(np.asarray(data)), _du), _ou)
+                result = Qty(Qty(self.func(np.asarray(data)), d_u), o_u)
         return result.magnitude if strip_unit else result
 
     def get_output_unit(self) -> str:
@@ -142,13 +146,14 @@ class Property:
         return self
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
+        "Check whether the mesh contains the mask of this property."
         return (
             not self.is_mask()
             and self.mask in mesh.cell_data
             and (len(mesh.cell_data[self.mask]) != 0)
         )
 
-    def get_data(
+    def _get_data(
         self, mesh: pv.UnstructuredGrid, masked: bool = True
     ) -> pv.UnstructuredGrid:
         """Get the data associated with a scalar or vector property from a mesh."""

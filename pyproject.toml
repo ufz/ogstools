@@ -49,7 +49,7 @@ feflow2ogs = 'ogstools.feflowlib._cli:cli'
 
 [project.optional-dependencies]
 dev = ["pre-commit>=2.20", "build", "black"]
-test = ["pytest", "coverage", "gmsh", "ogs6py"]
+test = ["pytest", "coverage", "gmsh", "ogs6py", "parameterized"]
 docs = [
   "sphinx",
   "sphinx-argparse",

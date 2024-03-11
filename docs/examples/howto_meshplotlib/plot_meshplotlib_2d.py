@@ -29,6 +29,14 @@ fig = mpl.plot(mesh, presets.material_id)
 fig = mpl.plot(mesh, presets.temperature)
 
 # %%
+# We can also plot components of vector properties:
+
+fig = mpl.plot(mesh, presets.displacement[0])
+
+# %%
+fig = mpl.plot(mesh, presets.displacement[1])
+
+# %%
 # This example has hydraulically deactivated subdomains:
 
 fig = mpl.plot(mesh, presets.pressure.get_mask())
@@ -37,19 +45,8 @@ fig = mpl.plot(mesh, presets.pressure.get_mask())
 # Let's plot the fluid velocity field.
 fig = mpl.plot(mesh, presets.velocity)
 
-
 # %%
 # Let's plot it again, this time log-scaled.
 mpl.setup.log_scaled = True
 mpl.setup.p_min = -8
 fig = mpl.plot(mesh, presets.velocity)
-mpl.setup.p_min = None
-mpl.setup.log_scaled = False
-
-# %%
-# We can also plot components of vector property:
-
-fig = mpl.plot(mesh, presets.displacement[0])
-
-# %%
-fig = mpl.plot(mesh, presets.displacement[1])

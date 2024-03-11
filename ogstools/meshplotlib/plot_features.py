@@ -1,6 +1,6 @@
 """Specialized plot features."""
 
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,14 +81,23 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
 def plot_streamlines(
     ax: plt.Axes,
     mesh: pv.DataSet,
-    property: Vector,
+    mesh_property: Vector,
     projection: Optional[int] = None,
-    arrows: bool = False,
+    plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
 ) -> None:
-    """Plot vector streamlines on a matplotlib axis."""
+    """
+    Plot the vector streamlines or arrows on a matplotlib axis.
+
+    :param ax:              Matplotlib axis to plot onto
+    :param mesh:            Mesh containing the vector property
+    :param mesh_property:   Vector property to visualize
+    :param projection:      Index of flat dimension (e.g. 2 for z axis),
+                            gets automatically determined if not given
+    :param plot_type:       Whether to plot streamlines, arrows or lines.
+    """
     if (n_pts := setup.num_streamline_interp_pts) is None:
         return
-    if arrows:
+    if plot_type != "streamlines":
         n_pts = 50
     if projection is None:
         mean_normal = np.abs(
@@ -103,47 +112,37 @@ def plot_streamlines(
 
     _mesh = mesh.copy()
     for key in _mesh.point_data:
-        if key not in [property.data_name, property.mask]:
+        if key not in [mesh_property.data_name, mesh_property.mask]:
             del _mesh.point_data[key]
     grid = pv.RectilinearGrid(
         [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
     )
     grid = grid.sample(_mesh, pass_cell_data=False)
-    values = property(grid.point_data[property.data_name])
+    values = mesh_property(grid.point_data[mesh_property.data_name])
     values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
     if np.shape(values)[-1] == 3:
         values = np.delete(values, projection, 1)
     val = np.reshape(values, (n_pts, n_pts, 2))
 
-    if property.mask in grid.point_data:
-        mask = np.reshape(grid.point_data[property.mask], (n_pts, n_pts))
+    if mesh_property.mask in grid.point_data:
+        mask = np.reshape(grid.point_data[mesh_property.mask], (n_pts, n_pts))
         val[mask == 0, :] = 0
     val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
     lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
     x_g, y_g = setup.length(np.meshgrid(x, y))
-    if arrows:
-        ax.quiver(
-            x_g,
-            y_g,
-            val[..., 0],
-            val[..., 1],
-            scale=1 / 0.03,
-            headlength=0,
-            headaxislength=0,
-            headwidth=1,
-            pivot="mid",
-        )
+    plot_args = [x_g, y_g, val[..., 0], val[..., 1]]
+    if plot_type == "streamlines":
+        ax.streamplot(*plot_args, color="k", linewidth=lw, density=1.5)
     else:
-        ax.streamplot(
-            x_g,
-            y_g,
-            val[..., 0],
-            val[..., 1],
-            color="k",
-            linewidth=lw,
-            density=1.5,
+        line_args = (
+            dict(  # noqa: C408
+                headlength=0, headaxislength=0, headwidth=1, pivot="mid"
+            )
+            if plot_type == "lines"
+            else {}
         )
+        ax.quiver(*plot_args, **line_args, scale=1 / 0.03)
 
 
 def plot_on_top(

@@ -103,7 +103,7 @@ def frobenius_norm(val: ValType) -> ValType:
     return np.linalg.norm(sym_tensor_to_mat(val), axis=(-2, -1))
 
 
-def I1(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def invariant_1(vals: ValType) -> ValType:
     """Return the first invariant.
 
     :math:`I1 = tr(\\mathbf{\\sigma})`
@@ -111,7 +111,7 @@ def I1(vals: ValType) -> ValType:  # pylint: disable=invalid-name
     return trace(vals)
 
 
-def I2(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def invariant_2(vals: ValType) -> ValType:
     """Return the second invariant.
 
     :math:`I2 = \\frac{1}{2} \\left[(tr(\\mathbf{\\sigma}))^2 - tr(\\mathbf{\\sigma}^2) \\right]`
@@ -119,7 +119,7 @@ def I2(vals: ValType) -> ValType:  # pylint: disable=invalid-name
     return 0.5 * (trace(vals) ** 2 - trace(vals**2))
 
 
-def I3(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def invariant_3(vals: ValType) -> ValType:
     """Return the third invariant.
 
     :math:`I3 = det(\\mathbf{\\sigma})`
@@ -133,7 +133,7 @@ def mean(vals: ValType) -> ValType:
 
     :math:`\\pi = \\frac{1}{3} I1`
     """
-    return (1.0 / 3.0) * I1(vals)
+    return (1.0 / 3.0) * invariant_1(vals)
 
 
 def effective_pressure(vals: ValType) -> ValType:
@@ -167,7 +167,7 @@ def deviator(vals: ValType) -> ValType:
     return vals - hydrostatic_component(vals)
 
 
-def J1(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def deviator_invariant_1(vals: ValType) -> ValType:
     """Return the first invariant of the deviator.
 
     :math:`J1 = 0`
@@ -175,7 +175,7 @@ def J1(vals: ValType) -> ValType:  # pylint: disable=invalid-name
     return trace(deviator(vals))
 
 
-def J2(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def deviator_invariant_2(vals: ValType) -> ValType:
     """Return the second invariant of the deviator.
 
     :math:`J2 = \\frac{1}{2} tr(\\mathbf{s}^2)`
@@ -183,7 +183,7 @@ def J2(vals: ValType) -> ValType:  # pylint: disable=invalid-name
     return 0.5 * trace(deviator(vals) ** 2)
 
 
-def J3(vals: ValType) -> ValType:  # pylint: disable=invalid-name
+def deviator_invariant_3(vals: ValType) -> ValType:
     """Return the third invariant of the deviator.
 
     :math:`J3 = \\frac{1}{3} tr(\\mathbf{s}^3)`
@@ -196,7 +196,7 @@ def octahedral_shear(vals: ValType) -> ValType:
 
     :math:`\\tau_{oct} = \\sqrt{\\frac{2}{3} J2}`
     """
-    return np.sqrt((2.0 / 3.0) * J2(vals))
+    return np.sqrt((2.0 / 3.0) * deviator_invariant_2(vals))
 
 
 def von_mises(vals: ValType) -> ValType:
@@ -204,7 +204,7 @@ def von_mises(vals: ValType) -> ValType:
 
     :math:`\\sigma_{Mises} = \\sqrt{3 J2}`
     """
-    return np.sqrt(3.0 * J2(vals))
+    return np.sqrt(3.0 * deviator_invariant_2(vals))
 
 
 def qp_ratio(vals: ValType) -> ValType:

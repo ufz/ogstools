@@ -4,7 +4,10 @@
 ".. seealso:: :py:mod:`ogstools.propertylib.tensor_math`"
 """
 
+from functools import partial
 from typing import Optional
+
+import pandas as pd
 
 from . import mesh_dependent, tensor_math
 from .custom_colormaps import integrity_cmap, temperature_cmap
@@ -99,17 +102,11 @@ dilatancy_critescu = Scalar(
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
-dilatancy_critescu_eff = Scalar(
-    data_name="sigma",
-    data_unit="Pa",
-    output_unit="",
+dilatancy_critescu_eff = dilatancy_critescu.replace(
     output_name="effective_dilatancy_criterion",
-    mask=M_MASK,
-    func=mesh_dependent.dilatancy_critescu_eff,
-    mesh_dependent=True,
-    cmap=integrity_cmap,
-    bilinear_cmap=True,
+    func=partial(mesh_dependent.dilatancy_critescu, effective=True),
 )
+
 dilatancy_alkan = Scalar(
     data_name="sigma",
     data_unit="Pa",
@@ -121,17 +118,11 @@ dilatancy_alkan = Scalar(
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
-dilatancy_alkan_eff = Scalar(
-    data_name="sigma",
-    data_unit="Pa",
-    output_unit="MPa",
+dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
-    mask=M_MASK,
-    func=mesh_dependent.dilatancy_alkan_eff,
-    mesh_dependent=True,
-    cmap=integrity_cmap,
-    bilinear_cmap=True,
+    func=partial(mesh_dependent.dilatancy_alkan, effective=True),
 )
+
 fluid_pressure_crit = Scalar(
     data_name="sigma",
     data_unit="Pa",
@@ -167,3 +158,27 @@ def get_preset(property_name: str, shape: Optional[tuple] = None) -> Property:
     if shape[1] in [2, 3]:
         return Vector(property_name)
     return Matrix(property_name)
+
+
+def get_dataframe() -> pd.DataFrame:
+    data = [
+        "preset,data_name,data_unit,output_unit,output_name,type".split(",")
+    ]
+    for preset_name, preset_value in globals().items():
+        if isinstance(preset := preset_value, Property):
+            data += [
+                [
+                    preset_name,
+                    preset.data_name,
+                    preset.data_unit,
+                    preset.output_unit,
+                    preset.output_name,
+                    preset.type_name,
+                ]
+            ]
+
+    return (
+        pd.DataFrame(data[1:], columns=data[0])
+        .sort_values(["data_name", "preset"])
+        .set_index("preset")
+    )

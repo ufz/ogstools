@@ -47,7 +47,7 @@ def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
     return np.stack([np.round(v, 12 - median_exp) for v in vals])
 
 
-def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
+def compute_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     """
     Return an array in the interval [lower, upper] with terminating decimals.
 
@@ -56,10 +56,10 @@ def get_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     """
     if lower == upper:
         return np.asarray([lower, nextafter(lower, np.inf)])
-    levels = nice_range(lower, upper, n_ticks)
+    result = nice_range(lower, upper, n_ticks)
     return np.unique(
         adaptive_rounding(
-            np.append(np.append(lower, levels), upper), precision=3
+            np.append(np.append(lower, result), upper), precision=3
         )
     )
 

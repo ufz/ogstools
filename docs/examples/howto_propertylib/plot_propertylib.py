@@ -11,35 +11,14 @@ mesh data. There are several predefined properties stored under the module
 """
 
 # %%
-
-# sphinx_gallery_start_ignore
-
-import pandas as pd
-
 from ogstools.meshplotlib import examples, plot
 from ogstools.propertylib import Scalar, presets
 
-data = ["preset,data_name,data_unit,output_unit,output_name,type".split(",")]
-for preset_name in dir(presets):
-    if isinstance(preset := presets.__dict__[preset_name], presets.Property):
-        data += [
-            [
-                preset_name,
-                preset.data_name,
-                preset.data_unit,
-                preset.output_unit,
-                preset.output_name,
-                preset.type_name,
-            ]
-        ]
-
-pd.DataFrame(data[1:], columns=data[0]).sort_values(
-    ["data_name", "preset"]
-).set_index("preset")
-
-# sphinx_gallery_end_ignore
+presets.get_dataframe()
 
 # %% [markdown]
+# Scalar, Vector and Matrix are inherit from the class Property with its
+# :meth:`~ogstools.propertylib.Property.__call__` operator.
 # Calling a property converts the argument from data_unit to output_unit and
 # applies a function if specified. In this case we convert from K to °C:
 
@@ -57,7 +36,7 @@ custom_temperature = Scalar(
 custom_temperature(273.15)
 
 # %% [markdown]
-# Or us existing presets as a template and replace some parameters:
+# Or use existing presets as a template and replace some parameters:
 custom_temperature = presets.temperature.replace(output_unit="°F")
 custom_temperature(273.15)
 
@@ -81,8 +60,8 @@ presets.strain["xx"]([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
 presets.displacement.magnitude([0.03, 0.04])
 
 # %% [markdown]
-# The main benefit of having specified how these properties should be
-# transformed is when making use of these in post processing. When plotting
+# We suggest specifying the properties and their transformations once.
+# These can be reused in different kind of post processing. When plotting
 # with :py:mod:`ogstools.meshplotlib` we can use these presets to simplify the
 # task of processing the data (e.g. calculate the von Mises stress):
 

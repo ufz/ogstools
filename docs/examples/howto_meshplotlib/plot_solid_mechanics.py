@@ -42,23 +42,29 @@ fig = plot(mesh, presets.stress["xy"])
 # %% [markdown]
 # Principal stresses
 # ------------------
-# Let's calculate the the principal stress components and overlay the direcetion
-# of the corresponding eigenvector. Note: the eigenvalues are sorted by
-# increasing order, i.e. eigenvalue[0] is the most negative / largest
+# Let's plot the the principal stress components and also overlay the direction
+# of the corresponding eigenvector in the plot. Note: the eigenvalues are sorted
+# by increasing order, i.e. eigenvalue[0] is the most negative / largest
 # compressive principal stress.
 
 # %%
 eigvecs = presets.stress.eigenvectors
 fig = plot(mesh, mesh_property=presets.stress.eigenvalues[0])
-plot_streamlines(ax=fig.axes[0], mesh=mesh, property=eigvecs[0], arrows=True)
+plot_streamlines(
+    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[0], plot_type="lines"
+)
 
 # %%
 fig = plot(mesh, mesh_property=presets.stress.eigenvalues[1])
-plot_streamlines(ax=fig.axes[0], mesh=mesh, property=eigvecs[1], arrows=True)
+plot_streamlines(
+    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[1], plot_type="lines"
+)
 
 # %%
 fig = plot(mesh, mesh_property=presets.stress.eigenvalues[2])
-plot_streamlines(ax=fig.axes[0], mesh=mesh, property=eigvecs[2], arrows=True)
+plot_streamlines(
+    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[2], plot_type="lines"
+)
 
 # %% [markdown]
 # We can also plot the mean of the principal stress, i.e. the magnitude of the
