@@ -117,6 +117,8 @@ autodoc_member_order = "bysource"
 autodoc_preserve_defaults = True
 autodoc_typehints = "description"
 
+autodoc_default_options = {"special-members": "__call__, __getitem__"}
+
 ### sphinx-gallery setup ###
 # necessary when building the sphinx gallery
 pyvista.BUILDING_GALLERY = True

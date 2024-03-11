@@ -16,12 +16,15 @@ from ogstools.meshplotlib import (
     setup,
 )
 from ogstools.meshplotlib.animation import animate, save_animation
-from ogstools.meshplotlib.levels import get_levels
+from ogstools.meshplotlib.core import get_ticklabels
+from ogstools.meshplotlib.levels import compute_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar, presets
 
-equality = partial(np.testing.assert_allclose, rtol=1e-7, verbose=True)
+assert_allclose = partial(
+    np.testing.assert_allclose, rtol=1e-7, atol=1e-100, verbose=True
+)
 
 
 class MeshplotlibTest(unittest.TestCase):
@@ -37,13 +40,59 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_levels(self):
         """Test levels calculation property."""
-        equality(get_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1])
-        equality(get_levels(293, 350, 10), [293, *range(295, 355, 5)])
-        equality(get_levels(1e-3, 1.2, 5), [1e-3, *np.arange(0.2, 1.4, 0.2)])
-        equality(get_levels(1e5, 9e6, 20), [1e5, *np.arange(5e5, 9.5e6, 5e5)])
-        equality(get_levels(1, 40, 20), [1, *range(2, 42, 2)])
-        equality(get_levels(0.0, 0.0, 10), [0.0, 1e-6])
-        equality(get_levels(1e9, 1e9, 10), [1e9, 1e9 + 1e-6])
+        assert_allclose(
+            compute_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1]
+        )
+        assert_allclose(
+            compute_levels(293, 350, 10), [293, *range(295, 355, 5)]
+        )
+        assert_allclose(
+            compute_levels(1e-3, 1.2, 5), [1e-3, *np.arange(0.2, 1.4, 0.2)]
+        )
+        assert_allclose(
+            compute_levels(1e5, 9e6, 20), [1e5, *np.arange(5e5, 9.5e6, 5e5)]
+        )
+        assert_allclose(compute_levels(1, 40, 20), [1, *range(2, 42, 2)])
+        assert_allclose(compute_levels(0.0, 0.0, 10), [0.0, 0.0])
+        assert_allclose(compute_levels(1e9, 1e9, 10), [1e9, 1e9])
+
+    def test_ticklabels(self):
+        def compare(lower, upper, precision, ref_labels, ref_offset=None):
+            labels, offset = get_ticklabels(
+                np.asarray(compute_levels(lower, upper, n_ticks=precision))
+            )
+            self.assertTrue(np.all(labels == ref_labels))
+            self.assertEqual(offset, ref_offset)
+
+        compare(1, 10, 6, ["1", "2", "4", "6", "8", "10"])
+        compare(1, 10.01, 6, ["1", "2", "4", "6", "8", "10", "10.01"])
+        compare(1, 10.001, 6, ["1", "2", "4", "6", "8", "10", "10.001"])
+        compare(1, 10.0001, 6, ["1", "2", "4", "6", "8", "10"])
+        compare(
+            100, 200.1, 6, ["100", "120", "140", "160", "180", "200", "200.1"]
+        )
+        compare(
+            *[-1.2345e-3, 2 + 1.2345e-3, 6],
+            ["-0.001", "0", "0.4", "0.8", "1.2", "1.6", "2", "2.001"],
+        )
+        compare(
+            *[-1.2345e-4, 2 + 1.2345e-5, 6],
+            ["0", "0.4", "0.8", "1.2", "1.6", "2"],
+        )
+        compare(
+            *[100, 100.0012, 4],
+            ["0.0e+00", "4.0e-04", "8.0e-04", "1.2e-03"],
+            "100",
+        )
+        compare(
+            *[1.1e5, 1.90001e6, 6],
+            ["1.1e+05", "4.0e+05", "8.0e+05", "1.2e+06", "1.6e+06", "1.9e+06"],
+        )
+        compare(
+            *[1e6, 1e6 + 12, 6],
+            ["0", "2", "4", "6", "8", "10", "12"],
+            "1e+06",
+        )
 
     def test_justified_labels(self):
         points = np.asarray(
@@ -97,6 +146,9 @@ class MeshplotlibTest(unittest.TestCase):
         plot_probe(mesh_series, points, presets.temperature)
         points = mesh_series.read(0).points[[0, -1]]
         plot_probe(mesh_series, points, presets.temperature)
+        plot_probe(mesh_series, points, presets.velocity)
+        plot_probe(mesh_series, points, presets.stress)
+        plot_probe(mesh_series, points, presets.stress.von_Mises)
         mesh_series = examples.meshseries_XDMF
         points = mesh_series.read(0).center
         plot_probe(mesh_series, points, presets.temperature)

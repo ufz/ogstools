@@ -64,13 +64,13 @@ fig = plot(
 # ratio.
 
 # %%
-fig = plot(custom_mesh(np.pi, np.pi * 2), "example")
+fig = plot(custom_mesh(np.pi, np.pi * 3), "example")
 # %% [markdown]
 # The same is true here:
 
 # %%
 fig = plot(
-    [custom_mesh(np.pi, np.pi * 2), custom_mesh(np.pi, np.pi * 2)], "example"
+    [custom_mesh(np.pi, np.pi * 3), custom_mesh(np.pi, np.pi * 3)], "example"
 )
 
 # %% [markdown]

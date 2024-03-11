@@ -46,7 +46,7 @@ data_shape = (
     if property_name in meshes[0].point_data
     else None
 )
-mesh_property = propertylib.presets._resolve_property(property_name, data_shape)
+mesh_property = propertylib.presets.get_preset(property_name, data_shape)
 richardson = studies.convergence.richardson_extrapolation(
     meshes, mesh_property, topology, refinement_ratio
 )
@@ -81,21 +81,14 @@ fig = meshplotlib.plot(richardson, mesh_property)
 
 data_key = mesh_property.data_name
 if reference_solution_path is None:
-    diff = richardson[data_key] - topology.sample(meshes[-1])[data_key]
+    fig = meshplotlib.plot_diff(
+        richardson, topology.sample(meshes[-1]), mesh_property
+    )
 else:
     reference_solution = topology.sample(
         meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
     )
-    diff = reference_solution[data_key] - richardson[data_key]
-richardson["difference"] = diff
-diff_unit = (mesh_property(1) - mesh_property(1)).units
-diff_property = type(mesh_property)(
-    data_name="difference",
-    data_unit=diff_unit,
-    output_unit=diff_unit,
-    output_name=mesh_property.output_name + " difference",
-)
-fig = meshplotlib.plot(richardson, diff_property)
+    fig = meshplotlib.plot_diff(reference_solution, richardson, mesh_property)
 
 # %% [markdown]
 # ## Convergence metrics

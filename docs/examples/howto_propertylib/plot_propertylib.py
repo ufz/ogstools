@@ -1,72 +1,73 @@
 """
-Features of propertylib
-=====================================
+Property Presets
+================
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-``propertylib`` provides a common interface for other modules to structure
-reading, conversion and output of mesh data.
+:py:mod:`ogstools.propertylib` provides classes (Scalar, Vector, Matrix) which
+encapsulate unit handling and data transformation for simplified processing of
+mesh data. There are several predefined properties stored under the module
+:py:mod:`ogstools.propertylib.presets`.
 """
 
 # %%
+from ogstools.meshplotlib import examples, plot
+from ogstools.propertylib import Scalar, presets
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+presets.get_dataframe()
 
-from ogstools.propertylib import presets
-
-# %%
-# There are some predefined default properties:
-
-tab = pd.DataFrame(presets.all_properties).set_index("output_name")
-tab["type"] = [p.type_name for p in presets.all_properties]
-tab.drop(["func", "bilinear_cmap"], axis=1).sort_values(["mask", "data_name"])
+# %% [markdown]
+# Scalar, Vector and Matrix inherit from the class Property with its
+# :meth:`~ogstools.propertylib.Property.transform` function.
+# This function converts the argument from data_unit to output_unit and
+# applies a function if specified. In this case we convert from K to °C:
 
 # %%
-# You can access properties either form the entire collection or from a subset
-# which only contains properties available to a specific OGS process.
-# Calling a property converts the argument from data_unit to output_unit and
-# applies a function if specified.
+presets.temperature.transform(273.15)
 
-print(presets.temperature(273.15))  # access from the entire collection
-print(presets.strain(0.01))  # access from Mechanics collection
+# %% [markdown]
+# You can also create your own properties by creating a Scalar, Vector or Matrix
+# property. The following would convert 273.15 K to °F.
 
 # %%
-# VectorProperties and MatrixProperties contain other Properties which represent
-# the result of an applied function on itself. Components can be accessed with
-# brackets. VectorProperties should be of length 2 or 3 corresponding to the
-# dimension. MatrixProperties likewise should be of length 4 [xx, yy, zz, xy]
-# or 6 [xx, yy, zz, xy, yz, xz].
+custom_temperature = Scalar(
+    data_name="temperature", data_unit="K", output_unit="K"
+)
+custom_temperature.transform(273.15)
+
+# %% [markdown]
+# Or use existing presets as a template and replace some parameters:
+custom_temperature = presets.temperature.replace(output_unit="°F")
+custom_temperature.transform(273.15)
+
+# %% [markdown]
+# Components of Vector properties and Matrix properties can be accessed with
+# bracket indexing. :class:`~ogstools.propertylib.vector.Vector` properties
+# should be of length 2 or 3 corresponding to the dimension.
+# :class:`~ogstools.propertylib.matrix.Matrix` properties likewise should be of
+# length 4 [xx, yy, zz, xy] or 6 [xx, yy, zz, xy, yz, xz].
 
 # %%
-# Element 1 (counting from 0) of a 3D displacement vector:
-
-print(presets.displacement[1]([0.01, 0.02, 0.03]))
+presets.displacement[1].transform([0.01, 0.02, 0.03])
 
 # %%
-# Magnitude of a 2D displacement vector from:
+presets.strain["xx"].transform([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
 
-print(presets.displacement.magnitude([0.03, 0.04]))
-
-# %%
-# Log of Magnitude of a 2D velocity vector from the Hydraulics collection:
-print(presets.velocity.log_magnitude(np.sqrt([50, 50])))
+# %% [markdown]
+# Magnitude of a 2D displacement vector:
 
 # %%
-# Magnitude and trace of a 3D strain matrix:
-eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
-print(presets.strain.magnitude(eps))
-print(presets.strain.trace(eps))
+presets.displacement.magnitude.transform([0.03, 0.04])
+
+# %% [markdown]
+# We suggest specifying the properties and their transformations once.
+# These can be reused in different kind of post processing. When plotting
+# with :py:mod:`ogstools.meshplotlib` we can use these presets to simplify the
+# task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-# You can change the attributes of the defaults.
-# For example for temperature from the Thermal Collection from the default
-# output_unit °C to °F:
+fig = plot(examples.mesh_mechanics, presets.stress.von_Mises)
 
-temp = np.linspace(273.15, 373.15, 10)
-fig, axs = plt.subplots(2)
-axs[0].plot(presets.temperature(temp), color="r")
-temperature_F = presets.temperature.replace(output_unit="°F")
-axs[1].plot(temperature_F(temp), color="b")
-fig.show()
+# %% [markdown]
+# Have a look at
+# :ref:`sphx_glr_auto_examples_howto_meshplotlib` for more examples.

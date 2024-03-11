@@ -3,9 +3,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from matplotlib.colors import Colormap
-
-from ogstools.propertylib.property import Property, Scalar
+from ogstools.propertylib.property import Scalar
 
 from .plot_setup_defaults import setup_dict
 
@@ -21,16 +19,6 @@ class PlotSetup:
 
     combined_colorbar: bool
     "True if all subplots share on colorbar, else each has its own colorbar."
-    custom_cmap: Colormap
-    "If provided, this colormap will be used for any plot."
-    cmap_dict_if_bilinear: dict
-    "A dictionary that maps bilinear colormaps to properties."
-    cmap_dict: dict
-    "A dictionary that maps colormaps to properties."
-    cmap_if_mask: list
-    "A list of colors corresponding to [True, False] values of masks."
-    default_cmap: str
-    "The default colormap to use."
     dpi: int
     "The resolution (dots per inch) for the figure."
     fig_scale: float
@@ -80,17 +68,6 @@ class PlotSetup:
     embedded_region_names_color: str
     "Color of the embedded region names inside the plot."
 
-    def cmap_str(self, property: Property) -> Union[str, list]:
-        """Get the colormap string for a given property."""
-        if property.is_mask():
-            return self.cmap_if_mask
-        if property.bilinear_cmap:
-            if property.data_name in self.cmap_dict_if_bilinear:
-                return self.cmap_dict_if_bilinear[property.data_name]
-        elif property.data_name in self.cmap_dict:
-            return self.cmap_dict[property.data_name]
-        return self.default_cmap
-
     @property
     def rcParams_scaled(self) -> dict:
         """Get the scaled rcParams values."""
@@ -126,11 +103,6 @@ class PlotSetup:
             length=Scalar("", obj["length"][0], obj["length"][1], ""),
             material_names=obj["material_names"],
             combined_colorbar=obj["combined_colorbar"],
-            custom_cmap=obj["custom_cmap"],
-            cmap_dict=obj["cmap_dict"],
-            cmap_dict_if_bilinear=obj["cmap_dict_if_bilinear"],
-            cmap_if_mask=obj["cmap_if_mask"],
-            default_cmap=obj["default_cmap"],
             rcParams=obj["rcParams"],
         )
 

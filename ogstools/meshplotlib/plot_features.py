@@ -1,6 +1,6 @@
 """Specialized plot features."""
 
-from typing import Callable
+from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +10,7 @@ from matplotlib import patheffects
 from matplotlib.collections import PolyCollection
 from matplotlib.transforms import blended_transform_factory as btf
 
-from ogstools.propertylib.property import Vector
+from ogstools.propertylib import Vector
 
 from . import setup
 
@@ -28,7 +28,7 @@ def plot_layer_boundaries(
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
             edges = segment.extract_surface().strip(True, 10000)
-            x_b, y_b = setup.length.strip_units(
+            x_b, y_b = setup.length.transform(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
             lw = setup.rcParams_scaled["lines.linewidth"]
@@ -72,50 +72,77 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         cell_pts = [
             cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
         ]
-        verts = setup.length.strip_units(np.delete(cell_pts, projection, -1))
+        verts = setup.length.transform(np.delete(cell_pts, projection, -1))
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
         pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
 
 
 def plot_streamlines(
-    ax: plt.Axes, surf: pv.DataSet, property: Vector, projection: int
+    ax: plt.Axes,
+    mesh: pv.DataSet,
+    mesh_property: Vector,
+    projection: Optional[int] = None,
+    plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
 ) -> None:
-    """Plot vector streamlines on a matplotlib axis."""
+    """
+    Plot the vector streamlines or arrows on a matplotlib axis.
+
+    :param ax:              Matplotlib axis to plot onto
+    :param mesh:            Mesh containing the vector property
+    :param mesh_property:   Vector property to visualize
+    :param projection:      Index of flat dimension (e.g. 2 for z axis),
+                            gets automatically determined if not given
+    :param plot_type:       Whether to plot streamlines, arrows or lines.
+    """
     if (n_pts := setup.num_streamline_interp_pts) is None:
         return
+    if plot_type != "streamlines":
+        n_pts = 50
+    if projection is None:
+        mean_normal = np.abs(
+            np.mean(mesh.extract_surface().cell_normals, axis=0)
+        )
+        projection = int(np.argmax(mean_normal))
     x_id, y_id = np.delete([0, 1, 2], projection)
-    bounds = [float(b) for b in surf.bounds]
+    bounds = [float(b) for b in mesh.bounds]
     x = np.linspace(bounds[2 * x_id], bounds[2 * x_id + 1], n_pts)
     y = np.linspace(bounds[2 * y_id], bounds[2 * y_id + 1], n_pts)
-    z = np.array([np.mean(surf.points[..., projection])])
+    z = np.array([np.mean(mesh.points[..., projection])])
 
-    _surf = surf
-    for key in _surf.point_data:
-        if key not in [property.data_name, property.mask]:
-            del _surf.point_data[key]
+    _mesh = mesh.copy()
+    for key in _mesh.point_data:
+        if key not in [mesh_property.data_name, mesh_property.mask]:
+            del _mesh.point_data[key]
     grid = pv.RectilinearGrid(
         [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
     )
-    grid = grid.sample(_surf, pass_cell_data=False)
-    if np.shape(grid.point_data[property.data_name])[-1] == 3:
-        grid.point_data[property.data_name] = np.delete(
-            grid.point_data[property.data_name], projection, 1
-        )
-    val = np.reshape(
-        property.strip_units(grid.point_data[property.data_name]),
-        (n_pts, n_pts, 2),
-    )
+    grid = grid.sample(_mesh, pass_cell_data=False)
+    values = mesh_property.transform(grid.point_data[mesh_property.data_name])
+    values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
+    if np.shape(values)[-1] == 3:
+        values = np.delete(values, projection, 1)
+    val = np.reshape(values, (n_pts, n_pts, 2))
 
-    if property.mask in grid.point_data:
-        mask = np.reshape(grid.point_data[property.mask], (n_pts, n_pts))
+    if mesh_property.mask in grid.point_data:
+        mask = np.reshape(grid.point_data[mesh_property.mask], (n_pts, n_pts))
         val[mask == 0, :] = 0
-    val_norm = np.linalg.norm(val, axis=-1)
+    val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
     lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
-
-    x_g, y_g = setup.length.strip_units(np.meshgrid(x, y))
-    ax.streamplot(x_g, y_g, val[..., 0], val[..., 1], color="k", linewidth=lw)
+    x_g, y_g = setup.length.transform(np.meshgrid(x, y))
+    plot_args = [x_g, y_g, val[..., 0], val[..., 1]]
+    if plot_type == "streamlines":
+        ax.streamplot(*plot_args, color="k", linewidth=lw, density=1.5)
+    else:
+        line_args = (
+            dict(  # noqa: C408
+                headlength=0, headaxislength=0, headwidth=1, pivot="mid"
+            )
+            if plot_type == "lines"
+            else {}
+        )
+        ax.quiver(*plot_args, **line_args, scale=1 / 0.03)
 
 
 def plot_on_top(
@@ -134,11 +161,11 @@ def plot_on_top(
     x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
     y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
     contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
-    ax.set_ylim(top=setup.length.strip_units(np.max(contour_vals)))
+    ax.set_ylim(top=setup.length.transform(np.max(contour_vals)))
     ax.fill_between(
-        setup.length.strip_units(x_vals),
-        setup.length.strip_units(y_vals),
-        setup.length.strip_units(contour_vals),
+        setup.length.transform(x_vals),
+        setup.length.transform(y_vals),
+        setup.length.transform(contour_vals),
         facecolor="lightgrey",
     )
 

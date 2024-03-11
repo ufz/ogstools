@@ -1,3 +1,5 @@
+import pyvista as pv
+
 from ogstools.definitions import ROOT_DIR
 from ogstools.meshlib import MeshSeries
 
@@ -9,3 +11,6 @@ meshseries_XDMF = MeshSeries(
     str(examples / "2D_single_fracture_HT_2D_single_fracture.xdmf"),
     time_unit="s",
 )
+mesh_mechanics = pv.XMLUnstructuredGridReader(
+    str(examples / "mechanics_example.vtu")
+).read()
