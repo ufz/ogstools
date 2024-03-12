@@ -595,7 +595,6 @@ def msh2vtu(
         return 0
 
     for name, data in field_data.items():
-        ph_id = data[ph_index]  # selection by physical id (user defined)
         subdomain_dim = data[geo_index]  # 0 or 1 or 2 or 3
         if dim0 <= subdomain_dim and subdomain_dim <= dim3:
             subdomain_cell_types = existing_cell_types.intersection(
@@ -640,9 +639,7 @@ def msh2vtu(
 
         for cell_type in subdomain_cell_types:
             # cells
-            selection_index = (
-                cell_data_dict[gmsh_physical_cell_data_key][cell_type] == ph_id
-            )
+            selection_index = mesh.cell_sets_dict[name][cell_type]
             selection_cells_values = cells_dict[cell_type][selection_index]
             if len(selection_cells_values):  # if there are some data
                 selection_cells_block = (cell_type, selection_cells_values)
