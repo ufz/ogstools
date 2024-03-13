@@ -4,6 +4,7 @@ import unittest
 from functools import partial
 from tempfile import mkstemp
 
+import matplotlib.pyplot as plt
 import numpy as np
 from pyvista import examples as pv_examples
 
@@ -14,6 +15,7 @@ from ogstools.meshplotlib import (
     plot_limit,
     plot_probe,
     setup,
+    update_font_sizes,
 )
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.core import get_ticklabels
@@ -132,6 +134,60 @@ class MeshplotlibTest(unittest.TestCase):
         """Test creation of difference plots."""
         meshseries = examples.meshseries_CT_2D
         plot_diff(meshseries.read(0), meshseries.read(1), "Si")
+
+    def test_user_defined_ax(self):
+        """Test creating plot with subfigures and user provided ax"""
+        meshseries = examples.meshseries_THM_2D
+        fig, ax = plt.subplots(3, 1, figsize=(40, 30))
+        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
+        ax[0].set_title(r"$T(\mathrm{t}_{0})$")
+        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
+        ax[1].set_title(r"$T(\mathrm{t}_{end})$")
+        plot_diff(
+            meshseries.read(0),
+            meshseries.read(1),
+            presets.temperature,
+            fig=fig,
+            ax=ax[2],
+        )
+        ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
+        # fig.suptitle("Test user defined ax")
+        fig.tight_layout()
+
+    def test_user_defined_ax_diff_vals(self):
+        """Test creating plot with subfigures and user provided ax with different values plotted"""
+        meshseries = examples.meshseries_THM_2D
+        setup.combined_colorbar = False
+        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
+        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
+        plot(meshseries.read(1), presets.displacement, fig=fig, ax=ax[1])
+        fig.suptitle("Test user defined ax")
+        fig.tight_layout()
+
+    def test_user_defined_fig(self):
+        """Test creating plot with subfigures and user provided fig"""
+        meshseries = examples.meshseries_THM_2D
+        setup.combined_colorbar = False
+        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
+        plot(
+            [meshseries.read(0), meshseries.read(1)],
+            presets.temperature,
+            fig=fig,
+        )
+        fig.suptitle("Test user defined fig")
+
+    def test_update_font_sizes(self):
+        """Test creating plot with subfigures and user provided fig"""
+        meshseries = examples.meshseries_THM_2D
+        setup.combined_colorbar = False
+        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
+        plot(
+            [meshseries.read(0), meshseries.read(1)],
+            presets.temperature,
+            fig=fig,
+        )
+        fig = update_font_sizes(fig, fontsize=25)
+        fig.suptitle("Test user defined fig")
 
     def test_limit_plots(self):
         """Test creation of limit plots."""

@@ -13,7 +13,7 @@ from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property
 
 from . import setup
-from .core import _plot_on_figure, plot
+from .core import _draw_plot, plot
 
 
 def animate(
@@ -54,7 +54,7 @@ def animate(
             mesh = mesh_series.read_interp(i, True)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            fig = _plot_on_figure(fig, mesh, property)
+            fig = _draw_plot(mesh, property, fig=fig)
 
     _func = partial(animate_func, fig=fig)
 
