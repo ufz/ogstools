@@ -119,11 +119,8 @@ def find_connected_domain_cells(
         # there should be one domain cell for each boundary cell, however cells
         # of boundary dimension may be in the domain (e.g. as sources)
         if number_of_connected_domain_cells == 1:
-            domain_cells_array[
-                cell_index
-            ] = (
-                common_domain_cells.pop()
-            )  # assign only one (unique) connected dmain cell
+            # assign only one (unique) connected dmain cell
+            domain_cells_array[cell_index] = common_domain_cells.pop()
         elif number_of_connected_domain_cells < 1 and not warned_lt1:
             logging.warning(
                 "find_connected_domain_cells: cell %s"
@@ -156,7 +153,7 @@ def msh2vtu(
     input_filename: Path,
     output_path: Path = Path(),
     output_prefix: str = "",
-    dim: int = 0,
+    dim: Union[int, list[int]] = 0,
     delz: bool = False,
     swapxy: bool = False,
     rdcd: bool = True,
@@ -253,6 +250,7 @@ def msh2vtu(
 
     # set spatial dimension of mesh
     if dim == 0:
+        assert isinstance(dim, int)
         # automatically detect spatial dimension of mesh
         _dim = dim0  # initial value
         for test_dim, test_cell_types in available_cell_types.items():
@@ -265,7 +263,8 @@ def msh2vtu(
         logging.info("Detected mesh dimension: %s", str(_dim))
         logging.info("##")
     else:
-        _dim = dim  # trust the user
+        # trust the user
+        _dim = max(dim) if isinstance(dim, list) else dim
 
     # delete third dimension if wanted by user
     if delz:
@@ -292,6 +291,8 @@ def msh2vtu(
         )
         domain_cell_types = existing_cell_types.intersection(
             available_cell_types[domain_dim]
+            if isinstance(dim, int)
+            else set().union(*[available_cell_types[d] for d in dim])
         )
     else:
         logging.warning("Error, invalid dimension dim=%s!", str(_dim))
@@ -639,7 +640,13 @@ def msh2vtu(
 
         for cell_type in subdomain_cell_types:
             # cells
-            selection_index = mesh.cell_sets_dict[name][cell_type]
+            all_false = np.full(
+                cell_data_dict[gmsh_physical_cell_data_key][cell_type].shape,
+                False,
+            )
+            selection_index = mesh.cell_sets_dict[name].get(
+                cell_type, all_false
+            )
             selection_cells_values = cells_dict[cell_type][selection_index]
             if len(selection_cells_values):  # if there are some data
                 selection_cells_block = (cell_type, selection_cells_values)

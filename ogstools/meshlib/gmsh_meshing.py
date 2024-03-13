@@ -107,3 +107,68 @@ def cuboid(
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
     gmsh.finalize()
+
+
+def bhe_mesh(
+    width: float = 10.0,
+    length: float = 10.0,
+    depth: float = 30.0,
+    x_BHE: float = 5,
+    y_BHE: float = 5,
+    bhe_depth: float = 20,
+    order: int = 1,
+    out_name: Path = Path("bhe_mesh.msh"),
+):
+    gmsh.initialize()
+    model, geo = (gmsh.model, gmsh.model.geo)
+    model.add("Testmodel")
+
+    geo.addPoint(0.0, 0.0, 0.0)
+    geo.addPoint(width, 0.0, 0.0)
+    geo.addPoint(width, length, 0.0)
+    geo.addPoint(0.0, length, 0.0)
+
+    geo.addLine(1, 2)
+    geo.addLine(2, 3)
+    geo.addLine(3, 4)
+    geo.addLine(4, 1)
+
+    geo.addCurveLoop([1, 2, 3, 4], 1)
+    geo.addPlaneSurface([1], tag=1)
+
+    alpha = 6.134  # valid only for 6 surronding points
+    bhe_radius = 0.076
+    delta = alpha * bhe_radius
+    delta_2 = 0.866 * delta
+    delta_3 = 0.5 * delta
+
+    geo.addPoint(x_BHE, y_BHE, 0, delta)
+    d1 = geo.addPoint(x_BHE, y_BHE - delta, 0, delta)
+    d2 = geo.addPoint(x_BHE, y_BHE + delta, 0, delta)
+    d3 = geo.addPoint(x_BHE + delta_2, y_BHE + delta_3, 0, delta)
+    d4 = geo.addPoint(x_BHE - delta_2, y_BHE + delta_3, 0, delta)
+    d5 = geo.addPoint(x_BHE + delta_2, y_BHE - delta_3, 0, delta)
+    d6 = geo.addPoint(x_BHE - delta_2, y_BHE - delta_3, 0, delta)
+    geo.synchronize()
+    model.mesh.embed(0, [d1, d2, d3, d4, d5, d6], 2, 1)
+
+    soil_1 = geo.extrude([(2, 1)], 0, 0, -depth / 2, [6], [1], True)
+    soil_2 = geo.extrude([soil_1[0]], 0, 0, -depth / 2, [6], [1], True)
+    bhe = geo.extrude([(0, 5)], 0, 0, -bhe_depth, [7], [1], True)
+
+    top_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_1[1][1]])
+    bottom_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_2[1][1]])
+    bhe_tag = model.addPhysicalGroup(dim=1, tags=[bhe[1][1]])
+
+    model.setPhysicalName(dim=3, tag=top_soil_tag, name="top")
+    model.setPhysicalName(dim=3, tag=bottom_soil_tag, name="bottom")
+    model.setPhysicalName(dim=1, tag=bhe_tag, name="bhe")
+
+    geo.synchronize()
+    model.mesh.generate(3)
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    model.mesh.setOrder(order)
+    model.mesh.removeDuplicateNodes()
+
+    gmsh.write(str(out_name))
+    gmsh.finalize()

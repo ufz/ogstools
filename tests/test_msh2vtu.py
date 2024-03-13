@@ -1,6 +1,7 @@
 """
 Tests (pytest) for msh2vtu
 """
+
 import os
 import runpy
 import subprocess
@@ -113,6 +114,28 @@ def test_cuboid(tmp_path: Path):
             out_name=msh_file,
         )
         assert msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
+
+
+def test_bhe_mesh(tmp_path: Path):
+    """Create bhe gmsh mesh and convert with msh2vtu."""
+    msh_file = Path(tmp_path, "bhe.msh")
+    permutations = product(
+        [10.0, 20.0], [15.0, 30.0], [40.0, 80.0], [20.0, 30.0]
+    )
+    for width, length, depth, bhe_depth in permutations:
+        gmsh_meshing.bhe_mesh(
+            width=width,
+            length=length,
+            depth=depth,
+            x_BHE=5.0,
+            y_BHE=5.0,
+            bhe_depth=bhe_depth,
+            order=1,
+            out_name=msh_file,
+        )
+        assert msh2vtu(msh_file, rdcd=True, ogs=True, dim=[1, 3]) == 0
+        mesh = pv.read("bhe_domain.vtu")
+        assert set(mesh.celltypes) == {3, 13}  # wedges (3D) and lines (1D)
 
 
 def test_gmsh(tmp_path: Path):

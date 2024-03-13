@@ -43,10 +43,12 @@ def argparser():
         "-d",
         "--dim",
         type=int,
+        nargs="*",
         default=0,
         help=(
             "spatial dimension (1, 2 or 3), trying automatic detection, "
-            "if not given"
+            "if not given. If multiple dimensions are provided, all elements of"
+            "these dimensions are embedded in the resulting domain mesh."
         ),
     )
     parser.add_argument(
