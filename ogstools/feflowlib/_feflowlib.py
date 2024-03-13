@@ -269,19 +269,19 @@ def get_components(
     """
 
     comp_parameter = [
-        "P_SORP",
-        "P_PORO",
-        "P_LDIS",
-        "P_TRAT_IN",
-        "P_TRAT_OUT",
-        "P_TDIS",
-        "P_DIFF",
-        "P_DECA",
         "P_BC_MASS",
         "P_BCMASS_2ND",
         "P_BCMASS_3RD",
         "P_BCMASS_4TH",
         "P_CONC",
+        "P_DECA",
+        "P_DIFF",
+        "P_LDIS",
+        "P_PORO",
+        "P_SORP",
+        "P_TDIS",
+        "P_TRAT_IN",
+        "P_TRAT_OUT",
     ]
     components_point_dict = {}
     components_cell_dict = {}
