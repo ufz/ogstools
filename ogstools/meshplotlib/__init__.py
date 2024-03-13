@@ -3,7 +3,14 @@
 
 from .plot_setup import _setup as setup  # noqa: I001: noqa
 
-from .core import plot_diff, plot_limit, plot_probe, plot, subplot
+from .core import (
+    plot_diff,
+    plot_limit,
+    plot_probe,
+    plot,
+    subplot,
+    update_font_sizes,
+)
 from .plot_features import plot_contour, plot_on_top
 
 __all__ = [
@@ -15,4 +22,5 @@ __all__ = [
     "plot_on_top",
     "plot_probe",
     "subplot",
+    "update_font_sizes",
 ]
