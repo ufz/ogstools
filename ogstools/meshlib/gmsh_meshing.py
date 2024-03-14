@@ -48,17 +48,17 @@ def rect(
 
     _geo_square(gmsh.model.geo, lengths, n_edge_cells, structured_grid)
 
+    rectangle = gmsh.model.addPhysicalGroup(dim=2, tags=[1], tag=0)
     bottom = gmsh.model.addPhysicalGroup(dim=1, tags=[1])
     right = gmsh.model.addPhysicalGroup(dim=1, tags=[2])
     top = gmsh.model.addPhysicalGroup(dim=1, tags=[3])
     left = gmsh.model.addPhysicalGroup(dim=1, tags=[4])
-    rectangle = gmsh.model.addPhysicalGroup(dim=2, tags=[1])
 
+    gmsh.model.setPhysicalName(dim=2, tag=rectangle, name="unit_square")
     gmsh.model.setPhysicalName(dim=1, tag=bottom, name="bottom")
     gmsh.model.setPhysicalName(dim=1, tag=right, name="right")
     gmsh.model.setPhysicalName(dim=1, tag=top, name="top")
     gmsh.model.setPhysicalName(dim=1, tag=left, name="left")
-    gmsh.model.setPhysicalName(dim=2, tag=rectangle, name="unit_square")
 
     gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(dim=2)
@@ -98,7 +98,7 @@ def cuboid(
         side_name = gmsh.model.addPhysicalGroup(dim=2, tags=[surf_tag])
         gmsh.model.setPhysicalName(dim=2, tag=side_name, name=surf_name)
 
-    vol = gmsh.model.addPhysicalGroup(dim=3, tags=[vol_tag])
+    vol = gmsh.model.addPhysicalGroup(dim=3, tags=[vol_tag], tag=0)
     gmsh.model.setPhysicalName(dim=3, tag=vol, name="volume")
 
     gmsh.model.geo.synchronize()
@@ -121,7 +121,7 @@ def bhe_mesh(
 ):
     gmsh.initialize()
     model, geo = (gmsh.model, gmsh.model.geo)
-    model.add("Testmodel")
+    model.add(Path(out_name).stem)
 
     geo.addPoint(0.0, 0.0, 0.0)
     geo.addPoint(width, 0.0, 0.0)
@@ -156,8 +156,8 @@ def bhe_mesh(
     soil_2 = geo.extrude([soil_1[0]], 0, 0, -depth / 2, [4], [1], True)
     bhe = geo.extrude([(0, 5)], 0, 0, -bhe_depth, [5], [1], True)
 
-    top_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_1[1][1]])
-    bottom_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_2[1][1]])
+    top_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_1[1][1]], tag=0)
+    bottom_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_2[1][1]], tag=1)
     bhe_tag = model.addPhysicalGroup(dim=1, tags=[bhe[1][1]])
 
     model.setPhysicalName(dim=3, tag=top_soil_tag, name="top")
