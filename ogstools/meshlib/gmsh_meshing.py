@@ -152,9 +152,9 @@ def bhe_mesh(
     geo.synchronize()
     model.mesh.embed(0, [d1, d2, d3, d4, d5, d6, d7], 2, 1)
 
-    soil_1 = geo.extrude([(2, 1)], 0, 0, -depth / 2, [6], [1], True)
-    soil_2 = geo.extrude([soil_1[0]], 0, 0, -depth / 2, [6], [1], True)
-    bhe = geo.extrude([(0, 5)], 0, 0, -bhe_depth, [7], [1], True)
+    soil_1 = geo.extrude([(2, 1)], 0, 0, -depth / 2, [4], [1], True)
+    soil_2 = geo.extrude([soil_1[0]], 0, 0, -depth / 2, [4], [1], True)
+    bhe = geo.extrude([(0, 5)], 0, 0, -bhe_depth, [5], [1], True)
 
     top_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_1[1][1]])
     bottom_soil_tag = model.addPhysicalGroup(dim=3, tags=[soil_2[1][1]])
