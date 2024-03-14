@@ -9,7 +9,9 @@ import numpy as np
 from pyvista import examples as pv_examples
 
 from ogstools.meshplotlib import (
+    clear_labels,
     examples,
+    label_spatial_axes,
     plot,
     plot_diff,
     plot_limit,
@@ -188,6 +190,63 @@ class MeshplotlibTest(unittest.TestCase):
         )
         fig = update_font_sizes(fig, fontsize=25)
         fig.suptitle("Test user defined fig")
+
+    def test_sharexy(self):
+        """Test if labels are skipped if axis are shared"""
+        meshseries = examples.meshseries_THM_2D
+        fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
+        ax = ax.flatten()
+        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
+        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
+        plot_diff(
+            meshseries.read(0),
+            meshseries.read(1),
+            presets.temperature,
+            fig=fig,
+            ax=ax[2],
+        )
+        plot_diff(
+            meshseries.read(1),
+            meshseries.read(0),
+            presets.temperature,
+            fig=fig,
+            ax=ax[3],
+        )
+        fig.tight_layout()
+
+    def test_label_sharedxy(self):
+        """Test labeling shared x and y axes"""
+        meshseries = examples.meshseries_THM_2D
+        fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
+        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
+        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
+        plot_diff(
+            meshseries.read(0),
+            meshseries.read(1),
+            presets.temperature,
+            fig=fig,
+            ax=ax[0][1],
+        )
+        plot_diff(
+            meshseries.read(1),
+            meshseries.read(0),
+            presets.temperature,
+            fig=fig,
+            ax=ax[1][1],
+        )
+        ax = label_spatial_axes(ax, np.array([0, 1]))
+        fig.tight_layout()
+
+    def test_spatial_label(self):
+        """Test if labels are added to x and y axes"""
+        fig, ax = plt.subplots(2, 2)
+        ax = label_spatial_axes(ax, np.array([0, 1]))
+
+    def test_spatial_label_clear(self):
+        """Test if labels are added to x and y axes"""
+        fig, ax = plt.subplots(2, 2)
+        ax = label_spatial_axes(ax, np.array([0, 1]))
+        ax = clear_labels(ax)
 
     def test_limit_plots(self):
         """Test creation of limit plots."""
