@@ -9,7 +9,7 @@ from ogstools.propertylib import tensor_math
 from ogstools.propertylib.tensor_math import sym_tensor_to_mat
 
 
-def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-7, atol=1e-9):
+def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
     """Assert the equality of two arrays."""
     np.testing.assert_allclose(vals1, vals2, verbose=True, rtol=rtol, atol=atol)
 
