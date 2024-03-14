@@ -6,105 +6,43 @@ from ogstools.msh2vtu import msh2vtu
 
 def argparser():
     # parsing command line arguments
+    def get_help(arg: str):
+        assert msh2vtu.__doc__ is not None
+        return msh2vtu.__doc__.split(arg + ":")[1].split(":param")[0].strip()
+
     parser = argparse.ArgumentParser(
-        description=(
-            "Prepares a Gmsh-mesh for use in OGS by extracting domain-,"
-            " boundary- and physical group-submeshes, and saves them in"
-            " vtu-format. Note that all mesh entities should belong to"
-            " physical groups."
-        ),
+        description=msh2vtu.__doc__.split(":param")[0].strip()
     )
-    parser.add_argument("filename", help="Gmsh mesh file (*.msh) as input data")
-    parser.add_argument(
-        "-g",
-        "--ogs",
-        action="store_true",
-        help=(
-            'rename "gmsh:physical" to "MaterialIDs" for domains and change '
-            "type of corresponding cell data to INT32"
-        ),
-    )
-    parser.add_argument(
-        "-r",
-        "--rdcd",
-        action="store_true",
-        help=(
-            "renumber domain cell data, physical IDs (cell data) of domains "
-            "get numbered beginning with zero"
-        ),
-    )
-    parser.add_argument(
-        "-a",
-        "--ascii",
-        action="store_true",
-        help="save output files (*.vtu) in ascii format",
-    )
-    parser.add_argument(
-        "-d",
-        "--dim",
-        type=int,
-        default=0,
-        help=(
-            "spatial dimension (1, 2 or 3), trying automatic detection, "
-            "if not given"
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        "--output_path",
-        default="",
-        help=("path of output files; if not given, then it defaults to cwd"),
-    )
-    parser.add_argument(
-        "-p",
-        "--prefix",
-        default="",
-        help=(
-            "basename of output files; if not given, then it defaults to"
-            " basename of inputfile"
-        ),
-    )
-    parser.add_argument(
-        "-z",
-        "--delz",
-        action="store_true",
-        help=(
-            "deleting z-coordinate, for 2D-meshes with z=0, note that"
-            " vtu-format requires 3D points"
-        ),
-    )
-    parser.add_argument(
-        "-s",
-        "--swapxy",
-        action="store_true",
-        help="swap x and y coordinate",
-    )
-    parser.add_argument(
-        "-v",
-        "--version",
-        action="version",
-        version=f"msh2vtu (part of ogstools {__version__}, Dominik Kern)",
-    )
+    add_arg = parser.add_argument
+    add_arg("filename", help=get_help("filename"))
+    add_arg("-o", "--output_path", default="", help=get_help("output_path"))
+    add_arg("-p", "--prefix", default="", help=get_help("prefix"))
+    add_arg("-d", "--dim", type=int, nargs="*", default=0, help=get_help("dim"))
+    add_arg("-z", "--delz", action="store_true", help=get_help("delz"))
+    add_arg("-s", "--swapxy", action="store_true", help=get_help("swapxy"))
+    add_arg("-r", "--reindex", action="store_true", help=get_help("reindex"))
+    add_arg("-k", "--keep_ids", action="store_true", help=get_help("keep_ids"))
+    add_arg("-a", "--ascii", action="store_true", help=get_help("ascii"))
+    add_arg("-l", "--log_level", default="DEBUG", help=get_help("log_level"))
+    version = f"msh2vtu (part of ogstools {__version__}, Dominik Kern)"
+    add_arg("-v", "--version", action="version", version=version)
 
     return parser
 
 
-def cli():
+def cli() -> int:
     """command line use"""
     args = argparser().parse_args()
 
-    ErrorCode = msh2vtu(
-        input_filename=args.filename,
+    return msh2vtu(
+        filename=args.filename,
         output_path=args.output_path,
         output_prefix=args.prefix,
         dim=args.dim,
         delz=args.delz,
         swapxy=args.swapxy,
-        rdcd=args.rdcd,
-        ogs=args.ogs,
+        reindex=args.reindex,
+        keep_ids=args.keep_ids,
         ascii=args.ascii,
+        log_level=args.log_level,
     )
-    if ErrorCode == 0:
-        print("msh2vtu successfully finished")
-    else:
-        print("msh2vtu stopped with errors")

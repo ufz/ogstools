@@ -119,11 +119,8 @@ def find_connected_domain_cells(
         # there should be one domain cell for each boundary cell, however cells
         # of boundary dimension may be in the domain (e.g. as sources)
         if number_of_connected_domain_cells == 1:
-            domain_cells_array[
-                cell_index
-            ] = (
-                common_domain_cells.pop()
-            )  # assign only one (unique) connected dmain cell
+            # assign only one (unique) connected dmain cell
+            domain_cells_array[cell_index] = common_domain_cells.pop()
         elif number_of_connected_domain_cells < 1 and not warned_lt1:
             logging.warning(
                 "find_connected_domain_cells: cell %s"
@@ -153,19 +150,49 @@ def find_connected_domain_cells(
 
 # TODO: rename
 def msh2vtu(
-    input_filename: Path,
+    filename: Path,
     output_path: Path = Path(),
     output_prefix: str = "",
-    dim: int = 0,
+    dim: Union[int, list[int]] = 0,
     delz: bool = False,
     swapxy: bool = False,
-    rdcd: bool = True,
-    ogs: bool = True,
+    reindex: bool = False,
+    keep_ids: bool = False,
     ascii: bool = False,
     log_level: Union[int, str] = "DEBUG",
 ):
+    """
+    Convert a gmsh mesh (.msh) to an unstructured grid file (.vtu).
+
+    Prepares a Gmsh-mesh for use in OGS by extracting domain-,
+    boundary- and physical group-submeshes, and saves them in
+    vtu-format. Note that all mesh entities should belong to
+    physical groups.
+
+    :param filename:    Gmsh mesh file (.msh) as input data
+    :param output_path: Path of output files, defaults to current working dir
+    :param output_prefix: Output files prefix, defaults to basename of inputfile
+    :param dim: Spatial dimension (1, 2 or 3), trying automatic detection,
+                if not given. If multiple dimensions are provided, all elements
+                of these dimensions are embedded in the resulting domain mesh.
+    :param delz:    Delete z-coordinate, for 2D-meshes with z=0.
+                    Note that vtu-format requires 3D points.
+    :param swapxy:  Swap x and y coordinate
+    :param reindex: Renumber physical group / region / Material IDs to be
+                    renumbered beginning with zero.
+    :param keep_ids:    By default, rename 'gmsh:physical' to 'MaterialIDs'
+                        and change type of corresponding cell data to INT32.
+                        If True, this is skipped.
+    :param ascii:   Save output files (.vtu) in ascii format.
+    :param log_level:   Level of log output. Possible values:
+                        <https://docs.python.org/3/library/logging.html#levels>
+
+    :returns:           A MeshSeries object
+    """
     logging.getLogger().setLevel(log_level)
-    input_filename = Path(input_filename)
+    if isinstance(dim, list):
+        assert len(dim) < 3, "Specify at most 3 dim values."
+    filename = Path(filename)
     # some variable declarations
     ph_index = 0  # to access physical group id in field data
     geo_index = 1  # to access geometrical dimension in field data
@@ -181,55 +208,39 @@ def msh2vtu(
         dim0: {"vertex"},
         dim1: {"line", "line3", "line4"},
         dim2: {
-            "triangle",
-            "triangle6",
-            "triangle9",
-            "triangle10",
-            "quad",
-            "quad8",
-            "quad9",
+            *["triangle", "triangle6", "triangle9", "triangle10"],
+            *["quad", "quad8", "quad9"],
         },
         dim3: {
-            "tetra",
-            "tetra10",
-            "pyramid",
-            "pyramid13",
-            "pyramid15",
-            "pyramid14",
-            "wedge",  # outdated, keep for backward compatibility
-            "wedge15",
-            "wedge18",
-            "hexahedron",
-            "hexahedron20",
-            "hexahedron27",
-            "prism",
-            "prism15",
-            "prism18",
+            *["tetra", "tetra10"],
+            *["pyramid", "pyramid13", "pyramid15", "pyramid14"],
+            *["wedge", "wedge15", "wedge18"],
+            *["hexahedron", "hexahedron20", "hexahedron27"],
+            *["prism", "prism15", "prism18"],
         },
     }
     gmsh_physical_cell_data_key = "gmsh:physical"
     ogs_domain_cell_data_key = "MaterialIDs"
     ogs_boundary_cell_data_key = "bulk_elem_ids"
+    ogs = not keep_ids
 
     # check if input file exists and is in gmsh-format
-    if not input_filename.is_file():
+    if not filename.is_file():
         logging.warning("No input file (mesh) found.")
         # raise FileNotFoundError
         return 1
 
-    if input_filename.suffix != ".msh":
+    if filename.suffix != ".msh":
         logging.warning(
             "Warning, input file seems not to be in gmsh-format (*.msh)"
         )
 
     # if no parameter given, use same basename as input file
-    output_basename = (
-        input_filename.stem if output_prefix == "" else output_prefix
-    )
+    output_basename = filename.stem if output_prefix == "" else output_prefix
     logging.info("Output: %s", output_basename)
 
     # read in mesh (be aware of shallow copies, i.e. by reference)
-    mesh: meshio.Mesh = meshio.read(str(input_filename))
+    mesh: meshio.Mesh = meshio.read(str(filename))
     points, point_data = mesh.points, mesh.point_data
     cells_dict, cell_data, cell_data_dict = (
         mesh.cells_dict,
@@ -253,6 +264,7 @@ def msh2vtu(
 
     # set spatial dimension of mesh
     if dim == 0:
+        assert isinstance(dim, int)
         # automatically detect spatial dimension of mesh
         _dim = dim0  # initial value
         for test_dim, test_cell_types in available_cell_types.items():
@@ -265,7 +277,8 @@ def msh2vtu(
         logging.info("Detected mesh dimension: %s", str(_dim))
         logging.info("##")
     else:
-        _dim = dim  # trust the user
+        # trust the user
+        _dim = max(dim) if isinstance(dim, list) else dim
 
     # delete third dimension if wanted by user
     if delz:
@@ -292,6 +305,8 @@ def msh2vtu(
         )
         domain_cell_types = existing_cell_types.intersection(
             available_cell_types[domain_dim]
+            if isinstance(dim, int)
+            else set().union(*[available_cell_types[d] for d in dim])
         )
     else:
         logging.warning("Error, invalid dimension dim=%s!", str(_dim))
@@ -322,24 +337,12 @@ def msh2vtu(
                     pg_key = "PhysicalGroup_" + str(pg_id)
                     field_data[pg_key] = np.array([pg_id, pg_dim])
 
-        # if user wants physical group numbering of domains beginning with zero
-        id_offset = 0  # initial value, zero will not change anything
-        if rdcd:  # prepare renumber-domain-cell-data (rdcd)
-            # find minimum physical_id of domains (dim)
-            id_list_domains = []
-            for (
-                dataset
-            ) in field_data.values():  # go through all physical groups
-                if (
-                    dataset[geo_index] == domain_dim
-                ):  # only for domains, ignore lower dimensional entities
-                    id_list_domains.append(
-                        dataset[ph_index]
-                    )  # append physical id
-            if len(id_list_domains):  # if there are some domains..
-                id_offset = min(
-                    id_list_domains
-                )  # ..then find minimal physical id
+        id_list_domains = [
+            physical_group[ph_index]
+            for physical_group in field_data.values()
+            if physical_group[geo_index] == domain_dim
+        ]
+        id_offset = min(id_list_domains, default=0) if reindex else 0
 
     else:
         logging.info("No physical groups found.")
@@ -353,9 +356,8 @@ def msh2vtu(
     ############################################################################
     all_points = np.copy(points)  # copy all, superfluous get deleted later
     if ogs:
-        original_point_numbers = np.arange(
-            number_of_original_points
-        )  # to associate domain points later
+        # to associate domain points later
+        original_point_numbers = np.arange(number_of_original_points)
         all_point_data = {}
         all_point_data[ogs_domain_point_data_key] = np.uint64(
             original_point_numbers
@@ -554,9 +556,8 @@ def msh2vtu(
                     gmsh_physical_cell_data_key
                 ][boundary_cell_type]
             else:
-                number_of_boundary_cells = len(
-                    boundary_cells_values
-                )  # cells of specific type
+                # cells of specific type
+                number_of_boundary_cells = len(boundary_cells_values)
                 boundary_cell_data_values = np.zeros(
                     (number_of_boundary_cells), dtype=int
                 )
@@ -629,9 +630,8 @@ def msh2vtu(
                 # use gmsh, as the requirements from OGS
                 subdomain_cell_data_key = gmsh_physical_cell_data_key
         else:
-            subdomain_cell_data_key = (
-                gmsh_physical_cell_data_key  # same for all dimensions
-            )
+            # same for all dimensions
+            subdomain_cell_data_key = gmsh_physical_cell_data_key
         subdomain_cell_data[subdomain_cell_data_key] = []  # list
         # flag to indicate invalid bulk_element_ids, then no cell data will be
         # written
@@ -639,7 +639,13 @@ def msh2vtu(
 
         for cell_type in subdomain_cell_types:
             # cells
-            selection_index = mesh.cell_sets_dict[name][cell_type]
+            all_false = np.full(
+                cell_data_dict[gmsh_physical_cell_data_key][cell_type].shape,
+                False,
+            )
+            selection_index = mesh.cell_sets_dict[name].get(
+                cell_type, all_false
+            )
             selection_cells_values = cells_dict[cell_type][selection_index]
             if len(selection_cells_values):  # if there are some data
                 selection_cells_block = (cell_type, selection_cells_values)

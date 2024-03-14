@@ -31,9 +31,7 @@ class ConvergenceTest(unittest.TestCase):
                 structured_grid=True,
                 out_name=msh_path,
             )
-            msh2vtu(
-                input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
-            )
+            msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
             model = ogs.OGS(
                 PROJECT_FILE=temp_dir / "default.prj",
                 INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
