@@ -142,15 +142,15 @@ def bhe_mesh(
     delta_2 = 0.866 * delta
     delta_3 = 0.5 * delta
 
-    geo.addPoint(x_BHE, y_BHE, 0, delta)
-    d1 = geo.addPoint(x_BHE, y_BHE - delta, 0, delta)
-    d2 = geo.addPoint(x_BHE, y_BHE + delta, 0, delta)
-    d3 = geo.addPoint(x_BHE + delta_2, y_BHE + delta_3, 0, delta)
-    d4 = geo.addPoint(x_BHE - delta_2, y_BHE + delta_3, 0, delta)
-    d5 = geo.addPoint(x_BHE + delta_2, y_BHE - delta_3, 0, delta)
-    d6 = geo.addPoint(x_BHE - delta_2, y_BHE - delta_3, 0, delta)
+    d1 = geo.addPoint(x_BHE, y_BHE, 0, delta)
+    d2 = geo.addPoint(x_BHE, y_BHE - delta, 0, delta)
+    d3 = geo.addPoint(x_BHE, y_BHE + delta, 0, delta)
+    d4 = geo.addPoint(x_BHE + delta_2, y_BHE + delta_3, 0, delta)
+    d5 = geo.addPoint(x_BHE - delta_2, y_BHE + delta_3, 0, delta)
+    d6 = geo.addPoint(x_BHE + delta_2, y_BHE - delta_3, 0, delta)
+    d7 = geo.addPoint(x_BHE - delta_2, y_BHE - delta_3, 0, delta)
     geo.synchronize()
-    model.mesh.embed(0, [d1, d2, d3, d4, d5, d6], 2, 1)
+    model.mesh.embed(0, [d1, d2, d3, d4, d5, d6, d7], 2, 1)
 
     soil_1 = geo.extrude([(2, 1)], 0, 0, -depth / 2, [6], [1], True)
     soil_2 = geo.extrude([soil_1[0]], 0, 0, -depth / 2, [6], [1], True)
