@@ -38,12 +38,7 @@ bhe_mesh(
 
 # %%
 msh2vtu(
-    msh_file,
-    output_path=tmp_dir,
-    rdcd=True,
-    ogs=True,
-    dim=[1, 3],
-    log_level="ERROR",
+    msh_file, output_path=tmp_dir, dim=[1, 3], reindex=True, log_level="ERROR"
 )
 
 # %% [markdown]
@@ -69,11 +64,3 @@ p.add_mesh(
 )
 p.add_mesh(bhe_line, color="r", line_width=3)
 p.show()
-
-# sphinx_gallery_start_ignore
-
-from shutil import rmtree  # noqa: E402 # pylint: disable=C0413, C0411
-
-rmtree(tmp_dir)
-
-# sphinx_gallery_end_ignore

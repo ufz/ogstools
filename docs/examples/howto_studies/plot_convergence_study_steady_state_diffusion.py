@@ -32,7 +32,6 @@ First, the required packages are imported and an output directory is created:
 
 # %%
 from pathlib import Path
-from shutil import rmtree
 from tempfile import mkdtemp
 
 from IPython.display import HTML
@@ -63,9 +62,7 @@ for n_edge_cells in edge_cells:
     meshlib.gmsh_meshing.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
-    msh2vtu.msh2vtu(
-        input_filename=msh_path, output_path=temp_dir, log_level="ERROR"
-    )
+    msh2vtu.msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
 
     model = ogs.OGS(
         PROJECT_FILE=temp_dir / "default.prj",
@@ -135,13 +132,3 @@ convergence.run_convergence_study(
     refinement_ratio=2.0,
 )
 HTML(workflow.jupyter_to_html(report_name, show_input=True))
-
-# %%
-
-# sphinx_gallery_start_ignore
-
-# Removing the created files to keep the code repository clean for developers.
-# If you want to use the created jupyter notebook further, skip this step.
-rmtree(temp_dir)
-
-# sphinx_gallery_end_ignore

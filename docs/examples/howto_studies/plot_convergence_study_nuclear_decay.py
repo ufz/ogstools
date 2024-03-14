@@ -30,7 +30,6 @@ created:
 
 # %%
 from pathlib import Path
-from shutil import rmtree
 from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
@@ -184,11 +183,3 @@ fig = studies.convergence.plot_convergence_error_evolution(
 
 # %%
 fig = studies.convergence.plot_convergence_order_evolution(evolution_metrics)
-
-# sphinx_gallery_start_ignore
-
-# Removing the created files to keep the code repository clean for developers.
-# If you want to use the created jupyter notebook further, skip this step.
-rmtree(temp_dir)
-
-# sphinx_gallery_end_ignore
