@@ -4,7 +4,6 @@ Tests (pytest) for msh2vtu
 
 import os
 import runpy
-import subprocess
 import sys
 from itertools import product
 from pathlib import Path
@@ -18,10 +17,6 @@ import pyvista as pv
 from ogstools.meshlib import gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
 from ogstools.msh2vtu._cli import cli
-
-
-def test_cli():
-    subprocess.run(["msh2vtu", "--help"], check=True)
 
 
 def test_multiple_groups_per_element(tmp_path: Path):
@@ -116,9 +111,16 @@ def test_cuboid(tmp_path: Path):
         assert msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
 
 
+def run_cli(cmd: str) -> int:
+    "Execute the given command in CLI."
+    with patch.object(sys, "argv", cmd.split(" ")):
+        return cli()
+
+
 def test_bhe_mesh(tmp_path: Path):
     """Create bhe gmsh mesh and convert with msh2vtu."""
     msh_file = Path(tmp_path, "bhe.msh")
+    vtu_file = Path(tmp_path, "bhe_domain.vtu")
     permutations = product(
         [10.0, 20.0], [15.0, 30.0], [40.0, 80.0], [20.0, 30.0]
     )
@@ -133,8 +135,11 @@ def test_bhe_mesh(tmp_path: Path):
             order=1,
             out_name=msh_file,
         )
-        assert msh2vtu(msh_file, rdcd=True, ogs=True, dim=[1, 3]) == 0
-        mesh = pv.read("bhe_domain.vtu")
+        assert msh2vtu(msh_file, output_path=tmp_path, dim=[1, 3]) == 0
+        mesh = pv.read(vtu_file)
+        assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} --dim 1 3") == 0
+        mesh_cli = pv.read(vtu_file)
+        assert mesh == mesh_cli
         assert set(mesh.celltypes) == {3, 13}  # wedges (3D) and lines (1D)
 
 
@@ -150,9 +155,10 @@ def test_gmsh(tmp_path: Path):
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
         assert msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0
-    testargs = ["msh2vtu", str(msh_file), "-o", str(tmp_path), "-p", prefix]
-    with patch.object(sys, "argv", testargs):
-        cli()
+        mesh = pv.read(prefix + "_domain.vtu")
+        assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
+        mesh_cli = pv.read(prefix + "_domain.vtu")
+        assert mesh == mesh_cli
 
     for vtu_file in tmp_path.glob("*.vtu"):
         try:
