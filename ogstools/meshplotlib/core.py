@@ -1,7 +1,6 @@
 """Meshplotlib core utilitites."""
 
 import warnings
-from copy import deepcopy
 from math import nextafter
 from typing import Literal, Optional, Union
 
@@ -643,35 +642,6 @@ def plot(
         _draw_plot(meshes, mesh_property, fig=fig, ax=ax)
         ax.set_aspect(1.0 / ax_aspects[0])
     return fig
-
-
-def plot_diff(
-    mesh1: pv.UnstructuredGrid,
-    mesh2: pv.UnstructuredGrid,
-    mesh_property: Union[Property, str],
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> mfigure.Figure:
-    if isinstance(mesh_property, str):
-        data_shape = mesh1[mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
-    diff_mesh = deepcopy(mesh1)
-    diff_mesh[mesh_property.data_name] -= mesh2[mesh_property.data_name]
-    data_property = mesh_property.replace(output_unit=mesh_property.data_unit)
-    diff_unit = str(
-        (
-            data_property.transform(1, strip_unit=False)
-            - data_property.transform(1, strip_unit=False)
-        ).units
-    )
-    diff_property = mesh_property.replace(
-        data_unit=diff_unit,
-        output_unit=diff_unit,
-        output_name=mesh_property.output_name + " difference",
-        bilinear_cmap=True,
-        cmap=mesh_property.cmap if mesh_property.bilinear_cmap else "coolwarm",
-    )
-    return plot(diff_mesh, diff_property, fig=fig, ax=ax)
 
 
 def plot_limit(

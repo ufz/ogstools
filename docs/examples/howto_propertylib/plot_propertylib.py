@@ -27,7 +27,7 @@ presets.temperature.transform(273.15)
 
 # %% [markdown]
 # You can also create your own properties by creating a Scalar, Vector or Matrix
-# property. The following would convert 273.15 K to °F.
+# property. The following doesn't do any unit conversion.
 
 # %%
 custom_temperature = Scalar(

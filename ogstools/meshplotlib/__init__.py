@@ -4,7 +4,6 @@
 from .plot_setup import _setup as setup  # noqa: I001: noqa
 
 from .core import (
-    plot_diff,
     plot_limit,
     plot_probe,
     plot,
@@ -20,7 +19,6 @@ __all__ = [
     "setup",
     "plot",
     "plot_contour",
-    "plot_diff",
     "plot_limit",
     "plot_on_top",
     "plot_probe",

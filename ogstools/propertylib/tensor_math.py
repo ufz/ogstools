@@ -19,11 +19,11 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
-from typing import TypeVar, Union
+from typing import Optional, TypeVar, Union
 
 import numpy as np
 from numpy import linalg as LA
-from pint.facets.plain import PlainQuantity
+from pint.facets.plain import PlainQuantity, PlainUnit
 
 from .unit_registry import u_reg
 
@@ -31,6 +31,18 @@ ValType = Union[PlainQuantity, np.ndarray]
 
 
 T = TypeVar("T")
+
+
+def _split_quantity(values: ValType) -> tuple[np.ndarray, Optional[PlainUnit]]:
+    if isinstance(values, PlainQuantity):
+        return values.magnitude, values.units
+    return values, None
+
+
+def _to_quantity(
+    values: np.ndarray, unit: Optional[PlainUnit]
+) -> Union[np.ndarray, PlainQuantity]:
+    return values if unit is None else u_reg.Quantity(values, unit)
 
 
 def identity(vals: T) -> T:
@@ -49,167 +61,157 @@ def sym_tensor_to_mat(vals: np.ndarray) -> np.ndarray:
     return mat
 
 
-def trace(vals: ValType) -> ValType:
+def trace(values: ValType) -> ValType:
     """Return the trace.
 
     :math:`tr(\\mathbf{\\sigma}) = \\sum\\limits_{i=1}^3 \\sigma_{ii}`
     """
-    return np.sum(vals[..., :3], axis=-1)
+    vals, unit = _split_quantity(values)
+    return _to_quantity(np.sum(vals[..., :3], axis=-1), unit)
 
 
-def eigenvalues(vals: ValType) -> ValType:
+def eigenvalues(values: ValType) -> ValType:
     "Return the eigenvalues."
-    if isinstance(vals, PlainQuantity):
-        unit = vals.units
-        vals = vals.magnitude
-    else:
-        unit = None
+    vals, unit = _split_quantity(values)
     eigvals: np.ndarray = LA.eigvals(sym_tensor_to_mat(vals))
     eigvals.sort(axis=-1)
     assert np.all(eigvals[..., 0] <= eigvals[..., 1])
     assert np.all(eigvals[..., 1] <= eigvals[..., 2])
-    return eigvals if unit is None else u_reg.Quantity(eigvals, unit)
+    return _to_quantity(eigvals, unit)
 
 
-def eigenvectors(vals: ValType) -> ValType:
+def eigenvectors(values: ValType) -> ValType:
     "Return the eigenvectors."
-    if isinstance(vals, PlainQuantity):
-        vals = vals.magnitude
+    vals, unit = _split_quantity(values)
     eigvals, eigvecs = LA.eig(sym_tensor_to_mat(vals))
     ids = eigvals.argsort(axis=-1)
     eigvals = np.take_along_axis(eigvals, ids, axis=-1)
     eigvecs = np.take_along_axis(eigvecs, ids[:, np.newaxis], axis=-1)
     assert np.all(eigvals[..., 0] <= eigvals[..., 1])
     assert np.all(eigvals[..., 1] <= eigvals[..., 2])
-    return eigvecs
+    return _to_quantity(eigvecs, unit)
 
 
-def det(vals: ValType) -> ValType:
+def det(values: ValType) -> ValType:
     "Return the determinants."
-    if isinstance(vals, PlainQuantity):
-        unit = vals.units
-        vals = vals.magnitude
-    else:
-        unit = None
-    result = np.linalg.det(sym_tensor_to_mat(vals))
-    return result if unit is None else u_reg.Quantity(result, unit)
+    vals, unit = _split_quantity(values)
+    return _to_quantity(np.linalg.det(sym_tensor_to_mat(vals)), unit)
 
 
-def frobenius_norm(val: ValType) -> ValType:
+def frobenius_norm(values: ValType) -> ValType:
     """Return the Frobenius norm.
 
     :math:`||\\mathbf{\\sigma}||_F = \\sqrt{ \\sum\\limits_{i=1}^m \\sum\\limits_{j=1}^n |\\sigma_{ij}|^2 }`
     """
-    return np.linalg.norm(sym_tensor_to_mat(val), axis=(-2, -1))
+    vals, unit = _split_quantity(values)
+    return _to_quantity(
+        np.linalg.norm(sym_tensor_to_mat(vals), axis=(-2, -1)), unit
+    )
 
 
-def invariant_1(vals: ValType) -> ValType:
+def invariant_1(values: ValType) -> ValType:
     """Return the first invariant.
 
     :math:`I1 = tr(\\mathbf{\\sigma})`
     """
-    return trace(vals)
+    return trace(values)
 
 
-def invariant_2(vals: ValType) -> ValType:
+def invariant_2(values: ValType) -> ValType:
     """Return the second invariant.
 
     :math:`I2 = \\frac{1}{2} \\left[(tr(\\mathbf{\\sigma}))^2 - tr(\\mathbf{\\sigma}^2) \\right]`
     """
-    return 0.5 * (trace(vals) ** 2 - trace(vals**2))
+    return 0.5 * (trace(values) ** 2 - trace(values**2))
 
 
-def invariant_3(vals: ValType) -> ValType:
+def invariant_3(values: ValType) -> ValType:
     """Return the third invariant.
 
     :math:`I3 = det(\\mathbf{\\sigma})`
     """
-    return det(vals)
+    return det(values)
 
 
-def mean(vals: ValType) -> ValType:
+def mean(values: ValType) -> ValType:
     """Return the mean value.
     Also called hydrostatic component or octahedral normal component.
 
     :math:`\\pi = \\frac{1}{3} I1`
     """
-    return (1.0 / 3.0) * invariant_1(vals)
+    return (1.0 / 3.0) * invariant_1(values)
 
 
-def effective_pressure(vals: ValType) -> ValType:
+def effective_pressure(values: ValType) -> ValType:
     """Return the effective pressure.
 
     :math:`\\pi = -\\frac{1}{3} I1`
     """
-    return -mean(vals)
+    return -mean(values)
 
 
-def hydrostatic_component(vals: ValType) -> ValType:
+def hydrostatic_component(values: ValType) -> ValType:
     """Return the hydrostatic component.
 
     :math:`p_{ij} = \\pi \\delta_{ij}`
     """
-    if isinstance(vals, PlainQuantity):
-        unit = vals.units
-        vals = vals.magnitude
-    else:
-        unit = None
+    vals, unit = _split_quantity(values)
     result = vals * 0.0
-    result[..., :3] = mean(vals)[..., np.newaxis]
-    return result if unit is None else u_reg.Quantity(result, unit)
+    result[..., :3] = _split_quantity(mean(vals))[0][..., np.newaxis]
+    return _to_quantity(result, unit)
 
 
-def deviator(vals: ValType) -> ValType:
+def deviator(values: ValType) -> ValType:
     """Return the deviator.
 
     :math:`s_{ij} = \\sigma_{ij} - \\pi \\delta_{ij}`
     """
-    return vals - hydrostatic_component(vals)
+    return values - hydrostatic_component(values)
 
 
-def deviator_invariant_1(vals: ValType) -> ValType:
+def deviator_invariant_1(values: ValType) -> ValType:
     """Return the first invariant of the deviator.
 
     :math:`J1 = 0`
     """
-    return trace(deviator(vals))
+    return trace(deviator(values))
 
 
-def deviator_invariant_2(vals: ValType) -> ValType:
+def deviator_invariant_2(values: ValType) -> ValType:
     """Return the second invariant of the deviator.
 
     :math:`J2 = \\frac{1}{2} tr(\\mathbf{s}^2)`
     """
-    return 0.5 * trace(deviator(vals) ** 2)
+    return 0.5 * trace(deviator(values) ** 2)
 
 
-def deviator_invariant_3(vals: ValType) -> ValType:
+def deviator_invariant_3(values: ValType) -> ValType:
     """Return the third invariant of the deviator.
 
     :math:`J3 = \\frac{1}{3} tr(\\mathbf{s}^3)`
     """
-    return (1.0 / 3.0) * trace(deviator(vals) ** 3)
+    return (1.0 / 3.0) * trace(deviator(values) ** 3)
 
 
-def octahedral_shear(vals: ValType) -> ValType:
+def octahedral_shear(values: ValType) -> ValType:
     """Return the octahedral shear value.
 
     :math:`\\tau_{oct} = \\sqrt{\\frac{2}{3} J2}`
     """
-    return np.sqrt((2.0 / 3.0) * deviator_invariant_2(vals))
+    return np.sqrt((2.0 / 3.0) * deviator_invariant_2(values))
 
 
-def von_mises(vals: ValType) -> ValType:
+def von_mises(values: ValType) -> ValType:
     """Return the von Mises stress.
 
     :math:`\\sigma_{Mises} = \\sqrt{3 J2}`
     """
-    return np.sqrt(3.0 * deviator_invariant_2(vals))
+    return np.sqrt(3.0 * deviator_invariant_2(values))
 
 
-def qp_ratio(vals: ValType) -> ValType:
+def qp_ratio(values: ValType) -> ValType:
     """Return the qp ratio (von Mises stress / effective pressure).
 
     :math:`qp = \\sigma_{Mises} / \\pi`
     """
-    return von_mises(vals) / effective_pressure(vals)
+    return von_mises(values) / effective_pressure(values)
