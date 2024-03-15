@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyvista import examples as pv_examples
 
+from ogstools.meshlib import difference
 from ogstools.meshplotlib import (
     clear_labels,
     examples,
     label_spatial_axes,
     plot,
-    plot_diff,
     plot_limit,
     plot_probe,
     setup,
@@ -135,7 +135,7 @@ class MeshplotlibTest(unittest.TestCase):
     def test_diff_plots(self):
         """Test creation of difference plots."""
         meshseries = examples.meshseries_CT_2D
-        plot_diff(meshseries.read(0), meshseries.read(1), "Si")
+        plot(difference(meshseries.read(0), meshseries.read(1), "Si"), "Si")
 
     def test_user_defined_ax(self):
         """Test creating plot with subfigures and user provided ax"""
@@ -145,13 +145,10 @@ class MeshplotlibTest(unittest.TestCase):
         ax[0].set_title(r"$T(\mathrm{t}_{0})$")
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
         ax[1].set_title(r"$T(\mathrm{t}_{end})$")
-        plot_diff(
-            meshseries.read(0),
-            meshseries.read(1),
-            presets.temperature,
-            fig=fig,
-            ax=ax[2],
+        diff_mesh = difference(
+            meshseries.read(0), meshseries.read(1), presets.temperature
         )
+        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
         ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
         # fig.suptitle("Test user defined ax")
         fig.tight_layout()
@@ -198,20 +195,11 @@ class MeshplotlibTest(unittest.TestCase):
         ax = ax.flatten()
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
-        plot_diff(
-            meshseries.read(0),
-            meshseries.read(1),
-            presets.temperature,
-            fig=fig,
-            ax=ax[2],
+        diff_mesh = difference(
+            meshseries.read(0), meshseries.read(1), presets.temperature
         )
-        plot_diff(
-            meshseries.read(1),
-            meshseries.read(0),
-            presets.temperature,
-            fig=fig,
-            ax=ax[3],
-        )
+        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
+        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[3])
         fig.tight_layout()
 
     def test_label_sharedxy(self):
@@ -220,20 +208,11 @@ class MeshplotlibTest(unittest.TestCase):
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-        plot_diff(
-            meshseries.read(0),
-            meshseries.read(1),
-            presets.temperature,
-            fig=fig,
-            ax=ax[0][1],
+        diff_mesh = difference(
+            meshseries.read(0), meshseries.read(1), presets.temperature
         )
-        plot_diff(
-            meshseries.read(1),
-            meshseries.read(0),
-            presets.temperature,
-            fig=fig,
-            ax=ax[1][1],
-        )
+        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[0][1])
+        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[1][1])
         ax = label_spatial_axes(ax, np.array([0, 1]))
         fig.tight_layout()
 

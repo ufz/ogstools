@@ -14,7 +14,8 @@ To see this benchmark results over all timesteps have a look at
 """
 
 # %%
-from ogstools.meshplotlib import examples, plot_diff, plot_limit, setup
+from ogstools.meshlib import difference
+from ogstools.meshplotlib import examples, plot, plot_limit, setup
 from ogstools.propertylib import Scalar
 
 setup.reset()
@@ -43,4 +44,5 @@ fig = plot_limit(mesh_series, si, "min")
 # Difference between the last and he first timestep:
 
 # %%
-fig = plot_diff(mesh_series.read(-1), mesh_series.read(0), si)
+diff_mesh = difference(mesh_series.read(-1), mesh_series.read(0), si)
+fig = plot(diff_mesh, si.delta)
