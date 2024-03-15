@@ -27,7 +27,7 @@ presets.temperature.transform(273.15)
 
 # %% [markdown]
 # You can also create your own properties by creating a Scalar, Vector or Matrix
-# property. The following would doesn't to any unit conversion.
+# property. The following doesn't do any unit conversion.
 
 # %%
 custom_temperature = Scalar(

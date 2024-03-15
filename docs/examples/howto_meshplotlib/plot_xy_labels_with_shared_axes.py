@@ -24,7 +24,7 @@ from ogstools.meshplotlib import (
     plot,
     setup,
 )
-from ogstools.propertylib import presets
+from ogstools.propertylib.presets import temperature
 
 plt.rcParams.update({"font.size": 32})
 
@@ -33,13 +33,15 @@ setup.length.output_unit = "km"
 setup.combined_colorbar = False
 
 meshseries = examples.meshseries_THM_2D
+mesh_a = meshseries.read(0)
+mesh_b = meshseries.read(1)
 
 # %%
 # First, by default (without shared axes) both X and Y axes will be labeled
 # automatically. The default is that both axes are shared and this will be
 # respected.
 
-fig = plot([meshseries.read(0), meshseries.read(1)], presets.temperature)
+fig = plot([mesh_a, mesh_b], temperature)
 
 
 # %%
@@ -50,13 +52,12 @@ fig = plot([meshseries.read(0), meshseries.read(1)], presets.temperature)
 # not.
 
 fig, ax = plt.subplots(2, 2, figsize=(40, 20), sharex=True, sharey=True)
-plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
-plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-diff_mesh = difference(
-    meshseries.read(1), meshseries.read(0), presets.temperature
-)
-plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[0][1])
-plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[1][1])
+plot(mesh_a, temperature, fig=fig, ax=ax[0][0])
+plot(mesh_b, temperature, fig=fig, ax=ax[1][0])
+diff_ab = difference(mesh_b, mesh_a, temperature)
+diff_ba = difference(mesh_b, mesh_a, temperature)
+plot(diff_ab, temperature.delta, fig=fig, ax=ax[0][1])
+plot(diff_ba, temperature.delta, fig=fig, ax=ax[1][1])
 fig.tight_layout()
 
 # %%
@@ -66,10 +67,10 @@ fig.tight_layout()
 # last plot related function call.
 
 fig, ax = plt.subplots(2, 2, figsize=(40, 20), sharex=True, sharey=True)
-plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
-plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[0][1])
-plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[1][1])
+plot(mesh_a, temperature, fig=fig, ax=ax[0][0])
+plot(mesh_b, temperature, fig=fig, ax=ax[1][0])
+plot(diff_ab, temperature.delta, fig=fig, ax=ax[0][1])
+plot(diff_ba, temperature.delta, fig=fig, ax=ax[1][1])
 ax = clear_labels(ax)
 ax = label_spatial_axes(ax, np.array([0, 1]))
 fig.tight_layout()
