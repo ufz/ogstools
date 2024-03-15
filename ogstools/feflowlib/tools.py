@@ -291,7 +291,94 @@ def get_materials_of_HT_model(
             mesh, parameter_feflow
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
+
     return material_properties
+
+
+def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
+    """
+    Gets the material parameter for each chemical species/component of the model.
+
+    :param mesh: mesh
+    """
+    parameters_mapping = {
+        "P_DECA": "decay_rate",
+        "P_DIFF": "pore_diffusion",
+        "P_LDIS": "longitudinal_dispersivity",
+        "P_PORO": "porosity",
+        "P_SORP": "sorption_coeff",
+        "P_TDIS": "transversal_dispersivity",
+        "P_COMP": "storage",
+        "P_CONDX": "permeability_X",
+        "P_CONDY": "permeability_Y",
+        "P_CONDZ": "permeability_Z",
+    }
+
+    feflow_species_parameter = [
+        cell_data
+        for cell_data in mesh.cell_data
+        if any(parameter in cell_data for parameter in parameters_mapping)
+    ]
+
+    ogs_species_parameter = []
+    for feflow_species_para in feflow_species_parameter:
+        for feflow_parameter in parameters_mapping:
+            if feflow_parameter in feflow_species_para:
+                ogs_param = parameters_mapping[feflow_parameter]
+                ogs_species_parameter.append(
+                    feflow_species_para.replace(feflow_parameter, ogs_param)
+                )
+
+    material_properties: defaultdict = defaultdict(dict)
+    for parameter_feflow, parameter_ogs in zip(
+        feflow_species_parameter, ogs_species_parameter
+    ):
+        for material_id, property_value in get_material_properties(
+            mesh, parameter_feflow
+        ).items():
+            material_properties[material_id][parameter_ogs] = property_value[0]
+
+    return material_properties
+
+
+def add_components_to_prj_file(
+    xpath: str, parameter_dict: dict, components: list, model: ogs.OGS
+) -> None:
+    """
+    Adds the entries needed in the prj-file for components/species. Since in ogs6py no
+    corresponding feature exists to use the common ogs6py.media-class, the generic method
+    add_block is used.
+
+    WARNING: After add_block was used, the ogs6py-model cannot be altered with
+    common ogs6py functions!
+    """
+    component_parameter = ["decay_rate", "retardation_factor", "diffusion"]
+    model.add_element(parent_xpath=xpath, tag="components")
+    for component in np.unique(components)[1:]:
+        model.add_block(
+            blocktag="component",
+            parent_xpath=xpath + "/components",
+            taglist=["name", "properties"],
+            textlist=[component, ""],
+        )
+        for parameter, parameter_val in parameter_dict.items():
+            if (
+                any(c in parameter for c in component_parameter)
+                and component in parameter
+            ):
+                model.add_block(
+                    blocktag="property",
+                    parent_xpath=xpath
+                    + "/components/component[name='"
+                    + component
+                    + "']/properties",
+                    taglist=["name", "type", "value"],
+                    textlist=[
+                        parameter.replace(component, ""),
+                        "Constant",
+                        str(parameter_val),
+                    ],
+                )
 
 
 def combine_material_properties(
@@ -478,8 +565,6 @@ def materials_in_HT(
     """
     Create the section for material properties for HT processes in the prj-file.
 
-    :param bulk_mesh_path: path of bulk mesh
-    :param mesh: mesh
     :param material_properties: material properties
     :param model: model to setup prj-file
     :return: model
@@ -588,6 +673,105 @@ def materials_in_HT(
             value=material_properties[material_id][
                 "thermal_longitudinal_dispersivity"
             ],
+        )
+
+    return model
+
+
+def materials_in_HC(
+    material_properties: dict,
+    components: list,
+    model: ogs.OGS,
+) -> ogs.OGS:
+    """
+    Create the section for material properties for HC processes in the prj-file.
+
+    :param material_properties: material properties
+    :param model: model to setup prj-file
+    :return: model
+    """
+    for material_id in material_properties:
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        # Get a list of properties (porosity,transversal/longitunal_dispersivity)
+        # across species. If there are more than one value, independent OGS-models
+        # need to be set up manually.
+        porosity_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "porosity" in prop
+                ]
+            )
+        )
+
+        long_disp_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "longitudinal_dispersivity" in prop
+                ]
+            )
+        )
+
+        trans_disp_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "transversal_dispersivity" in prop
+                ]
+            )
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=porosity_val,
+        )
+
+        model.media.add_property(
+            medium_id=material_id,
+            name="longitudinal_dispersivity",
+            type="Constant",
+            value=long_disp_val,
+        )
+
+        model.media.add_property(
+            medium_id=material_id,
+            name="transversal_dispersivity",
+            type="Constant",
+            value=trans_disp_val,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="permeability",
+            type="Constant",
+            value=str(material_properties[material_id]["permeability_X"])
+            + " "
+            + str(material_properties[material_id]["permeability_Y"])
+            + " "
+            + str(material_properties[material_id]["permeability_Z"]),
+        )
+
+    for material_id in material_properties:
+        xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
+        add_components_to_prj_file(
+            xpath, material_properties[material_id], components, model
         )
 
     return model
