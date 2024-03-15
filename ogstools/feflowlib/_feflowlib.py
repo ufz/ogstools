@@ -256,7 +256,7 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     return mesh
 
 
-def get_components(
+def get_component_specific_parameter(
     doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
 ) -> tuple[dict, dict, dict]:
     """
@@ -307,6 +307,23 @@ def get_components(
     return (components_point_dict, components_cell_dict, obsolete_data)
 
 
+def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
+    """
+    Some Documentation is needed!
+    """
+    for spec_porosity in [
+        species_porosity
+        for species_porosity in mesh.cell_data
+        if "PORO" in species_porosity
+    ]:
+        porosity = mesh.cell_data[spec_porosity]
+        species = spec_porosity.replace("P_PORO", "")
+        # calculation of the retardation factor
+        mesh.cell_data[species + "retardation_factor"] = (
+            1 + mesh.cell_data[species + "P_SORP"] * (1 - porosity) / porosity
+        )
+
+
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     Get the geometric construction of the mesh.
@@ -341,7 +358,7 @@ def update_geometry(
             component_point_data,
             component_cell_data,
             obsolete_data,
-        ) = get_components(doc, mesh)
+        ) = get_component_specific_parameter(doc, mesh)
         for i in component_point_data:
             mesh.point_data.update({i: component_point_data[i]})
         for i in component_cell_data:
@@ -355,7 +372,7 @@ def update_geometry(
                 logger.error(
                     "Unknown geometry to remove obsolet data after conversion of chemical components."
                 )
-
+        _caclulate_retardation_factor(mesh)
     return _convert_to_SI_units(mesh)
 
 
