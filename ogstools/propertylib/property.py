@@ -125,6 +125,24 @@ class Property:
         """
         return "%" if self.output_unit == "percent" else self.output_unit
 
+    @property
+    def delta(self) -> "Property":
+        "returns: A property relating to the difference in a quantity."
+        data_property = self.replace(output_unit=self.data_unit)
+        diff_unit = str(
+            (
+                data_property.transform(1, strip_unit=False)
+                - data_property.transform(1, strip_unit=False)
+            ).units
+        )
+        return self.replace(
+            data_unit=diff_unit,
+            output_unit=diff_unit,
+            output_name=self.output_name + " difference",
+            bilinear_cmap=True,
+            cmap=self.cmap if self.bilinear_cmap else "coolwarm",
+        )
+
     def is_mask(self) -> bool:
         """
         Check if the property is a mask.

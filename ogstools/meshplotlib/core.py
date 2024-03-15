@@ -657,21 +657,7 @@ def plot_diff(
         mesh_property = get_preset(mesh_property, data_shape)
     diff_mesh = deepcopy(mesh1)
     diff_mesh[mesh_property.data_name] -= mesh2[mesh_property.data_name]
-    data_property = mesh_property.replace(output_unit=mesh_property.data_unit)
-    diff_unit = str(
-        (
-            data_property.transform(1, strip_unit=False)
-            - data_property.transform(1, strip_unit=False)
-        ).units
-    )
-    diff_property = mesh_property.replace(
-        data_unit=diff_unit,
-        output_unit=diff_unit,
-        output_name=mesh_property.output_name + " difference",
-        bilinear_cmap=True,
-        cmap=mesh_property.cmap if mesh_property.bilinear_cmap else "coolwarm",
-    )
-    return plot(diff_mesh, diff_property, fig=fig, ax=ax)
+    return plot(diff_mesh, mesh_property.delta, fig=fig, ax=ax)
 
 
 def plot_limit(
