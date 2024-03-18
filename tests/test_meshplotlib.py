@@ -114,7 +114,7 @@ class MeshplotlibTest(unittest.TestCase):
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        self.assertRaises(IndexError, plot, mesh, Scalar("missing_data"))
+        self.assertRaises(KeyError, plot, mesh, Scalar("missing_data"))
 
     def test_plot_2D(self):
         """Test creation of 2D plots."""

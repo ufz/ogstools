@@ -8,10 +8,8 @@ from pint.facets.plain import PlainQuantity
 
 from ogstools.meshplotlib.examples import mesh_mechanics
 from ogstools.propertylib import presets as pp
-from ogstools.propertylib.matrix import Matrix
 from ogstools.propertylib.mesh_dependent import depth
-from ogstools.propertylib.property import Scalar, u_reg
-from ogstools.propertylib.vector import Vector
+from ogstools.propertylib.property import u_reg
 
 Qty = u_reg.Quantity
 
@@ -21,7 +19,7 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     EPS = 1e-7
 
-    def equality(self, p: Scalar, vals: np.ndarray, res: PlainQuantity):
+    def equality(self, p: pp.Scalar, vals: np.ndarray, res: PlainQuantity):
         """
         Assert the equality of property calculations.
 
@@ -185,11 +183,17 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_get_preset(self):
         """Test find property function."""
-        self.assertEqual(pp.get_preset("pressure"), pp.pressure)
-        self.assertEqual(pp.get_preset("pore_pressure"), pp.pressure)
-        self.assertEqual(pp.get_preset("test"), Scalar("test"))
-        self.assertEqual(pp.get_preset("test", shape=(100, 3)), Vector("test"))
-        self.assertEqual(pp.get_preset("test", shape=(100, 6)), Matrix("test"))
+        mesh = mesh_mechanics
+        mesh.point_data["scalar"] = mesh["temperature"]
+        mesh.point_data["vector"] = mesh["displacement"]
+        mesh.point_data["matrix"] = mesh["sigma"]
+        self.assertEqual(pp.get_preset("temperature", mesh), pp.temperature)
+        self.assertEqual(pp.get_preset("displacement", mesh), pp.displacement)
+        self.assertEqual(pp.get_preset("sigma", mesh), pp.stress)
+        self.assertEqual(pp.get_preset("scalar", mesh), pp.Scalar("scalar"))
+        self.assertEqual(pp.get_preset("vector", mesh), pp.Vector("vector"))
+        self.assertEqual(pp.get_preset("matrix", mesh), pp.Matrix("matrix"))
+        self.assertRaises(KeyError, pp.get_preset, "test", mesh)
 
     def test_copy_ctor(self):
         """Test replace constructor."""
