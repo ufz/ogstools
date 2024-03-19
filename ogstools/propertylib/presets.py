@@ -5,9 +5,10 @@
 """
 
 from functools import partial
-from typing import Optional
+from typing import Union
 
 import pandas as pd
+import pyvista as pv
 
 from . import mesh_dependent, tensor_math
 from .custom_colormaps import integrity_cmap, temperature_cmap
@@ -140,24 +141,38 @@ nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
 
-def get_preset(property_name: str, shape: Optional[tuple] = None) -> Property:
+def get_preset(
+    mesh_property: Union[Property, str], mesh: pv.DataSet
+) -> Property:
     """
-    Returns a Property preset or create one with correct type.
+    Returns a Property preset or creates one with correct type.
 
     Searches for presets by data_name and output_name and returns if found.
-    Otherwise create Scalar, Vector or Matrix Property depending on shape.
+    Otherwise create Scalar, Vector, or Matrix Property depending on the shape
+    of data in mesh.
+
+    :param mesh_property:   The property to retrieve or its name if a string.
+    :param mesh:            The mesh dataset containing the property data.
+    :returns: A corresponding Property preset or a new Property of correct type.
     """
+    if isinstance(mesh_property, Property):
+        return mesh_property
+
     for prop in all_properties:
-        if prop.output_name == property_name:
+        if prop.output_name == mesh_property:
             return prop
     for prop in all_properties:
-        if prop.data_name == property_name:
+        if prop.data_name == mesh_property:
             return prop
-    if shape is None or len(shape) == 1:
-        return Scalar(property_name)
-    if shape[1] in [2, 3]:
-        return Vector(property_name)
-    return Matrix(property_name)
+    if mesh_property not in set().union(mesh.point_data, mesh.cell_data):
+        msg = f"Property {mesh_property} not found in mesh."
+        raise KeyError(msg)
+    data_shape = mesh[mesh_property].shape
+    if len(data_shape) == 1:
+        return Scalar(mesh_property)
+    if data_shape[1] in [2, 3]:
+        return Vector(mesh_property)
+    return Matrix(mesh_property)
 
 
 def get_dataframe() -> pd.DataFrame:

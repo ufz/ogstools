@@ -18,9 +18,7 @@ def difference(
     :param mesh_property: The property to of interest.
     :returns: A new mesh representing the difference between mesh1 and mesh2.
     """
-    if isinstance(mesh_property, str):
-        data_shape = mesh1[mesh_property].shape
-        mesh_property = presets.get_preset(mesh_property, data_shape)
+    mesh_property = presets.get_preset(mesh_property, mesh1)
     diff_mesh = mesh1.copy(deep=True)
     diff_mesh[mesh_property.data_name] -= mesh2[mesh_property.data_name]
     return diff_mesh

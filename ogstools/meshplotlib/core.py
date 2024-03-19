@@ -224,9 +224,7 @@ def subplot(
     Custom levels and a colormap string can be provided.
     """
 
-    if isinstance(mesh_property, str):
-        data_shape = mesh[mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
+    mesh_property = get_preset(mesh_property, mesh)
     if mesh.get_cell(0).dimension == 3:
         msg = "meshplotlib is for 2D meshes only, but found 3D elements."
         raise ValueError(msg)
@@ -261,18 +259,15 @@ def subplot(
         levels = compute_levels(p_min, p_max, num_levels)
     cmap, norm = get_cmap_norm(levels, mesh_property)
 
-    if (
-        mesh_property.data_name in mesh.cell_data
-        and mesh_property.data_name not in mesh.point_data
-    ):
+    if mesh_property.data_name in mesh.point_data:
+        ax.tricontourf(x, y, tri, values, levels=levels, cmap=cmap, norm=norm)
+        if _q_zero_line(mesh_property, levels):
+            ax.tricontour(x, y, tri, values, levels=[0], colors="w")
+    else:
         ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
         if mesh_property.is_mask():
             ax.tripcolor(x, y, tri, facecolors=values, mask=(values == 1),
                          cmap=cmap, norm=norm, hatch="/")  # fmt: skip
-    else:
-        ax.tricontourf(x, y, tri, values, levels=levels, cmap=cmap, norm=norm)
-        if _q_zero_line(mesh_property, levels):
-            ax.tricontour(x, y, tri, values, levels=[0], colors="w")
 
     surf = mesh.extract_surface()
 
@@ -435,9 +430,7 @@ def get_combined_levels(
     """
     Calculate well spaced levels for the encompassing property range in meshes.
     """
-    if isinstance(mesh_property, str):
-        data_shape = meshes[0][mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
+    mesh_property = get_preset(mesh_property, meshes[0])
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
@@ -509,7 +502,7 @@ def _draw_plot(
             _levels = (
                 combined_levels
                 if setup.combined_colorbar
-                else get_combined_levels(np_meshes[i, j], mesh_property)
+                else get_combined_levels([np_meshes[i, j]], mesh_property)
             )
             subplot(np_meshes[i, j], mesh_property, np_axs[i, j], _levels)
 
@@ -547,7 +540,7 @@ def _draw_plot(
             for i in range(shape[0]):
                 for j in range(shape[1]):
                     _levels = get_combined_levels(
-                        np_meshes[i, j], mesh_property
+                        [np_meshes[i, j]], mesh_property
                     )
                     add_colorbars(fig, np_axs[i, j], mesh_property, _levels)
     return fig
@@ -614,9 +607,7 @@ def plot(
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).flatten()
-    if isinstance(mesh_property, str):
-        data_shape = _meshes[0][mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
+    mesh_property = get_preset(mesh_property, _meshes[0])
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
         fig_aspect = np.mean(data_aspects)
@@ -663,9 +654,7 @@ def plot_limit(
     :returns:   A matplotlib Figure
     """
     mesh = mesh_series.read(0)
-    if isinstance(mesh_property, str):
-        data_shape = mesh[mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
+    mesh_property = get_preset(mesh_property, mesh)
     func = {"min": np.min, "max": np.max}[limit]
     vals = mesh_series.values(mesh_property.data_name)
     func(vals, out=mesh[mesh_property.data_name], axis=0)
@@ -710,9 +699,7 @@ def plot_probe(
     points = np.asarray(points)
     if len(points.shape) == 1:
         points = points[np.newaxis]
-    if isinstance(mesh_property, str):
-        data_shape = mesh_series.read(0)[mesh_property].shape
-        mesh_property = get_preset(mesh_property, data_shape)
+    mesh_property = get_preset(mesh_property, mesh_series.read(0))
     values = mesh_property.magnitude.transform(
         mesh_series.probe(
             points, mesh_property.data_name, interp_method, interp_backend_pvd
@@ -726,11 +713,9 @@ def plot_probe(
         x_values = time_unit_conversion * mesh_series.timevalues
         x_label = f"time / {time_unit}" if time_unit else "time"
     else:
-        if isinstance(mesh_property_abscissa, str):
-            data_shape = mesh_series.read(0)[mesh_property_abscissa].shape
-            mesh_property_abscissa = get_preset(
-                mesh_property_abscissa, data_shape
-            )
+        mesh_property_abscissa = get_preset(
+            mesh_property_abscissa, mesh_series.read(0)
+        )
         x_values = mesh_property_abscissa.magnitude.transform(
             mesh_series.probe(
                 points,

@@ -173,14 +173,11 @@ class Property:
 
     def _get_data(
         self, mesh: pv.UnstructuredGrid, masked: bool = True
-    ) -> pv.UnstructuredGrid:
+    ) -> np.ndarray:
         """Get the data associated with a scalar or vector property from a mesh."""
-        if (
-            self.data_name not in mesh.point_data
-            and self.data_name not in mesh.cell_data
-        ):
-            msg = f"Property {self.data_name} not found in mesh."
-            raise IndexError(msg)
+        if self.data_name not in set().union(mesh.point_data, mesh.cell_data):
+            msg = f"Data name {self.data_name} not found in mesh."
+            raise KeyError(msg)
         if masked and self.mask_used(mesh):
             return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
                 self.data_name
