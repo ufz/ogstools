@@ -10,7 +10,7 @@ from typing import Any, Optional, Union
 from ogs6py.ogs_regexes.ogs_regexes import ogs_regexes
 
 
-def try_match_parallel_line(
+def _try_match_parallel_line(
     line: str, line_nr: int, regex: re.Pattern, pattern_class
 ):
     if match := regex.match(line):
@@ -50,6 +50,18 @@ def try_match_serial_line(
 
 
 def mpi_processes(file_name: Union[str, Path]) -> int:
+    """
+    Counts the number of MPI processes started by OpenGeoSys-6 by detecting
+    specific log entries in a given file. It assumes that each MPI process
+    will log two specific messages: "This is OpenGeoSys-6 version" and
+    "OGS started on". The function counts occurrences of these messages and
+    divides the count by two to estimate the number of MPI processes.
+
+    :param file_name: The path to the log file, as either a string or a Path object.
+    :return: An integer representing the estimated number of MPI processes
+             based on the log file's content.
+
+    """
     occurrences = 0
     if isinstance(file_name, str):
         file_name = Path(file_name)
@@ -92,7 +104,7 @@ def parse_file(
 
     if parallel_log:
         process_regex = "\\[(\\d+)\\]\\ "
-        try_match = try_match_parallel_line
+        try_match = _try_match_parallel_line
     else:
         process_regex = ""
         try_match = try_match_serial_line

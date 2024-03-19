@@ -4,12 +4,16 @@
 #              http://www.opengeosys.org/project/license
 
 
+from typing import Callable
+
 import numpy as np
 import pandas as pd
 
 
 # Helper functions
-def check_input(df: pd.DataFrame, interest: list[str], context: list[str]):
+def _check_input(
+    df: pd.DataFrame, interest: list[str], context: list[str]
+) -> None:
     diff = set(interest) - set(df.columns)
     if diff:
         msg = "Column(s) of interest ({}) is/are not present in table".format(
@@ -25,7 +29,9 @@ def check_input(df: pd.DataFrame, interest: list[str], context: list[str]):
         )
 
 
-def check_output(pt: pd.DataFrame, interest: list[str], context: list[str]):
+def _check_output(
+    pt: pd.DataFrame, interest: list[str], context: list[str]
+) -> None:
     if pt.empty:
         msg = "The values of {} are not associated to all of {}. Call or see fill_ogs_context".format(
             ",".join(interest), ",".join(context)
@@ -34,12 +40,28 @@ def check_output(pt: pd.DataFrame, interest: list[str], context: list[str]):
 
 
 # decorator for analyses
-def pre_post_check(interest: list[str], context: list[str]):
-    def wrap(f):
+def pre_post_check(interest: list[str], context: list[str]) -> Callable:
+    """
+    A decorator for analyzing pandas DataFrames before and after applying a function.
+    It checks the DataFrame against specified 'interest' and 'context' criteria both
+    before and after the function is called.
+
+    Parameters:
+    - interest (List[str]): A list of strings indicating the columns of interest in the DataFrame.
+    - context (List[str]): A list of strings indicating the context columns in the DataFrame
+                           that should be checked.
+
+    Returns:
+    - A decorator function that takes a function accepting a pandas DataFrame and
+      returns a modified DataFrame, wrapping it with pre-check and post-check logic
+      based on the specified 'interest' and 'context'.
+    """
+
+    def wrap(func):
         def wrapped_f(df):
-            check_input(df, interest, context)
-            pt = f(df)
-            check_output(pt, interest, context)
+            _check_input(df, interest, context)
+            pt = func(df)
+            _check_output(pt, interest, context)
             return pt
 
         return wrapped_f
@@ -47,36 +69,34 @@ def pre_post_check(interest: list[str], context: list[str]):
     return wrap
 
 
-"""
-Analysis with focus on computation time per time step. It combines time step specific measurements 'output time'
-and 'time step solution time' with iteration specific measurements 'assembly time', 'linear solver time', 'Dirichlet time'.
-Time from iteration are accumulated.
-"""
-
-
 def analysis_time_step(df: pd.DataFrame):
+    """
+    Analysis with focus on computation time per time step. It combines time step specific measurements 'output time'
+    and 'time step solution time' with iteration specific measurements 'assembly time', 'linear solver time', 'Dirichlet time'.
+    Time from iteration are accumulated.
+    """
     interest1 = ["output_time", "time_step_solution_time", "step_size"]
     interest2 = ["assembly_time", "linear_solver_time", "dirichlet_time"]
     interest = [*interest1, *interest2]
     context = ["mpi_process", "time_step"]
-    check_input(df, interest, context)
+    _check_input(df, interest, context)
 
     dfe_ts = df.pivot_table(interest1, context)
     # accumulates coupling iterations and newton iterations
     dfe_tsi = df.pivot_table(interest2, context, aggfunc="sum")
 
     dfe = dfe_ts.merge(dfe_tsi, left_index=True, right_index=True)
-    check_output(dfe, interest, context)
+    _check_output(dfe, interest, context)
     return dfe
 
 
 def analysis_simulation(df: pd.DataFrame):
     interest = ["execution_time"]  # 'start_time'
     context = ["mpi_process"]
-    check_input(df, interest, context)
+    _check_input(df, interest, context)
 
     pt = df.pivot_table(interest, context)
-    check_output(pt, interest, context)
+    _check_output(pt, interest, context)
     return pt
 
 
@@ -92,7 +112,7 @@ def analysis_convergence_newton_iteration(df: pd.DataFrame):
         ]
         if "component" in df.columns:
             context.append("component")
-        check_input(df, interest, context)
+        _check_input(df, interest, context)
         # Eliminate all entries for coupling iteration (not of interest in this study)
         dfe_newton_iteration[
             "coupling_iteration"
@@ -112,10 +132,10 @@ def analysis_convergence_newton_iteration(df: pd.DataFrame):
         context = ["time_step", "process", "iteration_number"]
         if "component" in df.columns:
             context.append("component")
-        check_input(df, interest, context)
+        _check_input(df, interest, context)
         pt = dfe_newton_iteration.pivot_table(interest, context)
 
-    check_output(pt, interest, context)
+    _check_output(pt, interest, context)
     return pt
 
 
@@ -130,7 +150,7 @@ def analysis_convergence_coupling_iteration(df: pd.DataFrame):
     context = ["time_step", "coupling_iteration", "coupling_iteration_process"]
     if "component" in df.columns:
         context.append("component")
-    check_input(df, interest, context)
+    _check_input(df, interest, context)
 
     dfe_convergence_coupling_iteration[
         "coupling_iteration"
@@ -147,16 +167,16 @@ def analysis_convergence_coupling_iteration(df: pd.DataFrame):
     )
 
     pt = dfe_convergence_coupling_iteration.pivot_table(interest, context)
-    check_output(pt, interest, context)
+    _check_output(pt, interest, context)
     return pt
 
 
 def time_step_vs_iterations(df: pd.DataFrame):
     interest = ["iteration_number"]
     context = ["time_step"]
-    check_input(df, interest, context)
+    _check_input(df, interest, context)
     pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc=np.max)
-    check_output(pt, interest, context)
+    _check_output(pt, interest, context)
     return pt
 
 
@@ -167,10 +187,10 @@ def analysis_simulation_termination(df: pd.DataFrame):
     context = ["message", "line", "mpi_process", "type"]
 
     if "message" in df:
-        check_input(df, interest, context)
+        _check_input(df, interest, context)
         df2 = df.dropna(subset=interest)[context]
         # ToDo Merge columns together and add a column for type (warning, error, critical)
-        check_output(df2, interest, context)
+        _check_output(df2, interest, context)
         return df2
     return pd.DataFrame()
 
