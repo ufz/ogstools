@@ -6,25 +6,45 @@
 #              http://www.opengeosys.org/project/license
 
 import re
+
 from ogs6py.ogs_regexes.ogs_regexes import ogs_regexes
 
 
-def try_match_parallel_line(line: str, line_nr: int, regex: re.Pattern, pattern_class):
+def try_match_parallel_line(
+    line: str, line_nr: int, regex: re.Pattern, pattern_class
+):
     if match := regex.match(line):
         # Line , Process, Type specific
-        ts=pattern_class.type_str()
-        types = (str,int, int,) + tuple(pattern_class.__annotations__.values())
-        match_with_line = (ts,line_nr,) + match.groups()
+        ts = pattern_class.type_str()
+        types = (
+            str,
+            int,
+            int,
+        ) + tuple(pattern_class.__annotations__.values())
+        match_with_line = (
+            ts,
+            line_nr,
+        ) + match.groups()
         return [ctor(s) for ctor, s in zip(types, match_with_line)]
     return None
 
 
-def try_match_serial_line(line: str, line_nr: int, regex: re.Pattern, pattern_class):
+def try_match_serial_line(
+    line: str, line_nr: int, regex: re.Pattern, pattern_class
+):
     if match := regex.match(line):
         # Line , Process, Type specific
-        ts=pattern_class.type_str()
-        types = (str, int, int,) + tuple(pattern_class.__annotations__.values())
-        match_with_line = (ts,line_nr, 0,) + match.groups()
+        ts = pattern_class.type_str()
+        types = (
+            str,
+            int,
+            int,
+        ) + tuple(pattern_class.__annotations__.values())
+        match_with_line = (
+            ts,
+            line_nr,
+            0,
+        ) + match.groups()
         return [ctor(s) for ctor, s in zip(types, match_with_line)]
     return None
 
@@ -34,10 +54,12 @@ def mpi_processes(file_name):
     with open(file_name) as file:
         lines = iter(file)
         # There is no synchronisation barrier between both info, we count both and divide
-        while re.search("info: This is OpenGeoSys-6 version|info: OGS started on", next(lines)):
+        while re.search(
+            "info: This is OpenGeoSys-6 version|info: OGS started on",
+            next(lines),
+        ):
             occurrences = occurrences + 1
-        processes = int(occurrences / 2)
-        return processes
+        return int(occurrences / 2)
 
 
 def parse_file(file_name, maximum_lines=None, force_parallel=False):
@@ -45,10 +67,10 @@ def parse_file(file_name, maximum_lines=None, force_parallel=False):
     parallel_log = force_parallel or mpi_processes(file_name) > 1
 
     if parallel_log:
-        process_regex = '\\[(\\d+)\\]\\ '
+        process_regex = "\\[(\\d+)\\]\\ "
         try_match = try_match_parallel_line
     else:
-        process_regex = ''
+        process_regex = ""
         try_match = try_match_serial_line
 
     def compile_re_fn(mpi_process_regex):
@@ -60,11 +82,13 @@ def parse_file(file_name, maximum_lines=None, force_parallel=False):
     number_of_lines_read = 0
     with open(file_name) as file:
         lines = iter(file)
-        records = list()
+        records = []
         for line in lines:
             number_of_lines_read += 1
 
-            if (maximum_lines is not None) and (maximum_lines > number_of_lines_read):
+            if (maximum_lines is not None) and (
+                maximum_lines > number_of_lines_read
+            ):
                 break
 
             for key, value in patterns:
@@ -73,4 +97,3 @@ def parse_file(file_name, maximum_lines=None, force_parallel=False):
                     break
 
     return records
-
