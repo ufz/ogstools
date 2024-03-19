@@ -29,7 +29,7 @@ def _try_match_parallel_line(
     return None
 
 
-def try_match_serial_line(
+def _try_match_serial_line(
     line: str, line_nr: int, regex: re.Pattern, pattern_class
 ):
     if match := regex.match(line):
@@ -107,7 +107,7 @@ def parse_file(
         try_match = _try_match_parallel_line
     else:
         process_regex = ""
-        try_match = try_match_serial_line
+        try_match = _try_match_serial_line
 
     def compile_re_fn(mpi_process_regex):
         return lambda regex: re.compile(mpi_process_regex + regex)
