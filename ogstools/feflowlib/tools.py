@@ -48,16 +48,25 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
 
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     """
-    Add fields bulk_node_ids and bulk_element_ids to the given bulk mesh.
+    Add data arrays for bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param mesh: bulk mesh
     """
     # The format must be unsigned integer, as it is required by OGS
     mesh["bulk_node_ids"] = np.arange(mesh.n_points, dtype=np.uint64)
     mesh.cell_data["bulk_element_ids"] = np.arange(
         mesh.n_cells, dtype=np.uint64
     )
+
+
+def remove_bulk_ids(mesh: pv.UnstructuredGrid):
+    """
+    Remove data arrays for bulk_node_ids and bulk_element_ids of the given bulk mesh.
+
+    :param mesh: bulk mesh
+    """
+    mesh.point_data.remove("bulk_node_ids")
+    mesh.cell_data.remove("bulk_element_ids")
 
 
 def extract_point_boundary_conditions(
@@ -111,8 +120,7 @@ def extract_point_boundary_conditions(
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
     # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
-    mesh.point_data.remove("bulk_node_ids")
-    mesh.cell_data.remove("bulk_element_ids")
+    remove_bulk_ids(mesh)
     return dict_of_point_boundary_conditions
 
 
@@ -172,8 +180,7 @@ def extract_cell_boundary_conditions(
     # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
     topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
     # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
-    mesh.point_data.remove("bulk_node_ids")
-    mesh.cell_data.remove("bulk_element_ids")
+    remove_bulk_ids(mesh)
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
