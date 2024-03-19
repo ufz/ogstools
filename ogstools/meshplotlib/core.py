@@ -624,7 +624,7 @@ def plot(
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is None:
         _draw_plot(meshes, mesh_property, ax=ax)
-        ax.set_aspect(1.0 / ax_aspects[0], share=True)
+        ax.set_aspect(1.0 / ax_aspects[0])
     elif ax is None and fig is not None:
         fig = _draw_plot(meshes, mesh_property, fig=fig)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
@@ -632,7 +632,7 @@ def plot(
     elif ax is not None and fig is not None:
         _draw_plot(meshes, mesh_property, fig=fig, ax=ax)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
-            ax.set_aspect(1.0 / aspect, adjustable="box")
+            ax.set_aspect(1.0 / aspect)
     return fig
 
 
