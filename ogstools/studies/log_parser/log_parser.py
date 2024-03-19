@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2012-2022, OpenGeoSys Community (http://www.opengeosys.org)
 #            Distributed under a Modified BSD License.
 #              See accompanying file LICENSE.txt or
 #              http://www.opengeosys.org/project/license
 
 import re
+from pathlib import Path
 
 from ogs6py.ogs_regexes.ogs_regexes import ogs_regexes
 
@@ -51,7 +50,8 @@ def try_match_serial_line(
 
 def mpi_processes(file_name):
     occurrences = 0
-    with open(file_name) as file:
+    file_name = Path(file_name)
+    with file_name.open() as file:
         lines = iter(file)
         # There is no synchronisation barrier between both info, we count both and divide
         while re.search(
@@ -63,6 +63,7 @@ def mpi_processes(file_name):
 
 
 def parse_file(file_name, maximum_lines=None, force_parallel=False):
+    file_name = Path(file_name)
     ogs_res = ogs_regexes()
     parallel_log = force_parallel or mpi_processes(file_name) > 1
 
@@ -80,7 +81,7 @@ def parse_file(file_name, maximum_lines=None, force_parallel=False):
     patterns = [(compile_re(k), v) for k, v in ogs_res]
 
     number_of_lines_read = 0
-    with open(file_name) as file:
+    with file_name.open() as file:
         lines = iter(file)
         records = []
         for line in lines:

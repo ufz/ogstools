@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2012-2022, OpenGeoSys Community (http://www.opengeosys.org)
 #            Distributed under a Modified BSD License.
 #              See accompanying file LICENSE.txt or
@@ -174,8 +172,7 @@ def analysis_simulation_termination(df):
         # ToDo Merge columns together and add a column for type (warning, error, critical)
         check_output(df2, interest, context)
         return df2
-    else:
-        return pd.DataFrame()
+    return pd.DataFrame()
 
 
 def fill_ogs_context(df):
@@ -197,8 +194,14 @@ def fill_ogs_context(df):
         if column in int_columns:
             try:
                 df[column] = df[column].astype("Int64")
-            except:
-                print(f"Could not convert column '{column}' to integer")
+            except ValueError:
+                print(
+                    f"Could not convert column '{column}' to integer due to value error"
+                )
+            except TypeError:
+                print(
+                    f"Could not convert column '{column}' to integer due to type error"
+                )
 
     # Some logs do not contain information about time_step and iteration
     # The information must be collected by context (by surrounding log lines from same mpi_process)
