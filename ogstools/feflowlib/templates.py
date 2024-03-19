@@ -82,6 +82,10 @@ def liquid_flow(
     :param saving_path: path of ogs simulation results
     :param model: ogs model, which shall be used with the template
     """
+    # FEFLOW uses hydraulic HEAD instead of pressure as primary variable,
+    # which is why the gravity is calculated in the hydraulic conductivity.
+    # That is why, in this case we can set the gravity to 0 in all needed spatial
+    # directions.
     gravity = "0 0" if dimension2D else "0 0 0"
     model.processes.set_process(
         name="LiquidFlow",

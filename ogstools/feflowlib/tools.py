@@ -535,6 +535,8 @@ def materials_in_HT(
             medium_id=material_id,
             name="permeability",
             type="Constant",
+            # Theoretically an anisotropy angle can be applied, but it is not implemented
+            # in this case.
             value=str(material_properties[material_id]["permeability"])
             + " "
             + str(
@@ -699,6 +701,12 @@ def setup_prj_file(
                 )
 
     for cell_data in mesh.cell_data:
+        """
+        At the moment, P_IOFLOW and P_SOUF have only been tested with 3D
+        meshes. That is why, we only write them to the prj-file
+        if the mesh is 3D and their value is non-zero. If it is 0,
+        they do not matter, since they will not have an effect.
+        """
         if (
             cell_data in ["P_IOFLOW", "P_SOUF"]
             and np.unique(mesh.cell_data[cell_data]) != 0

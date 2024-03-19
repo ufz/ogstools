@@ -194,8 +194,8 @@ def _point_and_cell_data(
         list(MaterialIDs.values())[0]
     ]
 
-    # if MaterialIDs are not saved in selections but in P_LOOKUP_REGION
-    # then take them from P_LOOK_UP_REGION:
+    # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
+    # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
     if "P_LOOKUP_REGION" in cell_data and len(
         np.unique(MaterialIDs.values())
     ) < len(np.unique(cell_data["P_LOOKUP_REGION"])):
