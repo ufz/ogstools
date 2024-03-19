@@ -48,16 +48,25 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
 
 def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     """
-    Add fields bulk_node_ids and bulk_element_ids to the given bulk mesh.
+    Add data arrays for bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
-    :param mesh_name: name of the mesh
-    :type mesh_name: str
+    :param mesh: bulk mesh
     """
     # The format must be unsigned integer, as it is required by OGS
     mesh["bulk_node_ids"] = np.arange(mesh.n_points, dtype=np.uint64)
     mesh.cell_data["bulk_element_ids"] = np.arange(
         mesh.n_cells, dtype=np.uint64
     )
+
+
+def remove_bulk_ids(mesh: pv.UnstructuredGrid):
+    """
+    Remove data arrays for bulk_node_ids and bulk_element_ids of the given bulk mesh.
+
+    :param mesh: bulk mesh
+    """
+    mesh.point_data.remove("bulk_node_ids")
+    mesh.cell_data.remove("bulk_element_ids")
 
 
 def extract_point_boundary_conditions(
@@ -75,29 +84,25 @@ def extract_point_boundary_conditions(
     :rtype: dict
     """
     dict_of_point_boundary_conditions = {}
+    # Assigning bulk node ids because format needs to be unsigned integer for OGS.
+    # Otherwise vtkOriginalPointIds would be fine.
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     surf_mesh = mesh.extract_surface()
     # remove all the point data that are not of interest
     for point_data in surf_mesh.point_data:
-        if not all(["_BC" in point_data]) and point_data != "bulk_node_ids":
+        if "_BC" not in point_data and point_data != "bulk_node_ids":
             surf_mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
     for point_data in surf_mesh.point_data:
         if point_data != "bulk_node_ids":
-            dirichlet_bool = "_BC_" not in point_data
-            if "_4TH" in point_data:
-                filtered_points = mesh.extract_points(
-                    [not np.isnan(x) for x in mesh[point_data]],
-                    adjacent_cells=False,
-                    include_cells=False,
-                )
-            else:
-                filtered_points = surf_mesh.extract_points(
-                    [not np.isnan(x) for x in surf_mesh[point_data]],
-                    adjacent_cells=False,
-                    include_cells=dirichlet_bool,
-                )
+            BC_2nd_or_3rd = "2ND" in point_data or "3RD" in point_data
+            filter_mesh = mesh if "_4TH" in point_data else surf_mesh
+            filtered_points = filter_mesh.extract_points(
+                [not np.isnan(x) for x in filter_mesh[point_data]],
+                adjacent_cells=False,
+                include_cells=BC_2nd_or_3rd,
+            )
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
@@ -110,6 +115,8 @@ def extract_point_boundary_conditions(
             dict_of_point_boundary_conditions[
                 str(out_mesh_path / point_data) + ".vtu"
             ] = filtered_points
+    # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
+    remove_bulk_ids(mesh)
     return dict_of_point_boundary_conditions
 
 
@@ -168,6 +175,8 @@ def extract_cell_boundary_conditions(
             topsurf.point_data.remove(pt_data)
     # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
     topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
+    # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
+    remove_bulk_ids(mesh)
     return (
         bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
         topsurf,
