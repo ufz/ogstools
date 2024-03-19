@@ -5,6 +5,7 @@
 
 import re
 from pathlib import Path
+from typing import Any, Optional, Union
 
 from ogs6py.ogs_regexes.ogs_regexes import ogs_regexes
 
@@ -48,9 +49,10 @@ def try_match_serial_line(
     return None
 
 
-def mpi_processes(file_name):
+def mpi_processes(file_name: Union[str, Path]) -> int:
     occurrences = 0
-    file_name = Path(file_name)
+    if isinstance(file_name, str):
+        file_name = Path(file_name)
     with file_name.open() as file:
         lines = iter(file)
         # There is no synchronisation barrier between both info, we count both and divide
@@ -62,7 +64,28 @@ def mpi_processes(file_name):
         return int(occurrences / 2)
 
 
-def parse_file(file_name, maximum_lines=None, force_parallel=False):
+def parse_file(
+    file_name: Union[str, Path],
+    maximum_lines: Optional[int] = None,
+    force_parallel: bool = False,
+) -> list[Any]:
+    """
+    Parses a log file from OGS, applying regex patterns to extract specific information,
+
+    The function supports processing files in serial or parallel mode. In
+    parallel mode, a specific regex is used to match log entries from different
+    processes.
+
+    :param file_name: The path to the log file, as a string or Path object.
+    :param maximum_lines: Optional maximum number of lines to read from the file.
+                          If not provided, the whole file is read.
+    :param force_parallel: Should only be set to True if OGS run with MPI with a single core
+    :return: A list of extracted records based on the applied regex patterns.
+             The exact type and structure of these records depend on the regex
+             patterns and their associated processing functions.
+    """
+    if isinstance(file_name, str):
+        file_name = Path(file_name)
     file_name = Path(file_name)
     ogs_res = ogs_regexes()
     parallel_log = force_parallel or mpi_processes(file_name) > 1
