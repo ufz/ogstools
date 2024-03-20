@@ -9,6 +9,7 @@ We uses the project file from the following benchmark:
 `<t_end> 1e8 </t_end>`
 and for the staggered scheme the variant taken from
 `Tests/Data/Parabolic/HT/StaggeredCoupling/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj`
+
 """
 
 # %%
