@@ -184,6 +184,13 @@ class Property:
             ]
         return mesh[self.data_name]
 
+    def get_label(self) -> str:
+        "Creates property label in format 'property_name / property_unit'"
+        unit_str = (
+            f" / {self.get_output_unit()}" if self.get_output_unit() else ""
+        )
+        return self.output_name.replace("_", " ") + unit_str
+
 
 @dataclass
 class Scalar(Property):
