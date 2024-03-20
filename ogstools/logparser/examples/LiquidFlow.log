@@ -1,0 +1,59 @@
+info: This is OpenGeoSys-6 version 6.5.0-286-ge7ef7067.
+info: OGS started on 2024-03-19 14:15:14+0100.
+info: Reading project file /home/meisel/o/s/Tests/Data/Parabolic/LiquidFlow/SimpleSynthetics/PrimaryVariableConstraintDirichletBC/cuboid_1x1x1_hex_1000_Dirichlet_Dirichlet_1.prj.
+info: readRasters ...
+info: readRasters done
+info: ConstantParameter: p0
+info: ConstantParameter: part_of_left_boundary_Dirichlet
+info: ConstantParameter: part_of_right_boundary_Dirichlet
+info: ConstantParameter: constant_porosity_parameter
+info: ConstantParameter: kappa1
+info: ConstantParameter: p_spatial
+info: ConstantParameter: zero
+info: ConstantParameter: p_Dirichlet_top
+info: No source terms for process variable 'pressure' found.
+info: LiquidFlow process is set to be linear.
+info: Initialize processes.
+info: [time] Output of timestep 0 took 0.00556133 s.
+info: OpenGeoSys is now initialized.
+info: OGS started on 2024-03-19 14:15:14+0100.
+info: Solve processes.
+info: === Time stepping at step #1 and time 43200 with step size 43200
+info: [time] Assembly took 0.0763653 s.
+info: [time] Applying Dirichlet BCs took 0.00057093 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+info: 	 iteration: 47/10000
+info: 	 residual: 5.835249e-21
+
+info: [time] Linear solver took 0.0120602 s.
+info: [time] Iteration #1 took 0.0891769 s.
+info: [time] Solving process #0 took 0.0892044 s in time step #1
+info: [time] Time step #1 took 0.0896693 s.
+info: [time] Output of timestep 1 took 0.00817603 s.
+info: === Time stepping at step #2 and time 86400 with step size 43200
+info: [time] Assembly took 0.0627239 s.
+info: [time] Applying Dirichlet BCs took 0.000460932 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+info: 	 iteration: 55/10000
+info: 	 residual: 7.003839e-21
+
+info: [time] Linear solver took 0.00256477 s.
+info: [time] Iteration #1 took 0.065935 s.
+info: [time] Solving process #0 took 0.0659825 s in time step #2
+info: [time] Time step #2 took 0.0663716 s.
+info: [time] Output of timestep 2 took 0.0160351 s.
+info: The whole computation of the time stepping took 2 steps, in which
+	 the accepted steps are 2, and the rejected steps are 0.
+
+info: [time] Execution took 0.18038 s.
+info: OGS terminated on 2024-03-19 14:15:14+0100.
