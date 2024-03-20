@@ -50,7 +50,7 @@ ax[0].set_title(r"$T(\mathrm{t}_{0})$")
 plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
 ax[1].set_title(r"$T(\mathrm{t}_{end})$")
 diff_mesh = difference(
-    meshseries.read(0), meshseries.read(1), presets.temperature
+    presets.temperature, meshseries.read(1), meshseries.read(0)
 )
 plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")

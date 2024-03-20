@@ -3,8 +3,17 @@
 import unittest
 
 import numpy as np
+from pyvista import UnstructuredGrid
 
-from ogstools.meshlib import MeshSeries, examples
+from ogstools.meshlib import (
+    MeshSeries,
+    difference,
+    difference_matrix,
+    difference_pairwise,
+    examples,
+)
+from ogstools.meshplotlib import examples as examples_mpl
+from ogstools.propertylib import presets
 
 
 class UtilsTest(unittest.TestCase):
@@ -45,3 +54,66 @@ class UtilsTest(unittest.TestCase):
         for method in ["nearest", "linear", None]:
             values = mesh_series.probe(points, "temperature", method)
             self.assertTrue(not np.any(np.isnan(values)))
+
+    def test_diff_two_meshes(self):
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        mesh1 = meshseries.read(0)
+        mesh2 = meshseries.read(-1)
+        mesh_diff = difference(mesh_property, mesh1, mesh2)
+        self.assertTrue(isinstance(mesh_diff, UnstructuredGrid))
+
+    def test_diff_pairwise(self):
+        n = 5
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        meshes1 = [meshseries.read(0)] * n
+        meshes2 = [meshseries.read(-1)] * n
+        meshes_diff = difference_pairwise(mesh_property, meshes1, meshes2)
+        self.assertTrue(
+            isinstance(meshes_diff, np.ndarray) and len(meshes_diff) == n
+        )
+
+    def test_diff_matrix_single_list(self):
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        meshes1 = [meshseries.read(0), meshseries.read(-1)]
+        meshes_diff = difference_matrix(mesh_property, meshes1)
+        self.assertTrue(
+            isinstance(meshes_diff, np.ndarray)
+            and meshes_diff.shape == (len(meshes1), len(meshes1))
+        )
+
+    def test_diff_matrix_single_numpy(self):
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        meshes1 = np.array([meshseries.read(0), meshseries.read(-1)])
+        meshes_diff = difference_matrix(mesh_property, meshes1)
+        self.assertTrue(
+            isinstance(meshes_diff, np.ndarray)
+            and meshes_diff.shape == (len(meshes1), len(meshes1))
+        )
+
+    def test_diff_matrix_unequal_list(self):
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        meshes1 = [meshseries.read(0), meshseries.read(-1)]
+        meshes2 = [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
+        meshes_diff = difference_matrix(mesh_property, meshes1, meshes2)
+        self.assertTrue(
+            isinstance(meshes_diff, np.ndarray)
+            and meshes_diff.shape == (len(meshes1), len(meshes2))
+        )
+
+    def test_diff_matrix_unequal_numpy(self):
+        meshseries = examples_mpl.meshseries_THM_2D
+        mesh_property = presets.temperature
+        meshes1 = np.array([meshseries.read(0), meshseries.read(-1)])
+        meshes2 = np.array(
+            [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
+        )
+        meshes_diff = difference_matrix(mesh_property, meshes1, meshes2)
+        self.assertTrue(
+            isinstance(meshes_diff, np.ndarray)
+            and meshes_diff.shape == (len(meshes1), len(meshes2))
+        )

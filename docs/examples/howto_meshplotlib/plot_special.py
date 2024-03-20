@@ -44,5 +44,5 @@ fig = plot_limit(mesh_series, si, "min")
 # Difference between the last and he first timestep:
 
 # %%
-diff_mesh = difference(mesh_series.read(-1), mesh_series.read(0), si)
+diff_mesh = difference(si, mesh_series.read(-1), mesh_series.read(0))
 fig = plot(diff_mesh, si.delta)

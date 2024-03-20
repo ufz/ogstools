@@ -77,7 +77,7 @@ fig = meshplotlib.plot(richardson, mesh_property)
 data_key = mesh_property.data_name
 if reference_solution_path is None:
     diff_mesh = meshlib.difference(
-        richardson, topology.sample(meshes[-1]), mesh_property
+        mesh_property, richardson, topology.sample(meshes[-1])
     )
     fig = meshplotlib.plot(diff_mesh, mesh_property.delta)
 else:
@@ -85,7 +85,7 @@ else:
         meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
     )
     diff_mesh = meshlib.difference(
-        reference_solution, richardson, mesh_property
+        mesh_property, reference_solution, richardson
     )
     fig = meshplotlib.plot(diff_mesh, mesh_property.delta)
 
