@@ -135,7 +135,7 @@ class MeshplotlibTest(unittest.TestCase):
     def test_diff_plots(self):
         """Test creation of difference plots."""
         meshseries = examples.meshseries_CT_2D
-        plot(difference(meshseries.read(0), meshseries.read(1), "Si"), "Si")
+        plot(difference("Si", meshseries.read(0), meshseries.read(1)), "Si")
 
     def test_user_defined_ax(self):
         """Test creating plot with subfigures and user provided ax"""
@@ -146,7 +146,7 @@ class MeshplotlibTest(unittest.TestCase):
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
         ax[1].set_title(r"$T(\mathrm{t}_{end})$")
         diff_mesh = difference(
-            meshseries.read(0), meshseries.read(1), presets.temperature
+            presets.temperature, meshseries.read(0), meshseries.read(1)
         )
         plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
         ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
@@ -197,8 +197,8 @@ class MeshplotlibTest(unittest.TestCase):
         ax = ax.flatten()
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
-        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
-        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
+        diff_ab = difference(presets.temperature, mesh_a, mesh_b)
+        diff_ba = difference(presets.temperature, mesh_b, mesh_a)
         plot(diff_ab, presets.temperature.delta, fig=fig, ax=ax[2])
         plot(diff_ba, presets.temperature.delta, fig=fig, ax=ax[3])
         fig.tight_layout()
@@ -211,8 +211,8 @@ class MeshplotlibTest(unittest.TestCase):
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
-        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
+        diff_ab = difference(presets.temperature, mesh_a, mesh_b)
+        diff_ba = difference(presets.temperature, mesh_b, mesh_a)
         plot(diff_ab, presets.temperature.delta, fig=fig, ax=ax[0][1])
         plot(diff_ba, presets.temperature.delta, fig=fig, ax=ax[1][1])
         ax = label_spatial_axes(ax, np.array([0, 1]))
