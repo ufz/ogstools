@@ -195,11 +195,34 @@ def analysis_simulation_termination(df: pd.DataFrame):
     return pd.DataFrame()
 
 
-def fill_ogs_context(df: pd.DataFrame):
-    # Some columns that contain actual integer values are converted to float
-    # See https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
-    # ToDo list of columns with integer values are known from regular expression
+def fill_ogs_context(df_raw_log: pd.DataFrame):
+    """
+    Fill missing values in OpenGeoSys (OGS) log DataFrame by context.
 
+    This function fills missing values in an OpenGeoSys (OGS) log DataFrame by context. Some logs do not contain information about time_step and iteration. The information must be collected by context, by surrounding log lines from the same MPI process. Logs are grouped by MPI process to get only surrounding log lines from the same MPI process. It is assumed that all following lines belong to the same time step until the next collected value of the time step. Some columns that contain actual integer values are converted to float.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame containing the raw OGS log data. Usually, the result of pd.DataFrame(parse_file(file))
+
+    Returns:
+    - pd.DataFrame: DataFrame with missing values filled by context.
+
+    References:
+    - Pandas documentation : https://pandas.pydata.org/pandas-docs/stable/user_guide/
+
+    Todo:
+    - List of columns with integer values are known from regular expression.
+
+    Notes:
+    - Some logs do not contain information about time_step and iteration. The information must be collected by context (by surrounding log lines from same mpi_process)
+      Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process
+      There are log lines that give the current time step (when time step starts).
+      It can be assumed that in all following lines belong to this time steps, until next collected value of time step
+      Some columns that contain actual integer values are converted to float
+      See https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
+      ToDo list of columns with integer values are known from regular expression
+
+    """
     int_columns = [
         "line",
         "mpi_process",
@@ -210,10 +233,10 @@ def fill_ogs_context(df: pd.DataFrame):
         "component",
         "process",
     ]
-    for column in df.columns:
+    for column in df_raw_log.columns:
         if column in int_columns:
             try:
-                df[column] = df[column].astype("Int64")
+                df_raw_log[column] = df_raw_log[column].astype("Int64")
             except ValueError:
                 print(
                     f"Could not convert column '{column}' to integer due to value error"
@@ -223,36 +246,29 @@ def fill_ogs_context(df: pd.DataFrame):
                     f"Could not convert column '{column}' to integer due to type error"
                 )
 
-    # Some logs do not contain information about time_step and iteration
-    # The information must be collected by context (by surrounding log lines from same mpi_process)
-    # Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process
-
-    # There are log lines that give the current time step (when time step starts).
-    # It can be assumed that in all following lines belong to this time steps, until next collected value of time step
-    df["time_step"] = (
-        df.groupby("mpi_process")[["time_step"]]
+    df_raw_log["time_step"] = (
+        df_raw_log.groupby("mpi_process")[["time_step"]]
         .fillna(method="ffill")
         .fillna(value=0)
     )
 
     # Back fill, because iteration number can be found in logs at the END of the iteration
-    df["iteration_number"] = df.groupby("mpi_process")[
+    df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
         ["iteration_number"]
     ].fillna(method="bfill")
 
-    # ToDo Comment
-    if "component" in df:
-        df["component"] = df.groupby("mpi_process")[["component"]].fillna(
-            value=-1
-        )
+    if "component" in df_raw_log:
+        df_raw_log["component"] = df_raw_log.groupby("mpi_process")[
+            ["component"]
+        ].fillna(value=-1)
     # Forward fill because process will be printed in the beginning - applied to all subsequent
-    if "process" in df:
-        df["process"] = df.groupby("mpi_process")[["process"]].fillna(
-            method="bfill"
-        )
+    if "process" in df_raw_log:
+        df_raw_log["process"] = df_raw_log.groupby("mpi_process")[
+            ["process"]
+        ].fillna(method="bfill")
     # Attention - coupling iteration applies to successor line and to all other predecessors - it needs further processing for specific analysis
-    if "coupling_iteration_process" in df:
-        df["coupling_iteration_process"] = df.groupby("mpi_process")[
-            ["coupling_iteration_process"]
-        ].fillna(method="ffill", limit=1)
-    return df
+    if "coupling_iteration_process" in df_raw_log:
+        df_raw_log["coupling_iteration_process"] = df_raw_log.groupby(
+            "mpi_process"
+        )[["coupling_iteration_process"]].fillna(method="ffill", limit=1)
+    return df_raw_log

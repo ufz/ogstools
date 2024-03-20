@@ -5,7 +5,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from ogstools.logparser.ogs_regexes import ogs_regexes
 
@@ -80,6 +80,7 @@ def parse_file(
     file_name: Union[str, Path],
     maximum_lines: Optional[int] = None,
     force_parallel: bool = False,
+    ogs_res: Callable = ogs_regexes,
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,
@@ -99,7 +100,6 @@ def parse_file(
     if isinstance(file_name, str):
         file_name = Path(file_name)
     file_name = Path(file_name)
-    ogs_res = ogs_regexes()
     parallel_log = force_parallel or mpi_processes(file_name) > 1
 
     if parallel_log:
@@ -113,7 +113,7 @@ def parse_file(
         return lambda regex: re.compile(mpi_process_regex + regex)
 
     compile_re = compile_re_fn(process_regex)
-    patterns = [(compile_re(k), v) for k, v in ogs_res]
+    patterns = [(compile_re(k), v) for k, v in ogs_res()]
 
     number_of_lines_read = 0
     with file_name.open() as file:
