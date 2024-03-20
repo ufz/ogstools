@@ -154,9 +154,7 @@ def add_colorbars(
     # Formatting the colorbar label and ticks
 
     tick_labels, offset = get_ticklabels(ticks)
-    cb_label = mesh_property.output_name.replace("_", " ")
-    if (unit := mesh_property.get_output_unit()) != "":
-        cb_label += " / " + unit
+    cb_label = mesh_property.get_label()
     if offset is not None:
         if offset[0] == "-":
             cb_label += " + " + offset[1:]
@@ -753,14 +751,8 @@ def plot_probe(
     ax.set_axisbelow(True)
     ax.grid(which="major", color="lightgrey", linestyle="-")
     ax.grid(which="minor", color="0.95", linestyle="--")
-    unit_str = (
-        f" / {mesh_property.get_output_unit()}"
-        if mesh_property.get_output_unit()
-        else ""
-    )
-    y_label = mesh_property.output_name.replace("_", " ") + unit_str
     ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+    ax.set_ylabel(mesh_property.get_label())
     ax.label_outer()
     ax.minorticks_on()
     return fig

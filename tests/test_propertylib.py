@@ -208,3 +208,6 @@ class PhysicalPropertyTest(unittest.TestCase):
         )
 
         self.assertEqual(pp.strain, strain_copy)
+
+    def test_get_label(self):
+        self.assertEqual(pp.pressure.get_label(), "pore pressure / MPa")
