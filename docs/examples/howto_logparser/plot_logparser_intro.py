@@ -1,5 +1,5 @@
 """
-Efficiency study - Introduction
+Log parser - Introduction
 ================================
 
 This basic example shows a how to analyse the OGS log output to get information
@@ -13,12 +13,12 @@ It uses the project file from the following benchmark:
 # %%
 import pandas as pd
 
-from ogstools.studies.efficiency import (
+from ogstools.logparser import (
     fill_ogs_context,
     parse_file,
     time_step_vs_iterations,
 )
-from ogstools.studies.efficiency.examples import (
+from ogstools.logparser.examples import (
     const_viscosity_thermal_convection_log,
 )
 

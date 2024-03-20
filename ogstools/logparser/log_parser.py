@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from ogstools.studies.efficiency.ogs_regexes import ogs_regexes
+from ogstools.logparser.ogs_regexes import ogs_regexes
 
 
 def _try_match_parallel_line(
