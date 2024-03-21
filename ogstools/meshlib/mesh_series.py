@@ -215,6 +215,7 @@ class MeshSeries:
             else f"{mesh_property}_{func}"
         )
         mesh[output_name] = np.empty(vals.shape[1:])
+        assert isinstance(np_func, type(np.max))
         np_func(vals, out=mesh[output_name], axis=0)
         return mesh
 

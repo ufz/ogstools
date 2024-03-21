@@ -6,20 +6,16 @@ from pint.facets.plain import PlainQuantity
 
 from ogstools.propertylib.property import Property, Scalar
 
-from .unit_registry import u_reg
+from .tensor_math import _split_quantity, _to_quantity
 
 ValType = Union[PlainQuantity, np.ndarray]
 
 
-def vector_norm(vals: ValType) -> ValType:
+def vector_norm(values: ValType) -> ValType:
     ":returns: The norm of the vector."
-    if isinstance(vals, PlainQuantity):
-        unit = vals.units
-        vals = vals.magnitude
-    else:
-        unit = None
+    vals, unit = _split_quantity(values)
     result = np.linalg.norm(vals, axis=-1)
-    return result if unit is None else u_reg.Quantity(result, unit)
+    return _to_quantity(result, unit)
 
 
 @dataclass

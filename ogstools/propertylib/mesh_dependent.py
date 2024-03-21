@@ -7,7 +7,7 @@ import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
 from .property import Property
-from .tensor_math import eigenvalues, mean, octahedral_shear
+from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
 
 ValType = Union[PlainQuantity, np.ndarray]
@@ -116,9 +116,8 @@ def fluid_pressure_criterion(
 
     Qty = u_reg.Quantity
     sigma = mesh[mesh_property.data_name]
-    return p_fluid(mesh) - Qty(
-        eigenvalues(-sigma)[..., 0], mesh_property.data_unit
-    )
+    sig_min = _split_quantity(eigenvalues(-sigma))[0][..., 0]
+    return p_fluid(mesh) - Qty(sig_min, mesh_property.data_unit)
 
 
 def dilatancy_critescu(
