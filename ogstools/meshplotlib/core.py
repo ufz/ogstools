@@ -634,35 +634,6 @@ def plot(
     return fig
 
 
-def plot_limit(
-    mesh_series: MeshSeries,
-    mesh_property: Union[Property, str],
-    limit: Literal["min", "max"],
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> mfigure.Figure:
-    """
-    Plot the property limits through all timesteps of a MeshSeries.
-
-    :param mesh_series: MeshSeries object containing the data to be plotted
-    :param property:    The property field to be evaluated
-    :param limit:       Type of limit to be computed
-    :param fig: Matplotlib Figure object to use for plotting (optional)
-    :param ax: Matplotlib Axis object to use for plotting (optional)
-
-    :returns:   A matplotlib Figure
-    """
-    mesh = mesh_series.read(0)
-    mesh_property = get_preset(mesh_property, mesh)
-    func = {"min": np.min, "max": np.max}[limit]
-    vals = mesh_series.values(mesh_property.data_name)
-    func(vals, out=mesh[mesh_property.data_name], axis=0)
-    limit_property = mesh_property.replace(
-        output_name=limit + " " + mesh_property.output_name
-    )
-    return plot(mesh, limit_property, fig=fig, ax=ax)
-
-
 def plot_probe(
     mesh_series: MeshSeries,
     points: np.ndarray,
