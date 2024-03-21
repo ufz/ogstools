@@ -132,6 +132,7 @@ class MeshplotlibTest(unittest.TestCase):
         plot_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
+        plt.close()
 
     def test_diff_plots(self):
         """Test creation of difference plots."""
@@ -163,6 +164,7 @@ class MeshplotlibTest(unittest.TestCase):
         ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
         # fig.suptitle("Test user defined ax")
         fig.tight_layout()
+        plt.close()
 
     def test_user_defined_ax_diff_vals(self):
         """Test creating plot with subfigures and user provided ax with different values plotted"""
@@ -172,7 +174,7 @@ class MeshplotlibTest(unittest.TestCase):
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
         plot(meshseries.read(1), presets.displacement, fig=fig, ax=ax[1])
         fig.suptitle("Test user defined ax")
-        fig.tight_layout()
+        plt.close()
 
     def test_user_defined_fig(self):
         """Test creating plot with subfigures and user provided fig"""
@@ -185,6 +187,7 @@ class MeshplotlibTest(unittest.TestCase):
             fig=fig,
         )
         fig.suptitle("Test user defined fig")
+        plt.close()
 
     def test_update_font_sizes(self):
         """Test creating plot with subfigures and user provided fig"""
@@ -198,6 +201,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
         fig = update_font_sizes(fig, fontsize=25)
         fig.suptitle("Test user defined fig")
+        plt.close()
 
     def test_sharexy(self):
         """Test if labels are skipped if axis are shared"""
@@ -233,12 +237,14 @@ class MeshplotlibTest(unittest.TestCase):
         """Test axes labeling"""
         fig, ax = plt.subplots(2, 2)
         label_spatial_axes(ax, "x", "y")
+        plt.close()
 
     def test_spatial_label_clear(self):
         """Test axes labels clearing"""
         fig, ax = plt.subplots(2, 2)
         label_spatial_axes(ax, "x", "y")
         clear_labels(ax)
+        plt.close()
 
     def test_limit_plots(self):
         """Test creation of limit plots."""
@@ -261,6 +267,7 @@ class MeshplotlibTest(unittest.TestCase):
         plot_probe(mesh_series, points, presets.temperature)
         mesh_property = presets.velocity.replace(data_name="darcy_velocity")
         plot_probe(mesh_series, points, mesh_property)
+        plt.close()
 
     def test_animation(self):
         """Test creation of animation."""
@@ -269,6 +276,7 @@ class MeshplotlibTest(unittest.TestCase):
         titles = [str(tv) for tv in timevalues]
         anim = animate(meshseries, presets.temperature, timevalues, titles)
         anim.to_jshtml()
+        plt.close()
 
     def test_save_animation(self):
         """Test saving of an animation."""
@@ -277,6 +285,7 @@ class MeshplotlibTest(unittest.TestCase):
         anim = animate(meshseries, presets.temperature, timevalues)
         if not save_animation(anim, mkstemp()[1], 5):
             self.skipTest("Saving animation failed.")
+        plt.close()
 
     def test_plot_3D(self):
         """Test creation of slice plots for 3D mesh."""
@@ -285,13 +294,16 @@ class MeshplotlibTest(unittest.TestCase):
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
         plot(meshes, "Spatial Point Data")
         plot(mesh.slice([1, -2, 0]), "Spatial Point Data")
+        plt.close()
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = examples.meshseries_CT_2D.read(0)
         plot(mesh, Scalar("Si"))
+        plt.close()
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = examples.meshseries_XDMF.read(0)
         plot(mesh, presets.pressure)
+        plt.close()
