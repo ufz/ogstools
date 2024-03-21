@@ -1,5 +1,5 @@
 # Author: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
-"""functions to generate a convergence study."""
+"""functions used by logparser."""
 
 from .common_ogs_analyses import (
     analysis_convergence_coupling_iteration,
