@@ -90,16 +90,19 @@ testpaths = ["tests"]
 line-length = 80
 
 [tool.mypy]
-files = "ogstools"
+files = "ogstools/**/*.py"
+# does not work when mypy invoked directly, works in pre-commit as explicitly
+# stated there again:
 exclude = ['.*/examples/.*']
+ignore_missing_imports = true
+scripts_are_modules = true
+# Set to true when current issues are fixed
 strict = false
-show_error_codes = true
-enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+# Delete following lines when strict is true:
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
 warn_unreachable = true
-# Uncomment and fix one by one:
-# check_untyped_defs = true
-# disallow_untyped_defs = true
-# disallow_incomplete_defs =  true
 
 [tool.ruff]
 select = [
