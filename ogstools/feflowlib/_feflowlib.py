@@ -242,7 +242,7 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     :param mesh: mesh
     """
 
-    arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND"]
+    arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND", "P_DIFF"]
     for data in list(mesh.point_data) + list(mesh.cell_data):
         if any(
             to_be_converted in data
