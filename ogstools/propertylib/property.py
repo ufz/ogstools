@@ -91,8 +91,8 @@ class Property:
         """
         Return the transformed data values.
 
-        Converts the data from data_unit to output_unit and apply a function
-        the transformation function of this property. The result is returned by
+        Converts the data from data_unit to output_unit and applies the
+        transformation function of this property. The result is returned by
         default without units. if `strip_unit` is False, a quantity is returned.
 
         Note:

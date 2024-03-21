@@ -33,9 +33,18 @@ meshplotlib.setup.reset()
 si = Scalar(
     data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
 )
-# alternatively:
-# from ogstools.meshlib import MeshSeries
-# mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
+
+# %% [markdown]
+# To read your own data as a mesh series you can do:
+#
+# ..  code-block:: python
+#
+#   from ogstools.meshlib import MeshSeries
+#   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
+#
+# You can also use a property from the available presets instead of needing to
+# create your own:
+# :ref:`sphx_glr_auto_examples_howto_propertylib_plot_propertylib.py`
 
 # %% [markdown]
 # Let's define 4 observation points and plot them on the mesh.

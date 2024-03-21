@@ -41,7 +41,7 @@ fig = plot_limit(mesh_series, si, "min")
 
 
 # %% [markdown]
-# Difference between the last and he first timestep:
+# Difference between the last and the first timestep:
 
 # %%
 diff_mesh = difference(si, mesh_series.read(-1), mesh_series.read(0))
