@@ -29,6 +29,14 @@ cache:
   - make setup_headless
   - source .venv/bin/activate
 
+pre-commit:
+  tags: [shell, envinf]
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+  needs: []
+  script:
+    - pre-commit run --from-ref ${CI_MERGE_REQUEST_DIFF_BASE_SHA} --to-ref HEAD
+
 build:
   script:
     - pip install build
@@ -38,7 +46,6 @@ tests (arch):
   tags: [shell, envinf]
   needs: []
   script:
-    - pre-commit run --all-files
     - *setup-headless
     - make test
 
@@ -135,3 +142,26 @@ user container image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $DOCKER_USER_IMAGE .
     - docker push $DOCKER_USER_IMAGE
+
+code_quality_ruff:
+  image: python:3.10-slim
+  needs: []
+  script:
+    # Use same ruff as in .pre-commit-config.yaml
+    - pip install ruff==0.0.277
+    - ruff . --format gitlab > ruff-code-quality-report.json || true
+  artifacts:
+    reports:
+      codequality: ruff-code-quality-report.json
+
+code_quality_mypy:
+  image: python:3.10-slim
+  needs: []
+  script:
+    # Use same mypy as in .pre-commit-config.yaml
+    - pip install mypy==1.4.1 mypy-to-codeclimate
+    - mypy ogstools > mypy-output.txt || true
+    - mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
+  artifacts:
+    reports:
+      codequality: mypy-code-quality-report.json
