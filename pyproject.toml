@@ -26,6 +26,7 @@ dependencies = [
   "ogs>=6.5.1.dev0",
   "ogs6py>=0.370",
   "tqdm>=4.60",
+  "typeguard>=4.0.0",
   "VTUinterface>=0.704",
 ]
 

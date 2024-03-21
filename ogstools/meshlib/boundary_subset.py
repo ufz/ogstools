@@ -5,6 +5,7 @@ from typing import Union
 import numpy as np
 import pyvista as pv
 from ogs import cli
+from typeguard import typechecked
 
 
 class Surface:
@@ -19,11 +20,8 @@ class Surface:
     def material_id(self) -> int:
         return self._material_id
 
-    def __init__(
-        self,
-        input: Union[Path, pv.DataSet],
-        material_id: int,
-    ):
+    @typechecked
+    def __init__(self, input: Union[Path, pv.DataSet], material_id: int):
         """Initialize a surface mesh. Either from pyvista or from a file."""
         self._material_id = material_id
 
@@ -37,11 +35,6 @@ class Surface:
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
             pv.save_meshio(self.filename, self.mesh, file_format="vtu")
-        else:
-            msg = "{} given, must be either Path or pyvista Dataset.".format(
-                self.filename
-            )
-            raise ValueError(msg)
 
         self.mesh.cell_data["MaterialIDs"] = (
             np.ones(self.mesh.n_cells) * self.material_id

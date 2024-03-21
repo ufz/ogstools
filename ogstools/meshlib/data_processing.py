@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 import pyvista as pv
+from typeguard import typechecked
 
 from ogstools.propertylib import Property
 
@@ -85,7 +86,7 @@ def difference_pairwise(
     )
 
 
-# TODO: let this also return meshes and a property
+@typechecked
 def difference_matrix(
     meshes_1: Union[list, np.ndarray],
     meshes_2: Optional[Union[list, np.ndarray]] = None,
@@ -104,13 +105,7 @@ def difference_matrix(
                 or all datasets between meshes_1 and meshes_2 for all possible
                 combinations.
     """
-    if not isinstance(meshes_1, (list, np.ndarray)):
-        msg = "mesh1 is neither of type list nor np.ndarray"  # type: ignore[unreachable]
-        raise TypeError(msg)
     meshes_1 = np.asarray(meshes_1).flatten()
-    if not isinstance(meshes_2, (list, np.ndarray)) and meshes_2 is not None:
-        msg = "mesh2 is neither of type list nor np.ndarray."  # type: ignore[unreachable]
-        raise TypeError(msg)
     if meshes_2 is None:
         meshes_2 = meshes_1.copy()
     meshes_2 = np.asarray(meshes_2).flatten()
