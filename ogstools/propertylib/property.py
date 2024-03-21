@@ -12,6 +12,7 @@ from typing import Any, Callable, Union
 import numpy as np
 import pyvista as pv
 from matplotlib.colors import Colormap
+from pint.facets.plain import PlainQuantity
 
 from .custom_colormaps import mask_cmap
 from .tensor_math import identity
@@ -128,20 +129,22 @@ class Property:
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
-    def delta(self) -> "Property":
-        "returns: A property relating to the difference in a quantity."
-        data_property = self.replace(output_unit=self.data_unit)
-        diff_unit = str(
-            (
-                data_property.transform(1, strip_unit=False)
-                - data_property.transform(1, strip_unit=False)
-            ).units
-        )
+    def difference(self) -> "Property":
+        "returns: A property relating to differences in this quantity."
+        quantity = u_reg.Quantity(1, self.output_unit)
+        diff_quantity: PlainQuantity = quantity - quantity
+        diff_unit = str(diff_quantity.units)
+        if diff_unit == "delta_degC":
+            diff_unit = "kelvin"
+        outname = self.output_name + "_difference"
         return self.replace(
+            data_name=outname,
             data_unit=diff_unit,
             output_unit=diff_unit,
-            output_name=self.output_name + " difference",
+            output_name=outname,
             bilinear_cmap=True,
+            func=identity,
+            mesh_dependent=False,
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
@@ -176,9 +179,14 @@ class Property:
     def _get_data(
         self, mesh: pv.UnstructuredGrid, masked: bool = True
     ) -> np.ndarray:
-        """Get the data associated with a scalar or vector property from a mesh."""
-        if self.data_name not in set().union(mesh.point_data, mesh.cell_data):
-            msg = f"Data name {self.data_name} not found in mesh."
+        "Get the data associated with a scalar or vector property from a mesh."
+        if self.data_name not in (
+            data_keys := ",".join(set().union(mesh.point_data, mesh.cell_data))
+        ):
+            msg = (
+                f"Data name {self.data_name} not found in mesh. "
+                f"Available data names are {data_keys}. "
+            )
             raise KeyError(msg)
         if masked and self.mask_used(mesh):
             return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
