@@ -135,3 +135,14 @@ user container image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $DOCKER_USER_IMAGE .
     - docker push $DOCKER_USER_IMAGE
+
+code_quality:
+  image: python:3.10-slim
+  needs: []
+  script:
+    # Use same ruff as in .pre-commit-config.yaml
+    - pip install ruff==0.0.277
+    - ruff . --format gitlab > ruff-code-quality-report.json || true
+  artifacts:
+    reports:
+      codequality: ruff-code-quality-report.json
