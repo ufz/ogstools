@@ -136,7 +136,7 @@ user container image:
     - docker build -t $DOCKER_USER_IMAGE .
     - docker push $DOCKER_USER_IMAGE
 
-code_quality:
+code_quality_ruff:
   image: python:3.10-slim
   needs: []
   script:
@@ -146,3 +146,15 @@ code_quality:
   artifacts:
     reports:
       codequality: ruff-code-quality-report.json
+
+code_quality_mypy:
+  image: python:3.10-slim
+  needs: []
+  script:
+    # Use same mypy as in .pre-commit-config.yaml
+    - pip install mypy==1.4.1 mypy-to-codeclimate
+    - mypy ogstools > mypy-output.txt || true
+    - mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
+  artifacts:
+    reports:
+      codequality: mypy-code-quality-report.json
