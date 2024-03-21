@@ -10,7 +10,6 @@ from .core import (
     update_font_sizes,
     label_spatial_axes,
     clear_labels,
-    clear_labels_ax,
 )
 from .plot_features import plot_contour, plot_on_top
 
@@ -24,5 +23,4 @@ __all__ = [
     "update_font_sizes",
     "label_spatial_axes",
     "clear_labels",
-    "clear_labels_ax",
 ]

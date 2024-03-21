@@ -14,7 +14,6 @@ under various conditions (shared and nor shared X and Y axes).
 # %%
 # Import Python packages, change some settings and load example data set
 import matplotlib.pyplot as plt
-import numpy as np
 
 from ogstools.meshlib import difference
 from ogstools.meshplotlib import (

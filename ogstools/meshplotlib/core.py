@@ -6,7 +6,6 @@ from typing import Literal, Optional, Union
 
 import numpy as np
 import pyvista as pv
-from matplotlib import axes as matplax
 from matplotlib import cm as mcm
 from matplotlib import colormaps, rcParams
 from matplotlib import colors as mcolors
@@ -14,6 +13,7 @@ from matplotlib import figure as mfigure
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
+from typeguard import typechecked
 
 from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property, Vector
@@ -304,72 +304,31 @@ def subplot(
         secax.set_xlabel(f'{"xyz"[projection]} / {setup.length.output_unit}')
 
 
-def clear_labels_ax(ax: plt.axes) -> plt.axes:
-    ax.set_xlabel(None)
-    ax.set_ylabel(None)
-    return ax
+def clear_labels(axes: Union[plt.Axes, np.ndarray]) -> None:
+    ax: plt.Axes
+    for ax in np.ravel(np.array(axes)):
+        ax.set_xlabel("")
+        ax.set_ylabel("")
 
 
-def clear_labels(ax: Union[plt.axes, np.array]) -> Union[plt.axes, np.array]:
-    if isinstance(ax, np.ndarray):
-        for id_n in range(ax.shape[0]):
-            for id_m in range(ax.shape[1]):
-                ax[id_n, id_m] = clear_labels_ax(ax[id_n, id_m])
-    if isinstance(ax, matplax.Axes):
-        # Wrap single axis in np.array
-        ax = clear_labels_ax(ax)
-    return ax
-
-
+@typechecked
 def label_spatial_axes(
-    ax: Union[plt.axes, np.array],
-    ax_ids: np.array,
-) -> plt.axes:
+    axes: Union[plt.Axes, np.ndarray], x_label: str = "x", y_label: str = "y"
+) -> None:
     """
-    Add labels to X and Y axis
+    Add labels to x and y axis.
 
-    Automatically selects correct pair of directions and unit.
-    Respects sharex / sharey settings.
-
-    :param ax: Matplotlib Axis object
-    :param ax_ids: indices of axes label [0,1,2] for [x,y,z] for horizontal and vertical axis
+    If given an array of axes, only the outer axes will be labeled.
     """
-    if isinstance(ax, np.ndarray):
-        # Labels will be applied to shared axis
-        # Shared axis = value in projection is not None
-        if ax_ids[0] is not None:
-            x_label = (
-                setup.x_label
-                or f'{"xyz"[ax_ids[0]]} / {setup.length.output_unit}'
-            )
-            for ax_temp in ax[-1, :]:
-                ax_temp.set_xlabel(x_label)
-        if ax_ids[1] is not None:
-            y_label = (
-                setup.y_label
-                or f'{"xyz"[ax_ids[1]]} / {setup.length.output_unit}'
-            )
-            for ax_temp in ax[:, 0]:
-                ax_temp.set_ylabel(y_label)
-    elif isinstance(ax, matplax.Axes):
-        # Labels will only be applied to non shared axis:
-        # Non shared = value in projection is not None
-        if ax_ids[0] is not None:
-            x_label = (
-                setup.x_label
-                or f'{"xyz"[ax_ids[0]]} / {setup.length.output_unit}'
-            )
-            ax.set_xlabel(x_label)
-        if ax_ids[1] is not None:
-            y_label = (
-                setup.y_label
-                or f'{"xyz"[ax_ids[1]]} / {setup.length.output_unit}'
-            )
-            ax.set_ylabel(y_label)
+    if isinstance(axes, np.ndarray):
+        ax: plt.Axes
+        for ax in axes[-1, :]:
+            ax.set_xlabel(f"{x_label} / {setup.length.output_unit}")
+        for ax in axes[:, 0]:
+            ax.set_ylabel(f"{y_label} / {setup.length.output_unit}")
     else:
-        msg = "ax is neither Matplotlib axis nor Numpy array!"
-        raise TypeError(msg)
-    return ax
+        axes.set_xlabel(f"{x_label} / {setup.length.output_unit}")
+        axes.set_ylabel(f"{y_label} / {setup.length.output_unit}")
 
 
 def _get_rows_cols(
@@ -428,7 +387,7 @@ def get_combined_levels(
     """
     Calculate well spaced levels for the encompassing property range in meshes.
     """
-    mesh_property = get_preset(mesh_property, meshes[0])
+    mesh_property = get_preset(mesh_property, meshes.ravel()[0])
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
@@ -604,7 +563,7 @@ def plot(
     """
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
-    _meshes = np.reshape(meshes, shape).flatten()
+    _meshes = np.reshape(meshes, shape).ravel()
     mesh_property = get_preset(mesh_property, _meshes[0])
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:

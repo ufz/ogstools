@@ -232,13 +232,13 @@ class MeshplotlibTest(unittest.TestCase):
     def test_spatial_label(self):
         """Test axes labeling"""
         fig, ax = plt.subplots(2, 2)
-        ax = label_spatial_axes(ax, np.array([0, 1]))
+        label_spatial_axes(ax, "x", "y")
 
     def test_spatial_label_clear(self):
         """Test axes labels clearing"""
         fig, ax = plt.subplots(2, 2)
-        ax = label_spatial_axes(ax, np.array([0, 1]))
-        ax = clear_labels(ax)
+        label_spatial_axes(ax, "x", "y")
+        clear_labels(ax)
 
     def test_limit_plots(self):
         """Test creation of limit plots."""
