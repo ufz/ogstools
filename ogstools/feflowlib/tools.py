@@ -202,8 +202,6 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
-    # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
-    # assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
     for material_id in np.unique(material_ids):
         indices = np.where(material_ids == material_id)
         property_of_material = mesh.cell_data[property][indices]
@@ -289,7 +287,6 @@ def combine_material_properties(
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
-        assert property in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
         for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
@@ -321,8 +318,6 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    for prop in property_list:
-        assert prop in ["P_COND", "P_CONDX", "P_CONDY", "P_CONDZ"]
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
