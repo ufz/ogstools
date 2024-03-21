@@ -148,7 +148,7 @@ def convergence_metrics(
     :returns:           A pandas Dataframe containing all metrics.
     """
 
-    def _data(m: pv.UnstructuredGrid):
+    def _data(m: pv.UnstructuredGrid) -> np.ndarray:
         return mesh_property.magnitude.transform(
             m.point_data[mesh_property.data_name]
         )
@@ -304,7 +304,9 @@ def convergence_metrics_evolution(
         .to(units[1])
         .magnitude
     )
-    p_metrics_per_t = np.concatenate(([time_vals], p_metrics_per_t.T)).T
+    p_metrics_per_t = np.concatenate(
+        (np.asarray([time_vals]), p_metrics_per_t.T)
+    ).T
     columns = ["timevalue"] + [
         f"{t} ({x})"
         for t in ["abs. error", "rel. error", "p"]

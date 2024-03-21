@@ -1,7 +1,7 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import meshio
 import numpy as np
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def my_remove_orphaned_nodes(my_mesh: meshio.Mesh):
+def my_remove_orphaned_nodes(my_mesh: meshio.Mesh) -> None:
     """Auxiliary function to remove points not belonging to any cell"""
 
     # find connected points and derive mapping from all points to them
@@ -51,11 +51,9 @@ def my_remove_orphaned_nodes(my_mesh: meshio.Mesh):
     # cell data are not affected by point changes
     my_mesh.cells = output_cell_blocks  # update cells
 
-    return
-
 
 # print info for mesh: statistics and data field names
-def print_info(mesh: meshio.Mesh):
+def print_info(mesh: meshio.Mesh) -> None:
     N, D = mesh.points.shape
     logging.info("%d points in %d dimensions", N, D)
     cell_info = "cells: "
@@ -70,13 +68,15 @@ def print_info(mesh: meshio.Mesh):
 
 # function to create node connectivity list, i.e. store for each node (point) to
 # which element (cell) it belongs
-def find_cells_at_nodes(cells, node_count, cell_start_index):
+def find_cells_at_nodes(
+    cells: Any, node_count: int, cell_start_index: int
+) -> list[set]:
     # depending on the numbering of mixed meshes in OGS one may think of an
     # object-oriented way to add elements (of different type) to node
     # connectivity
 
     # initialize list of sets
-    node_connectivity = [set() for _ in range(node_count)]
+    node_connectivity: list[set] = [set() for _ in range(node_count)]
     cell_index = cell_start_index
     for cell in cells:
         for node in cell:
@@ -95,7 +95,7 @@ def find_cells_at_nodes(cells, node_count, cell_start_index):
 
 # function to find out to which domain elements a boundary element belongs
 def find_connected_domain_cells(
-    boundary_cells_values, domain_cells_at_node
+    boundary_cells_values: Any, domain_cells_at_node: list[set[int]]
 ) -> tuple[np.ndarray, np.ndarray]:
     warned_gt1 = False  # to avoid flood of warnings
     warned_lt1 = False  # to avoid flood of warnings
@@ -160,7 +160,7 @@ def msh2vtu(
     keep_ids: bool = False,
     ascii: bool = False,
     log_level: Union[int, str] = "DEBUG",
-):
+) -> int:
     """
     Convert a gmsh mesh (.msh) to an unstructured grid file (.vtu).
 

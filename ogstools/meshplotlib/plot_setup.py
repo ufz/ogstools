@@ -1,7 +1,7 @@
 """Plot configuration setup."""
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Optional, Union
 
 from ogstools.propertylib.property import Scalar
 
@@ -23,9 +23,9 @@ class PlotSetup:
     "The resolution (dots per inch) for the figure."
     fig_scale: float
     "A scaling factor for the figure."
-    min_ax_aspect: float
+    min_ax_aspect: Optional[float]
     "Minimum aspect ratio of subplots."
-    max_ax_aspect: float
+    max_ax_aspect: Optional[float]
     "Maximum aspect ratio of subplots."
     invert_colorbar: bool
     "A boolean indicating whether to invert the colorbar."
@@ -38,11 +38,11 @@ class PlotSetup:
     num_levels: int
     """The aimed number of levels / bins of the colorbar. See
     :obj:`ogstools.meshplotlib.levels`"""
-    num_streamline_interp_pts: int
+    num_streamline_interp_pts: Optional[int]
     "The number of interpolation points for streamlines."
-    p_max: float
+    p_max: Optional[float]
     "The fixed upper limit for the current scale."
-    p_min: float
+    p_min: Optional[float]
     "The fixed lower limit for the current scale."
     rcParams: dict
     """Matplotlib runtime configuration. See
@@ -78,7 +78,7 @@ class PlotSetup:
         return params
 
     @classmethod
-    def from_dict(cls: type["PlotSetup"], obj: dict):
+    def from_dict(cls: type["PlotSetup"], obj: dict) -> "PlotSetup":
         """Create a PlotSetup instance from a dictionary."""
         return cls(
             fig_scale=obj["fig_scale"],

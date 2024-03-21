@@ -7,7 +7,7 @@ via pint.
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import numpy as np
 import pyvista as pv
@@ -46,15 +46,15 @@ class Property:
     categoric: bool = False
     """Does this property only have categoric values?"""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.output_name:
             self.output_name = self.data_name
 
     @property
-    def type_name(self):
+    def type_name(self) -> str:
         return type(self).__name__
 
-    def replace(self, **changes):
+    def replace(self: "Property", **changes: Any) -> "Property":
         """
         Create a new Property object with modified attributes.
 
@@ -68,7 +68,9 @@ class Property:
         return replace(self, **changes)
 
     @classmethod
-    def from_property(cls, new_property: "Property", **changes):
+    def from_property(  # type: ignore[no-untyped-def]
+        cls, new_property: "Property", **changes: Any
+    ):
         "Create a new Property object with modified attributes."
         return cls(
             data_name=new_property.data_name,
@@ -151,7 +153,7 @@ class Property:
         """
         return self.data_name == self.mask
 
-    def get_mask(self):
+    def get_mask(self) -> "Property":
         """
         :returns: A property representing this properties mask.
         """

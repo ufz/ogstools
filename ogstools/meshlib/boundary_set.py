@@ -20,12 +20,12 @@ class BoundarySet(ABC):
     """
 
     @abstractmethod
-    def bounds(self):
-        return
+    def bounds(self) -> list:
+        return []
 
     @abstractmethod
-    def filenames(self):
-        return
+    def filenames(self) -> list[Path]:
+        return []
 
 
 class LayerSet(BoundarySet):
@@ -49,16 +49,16 @@ class LayerSet(BoundarySet):
                 raise ValueError(msg)
         self.layers = layers
 
-    def bounds(self):
+    def bounds(self) -> list:
         return list(self.layers[0].top.mesh.bounds)
 
-    def filenames(self):
+    def filenames(self) -> list[Path]:
         layer_filenames = [layer.bottom.filename for layer in self.layers]
         layer_filenames.insert(0, self.layers[0].top.filename)  # file interface
         return layer_filenames
 
     @classmethod
-    def from_pandas(cls, df: pd.DataFrame):
+    def from_pandas(cls, df: pd.DataFrame) -> "LayerSet":
         """Create a LayerSet from a Pandas DataFrame."""
         Row = namedtuple("Row", ["material_id", "mesh", "resolution"])
         surfaces = [
@@ -79,7 +79,7 @@ class LayerSet(BoundarySet):
         ]
         return cls(layers=base_layer)
 
-    def create_raster(self, resolution):
+    def create_raster(self, resolution: float) -> tuple[Path, Path]:
         """
         Create raster representations for the LayerSet.
 
@@ -103,7 +103,7 @@ class LayerSet(BoundarySet):
             file.write("\n".join(str(item) for item in raster_set))
         return raster_vtu, rastered_layers_txt
 
-    def create_rasters(self, resolution: int) -> list[Path]:
+    def create_rasters(self, resolution: float) -> list[Path]:
         """
         For each surface a (temporary) raster file with given resolution is created.
         """

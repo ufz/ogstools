@@ -21,7 +21,7 @@ class Boundary(ABC):
     """
 
     @abstractmethod
-    def dim(self):
+    def dim(self) -> int:
         """
         Get the dimension of the boundary.
 
@@ -29,7 +29,7 @@ class Boundary(ABC):
             int: The dimension of the boundary. For example, the dimension of a boundary
             of a cube (3D) is 2.
         """
-        return
+        return 0
 
 
 @dataclass(frozen=True)
@@ -47,7 +47,7 @@ class Layer(Boundary):
     of the layer in the GIS system.
     """
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.material_id:
             object.__setattr__(self, "material_id", self.bottom._material_id)
 
@@ -89,7 +89,7 @@ class Layer(Boundary):
         rasters.append(bottom_raster)
         return rasters
 
-    def dim(self):
+    def dim(self) -> int:
         return 3
 
 
@@ -100,7 +100,7 @@ class LocationFrame:
     ymin: float
     ymax: float
 
-    def as_gml(self, filename: Path):
+    def as_gml(self, filename: Path) -> None:
         """
         Generate GML representation of the location frame.
 

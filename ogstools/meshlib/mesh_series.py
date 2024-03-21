@@ -7,6 +7,7 @@ import meshio
 import numpy as np
 import pyvista as pv
 import vtuIO
+from h5py import File
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from tqdm.auto import tqdm
 
@@ -55,7 +56,7 @@ class MeshSeries:
             raise TypeError(msg)
 
     @property
-    def hdf5(self):
+    def hdf5(self) -> File:
         # We assume there is only one h5 file
         return next(iter(self._xdmf_reader.hdf5_files.values()))
 
@@ -225,7 +226,7 @@ class MeshSeries:
         data_name: str,
         interp_method: Optional[Literal["nearest", "probefilter"]] = None,
         interp_backend: Optional[Literal["vtk", "scipy"]] = None,
-    ):
+    ) -> np.ndarray:
         obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
         dim = self.read(0).get_cell(0).dimension
         pvd_path = self.filepath
@@ -242,7 +243,7 @@ class MeshSeries:
         points: np.ndarray,
         data_name: str,
         interp_method: Optional[Literal["nearest", "linear"]] = None,
-    ):
+    ) -> np.ndarray:
         values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
         geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
         values = np.swapaxes(values, 0, 1)

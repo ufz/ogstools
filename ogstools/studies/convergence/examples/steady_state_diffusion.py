@@ -6,15 +6,15 @@ import numpy as np
 import pyvista as pv
 
 
-def _c_k(k):
+def _c_k(k: float) -> float:
     return 0.5 * (2 * k - 1) * np.pi
 
 
-def _a_k(k):
+def _a_k(k: float) -> float:
     return 2 / (_c_k(k) ** 2 * np.cosh(_c_k(k)))
 
 
-def _h(points):
+def _h(points: np.ndarray) -> np.ndarray:
     result = np.ones(len(points))
     for k in np.arange(1, 100):
         c_k_val = _c_k(k)

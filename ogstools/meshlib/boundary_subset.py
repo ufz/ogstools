@@ -21,9 +21,7 @@ class Surface:
         return self._material_id
 
     @typechecked
-    def __init__(
-        self, input: Union[Path, pv.UnstructuredGrid], material_id: int
-    ):
+    def __init__(self, input: Union[Path, pv.DataObject], material_id: int):
         """Initialize a surface mesh. Either from pyvista or from a file."""
         self._material_id = material_id
 
@@ -33,7 +31,7 @@ class Surface:
                 msg = f"{self.filename} does not exist."
                 raise ValueError(msg)
             self.mesh = pv.get_reader(self.filename).read()
-        elif isinstance(input, pv.UnstructuredGrid):
+        elif isinstance(input, pv.DataObject):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
             pv.save_meshio(self.filename, self.mesh, file_format="vtu")
@@ -42,7 +40,7 @@ class Surface:
             np.ones(self.mesh.n_cells) * self.material_id
         ).astype(np.int32)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
 
     def create_raster_file(self, resolution: float) -> Path:
@@ -76,7 +74,7 @@ def Gaussian2D(
     spread: float,
     height_offset: float,
     n: int,
-):
+) -> pv.DataSet:
     """
     Generate a 2D Gaussian-like surface using the provided parameters.
 
