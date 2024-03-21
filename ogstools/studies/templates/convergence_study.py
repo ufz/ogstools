@@ -77,17 +77,17 @@ fig = meshplotlib.plot(richardson, mesh_property)
 data_key = mesh_property.data_name
 if reference_solution_path is None:
     diff_mesh = meshlib.difference(
-        mesh_property, richardson, topology.sample(meshes[-1])
+        richardson, topology.sample(meshes[-1]), mesh_property
     )
-    fig = meshplotlib.plot(diff_mesh, mesh_property.delta)
+    fig = meshplotlib.plot(diff_mesh, mesh_property)
 else:
     reference_solution = topology.sample(
         meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
     )
     diff_mesh = meshlib.difference(
-        mesh_property, reference_solution, richardson
+        reference_solution, richardson, mesh_property
     )
-    fig = meshplotlib.plot(diff_mesh, mesh_property.delta)
+    fig = meshplotlib.plot(diff_mesh, mesh_property)
 
 # %% [markdown]
 # ## Convergence metrics

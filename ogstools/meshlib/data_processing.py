@@ -4,42 +4,71 @@ from typing import Optional, Union
 import numpy as np
 import pyvista as pv
 
-from ogstools.propertylib import Property, presets
+from ogstools.propertylib import Property
+
+
+def _raw_differences_all_data(
+    mesh1: pv.UnstructuredGrid, mesh2: pv.UnstructuredGrid
+) -> pv.UnstructuredGrid:
+    diff_mesh = mesh1.copy(deep=True)
+    for point_data_key in mesh1.point_data:
+        diff_mesh.point_data[point_data_key] -= mesh2.point_data[point_data_key]
+    for cell_data_key in mesh1.cell_data:
+        if cell_data_key == "MaterialIDs":
+            continue
+        diff_mesh.cell_data[cell_data_key] -= mesh2.cell_data[cell_data_key]
+    return diff_mesh
 
 
 def difference(
-    mesh_property: Union[Property, str],
     mesh1: pv.UnstructuredGrid,
     mesh2: pv.UnstructuredGrid,
+    mesh_property: Optional[Union[Property, str]] = None,
 ) -> pv.UnstructuredGrid:
     """
-    Compute the difference between two meshes based on a specified property.
+    Compute the difference of properties between two meshes.
 
-    :param mesh_property: The property to of interest.
     :param mesh1: The first mesh to be subtracted from.
     :param mesh2: The second mesh whose data is subtracted from the first mesh.
-    :returns: A new mesh representing the difference between mesh1 and mesh2.
+    :param mesh_property:   The property of interest. If not given, all point
+                            and cell_data will be processed raw.
+    :returns:   A new mesh containing the difference of `mesh_property` or all
+                datasets between mesh1 and mesh2.
     """
-    mesh_property = presets.get_preset(mesh_property, mesh1)
+    if mesh_property is None:
+        return _raw_differences_all_data(mesh1, mesh2)
+    if isinstance(mesh_property, Property):
+        vals = np.asarray(
+            [mesh_property.transform(mesh) for mesh in [mesh1, mesh2]]
+        )
+        outname = mesh_property.output_name + "_difference"
+    else:
+        vals = np.asarray([mesh[mesh_property] for mesh in [mesh1, mesh2]])
+        outname = mesh_property + "_difference"
+
     diff_mesh = mesh1.copy(deep=True)
-    diff_mesh[mesh_property.data_name] -= mesh2[mesh_property.data_name]
+    diff_mesh.clear_data()
+    diff_mesh[outname] = np.empty(vals.shape[1:])
+    diff_mesh[outname] = vals[0] - vals[1]
     return diff_mesh
 
 
 def difference_pairwise(
-    mesh_property: Union[Property, str],
     meshes_1: Union[list, np.ndarray],
     meshes_2: Union[list, np.ndarray],
+    mesh_property: Optional[Union[Property, str]] = None,
 ) -> np.ndarray:
     """
     Compute pairwise difference between meshes from two lists/arrays
     (they have to be of the same length).
 
-    :param mesh_property: The property to of interest.
     :param meshes_1: The first list/array of meshes to be subtracted from.
     :param meshes_2: The second list/array of meshes whose data is subtracted
                      from the first list/array of meshes - meshes_1.
-    :returns: An array of differences between meshes from meshes_1 and meshes_2.
+    :param mesh_property:   The property of interest. If not given, all point
+                            and cell_data will be processed raw.
+    :returns:   An array of meshes containing the differences of `mesh_property`
+                or all datasets between meshes_1 and meshes_2.
     """
     meshes_1 = np.asarray(meshes_1).flatten()
     meshes_2 = np.asarray(meshes_2).flatten()
@@ -48,26 +77,32 @@ def difference_pairwise(
               Their length has to be identical to calculate pairwise \
               difference. Did you intend to use difference_matrix()?"
         raise RuntimeError(msg)
-    diff_mesh = [
-        difference(mesh_property, m1, m2) for m1, m2 in zip(meshes_1, meshes_2)
-    ]
-    return np.array(diff_mesh)
+    return np.asarray(
+        [
+            difference(m1, m2, mesh_property)
+            for m1, m2 in zip(meshes_1, meshes_2)
+        ]
+    )
 
 
+# TODO: let this also return meshes and a property
 def difference_matrix(
-    mesh_property: Union[Property, str],
     meshes_1: Union[list, np.ndarray],
     meshes_2: Optional[Union[list, np.ndarray]] = None,
+    mesh_property: Optional[Union[Property, str]] = None,
 ) -> np.ndarray:
     """
     Compute the difference between all combinations of two meshes
     from one or two arrays based on a specified property.
 
-    :param mesh_property: The property to of interest.
     :param meshes_1: The first list/array of meshes to be subtracted from.
     :param meshes_2: The second list/array of meshes, it is subtracted from
                      the first list/array of meshes - meshes_1 (optional).
-    :returns: An array of differences between meshes from meshes_1 and meshes_2.
+    :param mesh_property:   The property of interest. If not given, all point
+                            and cell_data will be processed raw.
+    :returns:   An array of meshes containing the differences of `mesh_property`
+                or all datasets between meshes_1 and meshes_2 for all possible
+                combinations.
     """
     if not isinstance(meshes_1, (list, np.ndarray)):
         msg = "mesh1 is neither of type list nor np.ndarray"  # type: ignore[unreachable]
@@ -79,8 +114,8 @@ def difference_matrix(
     if meshes_2 is None:
         meshes_2 = meshes_1.copy()
     meshes_2 = np.asarray(meshes_2).flatten()
-    diff_mesh = [
-        difference(mesh_property, m1, m2)
+    diff_meshes = [
+        difference(m1, m2, mesh_property)
         for m1, m2 in product(meshes_1, meshes_2)
     ]
-    return np.array(diff_mesh).reshape((len(meshes_1), len(meshes_2)))
+    return np.asarray(diff_meshes).reshape((len(meshes_1), len(meshes_2)))
