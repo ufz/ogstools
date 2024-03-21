@@ -341,8 +341,8 @@ def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
     return material_properties
 
 
-def add_components_to_prj_file(
-    xpath: str, parameter_dict: dict, components: list, model: ogs.OGS
+def add_species_to_prj_file(
+    xpath: str, parameter_dict: dict, species_list: list, model: ogs.OGS
 ) -> None:
     """
     Adds the entries needed in the prj-file for components/species. Since in ogs6py no
@@ -351,30 +351,35 @@ def add_components_to_prj_file(
 
     WARNING: After add_block was used, the ogs6py-model cannot be altered with
     common ogs6py functions!
+
+    :param xpath: Path to the species/components sektion in the prj-file.
+    :param parameter_dict: Dictionary with all the parameter names and values.
+    :param species_list: List of all species.
+    :param model: Model to setup prj-file, there the species will be added to.
     """
-    component_parameter = ["decay_rate", "retardation_factor", "diffusion"]
+    species_parameter = ["decay_rate", "retardation_factor", "diffusion"]
     model.add_element(parent_xpath=xpath, tag="components")
-    for component in np.unique(components)[1:]:
+    for species in np.unique(species_list)[1:]:
         model.add_block(
             blocktag="component",
             parent_xpath=xpath + "/components",
             taglist=["name", "properties"],
-            textlist=[component, ""],
+            textlist=[species, ""],
         )
         for parameter, parameter_val in parameter_dict.items():
             if (
-                any(c in parameter for c in component_parameter)
-                and component in parameter
+                any(c in parameter for c in species_parameter)
+                and species in parameter
             ):
                 model.add_block(
                     blocktag="property",
                     parent_xpath=xpath
                     + "/components/component[name='"
-                    + component
+                    + species
                     + "']/properties",
                     taglist=["name", "type", "value"],
                     textlist=[
-                        parameter.replace(component, ""),
+                        parameter.replace(species, ""),
                         "Constant",
                         str(parameter_val),
                     ],
@@ -680,7 +685,7 @@ def materials_in_HT(
 
 def materials_in_HC(
     material_properties: dict,
-    components: list,
+    species_list: list,
     model: ogs.OGS,
 ) -> ogs.OGS:
     """
@@ -770,8 +775,8 @@ def materials_in_HC(
 
     for material_id in material_properties:
         xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
-        add_components_to_prj_file(
-            xpath, material_properties[material_id], components, model
+        add_species_to_prj_file(
+            xpath, material_properties[material_id], species_list, model
         )
 
     return model

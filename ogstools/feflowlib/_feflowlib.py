@@ -256,19 +256,19 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     return mesh
 
 
-def get_component_specific_parameter(
+def get_species_parameter(
     doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
-) -> tuple[dict, dict, dict]:
+) -> tuple[dict, dict]:
     """
-    Components are saved as species in FEFLOW and can only be read with a subID as second argument
-    in the ifm.getParameter() function.
+    Retrieve species parameters from FEFLOW data for points and cells.
 
     :param doc: The FEFLOW data.
     :param mesh: mesh
     :return: Dictonaries of point and cell species-specific data.
     """
 
-    comp_parameter = [
+    # Define common species parameters in FEFLOW.
+    species_parameters = [
         "P_BC_MASS",
         "P_BCMASS_2ND",
         "P_BCMASS_3RD",
@@ -283,28 +283,25 @@ def get_component_specific_parameter(
         "P_TRAT_IN",
         "P_TRAT_OUT",
     ]
-    components_point_dict = {}
-    components_cell_dict = {}
+
+    species_point_dict: dict = {}
+    species_cell_dict: dict = {}
     obsolete_data = {}
-    for point_data in mesh.point_data:
-        if point_data in comp_parameter:
-            obsolete_data[point_data] = "point"
-            for species_id in range(doc.getNumberOfSpecies()):
-                component = doc.getSpeciesName(species_id)
-                par = doc.getParameter(getattr(ifm.Enum, point_data), component)
-                components_point_dict[component + "_" + point_data] = np.array(
-                    doc.getParamValues(par)
-                )
-    for cell_data in mesh.cell_data:
-        if cell_data in comp_parameter:
-            obsolete_data[cell_data] = "cell"
-            for species_id in range(doc.getNumberOfSpecies()):
-                component = doc.getSpeciesName(species_id)
-                par = doc.getParameter(getattr(ifm.Enum, cell_data), component)
-                components_cell_dict[component + "_" + cell_data] = np.array(
-                    doc.getParamValues(par)
-                )
-    return (components_point_dict, components_cell_dict, obsolete_data)
+
+    data_dict = {"point": mesh.point_data, "cell": mesh.cell_data}
+    species_dict = {"point": species_point_dict, "cell": species_cell_dict}
+    for point_or_cell in ["point", "cell"]:
+        for data in data_dict[point_or_cell]:
+            if data in species_parameters:
+                obsolete_data[data] = point_or_cell
+                for i in range(doc.getNumberOfSpecies()):
+                    species = doc.getSpeciesName(i)
+                    par = doc.getParameter(getattr(ifm.Enum, data), species)
+                    species_dict[point_or_cell][
+                        species + "_" + data
+                    ] = np.array(doc.getParamValues(par))
+
+    return species_dict, obsolete_data
 
 
 def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
@@ -347,22 +344,25 @@ def update_geometry(
     """
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
-    for i in point_data:
-        mesh.point_data.update({i: point_data[i]})
-    for i in cell_data:
-        mesh.cell_data.update({i: cell_data[i][0]})
+    for pt_data in point_data:
+        mesh.point_data.update({pt_data: point_data[pt_data]})
+    for c_data in cell_data:
+        mesh.cell_data.update({c_data: cell_data[c_data][0]})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
     if doc.getProblemClass() in [1, 3]:
         (
-            component_point_data,
-            component_cell_data,
+            species_dict,
             obsolete_data,
-        ) = get_component_specific_parameter(doc, mesh)
-        for i in component_point_data:
-            mesh.point_data.update({i: component_point_data[i]})
-        for i in component_cell_data:
-            mesh.cell_data.update({i: component_cell_data[i][0]})
+        ) = get_species_parameter(doc, mesh)
+        for point_data in species_dict["point"]:
+            mesh.point_data.update(
+                {point_data: species_dict["point"][point_data]}
+            )
+        for cell_data in species_dict["cell"]:
+            mesh.cell_data.update(
+                {cell_data: species_dict["cell"][cell_data][0]}
+            )
         for data, geometry in obsolete_data.items():
             if geometry == "point":
                 mesh.point_data.remove(data)
@@ -370,7 +370,7 @@ def update_geometry(
                 mesh.cell_data.remove(data)
             else:
                 logger.error(
-                    "Unknown geometry to remove obsolet data after conversion of chemical components."
+                    "Unknown geometry to remove obsolet data after conversion of chemical species."
                 )
         _caclulate_retardation_factor(mesh)
     return _convert_to_SI_units(mesh)
