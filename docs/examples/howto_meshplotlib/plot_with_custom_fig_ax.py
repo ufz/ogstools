@@ -49,10 +49,10 @@ plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
 ax[0].set_title(r"$T(\mathrm{t}_{0})$")
 plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
 ax[1].set_title(r"$T(\mathrm{t}_{end})$")
-diff_mesh, mesh_property = difference(
-    presets.temperature, meshseries.read(1), meshseries.read(0)
+diff_mesh = difference(
+    meshseries.read(1), meshseries.read(0), presets.temperature
 )
-plot(diff_mesh, mesh_property, fig=fig, ax=ax[2])
+plot(diff_mesh, presets.temperature, fig=fig, ax=ax[2])
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
 fig.suptitle("Plot two time steps and their difference - with colorbars")
 fig.tight_layout()
