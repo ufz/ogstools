@@ -68,6 +68,21 @@ def remove_bulk_ids(mesh: pv.UnstructuredGrid):
     mesh.cell_data.remove("bulk_element_ids")
 
 
+def get_dimension(mesh: pv.UnstructuredGrid):
+    """
+    Return the dimension of the mesh.
+
+    :param mesh: mesh
+    """
+    if len(np.unique(mesh.celltypes)) == 1:
+        return mesh.get_cell(0).dimension
+
+    msg = (
+        "The dimension can only be returned, if all cells are of the same type."
+    )
+    raise ValueError(msg)
+
+
 def extract_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
 ) -> dict:
@@ -93,19 +108,16 @@ def extract_point_boundary_conditions(
     for point_data in surf_mesh.point_data:
         if point_data != "bulk_node_ids":
             BC_2nd_or_3rd = "2ND" in point_data or "3RD" in point_data
-            include_cells_bool = BC_2nd_or_3rd and mesh.celltypes[0] not in [
-                5,
-                9,
-            ]
+            include_cells_bool = BC_2nd_or_3rd and get_dimension(mesh) == 3
             filter_mesh = mesh if "_4TH" in point_data else surf_mesh
             filtered_points = filter_mesh.extract_points(
                 [not np.isnan(x) for x in filter_mesh[point_data]],
                 adjacent_cells=False,
                 include_cells=include_cells_bool,
             )
-            # If the mesh is 2D (mesh.celltypes[0] in [5, 9]) and BC are of 2nd or 3rd order, line elements
+            # If the mesh is 2D and BC are of 2nd or 3rd order, line elements
             # will be included in the boundary mesh.
-            if BC_2nd_or_3rd and mesh.celltypes[0] in [5, 9]:
+            if BC_2nd_or_3rd and get_dimension(mesh) == 2:
                 filtered_points_new = pv.lines_from_points(
                     filtered_points.points
                 ).cast_to_unstructured_grid()
@@ -603,7 +615,7 @@ def setup_prj_file(
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
     # this if condition checks if the mesh is 3D. If so the topsurface will be considered.
-    if mesh.celltypes[0] not in [5, 9]:
+    if get_dimension(mesh) == 3:
         model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
     if "thermal" in process:
         model.processes.add_process_variable(
@@ -705,7 +717,7 @@ def setup_prj_file(
         if (
             cell_data in ["P_IOFLOW", "P_SOUF"]
             and np.unique(mesh.cell_data[cell_data]) != 0
-            and mesh.celltypes[0] not in [5, 9]
+            and get_dimension(mesh) == 3
         ):
             if cell_data in ["P_IOFLOW"]:
                 # Add boundary conditions
