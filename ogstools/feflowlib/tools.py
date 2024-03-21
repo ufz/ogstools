@@ -99,17 +99,21 @@ def extract_point_boundary_conditions(
     # Otherwise vtkOriginalPointIds would be fine.
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
-    surf_mesh = mesh.extract_surface()
+    boundary_mesh = (
+        mesh.extract_surface()
+        if get_dimension(mesh) == 3
+        else mesh.extract_feature_edges()
+    )
     # remove all the point data that are not of interest
-    for point_data in surf_mesh.point_data:
+    for point_data in boundary_mesh.point_data:
         if "_BC" not in point_data and point_data != "bulk_node_ids":
-            surf_mesh.point_data.remove(point_data)
+            boundary_mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
-    for point_data in surf_mesh.point_data:
+    for point_data in boundary_mesh.point_data:
         if point_data != "bulk_node_ids":
             BC_2nd_or_3rd = "2ND" in point_data or "3RD" in point_data
             include_cells_bool = BC_2nd_or_3rd and get_dimension(mesh) == 3
-            filter_mesh = mesh if "_4TH" in point_data else surf_mesh
+            filter_mesh = mesh if "_4TH" in point_data else boundary_mesh
             filtered_points = filter_mesh.extract_points(
                 [not np.isnan(x) for x in filter_mesh[point_data]],
                 adjacent_cells=False,
