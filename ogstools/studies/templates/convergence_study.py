@@ -40,7 +40,7 @@ meshplotlib.setup.combined_colorbar = False
 mesh_series = [meshlib.MeshSeries(mesh_path) for mesh_path in mesh_paths]
 timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
 meshes = [ms.read_closest(timevalue) for ms in mesh_series]
-topology: pv.DataSet = meshes[-3]
+topology: pv.UnstructuredGrid = meshes[-3]
 mesh_property = propertylib.presets.get_preset(property_name, meshes[0])
 richardson = studies.convergence.richardson_extrapolation(
     meshes, mesh_property, topology, refinement_ratio

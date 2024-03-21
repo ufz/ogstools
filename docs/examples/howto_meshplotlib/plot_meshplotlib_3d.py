@@ -9,7 +9,7 @@ To create them we use ``pyvista`` as it provides all the necessary functionality
 If we want to plot multiple meshes, they have to be in a 2D ``numpy`` array.
 The shape of this array determines the number of rows and columns in our plot.
 First, let's load 3D example data from ``pyvista`` and plot the only available
-dataset: "facies" with a native pyvista plot.
+data: "facies" with a native pyvista plot.
 """
 
 # %%

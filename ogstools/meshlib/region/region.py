@@ -18,7 +18,7 @@ class RegionSet:
     subsets. Each subset within a region is uniquely identified by "MaterialID".
     """
 
-    def __init__(self, input: Union[Path, pv.DataSet]):
+    def __init__(self, input: Union[Path, pv.UnstructuredGrid]):
         if type(input) is Path:
             self.filename = input
             self.mesh = None

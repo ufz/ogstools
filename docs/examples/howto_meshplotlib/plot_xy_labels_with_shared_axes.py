@@ -6,7 +6,7 @@ Labeling directional shared axes
 
 .. warning:: This example discusses functionality that may experience breaking changes in the near future!
 
-For this example we load a 2D meshseries dataset from within the ``meshplotlib``
+For this example we load a 2D meshseries from within the ``meshplotlib``
 examples. This tutorial covers automatic labeling the directional axes (X and Y)
 under various conditions (shared and nor shared X and Y axes).
 """

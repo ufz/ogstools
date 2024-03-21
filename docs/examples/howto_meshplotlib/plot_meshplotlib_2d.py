@@ -4,7 +4,7 @@ Visualizing 2D model data
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-For this example we load a 2D meshseries dataset from within the ``meshplotlib``
+For this example we load a 2D meshseries from within the ``meshplotlib``
 examples. In the ``meshplotlib.setup`` we can provide a dictionary to map names
 to material ids. First, let's plot the material ids (cell_data). Per default in
 the setup, this will automatically show the element edges.

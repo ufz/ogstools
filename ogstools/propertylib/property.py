@@ -20,18 +20,18 @@ from .unit_registry import u_reg
 
 @dataclass
 class Property:
-    """Represent a property of a dataset."""
+    """Represent a generic mesh property."""
 
     data_name: str
-    """The name of the property data in the dataset."""
+    """The name of the property data in the mesh."""
     data_unit: str = ""
-    """The unit of the property data in the dataset."""
+    """The unit of the property data in the mesh."""
     output_unit: str = ""
     """The output unit of the property."""
     output_name: str = ""
     """The output name of the property."""
     mask: str = ""
-    """The name of the mask data in the dataset."""
+    """The name of the mask data in the mesh."""
     func: Callable = identity
     """The function to be applied on the data.
        .. seealso:: :meth:`~ogstools.propertylib.Property.transform`"""
@@ -85,7 +85,7 @@ class Property:
 
     def transform(
         self,
-        data: Union[int, float, np.ndarray, pv.DataSet, Sequence],
+        data: Union[int, float, np.ndarray, pv.UnstructuredGrid, Sequence],
         strip_unit: bool = True,
     ) -> np.ndarray:
         """
@@ -97,19 +97,19 @@ class Property:
 
         Note:
         If `self.mesh_dependent` is True, `self.func` is applied directly to the
-        DataSet. Otherwise, it is determined by `self.process_with_units` if the
+        mesh. Otherwise, it is determined by `self.process_with_units` if the
         data is passed to the function with units (i.e. as a pint quantity) or
         without.
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
         if self.mesh_dependent:
-            if isinstance(data, pv.DataSet):
+            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This property can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, pv.DataSet):
+            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)
@@ -194,4 +194,4 @@ class Property:
 
 @dataclass
 class Scalar(Property):
-    "Represent a scalar property of a dataset."
+    "Represent a scalar property."

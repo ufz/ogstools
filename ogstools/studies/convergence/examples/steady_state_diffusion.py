@@ -24,8 +24,14 @@ def _h(points):
     return result
 
 
-def analytical_solution(topology: Union[Path, pv.DataSet]) -> pv.DataSet:
-    mesh = topology if isinstance(topology, pv.DataSet) else pv.read(topology)
+def analytical_solution(
+    topology: Union[Path, pv.UnstructuredGrid]
+) -> pv.UnstructuredGrid:
+    mesh = (
+        topology
+        if isinstance(topology, pv.UnstructuredGrid)
+        else pv.read(topology)
+    )
     new_mesh = deepcopy(mesh)
     new_mesh.clear_point_data()
     points = new_mesh.points

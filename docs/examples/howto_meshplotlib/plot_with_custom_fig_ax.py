@@ -4,7 +4,7 @@ Plotting different process variables on already existing Matplotlib figures / ax
 
 .. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-For this example we load a 2D meshseries dataset from within the ``meshplotlib``
+For this example we load a 2D meshseries from within the ``meshplotlib``
 examples. This tutorial covers using meshplotlib to plot meshseries data using
 Matplotlib objects for Figure and / or Axis. This is useful if different
 plotting functions from Meshplotlib are to be used on different subplots

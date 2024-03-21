@@ -21,7 +21,9 @@ class Surface:
         return self._material_id
 
     @typechecked
-    def __init__(self, input: Union[Path, pv.DataSet], material_id: int):
+    def __init__(
+        self, input: Union[Path, pv.UnstructuredGrid], material_id: int
+    ):
         """Initialize a surface mesh. Either from pyvista or from a file."""
         self._material_id = material_id
 
@@ -31,7 +33,7 @@ class Surface:
                 msg = f"{self.filename} does not exist."
                 raise ValueError(msg)
             self.mesh = pv.get_reader(self.filename).read()
-        elif isinstance(input, pv.DataSet):
+        elif isinstance(input, pv.UnstructuredGrid):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
             pv.save_meshio(self.filename, self.mesh, file_format="vtu")

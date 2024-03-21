@@ -544,7 +544,7 @@ def _draw_plot(
     return fig
 
 
-def get_data_aspect(mesh: pv.DataSet) -> float:
+def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
     """
     Calculate the data aspect ratio of a 2D mesh.
     """

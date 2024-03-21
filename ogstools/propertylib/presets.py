@@ -142,7 +142,7 @@ all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
 
 def get_preset(
-    mesh_property: Union[Property, str], mesh: pv.DataSet
+    mesh_property: Union[Property, str], mesh: pv.UnstructuredGrid
 ) -> Property:
     """
     Returns a Property preset or creates one with correct type.
@@ -152,7 +152,7 @@ def get_preset(
     of data in mesh.
 
     :param mesh_property:   The property to retrieve or its name if a string.
-    :param mesh:            The mesh dataset containing the property data.
+    :param mesh:            The mesh containing the property data.
     :returns: A corresponding Property preset or a new Property of correct type.
     """
     if isinstance(mesh_property, Property):

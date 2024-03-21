@@ -20,7 +20,7 @@ def vector_norm(values: ValType) -> ValType:
 
 @dataclass
 class Vector(Property):
-    """Represent a vector property of a dataset.
+    """Represent a vector property.
 
     Vector properties should contain either 2 (2D) or 3 (3D) components.
     Vector components can be accesses with brackets e.g. displacement[0]
@@ -54,7 +54,7 @@ class Vector(Property):
 
 @dataclass
 class VectorList(Property):
-    """Represent a list of vector properties of a dataset."""
+    """Represent a list of vector properties."""
 
     def __getitem__(self, index: int) -> Vector:
         ":returns: A vector property as a component of the vectorlist property."
