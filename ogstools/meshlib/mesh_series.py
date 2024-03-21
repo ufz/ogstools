@@ -10,8 +10,7 @@ import vtuIO
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from tqdm.auto import tqdm
 
-from ogstools.propertylib import Property, presets
-from ogstools.propertylib.tensor_math import identity
+from ogstools.propertylib import Property
 
 from .xdmf_reader import XDMFReader
 
@@ -171,7 +170,7 @@ class MeshSeries:
         self,
         mesh_property: Union[Property, str],
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-    ) -> tuple[pv.DataSet, Property]:
+    ) -> pv.UnstructuredGrid:
         """Aggregate data over all timesteps using a specified function.
 
         :param mesh_property:
@@ -182,8 +181,7 @@ class MeshSeries:
             The aggregation function to apply. It must be one of "min", "max",
             "mean", "median", "sum", "std", "var". The equally named numpy
             function will be used to aggregate over all timesteps.
-        :returns:   A mesh with aggregated data according to the given function
-                    and a Property corresponding to this data.
+        :returns:   A mesh with aggregated data according to the given function.
 
         """
         np_func = {
@@ -218,18 +216,7 @@ class MeshSeries:
         )
         mesh[output_name] = np.empty(vals.shape[1:])
         np_func(vals, out=mesh[output_name], axis=0)
-        if isinstance(mesh_property, Property):
-            agg_property = mesh_property.replace(
-                data_name=output_name,
-                data_unit=mesh_property.output_unit,
-                output_unit=mesh_property.output_unit,
-                output_name=output_name,
-                func=identity,
-                mesh_dependent=False,
-            )
-        else:
-            agg_property = presets.get_preset(output_name, mesh)
-        return mesh, agg_property
+        return mesh
 
     def _probe_pvd(
         self,

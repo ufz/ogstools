@@ -14,7 +14,6 @@ from ogstools.meshplotlib import (
     examples,
     label_spatial_axes,
     plot,
-    plot_limit,
     plot_probe,
     setup,
     update_font_sizes,
@@ -32,7 +31,9 @@ assert_allclose = partial(
 
 
 class MeshplotlibTest(unittest.TestCase):
-    """Test case for meshplotlib."""
+    """Test case for meshplotlib.
+
+    Most of these tests only test for no-throw, currently."""
 
     def test_pyvista_offscreen(self):
         import pyvista as pv
@@ -134,8 +135,18 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_diff_plots(self):
         """Test creation of difference plots."""
-        meshseries = examples.meshseries_CT_2D
-        plot(difference("Si", meshseries.read(0), meshseries.read(1)), "Si")
+        meshseries = examples.meshseries_THM_2D
+        mesh0 = meshseries.read(0)
+        mesh1 = meshseries.read(1)
+        plot(difference(mesh1, mesh0, "temperature"), "temperature_difference")
+        for prop in [
+            presets.temperature,
+            presets.displacement,
+            presets.stress,
+            presets.stress.von_Mises,
+        ]:
+            plot(difference(mesh1, mesh0, prop), prop)
+        plt.close()
 
     def test_user_defined_ax(self):
         """Test creating plot with subfigures and user provided ax"""
@@ -146,9 +157,9 @@ class MeshplotlibTest(unittest.TestCase):
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
         ax[1].set_title(r"$T(\mathrm{t}_{end})$")
         diff_mesh = difference(
-            presets.temperature, meshseries.read(0), meshseries.read(1)
+            meshseries.read(0), meshseries.read(1), presets.temperature
         )
-        plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
+        plot(diff_mesh, presets.temperature, fig=fig, ax=ax[2])
         ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
         # fig.suptitle("Test user defined ax")
         fig.tight_layout()
@@ -197,11 +208,11 @@ class MeshplotlibTest(unittest.TestCase):
         ax = ax.flatten()
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
-        diff_ab = difference(presets.temperature, mesh_a, mesh_b)
-        diff_ba = difference(presets.temperature, mesh_b, mesh_a)
-        plot(diff_ab, presets.temperature.delta, fig=fig, ax=ax[2])
-        plot(diff_ba, presets.temperature.delta, fig=fig, ax=ax[3])
-        fig.tight_layout()
+        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
+        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
+        plot(diff_ab, presets.temperature, fig=fig, ax=ax[2])
+        plot(diff_ba, presets.temperature, fig=fig, ax=ax[3])
+        plt.close()
 
     def test_label_sharedxy(self):
         """Test labeling shared x and y axes"""
@@ -211,29 +222,29 @@ class MeshplotlibTest(unittest.TestCase):
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
         plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
         plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-        diff_ab = difference(presets.temperature, mesh_a, mesh_b)
-        diff_ba = difference(presets.temperature, mesh_b, mesh_a)
-        plot(diff_ab, presets.temperature.delta, fig=fig, ax=ax[0][1])
-        plot(diff_ba, presets.temperature.delta, fig=fig, ax=ax[1][1])
-        ax = label_spatial_axes(ax, np.array([0, 1]))
-        fig.tight_layout()
+        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
+        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
+        plot(diff_ab, presets.temperature, fig=fig, ax=ax[0][1])
+        plot(diff_ba, presets.temperature, fig=fig, ax=ax[1][1])
+        label_spatial_axes(ax, "x", "y")
+        plt.close()
 
     def test_spatial_label(self):
-        """Test if labels are added to x and y axes"""
+        """Test axes labeling"""
         fig, ax = plt.subplots(2, 2)
         ax = label_spatial_axes(ax, np.array([0, 1]))
 
     def test_spatial_label_clear(self):
-        """Test if labels are added to x and y axes"""
+        """Test axes labels clearing"""
         fig, ax = plt.subplots(2, 2)
         ax = label_spatial_axes(ax, np.array([0, 1]))
         ax = clear_labels(ax)
 
     def test_limit_plots(self):
         """Test creation of limit plots."""
-        meshseries = examples.meshseries_CT_2D
-        plot_limit(meshseries, "Si", "min")
-        plot_limit(meshseries, "Si", "max")
+        mesh = examples.meshseries_CT_2D.aggregate("Si", "var")
+        plot(mesh, "Si_var")
+        plt.close()
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
