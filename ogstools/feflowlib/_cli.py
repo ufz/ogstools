@@ -163,7 +163,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             material_properties = get_materials_of_HT_model(mesh)
 
         else:
-            material_properties, species_list = get_materials_of_HC_model(mesh)
+            material_properties, species = get_materials_of_HC_model(mesh)
         for material_id, property_value in material_properties.items():
             if any(prop == "inhomogeneous" for prop in property_value):
                 write_mesh_of_combined_properties(
@@ -207,8 +207,8 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             mesh,
             material_properties,
             process,
-            species_list,
-            template_model,
+            species_list=species,
+            model=template_model,
         )
 
         ogs_model.write_input()

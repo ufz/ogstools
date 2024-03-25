@@ -9,7 +9,6 @@ import logging as log
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable
-from typing import Optional
 
 import numpy as np
 import pyvista as pv
@@ -795,9 +794,8 @@ def setup_prj_file(
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    species_list: Optional[list] = None,
-    model=None,
-) -> None:
+    **kwargs,
+) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
 
@@ -805,10 +803,18 @@ def setup_prj_file(
     :param mesh: mesh
     :param material_properties: material properties
     :param process: the process to be prepared
-    :param model: model to setup prj-file
+    :Keyword Arguments (kwargs):
+       * *model* (``ogs.OGS``) --
+         A ogs6py (ogs) model that is extended, should be used for templates
+       * *species_lsit* (``list``) --
+         All chemical species that occur in a model, if the model is to simulate a
+         HC (Componenttransport) process.
     :return: model
-    """
 
+
+    """
+    model = kwargs["model"] if "model" in kwargs else None
+    species_list = kwargs["species_list"] if "species_list" in kwargs else None
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
