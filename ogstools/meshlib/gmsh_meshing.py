@@ -9,7 +9,7 @@ def _geo_square(
     lengths: Union[float, list[float]],
     n_edge_cells: Union[int, list[int]],
     structured: bool,
-):
+) -> None:
     _lengths = lengths if isinstance(lengths, list) else [lengths] * 2
     _n = n_edge_cells if isinstance(n_edge_cells, list) else [n_edge_cells] * 2
     geo.addPoint(0, 0, 0, tag=1)
@@ -41,7 +41,7 @@ def rect(
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_square.msh"),
-):
+) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
     gmsh.model.add("unit_square")
@@ -75,7 +75,7 @@ def cuboid(
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_cube.msh"),
-):
+) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
     gmsh.model.add("unit_cube")
@@ -118,7 +118,7 @@ def bhe_mesh(
     bhe_depth: float = 20,
     order: int = 1,
     out_name: Path = Path("bhe_mesh.msh"),
-):
+) -> None:
     gmsh.initialize()
     model, geo = (gmsh.model, gmsh.model.geo)
     model.add(Path(out_name).stem)

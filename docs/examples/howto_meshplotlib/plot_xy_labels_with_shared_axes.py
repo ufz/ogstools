@@ -6,7 +6,7 @@ Labeling directional shared axes
 
 .. warning:: This example discusses functionality that may experience breaking changes in the near future!
 
-For this example we load a 2D meshseries dataset from within the ``meshplotlib``
+For this example we load a 2D meshseries from within the ``meshplotlib``
 examples. This tutorial covers automatic labeling the directional axes (X and Y)
 under various conditions (shared and nor shared X and Y axes).
 """
@@ -14,7 +14,6 @@ under various conditions (shared and nor shared X and Y axes).
 # %%
 # Import Python packages, change some settings and load example data set
 import matplotlib.pyplot as plt
-import numpy as np
 
 from ogstools.meshlib import difference
 from ogstools.meshplotlib import (
@@ -54,10 +53,10 @@ fig = plot([mesh_a, mesh_b], temperature)
 fig, ax = plt.subplots(2, 2, figsize=(40, 20), sharex=True, sharey=True)
 plot(mesh_a, temperature, fig=fig, ax=ax[0][0])
 plot(mesh_b, temperature, fig=fig, ax=ax[1][0])
-diff_ab = difference(temperature, mesh_b, mesh_a)
-diff_ba = difference(temperature, mesh_b, mesh_a)
-plot(diff_ab, temperature.delta, fig=fig, ax=ax[0][1])
-plot(diff_ba, temperature.delta, fig=fig, ax=ax[1][1])
+diff_ab = difference(mesh_a, mesh_b, temperature)
+diff_ba = difference(mesh_b, mesh_a, temperature)
+plot(diff_ab, temperature, fig=fig, ax=ax[0][1])
+plot(diff_ba, temperature, fig=fig, ax=ax[1][1])
 fig.tight_layout()
 
 # %%
@@ -69,8 +68,8 @@ fig.tight_layout()
 fig, ax = plt.subplots(2, 2, figsize=(40, 20), sharex=True, sharey=True)
 plot(mesh_a, temperature, fig=fig, ax=ax[0][0])
 plot(mesh_b, temperature, fig=fig, ax=ax[1][0])
-plot(diff_ab, temperature.delta, fig=fig, ax=ax[0][1])
-plot(diff_ba, temperature.delta, fig=fig, ax=ax[1][1])
-ax = clear_labels(ax)
-ax = label_spatial_axes(ax, np.array([0, 1]))
+plot(difference(mesh_a, mesh_b, temperature), temperature, fig=fig, ax=ax[0][1])
+plot(difference(mesh_b, mesh_a, temperature), temperature, fig=fig, ax=ax[1][1])
+clear_labels(ax)
+label_spatial_axes(ax)
 fig.tight_layout()

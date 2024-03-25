@@ -74,7 +74,9 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         ]
         verts = setup.length.transform(np.delete(cell_pts, projection, -1))
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
-        pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
+        pc = PolyCollection(
+            verts, fc="None", ec="black", lw=lw  # type: ignore[arg-type]
+        )
         ax.add_collection(pc)
 
 
@@ -131,9 +133,9 @@ def plot_streamlines(
     lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
     lw *= setup.rcParams_scaled["lines.linewidth"]
     x_g, y_g = setup.length.transform(np.meshgrid(x, y))
-    plot_args = [x_g, y_g, val[..., 0], val[..., 1]]
     if plot_type == "streamlines":
-        ax.streamplot(*plot_args, color="k", linewidth=lw, density=1.5)
+        ax.streamplot(x_g, y_g, val[..., 0], val[..., 1],
+                      color="k", linewidth=lw, density=1.5)  # fmt: skip
     else:
         line_args = (
             dict(  # noqa: C408
@@ -142,7 +144,8 @@ def plot_streamlines(
             if plot_type == "lines"
             else {}
         )
-        ax.quiver(*plot_args, **line_args, scale=1 / 0.03)
+        scale = 1.0 / 0.03
+        ax.quiver(x_g, y_g, val[..., 0], val[..., 1], **line_args, scale=scale)
 
 
 def plot_on_top(
@@ -161,7 +164,7 @@ def plot_on_top(
     x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
     y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
     contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
-    ax.set_ylim(top=setup.length.transform(np.max(contour_vals)))
+    ax.set_ylim(top=float(setup.length.transform(np.max(contour_vals))))
     ax.fill_between(
         setup.length.transform(x_vals),
         setup.length.transform(y_vals),
@@ -172,7 +175,7 @@ def plot_on_top(
 
 def plot_contour(
     ax: plt.Axes, mesh: pv.DataSet, style: str, lw: int, projection: int = 2
-):
+) -> None:
     contour = mesh.extract_surface().strip(join=True)
     x_id, y_id = np.delete([0, 1, 2], projection)
     x, y = 1e-3 * contour.points[contour.lines[1:]].T[[x_id, y_id]]

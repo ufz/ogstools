@@ -15,8 +15,8 @@ u_reg.default_format = "~.3g"
 
 
 def resample(
-    topology: pv.DataSet, meshes: list[pv.DataSet]
-) -> list[pv.DataSet]:
+    topology: pv.UnstructuredGrid, meshes: list[pv.UnstructuredGrid]
+) -> list[pv.UnstructuredGrid]:
     meshes_resampled = []
     for mesh in meshes:
         mesh_temp = deepcopy(topology)
@@ -27,7 +27,7 @@ def resample(
     return meshes_resampled
 
 
-def add_grid_spacing(mesh: pv.DataSet) -> pv.DataSet:
+def add_grid_spacing(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     dim = mesh.get_cell(0).dimension
     key = ["Length", "Area", "Volume"][dim - 1]
     _mesh = mesh.compute_cell_sizes()
@@ -36,11 +36,11 @@ def add_grid_spacing(mesh: pv.DataSet) -> pv.DataSet:
 
 
 def grid_convergence(
-    meshes: list[pv.DataSet],
+    meshes: list[pv.UnstructuredGrid],
     mesh_property: propertylib.Property,
-    topology: pv.DataSet,
+    topology: pv.UnstructuredGrid,
     refinement_ratio: float,
-) -> pv.DataSet:
+) -> pv.UnstructuredGrid:
     """
     Calculate the grid convergence field for the given meshes on the topology.
 
@@ -92,11 +92,11 @@ def grid_convergence(
 
 
 def richardson_extrapolation(
-    meshes: list[pv.DataSet],
+    meshes: list[pv.UnstructuredGrid],
     mesh_property: propertylib.Property,
-    topology: pv.DataSet,
+    topology: pv.UnstructuredGrid,
     refinement_ratio: float,
-) -> pv.DataSet:
+) -> pv.UnstructuredGrid:
     """
     Estimate a better approximation of a property on a mesh.
 
@@ -133,8 +133,8 @@ def richardson_extrapolation(
 
 
 def convergence_metrics(
-    meshes: list[pv.DataSet],
-    reference: pv.DataSet,
+    meshes: list[pv.UnstructuredGrid],
+    reference: pv.UnstructuredGrid,
     mesh_property: propertylib.Property,
     timestep_sizes: list[float],
 ) -> pd.DataFrame:
@@ -142,13 +142,13 @@ def convergence_metrics(
     Calculate convergence metrics for a given reference and property.
 
     :param meshes:          The List of meshes to be analyzed for convergence.
-    :param reference:       The reference Dataset to compare against.
+    :param reference:       The reference mesh to compare against.
     :param mesh_property:   The property of interest.
 
     :returns:           A pandas Dataframe containing all metrics.
     """
 
-    def _data(m: pv.DataSet):
+    def _data(m: pv.UnstructuredGrid) -> np.ndarray:
         return mesh_property.magnitude.transform(
             m.point_data[mesh_property.data_name]
         )
@@ -304,7 +304,9 @@ def convergence_metrics_evolution(
         .to(units[1])
         .magnitude
     )
-    p_metrics_per_t = np.concatenate(([time_vals], p_metrics_per_t.T)).T
+    p_metrics_per_t = np.concatenate(
+        (np.asarray([time_vals]), p_metrics_per_t.T)
+    ).T
     columns = ["timevalue"] + [
         f"{t} ({x})"
         for t in ["abs. error", "rel. error", "p"]

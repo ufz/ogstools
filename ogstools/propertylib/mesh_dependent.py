@@ -7,7 +7,7 @@ import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
 from .property import Property
-from .tensor_math import eigenvalues, mean, octahedral_shear
+from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
 
 ValType = Union[PlainQuantity, np.ndarray]
@@ -48,11 +48,16 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
         ]
         edge_centers = edges.cell_centers().points
         adj_cells = [mesh.find_closest_cell(point) for point in edge_centers]
-        adj_cell_centers = mesh.extract_cells(adj_cells).cell_centers().points
-        are_above = (
-            edge_centers[..., vertical_dim]
-            > adj_cell_centers[..., vertical_dim]
+        adj_centers = np.vstack(
+            [
+                mesh.extract_cells(adj_cell).cell_centers().points
+                for adj_cell in adj_cells
+            ]
         )
+        are_above = [
+            edge_center[vertical_dim] > adj_center[vertical_dim]
+            for edge_center, adj_center in zip(edge_centers, adj_centers)
+        ]
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical
     top = edges.extract_cells(top_cells)
@@ -110,8 +115,9 @@ def fluid_pressure_criterion(
     """
 
     Qty = u_reg.Quantity
-    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
-    return p_fluid(mesh) - eigenvalues(sigma)[..., 0]
+    sigma = mesh[mesh_property.data_name]
+    sig_min = _split_quantity(eigenvalues(-sigma))[0][..., 0]
+    return p_fluid(mesh) - Qty(sig_min, mesh_property.data_unit)
 
 
 def dilatancy_critescu(

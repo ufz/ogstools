@@ -4,7 +4,7 @@ Plotting different process variables on already existing Matplotlib figures / ax
 
 .. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-For this example we load a 2D meshseries dataset from within the ``meshplotlib``
+For this example we load a 2D meshseries from within the ``meshplotlib``
 examples. This tutorial covers using meshplotlib to plot meshseries data using
 Matplotlib objects for Figure and / or Axis. This is useful if different
 plotting functions from Meshplotlib are to be used on different subplots
@@ -50,9 +50,9 @@ ax[0].set_title(r"$T(\mathrm{t}_{0})$")
 plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
 ax[1].set_title(r"$T(\mathrm{t}_{end})$")
 diff_mesh = difference(
-    presets.temperature, meshseries.read(1), meshseries.read(0)
+    meshseries.read(1), meshseries.read(0), presets.temperature
 )
-plot(diff_mesh, presets.temperature.delta, fig=fig, ax=ax[2])
+plot(diff_mesh, presets.temperature, fig=fig, ax=ax[2])
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
 fig.suptitle("Plot two time steps and their difference - with colorbars")
 fig.tight_layout()

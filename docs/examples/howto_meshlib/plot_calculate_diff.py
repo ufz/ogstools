@@ -4,7 +4,8 @@ Differences between meshes
 
 .. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-This example explains how to use functions from meshlib to calculate differences between meshes.
+This example explains how to use functions from meshlib to calculate differences
+between meshes.
 """
 
 # %%
@@ -25,25 +26,31 @@ mesh_property = presets.temperature
 # 0. Introduction
 # ---------------
 # This example shows how to calculate differences between meshes.
-# It is possible to calculate the difference between multiple meshes at the same time. Multiple meshes can be provided either as list or Numpy arrays.
+# It is possible to calculate the difference between multiple meshes at the same
+# time. Multiple meshes can be provided either as list or Numpy arrays.
 # 4 ways of calculating the difference are presented here.
 
 # %%
 # 1. Difference between two meshes
 # --------------------------------
-# The simplest case is calculating the difference between two meshes. For this example, we read two different timesteps from a MeshSeries. It is not required that they belong to the same MeshSeries object. As long, as the meshes share the same topology and contain the mesh_property of interest, the difference will work fine.
+# The simplest case is calculating the difference between two meshes. For this
+# example, we read two different timesteps from a MeshSeries. It is not required
+# that they belong to the same MeshSeries object. As long, as the meshes share
+# the same topology and contain the mesh_property of interest, the difference
+# will work fine.
 mesh1 = meshseries_THM_2D.read(0)
 mesh2 = meshseries_THM_2D.read(-1)
 
 # %% [markdown]
-# The following call will return a mesh containing the difference of the mesh_property between the two provided meshes:
+# The following call will return a mesh containing the difference of the
+# mesh_property between the two provided meshes:
 #
 # .. math::
 #
 #   \text{Mesh}_1 - \text{Mesh}_2
 #
 
-mesh_diff = difference(mesh_property, mesh1, mesh2)
+mesh_diff = difference(mesh1, mesh2, mesh_property)
 
 # %% [markdown]
 # This returned object will be a PyVista UnstructuredGrid object:
@@ -54,7 +61,9 @@ print(f"Type of mesh_diff: {type(mesh_diff)}")
 # %% [markdown]
 # 2. Pairwise difference
 # ----------------------
-# In order to calculate pairwise differences, two lists or arrays of equal length have to be provided as the input. They can contain an arbitrary number of different meshes, as long as their length is equal.
+# In order to calculate pairwise differences, two lists or arrays of equal
+# length have to be provided as the input. They can contain an arbitrary number
+# of different meshes, as long as their length is equal.
 #
 # Consider the two following lists:
 #
@@ -79,7 +88,7 @@ print(f"Type of mesh_diff: {type(mesh_diff)}")
 meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
-mesh_diff_pair_wise = difference_pairwise(mesh_property, meshes_1, meshes_2)
+mesh_diff_pair_wise = difference_pairwise(meshes_1, meshes_2, mesh_property)
 
 # %%
 print(f"Length of mesh_list1: {len(meshes_1)}")
@@ -93,7 +102,8 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 # %% [markdown]
 # 3. Matrix difference - one array
 # --------------------------------
-# If only one list or array is provided, the differences between every possible pair of objects in the array will be returned.
+# If only one list or array is provided, the differences between every possible
+# pair of objects in the array will be returned.
 #
 # Consider following list:
 #
@@ -107,11 +117,12 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 #
 #   \begin{bmatrix} A-A & B-A & C-A\\ A-B & B-B & C-B \\ A-C & B-C & C-C \\ \end{bmatrix}
 #
-# and will have shape of (len(mesh_list), len(mesh_list)). As in the following example:
+# and will have shape of (len(mesh_list), len(mesh_list)). As in the following
+# example:
 
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = difference_matrix(mesh_property, mesh_list)
+mesh_diff_matrix = difference_matrix(mesh_list, mesh_property=mesh_property)
 
 # %%
 print(f"Length of mesh_list1: {len(mesh_list)}")
@@ -122,7 +133,9 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 # %% [markdown]
 # 4. Matrix difference - two arrays of different length
 # -----------------------------------------------------
-# Unlike difference_pairwise(), difference_matrix() can accept two lists/arrays of different lengths. As in Section 3, the differences between all possible pairs of meshes in both lists/arrays will be calculated.
+# Unlike difference_pairwise(), difference_matrix() can accept two lists/arrays
+# of different lengths. As in Section 3, the differences between all possible
+# pairs of meshes in both lists/arrays will be calculated.
 #
 # Consider following lists:
 #
@@ -140,13 +153,14 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 #
 #   \begin{bmatrix} A_1-A_2 & A_1-B_2 \\ B_1-A_2 & B_1-B_2 \\ C_1-A_2 & C_1-B_2 \\ \end{bmatrix}
 #
-# and will have a shape of (len(mesh_list_matrix_1), len(mesh_list_matrix_2)). As in the following example:
+# and will have a shape of (len(mesh_list_matrix_1), len(mesh_list_matrix_2)).
+# As in the following example:
 
 mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
 mesh_diff_matrix = difference_matrix(
-    mesh_property, mesh_list_matrix_1, mesh_list_matrix_2
+    mesh_list_matrix_1, mesh_list_matrix_2, mesh_property
 )
 
 # %%

@@ -15,6 +15,8 @@ to be read like::
 
 """
 
+from xml.etree.ElementTree import Element
+
 import meshio
 import numpy as np
 from meshio.xdmf.time_series import (
@@ -25,10 +27,10 @@ from meshio.xdmf.time_series import (
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         super().__init__(filename)
 
-    def read_data(self, k: int):
+    def read_data(self, k: int) -> tuple[float, dict, dict, dict]:
         point_data = {}
         cell_data_raw = {}
         other_data = {}
@@ -67,8 +69,8 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
 
         return t, point_data, cell_data, other_data
 
-    def _read_data_item(self, data_item):
-        dims = [int(d) for d in data_item.get("Dimensions").split()]
+    def _read_data_item(self, data_item: Element) -> np.ndarray:
+        dims = [int(d) for d in data_item.get("Dimensions", "").split()]
 
         # Actually, `NumberType` is XDMF2 and `DataType` XDMF3, but many files out there
         # use both keys interchangeably.
@@ -92,6 +94,7 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
 
         data_format = data_item.attrib["Format"]
 
+        assert isinstance(data_item.text, str)
         if data_format == "XML":
             return np.fromstring(
                 data_item.text,

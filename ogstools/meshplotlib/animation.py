@@ -44,7 +44,7 @@ def animate(
         index = np.argmin(np.abs(np.asarray(ts) - i))
 
         fig.axes[-1].remove()  # remove colorbar
-        for ax in np.ravel(fig.axes):
+        for ax in np.ravel(np.asarray(fig.axes)):
             ax.clear()
         if titles is not None:
             setup.title_center = titles[index]
@@ -54,18 +54,20 @@ def animate(
             mesh = mesh_series.read_interp(i, True)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            fig = _draw_plot(mesh, property, fig=fig)
+            fig = _draw_plot(
+                mesh, property, fig=fig
+            )  # type: ignore[assignment]
 
     _func = partial(animate_func, fig=fig)
 
     return FuncAnimation(
-        fig,
-        _func,
+        fig,  # type: ignore[arg-type]
+        _func,  # type: ignore[arg-type]
         frames=tqdm(ts),
         blit=False,
         interval=50,
         repeat=False,
-        init_func=init,
+        init_func=init,  # type: ignore[arg-type]
     )
 
 
@@ -83,7 +85,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
         "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
     ).split(" ")
 
-    writer = None
+    writer: Optional[Union[FFMpegWriter, ImageMagickWriter]] = None
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
         filename += ".mp4"
@@ -91,7 +93,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
         print("\nffmpeg not available. It is recommended for saving animation.")
         filename += ".gif"
         if ImageMagickWriter.isAvailable():
-            writer = "imagemagick"
+            writer = ImageMagickWriter()
         else:
             print(
                 "ImageMagick also not available. Falling back to"

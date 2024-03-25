@@ -7,8 +7,11 @@ import meshio
 import numpy as np
 import pyvista as pv
 import vtuIO
+from h5py import File
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from tqdm.auto import tqdm
+
+from ogstools.propertylib import Property
 
 from .xdmf_reader import XDMFReader
 
@@ -53,7 +56,7 @@ class MeshSeries:
             raise TypeError(msg)
 
     @property
-    def hdf5(self):
+    def hdf5(self) -> File:
         # We assume there is only one h5 file
         return next(iter(self._xdmf_reader.hdf5_files.values()))
 
@@ -164,13 +167,66 @@ class MeshSeries:
             )
         return mesh[data_name]
 
+    def aggregate(
+        self,
+        mesh_property: Union[Property, str],
+        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+    ) -> pv.UnstructuredGrid:
+        """Aggregate data over all timesteps using a specified function.
+
+        :param mesh_property:
+            The mesh property to be aggregated. If given as type `Property`, the
+            :meth:`~ogstools.propertylib.property.Property.transform` function
+            will be applied on each timestep and aggregation afterwards.
+        :param func:
+            The aggregation function to apply. It must be one of "min", "max",
+            "mean", "median", "sum", "std", "var". The equally named numpy
+            function will be used to aggregate over all timesteps.
+        :returns:   A mesh with aggregated data according to the given function.
+
+        """
+        np_func = {
+            "min": np.min,
+            "max": np.max,
+            "mean": np.mean,
+            "median": np.median,
+            "sum": np.sum,
+            "std": np.std,
+            "var": np.var,
+        }[func]
+        mesh = self.read(0).copy(deep=True)
+        mesh.clear_data()
+        if isinstance(mesh_property, Property):
+            if mesh_property.mesh_dependent:
+                vals = np.asarray(
+                    [
+                        mesh_property.transform(self.read(t))
+                        for t in tqdm(self.timesteps)
+                    ]
+                )
+            else:
+                vals = mesh_property.transform(
+                    self.values(mesh_property.data_name)
+                )
+        else:
+            vals = self.values(mesh_property)
+        output_name = (
+            f"{mesh_property.output_name}_{func}"
+            if isinstance(mesh_property, Property)
+            else f"{mesh_property}_{func}"
+        )
+        mesh[output_name] = np.empty(vals.shape[1:])
+        assert isinstance(np_func, type(np.max))
+        np_func(vals, out=mesh[output_name], axis=0)
+        return mesh
+
     def _probe_pvd(
         self,
         points: np.ndarray,
         data_name: str,
         interp_method: Optional[Literal["nearest", "probefilter"]] = None,
         interp_backend: Optional[Literal["vtk", "scipy"]] = None,
-    ):
+    ) -> np.ndarray:
         obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
         dim = self.read(0).get_cell(0).dimension
         pvd_path = self.filepath
@@ -187,7 +243,7 @@ class MeshSeries:
         points: np.ndarray,
         data_name: str,
         interp_method: Optional[Literal["nearest", "linear"]] = None,
-    ):
+    ) -> np.ndarray:
         values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
         geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
         values = np.swapaxes(values, 0, 1)

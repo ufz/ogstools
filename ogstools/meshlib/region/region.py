@@ -7,7 +7,7 @@ import numpy as np
 import pyvista as pv
 from ogs import cli
 
-from ..boundary_set import LayerSet
+from ..boundary_set import Layer, LayerSet
 
 
 class RegionSet:
@@ -18,7 +18,7 @@ class RegionSet:
     subsets. Each subset within a region is uniquely identified by "MaterialID".
     """
 
-    def __init__(self, input: Union[Path, pv.DataSet]):
+    def __init__(self, input: Union[Path, pv.UnstructuredGrid]):
         if type(input) is Path:
             self.filename = input
             self.mesh = None
@@ -26,7 +26,7 @@ class RegionSet:
             self.filename = Path(tempfile.mkstemp(".vtu", "region_set")[1])
             self.mesh = input
 
-    def box_boundaries(self):
+    def box_boundaries(self) -> tuple[pv.UnstructuredGrid, ...]:
         """
         Retrieve the boundaries of the mesh in local coordinate system (u, v, w).
 
@@ -46,6 +46,7 @@ class RegionSet:
             mesh = ...
             u_min, u_max, v_min, v_max, w_min, w_max = mesh.box_boundaries()
         """
+        assert isinstance(self.mesh, pv.UnstructuredGrid)
         surface = self.mesh.extract_surface()
         u_max = to_boundary(surface, lambda normals: normals[:, 0] > 0.5)
         u_min = to_boundary(surface, lambda normals: normals[:, 0] < -0.5)
@@ -152,7 +153,7 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
 
 
 def layer_to_simplified_mesh(
-    layer, resolution: float, rank: int, bounds: list[float]
+    layer: Layer, resolution: float, rank: int, bounds: list[float]
 ) -> pv.UnstructuredGrid:
     """Convert a geological layer to a simplified mesh.
 

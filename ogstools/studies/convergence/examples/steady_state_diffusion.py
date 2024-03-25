@@ -6,15 +6,15 @@ import numpy as np
 import pyvista as pv
 
 
-def _c_k(k):
+def _c_k(k: float) -> float:
     return 0.5 * (2 * k - 1) * np.pi
 
 
-def _a_k(k):
+def _a_k(k: float) -> float:
     return 2 / (_c_k(k) ** 2 * np.cosh(_c_k(k)))
 
 
-def _h(points):
+def _h(points: np.ndarray) -> np.ndarray:
     result = np.ones(len(points))
     for k in np.arange(1, 100):
         c_k_val = _c_k(k)
@@ -24,8 +24,14 @@ def _h(points):
     return result
 
 
-def analytical_solution(topology: Union[Path, pv.DataSet]) -> pv.DataSet:
-    mesh = topology if isinstance(topology, pv.DataSet) else pv.read(topology)
+def analytical_solution(
+    topology: Union[Path, pv.UnstructuredGrid]
+) -> pv.UnstructuredGrid:
+    mesh = (
+        topology
+        if isinstance(topology, pv.UnstructuredGrid)
+        else pv.read(topology)
+    )
     new_mesh = deepcopy(mesh)
     new_mesh.clear_point_data()
     points = new_mesh.points

@@ -2,12 +2,13 @@ from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from cycler import Cycler
 
 
 def justified_labels(points: np.ndarray) -> list[str]:
     "Formats an array of points to a list of aligned str."
 
-    def fmt(val: float):
+    def fmt(val: float) -> str:
         return f"{val:.2f}".rstrip("0").rstrip(".")
 
     col_lens = np.max(
@@ -24,7 +25,7 @@ def get_style_cycler(
     min_number_of_styles: int,
     colors: Optional[Optional[list]] = None,
     linestyles: Optional[list] = None,
-) -> plt.cycler:
+) -> Cycler:
     if colors is None:
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     if linestyles is None:

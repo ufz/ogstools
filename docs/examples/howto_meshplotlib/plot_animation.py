@@ -17,37 +17,59 @@ from ogstools.propertylib import Scalar
 
 setup.reset()
 mesh_series = examples.meshseries_CT_2D
-# alternatively:
-# from ogstools.meshlib import MeshSeries
-# mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
-# %%
+mesh_property = Scalar(
+    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
+)
+
+# %% [markdown]
+# To read your own data as a mesh series you can do:
+#
+# ..  code-block:: python
+#
+#   from ogstools.meshlib import MeshSeries
+#   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
+#
+# You can also use a property from the available presets instead of needing to
+# create your own:
+# :ref:`sphx_glr_auto_examples_howto_propertylib_plot_propertylib.py`
+
+# %% [markdown]
 # Let's use fixed scale limits to prevent rescaling during the animation.
+
+# %%
 setup.p_min = 0
 setup.p_max = 100
 setup.dpi = 50
 
-# %%
+# %% [markdown]
 # You can choose which timesteps to render by passing either an int array
 # corresponding to the indices, or a float array corresponding to the timevalues
 # to render. If a requested timevalue is not part of the timeseries it will be
 # interpolated. In this case every second frame will be interpolated.
+
+# %%
 timevalues = np.linspace(
     mesh_series.timevalues[0], mesh_series.timevalues[-1], num=25
 )
 
-# %%
+# %% [markdown]
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
 # Note that rendering many frames in conjunction with large meshes might take
 # a really long time.
+
+# %%
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-si = Scalar(
-    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
-)
-anim = animate(mesh_series, si, timevalues, titles)
-# the animation can be saved (as mp4) like so:
-# from ogstools.meshplotlib.animation import save_animation
-# save_animation(anim, "Saturation", fps=5)
+anim = animate(mesh_series, mesh_property, timevalues, titles)
+
+# %% [markdown]
+# The animation can be saved (as mp4) like so:
+#
+# ..  code-block:: python
+#
+#   from ogstools.meshplotlib.animation import save_animation
+#   save_animation(anim, "Saturation", fps=5)
+#
 
 # sphinx_gallery_start_ignore
 # note for developers:

@@ -6,25 +6,21 @@ from pint.facets.plain import PlainQuantity
 
 from ogstools.propertylib.property import Property, Scalar
 
-from .unit_registry import u_reg
+from .tensor_math import _split_quantity, _to_quantity
 
 ValType = Union[PlainQuantity, np.ndarray]
 
 
-def vector_norm(vals: ValType) -> ValType:
+def vector_norm(values: ValType) -> ValType:
     ":returns: The norm of the vector."
-    if isinstance(vals, PlainQuantity):
-        unit = vals.units
-        vals = vals.magnitude
-    else:
-        unit = None
+    vals, unit = _split_quantity(values)
     result = np.linalg.norm(vals, axis=-1)
-    return result if unit is None else u_reg.Quantity(result, unit)
+    return _to_quantity(result, unit)
 
 
 @dataclass
 class Vector(Property):
-    """Represent a vector property of a dataset.
+    """Represent a vector property.
 
     Vector properties should contain either 2 (2D) or 3 (3D) components.
     Vector components can be accesses with brackets e.g. displacement[0]
@@ -58,7 +54,7 @@ class Vector(Property):
 
 @dataclass
 class VectorList(Property):
-    """Represent a list of vector properties of a dataset."""
+    """Represent a list of vector properties."""
 
     def __getitem__(self, index: int) -> Vector:
         ":returns: A vector property as a component of the vectorlist property."

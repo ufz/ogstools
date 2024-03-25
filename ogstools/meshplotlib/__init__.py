@@ -4,14 +4,12 @@
 from .plot_setup import _setup as setup  # noqa: I001: noqa
 
 from .core import (
-    plot_limit,
     plot_probe,
     plot,
     subplot,
     update_font_sizes,
     label_spatial_axes,
     clear_labels,
-    clear_labels_ax,
 )
 from .plot_features import plot_contour, plot_on_top
 
@@ -19,12 +17,10 @@ __all__ = [
     "setup",
     "plot",
     "plot_contour",
-    "plot_limit",
     "plot_on_top",
     "plot_probe",
     "subplot",
     "update_font_sizes",
     "label_spatial_axes",
     "clear_labels",
-    "clear_labels_ax",
 ]

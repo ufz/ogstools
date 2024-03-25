@@ -8,7 +8,7 @@ from ogstools.propertylib.vector import Vector, VectorList
 
 @dataclass
 class Matrix(Property):
-    """Represent a matrix property of a dataset.
+    """Represent a matrix property.
 
     Matrix properties should contain either 4 (2D) or 6 (3D) components.
     Matrix components can be accesses with brackets e.g. stress[0]

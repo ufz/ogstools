@@ -7,11 +7,12 @@ via pint.
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import numpy as np
 import pyvista as pv
 from matplotlib.colors import Colormap
+from pint.facets.plain import PlainQuantity
 
 from .custom_colormaps import mask_cmap
 from .tensor_math import identity
@@ -20,18 +21,18 @@ from .unit_registry import u_reg
 
 @dataclass
 class Property:
-    """Represent a property of a dataset."""
+    """Represent a generic mesh property."""
 
     data_name: str
-    """The name of the property data in the dataset."""
+    """The name of the property data in the mesh."""
     data_unit: str = ""
-    """The unit of the property data in the dataset."""
+    """The unit of the property data in the mesh."""
     output_unit: str = ""
     """The output unit of the property."""
     output_name: str = ""
     """The output name of the property."""
     mask: str = ""
-    """The name of the mask data in the dataset."""
+    """The name of the mask data in the mesh."""
     func: Callable = identity
     """The function to be applied on the data.
        .. seealso:: :meth:`~ogstools.propertylib.Property.transform`"""
@@ -46,15 +47,15 @@ class Property:
     categoric: bool = False
     """Does this property only have categoric values?"""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.output_name:
             self.output_name = self.data_name
 
     @property
-    def type_name(self):
+    def type_name(self) -> str:
         return type(self).__name__
 
-    def replace(self, **changes):
+    def replace(self: "Property", **changes: Any) -> "Property":
         """
         Create a new Property object with modified attributes.
 
@@ -68,7 +69,9 @@ class Property:
         return replace(self, **changes)
 
     @classmethod
-    def from_property(cls, new_property: "Property", **changes):
+    def from_property(  # type: ignore[no-untyped-def]
+        cls, new_property: "Property", **changes: Any
+    ):
         "Create a new Property object with modified attributes."
         return cls(
             data_name=new_property.data_name,
@@ -85,31 +88,31 @@ class Property:
 
     def transform(
         self,
-        data: Union[int, float, np.ndarray, pv.DataSet, Sequence],
+        data: Union[int, float, np.ndarray, pv.UnstructuredGrid, Sequence],
         strip_unit: bool = True,
     ) -> np.ndarray:
         """
         Return the transformed data values.
 
-        Converts the data from data_unit to output_unit and apply a function
-        the transformation function of this property. The result is returned by
+        Converts the data from data_unit to output_unit and applies the
+        transformation function of this property. The result is returned by
         default without units. if `strip_unit` is False, a quantity is returned.
 
         Note:
         If `self.mesh_dependent` is True, `self.func` is applied directly to the
-        DataSet. Otherwise, it is determined by `self.process_with_units` if the
+        mesh. Otherwise, it is determined by `self.process_with_units` if the
         data is passed to the function with units (i.e. as a pint quantity) or
         without.
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
         if self.mesh_dependent:
-            if isinstance(data, pv.DataSet):
+            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This property can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, pv.DataSet):
+            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)
@@ -126,20 +129,22 @@ class Property:
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
-    def delta(self) -> "Property":
-        "returns: A property relating to the difference in a quantity."
-        data_property = self.replace(output_unit=self.data_unit)
-        diff_unit = str(
-            (
-                data_property.transform(1, strip_unit=False)
-                - data_property.transform(1, strip_unit=False)
-            ).units
-        )
+    def difference(self) -> "Property":
+        "returns: A property relating to differences in this quantity."
+        quantity = u_reg.Quantity(1, self.output_unit)
+        diff_quantity: PlainQuantity = quantity - quantity
+        diff_unit = str(diff_quantity.units)
+        if diff_unit == "delta_degC":
+            diff_unit = "kelvin"
+        outname = self.output_name + "_difference"
         return self.replace(
+            data_name=outname,
             data_unit=diff_unit,
             output_unit=diff_unit,
-            output_name=self.output_name + " difference",
+            output_name=outname,
             bilinear_cmap=True,
+            func=identity,
+            mesh_dependent=False,
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
@@ -151,7 +156,7 @@ class Property:
         """
         return self.data_name == self.mask
 
-    def get_mask(self):
+    def get_mask(self) -> "Property":
         """
         :returns: A property representing this properties mask.
         """
@@ -174,9 +179,14 @@ class Property:
     def _get_data(
         self, mesh: pv.UnstructuredGrid, masked: bool = True
     ) -> np.ndarray:
-        """Get the data associated with a scalar or vector property from a mesh."""
-        if self.data_name not in set().union(mesh.point_data, mesh.cell_data):
-            msg = f"Data name {self.data_name} not found in mesh."
+        "Get the data associated with a scalar or vector property from a mesh."
+        if self.data_name not in (
+            data_keys := ",".join(set().union(mesh.point_data, mesh.cell_data))
+        ):
+            msg = (
+                f"Data name {self.data_name} not found in mesh. "
+                f"Available data names are {data_keys}. "
+            )
             raise KeyError(msg)
         if masked and self.mask_used(mesh):
             return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
@@ -194,4 +204,4 @@ class Property:
 
 @dataclass
 class Scalar(Property):
-    "Represent a scalar property of a dataset."
+    "Represent a scalar property."

@@ -2,11 +2,10 @@
 
 import warnings
 from math import nextafter
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pyvista as pv
-from matplotlib import axes as matplax
 from matplotlib import cm as mcm
 from matplotlib import colormaps, rcParams
 from matplotlib import colors as mcolors
@@ -14,6 +13,7 @@ from matplotlib import figure as mfigure
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
+from typeguard import typechecked
 
 from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property, Vector
@@ -28,13 +28,13 @@ from .utils import get_style_cycler
 # TODO: define default data_name for regions in setup
 
 
-def _q_zero_line(mesh_property: Property, levels: np.ndarray):
+def _q_zero_line(mesh_property: Property, levels: np.ndarray) -> bool:
     return mesh_property.bilinear_cmap or (
         mesh_property.data_name == "temperature" and levels[0] < 0 < levels[-1]
     )
 
 
-def get_level_boundaries(levels: np.ndarray):
+def get_level_boundaries(levels: np.ndarray) -> np.ndarray:
     return np.array(
         [
             levels[0] - 0.5 * (levels[1] - levels[0]),
@@ -57,6 +57,7 @@ def get_cmap_norm(
         continuous_cmap = colormaps[mesh_property.cmap]
     else:
         continuous_cmap = mesh_property.cmap
+    conti_norm: Union[mcolors.TwoSlopeNorm, mcolors.Normalize]
     if mesh_property.bilinear_cmap:
         if vmin <= 0.0 <= vmax:
             vcenter = 0.0
@@ -258,9 +259,13 @@ def subplot(
     cmap, norm = get_cmap_norm(levels, mesh_property)
 
     if mesh_property.data_name in mesh.point_data:
-        ax.tricontourf(x, y, tri, values, levels=levels, cmap=cmap, norm=norm)
+        ax.tricontourf(  # type: ignore[call-overload]
+            x, y, tri, values, levels=levels, cmap=cmap, norm=norm
+        )
         if _q_zero_line(mesh_property, levels):
-            ax.tricontour(x, y, tri, values, levels=[0], colors="w")
+            ax.tricontour(  # type: ignore[call-overload]
+                x, y, tri, values, levels=[0], colors="w"
+            )
     else:
         ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
         if mesh_property.is_mask():
@@ -299,77 +304,38 @@ def subplot(
                 sec_labels += [""]
         # TODO: use a function to make this short
         secax = ax.secondary_xaxis("top")
-        secax.xaxis.set_major_locator(mticker.FixedLocator(ax.get_xticks()))
+        secax.xaxis.set_major_locator(
+            mticker.FixedLocator(list(ax.get_xticks()))
+        )
         secax.set_xticklabels(sec_labels)
         secax.set_xlabel(f'{"xyz"[projection]} / {setup.length.output_unit}')
 
 
-def clear_labels_ax(ax: plt.axes) -> plt.axes:
-    ax.set_xlabel(None)
-    ax.set_ylabel(None)
-    return ax
+def clear_labels(axes: Union[plt.Axes, np.ndarray]) -> None:
+    ax: plt.Axes
+    for ax in np.ravel(np.array(axes)):
+        ax.set_xlabel("")
+        ax.set_ylabel("")
 
 
-def clear_labels(ax: Union[plt.axes, np.array]) -> Union[plt.axes, np.array]:
-    if isinstance(ax, np.ndarray):
-        for id_n in range(ax.shape[0]):
-            for id_m in range(ax.shape[1]):
-                ax[id_n, id_m] = clear_labels_ax(ax[id_n, id_m])
-    if isinstance(ax, matplax.Axes):
-        # Wrap single axis in np.array
-        ax = clear_labels_ax(ax)
-    return ax
-
-
+@typechecked
 def label_spatial_axes(
-    ax: Union[plt.axes, np.array],
-    ax_ids: np.array,
-) -> plt.axes:
+    axes: Union[plt.Axes, np.ndarray], x_label: str = "x", y_label: str = "y"
+) -> None:
     """
-    Add labels to X and Y axis
+    Add labels to x and y axis.
 
-    Automatically selects correct pair of directions and unit.
-    Respects sharex / sharey settings.
-
-    :param ax: Matplotlib Axis object
-    :param ax_ids: indices of axes label [0,1,2] for [x,y,z] for horizontal and vertical axis
+    If given an array of axes, only the outer axes will be labeled.
     """
-    if isinstance(ax, np.ndarray):
-        # Labels will be applied to shared axis
-        # Shared axis = value in projection is not None
-        if ax_ids[0] is not None:
-            x_label = (
-                setup.x_label
-                or f'{"xyz"[ax_ids[0]]} / {setup.length.output_unit}'
-            )
-            for ax_temp in ax[-1, :]:
-                ax_temp.set_xlabel(x_label)
-        if ax_ids[1] is not None:
-            y_label = (
-                setup.y_label
-                or f'{"xyz"[ax_ids[1]]} / {setup.length.output_unit}'
-            )
-            for ax_temp in ax[:, 0]:
-                ax_temp.set_ylabel(y_label)
-    elif isinstance(ax, matplax.Axes):
-        # Labels will only be applied to non shared axis:
-        # Non shared = value in projection is not None
-        if ax_ids[0] is not None:
-            x_label = (
-                setup.x_label
-                or f'{"xyz"[ax_ids[0]]} / {setup.length.output_unit}'
-            )
-            ax.set_xlabel(x_label)
-        if ax_ids[1] is not None:
-            y_label = (
-                setup.y_label
-                or f'{"xyz"[ax_ids[1]]} / {setup.length.output_unit}'
-            )
-            ax.set_ylabel(y_label)
+    if isinstance(axes, np.ndarray):
+        ax: plt.Axes
+        for ax in axes[-1, :]:
+            ax.set_xlabel(f"{x_label} / {setup.length.output_unit}")
+        for ax in axes[:, 0]:
+            ax.set_ylabel(f"{y_label} / {setup.length.output_unit}")
     else:
-        msg = "ax is neither Matplotlib axis nor Numpy array!"
-        raise TypeError(msg)
-    return ax
+        axes.set_xlabel(f"{x_label} / {setup.length.output_unit}")
+        axes.set_ylabel(f"{y_label} / {setup.length.output_unit}")
 
 
 def _get_rows_cols(
@@ -428,7 +394,7 @@ def get_combined_levels(
     """
     Calculate well spaced levels for the encompassing property range in meshes.
     """
-    mesh_property = get_preset(mesh_property, meshes[0])
+    mesh_property = get_preset(mesh_property, meshes.ravel()[0])
     p_min, p_max = np.inf, -np.inf
     unique_vals = np.array([])
     for mesh in np.ravel(meshes):
@@ -460,21 +426,21 @@ def _draw_plot(
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
     mesh_property: Property,
     fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> mfigure.Figure:
+    axes: Optional[plt.Axes] = None,
+) -> Optional[mfigure.Figure]:
     """
     Plot the property field of meshes on existing figure.
 
     :param meshes: Singular mesh of 2D numpy array of meshes
     :param property: the property field to be visualized on all meshes
-    :param fig: Matplotlib Figure object to use for plotting (optional)
-    :param ax: Matplotlib Axis object to use for plotting (optional)
+    :param fig: Matplotlib figure to use for plotting (optional)
+    :param axes: Matplotlib Axes to use for plotting (optional)
     """
     shape = _get_rows_cols(meshes)
     np_meshes = np.reshape(meshes, shape)
-    if fig is not None and ax is not None:
-        np_axs = np.reshape(np.array(ax), shape)
-    elif fig is not None and ax is None:
+    if fig is not None and axes is not None:
+        np_axs = np.reshape(np.array(axes), shape)
+    elif fig is not None and axes is None:
         # Only Fig is given
         # Multiple meshes should be accepted
         warnings.warn(
@@ -482,14 +448,14 @@ def _draw_plot(
             Warning,
             stacklevel=4,
         )
-        np_axs = np.reshape(fig.axes, shape)
-    elif fig is None and ax is not None:
+        np_axs = np.reshape(np.asarray(fig.axes), shape)
+    elif fig is None and axes is not None:
         # Only ax is given
         # Only one mesh should be accepted
         if shape != (1, 1):
             msg = "You have provided only one Axis object but multiple meshes. Provide only one mesh per Axis object, or provide Figure object instead."
             raise ValueError(msg)
-        np_axs = np.reshape(np.array(ax), (1, 1))
+        np_axs = np.reshape(np.array(axes), (1, 1))
     else:
         msg = "Neither Figure nor Axis object was provided."
         raise TypeError(msg)
@@ -500,14 +466,14 @@ def _draw_plot(
             _levels = (
                 combined_levels
                 if setup.combined_colorbar
-                else get_combined_levels([np_meshes[i, j]], mesh_property)
+                else get_combined_levels(np_meshes[i, j, None], mesh_property)
             )
             subplot(np_meshes[i, j], mesh_property, np_axs[i, j], _levels)
 
     x_id, y_id = get_projection(
         np_meshes[0, 0]
     )  # One mesh is sufficient, it should be the same for all of them
-    np_axs = label_spatial_axes(np_axs, np.array([x_id, y_id]))
+    label_spatial_axes(np_axs, "xyz"[x_id], "xyz"[y_id])
     np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
     np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
     np_axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
@@ -522,7 +488,7 @@ def _draw_plot(
                 stacklevel=4,
             )
         else:
-            cb_axs = np.ravel(fig.axes).tolist()
+            cb_axs = np.ravel(np.asarray(fig.axes)).tolist()
             add_colorbars(
                 fig, cb_axs, mesh_property, combined_levels, pad=0.05 / shape[1]
             )
@@ -538,13 +504,13 @@ def _draw_plot(
             for i in range(shape[0]):
                 for j in range(shape[1]):
                     _levels = get_combined_levels(
-                        [np_meshes[i, j]], mesh_property
+                        np_meshes[i, j, None], mesh_property
                     )
                     add_colorbars(fig, np_axs[i, j], mesh_property, _levels)
     return fig
 
 
-def get_data_aspect(mesh: pv.DataSet) -> float:
+def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
     """
     Calculate the data aspect ratio of a 2D mesh.
     """
@@ -573,10 +539,14 @@ def update_font_sizes(
         subax_xlim = subax.get_xlim()
         subax_ylim = subax.get_ylim()
         subax.set_xticks(
-            subax.get_xticks(), subax.get_xticklabels(), fontsize=fontsize
+            subax.get_xticks(),
+            [label.get_text() for label in subax.get_xticklabels()],
+            fontsize=fontsize,
         )
         subax.set_yticks(
-            subax.get_yticks(), subax.get_yticklabels(), fontsize=fontsize
+            subax.get_yticks(),
+            [label.get_text() for label in subax.get_yticklabels()],
+            fontsize=fontsize,
         )
         subax.set_xlim(subax_xlim)
         subax.set_ylim(subax_ylim)
@@ -590,7 +560,7 @@ def plot(
     mesh_property: Union[Property, str],
     fig: Optional[mfigure.Figure] = None,
     ax: Optional[plt.Axes] = None,
-) -> mfigure.Figure:
+) -> Optional[mfigure.Figure]:
     """
     Plot the property field of meshes with default settings.
 
@@ -604,7 +574,7 @@ def plot(
     """
     rcParams.update(setup.rcParams_scaled)
     shape = _get_rows_cols(meshes)
-    _meshes = np.reshape(meshes, shape).flatten()
+    _meshes = np.reshape(meshes, shape).ravel()
     mesh_property = get_preset(mesh_property, _meshes[0])
     data_aspects = np.asarray([get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
@@ -617,50 +587,23 @@ def plot(
     n_axs = shape[0] * shape[1]
     if ax is None and fig is None:
         _fig, _ax = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
-        fig = _draw_plot(meshes, mesh_property, fig=_fig, ax=_ax)
+        fig = _draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
+        assert isinstance(fig, plt.Figure)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is None:
-        _draw_plot(meshes, mesh_property, ax=ax)
+        _draw_plot(meshes, mesh_property, axes=ax)
         ax.set_aspect(1.0 / ax_aspects[0])
     elif ax is None and fig is not None:
         fig = _draw_plot(meshes, mesh_property, fig=fig)
+        assert isinstance(fig, plt.Figure)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is not None:
-        _draw_plot(meshes, mesh_property, fig=fig, ax=ax)
+        _draw_plot(meshes, mesh_property, fig=fig, axes=ax)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
             ax.set_aspect(1.0 / aspect)
     return fig
-
-
-def plot_limit(
-    mesh_series: MeshSeries,
-    mesh_property: Union[Property, str],
-    limit: Literal["min", "max"],
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> mfigure.Figure:
-    """
-    Plot the property limits through all timesteps of a MeshSeries.
-
-    :param mesh_series: MeshSeries object containing the data to be plotted
-    :param property:    The property field to be evaluated
-    :param limit:       Type of limit to be computed
-    :param fig: Matplotlib Figure object to use for plotting (optional)
-    :param ax: Matplotlib Axis object to use for plotting (optional)
-
-    :returns:   A matplotlib Figure
-    """
-    mesh = mesh_series.read(0)
-    mesh_property = get_preset(mesh_property, mesh)
-    func = {"min": np.min, "max": np.max}[limit]
-    vals = mesh_series.values(mesh_property.data_name)
-    func(vals, out=mesh[mesh_property.data_name], axis=0)
-    limit_property = mesh_property.replace(
-        output_name=limit + " " + mesh_property.output_name
-    )
-    return plot(mesh, limit_property, fig=fig, ax=ax)
 
 
 def plot_probe(
@@ -676,8 +619,8 @@ def plot_probe(
     linestyles: Optional[list] = None,
     ax: Optional[plt.Axes] = None,
     fill_between: bool = False,
-    **kwargs,
-) -> mfigure.Figure:
+    **kwargs: Any,
+) -> Optional[mfigure.Figure]:
     """
     Plot the transient property on the observation points in the MeshSeries.
 
