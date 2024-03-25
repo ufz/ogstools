@@ -9,6 +9,7 @@ import logging as log
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable
+from typing import Optional
 
 import numpy as np
 import pyvista as pv
@@ -295,7 +296,9 @@ def get_materials_of_HT_model(
     return material_properties
 
 
-def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
+def get_materials_of_HC_model(
+    mesh: pv.UnstructuredGrid,
+) -> tuple[defaultdict, list]:
     """
     Gets the material parameter for each chemical species/component of the model.
 
@@ -312,6 +315,7 @@ def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
         "P_CONDX": "permeability_X",
         "P_CONDY": "permeability_Y",
         "P_CONDZ": "permeability_Z",
+        "retardation_factor": "retardation_factor",
     }
 
     feflow_species_parameter = [
@@ -321,12 +325,16 @@ def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
     ]
 
     ogs_species_parameter = []
+    species_list = []
     for feflow_species_para in feflow_species_parameter:
         for feflow_parameter in parameters_mapping:
             if feflow_parameter in feflow_species_para:
                 ogs_param = parameters_mapping[feflow_parameter]
                 ogs_species_parameter.append(
                     feflow_species_para.replace(feflow_parameter, ogs_param)
+                )
+                species_list.append(
+                    feflow_species_para.replace(feflow_parameter, "")
                 )
 
     material_properties: defaultdict = defaultdict(dict)
@@ -338,7 +346,7 @@ def get_materials_of_HC_model(mesh: pv.UnstructuredGrid) -> defaultdict:
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
 
-    return material_properties
+    return material_properties, species_list
 
 
 def add_species_to_prj_file(
@@ -368,7 +376,7 @@ def add_species_to_prj_file(
         )
         for parameter, parameter_val in parameter_dict.items():
             if (
-                any(c in parameter for c in species_parameter)
+                any(spec_par in parameter for spec_par in species_parameter)
                 and species in parameter
             ):
                 model.add_block(
@@ -787,8 +795,9 @@ def setup_prj_file(
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    model: ogs.OGS = None,
-) -> ogs.OGS:
+    species_list: Optional[list] = None,
+    model=None,
+) -> None:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
 
@@ -957,6 +966,9 @@ def setup_prj_file(
         materials_in_liquid_flow(material_properties, model)
     elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
+    elif process == "HC":
+        assert species_list is not None
+        materials_in_HC(material_properties, species_list, model)
     else:
         msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
         raise ValueError(msg)
