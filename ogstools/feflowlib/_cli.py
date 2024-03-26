@@ -19,6 +19,7 @@ from ogs6py import ogs
 
 from ogstools.feflowlib import (
     combine_material_properties,
+    component_transport,
     convert_geometry_mesh,
     deactivate_cells,
     extract_cell_boundary_conditions,
@@ -197,7 +198,11 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             )
             process = "hydro thermal"
         elif "HC" in case:
-            template_model = ogs.OGS(PROJECT_FILE="test_HC.prj")
+            template_model = component_transport(
+                str(Path(output).name),
+                species,
+                ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
+            )
             process = "HC"
         else:
             error_msg = """Either you select 'OGS_steady_state_diffusion' to prepare an OGS project file for a steady state diffusion process,\n

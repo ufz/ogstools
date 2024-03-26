@@ -18,7 +18,12 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from .templates import hydro_thermal, liquid_flow, steady_state_diffusion
+from .templates import (
+    component_transport,
+    hydro_thermal,
+    liquid_flow,
+    steady_state_diffusion,
+)
 from .tools import (
     combine_material_properties,
     deactivate_cells,
@@ -36,6 +41,7 @@ from .tools import (
 
 __all__ = [
     "combine_material_properties",
+    "component_transport",
     "convert_geometry_mesh",
     "convert_properties_mesh",
     "deactivate_cells",

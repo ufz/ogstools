@@ -820,7 +820,7 @@ def setup_prj_file(
     :Keyword Arguments (kwargs):
        * *model* (``ogs.OGS``) --
          A ogs6py (ogs) model that is extended, should be used for templates
-       * *species_lsit* (``list``) --
+       * *species_list* (``list``) --
          All chemical species that occur in a model, if the model is to simulate a
          HC (Componenttransport) process.
     :return: model
@@ -864,11 +864,29 @@ def setup_prj_file(
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
+    elif "HC" in process:
+        model.processes.add_process_variable(
+            process_variable="pressure", process_variable_name="HEAD_OGS"
+        )
+        model.parameters.add_parameter(name="C0", type="Constant", value=0)
+        for spec in species_list:
+            model.processes.add_process_variable(
+                process_variable="concentration_" + spec,
+                process_variable_name=spec,
+            )
+            model.processvars.set_ic(
+                process_variable_name=spec,
+                components=1,
+                order=1,
+                initial_condition="C0",
+            )
+
     else:
         model.processes.add_process_variable(
             process_variable="process_variable",
             process_variable_name="HEAD_OGS",
         )
+
     model.processvars.set_ic(
         process_variable_name="HEAD_OGS",
         components=1,
@@ -877,7 +895,14 @@ def setup_prj_file(
     )
     model.parameters.add_parameter(name="p0", type="Constant", value=0)
     for point_data in mesh.point_data:
-        if point_data[0:4] == "P_BC":
+        if "P_BC" in point_data:
+            if "FLOW" in point_data:
+                process_var = "HEAD_OGS"
+            elif "HEAT" in point_data:
+                process_var = "temperature"
+            elif "MASS" in point_data:
+                process_var = point_data.split("_P_", 1)[0]
+                logger.info(process_var)
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
             if "HEAT" in point_data:
@@ -983,7 +1008,7 @@ def setup_prj_file(
     if process == "steady state diffusion":
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
-        materials_in_liquid_flow(material_properties, model)
+        materials_in_liquid_flow(materiafl_properties, model)
     elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
     elif process == "HC":

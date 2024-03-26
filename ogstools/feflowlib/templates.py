@@ -159,6 +159,81 @@ def liquid_flow(
     return model
 
 
+def component_transport(saving_path: str, species: list, model: ogs.OGS = None):
+    """
+    A template for component transport process to be simulated in ogs.
+
+    :param saving_path: path of ogs simulation results
+    :param species:
+    :param model: ogs model, which shall be used with the template
+    """
+    model.processes.set_process(
+        name="CT",
+        type="ComponentTransport",
+        coupling_scheme="staggered",
+        integration_order="2",
+        specific_body_force="0 0 0",
+    )
+    # Actually for each process variable, especially for each
+    # chemical species the following functions need to be called.
+    # But this feature is not supplied by ogs6py
+    model.timeloop.add_process(
+        process="CT",
+        nonlinear_solver_name="basic_picard",
+        convergence_type="DeltaX",
+        norm_type="NORM2",
+        abstol="1e-10",
+        time_discretization="BackwardEuler",
+    )
+    model.timeloop.set_stepping(
+        process="CT",
+        type="FixedTimeStepping",
+        t_initial="0",
+        t_end="1",
+        repeat="1",
+        delta_t="1",
+    )
+    output_variables = species + ["pressure"]
+    model.timeloop.add_output(
+        type="VTK",
+        prefix=str(saving_path),
+        repeat="1",
+        each_steps="1",
+        variables=output_variables,
+    )
+    model.nonlinsolvers.add_non_lin_solver(
+        name="basic_picard",
+        type="Picard",
+        max_iter="10",
+        linear_solver="general_linear_solver",
+    )
+    model.linsolvers.add_lin_solver(
+        name="general_linear_solver",
+        kind="lis",
+        solver_type="bicgstab",
+        precon_type="ilut",
+        max_iteration_step="10000",
+        error_tolerance="1e-10",
+    )
+    model.linsolvers.add_lin_solver(
+        name="general_linear_solver",
+        kind="eigen",
+        solver_type="CG",
+        precon_type="DIAGONAL",
+        max_iteration_step="100000",
+        error_tolerance="1e-20",
+    )
+    model.linsolvers.add_lin_solver(
+        name="general_linear_solver",
+        kind="petsc",
+        prefix="ct",
+        solver_type="bcgs",
+        precon_type="bjacobi",
+        max_iteration_step="10000",
+        error_tolerance="1e-16",
+    )
+    return model
+
 def hydro_thermal(
     saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
 ) -> ogs.OGS:
