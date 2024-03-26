@@ -247,7 +247,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     return material_properties
 
 
-def get_materials_of_HT_model(
+def get_material_properties_of_HT_model(
     mesh: pv.UnstructuredGrid,
 ) -> defaultdict:
     """
@@ -295,11 +295,11 @@ def get_materials_of_HT_model(
     return material_properties
 
 
-def get_materials_of_HC_model(
+def get_material_properties_of_HC_model(
     mesh: pv.UnstructuredGrid,
-) -> tuple[defaultdict, list]:
+) -> defaultdict:
     """
-    Gets the material parameter for each chemical species/component of the model.
+    Gets the material properties/parameter for each chemical species/component of the model.
 
     :param mesh: mesh
     """
@@ -324,16 +324,12 @@ def get_materials_of_HC_model(
     ]
 
     ogs_species_parameter = []
-    species_list = []
     for feflow_species_para in feflow_species_parameter:
         for feflow_parameter in parameters_mapping:
             if feflow_parameter in feflow_species_para:
                 ogs_param = parameters_mapping[feflow_parameter]
                 ogs_species_parameter.append(
                     feflow_species_para.replace(feflow_parameter, ogs_param)
-                )
-                species_list.append(
-                    feflow_species_para.replace(feflow_parameter, "")
                 )
 
     material_properties: defaultdict = defaultdict(dict)
@@ -345,7 +341,25 @@ def get_materials_of_HC_model(
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
 
-    return material_properties, species_list
+    return material_properties
+
+
+def get_species(mesh: pv.UnstructuredGrid) -> list:
+    """
+    Get the names of chemical species of a mesh. Only works, if species-specific
+    porosity values are assigned and named '*_P_PORO'.
+    """
+    species = [
+        cell_data.replace("_P_PORO", "")
+        for cell_data in mesh.cell_data
+        if "P_PORO" in cell_data
+    ]
+    if not species:
+        ValueError(
+            """No species are found. This could be due to the fact that no porosity
+                   values for species are assigned."""
+        )
+    return species
 
 
 def add_species_to_prj_file(

@@ -22,8 +22,9 @@ from ogstools.feflowlib import (
     convert_geometry_mesh,
     deactivate_cells,
     extract_cell_boundary_conditions,
-    get_materials_of_HC_model,
-    get_materials_of_HT_model,
+    get_materials_properties_of_HT_model,
+    get_material_properties_of_HC_model,
+    get_species,
     helpFormat,
     hydro_thermal,
     liquid_flow,
@@ -163,7 +164,8 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             material_properties = get_materials_of_HT_model(mesh)
 
         else:
-            material_properties, species = get_materials_of_HC_model(mesh)
+            material_properties = get_material_properties_of_HC_model(mesh)
+            species = get_species(mesh)
         for material_id, property_value in material_properties.items():
             if any(prop == "inhomogeneous" for prop in property_value):
                 write_mesh_of_combined_properties(
