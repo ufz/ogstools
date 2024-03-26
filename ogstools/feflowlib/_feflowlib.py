@@ -127,7 +127,9 @@ def _material_ids_from_selections(
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
-def fetch_user_data(user_data, geom_type, val_type):
+def fetch_user_data(
+    user_data: np.ndarray, geom_type: str, val_type: str
+) -> list:
     return [
         data[1]
         for data in user_data
@@ -225,10 +227,11 @@ def _point_and_cell_data(
     return (pt_data, cell_data)
 
 
-def _convert_to_SI_units(mesh: pv.UnstructuredGrid):
+def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     """
-    FEFLOW often uses days as unit for time. In OGS SI-units are used. This is why
-    days must be converted to seconds.
+    FEFLOW often uses days as unit for time. In OGS SI-units are used.
+    This is why days must be converted to seconds for properties to work
+    correctly in OGS.
 
     :param mesh: mesh
     """

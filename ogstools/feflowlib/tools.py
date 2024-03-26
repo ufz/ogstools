@@ -2,6 +2,7 @@ import argparse
 import logging as log
 from collections import defaultdict
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import pyvista as pv
@@ -20,7 +21,8 @@ class helpFormat(
 
 
 def get_specific_surface(
-    surface_mesh: pv.PolyData, filter_condition
+    surface_mesh: pv.PolyData,
+    filter_condition: Callable[[pv.pyvista_ndarray], pv.pyvista_ndarray],
 ) -> pv.UnstructuredGrid:
     """
     Return only cells that match the filter condition for the normals of the
@@ -45,7 +47,7 @@ def get_specific_surface(
     return surface_mesh.extract_cells(ids)
 
 
-def assign_bulk_ids(mesh: pv.UnstructuredGrid):
+def assign_bulk_ids(mesh: pv.UnstructuredGrid) -> None:
     """
     Add data arrays for bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
@@ -58,7 +60,7 @@ def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     )
 
 
-def remove_bulk_ids(mesh: pv.UnstructuredGrid):
+def remove_bulk_ids(mesh: pv.UnstructuredGrid) -> None:
     """
     Remove data arrays for bulk_node_ids and bulk_element_ids of the given bulk mesh.
 
@@ -68,7 +70,7 @@ def remove_bulk_ids(mesh: pv.UnstructuredGrid):
     mesh.cell_data.remove("bulk_element_ids")
 
 
-def get_dimension(mesh: pv.UnstructuredGrid):
+def get_dimension(mesh: pv.UnstructuredGrid) -> int:
     """
     Return the dimension of the mesh.
 
@@ -149,7 +151,7 @@ def extract_point_boundary_conditions(
 
 def write_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> None:
     """
     Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
 
@@ -165,7 +167,7 @@ def write_point_boundary_conditions(
 
 def extract_cell_boundary_conditions(
     bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> tuple[Path, pv.UnstructuredGrid]:
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
@@ -176,7 +178,6 @@ def extract_cell_boundary_conditions(
     :param bulk_mesh_path: name of the mesh
     :param mesh: mesh
     :return: path with name of mesh, topsurface mesh with cell boundary conditions
-    :rtype: tuple
     """
     assign_bulk_ids(mesh)
     if mesh.volume != 0:
@@ -352,7 +353,7 @@ def write_mesh_of_combined_properties(
 
 def materials_in_steady_state_diffusion(
     material_properties: dict,
-    model,
+    model: ogs.OGS,
 ) -> ogs.OGS:
     """
     Create the section for material properties for steady state diffusion processes in the prj-file.
@@ -396,7 +397,7 @@ def materials_in_steady_state_diffusion(
 
 def materials_in_liquid_flow(
     material_properties: dict,
-    model,
+    model: ogs.OGS,
 ) -> ogs.OGS:
     """
     Create the section for material properties in liquid flow processes in the prj-file.
@@ -466,7 +467,7 @@ def materials_in_liquid_flow(
 
 def materials_in_HT(
     material_properties: dict,
-    model,
+    model: ogs.OGS,
 ) -> ogs.OGS:
     """
     Create the section for material properties for HT processes in the prj-file.
@@ -591,7 +592,7 @@ def setup_prj_file(
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    model=None,
+    model: ogs.OGS = None,
 ) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.

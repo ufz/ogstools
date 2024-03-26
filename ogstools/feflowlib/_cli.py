@@ -203,6 +203,6 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     return 0
 
 
-def cli():
+def cli() -> None:
     args = parser.parse_args()
     feflow_converter(args.input, args.output, args.case, args.BC)
