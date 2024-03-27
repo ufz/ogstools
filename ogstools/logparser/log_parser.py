@@ -80,7 +80,7 @@ def parse_file(
     file_name: Union[str, Path],
     maximum_lines: Optional[int] = None,
     force_parallel: bool = False,
-    ogs_res: Callable = ogs_regexes,
+    ogs_res: Optional[list] = None,
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,
@@ -109,11 +109,14 @@ def parse_file(
         process_regex = ""
         try_match = _try_match_serial_line
 
-    def compile_re_fn(mpi_process_regex):
+    def compile_re_fn(mpi_process_regex: str) -> Callable[[str], re.Pattern]:
         return lambda regex: re.compile(mpi_process_regex + regex)
 
     compile_re = compile_re_fn(process_regex)
-    patterns = [(compile_re(k), v) for k, v in ogs_res()]
+
+    if ogs_res is None:
+        ogs_res = ogs_regexes()
+    patterns = [(compile_re(k), v) for k, v in ogs_res]
 
     number_of_lines_read = 0
     with file_name.open() as file:
