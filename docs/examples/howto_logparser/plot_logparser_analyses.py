@@ -40,8 +40,8 @@ df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)
 
 # %%
-# Iterations per time step
-# ------------------------
+# Analysis of iterations per time step
+# ------------------------------------
 # Please see explanation in logparser
 # :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_intro.py`.
 # (Section: Use predefined analyses)
@@ -52,8 +52,8 @@ df_ts_it  # noqa: B018
 
 
 # %%
-# Performance in separate parts by time step
-# ---------------------------------------------
+# Analysis of computational efficiency by time step
+# -------------------------------------------------
 # The resulting table presents the performance metrics for separate parts of the simulation,
 # organized by time step. Is uses :py:mod:`ogstools.logparser.analysis_time_step`.
 # Each row corresponds to a specific time step, displaying metrics such
@@ -66,8 +66,6 @@ df_ts = df_ts.loc[0]
 # - see advanced
 df_ts  # noqa: B018
 # %%
-# Performance of in separate parts by time step - plot
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We select only some metrics (3) and use pandas plot function.
 df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
     logy=True, grid=True
@@ -85,8 +83,8 @@ analysis_convergence_newton_iteration(df_log)
 
 
 # %%
-# Staggered
-# ---------
+# Staggered - Analysis of convergence criteria - Newton iterations
+# ----------------------------------------------------------------
 # The resulting table provides convergence criteria for staggered coupled processes,
 # Each row represents convergence metrics such as `global component norm |x|`, `change of global component norm |dx|` (change between 2 iteration of non linear solver)
 # and `relative change of global component |dx|/|x|` at different time steps and coupling

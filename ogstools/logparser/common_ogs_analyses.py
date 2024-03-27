@@ -206,11 +206,13 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     Pandas documentation : https://pandas.pydata.org/pandas-docs/stable/user_guide/
 
     Notes:
-    Some logs do not contain information about time_step and iteration. The information must be collected by context (by surrounding log lines from same mpi_process)
-    Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process
+    Some logs do not contain information about time_step and iteration. The
+    information must be collected by context (by surrounding log lines from same mpi_process).
+    Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process.
     There are log lines that give the current time step (when time step starts).
-    It can be assumed that in all following lines belong to this time steps, until next collected value of time step
-    Some columns that contain actual integer values are converted to float
+    It can be assumed that in all following lines belong to this time steps, until next
+    collected value of time step.
+    Some columns that contain actual integer values are converted to float.
     See https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
     ToDo list of columns with integer values are known from regular expression
 
