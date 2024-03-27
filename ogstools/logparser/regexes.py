@@ -1,33 +1,4 @@
-# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#              See accompanying file LICENSE.txt or
-#              http://www.opengeosys.org/project/license
-
 from dataclasses import dataclass
-
-
-class Info:
-    @staticmethod
-    def type_str():
-        return "Info"
-
-
-class WarningType:
-    @staticmethod
-    def type_str():
-        return "Warning"
-
-
-class ErrorType:
-    @staticmethod
-    def type_str():
-        return "Error"
-
-
-class CriticalType:
-    @staticmethod
-    def type_str():
-        return "Critical"
 
 
 @dataclass
@@ -35,9 +6,37 @@ class Log:
     type: str
     line: int
 
+    @staticmethod
+    def type_str() -> str:
+        return "Log"
+
+
+class Info(Log):
+    @staticmethod
+    def type_str() -> str:
+        return "Info"
+
+
+class WarningType(Log):
+    @staticmethod
+    def type_str() -> str:
+        return "Warning"
+
+
+class ErrorType(Log):
+    @staticmethod
+    def type_str() -> str:
+        return "Error"
+
+
+class CriticalType(Log):
+    @staticmethod
+    def type_str() -> str:
+        return "Critical"
+
 
 @dataclass
-class MPIProcess(Log):
+class MPIProcess(Info):
     mpi_process: int
 
 
@@ -164,7 +163,13 @@ class WarningMessage(MPIProcess, WarningType):
     message: str
 
 
-def ogs_regexes():
+def ogs_regexes() -> list[tuple[str, type[Log]]]:
+    """
+    Defines regular expressions for parsing OpenGeoSys log messages.
+
+    :return:  A list of tuples, each containing a regular expression pattern
+              and the corresponding message class.
+    """
     return [
         (
             r"info: \[time\] Output of timestep (\d+) took ([\d\.e+-]+) s",
@@ -196,8 +201,14 @@ def ogs_regexes():
             r"info: \[time\] Applying Dirichlet BCs took ([\d\.e+-]+) s",
             DirichletTime,
         ),
-        (r"info: \[time\] Linear solver took ([\d\.e+-]+) s", LinearSolverTime),
-        (r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s", IterationTime),
+        (
+            r"info: \[time\] Linear solver took ([\d\.e+-]+) s",
+            LinearSolverTime,
+        ),
+        (
+            r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
+            IterationTime,
+        ),
         (
             r"info: Convergence criterion: \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)$",
             TimeStepConvergenceCriterion,

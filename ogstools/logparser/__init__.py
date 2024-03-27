@@ -11,7 +11,7 @@ from .common_ogs_analyses import (
     time_step_vs_iterations,
 )
 from .log_parser import parse_file
-from .ogs_regexes import ogs_regexes
+from .regexes import ogs_regexes
 
 __all__ = [
     "parse_file",
