@@ -46,13 +46,11 @@ def pre_post_check(interest: list[str], context: list[str]) -> Callable:
     It checks the DataFrame against specified 'interest' and 'context' criteria both
     before and after the function is called.
 
-    Parameters:
-    - interest (List[str]): A list of strings indicating the columns of interest in the DataFrame.
-    - context (List[str]): A list of strings indicating the context columns in the DataFrame
-                           that should be checked.
 
-    Returns:
-    - A decorator function that takes a function accepting a pandas DataFrame and
+    :param interest: indicates the columns of interest in the DataFrame.
+    :param context: indicates the context columns in the DataFrame that should be checked.
+
+    :return: A decorator function that takes a function accepting a pandas DataFrame and
       returns a modified DataFrame, wrapping it with pre-check and post-check logic
       based on the specified 'interest' and 'context'.
     """
@@ -195,32 +193,26 @@ def analysis_simulation_termination(df: pd.DataFrame):
     return pd.DataFrame()
 
 
-def fill_ogs_context(df_raw_log: pd.DataFrame):
+def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     """
     Fill missing values in OpenGeoSys (OGS) log DataFrame by context.
+    This function fills missing values in an OpenGeoSys (OGS) log DataFrame by context.
 
-    This function fills missing values in an OpenGeoSys (OGS) log DataFrame by context. Some logs do not contain information about time_step and iteration. The information must be collected by context, by surrounding log lines from the same MPI process. Logs are grouped by MPI process to get only surrounding log lines from the same MPI process. It is assumed that all following lines belong to the same time step until the next collected value of the time step. Some columns that contain actual integer values are converted to float.
+    :param df_raw_log: DataFrame containing the raw OGS log data. Usually, the result of pd.DataFrame(parse_file(file))
 
-    Parameters:
-    - df (pd.DataFrame): DataFrame containing the raw OGS log data. Usually, the result of pd.DataFrame(parse_file(file))
-
-    Returns:
-    - pd.DataFrame: DataFrame with missing values filled by context.
+    :return: pd.DataFrame with missing values filled by context.
 
     References:
-    - Pandas documentation : https://pandas.pydata.org/pandas-docs/stable/user_guide/
-
-    Todo:
-    - List of columns with integer values are known from regular expression.
+    Pandas documentation : https://pandas.pydata.org/pandas-docs/stable/user_guide/
 
     Notes:
-    - Some logs do not contain information about time_step and iteration. The information must be collected by context (by surrounding log lines from same mpi_process)
-      Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process
-      There are log lines that give the current time step (when time step starts).
-      It can be assumed that in all following lines belong to this time steps, until next collected value of time step
-      Some columns that contain actual integer values are converted to float
-      See https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
-      ToDo list of columns with integer values are known from regular expression
+    Some logs do not contain information about time_step and iteration. The information must be collected by context (by surrounding log lines from same mpi_process)
+    Logs are grouped by mpi_process to get only surrounding log lines from same mpi_process
+    There are log lines that give the current time step (when time step starts).
+    It can be assumed that in all following lines belong to this time steps, until next collected value of time step
+    Some columns that contain actual integer values are converted to float
+    See https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
+    ToDo list of columns with integer values are known from regular expression
 
     """
     int_columns = [
