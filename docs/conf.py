@@ -36,6 +36,7 @@ extensions = [
     "sphinx_gallery.gen_gallery",
 ]
 
+
 templates_path = ["_templates"]
 exclude_patterns = [
     "_build",

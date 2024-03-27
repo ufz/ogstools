@@ -1,0 +1,114 @@
+info: This is OpenGeoSys-6 version 6.5.0-167-gd7633c76.dirty.
+info: OGS started on 2024-03-21 13:17:33+0100.
+info: This is OpenGeoSys-6 version 6.5.0-167-gd7633c76.dirty.
+info: OGS started on 2024-03-21 13:17:33+0100.
+info: This is OpenGeoSys-6 version 6.5.0-167-gd7633c76.dirty.
+info: OGS started on 2024-03-21 13:17:33+0100.
+[2] info: Reading project file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj.
+[0] info: Reading project file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj.
+[1] info: Reading project file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj.
+[0] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/steady_state_diffusion.include into project file.
+[1] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/steady_state_diffusion.include into project file.
+[2] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/steady_state_diffusion.include into project file.
+[0] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3.include into project file.
+[2] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3.include into project file.
+[1] info: Including /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3.include into project file.
+[0] info: Reading corresponding part of mesh data from binary file cube_1x1x1_hex_1e3 ...
+[2] info: Reading corresponding part of mesh data from binary file cube_1x1x1_hex_1e3 ...
+[1] info: Reading corresponding part of mesh data from binary file cube_1x1x1_hex_1e3 ...
+[0] warning: Could not open file 'cube_1x1x1_hex_1e3_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[2] warning: Could not open file 'cube_1x1x1_hex_1e3_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[1] warning: Could not open file 'cube_1x1x1_hex_1e3_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[1] info: [time] Reading the mesh took 0.007251 s.
+[2] info: [time] Reading the mesh took 0.007835 s.
+[0] info: [time] Reading the mesh took 0.008025 s.
+[2] info: readRasters ...
+[2] info: readRasters done
+[2] info: ConstantParameter: p0
+[2] info: ConstantParameter: p_Dirichlet_left
+[2] info: ConstantParameter: p_Dirichlet_right
+[1] info: readRasters ...
+[1] info: readRasters done
+[1] info: ConstantParameter: p0
+[2] info: No source terms for process variable 'pressure' found.
+[1] info: ConstantParameter: p_Dirichlet_left
+[1] info: ConstantParameter: p_Dirichlet_right
+[0] info: readRasters ...
+[0] info: readRasters done
+[1] info: No source terms for process variable 'pressure' found.
+[0] info: ConstantParameter: p0
+[0] info: ConstantParameter: p_Dirichlet_left
+[0] info: ConstantParameter: p_Dirichlet_right
+[0] info: No source terms for process variable 'pressure' found.
+[1] info: Initialize processes.
+[2] info: Initialize processes.
+[0] info: Initialize processes.
+[0] info: HDF5: Using a single chunk for dataset geometry .
+[2] info: HDF5: Using a single chunk for dataset geometry .
+[1] info: HDF5: Using a single chunk for dataset geometry .
+[2] info: HDF5: Using a single chunk for dataset geometry .
+[2] info: HDF5: Using a single chunk for dataset topology .
+[1] info: HDF5: Using a single chunk for dataset geometry .
+[1] info: HDF5: Using a single chunk for dataset topology .
+[0] info: HDF5: Using a single chunk for dataset geometry .
+[0] info: HDF5: Using a single chunk for dataset topology .
+[0] info: HDF5: Using a single chunk for dataset pressure .
+[1] info: HDF5: Using a single chunk for dataset pressure .
+[2] info: HDF5: Using a single chunk for dataset pressure .
+[0] info: HDF5: Using a single chunk for dataset v .
+[2] info: HDF5: Using a single chunk for dataset v .
+[1] info: HDF5: Using a single chunk for dataset v .
+[1] info: [time] Output of timestep 0 took 0.00447257 s.
+[2] info: [time] Output of timestep 0 took 0.00447257 s.
+[2] info: Solve processes.
+[0] info: [time] Output of timestep 0 took 0.00449248 s.
+[0] info: Solve processes.
+[1] info: Solve processes.
+[1] info: === Time stepping at step #1 and time 0.1 with step size 0.1
+[2] info: === Time stepping at step #1 and time 0.1 with step size 0.1
+[0] info: === Time stepping at step #1 and time 0.1 with step size 0.1
+[1] info: [time] Assembly took 0.0058952 s.
+[0] info: [time] Assembly took 0.00589635 s.
+[2] info: [time] Assembly took 0.00589633 s.
+[0] info: [time] Applying Dirichlet BCs took 0.000100729 s.
+[1] info: [time] Applying Dirichlet BCs took 9.7956e-05 s.
+[2] info: [time] Applying Dirichlet BCs took 0.000100732 s.
+
+================================================
+Linear solver bcgs with mg preconditioner using PRECONDITIONED
+converged in 15 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.0031392 s.
+[2] info: [time] Linear solver took 0.0031265 s.
+[2] info: [time] Iteration #1 took 0.00918299 s.
+[1] info: [time] Linear solver took 0.0031268 s.
+[1] info: [time] Iteration #1 took 0.00917942 s.
+[0] info: [time] Iteration #1 took 0.00918262 s.
+[0] info: [time] Solving process #0 took 0.00926697 s in time step #1
+[1] info: [time] Solving process #0 took 0.00926667 s in time step #1
+[2] info: [time] Solving process #0 took 0.00926656 s in time step #1
+[2] info: [time] Time step #1 took 0.0093221 s.
+[0] info: [time] Time step #1 took 0.00931536 s.
+[1] info: [time] Time step #1 took 0.00932201 s.
+[2] info: [time] Output of timestep 1 took 0.00231362 s.
+[2] info: The whole computation of the time stepping took 1 steps, in which
+	 the accepted steps are 1, and the rejected steps are 0.
+
+[1] info: [time] Output of timestep 1 took 0.00231531 s.
+[1] info: The whole computation of the time stepping took 1 steps, in which
+	 the accepted steps are 1, and the rejected steps are 0.
+
+[1] info: [time] Execution took 0.0873399 s.
+[0] info: [time] Output of timestep 1 took 0.00231734 s.
+[0] info: The whole computation of the time stepping took 1 steps, in which
+	 the accepted steps are 1, and the rejected steps are 0.
+
+[0] info: [time] Execution took 0.0873461 s.
+[2] info: [time] Execution took 0.087346 s.
+[0] info: [time] Output of XDMF to cube_1e3_np3_cube_1x1x1_hex_1e3.xdmf took 8.7512e-05 s.
+[1] info: OGS terminated on 2024-03-21 13:17:34+0100.
+[0] info: OGS terminated on 2024-03-21 13:17:34+0100.
+[2] info: OGS terminated on 2024-03-21 13:17:34+0100.
