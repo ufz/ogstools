@@ -7,12 +7,12 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 
-from ogstools.logparser.ogs_regexes import ogs_regexes
+from ogstools.logparser.regexes import Log, ogs_regexes
 
 
 def _try_match_parallel_line(
-    line: str, line_nr: int, regex: re.Pattern, pattern_class
-):
+    line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
+) -> Optional[Any]:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = pattern_class.type_str()
@@ -30,8 +30,8 @@ def _try_match_parallel_line(
 
 
 def _try_match_serial_line(
-    line: str, line_nr: int, regex: re.Pattern, pattern_class
-):
+    line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
+) -> Optional[list[tuple[str, Log]]]:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = pattern_class.type_str()
