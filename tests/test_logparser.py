@@ -66,38 +66,38 @@ class MeshplotlibTest(unittest.TestCase):
         record_id = namedtuple("id", "mpi_process time_step")
         digits = 6
         self.assertAlmostEqual(
-            df_ts.at[record_id(mpi_process=0.0, time_step=1.0), "output_time"],
+            df_ts.loc[record_id(mpi_process=0.0, time_step=1.0), "output_time"],
             0.001871,
             digits,
         )
         self.assertAlmostEqual(
-            df_ts.at[record_id(mpi_process=1.0, time_step=1.0), "output_time"],
+            df_ts.loc[record_id(mpi_process=1.0, time_step=1.0), "output_time"],
             0.001833,
             digits,
         )
         self.assertAlmostEqual(
-            df_ts.at[
+            df_ts.loc[
                 record_id(mpi_process=0.0, time_step=1.0), "linear_solver_time"
             ],
             0.004982,
             digits,
         )
         self.assertAlmostEqual(
-            df_ts.at[
+            df_ts.loc[
                 record_id(mpi_process=0.0, time_step=1.0), "assembly_time"
             ],
             0.002892,
             digits,
         )
         self.assertAlmostEqual(
-            df_ts.at[
+            df_ts.loc[
                 record_id(mpi_process=1.0, time_step=1.0), "dirichlet_time"
             ],
             0.000250,
             digits,
         )
         self.assertAlmostEqual(
-            df_ts.at[
+            df_ts.loc[
                 record_id(mpi_process=2.0, time_step=1.0),
                 "time_step_solution_time",
             ],
@@ -119,7 +119,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
         digits = 6
         self.assertAlmostEqual(
-            df_cni.at[
+            df_cni.loc[
                 record_id(
                     time_step=1.0,
                     coupling_iteration=0,
@@ -133,7 +133,7 @@ class MeshplotlibTest(unittest.TestCase):
             digits,
         )
         self.assertAlmostEqual(
-            df_cni.at[
+            df_cni.loc[
                 record_id(
                     time_step=10.0,
                     coupling_iteration=5,
@@ -167,7 +167,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
         digits = 6
         self.assertAlmostEqual(
-            df_st.at[
+            df_st.loc[
                 record_id(
                     time_step=1.0,
                     coupling_iteration=1,
@@ -180,7 +180,7 @@ class MeshplotlibTest(unittest.TestCase):
             digits,
         )
         self.assertAlmostEqual(
-            df_st.at[
+            df_st.loc[
                 record_id(
                     time_step=10.0,
                     coupling_iteration=5,
@@ -224,6 +224,6 @@ class MeshplotlibTest(unittest.TestCase):
         df_records = fill_ogs_context(df_records)
         df_tsi = time_step_vs_iterations(df_records)
         # some specific values
-        self.assertEqual(df_tsi.at[0, "iteration_number"], 1)
-        self.assertEqual(df_tsi.at[1, "iteration_number"], 6)
-        self.assertEqual(df_tsi.at[10, "iteration_number"], 5)
+        self.assertEqual(df_tsi.loc[0, "iteration_number"], 1)
+        self.assertEqual(df_tsi.loc[1, "iteration_number"], 6)
+        self.assertEqual(df_tsi.loc[10, "iteration_number"], 5)
