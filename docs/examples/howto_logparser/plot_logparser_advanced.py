@@ -2,15 +2,16 @@
 Advanced topics
 ===============
 
-We cover:
+We address to following:
 
-1. Logs from parallel computation (OGS with MPI runs)
+1. Handling OGS logs from parallel computation (OGS with MPI runs).
 
-2. Reduce computation time to process logs
+2. Reduce computation time required for log processing.
 
-3. Custom analyses
+3. Creating custom analyses.
 
-Although these topics are presented together they do not depend on each other and can be used separately.
+Although these topics are discussed together, they are independent of each
+other and can be utilized separately as needed.
 
 """
 
@@ -29,6 +30,8 @@ from ogstools.logparser.examples import (
     const_viscosity_thermal_convection_log,
     parallel_log,
 )
+
+pd.set_option("display.max_rows", 8)  # for visualization only
 
 # %%
 # 1. Logs from parallel computations (with MPI)
@@ -58,7 +61,7 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # 2. Reduce computation time to process logs
 # ------------------------------------------
 #
-# To reduce the computation to evaluate the logs you can either
+# To reduce the computation to evaluate the logs, you can either
 # (2.1) Reduce set of regular expressions, when you exactly know,
 # what you final analysis will need
 
@@ -79,8 +82,8 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # %% [markdown]
 # 2.2. Save and load records
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-# We recommend to save the records by any of these methodes http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
-# For example with hdf:
+# We recommend saving the records by any of these methodes http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
+# For example with HDF:
 # ```python
 # df_records.to_hdf("anyfilename.csv")
 # pd.read_hdf("anyfilename.csv")
@@ -94,16 +97,16 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # The function :py:mod:`ogstools.logparser.parse_file` iterates over all lines in the log file. For a specific set of regular expressions it finds and creates a new entry into a list (here named records)
 #
 
-# Let us print the content of the log file in this example first.
+# Let us print the content of the log file in this example.
 with Path(const_viscosity_thermal_convection_log).open() as log_file:
     print(log_file.read())
 
 records = parse_file(const_viscosity_thermal_convection_log)
-# The list of records can directly be transformed into a pandas.DataFrame for further inspections. It is the raw representation of a filtered ogs log in pandas DataFrame format.
+# The list of records can directly be transformed into a pandas.DataFrame for further inspections. It is the raw representation of a filtered OGS log in pandas DataFrame format.
 df_records = pd.DataFrame(records)
 # The logparser is able to find the following entries:
 print(df_records.columns)
-# For each entry :py:mod:`ogstools.logparser.ogs_regexes` has added the type (corresponding to ogs log level) and value found to the result DataFrame.
+# For each entry :py:mod:`ogstools.logparser.ogs_regexes` has added the type (corresponding to OGS log level) and value found to the result DataFrame.
 df_records  # noqa: B018
 
 
@@ -116,7 +119,7 @@ df_log  # noqa: B018
 # %%
 # 3.2. Custom analyses - example
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# We create a pivot_table where for each time step we see the step_size and the number of iterations.
+# We create a pivot_table where for each time step we can see the step_size and the number of iterations.
 
 
 df_custom = df_records.pivot_table(

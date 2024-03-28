@@ -6,3 +6,12 @@ const_viscosity_thermal_convection_log = (
 )
 staggered_log = _prefix / "staggered_heat_transport_in_stationary_flow.log"
 parallel_log = _prefix / "steady_state_diffusion_parallel.log"
+
+parallel_1_info = _prefix / "parallel_1_info.txt"
+parallel_3_debug = _prefix / "parallel_3_debug.txt"
+serial_convergence_long = _prefix / "serial_convergence_long.txt"
+serial_convergence_short = _prefix / "serial_convergence_short.txt"
+serial_critical = _prefix / "serial_critical.txt"
+serial_info = _prefix / "serial_info.txt"
+serial_time_step_rejected = _prefix / "serial_time_step_rejected.txt"
+serial_warning_only = _prefix / "serial_warning_only.txt"
