@@ -99,6 +99,10 @@ def analysis_simulation(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def analysis_convergence_newton_iteration(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convergence metrics need to be interpreted as norm `|x|`,`|dx|`, `|dx|/|x|` and are specific to
+    defined <convergence_criterion> in prj - file.
+    """
     dfe_newton_iteration = df.copy()
     interest = ["dx", "x", "dx_x"]
     if "coupling_iteration" in df:
