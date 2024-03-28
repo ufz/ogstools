@@ -58,42 +58,46 @@ class MeshplotlibTest(unittest.TestCase):
             "The number of logs of each type should be a multiple of the number of processes",
         )
 
-        df = pd.DataFrame(records)
-        df = fill_ogs_context(df)
-        dfe = analysis_time_step(df)
+        df_records = pd.DataFrame(records)
+        df_records = fill_ogs_context(df_records)
+        df_ts = analysis_time_step(df_records)
 
         # some specific values
         record_id = namedtuple("id", "mpi_process time_step")
         digits = 6
         self.assertAlmostEqual(
-            dfe.at[record_id(mpi_process=0.0, time_step=1.0), "output_time"],
+            df_ts.at[record_id(mpi_process=0.0, time_step=1.0), "output_time"],
             0.001871,
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[record_id(mpi_process=1.0, time_step=1.0), "output_time"],
+            df_ts.at[record_id(mpi_process=1.0, time_step=1.0), "output_time"],
             0.001833,
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[
+            df_ts.at[
                 record_id(mpi_process=0.0, time_step=1.0), "linear_solver_time"
             ],
             0.004982,
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[record_id(mpi_process=0.0, time_step=1.0), "assembly_time"],
+            df_ts.at[
+                record_id(mpi_process=0.0, time_step=1.0), "assembly_time"
+            ],
             0.002892,
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[record_id(mpi_process=1.0, time_step=1.0), "dirichlet_time"],
+            df_ts.at[
+                record_id(mpi_process=1.0, time_step=1.0), "dirichlet_time"
+            ],
             0.000250,
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[
+            df_ts.at[
                 record_id(mpi_process=2.0, time_step=1.0),
                 "time_step_solution_time",
             ],
@@ -104,9 +108,9 @@ class MeshplotlibTest(unittest.TestCase):
     def test_serial_convergence_newton_iteration_long(self):
         filename = "tests/parser/serial_convergence_long.txt"
         records = parse_file(filename)
-        df = pd.DataFrame(records)
-        df = fill_ogs_context(df)
-        dfe = analysis_convergence_newton_iteration(df)
+        df_records = pd.DataFrame(records)
+        df_records = fill_ogs_context(df_records)
+        df_cni = analysis_convergence_newton_iteration(df_records)
 
         # some specific values
         record_id = namedtuple(
@@ -115,7 +119,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
         digits = 6
         self.assertAlmostEqual(
-            dfe.at[
+            df_cni.at[
                 record_id(
                     time_step=1.0,
                     coupling_iteration=0,
@@ -129,7 +133,7 @@ class MeshplotlibTest(unittest.TestCase):
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[
+            df_cni.at[
                 record_id(
                     time_step=10.0,
                     coupling_iteration=5,
@@ -146,15 +150,15 @@ class MeshplotlibTest(unittest.TestCase):
     def test_serial_convergence_coupling_iteration_long(self):
         filename = "tests/parser/serial_convergence_long.txt"
         records = parse_file(filename)
-        df = pd.DataFrame(records)
-        dfe = analysis_simulation_termination(df)
-        status = dfe.empty  # No errors assumed
+        df_records = pd.DataFrame(records)
+        df_st = analysis_simulation_termination(df_records)
+        status = df_st.empty  # No errors assumed
         self.assertEqual(status, True)  #
         if not (status):
-            print(dfe)
+            print(df_st)
         self.assertEqual(status, True)  #
-        df = fill_ogs_context(df)
-        dfe = analysis_convergence_coupling_iteration(df)
+        df_records = fill_ogs_context(df_records)
+        df_st = analysis_convergence_coupling_iteration(df_records)
 
         # some specific values
         record_id = namedtuple(
@@ -163,7 +167,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
         digits = 6
         self.assertAlmostEqual(
-            dfe.at[
+            df_st.at[
                 record_id(
                     time_step=1.0,
                     coupling_iteration=1,
@@ -176,7 +180,7 @@ class MeshplotlibTest(unittest.TestCase):
             digits,
         )
         self.assertAlmostEqual(
-            dfe.at[
+            df_st.at[
                 record_id(
                     time_step=10.0,
                     coupling_iteration=5,
@@ -193,33 +197,33 @@ class MeshplotlibTest(unittest.TestCase):
         filename = "tests/parser/serial_critical.txt"
         records = parse_file(filename)
         self.assertEqual(len(records), 4)
-        df = pd.DataFrame(records)
-        self.assertEqual(len(df), 4)
-        dfe = analysis_simulation_termination(df)
-        has_errors = not (dfe.empty)
+        df_records = pd.DataFrame(records)
+        self.assertEqual(len(df_records), 4)
+        df_st = analysis_simulation_termination(df_records)
+        has_errors = not (df_st.empty)
         self.assertEqual(has_errors, True)
         if has_errors:
-            print(dfe)
+            print(df_st)
 
     def test_serial_warning_only(self):
         filename = "tests/parser/serial_warning_only.txt"
         records = parse_file(filename)
         self.assertEqual(len(records), 1)
-        df = pd.DataFrame(records)
-        self.assertEqual(len(df), 1)
-        dfe = analysis_simulation_termination(df)
-        has_errors = not (dfe.empty)
+        df_records = pd.DataFrame(records)
+        self.assertEqual(len(df_records), 1)
+        df_st = analysis_simulation_termination(df_records)
+        has_errors = not (df_st.empty)
         self.assertEqual(has_errors, True)
         if has_errors:
-            print(dfe)
+            print(df_st)
 
     def test_serial_time_vs_iterations(self):
         filename = "tests/parser/serial_convergence_long.txt"
         records = parse_file(filename)
-        df = pd.DataFrame(records)
-        df = fill_ogs_context(df)
-        dfe = time_step_vs_iterations(df)
+        df_records = pd.DataFrame(records)
+        df_records = fill_ogs_context(df_records)
+        df_tsi = time_step_vs_iterations(df_records)
         # some specific values
-        self.assertEqual(dfe.at[0, "iteration_number"], 1)
-        self.assertEqual(dfe.at[1, "iteration_number"], 6)
-        self.assertEqual(dfe.at[10, "iteration_number"], 5)
+        self.assertEqual(df_tsi.at[0, "iteration_number"], 1)
+        self.assertEqual(df_tsi.at[1, "iteration_number"], 6)
+        self.assertEqual(df_tsi.at[10, "iteration_number"], 5)
