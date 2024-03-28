@@ -12,6 +12,14 @@ from ogstools.logparser import (
     parse_file,
     time_step_vs_iterations,
 )
+from ogstools.logparser.examples import (
+    parallel_1_info,
+    parallel_3_debug,
+    serial_convergence_long,
+    serial_critical,
+    serial_info,
+    serial_warning_only,
+)
 
 
 def log_types(records):
@@ -21,17 +29,15 @@ def log_types(records):
     return d
 
 
-class MeshplotlibTest(unittest.TestCase):
-    """Test case for logparser."""
+class LogparserTest(unittest.TestCase):
+    """Test cases for logparser."""
 
     def test_parallel_1_compare_serial_info(self):
-        filename_p = "tests/parser/parallel_1_info.txt"
         # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
-        records_p = parse_file(filename_p, force_parallel=True)
+        records_p = parse_file(parallel_1_info, force_parallel=True)
         num_of_record_type_p = [len(i) for i in log_types(records_p).values()]
 
-        filename_s = "tests/parser/serial_info.txt"
-        records_s = parse_file(filename_s)
+        records_s = parse_file(serial_info)
         num_of_record_type_s = [len(i) for i in log_types(records_s).values()]
 
         self.assertSequenceEqual(
@@ -41,8 +47,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
 
     def test_parallel_3_debug(self):
-        filename = "tests/parser/parallel_3_debug.txt"
-        records = parse_file(filename)
+        records = parse_file(parallel_3_debug)
         mpi_processes = 3
 
         self.assertEqual(
@@ -106,8 +111,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
 
     def test_serial_convergence_newton_iteration_long(self):
-        filename = "tests/parser/serial_convergence_long.txt"
-        records = parse_file(filename)
+        records = parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
         df_records = fill_ogs_context(df_records)
         df_cni = analysis_convergence_newton_iteration(df_records)
@@ -148,8 +152,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
 
     def test_serial_convergence_coupling_iteration_long(self):
-        filename = "tests/parser/serial_convergence_long.txt"
-        records = parse_file(filename)
+        records = parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
         df_st = analysis_simulation_termination(df_records)
         status = df_st.empty  # No errors assumed
@@ -194,8 +197,7 @@ class MeshplotlibTest(unittest.TestCase):
         )
 
     def test_serial_critical(self):
-        filename = "tests/parser/serial_critical.txt"
-        records = parse_file(filename)
+        records = parse_file(serial_critical)
         self.assertEqual(len(records), 4)
         df_records = pd.DataFrame(records)
         self.assertEqual(len(df_records), 4)
@@ -206,8 +208,7 @@ class MeshplotlibTest(unittest.TestCase):
             print(df_st)
 
     def test_serial_warning_only(self):
-        filename = "tests/parser/serial_warning_only.txt"
-        records = parse_file(filename)
+        records = parse_file(serial_warning_only)
         self.assertEqual(len(records), 1)
         df_records = pd.DataFrame(records)
         self.assertEqual(len(df_records), 1)
@@ -218,8 +219,7 @@ class MeshplotlibTest(unittest.TestCase):
             print(df_st)
 
     def test_serial_time_vs_iterations(self):
-        filename = "tests/parser/serial_convergence_long.txt"
-        records = parse_file(filename)
+        records = parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
         df_records = fill_ogs_context(df_records)
         df_tsi = time_step_vs_iterations(df_records)
