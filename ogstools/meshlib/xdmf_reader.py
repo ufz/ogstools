@@ -1,3 +1,9 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """
 This file provides an override to meshios XDMF Reader since it misses a feature
 to handle hyperslabs (there are two ways to handle hyperslab:

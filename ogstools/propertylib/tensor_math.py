@@ -1,3 +1,9 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """Common tensor transformation operations.
 
 They can be used as they are, but are also part of
