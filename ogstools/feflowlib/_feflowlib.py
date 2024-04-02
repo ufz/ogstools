@@ -10,14 +10,12 @@ ifm.forceLicense("Viewer")
 logger = log.getLogger(__name__)
 
 
-def points_and_cells(doc: ifm.FeflowDoc):
+def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     """
     Get points and cells in a pyvista compatible format.
 
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :return: pts, cells, celltypes (points, cells, celltypes)
-    :rtype: tuple(numpy.ndarray, list, list)
     """
     # 0. define variables
     cell_type_dict = {
@@ -50,6 +48,15 @@ def points_and_cells(doc: ifm.FeflowDoc):
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
         pts = np.pad(pts, [(0, 0), (0, 1)])
+        # order of points in the cells needs to be flipped
+        if nElement == 3:
+            cells = cells.reshape(-1, 4)
+            cells[:, -3:] = np.flip(cells[:, -3:], axis=1)
+            np.concatenate(cells)
+        if nElement == 4:
+            cells = cells.reshape(-1, 5)
+            cells[:, -4:] = np.flip(cells[:, -4:], axis=1)
+            np.concatenate(cells)
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}
@@ -68,15 +75,15 @@ def points_and_cells(doc: ifm.FeflowDoc):
     return pts, cells, celltypes
 
 
-def _material_ids_from_selections(doc: ifm.FeflowDoc):
+def _material_ids_from_selections(
+    doc: ifm.FeflowDoc,
+) -> dict:
     """
     Get MaterialIDs from the FEFLOW data. Only applicable if they are
     saved in doc.c.sel.selections().
 
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :return: MaterialIDs
-    :rtype: tuple
     """
     # Note: an error occurs if there are no elements defined to the selection
 
@@ -120,7 +127,9 @@ def _material_ids_from_selections(doc: ifm.FeflowDoc):
     return {"MaterialIDs": np.array(mat_ids_mesh).astype(np.int32)}
 
 
-def fetch_user_data(user_data, geom_type, val_type):
+def fetch_user_data(
+    user_data: np.ndarray, geom_type: str, val_type: str
+) -> list:
     return [
         data[1]
         for data in user_data
@@ -128,17 +137,16 @@ def fetch_user_data(user_data, geom_type, val_type):
     ]
 
 
-def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
+def _point_and_cell_data(
+    MaterialIDs: dict, doc: ifm.FeflowDoc
+) -> tuple[dict, dict]:
     """
     Get point and cell data from Feflow data. Also write the MaterialIDs to the
     cell data.
 
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :param MaterialIDs:
-    :type MaterialIDs: dict
     :return: pt_data, cell_data (point and cell data)
-    :rtype: tuple(dict,dict)
     """
 
     # 1. create a dictionary to filter all nodal and elemental values
@@ -183,10 +191,19 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
     # 5. change format of cell data to a dictionary of lists
     cell_data = {key: [cell_data[key]] for key in cell_data}
 
-    # 6. add materialIDs to cell data
+    # 6. add MaterialIDs to cell data
     cell_data[str(list(MaterialIDs.keys())[0])] = [
         list(MaterialIDs.values())[0]
     ]
+
+    # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
+    # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
+    if "P_LOOKUP_REGION" in cell_data and len(
+        np.unique(MaterialIDs.values())
+    ) < len(np.unique(cell_data["P_LOOKUP_REGION"])):
+        cell_data["MaterialIDs"] = np.array(
+            cell_data.pop("P_LOOKUP_REGION")
+        ).astype(np.int32)
 
     # 7. write a list of all properties that have been dropped due to nans
     nan_arrays = [
@@ -207,16 +224,16 @@ def _point_and_cell_data(MaterialIDs: dict, doc: ifm.FeflowDoc):
         nan_arrays,
     )
 
-    return pt_data, cell_data
+    return (pt_data, cell_data)
 
 
-def _convert_to_SI_units(mesh: pv.UnstructuredGrid):
+def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     """
-    FEFLOW often uses days as unit for time. In OGS SI-units are used. This is why
-    days must be converted to seconds.
+    FEFLOW often uses days as unit for time. In OGS SI-units are used.
+    This is why days must be converted to seconds for properties to work
+    correctly in OGS.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     """
 
     arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND"]
@@ -226,37 +243,36 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid):
             for to_be_converted in arrays_to_be_converted
         ):
             mesh[data] *= 1 / 86400
-        if "4TH" in data or "2ND" in data:
+        elif "4TH" in data or "2ND" in data:
             mesh[data] *= -1 / 86400
+        elif "HEAT" in data or "TEMP" in data:
+            mesh[data] = mesh[data] + [273.15] * len(mesh[data])
     return mesh
 
 
-def convert_geometry_mesh(doc: ifm.FeflowDoc):
+def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     Get the geometric construction of the mesh.
 
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :return: mesh
-    :rtype: pyvista.UnstructuredGrid
     """
     points, cells, celltypes = points_and_cells(doc)
     return pv.UnstructuredGrid(cells, celltypes, points)
 
 
-def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
+def update_geometry(
+    mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc
+) -> pv.UnstructuredGrid:
     """
     Update the geometric construction of the mesh with point and cell data.
 
     :param mesh: The mesh to be updated.
-    :type mesh: pyvista.UnstructuredGrid
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :return: mesh
-    :rtype: pyvista.UnstructuredGrid
     """
     MaterialIDs = _material_ids_from_selections(doc)
-    point_data, cell_data = _point_and_cell_data(MaterialIDs, doc)
+    (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
     for i in point_data:
         mesh.point_data.update({i: point_data[i]})
     for i in cell_data:
@@ -264,14 +280,12 @@ def update_geometry(mesh: pv.UnstructuredGrid, doc: ifm.FeflowDoc):
     return _convert_to_SI_units(mesh)
 
 
-def convert_properties_mesh(doc: ifm.FeflowDoc):
+def convert_properties_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     Get the mesh with point and cell properties.
 
     :param doc: The FEFLOW data.
-    :type doc: ifm.FeflowDoc
     :return: mesh
-    :rtype: pyvista.UnstructuredGrid
     """
     mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)

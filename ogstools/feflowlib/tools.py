@@ -2,6 +2,7 @@ import argparse
 import logging as log
 from collections import defaultdict
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import pyvista as pv
@@ -19,7 +20,10 @@ class helpFormat(
     """
 
 
-def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
+def get_specific_surface(
+    surface_mesh: pv.PolyData,
+    filter_condition: Callable[[pv.pyvista_ndarray], pv.pyvista_ndarray],
+) -> pv.UnstructuredGrid:
     """
     Return only cells that match the filter condition for the normals of the
     input-surface mesh. A standard use case could be to extract the cells that
@@ -27,11 +31,8 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     filter condition would then be: `lambda normals: normals[:, 2] > 0`.
 
     :param surface_mesh: The surface mesh.
-    :type surface_mesh: pyvista.PolyData
     :param filter_condition: A condition to set up the filter for the normals.
-    :type filter_condition: Callable [[list], [list]]
     :return: specific_cells
-    :rtype: pyvista.UnstructuredGird
     """
     # Compute the normals of the surface mesh
     surface_mesh = surface_mesh.compute_normals(
@@ -46,7 +47,7 @@ def get_specific_surface(surface_mesh: pv.PolyData, filter_condition):
     return surface_mesh.extract_cells(ids)
 
 
-def assign_bulk_ids(mesh: pv.UnstructuredGrid):
+def assign_bulk_ids(mesh: pv.UnstructuredGrid) -> None:
     """
     Add data arrays for bulk_node_ids and bulk_element_ids to the given bulk mesh.
 
@@ -59,7 +60,7 @@ def assign_bulk_ids(mesh: pv.UnstructuredGrid):
     )
 
 
-def remove_bulk_ids(mesh: pv.UnstructuredGrid):
+def remove_bulk_ids(mesh: pv.UnstructuredGrid) -> None:
     """
     Remove data arrays for bulk_node_ids and bulk_element_ids of the given bulk mesh.
 
@@ -69,40 +70,68 @@ def remove_bulk_ids(mesh: pv.UnstructuredGrid):
     mesh.cell_data.remove("bulk_element_ids")
 
 
+def get_dimension(mesh: pv.UnstructuredGrid) -> int:
+    """
+    Return the dimension of the mesh.
+
+    :param mesh: mesh
+    """
+    if len(np.unique(mesh.celltypes)) == 1:
+        return mesh.get_cell(0).dimension
+
+    msg = (
+        "The dimension can only be returned, if all cells are of the same type."
+    )
+    raise ValueError(msg)
+
+
 def extract_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> dict:
     """
     Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
 
     :param out_mesh_path: path of the output mesh
-    :type out_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: dict_of_point_boundary_conditions
-    :rtype: dict
     """
     dict_of_point_boundary_conditions = {}
     # Assigning bulk node ids because format needs to be unsigned integer for OGS.
     # Otherwise vtkOriginalPointIds would be fine.
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
-    surf_mesh = mesh.extract_surface()
+    boundary_mesh = (
+        mesh.extract_surface()
+        if get_dimension(mesh) == 3
+        else mesh.extract_feature_edges()
+    )
     # remove all the point data that are not of interest
-    for point_data in surf_mesh.point_data:
+    for point_data in boundary_mesh.point_data:
         if "_BC" not in point_data and point_data != "bulk_node_ids":
-            surf_mesh.point_data.remove(point_data)
+            boundary_mesh.point_data.remove(point_data)
     # remove all points with point data that are of "nan"-value
-    for point_data in surf_mesh.point_data:
+    for point_data in boundary_mesh.point_data:
         if point_data != "bulk_node_ids":
             BC_2nd_or_3rd = "2ND" in point_data or "3RD" in point_data
-            filter_mesh = mesh if "_4TH" in point_data else surf_mesh
+            include_cells_bool = BC_2nd_or_3rd and get_dimension(mesh) == 3
+            filter_mesh = mesh if "_4TH" in point_data else boundary_mesh
             filtered_points = filter_mesh.extract_points(
                 [not np.isnan(x) for x in filter_mesh[point_data]],
                 adjacent_cells=False,
-                include_cells=BC_2nd_or_3rd,
+                include_cells=include_cells_bool,
             )
+            # If the mesh is 2D and BC are of 2nd or 3rd order, line elements
+            # will be included in the boundary mesh.
+            if BC_2nd_or_3rd and get_dimension(mesh) == 2:
+                filtered_points_new = pv.lines_from_points(
+                    filtered_points.points
+                ).cast_to_unstructured_grid()
+                filtered_points_new[point_data] = filtered_points[point_data]
+                filtered_points_new["bulk_node_ids"] = filtered_points[
+                    "bulk_node_ids"
+                ]
+                filtered_points = filtered_points_new.copy()
             # Only selected point data is needed -> clear all cell data instead of the bulk_element_ids
             for cell_data in filtered_points.cell_data:
                 if cell_data != "bulk_element_ids":
@@ -122,14 +151,12 @@ def extract_point_boundary_conditions(
 
 def write_point_boundary_conditions(
     out_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> None:
     """
     Writes the point boundary conditions that are returned from 'extract_point_boundary_conditions()'
 
     :param out_mesh_path: path for writing
-    :type out_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     """
     point_boundary_conditions_dict = extract_point_boundary_conditions(
         out_mesh_path, mesh
@@ -140,7 +167,7 @@ def write_point_boundary_conditions(
 
 def extract_cell_boundary_conditions(
     bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
-):
+) -> tuple[Path, pv.UnstructuredGrid]:
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
@@ -149,11 +176,8 @@ def extract_cell_boundary_conditions(
     TODO: Allow a generic definition of the normal vector for the filter condition.
 
     :param bulk_mesh_path: name of the mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: path with name of mesh, topsurface mesh with cell boundary conditions
-    :rtype: tuple
     """
     assign_bulk_ids(mesh)
     if mesh.volume != 0:
@@ -183,23 +207,18 @@ def extract_cell_boundary_conditions(
     )
 
 
-def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
+def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     """
     Get the material properties of the mesh converted from FEFLOW. There are several methods available
     to access the material properties. Either they are accessible with the FEFLOW API(ifm) or with brute-force methods,
     which check each element, like this function.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param property: property
-    :type property: str
     :return: material_properties
-    :rtype: dict
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
-    # At the moment only properties named 'P_CONDX', 'P_CONDY', 'P_CONDZ' can be used.
-    assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
     for material_id in np.unique(material_ids):
         indices = np.where(material_ids == material_id)
         property_of_material = mesh.cell_data[property][indices]
@@ -222,26 +241,69 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str):
     return material_properties
 
 
+def get_materials_of_HT_model(
+    mesh: pv.UnstructuredGrid,
+) -> defaultdict:
+    """
+    Get a dictionary of all necessaray parameter values for a HT problem for each material in the mesh.
+
+    :param mesh: mesh
+    :return: material_properties
+    """
+    parameters_feflow = [
+        "P_ANGL",
+        "P_ANIS",
+        "P_CAPACF",
+        "P_CAPACS",
+        "P_COMP",
+        "P_COND",
+        "P_CONDUCF",
+        "P_CONDUCS",
+        "P_POROH",
+        "P_LDISH",
+        "P_TDISH",
+        "P_ANIS",
+    ]
+    parameters_ogs = [
+        "anisotropy_angle",
+        "anisotropy_factor",
+        "specific_heat_capacity_fluid",
+        "specific_heat_capacity_solid",
+        "storage",
+        "permeability",
+        "thermal_conductivity_fluid",
+        "thermal_conductivity_solid",
+        "porosity",
+        "thermal_longitudinal_dispersivity",
+        "thermal_transversal_dispersivity",
+    ]
+    material_properties: defaultdict = defaultdict(dict)
+    for parameter_feflow, parameter_ogs in zip(
+        parameters_feflow, parameters_ogs
+    ):
+        for material_id, property_value in get_material_properties(
+            mesh, parameter_feflow
+        ).items():
+            material_properties[material_id][parameter_ogs] = property_value[0]
+    return material_properties
+
+
 def combine_material_properties(
     mesh: pv.UnstructuredGrid, properties_list: list
-):
+) -> defaultdict:
     """
     Combine multiple material properties. The combined properties are returned
     as list of values in a dictionary.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param properties_list: list of properties to be combined
-    :type properties_list: list
     :return: material_properties
-    :rtype: collections.defaultdict
     """
     # Use a default dict because it allows to extend the values in the list.
     # Also it initializes the value if there is an empty list.
     material_properties: defaultdict[str, list[float]] = defaultdict(list)
 
     for property in properties_list:
-        assert property in ["P_CONDX", "P_CONDY", "P_CONDZ"]
         for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
@@ -256,7 +318,7 @@ def write_mesh_of_combined_properties(
     new_property: str,
     material_id: int,
     saving_path: Path,
-):
+) -> str:
     """
     Writes a separate mesh-file with a specific material that has inhomogeneous property values
     within the material group. It can also be used to write multiple properties
@@ -265,22 +327,14 @@ def write_mesh_of_combined_properties(
     be used to write the inhomogeneous values of a single property into a separate mesh-file.
 
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param property_list: list of properties
-    :type property_list: list
     :param new_property: name of the combined properties
-    :type new_property: str
     :param material: material with inhomogeneous properties
-    :type material: int
     :param saving_path: path to save the mesh
-    :type saving_path: Path
     :return: filename
-    :rtype: str
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    for prop in property_list:
-        assert prop in ["P_CONDX", "P_CONDY", "P_CONDZ"]
     zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
     material_mesh[new_property] = zipped
     # correct the unit
@@ -299,21 +353,16 @@ def write_mesh_of_combined_properties(
 
 def materials_in_steady_state_diffusion(
     material_properties: dict,
-    model,
-):
+    model: ogs.OGS,
+) -> ogs.OGS:
     """
     Create the section for material properties for steady state diffusion processes in the prj-file.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -348,21 +397,16 @@ def materials_in_steady_state_diffusion(
 
 def materials_in_liquid_flow(
     material_properties: dict,
-    model,
-):
+    model: ogs.OGS,
+) -> ogs.OGS:
     """
     Create the section for material properties in liquid flow processes in the prj-file.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -421,28 +465,144 @@ def materials_in_liquid_flow(
     return model
 
 
+def materials_in_HT(
+    material_properties: dict,
+    model: ogs.OGS,
+) -> ogs.OGS:
+    """
+    Create the section for material properties for HT processes in the prj-file.
+
+    :param bulk_mesh_path: path of bulk mesh
+    :param mesh: mesh
+    :param material_properties: material properties
+    :param model: model to setup prj-file
+    :return: model
+    """
+    for material_id in material_properties:
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="specific_heat_capacity",
+            type="Constant",
+            value=material_properties[material_id][
+                "specific_heat_capacity_fluid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="thermal_conductivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_conductivity_fluid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="storage",
+            type="Constant",
+            value=material_properties[material_id]["storage"],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="specific_heat_capacity",
+            type="Constant",
+            value=material_properties[material_id][
+                "specific_heat_capacity_solid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="Solid",
+            name="thermal_conductivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_conductivity_solid"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="permeability",
+            type="Constant",
+            # Theoretically an anisotropy angle can be applied, but it is not implemented
+            # in this case.
+            value=str(material_properties[material_id]["permeability"])
+            + " "
+            + str(
+                material_properties[material_id]["permeability"]
+                * material_properties[material_id]["anisotropy_factor"]
+            ),
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=material_properties[material_id]["porosity"],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_conductivity",
+            type="EffectiveThermalConductivityPorosityMixing",
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_transversal_dispersivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_transversal_dispersivity"
+            ],
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="thermal_longitudinal_dispersivity",
+            type="Constant",
+            value=material_properties[material_id][
+                "thermal_longitudinal_dispersivity"
+            ],
+        )
+
+    return model
+
+
 def setup_prj_file(
     bulk_mesh_path: Path,
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    model=None,
-):
+    model: ogs.OGS = None,
+) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
 
     :param bulk_mesh_path: path of bulk mesh
-    :type bulk_mesh_path: Path
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :param material_properties: material properties
-    :type material_properties: dict
     :param process: the process to be prepared
-    :type process: str
     :param model: model to setup prj-file
-    :type model: ogs6py.OGS
     :return: model
-    :rtype: ogs6py.OGS
     """
 
     prjfile = bulk_mesh_path.with_suffix(".prj")
@@ -459,10 +619,32 @@ def setup_prj_file(
     }
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
-    model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
-    model.processes.add_process_variable(
-        process_variable="process_variable", process_variable_name="HEAD_OGS"
-    )
+    # this if condition checks if the mesh is 3D. If so the topsurface will be considered.
+    if get_dimension(mesh) == 3:
+        model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
+    if "thermal" in process:
+        model.processes.add_process_variable(
+            process_variable="temperature",
+            process_variable_name="temperature",
+        )
+        model.processvars.set_ic(
+            process_variable_name="temperature",
+            components=1,
+            order=1,
+            initial_condition="T0",
+        )
+        # Initial condition should be read from the FEFLOW file!
+        # But for this the initial condition should still be on the FEFLOW file.
+        # FEFLOW overwrites the initial condition, if the model was simulated.
+        model.parameters.add_parameter(name="T0", type="Constant", value=273.15)
+        model.processes.add_process_variable(
+            process_variable="pressure", process_variable_name="HEAD_OGS"
+        )
+    else:
+        model.processes.add_process_variable(
+            process_variable="process_variable",
+            process_variable_name="HEAD_OGS",
+        )
     model.processvars.set_ic(
         process_variable_name="HEAD_OGS",
         components=1,
@@ -474,6 +656,10 @@ def setup_prj_file(
         if point_data[0:4] == "P_BC":
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
+            if "HEAT" in point_data:
+                process_var = "temperature"
+            elif "FLOW" in point_data:
+                process_var = "HEAD_OGS"
             if "3RD" in point_data:
                 model.parameters.add_parameter(
                     name="u_0",
@@ -487,7 +673,7 @@ def setup_prj_file(
                     value=np.unique(mesh.cell_data["P_TRAF_IN"])[1],
                 )
                 model.processvars.add_bc(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type="Robin",
                     alpha="alpha",
                     u_0="u_0",
@@ -501,7 +687,7 @@ def setup_prj_file(
                     mesh=point_data,
                 )
                 model.processvars.add_st(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type="Nodal",
                     mesh=point_data,
                     parameter=point_data,
@@ -509,7 +695,7 @@ def setup_prj_file(
             else:
                 # Add boundary conditions
                 model.processvars.add_bc(
-                    process_variable_name="HEAD_OGS",
+                    process_variable_name=process_var,
                     type=next(
                         val
                         for key, val in BC_type_dict.items()
@@ -527,7 +713,17 @@ def setup_prj_file(
                 )
 
     for cell_data in mesh.cell_data:
-        if cell_data in ["P_IOFLOW", "P_SOUF"]:
+        """
+        At the moment, P_IOFLOW and P_SOUF have only been tested with 3D
+        meshes. That is why, we only write them to the prj-file
+        if the mesh is 3D and their value is non-zero. If it is 0,
+        they do not matter, since they will not have an effect.
+        """
+        if (
+            cell_data in ["P_IOFLOW", "P_SOUF"]
+            and np.unique(mesh.cell_data[cell_data]) != 0
+            and get_dimension(mesh) == 3
+        ):
             if cell_data in ["P_IOFLOW"]:
                 # Add boundary conditions
                 model.processvars.add_bc(
@@ -564,8 +760,10 @@ def setup_prj_file(
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
         materials_in_liquid_flow(material_properties, model)
+    elif process == "hydro thermal":
+        materials_in_HT(material_properties, model)
     else:
-        msg = "Only 'steady state diffusion' and 'liquid flow' processes are supported."
+        msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
         raise ValueError(msg)
 
     # add deactivated subdomains if existing
@@ -595,14 +793,12 @@ def setup_prj_file(
     return model
 
 
-def deactivate_cells(mesh: pv.UnstructuredGrid):
+def deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
     """
     Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
     Therefore, the input mesh is modified.
     :param mesh: mesh
-    :type mesh: pyvista.UnstructuredGrid
     :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
-    :rytpe: int
     """
     inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
     if len(inactive_cells[0]) == 0:
