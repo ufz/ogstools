@@ -17,7 +17,7 @@ def refine(layerset: LayerSet, factor: int) -> LayerSet:
         LayerSet: A new LayerSet with increased subdivisions for each layer.
     """
 
-    def refined_num_subsections(num_subsections, factor):
+    def refined_num_subsections(num_subsections: int, factor: int) -> int:
         return (num_subsections + 1) * factor - 1
 
     out = [
