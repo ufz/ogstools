@@ -49,7 +49,7 @@ df_log = fill_ogs_context(df_records)
 #
 # :py:mod:`ogstools.logparser.analysis_time_step`
 df_ts_it = time_step_vs_iterations(df_log)
-df_ts_it  # noqa: B018
+df_ts_it
 
 
 # %%
@@ -64,7 +64,8 @@ df_ts_it  # noqa: B018
 df_ts = analysis_time_step(df_log)
 df_ts = df_ts.loc[0]
 # Removing MPI_process (index=0) from result (all are 0) for serial log.
-df_ts  # noqa: B018
+df_ts
+
 # %%
 # Selecting specific metrics (3) and plotting using pandas plot function.
 df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(

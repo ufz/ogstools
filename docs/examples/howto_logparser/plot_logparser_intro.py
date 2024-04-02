@@ -32,7 +32,7 @@ records = parse_file(const_viscosity_thermal_convection_log)
 df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)
 df_ts_it = time_step_vs_iterations(df_log)
-df_ts_it  # noqa: B018
+df_ts_it
 
 # %%
 
@@ -91,7 +91,7 @@ df_ts_it = time_step_vs_iterations(df_log)
 # The result is a pandas.DataFrame. You may manipulate the dataframe to your
 # needs with pandas functionality.
 pd.set_option("display.max_rows", 8)  # for visualization only
-df_ts_it  # noqa: B018
+df_ts_it
 
 # %%
 # Pandas to plot
