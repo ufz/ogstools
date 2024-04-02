@@ -1,4 +1,4 @@
-FROM registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
+FROM registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9:feflow-8.0
 
 RUN --mount=target=/ogstools,type=bind,source=.,readwrite \
      pip install /ogstools[feflow] \
