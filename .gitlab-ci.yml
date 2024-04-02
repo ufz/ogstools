@@ -190,3 +190,9 @@ code_quality_mypy:
   artifacts:
     reports:
       codequality: mypy-code-quality-report.json
+
+ogs/tools/feflow-converter-tests:
+  stage: test
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  trigger: ogs/tools/feflow-converter-tests
