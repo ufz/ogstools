@@ -1,3 +1,9 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 from .boundary import Layer
 from .boundary_set import LayerSet
 
@@ -17,7 +23,7 @@ def refine(layerset: LayerSet, factor: int) -> LayerSet:
         LayerSet: A new LayerSet with increased subdivisions for each layer.
     """
 
-    def refined_num_subsections(num_subsections, factor):
+    def refined_num_subsections(num_subsections: int, factor: int) -> int:
         return (num_subsections + 1) * factor - 1
 
     out = [

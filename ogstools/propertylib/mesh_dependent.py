@@ -1,3 +1,9 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 "Functions related to stress analysis which can be only applied to a mesh."
 
 from typing import Union

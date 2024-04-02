@@ -1,3 +1,9 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """
 Extracts some boundary values from a result file (domain mesh) and adds them as
 point data to a boundary mesh (subdomain mesh).

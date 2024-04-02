@@ -42,11 +42,11 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 records = parse_file(parallel_log)
 df_records = pd.DataFrame(records)
 df_parallel = fill_ogs_context(df_records)
-df_parallel  # noqa: B018
+df_parallel
 
 df_ts = analysis_time_step(df_parallel)
 # For each mpi_process and each time_step we get the measurements (e.g. output_time)
-df_ts  # noqa: B018
+df_ts
 # %% [markdown]
 # 1.1. Aggregate measurements over all MPI processes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,14 +107,14 @@ df_records = pd.DataFrame(records)
 # The logparser is able to find the following entries:
 print(df_records.columns)
 # For each entry :py:mod:`ogstools.logparser.ogs_regexes` has added the type (corresponding to OGS log level) and value found to the result DataFrame.
-df_records  # noqa: B018
+df_records
 
 
 # %%
 
 # For each information (e.g. a time measurement or numerical metric) we need to know to which timestep, iteration_number, process, component it belongs.
 df_log = fill_ogs_context(df_records)
-df_log  # noqa: B018
+df_log
 
 # %%
 # 3.2. Custom analyses - example
@@ -125,4 +125,4 @@ df_log  # noqa: B018
 df_custom = df_records.pivot_table(
     ["step_size", "iteration_number"], ["time_step"], aggfunc=np.max
 )
-df_custom  # noqa: B018
+df_custom

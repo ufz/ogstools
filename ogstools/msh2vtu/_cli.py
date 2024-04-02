@@ -1,17 +1,25 @@
+# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 import argparse
 
 from ogstools import __version__
 from ogstools.msh2vtu import msh2vtu
 
 
-def argparser():
+def argparser() -> argparse.ArgumentParser:
     # parsing command line arguments
-    def get_help(arg: str):
+    def get_help(arg: str) -> str:
         assert msh2vtu.__doc__ is not None
         return msh2vtu.__doc__.split(arg + ":")[1].split(":param")[0].strip()
 
     parser = argparse.ArgumentParser(
         description=msh2vtu.__doc__.split(":param")[0].strip()
+        if msh2vtu.__doc__ is not None
+        else ""
     )
     add_arg = parser.add_argument
     add_arg("filename", help=get_help("filename"))
