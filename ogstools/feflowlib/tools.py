@@ -727,7 +727,7 @@ def setup_prj_file(
         """
         if (
             cell_data in ["P_IOFLOW", "P_SOUF"]
-            and not np.any(mesh.cell_data[cell_data])
+            and np.any(mesh.cell_data[cell_data])
             and get_dimension(mesh) == 3
         ):
             if cell_data in ["P_IOFLOW"]:
