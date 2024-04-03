@@ -8,11 +8,12 @@ import argparse
 import logging as log
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable
+from typing import Callable, TypedDict
 
 import numpy as np
 import pyvista as pv
 from ogs6py import ogs
+from typing_extensions import NotRequired, Unpack
 
 # log configuration
 logger = log.getLogger(__name__)
@@ -345,9 +346,12 @@ def get_material_properties_of_HC_model(
 
 
 def get_species(mesh: pv.UnstructuredGrid) -> list:
-    """
+    r"""
     Get the names of chemical species of a mesh. Only works, if species-specific
-    porosity values are assigned and named '*_P_PORO'.
+    porosity values are assigned and named '\*_P_PORO'.
+
+    :param mesh: mesh
+    :return: list of species
     """
     species = [
         cell_data.replace("_P_PORO", "")
@@ -357,7 +361,7 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
     if not species:
         ValueError(
             """No species are found. This could be due to the fact that no porosity
-                   values for species are assigned."""
+            values for species are assigned."""
         )
     return species
 
@@ -803,12 +807,17 @@ def materials_in_HC(
     return model
 
 
+class RequestParams(TypedDict):
+    model: NotRequired[ogs.OGS]
+    species_list: NotRequired[list]
+
+
 def setup_prj_file(
     bulk_mesh_path: Path,
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    **kwargs,
+    **kwargs: Unpack[RequestParams],
 ) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
@@ -827,6 +836,7 @@ def setup_prj_file(
 
 
     """
+    # ToDo: Make sure that no non-valid arguments are chosen!
     model = kwargs["model"] if "model" in kwargs else None
     species_list = kwargs["species_list"] if "species_list" in kwargs else None
     prjfile = bulk_mesh_path.with_suffix(".prj")
@@ -869,17 +879,18 @@ def setup_prj_file(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
         model.parameters.add_parameter(name="C0", type="Constant", value=0)
-        for spec in species_list:
-            model.processes.add_process_variable(
-                process_variable="concentration_" + spec,
-                process_variable_name=spec,
-            )
-            model.processvars.set_ic(
-                process_variable_name=spec,
-                components=1,
-                order=1,
-                initial_condition="C0",
-            )
+        if species_list is not None:
+            for spec in species_list:
+                model.processes.add_process_variable(
+                    process_variable="concentration_" + spec,
+                    process_variable_name=spec,
+                )
+                model.processvars.set_ic(
+                    process_variable_name=spec,
+                    components=1,
+                    order=1,
+                    initial_condition="C0",
+                )
 
     else:
         model.processes.add_process_variable(
@@ -1008,7 +1019,7 @@ def setup_prj_file(
     if process == "steady state diffusion":
         materials_in_steady_state_diffusion(material_properties, model)
     elif process == "liquid flow":
-        materials_in_liquid_flow(materiafl_properties, model)
+        materials_in_liquid_flow(material_properties, model)
     elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
     elif process == "HC":

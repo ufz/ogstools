@@ -16,7 +16,7 @@ import ifm_contrib as ifm  # noqa: E402
 from ogstools.feflowlib import (  # noqa: E402
     convert_properties_mesh,
     extract_cell_boundary_conditions,
-    get_materials_of_HT_model,
+    get_material_properties_of_HT_model,
     hydro_thermal,
     liquid_flow,
     points_and_cells,
@@ -416,9 +416,9 @@ class TestSimulation_HT(unittest.TestCase):
         model = setup_prj_file(
             self.path_writing / "HT_Dirichlet.vtu",
             self.pv_mesh,
-            get_materials_of_HT_model(self.pv_mesh),
+            get_material_properties_of_HT_model(self.pv_mesh),
             "hydro thermal",
-            model,
+            model=model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))

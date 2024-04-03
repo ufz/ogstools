@@ -264,7 +264,7 @@ def get_species_parameter(
 
     :param doc: The FEFLOW data.
     :param mesh: mesh
-    :return: Dictonaries of point and cell species-specific data.
+    :return: Dictionaries of point and cell species-specific data.
     """
 
     # Define common species parameters in FEFLOW.

@@ -159,7 +159,9 @@ def liquid_flow(
     return model
 
 
-def component_transport(saving_path: str, species: list, model: ogs.OGS = None):
+def component_transport(
+    saving_path: str, species: list, model: ogs.OGS = None
+) -> ogs.OGS:
     """
     A template for component transport process to be simulated in ogs.
 
@@ -233,6 +235,7 @@ def component_transport(saving_path: str, species: list, model: ogs.OGS = None):
         error_tolerance="1e-16",
     )
     return model
+
 
 def hydro_thermal(
     saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
