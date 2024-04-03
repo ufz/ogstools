@@ -1,0 +1,57 @@
+# Update with `git shortlog -sne`
+
+cff-version: 1.2.0
+title: OGSTools
+message: >-
+    If you use this software, please cite it using these
+    metadata.
+type: software
+authors:
+    - given-names: Florian
+      family-names: Zill
+      orcid: "https://orcid.org/0000-0002-5177-401X"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+    - given-names: Lars
+      family-names: Bilke
+      orcid: "https://orcid.org/0000-0001-8986-2413"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+    - given-names: Tobias
+      family-names: Meisel
+      orcid: "https://orcid.org/0009-0009-8790-8903"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+    - given-names: Julian
+      family-names: Heinze
+      oricd: "https://orcid.org/0009-0004-3449-8852"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+    - given-names: Feliks K.
+      family-names: Kiszkurno
+      orcid: "https://orcid.org/0000-0003-3304-4838"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+    - given-names: Dominik
+      family-names: Kern
+      orcid: "https://orcid.org/0000-0002-1958-2982"
+      affiliation: TU Bergakademie Freiberg
+    - given-names: Max
+      family-names: Jäschke
+      affiliation: Leipzig University of Applied Sciences -- HTWK
+    - given-names: Christoph
+      family-names: Lehmann
+      orcid: "https://orcid.org/0000-0001-7936-9852"
+      affiliation: Helmholtz Centre for Environmental Research -- UFZ
+identifiers:
+    - type: doi
+      value: 10.5281/zenodo.10913063
+      description: Zenodo DOI for 0.3.0
+    - type: doi
+      value: 10.5281/zenodo.10913044
+      description: Zenodo DOI for 0.2.0
+    - type: doi
+      value: 10.5281/zenodo.10912983
+      description: Zenodo DOI for 0.1.0
+    - type: doi
+      value: 10.5281/zenodo.10912874
+      description: Zenodo DOI for 0.0.3
+
+repository-code: "https://gitlab.opengeosys.org/ogs/tools/ogstools"
+url: "https://ogstools.opengeosys.org"
+license: BSD-3-Clause
