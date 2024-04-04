@@ -324,14 +324,14 @@ def get_material_properties_of_HC_model(
         if any(parameter in cell_data for parameter in parameters_mapping)
     ]
 
-    ogs_species_parameter = []
-    for feflow_species_para in feflow_species_parameter:
-        for feflow_parameter in parameters_mapping:
-            if feflow_parameter in feflow_species_para:
-                ogs_param = parameters_mapping[feflow_parameter]
-                ogs_species_parameter.append(
-                    feflow_species_para.replace(feflow_parameter, ogs_param)
-                )
+    ogs_species_parameter = [
+        feflow_species_para.replace(
+            feflow_parameter, parameters_mapping[feflow_parameter]
+        )
+        for feflow_species_para in feflow_species_parameter
+        for feflow_parameter in parameters_mapping
+        if feflow_parameter in feflow_species_para
+    ]
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
@@ -912,8 +912,8 @@ def setup_prj_file(
             elif "HEAT" in point_data:
                 process_var = "temperature"
             elif "MASS" in point_data:
+                # Each species becomes a separate process variable in OGS.
                 process_var = point_data.split("_P_", 1)[0]
-                logger.info(process_var)
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
             if "HEAT" in point_data:
