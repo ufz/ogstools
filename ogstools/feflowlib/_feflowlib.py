@@ -242,7 +242,7 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
     :param mesh: mesh
     """
 
-    arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND"]
+    arrays_to_be_converted = ["TRAF", "IOFLOW", "P_COND", "P_DIFF"]
     for data in list(mesh.point_data) + list(mesh.cell_data):
         if any(
             to_be_converted in data
@@ -254,6 +254,76 @@ def _convert_to_SI_units(mesh: pv.UnstructuredGrid) -> None:
         elif "HEAT" in data or "TEMP" in data:
             mesh[data] = mesh[data] + [273.15] * len(mesh[data])
     return mesh
+
+
+def get_species_parameter(
+    doc: ifm.FeflowDoc, mesh: pv.UnstructuredGrid
+) -> tuple[dict, dict]:
+    """
+    Retrieve species parameters from FEFLOW data for points and cells.
+
+    :param doc: The FEFLOW data.
+    :param mesh: mesh
+    :return: Dictionaries of point and cell species-specific data.
+    """
+
+    # Define common species parameters in FEFLOW.
+    species_parameters = [
+        "P_BC_MASS",
+        "P_BCMASS_2ND",
+        "P_BCMASS_3RD",
+        "P_BCMASS_4TH",
+        "P_CONC",
+        "P_DECA",
+        "P_DIFF",
+        "P_LDIS",
+        "P_PORO",
+        "P_SORP",
+        "P_TDIS",
+        "P_TRAT_IN",
+        "P_TRAT_OUT",
+    ]
+
+    species_point_dict: dict = {}
+    species_cell_dict: dict = {}
+    obsolete_data = {}
+
+    data_dict = {"point": mesh.point_data, "cell": mesh.cell_data}
+    species_dict = {"point": species_point_dict, "cell": species_cell_dict}
+    for point_or_cell in ["point", "cell"]:
+        for data in data_dict[point_or_cell]:
+            if data in species_parameters:
+                obsolete_data[data] = point_or_cell
+                for i in range(doc.getNumberOfSpecies()):
+                    species = doc.getSpeciesName(i)
+                    par = doc.getParameter(getattr(ifm.Enum, data), species)
+                    species_dict[point_or_cell][
+                        species + "_" + data
+                    ] = np.array(doc.getParamValues(par))
+
+    return species_dict, obsolete_data
+
+
+def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
+    """
+    Calculates the retardation factor from the absorption coefficient, which is called
+    Henry constant in FEFLOW, according to the formula: R = 1 + (1-p)/p * S. With R
+    the retardation factor, p the porosity, S the absorption coefficient. Further details
+    can be found in the FEFLOW book by Diersch in chapter 5.4.1.4 equation 5.70.
+
+    :param mesh: mesh
+    """
+    for spec_porosity in [
+        species_porosity
+        for species_porosity in mesh.cell_data
+        if "PORO" in species_porosity
+    ]:
+        porosity = mesh.cell_data[spec_porosity]
+        species = spec_porosity.replace("P_PORO", "")
+        # calculation of the retardation factor
+        mesh.cell_data[species + "retardation_factor"] = (
+            1 + mesh.cell_data[species + "P_SORP"] * (1 - porosity) / porosity
+        )
 
 
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
@@ -279,10 +349,35 @@ def update_geometry(
     """
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
-    for i in point_data:
-        mesh.point_data.update({i: point_data[i]})
-    for i in cell_data:
-        mesh.cell_data.update({i: cell_data[i][0]})
+    for pt_data in point_data:
+        mesh.point_data.update({pt_data: point_data[pt_data]})
+    for c_data in cell_data:
+        mesh.cell_data.update({c_data: cell_data[c_data][0]})
+    # If the FEFLOW problem class refers to a mass problem,
+    # the following if statement will be true.
+    if doc.getProblemClass() in [1, 3]:
+        (
+            species_dict,
+            obsolete_data,
+        ) = get_species_parameter(doc, mesh)
+        for point_data in species_dict["point"]:
+            mesh.point_data.update(
+                {point_data: species_dict["point"][point_data]}
+            )
+        for cell_data in species_dict["cell"]:
+            mesh.cell_data.update(
+                {cell_data: species_dict["cell"][cell_data][0]}
+            )
+        for data, geometry in obsolete_data.items():
+            if geometry == "point":
+                mesh.point_data.remove(data)
+            elif geometry == "cell":
+                mesh.cell_data.remove(data)
+            else:
+                logger.error(
+                    "Unknown geometry to remove obsolet data after conversion of chemical species."
+                )
+        _caclulate_retardation_factor(mesh)
     return _convert_to_SI_units(mesh)
 
 

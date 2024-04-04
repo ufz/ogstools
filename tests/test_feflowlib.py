@@ -16,7 +16,7 @@ import ifm_contrib as ifm  # noqa: E402
 from ogstools.feflowlib import (  # noqa: E402
     convert_properties_mesh,
     extract_cell_boundary_conditions,
-    get_materials_of_HT_model,
+    get_material_properties_of_HT_model,
     hydro_thermal,
     liquid_flow,
     points_and_cells,
@@ -58,7 +58,7 @@ class TestSimulation_Neumann(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxNeumann_test.prj")
-        model = steady_state_diffusion(
+        ssd_model = steady_state_diffusion(
             self.path_writing / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
@@ -67,7 +67,7 @@ class TestSimulation_Neumann(unittest.TestCase):
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
-            model,
+            model=ssd_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -89,16 +89,16 @@ class TestSimulation_Neumann(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxNeumann_test.prj")
-        model = liquid_flow(
+        lqf_model = liquid_flow(
             self.path_writing / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
-        setup_prj_file(
+        model = setup_prj_file(
             self.path_writing / "boxNeumann.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
-            model,
+            model=lqf_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -136,7 +136,7 @@ class TestSimulation_Robin(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxRobin_test.prj")
-        model = steady_state_diffusion(
+        ssd_model = steady_state_diffusion(
             str(self.path_writing / "sim_boxRobin"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
@@ -145,7 +145,7 @@ class TestSimulation_Robin(unittest.TestCase):
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
-            model,
+            model=ssd_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -167,7 +167,7 @@ class TestSimulation_Robin(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxRobin_test.prj")
-        model = liquid_flow(
+        lqf_model = liquid_flow(
             str(self.path_writing / "sim_boxRobin"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
@@ -176,7 +176,7 @@ class TestSimulation_Robin(unittest.TestCase):
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
-            model,
+            model=lqf_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -212,7 +212,7 @@ class TestSimulation_Well(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxWell_test.prj")
-        model = steady_state_diffusion(
+        ssd_model = steady_state_diffusion(
             str(self.path_writing / "sim_boxWell"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
@@ -221,7 +221,7 @@ class TestSimulation_Well(unittest.TestCase):
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
-            model,
+            model=ssd_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -242,7 +242,7 @@ class TestSimulation_Well(unittest.TestCase):
         """
         # Run ogs
         prjfile = str(self.path_writing / "boxWell_test.prj")
-        model = liquid_flow(
+        lqf_model = liquid_flow(
             str(self.path_writing / "sim_boxWell"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
@@ -251,7 +251,7 @@ class TestSimulation_Well(unittest.TestCase):
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
-            model,
+            model=lqf_model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))
@@ -416,9 +416,9 @@ class TestSimulation_HT(unittest.TestCase):
         model = setup_prj_file(
             self.path_writing / "HT_Dirichlet.vtu",
             self.pv_mesh,
-            get_materials_of_HT_model(self.pv_mesh),
+            get_material_properties_of_HT_model(self.pv_mesh),
             "hydro thermal",
-            model,
+            model=model,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))

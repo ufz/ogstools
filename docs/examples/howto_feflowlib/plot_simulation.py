@@ -69,7 +69,7 @@ topsurface.save(path_topsurface)
 path_prjfile = str(path_mesh.with_suffix(".prj"))
 prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
 # Get the template prj-file configurations for a steady state diffusion process
-model = steady_state_diffusion(
+ssd_model = steady_state_diffusion(
     path_writing / "sim_boxNeumann",
     prjfile,
 )
@@ -79,7 +79,7 @@ model = setup_prj_file(
     pyvista_mesh,
     get_material_properties(pyvista_mesh, "P_CONDX"),
     "steady state diffusion",
-    model,
+    model=ssd_model,
 )
 # The model must be written before it can be run.
 model.write_input(str(path_prjfile))

@@ -8,11 +8,12 @@ import argparse
 import logging as log
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable
+from typing import Callable, TypedDict
 
 import numpy as np
 import pyvista as pv
 from ogs6py import ogs
+from typing_extensions import NotRequired, Unpack
 
 # log configuration
 logger = log.getLogger(__name__)
@@ -247,7 +248,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     return material_properties
 
 
-def get_materials_of_HT_model(
+def get_material_properties_of_HT_model(
     mesh: pv.UnstructuredGrid,
 ) -> defaultdict:
     """
@@ -291,7 +292,123 @@ def get_materials_of_HT_model(
             mesh, parameter_feflow
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
+
     return material_properties
+
+
+def get_material_properties_of_CT_model(
+    mesh: pv.UnstructuredGrid,
+) -> defaultdict:
+    """
+    Gets the material properties/parameter for each chemical species/component of the model.
+
+    :param mesh: mesh
+    """
+    parameters_mapping = {
+        "P_DECA": "decay_rate",
+        "P_DIFF": "pore_diffusion",
+        "P_LDIS": "longitudinal_dispersivity",
+        "P_PORO": "porosity",
+        "P_SORP": "sorption_coeff",
+        "P_TDIS": "transversal_dispersivity",
+        "P_COMP": "storage",
+        "P_CONDX": "permeability_X",
+        "P_CONDY": "permeability_Y",
+        "P_CONDZ": "permeability_Z",
+        "retardation_factor": "retardation_factor",
+    }
+
+    feflow_species_parameter = [
+        cell_data
+        for cell_data in mesh.cell_data
+        if any(parameter in cell_data for parameter in parameters_mapping)
+    ]
+
+    ogs_species_parameter = [
+        feflow_species_para.replace(
+            feflow_parameter, parameters_mapping[feflow_parameter]
+        )
+        for feflow_species_para in feflow_species_parameter
+        for feflow_parameter in parameters_mapping
+        if feflow_parameter in feflow_species_para
+    ]
+
+    material_properties: defaultdict = defaultdict(dict)
+    for parameter_feflow, parameter_ogs in zip(
+        feflow_species_parameter, ogs_species_parameter
+    ):
+        for material_id, property_value in get_material_properties(
+            mesh, parameter_feflow
+        ).items():
+            material_properties[material_id][parameter_ogs] = property_value[0]
+
+    return material_properties
+
+
+def get_species(mesh: pv.UnstructuredGrid) -> list:
+    r"""
+    Get the names of chemical species of a mesh. Only works, if species-specific
+    porosity values are assigned and named '\*_P_PORO'.
+
+    :param mesh: mesh
+    :return: list of species
+    """
+    species = [
+        cell_data.replace("_P_PORO", "")
+        for cell_data in mesh.cell_data
+        if "P_PORO" in cell_data
+    ]
+    if not species:
+        ValueError(
+            """No species are found. This could be due to the fact that no porosity
+            values for species are assigned."""
+        )
+    return species
+
+
+def add_species_to_prj_file(
+    xpath: str, parameter_dict: dict, species_list: list, model: ogs.OGS
+) -> None:
+    """
+    Adds the entries needed in the prj-file for components/species. Since in ogs6py no
+    corresponding feature exists to use the common ogs6py.media-class, the generic method
+    add_block is used.
+
+    WARNING: After add_block was used, the ogs6py-model cannot be altered with
+    common ogs6py functions!
+
+    :param xpath: Path to the species/components sektion in the prj-file.
+    :param parameter_dict: Dictionary with all the parameter names and values.
+    :param species_list: List of all species.
+    :param model: Model to setup prj-file, there the species will be added to.
+    """
+    species_parameter = ["decay_rate", "retardation_factor", "diffusion"]
+    model.add_element(parent_xpath=xpath, tag="components")
+    for species in np.unique(species_list)[1:]:
+        model.add_block(
+            blocktag="component",
+            parent_xpath=xpath + "/components",
+            taglist=["name", "properties"],
+            textlist=[species, ""],
+        )
+        for parameter, parameter_val in parameter_dict.items():
+            if (
+                any(spec_par in parameter for spec_par in species_parameter)
+                and species in parameter
+            ):
+                model.add_block(
+                    blocktag="property",
+                    parent_xpath=xpath
+                    + "/components/component[name='"
+                    + species
+                    + "']/properties",
+                    taglist=["name", "type", "value"],
+                    textlist=[
+                        parameter.replace(species, ""),
+                        "Constant",
+                        str(parameter_val),
+                    ],
+                )
 
 
 def combine_material_properties(
@@ -478,8 +595,6 @@ def materials_in_HT(
     """
     Create the section for material properties for HT processes in the prj-file.
 
-    :param bulk_mesh_path: path of bulk mesh
-    :param mesh: mesh
     :param material_properties: material properties
     :param model: model to setup prj-file
     :return: model
@@ -593,12 +708,116 @@ def materials_in_HT(
     return model
 
 
+def materials_in_HC(
+    material_properties: dict,
+    species_list: list,
+    model: ogs.OGS,
+) -> ogs.OGS:
+    """
+    Create the section for material properties for HC processes in the prj-file.
+
+    :param material_properties: material properties
+    :param model: model to setup prj-file
+    :return: model
+    """
+    for material_id in material_properties:
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="viscosity",
+            type="Constant",
+            value=1,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            phase_type="AqueousLiquid",
+            name="density",
+            type="Constant",
+            value=1,
+        )
+        # Get a list of properties (porosity,transversal/longitunal_dispersivity)
+        # across species. If there are more than one value, independent OGS-models
+        # need to be set up manually.
+        porosity_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "porosity" in prop
+                ]
+            )
+        )
+
+        long_disp_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "longitudinal_dispersivity" in prop
+                ]
+            )
+        )
+
+        trans_disp_val = str(
+            np.unique(
+                [
+                    material_properties[material_id][prop]
+                    for prop in material_properties[material_id]
+                    if "transversal_dispersivity" in prop
+                ]
+            )
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="porosity",
+            type="Constant",
+            value=porosity_val,
+        )
+
+        model.media.add_property(
+            medium_id=material_id,
+            name="longitudinal_dispersivity",
+            type="Constant",
+            value=long_disp_val,
+        )
+
+        model.media.add_property(
+            medium_id=material_id,
+            name="transversal_dispersivity",
+            type="Constant",
+            value=trans_disp_val,
+        )
+        model.media.add_property(
+            medium_id=material_id,
+            name="permeability",
+            type="Constant",
+            value=str(material_properties[material_id]["permeability_X"])
+            + " "
+            + str(material_properties[material_id]["permeability_Y"])
+            + " "
+            + str(material_properties[material_id]["permeability_Z"]),
+        )
+
+    for material_id in material_properties:
+        xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
+        add_species_to_prj_file(
+            xpath, material_properties[material_id], species_list, model
+        )
+
+    return model
+
+
+class RequestParams(TypedDict):
+    model: NotRequired[ogs.OGS]
+    species_list: NotRequired[list]
+
+
 def setup_prj_file(
     bulk_mesh_path: Path,
     mesh: pv.UnstructuredGrid,
     material_properties: dict,
     process: str,
-    model: ogs.OGS = None,
+    **kwargs: Unpack[RequestParams],
 ) -> ogs.OGS:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
@@ -607,10 +826,19 @@ def setup_prj_file(
     :param mesh: mesh
     :param material_properties: material properties
     :param process: the process to be prepared
-    :param model: model to setup prj-file
+    :Keyword Arguments (kwargs):
+       * *model* (``ogs.OGS``) --
+         A ogs6py (ogs) model that is extended, should be used for templates
+       * *species_list* (``list``) --
+         All chemical species that occur in a model, if the model is to simulate a
+         Component Transport (HC/CT) process.
     :return: model
-    """
 
+
+    """
+    # ToDo: Make sure that no non-valid arguments are chosen!
+    model = kwargs["model"] if "model" in kwargs else None
+    species_list = kwargs["species_list"] if "species_list" in kwargs else None
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
@@ -646,11 +874,30 @@ def setup_prj_file(
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
+    elif "component" in process:
+        model.processes.add_process_variable(
+            process_variable="pressure", process_variable_name="HEAD_OGS"
+        )
+        model.parameters.add_parameter(name="C0", type="Constant", value=0)
+        if species_list is not None:
+            for spec in species_list:
+                model.processes.add_process_variable(
+                    process_variable="concentration_" + spec,
+                    process_variable_name=spec,
+                )
+                model.processvars.set_ic(
+                    process_variable_name=spec,
+                    components=1,
+                    order=1,
+                    initial_condition="C0",
+                )
+
     else:
         model.processes.add_process_variable(
             process_variable="process_variable",
             process_variable_name="HEAD_OGS",
         )
+
     model.processvars.set_ic(
         process_variable_name="HEAD_OGS",
         components=1,
@@ -659,7 +906,14 @@ def setup_prj_file(
     )
     model.parameters.add_parameter(name="p0", type="Constant", value=0)
     for point_data in mesh.point_data:
-        if point_data[0:4] == "P_BC":
+        if "P_BC" in point_data:
+            if "FLOW" in point_data:
+                process_var = "HEAD_OGS"
+            elif "HEAT" in point_data:
+                process_var = "temperature"
+            elif "MASS" in point_data:
+                # Each species becomes a separate process variable in OGS.
+                process_var = point_data.split("_P_", 1)[0]
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
             if "HEAT" in point_data:
@@ -768,8 +1022,11 @@ def setup_prj_file(
         materials_in_liquid_flow(material_properties, model)
     elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
+    elif process == "component transport":
+        assert species_list is not None
+        materials_in_HC(material_properties, species_list, model)
     else:
-        msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
+        msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
         raise ValueError(msg)
 
     # add deactivated subdomains if existing

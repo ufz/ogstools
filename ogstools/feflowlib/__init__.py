@@ -18,13 +18,20 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from .templates import hydro_thermal, liquid_flow, steady_state_diffusion
+from .templates import (
+    component_transport,
+    hydro_thermal,
+    liquid_flow,
+    steady_state_diffusion,
+)
 from .tools import (
     combine_material_properties,
     deactivate_cells,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
-    get_materials_of_HT_model,
+    get_material_properties_of_CT_model,
+    get_material_properties_of_HT_model,
+    get_species,
     get_specific_surface,
     helpFormat,
     setup_prj_file,
@@ -34,12 +41,15 @@ from .tools import (
 
 __all__ = [
     "combine_material_properties",
+    "component_transport",
     "convert_geometry_mesh",
     "convert_properties_mesh",
     "deactivate_cells",
     "extract_cell_boundary_conditions",
     "extract_point_boundary_conditions",
-    "get_materials_of_HT_model",
+    "get_material_properties_of_CT_model",
+    "get_material_properties_of_HT_model",
+    "get_species",
     "get_specific_surface",
     "helpFormat",
     "hydro_thermal",
