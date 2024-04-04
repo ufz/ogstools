@@ -296,7 +296,7 @@ def get_material_properties_of_HT_model(
     return material_properties
 
 
-def get_material_properties_of_HC_model(
+def get_material_properties_of_CT_model(
     mesh: pv.UnstructuredGrid,
 ) -> defaultdict:
     """
@@ -831,7 +831,7 @@ def setup_prj_file(
          A ogs6py (ogs) model that is extended, should be used for templates
        * *species_list* (``list``) --
          All chemical species that occur in a model, if the model is to simulate a
-         HC (Componenttransport) process.
+         Component Transport (HC/CT) process.
     :return: model
 
 
@@ -874,7 +874,7 @@ def setup_prj_file(
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
-    elif "HC" in process:
+    elif "component" in process:
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
@@ -1022,11 +1022,11 @@ def setup_prj_file(
         materials_in_liquid_flow(material_properties, model)
     elif process == "hydro thermal":
         materials_in_HT(material_properties, model)
-    elif process == "HC":
+    elif process == "component transport":
         assert species_list is not None
         materials_in_HC(material_properties, species_list, model)
     else:
-        msg = "Only 'steady state diffusion', 'liquid flow' and 'hydro thermal' processes are supported."
+        msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
         raise ValueError(msg)
 
     # add deactivated subdomains if existing
