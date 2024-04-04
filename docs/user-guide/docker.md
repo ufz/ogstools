@@ -13,7 +13,7 @@ A prebuilt [Docker](https://www.docker.com) image with the latest (nightly build
 :sync: unix
 
 ```bash
-docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.9
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.9:feflow-8.0
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -31,7 +31,7 @@ import ogstools.meshplotlib as mpl
 This command works only in the powershell.
 
 ```powershell
-docker run --rm -it -v ${PWD}:/working_dir -w /working_dir registry.opengeosys.org/ogs/tools/ogstools/main-3.9
+docker run --rm -it -v ${PWD}:/working_dir -w /working_dir registry.opengeosys.org/ogs/tools/ogstools/main-3.9:feflow-8.0
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -43,7 +43,7 @@ import ogstools.meshplotlib as mpl
 ...
 ```
 
-`/working_dir` is an arbitrary name of a path into which the current working directory (`PWD`) in the Docker container is loaded.
+`/working_dir` is an arbitrary name of a path into which the current working directory (`PWD`) is mounted in the Docker container.
 :::
 ::::
 
