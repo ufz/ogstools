@@ -306,7 +306,12 @@ def get_species_parameter(
 
 def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
     """
-    Some Documentation is needed!
+    Calculates the retardation factor from the absorption coefficient, which is called
+    Henry constant in FEFLOW, according to the formula: R = 1 + (1-p)/p * S. With R
+    the retardation factor, p the porosity, S the absorption coefficient. Further details
+    can be found in the FEFLOW book by Diersch in chapter 5.4.1.4 equation 5.70.
+
+    :param mesh: mesh
     """
     for spec_porosity in [
         species_porosity
