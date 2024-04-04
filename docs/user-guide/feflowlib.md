@@ -85,7 +85,11 @@ classDef TemplateStyle fill:#009c21, color:#ffffff
 ## Installation
 
 The converter requires FEFLOW to be installed.
-There are different ways to fulfill this requirement, either one installs FEFLOW or works with a container that has FEFLOW installed.
+There are different ways to fulfill this requirement, either one installs FEFLOW or works with a [Docker container](./docker.md) that has FEFLOW installed.
+
+::::{note}
+If you use an old version of FEFLOW, make sure it is compatible with `Python 3.9`, as this is a requirement for using of ogstools and the FEFLOW-converter.
+::::
 
 ::::{tab-set}
 :::{tab-item} Linux
