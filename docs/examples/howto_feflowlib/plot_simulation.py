@@ -1,10 +1,10 @@
 """
-How to convert a FEFLOW model and simulate it in OGS.
-=====================================================
+How to convert a hydraulic FEFLOW model.
+========================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-In this example we show how a simple FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
+In this example we show how a simple flow/hydraulic FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
 be simulated in OGS.
 """
 
