@@ -59,6 +59,9 @@ tests:
     - make coverage
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
+    when: always
+    paths:
+      - htmlcov
     reports:
       coverage_report:
         coverage_format: cobertura
