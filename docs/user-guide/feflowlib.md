@@ -6,8 +6,8 @@
 
 ## Introduction
 
-`feflowlib` can be used as a Python-library to easily access FEFLOW data and prepare them for `OGS`.
-`feflow2ogs` is the corresponding *command line interface* that combines the most important `feflowlib`-functions in a tool.
+`feflowlib` can be used as a Python-library to easily access FEFLOW data and prepare it for `OGS`.
+`feflow2ogs` is the corresponding *command line interface* that combines the most important `feflowlib`-functions into a tool.
 Together they are referred as FEFLOW-converter, as they allow the conversion of data stored in FEFLOW binary format to VTK format (`.vtu`) and the preparation of `OGS`-models.
 This converter was developed in the Python language and interacts with the Python API of FEFLOW.
 `pyvista` is used especially for the creation of unstructured grids.

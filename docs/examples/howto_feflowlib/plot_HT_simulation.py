@@ -1,7 +1,6 @@
 """
-How to convert a hydro thermal FEFLOW model and simulate it in OGS.
-===================================================================
-
+Hydro-thermal model - conversion and simulation
+===============================================
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple hydro thermal FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
@@ -36,8 +35,8 @@ from ogstools.propertylib import presets
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
 feflow_model = ifm.loadDocument(path_2D_HT_model)
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
-presets.temperature.data_name = "P_TEMP"
-mpl.plot(feflow_pv_mesh, presets.temperature)
+feflow_temperature_preset = presets.temperature.replace(data_name="P_TEMP")
+mpl.plot(feflow_pv_mesh, feflow_temperature_preset)
 
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
 path_mesh = path_writing / "2D_HT_model.vtu"
@@ -88,8 +87,8 @@ ogs_sim_res = pv.read(
     str(path_writing / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu")
 )
 # Plot the hydraulic head/height, which was simulated in OGS.
-presets.hydraulic_height.data_name = "HEAD_OGS"
-mpl.plot(ogs_sim_res, presets.hydraulic_height)
+ogs_head_preset = presets.temperature.replace(data_name="HEAD_OGS")
+mpl.plot(ogs_sim_res, ogs_head_preset)
 # %%
 # Plot the temperature, which was simulated in OGS.
 presets.temperature.data_name = "temperature"
@@ -99,11 +98,11 @@ mpl.plot(ogs_sim_res, presets.temperature)
 # 6. Plot the difference between the FEFLOW and OGS simulation.
 feflow_pv_mesh["HEAD"] = feflow_pv_mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
-presets.hydraulic_height.data_name = "HEAD"
+head_preset = presets.temperature.replace(data_name="HEAD")
 # Plot differences in hydraulic head/height.
 mpl.plot(
-    difference(feflow_pv_mesh, ogs_sim_res, presets.hydraulic_height),
-    presets.hydraulic_height,
+    difference(feflow_pv_mesh, ogs_sim_res, head_preset),
+    head_preset,
 )
 # %%
 feflow_pv_mesh["temperature"] = feflow_pv_mesh["P_TEMP"]
