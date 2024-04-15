@@ -75,9 +75,8 @@ model = setup_prj_file(
 # The model must be written before it can be run.
 model.write_input(str(path_prjfile))
 # Print the prj-file as an example.
-read_model = ET.parse(str(path_prjfile))
-root = read_model.getroot()
-ET.dump(root)
+model_prjfile = ET.parse(str(path_prjfile))
+ET.dump(model_prjfile)
 # %%
 # 4. Run the model.
 model.run_model(logfile=str(path_writing / "out.log"))
