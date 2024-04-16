@@ -4,6 +4,13 @@
 #            http://www.opengeosys.org/project/license
 #
 
-path_2layers_model = "../../../tests/data/feflowlib/2layers_model.fem"
-path_box_Neumann = "../../../tests/data/feflowlib/box_3D_neumann.fem"
-path_box_Robin = "../../../tests/data/feflowlib/box_3D_cauchy_areal.fem"
+from ogstools.definitions import ROOT_DIR
+
+path_2layers_model = str(ROOT_DIR / "../tests/data/feflowlib/2layers_model.fem")
+path_box_Neumann = str(ROOT_DIR / "../tests/data/feflowlib/box_3D_neumann.fem")
+path_box_Robin = str(
+    ROOT_DIR / "../tests/data/feflowlib/box_3D_cauchy_areal.fem"
+)
+path_2D_HT_model = str(
+    ROOT_DIR / "../tests/data/feflowlib/HT_toymodel_Diri.fem"
+)

@@ -1,10 +1,10 @@
 """
-How to convert a FEFLOW model and simulate it in OGS.
-=====================================================
+Hydraulic model - conversion and simulation
+===========================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-In this example we show how a simple FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
+In this example we show how a simple flow/hydraulic FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
 be simulated in OGS.
 """
 
@@ -84,9 +84,8 @@ model = setup_prj_file(
 # The model must be written before it can be run.
 model.write_input(str(path_prjfile))
 # Simply print the prj-file as an example.
-read_model = ET.parse(str(path_prjfile))
-root = read_model.getroot()
-ET.dump(root)
+model_prjfile = ET.parse(str(path_prjfile))
+ET.dump(model_prjfile)
 # %%
 # 4. Run the model
 model.run_model(logfile=str(path_writing / "out.log"))
