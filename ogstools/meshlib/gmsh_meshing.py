@@ -190,15 +190,36 @@ def gen_bhe_mesh(
         target_z_size_coarse: float = 7.5, 
         target_z_size_fine: float = 1.5,
         n_refinement_layers: float = 2,
+        meshing_type: str = 'structured',
+        dist_box_x: float = 5,
+        dist_box_y: float = 10,
         inner_mesh_size: float = 5,
         outer_mesh_size: float = 10,
         propagation: float = 1.1,
-        dist_box_x: float = 5,
-        dist_box_y: float = 10,
-        meshing_type: str = 'structured',
         order: int = 1,
         out_name: Path = Path("bhe_mesh.msh"),
-        ) -> None:
+) -> None:
+    """
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additonally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input paramters. Refinement layers are placed at the Top-Surface/BHE-begin, the groundwater end/start and the end of the BHE's. See detailed description of the parameters below:
+
+    :param length: Length of the model area (x-dimension)
+    :param width: Width of the model area (y-dimension)
+    :param layer: List of the soil layer thickness in m 
+    :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y']
+    :param BHE_array: List of BHEs, where every BHE is specified by a list of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
+    :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
+    :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
+    :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see genral description above)
+    :param meshing_type: 'structured' and 'prism' are supported
+    :param dist_box_x: distance in x-direction of the refinemnt box according to the BHE's
+    :param dist_box_y: distance in y-direction of the refinemnt box according to the BHE's
+    :param inner_mesh_size: mesh size inside the refinement box 
+    :param outer_mesh_size: mesh size outside of the refinement box
+    :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
+    :param order: -
+    :param out_name: name of the exported mesh, must end with .msh
+    :return: a gmsh .msh file
+    """
     def compute_layer_spacing(z_min,z_max,z_min_id,id_j,id_j_max):
         if z_min_id==3: #and id_j==1 - not needed, but logically safer 
             if id_j == id_j_max:
