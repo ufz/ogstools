@@ -200,10 +200,10 @@ def gen_bhe_mesh(
         out_name: Path = Path("bhe_mesh.msh"),
 ) -> None:
     """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additonally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input paramters. Refinement layers are placed at the Top-Surface/BHE-begin, the groundwater end/start and the end of the BHE's. See detailed description of the parameters below:
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additonally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input paramters. Refinement layers are placed at the Top-Surface/BHE-begin, the groundwater end/start and the end of the BHE's. Currently only the same BHE begin depth for all BHE's is supported. See detailed description of the parameters below:
 
-    :param length: Length of the model area (x-dimension)
-    :param width: Width of the model area (y-dimension)
+    :param length: Length of the model area in m (x-dimension)
+    :param width: Width of the model area in m (y-dimension)
     :param layer: List of the soil layer thickness in m 
     :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y']
     :param BHE_array: List of BHEs, where every BHE is specified by a list of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
