@@ -71,7 +71,7 @@ See the following tool descriptions:
 ```{toctree}
 ---
 maxdepth: 1
-glob:
+glob: 1
 ---
 *
 ```
