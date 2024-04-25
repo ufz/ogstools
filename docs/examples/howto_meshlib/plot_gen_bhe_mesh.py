@@ -199,13 +199,13 @@ gen_bhe_mesh(
         [50, 60, -1, -60, 0.076],
     ],
     meshing_type="structured",
-    target_z_size_coarse=10, #default value 7.5
-    target_z_size_fine=2, #default value 1.5
-    n_refinement_layers=1, #default value 2
-    dist_box_x=15, #default value 10
-    propagation=1.2, #default value 1.1
-    inner_mesh_size=8,  #default value 5
-    outer_mesh_size=12, #default value 10
+    target_z_size_coarse=10,  # default value 7.5
+    target_z_size_fine=2,  # default value 1.5
+    n_refinement_layers=1,  # default value 2
+    dist_box_x=15,  # default value 10
+    propagation=1.2,  # default value 1.1
+    inner_mesh_size=8,  # default value 5
+    outer_mesh_size=12,  # default value 10
     out_name=msh_file,
 )
 
@@ -224,7 +224,9 @@ msh2vtu(
 
 # %%
 mesh = pv.read(tmp_dir / "bhe_structured_advanced_domain.vtu")
-top_mesh = pv.read(tmp_dir / "bhe_structured_advanced_physical_group_Top_Surface.vtu")
+top_mesh = pv.read(
+    tmp_dir / "bhe_structured_advanced_physical_group_Top_Surface.vtu"
+)
 bottom_mesh = pv.read(
     tmp_dir / "bhe_structured_advanced_physical_group_Bottom_Surface.vtu"
 )
