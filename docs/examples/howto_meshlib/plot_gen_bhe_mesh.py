@@ -1,25 +1,10 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     custom_cell_magics: kql
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.11.2
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
-# %%
 """
-Creating a BHE mesh (Borehole Heat Exchanger)
-=============================================
+Creating a mesh with BHE (Borehole Heat Exchanger)
+===================================================
 
-This example demonstrates how to use gen_bhe_mesh() to create a Borehole Heat Exchanger (BHE) mesh.
+This example demonstrates how to use gen_bhe_mesh() to create
+a Borehole Heat Exchanger (BHE) mesh.
+
 """
 
 # %%
@@ -33,8 +18,15 @@ from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
 
 # %% [markdown]
 # 0. Introduction
-# ---------------
-# This example shows the general usage of gen_bhe_mesh and how some of the parameters will effect the mesh. This section demonstrates the mesh generation with only three soil layers, groundwater flow in one layer and three BHE's. However, this tool provides multiple soil layers, groundwater flow in multiple layers and multiple BHE's. The mesh sizes provides good initial values for the most Heat-Transport-BHE simulations in OGS. They can also be set by the user, to customize the mesh. Feel free to try it out!
+# ----------------
+# This example shows the general usage of gen_bhe_mesh and how some of
+# the parameters will effect the mesh. This section demonstrates the mesh
+# generation with only three soil layers, groundwater flow in one layer
+# and three BHE's. However, this tool provides multiple soil layers,
+# groundwater flow in multiple layers and multiple BHE's. The mesh sizes
+# provides good initial values for the most Heat-Transport-BHE simulations
+# in OGS. They can also be set by the user, to customize the mesh.
+# Feel free to try it out!
 
 # %% [markdown]
 # 1. Create a simple prism mesh
@@ -98,7 +90,7 @@ p.show()
 
 # %% [markdown]
 # 1. Create a simple structured mesh
-# --------------------------------
+# -----------------------------------
 # Generate a customizable structured BHE mesh:
 
 # %%
@@ -162,8 +154,10 @@ p.show()
 
 # %% [markdown]
 # 2. Create an advanced structured mesh
-# --------------------------------
-# Generate a customizable structured BHE mesh with advanced mesh sizing options (using gmsh). To understand the specific behaviour of every mesh parameter, test each one after another.
+# --------------------------------------
+# Generate a customizable structured BHE mesh with advanced mesh
+# sizing options (using gmsh). To understand the specific
+# behaviour of every mesh parameter, test each one after another.
 
 # %%
 msh_file = tmp_dir / "bhe_structured_advanced.vtu"
