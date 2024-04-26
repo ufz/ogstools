@@ -30,43 +30,32 @@ import pyvista as pv
 from pyvista.plotting import Plotter
 
 from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
-from ogstools.msh2vtu import msh2vtu
 
 # %% [markdown]
 # 0. Introduction
 # ---------------
-# This example shows the general usage of gen_bhe_mesh and how some of the parameters will efect the mesh. This section demonstrates the mesh genration with only three soil layers, groundwater flow in one layer and three BHE's. However, this tool provides multiple soil layers, groundwater flow in multiple layers and multiple BHE's. The mesh sizes provides good initial values for the most Heat-Transport-BHE simulations in OGS. They can also be set by the user, to customize the mesh. Feel free to try it out!
+# This example shows the general usage of gen_bhe_mesh and how some of the parameters will effect the mesh. This section demonstrates the mesh generation with only three soil layers, groundwater flow in one layer and three BHE's. However, this tool provides multiple soil layers, groundwater flow in multiple layers and multiple BHE's. The mesh sizes provides good initial values for the most Heat-Transport-BHE simulations in OGS. They can also be set by the user, to customize the mesh. Feel free to try it out!
 
 # %% [markdown]
 # 1. Create a simple prism mesh
 # --------------------------------
-# Generate a customizable prism BHE mesh (using gmsh):
+# Generate a customizable prism BHE mesh:
 
 # %%
 tmp_dir = Path(mkdtemp())
-msh_file = tmp_dir / "bhe_prism.msh"
+msh_file = tmp_dir / "bhe_prism.vtu"
 gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=[[-30, 1, "+x"]],
-    BHE_array=[
-        [50, 40, -1, -60, 0.076],
-        [50, 50, -1, -60, 0.076],
-        [50, 60, -1, -60, 0.076],
+    groundwater=[(-30, 1, "+x")],
+    BHE_Array=[
+        (50, 40, -1, -60, 0.076),
+        (50, 50, -1, -60, 0.076),
+        (50, 60, -1, -60, 0.076),
     ],
     meshing_type="prism",
     out_name=msh_file,
-)
-
-# %% [markdown]
-# Now we convert the gmsh mesh to the VTU format with msh2vtu.
-# Passing the list of dimensions [1, 3] to msh2vtu ensures, that the BHE line
-# elements will also be part of the domain mesh.
-
-# %%
-msh2vtu(
-    msh_file, output_path=tmp_dir, dim=[1, 3], reindex=True, log_level="ERROR"
 )
 
 # %% [markdown]
@@ -110,33 +99,23 @@ p.show()
 # %% [markdown]
 # 1. Create a simple structured mesh
 # --------------------------------
-# Generate a customizable structured BHE mesh (using gmsh):
+# Generate a customizable structured BHE mesh:
 
 # %%
 tmp_dir = Path(mkdtemp())
-msh_file = tmp_dir / "bhe_structured.msh"
+msh_file = tmp_dir / "bhe_structured.vtu"
 gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
     groundwater=[[-30, 1, "+x"]],
-    BHE_array=[
+    BHE_Array=[
         [50, 40, -1, -60, 0.076],
         [50, 50, -1, -60, 0.076],
         [50, 60, -1, -60, 0.076],
     ],
     meshing_type="structured",
     out_name=msh_file,
-)
-
-# %% [markdown]
-# Now we convert the gmsh mesh to the VTU format with msh2vtu.
-# Passing the list of dimensions [1, 3] to msh2vtu ensures, that the BHE line
-# elements will also be part of the domain mesh.
-
-# %%
-msh2vtu(
-    msh_file, output_path=tmp_dir, dim=[1, 3], reindex=True, log_level="ERROR"
 )
 
 # %% [markdown]
@@ -187,13 +166,13 @@ p.show()
 # Generate a customizable structured BHE mesh with advanced mesh sizing options (using gmsh). To understand the specific behaviour of every mesh parameter, test each one after another.
 
 # %%
-msh_file = tmp_dir / "bhe_structured_advanced.msh"
+msh_file = tmp_dir / "bhe_structured_advanced.vtu"
 gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
     groundwater=[[-30, 1, "+x"]],
-    BHE_array=[
+    BHE_Array=[
         [50, 40, -1, -60, 0.076],
         [50, 50, -1, -60, 0.076],
         [50, 60, -1, -60, 0.076],
@@ -207,16 +186,6 @@ gen_bhe_mesh(
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
     out_name=msh_file,
-)
-
-# %% [markdown]
-# Now we convert the gmsh mesh to the VTU format with msh2vtu.
-# Passing the list of dimensions [1, 3] to msh2vtu ensures, that the BHE line
-# elements will also be part of the domain mesh.
-
-# %%
-msh2vtu(
-    msh_file, output_path=tmp_dir, dim=[1, 3], reindex=True, log_level="ERROR"
 )
 
 # %% [markdown]
