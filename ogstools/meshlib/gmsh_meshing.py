@@ -229,7 +229,7 @@ def gen_bhe_mesh_gmsh(
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .msh
-    :return: a gmsh .msh file
+    :returns: a gmsh .msh file
     """
 
     def _compute_layer_spacing(
