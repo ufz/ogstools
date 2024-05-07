@@ -16,7 +16,8 @@
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "ms-python.black-formatter"
+        "ms-python.black-formatter",
+        "ms-toolsai.jupyter"
       ],
       "settings": {
         "python.defaultInterpreterPath": ".venv-devcontainer/bin/python",
