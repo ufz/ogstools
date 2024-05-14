@@ -1,5 +1,5 @@
 """
-Creating a mesh with BHE (Borehole Heat Exchanger)
+Creating a BHE mesh (Borehole Heat Exchanger)
 ===================================================
 
 This example demonstrates how to use gen_bhe_mesh() to create
