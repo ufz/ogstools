@@ -874,53 +874,178 @@ def gen_bhe_mesh_gmsh(
             name="Bottom_Surface",
         )
 
+        counter_for_gw_start_at_soil_layer = 0
         for i in range(0, len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusx[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-x":
-                # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list_minusx,k+3,f'Groundwater_Inflow_{i}')
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusx[
-                        3
-                        * (groundwater_list[i][0] + 1 + i) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list_minusx,k+3,f'Groundwater_Inflow_{i}')
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + 1
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + 1
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusy[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusy[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             k += 1
 
         # Sizing Functions and Transfinite Algorithm for Hexahedron meshing in wanted zones
@@ -1227,60 +1352,161 @@ def gen_bhe_mesh_gmsh(
             name="Bottom_Surface",
         )
 
+        counter_for_gw_start_at_soil_layer = 0
         for i in range(0, len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusx[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusx[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusy[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusy[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             k += 1
 
         # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list[start_groundwater+1:groundwater[1]+1],k+3,'Groundwater_Inflow')
@@ -1489,7 +1715,29 @@ def gen_bhe_mesh_gmsh(
 
         BHE_end_depths.append([-np.sum(layer[:i]), 0])
         BHE_end_depths.append([-np.sum(layer[: i + 1]), 0])
-        BHE_end_depths = np.unique(BHE_end_depths, axis=0)[::-1]
+        depths = np.unique(BHE_end_depths, axis=0)  # [::-1]
+
+        test, counts = np.unique(depths[:, 0], return_counts=True)
+        arg_indexes = np.argwhere(counts > 1)
+
+        if arg_indexes.size != 0:
+            new_test = depths[depths[:, 0] == test[arg_indexes[0]]][:, 1]
+            if np.argwhere(new_test > 0) == 1:
+                duplicate_depth = np.argwhere(
+                    depths[:, 0] == test[arg_indexes[0]]
+                )
+                not_needed_icl = np.argwhere(depths[:, 1] == 0)
+                depths = np.delete(
+                    depths,
+                    np.intersect1d(duplicate_depth, not_needed_icl),
+                    axis=0,
+                )
+
+            else:
+                msg = "Layering to difficult, groundwater, BHE depths and needed layers are very close - behaviour currently not implemented"
+                raise Exception(msg)
+
+        BHE_end_depths = depths[::-1]
         needed_depths.append(BHE_end_depths)
 
     number_of_layers: list = []
@@ -1562,7 +1810,10 @@ def gen_bhe_mesh_gmsh(
             groundwater_list_2 = np.array(
                 [inner_list[2] for inner_list in groundwater_list]
             )
-            if list_of_needed_depths[j, 0] in groundwater_list_2:
+            if (
+                list_of_needed_depths[j, 0] in groundwater_list_2
+                and list_of_needed_depths[j, 0] != list_of_needed_depths[-1, 0]
+            ):
                 _compute_layer_spacing(
                     list_of_needed_depths[j - 1, 0],
                     list_of_needed_depths[j, 0],
@@ -2404,53 +2655,178 @@ def gen_bhe_mesh(
             name="Bottom_Surface",
         )
 
+        counter_for_gw_start_at_soil_layer = 0
         for i in range(0, len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusx[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-x":
-                # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list_minusx,k+3,f'Groundwater_Inflow_{i}')
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusx[
-                        3
-                        * (groundwater_list[i][0] + 1 + i) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list_minusx,k+3,f'Groundwater_Inflow_{i}')
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + 1
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + 1
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusy[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusy[
-                        3
-                        * (groundwater_list[i][0] + i + 1) : 3
-                        * (groundwater_list[i][3] + 1 + i)
-                    ],
-                    tag=k + 3,
-                    name=f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            3
+                            * (
+                                groundwater_list[i][0]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            ) : 3
+                            * (
+                                groundwater_list[i][3]
+                                + i
+                                + 1
+                                - counter_for_gw_start_at_soil_layer
+                            )
+                        ],
+                        tag=k + 3,
+                        name=f"Groundwater_Inflow_{i}",
+                    )
             k += 1
 
         # Sizing Functions and Transfinite Algorithm for Hexahedron meshing in wanted zones
@@ -2757,60 +3133,161 @@ def gen_bhe_mesh(
             name="Bottom_Surface",
         )
 
+        counter_for_gw_start_at_soil_layer = 0
         for i in range(0, len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusx[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusx[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-x":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusx[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusx[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "+y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_plusy[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_plusy[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             elif groundwater_list[i][4] == "-y":
-                gmsh.model.addPhysicalGroup(
-                    2,
-                    boundary_groundwater_list_minusy[
-                        groundwater_list[i][0]
-                        + 1
-                        + i : groundwater_list[i][3]
-                        + 1
-                        + i
-                    ],
-                    k + 3,
-                    f"Groundwater_Inflow_{i}",
-                )
+                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            groundwater_list[i][0]
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
+                    counter_for_gw_start_at_soil_layer += 1
+                else:
+                    gmsh.model.addPhysicalGroup(
+                        2,
+                        boundary_groundwater_list_minusy[
+                            groundwater_list[i][0]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer : groundwater_list[
+                                i
+                            ][
+                                3
+                            ]
+                            + 1
+                            + i
+                            - counter_for_gw_start_at_soil_layer
+                        ],
+                        k + 3,
+                        f"Groundwater_Inflow_{i}",
+                    )
             k += 1
 
         # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list[start_groundwater+1:groundwater[1]+1],k+3,'Groundwater_Inflow')
@@ -3017,7 +3494,29 @@ def gen_bhe_mesh(
 
         BHE_end_depths.append([-np.sum(layer[:i]), 0])
         BHE_end_depths.append([-np.sum(layer[: i + 1]), 0])
-        BHE_end_depths = np.unique(BHE_end_depths, axis=0)[::-1]
+        depths = np.unique(BHE_end_depths, axis=0)  # [::-1] #to sort the values
+
+        test, counts = np.unique(depths[:, 0], return_counts=True)
+        arg_indexes = np.argwhere(counts > 1)
+
+        if arg_indexes.size != 0:
+            new_test = depths[depths[:, 0] == test[arg_indexes[0]]][:, 1]
+            if np.argwhere(new_test > 0) == 1:
+                duplicate_depth = np.argwhere(
+                    depths[:, 0] == test[arg_indexes[0]]
+                )
+                not_needed_icl = np.argwhere(depths[:, 1] == 0)
+                depths = np.delete(
+                    depths,
+                    np.intersect1d(duplicate_depth, not_needed_icl),
+                    axis=0,
+                )
+
+            else:
+                msg = "Layering to difficult, groundwater, BHE depths and needed layers are very close - behaviour currently not implemented"
+                raise Exception(msg)
+
+        BHE_end_depths = depths[::-1]
         needed_depths.append(BHE_end_depths)
 
     number_of_layers: list = []
@@ -3090,7 +3589,10 @@ def gen_bhe_mesh(
             groundwater_list_2 = np.array(
                 [inner_list[2] for inner_list in groundwater_list]
             )
-            if list_of_needed_depths[j, 0] in groundwater_list_2:
+            if (
+                list_of_needed_depths[j, 0] in groundwater_list_2
+                and list_of_needed_depths[j, 0] != list_of_needed_depths[-1, 0]
+            ):
                 _compute_layer_spacing(
                     list_of_needed_depths[j - 1, 0],
                     list_of_needed_depths[j, 0],
