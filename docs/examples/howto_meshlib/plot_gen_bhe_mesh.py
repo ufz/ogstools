@@ -51,7 +51,7 @@ gen_bhe_mesh(
 )
 
 # %% [markdown]
-# Load the domain mesh and all submeshes as well as extract BHE line:
+# Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
 mesh = pv.read(tmp_dir / "bhe_prism_domain.vtu")
@@ -111,7 +111,7 @@ gen_bhe_mesh(
 )
 
 # %% [markdown]
-# Load the domain mesh and all submeshes as well as extract BHE line:
+# Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
 mesh = pv.read(tmp_dir / "bhe_structured_domain.vtu")
@@ -183,7 +183,7 @@ gen_bhe_mesh(
 )
 
 # %% [markdown]
-# Load the domain mesh and all submeshes as well as extract BHE line:
+# Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
 mesh = pv.read(tmp_dir / "bhe_structured_advanced_domain.vtu")
