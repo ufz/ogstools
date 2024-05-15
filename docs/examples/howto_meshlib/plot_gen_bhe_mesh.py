@@ -1,3 +1,4 @@
+# %%
 """
 Creating a BHE mesh (Borehole Heat Exchanger)
 ===================================================
@@ -61,17 +62,13 @@ gw_mesh = pv.read(tmp_dir / "bhe_prism_physical_group_Groundwater_Inflow_0.vtu")
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
-# Translate the submeshes for visualization only:
+# Visualize the mesh:
 
 # %%
 top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
 bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
 gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
 
-# %% [markdown]
-# Visualize the mesh:
-
-# %%
 p = Plotter()
 p.add_mesh(mesh, style="wireframe", color="grey")
 p.add_mesh(
@@ -125,17 +122,13 @@ gw_mesh = pv.read(
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
-# Translate the submeshes for visualization only:
+# Visualize the mesh:
 
 # %%
 top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
 bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
 gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
 
-# %% [markdown]
-# Visualize the mesh:
-
-# %%
 p = Plotter()
 p.add_mesh(mesh, style="wireframe", color="grey")
 p.add_mesh(
@@ -199,17 +192,13 @@ gw_mesh = pv.read(
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
-# Translate the submeshes for visualization only:
+# Visualize the mesh:
 
 # %%
 top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
 bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
 gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
 
-# %% [markdown]
-# Visualize the mesh:
-
-# %%
 p = Plotter()
 p.add_mesh(mesh, style="wireframe", color="grey")
 p.add_mesh(
