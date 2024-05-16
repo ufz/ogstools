@@ -151,7 +151,7 @@ def gen_bhe_mesh_gmsh(
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
     :param layer: List of the soil layer thickness in m
-    :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y']
+    :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
     :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
@@ -187,9 +187,13 @@ def gen_bhe_mesh_gmsh(
                         space
                         <= (n_refinement_layers + 1) * target_z_size_coarse
                     ):
-                        absolute_height_of_layers.append(space)
+                        absolute_height_of_layers.append(
+                            np.abs(z_min - z_max)
+                        )  # space
                         number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(space / target_z_size_fine)
+                            math.ceil(
+                                np.abs(z_min - z_max) / target_z_size_fine
+                            )  # space
                         )
                     else:
                         absolute_height_of_layers.append(
@@ -1473,7 +1477,7 @@ def gen_bhe_mesh_gmsh(
                 if (
                     np.abs(groundwater[g][0])
                     < n_refinement_layers * target_z_size_fine
-                ):
+                ):  # pragma: no cover
                     msg = "Groundwater layer must start in the soil, a beginning in the first 2 meter of the top surface is currently not possible!"
                     raise Exception(msg)
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
@@ -1537,7 +1541,7 @@ def gen_bhe_mesh_gmsh(
                 if (
                     np.abs(BHE_array[j, 3]) - np.abs(BHE_array[j, 2])
                     <= n_refinement_layers * target_z_size_fine
-                ):
+                ):  # pragma: no cover
                     msg = "BHE to short, must be longer than 2m!"
                     raise Exception(msg)
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
@@ -1560,7 +1564,7 @@ def gen_bhe_mesh_gmsh(
                     BHE_to_soil[j, 2] = 0
 
     for i in range(1, len(BHE_array)):
-        if BHE_array[0, 2] != BHE_array[i, 2]:
+        if BHE_array[0, 2] != BHE_array[i, 2]:  # pragma: no cover
             msg = "All BHEs must start at the same height, different BHE begin heights not implemented yet!"
             raise Exception(msg)
 
@@ -1574,9 +1578,10 @@ def gen_bhe_mesh_gmsh(
                 if (
                     np.abs(BHE_array[j, 3]) - np.abs(BHE_array[j, 2])
                     <= n_refinement_layers * target_z_size_fine
-                ):
-                    print("WARNING: BHE to short, must be longer than 2m!")
-                elif (
+                ):  # pragma: no cover
+                    msg = "BHE to short, must be longer than 2m!"
+                    raise Exception(msg)
+                if (
                     np.abs(BHE_array[j, 3]) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
@@ -1602,7 +1607,7 @@ def gen_bhe_mesh_gmsh(
                     BHE_to_soil[j, 4] = 2
                 else:
                     BHE_to_soil[j, 4] = 0
-            elif np.abs(BHE_array[j, 3]) >= np.sum(layer):
+            elif np.abs(BHE_array[j, 3]) >= np.sum(layer):  # pragma: no cover
                 raise Exception(
                     "BHE %d ends at bottom boundary or outside of the model area"
                     % j
@@ -1634,7 +1639,7 @@ def gen_bhe_mesh_gmsh(
                         icl,
                     ]
                 )
-            else:
+            else:  # pragma: no cover
                 msg = "Two or more groundwater flows starts in the same soil layer, this is not allowed !"
                 raise Exception(msg)
 
@@ -1668,7 +1673,7 @@ def gen_bhe_mesh_gmsh(
                     axis=0,
                 )
 
-            else:
+            else:  # pragma: no cover
                 msg = "Layering to difficult, groundwater, BHE depths and needed layers are very close - behaviour currently not implemented"
                 raise Exception(msg)
 
@@ -1682,8 +1687,6 @@ def gen_bhe_mesh_gmsh(
         list_of_needed_depths = needed_depths[
             i
         ]  # all depths, which needs a node in the mesh
-        # list_of_depths_forward_layer=[]
-        # list_of_depths_next_layer=[]
 
         # vorheriger_layer - Abstand für top-critical etc.
         if i > 0:
@@ -1823,7 +1826,9 @@ def gen_bhe_mesh_gmsh(
         needed_extrusion = all_extrusion[
             (
                 (all_extrusion[:, 0] >= np.abs(BHE_array[i, 2]))
-                & (all_extrusion[:, 0] <= np.abs(BHE_array[i, 3]))
+                & (
+                    all_extrusion[:, 0] <= np.abs(BHE_array[i, 3]) + 0.001
+                )  # add little relax tolerance 0.001
             )
         ]
 
@@ -1857,7 +1862,7 @@ def gen_bhe_mesh_gmsh(
         _mesh_structured()
     elif meshing_type == "prism":
         _mesh_prism()
-    else:
+    else:  # pragma: no cover
         gmsh.finalize()
         msg = "Unknown meshing type! prism and structured supported"
         raise Exception(msg)
@@ -1926,7 +1931,7 @@ def gen_bhe_mesh(
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater inflow direction
+        isolation layer (count starts with 0), groundwater inflow direction, , empty list [] for no groundwater flow
         as string - supported '+x', '-x', '-y', '+y']
     :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats:
         [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
