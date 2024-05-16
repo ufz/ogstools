@@ -83,6 +83,7 @@ p.add_mesh(bhe_line, color="r", line_width=3)
 p.add_mesh(top_mesh, show_edges=True)
 p.add_mesh(bottom_mesh, show_edges=True)
 p.add_mesh(gw_mesh, show_edges=True)
+p.add_axes()
 p.show()
 
 # %% [markdown]
@@ -139,6 +140,7 @@ p.add_mesh(bhe_line, color="r", line_width=3)
 p.add_mesh(top_mesh, show_edges=True)
 p.add_mesh(bottom_mesh, show_edges=True)
 p.add_mesh(gw_mesh, show_edges=True)
+p.add_axes()
 p.show()
 
 # %% [markdown]
@@ -203,4 +205,5 @@ p.add_mesh(bhe_line, color="r", line_width=3)
 p.add_mesh(top_mesh, show_edges=True)
 p.add_mesh(bottom_mesh, show_edges=True)
 p.add_mesh(gw_mesh, show_edges=True)
+p.add_axes()
 p.show()
