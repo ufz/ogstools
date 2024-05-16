@@ -36,8 +36,8 @@ from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
 
 # %%
 tmp_dir = Path(mkdtemp())
-msh_file = tmp_dir / "bhe_prism.vtu"
-gen_bhe_mesh(
+vtu_file = tmp_dir / "bhe_prism.vtu"
+bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
@@ -48,17 +48,17 @@ gen_bhe_mesh(
         (50, 60, -1, -60, 0.076),
     ],
     meshing_type="prism",
-    out_name=msh_file,
+    out_name=vtu_file,
 )
 
 # %% [markdown]
 # Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
-mesh = pv.read(tmp_dir / "bhe_prism_domain.vtu")
-top_mesh = pv.read(tmp_dir / "bhe_prism_physical_group_Top_Surface.vtu")
-bottom_mesh = pv.read(tmp_dir / "bhe_prism_physical_group_Bottom_Surface.vtu")
-gw_mesh = pv.read(tmp_dir / "bhe_prism_physical_group_Groundwater_Inflow_0.vtu")
+mesh = pv.read(tmp_dir / bhe_meshes[0])
+top_mesh = pv.read(tmp_dir / bhe_meshes[1])
+bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
+gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
@@ -92,8 +92,8 @@ p.show()
 
 # %%
 tmp_dir = Path(mkdtemp())
-msh_file = tmp_dir / "bhe_structured.vtu"
-gen_bhe_mesh(
+vtu_file = tmp_dir / "bhe_structured.vtu"
+bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
@@ -104,21 +104,17 @@ gen_bhe_mesh(
         (50, 60, -1, -60, 0.076),
     ],
     meshing_type="structured",
-    out_name=msh_file,
+    out_name=vtu_file,
 )
 
 # %% [markdown]
 # Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
-mesh = pv.read(tmp_dir / "bhe_structured_domain.vtu")
-top_mesh = pv.read(tmp_dir / "bhe_structured_physical_group_Top_Surface.vtu")
-bottom_mesh = pv.read(
-    tmp_dir / "bhe_structured_physical_group_Bottom_Surface.vtu"
-)
-gw_mesh = pv.read(
-    tmp_dir / "bhe_structured_physical_group_Groundwater_Inflow_0.vtu"
-)
+mesh = pv.read(tmp_dir / bhe_meshes[0])
+top_mesh = pv.read(tmp_dir / bhe_meshes[1])
+bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
+gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
@@ -153,8 +149,8 @@ p.show()
 # behaviour of every mesh parameter, test each one after another.
 
 # %%
-msh_file = tmp_dir / "bhe_structured_advanced.vtu"
-gen_bhe_mesh(
+vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
+bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
@@ -172,23 +168,17 @@ gen_bhe_mesh(
     propagation=1.2,  # default value 1.1
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
-    out_name=msh_file,
+    out_name=vtu_file,
 )
 
 # %% [markdown]
 # Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
-mesh = pv.read(tmp_dir / "bhe_structured_advanced_domain.vtu")
-top_mesh = pv.read(
-    tmp_dir / "bhe_structured_advanced_physical_group_Top_Surface.vtu"
-)
-bottom_mesh = pv.read(
-    tmp_dir / "bhe_structured_advanced_physical_group_Bottom_Surface.vtu"
-)
-gw_mesh = pv.read(
-    tmp_dir / "bhe_structured_advanced_physical_group_Groundwater_Inflow_0.vtu"
-)
+mesh = pv.read(tmp_dir / bhe_meshes[0])
+top_mesh = pv.read(tmp_dir / bhe_meshes[1])
+bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
+gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
 bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
 
 # %% [markdown]
