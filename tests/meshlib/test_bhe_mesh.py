@@ -11,7 +11,7 @@ from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
 meshpath = TESTS_DIR / "data" / "meshlib"
 
 
-def case_1(vtu_out_file_path: Path, mesh_type: str):
+def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     return gen_bhe_mesh(
         length=50,
         width=50,
@@ -27,7 +27,7 @@ def case_1(vtu_out_file_path: Path, mesh_type: str):
     )
 
 
-def case_2(vtu_out_file_path: Path, mesh_type: str):
+def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     return gen_bhe_mesh(
         length=100,
         width=70,
@@ -43,7 +43,7 @@ def case_2(vtu_out_file_path: Path, mesh_type: str):
     )
 
 
-def case_3(vtu_out_file_path: Path, mesh_type: str):
+def case_3(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     return gen_bhe_mesh(
         length=120,
         width=60,
@@ -59,7 +59,7 @@ def case_3(vtu_out_file_path: Path, mesh_type: str):
     )
 
 
-def case_4(vtu_out_file_path: Path, mesh_type: str):
+def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     return gen_bhe_mesh(
         length=80,
         width=30,
