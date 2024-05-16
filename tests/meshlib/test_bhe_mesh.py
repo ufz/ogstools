@@ -11,7 +11,7 @@ from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
 meshpath = TESTS_DIR / "data" / "meshlib"
 
 
-def case_1(msh_file, mesh_type):
+def case_1(vtu_out_file_path: Path, mesh_type: str):
     return gen_bhe_mesh(
         length=50,
         width=50,
@@ -23,11 +23,11 @@ def case_1(msh_file, mesh_type):
         ),  # case for confinded aquifer, the top level of groundwater ends at soil layer transition
         BHE_Array=(25, 30, -5, -50, 0.076),
         meshing_type=mesh_type,
-        out_name=msh_file,
+        out_name=vtu_out_file_path,
     )
 
 
-def case_2(msh_file, mesh_type):
+def case_2(vtu_out_file_path: Path, mesh_type: str):
     return gen_bhe_mesh(
         length=100,
         width=70,
@@ -39,11 +39,11 @@ def case_2(msh_file, mesh_type):
             (50, 50, -1, -52, 0.076),
         ],
         meshing_type=mesh_type,
-        out_name=msh_file,
+        out_name=vtu_out_file_path,
     )
 
 
-def case_3(msh_file, mesh_type):
+def case_3(vtu_out_file_path: Path, mesh_type: str):
     return gen_bhe_mesh(
         length=120,
         width=60,
@@ -55,11 +55,11 @@ def case_3(msh_file, mesh_type):
             (50, 35, -1, -60, 0.076),
         ],
         meshing_type=mesh_type,
-        out_name=msh_file,
+        out_name=vtu_out_file_path,
     )
 
 
-def case_4(msh_file, mesh_type):
+def case_4(vtu_out_file_path: Path, mesh_type: str):
     return gen_bhe_mesh(
         length=80,
         width=30,
@@ -71,7 +71,7 @@ def case_4(msh_file, mesh_type):
             (60, 15, -1, -60, 0.076),
         ],
         meshing_type=mesh_type,
-        out_name=msh_file,
+        out_name=vtu_out_file_path,
         target_z_size_fine=1,
     )
 
@@ -83,9 +83,9 @@ class BHETest(unittest.TestCase):
         mesh_type = "structured"
 
         ##### Testcase 1 #####
-        msh_file = tmp_dir / "bhe_test_1.vtu"
+        vtu_file = tmp_dir / "bhe_test_1.vtu"
 
-        meshes = case_1(msh_file=msh_file, mesh_type=mesh_type)
+        meshes = case_1(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -106,8 +106,8 @@ class BHETest(unittest.TestCase):
         )  # check if all BHE Line Nodes are also in the 3D Soil Domain
 
         ##### Testcase 2 #####
-        msh_file = tmp_dir / "bhe_test_2.vtu"
-        meshes = case_2(msh_file=msh_file, mesh_type=mesh_type)
+        vtu_file = tmp_dir / "bhe_test_2.vtu"
+        meshes = case_2(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -128,8 +128,8 @@ class BHETest(unittest.TestCase):
         )  # check if all BHE Line Nodes are also in the 3D Soil Domain
 
         ##### Testcase 3 #####
-        msh_file = tmp_dir / "bhe_test_3.vtu"
-        meshes = case_3(msh_file=msh_file, mesh_type=mesh_type)
+        vtu_file = tmp_dir / "bhe_test_3.vtu"
+        meshes = case_3(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -150,8 +150,8 @@ class BHETest(unittest.TestCase):
         )  # check if all BHE Line Nodes are also in the 3D Soil Domain
 
         ##### Testcase 4 #####
-        msh_file = tmp_dir / "bhe_test_4.vtu"
-        meshes = case_4(msh_file=msh_file, mesh_type=mesh_type)
+        vtu_file = tmp_dir / "bhe_test_4.vtu"
+        meshes = case_4(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -177,9 +177,9 @@ class BHETest(unittest.TestCase):
         mesh_type = "prism"
 
         ##### Testcase 1 #####
-        msh_file = tmp_dir / "bhe_test_1.vtu"
+        vtu_file = tmp_dir / "bhe_test_1.vtu"
 
-        meshes = case_1(msh_file=msh_file, mesh_type=mesh_type)
+        meshes = case_1(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -200,8 +200,8 @@ class BHETest(unittest.TestCase):
         )  # check if all BHE Line Nodes are also in the 3D Soil Domain
 
         ##### Testcase 2 #####
-        msh_file = tmp_dir / "bhe_test_2.vtu"
-        meshes = case_2(msh_file=msh_file, mesh_type=mesh_type)
+        vtu_file = tmp_dir / "bhe_test_2.vtu"
+        meshes = case_2(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
@@ -222,8 +222,8 @@ class BHETest(unittest.TestCase):
         )  # check if all BHE Line Nodes are also in the 3D Soil Domain
 
         ##### Testcase 3 #####
-        msh_file = tmp_dir / "bhe_test_3.vtu"
-        meshes = case_3(msh_file=msh_file, mesh_type=mesh_type)
+        vtu_file = tmp_dir / "bhe_test_3.vtu"
+        meshes = case_3(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
 
         # check if all meshes are present in the directory
         for mesh in meshes:
