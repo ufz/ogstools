@@ -25,7 +25,7 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
-from typing import Optional, TypeVar, Union
+from typing import TypeVar, Union
 
 import numpy as np
 from numpy import linalg as LA
@@ -39,14 +39,14 @@ ValType = Union[PlainQuantity, np.ndarray]
 T = TypeVar("T")
 
 
-def _split_quantity(values: ValType) -> tuple[np.ndarray, Optional[PlainUnit]]:
+def _split_quantity(values: ValType) -> tuple[np.ndarray, PlainUnit | None]:
     if isinstance(values, PlainQuantity):
         return values.magnitude, values.units
     return values, None
 
 
 def _to_quantity(
-    values: np.ndarray, unit: Optional[PlainUnit]
+    values: np.ndarray, unit: PlainUnit | None
 ) -> Union[np.ndarray, PlainQuantity]:
     return values if unit is None else u_reg.Quantity(values, unit)
 

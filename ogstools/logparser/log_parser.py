@@ -11,14 +11,14 @@
 
 import re
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Union
 
 from ogstools.logparser.regexes import Log, ogs_regexes
 
 
 def _try_match_parallel_line(
     line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
-) -> Optional[Any]:
+) -> Any | None:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = pattern_class.type_str()
@@ -37,7 +37,7 @@ def _try_match_parallel_line(
 
 def _try_match_serial_line(
     line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
-) -> Optional[list[tuple[str, Log]]]:
+) -> list[tuple[str, Log]] | None:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = pattern_class.type_str()
@@ -83,10 +83,10 @@ def mpi_processes(file_name: Union[str, Path]) -> int:
 
 
 def parse_file(
-    file_name: Union[str, Path],
-    maximum_lines: Optional[int] = None,
+    file_name: str | Path,
+    maximum_lines: int | None = None,
     force_parallel: bool = False,
-    ogs_res: Optional[list] = None,
+    ogs_res: list | None = None,
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,

@@ -7,7 +7,7 @@
 """A class to handle Meshseries data."""
 
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Literal, Union
 
 import meshio
 import numpy as np
@@ -30,7 +30,7 @@ class MeshSeries:
     """
 
     def __init__(
-        self, filepath: Union[str, Path], time_unit: Optional[str] = "s"
+        self, filepath: Union[str, Path], time_unit: str | None = "s"
     ) -> None:
         """
         Initialize a MeshSeries object
@@ -236,8 +236,8 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[Literal["nearest", "probefilter"]] = None,
-        interp_backend: Optional[Literal["vtk", "scipy"]] = None,
+        interp_method: Literal["nearest", "probefilter"] | None = None,
+        interp_backend: Literal["vtk", "scipy"] | None = None,
     ) -> np.ndarray:
         obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
         dim = self.read(0).get_cell(0).dimension
@@ -254,7 +254,7 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[Literal["nearest", "linear"]] = None,
+        interp_method: Literal["nearest", "linear"] | None = None,
     ) -> np.ndarray:
         values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
         geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
@@ -279,10 +279,9 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[
-            Literal["nearest", "linear", "probefilter"]
-        ] = None,
-        interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
+        interp_method: Literal["nearest", "linear", "probefilter"]
+        | None = None,
+        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
     ) -> np.ndarray:
         """
         Probe the MeshSeries at observation points.

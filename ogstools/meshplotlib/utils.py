@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,8 +28,8 @@ def justified_labels(points: np.ndarray) -> list[str]:
 
 def get_style_cycler(
     min_number_of_styles: int,
-    colors: Optional[Optional[list]] = None,
-    linestyles: Optional[list] = None,
+    colors: list | None = None,
+    linestyles: list | None = None,
 ) -> Cycler:
     if colors is None:
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]

@@ -7,7 +7,7 @@
 """Specialized plot features."""
 
 import string
-from typing import Callable, Literal, Optional, Union
+from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -95,7 +95,8 @@ def _vectorfield(
     mesh: pv.DataSet,
     mesh_property: Vector,
     projection: Optional[int] = None,
-) -> tuple[float, float, float, float, float]:
+    plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
+) -> None:
     """
     Compute necessary data for streamlines or quiverplots.
 

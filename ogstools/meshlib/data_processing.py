@@ -32,7 +32,7 @@ def _raw_differences_all_data(
 def difference(
     mesh1: pv.UnstructuredGrid,
     mesh2: pv.UnstructuredGrid,
-    mesh_property: Optional[Union[Property, str]] = None,
+    mesh_property: Union[Property, str] | None = None,
 ) -> pv.UnstructuredGrid:
     """
     Compute the difference of properties between two meshes.
@@ -65,7 +65,7 @@ def difference(
 def difference_pairwise(
     meshes_1: Union[list, np.ndarray],
     meshes_2: Union[list, np.ndarray],
-    mesh_property: Optional[Union[Property, str]] = None,
+    mesh_property: Union[Property, str] | None = None,
 ) -> np.ndarray:
     """
     Compute pairwise difference between meshes from two lists/arrays
@@ -98,7 +98,7 @@ def difference_pairwise(
 def difference_matrix(
     meshes_1: Union[list, np.ndarray],
     meshes_2: Optional[Union[list, np.ndarray]] = None,
-    mesh_property: Optional[Union[Property, str]] = None,
+    mesh_property: Union[Property, str] | None = None,
 ) -> np.ndarray:
     """
     Compute the difference between all combinations of two meshes

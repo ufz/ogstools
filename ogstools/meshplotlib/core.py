@@ -8,7 +8,7 @@
 
 import warnings
 from math import nextafter
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Union
 
 import numpy as np
 import pyvista as pv
@@ -92,7 +92,7 @@ def get_cmap_norm(
     return cmap, norm
 
 
-def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], Optional[str]]:
+def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
     """Get formatted tick labels and optional offset str.
 
     If all values in ticks are too close together offset notation is used.
@@ -137,7 +137,7 @@ def add_colorbars(
     mesh_property: Property,
     levels: np.ndarray,
     pad: float = 0.05,
-    labelsize: Optional[float] = None,
+    labelsize: float | None = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     ticks = levels
@@ -219,7 +219,7 @@ def subplot(
     mesh: pv.UnstructuredGrid,
     mesh_property: Union[Property, str],
     ax: plt.Axes,
-    levels: Optional[np.ndarray] = None,
+    levels: np.ndarray | None = None,
 ) -> None:
     """
     Plot the property field of a mesh on a matplotlib.axis.
@@ -454,9 +454,9 @@ def get_combined_levels(
 def _draw_plot(
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
     mesh_property: Property,
-    fig: Optional[mfigure.Figure] = None,
-    axes: Optional[plt.Axes] = None,
-) -> Optional[mfigure.Figure]:
+    fig: mfigure.Figure | None = None,
+    axes: plt.Axes | None = None,
+) -> mfigure.Figure | None:
     """
     Plot the property field of meshes on existing figure.
 
@@ -612,9 +612,9 @@ def update_font_sizes(
 def plot(
     meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
     mesh_property: Union[Property, str],
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> Optional[mfigure.Figure]:
+    fig: mfigure.Figure | None = None,
+    ax: plt.Axes | None = None,
+) -> mfigure.Figure | None:
     """
     Plot the property field of meshes with default settings.
 
@@ -664,17 +664,17 @@ def plot_probe(
     mesh_series: MeshSeries,
     points: np.ndarray,
     mesh_property: Union[Property, str],
-    mesh_property_abscissa: Optional[Union[Property, str]] = None,
-    labels: Optional[list[str]] = None,
-    time_unit: Optional[str] = "s",
-    interp_method: Optional[Literal["nearest", "linear", "probefilter"]] = None,
-    interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
-    colors: Optional[list] = None,
-    linestyles: Optional[list] = None,
-    ax: Optional[plt.Axes] = None,
+    mesh_property_abscissa: Union[Property, str] | None = None,
+    labels: list[str] | None = None,
+    time_unit: str | None = "s",
+    interp_method: Literal["nearest", "linear", "probefilter"] | None = None,
+    interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+    colors: list | None = None,
+    linestyles: list | None = None,
+    ax: plt.Axes | None = None,
     fill_between: bool = False,
     **kwargs: Any,
-) -> Optional[mfigure.Figure]:
+) -> mfigure.Figure | None:
     """
     Plot the transient property on the observation points in the MeshSeries.
 
