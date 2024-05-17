@@ -9,7 +9,7 @@ description = "A collection of Python tools aimed at evolving into a modeling to
 authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
 readme = "README.md"
-requires-python = '>=3.9'
+requires-python = '>=3.10'
 dependencies = [
   "h5py>=3.8.0",
   "jupytext>=1.14.0",
