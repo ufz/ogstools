@@ -3,6 +3,14 @@ from collections import defaultdict, namedtuple
 
 import pandas as pd
 
+from ogstools.examples import (
+    parallel_1_info,
+    parallel_3_debug,
+    serial_convergence_long,
+    serial_critical,
+    serial_info,
+    serial_warning_only,
+)
 from ogstools.logparser import (
     analysis_convergence_coupling_iteration,
     analysis_convergence_newton_iteration,
@@ -11,14 +19,6 @@ from ogstools.logparser import (
     fill_ogs_context,
     parse_file,
     time_step_vs_iterations,
-)
-from ogstools.logparser.examples import (
-    parallel_1_info,
-    parallel_3_debug,
-    serial_convergence_long,
-    serial_critical,
-    serial_info,
-    serial_warning_only,
 )
 
 

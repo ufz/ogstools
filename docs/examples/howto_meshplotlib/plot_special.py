@@ -14,12 +14,13 @@ To see this benchmark results over all timesteps have a look at
 """
 
 # %%
+from ogstools import examples
 from ogstools.meshlib import difference
-from ogstools.meshplotlib import examples, plot, setup
+from ogstools.meshplotlib import plot, setup
 from ogstools.propertylib import Scalar
 
 setup.reset()
-mesh_series = examples.meshseries_CT_2D
+mesh_series = examples.load_meshseries_CT_2D_XDMF()
 si = Scalar(
     data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
 )

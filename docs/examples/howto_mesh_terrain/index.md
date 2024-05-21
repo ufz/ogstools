@@ -17,14 +17,14 @@ These are
 ## Gmsh
 
 If the relief is given as relief.grd, then we need to convert it first (file names are hard coded)
-`python -m ogstools.msh2vtu.examples.howto_mesh_terrain.grd2stl`.
+`python -m ogstools.examples.mesh_terrain.grd2stl`.
 
-Running `python -m ogstools.msh2vtu.examples.howto_mesh_terrain.pyvista_mesh` reads in `relief.stl` and meshes the volume between the relief and a *z*-coordinate specified in the script.
+Running `python -m ogstools.examples.mesh_terrain.pyvista_mesh` reads in `relief.stl` and meshes the volume between the relief and a *z*-coordinate specified in the script.
 In addition it creates physical groups for all bounding surfaces.
 
 ![gmsh](gmsh.png)
 
-```{literalinclude} ../../../ogstools/msh2vtu/examples/howto_mesh_terrain/gmsh_mesh.py
+```{literalinclude} ../../../ogstools/examples/mesh_terrain/gmsh_mesh.py
 ```
 
 ## OGS Utilities
@@ -44,11 +44,11 @@ Vtu2Grid -i wedge3d_mesh.vtu -o hex3d_mesh.vtu -x 0.4
 
 PyVista is mainly made for visualization, but brings some meshing functionality.
 It has a grid reader to read relief.grd and a meshio-interface to write to relief.vtu.
-Running `python -m ogstools.msh2vtu.examples.howto_mesh_terrain.pyvista_mesh` generates a structured mesh on the relief and extrudes it downwards to 3D.
+Running `python -m ogstools.examples.mesh_terrain.pyvista_mesh` generates a structured mesh on the relief and extrudes it downwards to 3D.
 
 ![pyvista](pyvista.png)
 
-```{literalinclude} ../../../ogstools/msh2vtu/examples/howto_mesh_terrain/pyvista_mesh.py
+```{literalinclude} ../../../ogstools/examples/mesh_terrain/pyvista_mesh.py
 ```
 
 ## TetGen
@@ -57,5 +57,5 @@ TetGen creates a 3D mesh from a 2D mesh on a closed surface.
 This surface may be either read from stl-files or PyVista-data.
 Currently the *pyvista-tetgen basic example* (`tetgen_example.py`) has been prepared for terrain meshing (`tetgen_mesh.py`), but is not finished yet.
 
-```{literalinclude} ../../../ogstools/msh2vtu/examples/howto_mesh_terrain/tetgen_mesh.py
+```{literalinclude} ../../../ogstools/examples/mesh_terrain/tetgen_mesh.py
 ```

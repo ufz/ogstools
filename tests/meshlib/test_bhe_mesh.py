@@ -5,10 +5,7 @@ from tempfile import mkdtemp
 import numpy as np
 import pyvista as pv
 
-from ogstools.definitions import TESTS_DIR
 from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
-
-meshpath = TESTS_DIR / "data" / "meshlib"
 
 
 def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:

@@ -18,12 +18,12 @@ import pyvista as pv
 from ogs6py import ogs
 
 import ogstools.meshplotlib as mpl
+from ogstools.examples import fem_2D_HT_model
 from ogstools.feflowlib import (
     convert_properties_mesh,
     hydro_thermal,
     setup_prj_file,
 )
-from ogstools.feflowlib.examples import path_2D_HT_model
 from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties_of_HT_model,
@@ -33,7 +33,7 @@ from ogstools.propertylib import properties
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
-feflow_model = ifm.loadDocument(path_2D_HT_model)
+feflow_model = ifm.loadDocument(fem_2D_HT_model)
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 feflow_temperature_preset = properties.temperature.replace(data_name="P_TEMP")
 mpl.plot(feflow_pv_mesh, feflow_temperature_preset)

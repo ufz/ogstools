@@ -21,14 +21,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from ogstools.examples import (
+    const_viscosity_thermal_convection_log,
+    parallel_log,
+)
 from ogstools.logparser import (
     analysis_time_step,
     fill_ogs_context,
     parse_file,
-)
-from ogstools.logparser.examples import (
-    const_viscosity_thermal_convection_log,
-    parallel_log,
 )
 
 pd.set_option("display.max_rows", 8)  # for visualization only

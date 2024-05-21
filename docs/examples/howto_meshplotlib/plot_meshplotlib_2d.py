@@ -12,13 +12,13 @@ the setup, this will automatically show the element edges.
 
 # %%
 import ogstools.meshplotlib as mpl
-from ogstools.meshplotlib.examples import meshseries_THM_2D
+from ogstools import examples
 from ogstools.propertylib import properties
 
 mpl.setup.reset()
 mpl.setup.length.output_unit = "km"
 mpl.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-mesh = meshseries_THM_2D.read(1)
+mesh = examples.load_meshseries_THM_2D_PVD().read(1)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:

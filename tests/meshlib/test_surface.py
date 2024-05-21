@@ -3,10 +3,10 @@ import unittest
 import numpy as np
 import pyvista as pv
 
-from ogstools.definitions import TESTS_DIR
+from ogstools.definitions import ROOT_DIR
 from ogstools.meshlib.boundary_subset import Surface
 
-meshpath = TESTS_DIR / "data" / "meshlib"
+meshpath = ROOT_DIR / "examples" / "meshlib"
 
 
 class SurfaceTest(unittest.TestCase):

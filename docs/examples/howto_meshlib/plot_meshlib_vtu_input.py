@@ -10,7 +10,7 @@ For this example we create meshes from surface layers.
 # %%
 from pathlib import Path  # To get example vtu files
 
-from ogstools.definitions import TESTS_DIR  # To get example vtu files
+from ogstools.definitions import ROOT_DIR  # To get example vtu files
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Surface
@@ -25,7 +25,7 @@ from ogstools.meshlib.region import (
 # The loaded surfaces are defined within VTU files and adhere to properties such as non-intersecting boundaries with consistent x and y bounds. Alternatively, surfaces can also be created using PyVista with the same properties.
 
 
-surface_dir = TESTS_DIR / "data" / "meshlib" / "mesh1" / "surface_data"
+surface_dir = ROOT_DIR / "examples" / "meshlib" / "mesh1" / "surface_data"
 
 surface1 = Surface(Path(surface_dir / "00_KB.vtu"), material_id=0)
 surface2 = Surface(Path(surface_dir / "01_q.vtu"), material_id=5)

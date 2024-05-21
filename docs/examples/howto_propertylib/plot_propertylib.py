@@ -7,11 +7,12 @@ Property Presets
 :py:mod:`ogstools.propertylib` provides classes (Scalar, Vector, Matrix) which
 encapsulate unit handling and data transformation for simplified processing of
 mesh data. There are several predefined properties stored under the module
-:py:mod:`ogstools.propertylib.presets`.
+:py:mod:`ogstools.propertylib.properties`.
 """
 
 # %%
-from ogstools.meshplotlib import examples, plot
+from ogstools import examples
+from ogstools.meshplotlib import plot
 from ogstools.propertylib import Scalar, properties
 
 properties.get_dataframe()
@@ -66,7 +67,7 @@ properties.displacement.magnitude.transform([0.03, 0.04])
 # task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-fig = plot(examples.mesh_mechanics, properties.stress.von_Mises)
+fig = plot(examples.load_mesh_mechanics_2D(), properties.stress.von_Mises)
 
 # %% [markdown]
 # Have a look at

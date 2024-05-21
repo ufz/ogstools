@@ -1,11 +1,11 @@
 import unittest
 
-from ogstools.definitions import TESTS_DIR
+from ogstools.definitions import ROOT_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.region import to_region_simplified
 
-meshpath = TESTS_DIR / "data" / "meshlib"
+meshpath = ROOT_DIR / "examples" / "meshlib"
 
 
 class SimplifiedMeshTest(unittest.TestCase):

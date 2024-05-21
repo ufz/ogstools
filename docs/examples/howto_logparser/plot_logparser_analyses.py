@@ -15,6 +15,10 @@ and for the **staggered scheme** we use a prj from
 # %%
 import pandas as pd
 
+from ogstools.examples import (
+    const_viscosity_thermal_convection_log,
+    staggered_log,
+)
 from ogstools.logparser import (
     analysis_convergence_coupling_iteration,
     analysis_convergence_newton_iteration,
@@ -22,10 +26,6 @@ from ogstools.logparser import (
     fill_ogs_context,
     parse_file,
     time_step_vs_iterations,
-)
-from ogstools.logparser.examples import (
-    const_viscosity_thermal_convection_log,
-    staggered_log,
 )
 
 pd.set_option("display.max_rows", 8)  # for visualization only

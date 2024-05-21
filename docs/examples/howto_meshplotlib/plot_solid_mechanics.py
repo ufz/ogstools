@@ -21,14 +21,17 @@ stress analysis:
 # sphinx_gallery_end_ignore
 
 
-from ogstools.meshplotlib import examples, plot, setup
+import ogstools as ot
+from ogstools import examples
+from ogstools.meshplotlib import plot, setup
 from ogstools.meshplotlib.plot_features import plot_streamlines
 from ogstools.propertylib import mesh_dependent, properties
 
 setup.reset()
 setup.length.output_unit = "km"
-mesh = examples.mesh_mechanics
-fig = plot(mesh, properties.displacement)
+mesh = examples.load_mesh_mechanics_2D()
+mesh_property = ot.properties.displacement
+fig = plot(mesh, mesh_property)
 
 # %% [markdown]
 # Tensor components

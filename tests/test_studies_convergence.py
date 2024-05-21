@@ -8,13 +8,11 @@ from tempfile import mkdtemp
 import numpy as np
 from ogs6py import ogs
 
+from ogstools.examples import analytical_diffusion, steady_state_diffusion_prj
 from ogstools.meshlib import MeshSeries, gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
 from ogstools.propertylib import Scalar
 from ogstools.studies import convergence
-from ogstools.studies.convergence.examples import (
-    steady_state_diffusion_analytical_solution,
-)
 
 
 class ConvergenceTest(unittest.TestCase):
@@ -34,7 +32,7 @@ class ConvergenceTest(unittest.TestCase):
             msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
             model = ogs.OGS(
                 PROJECT_FILE=temp_dir / "default.prj",
-                INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
+                INPUT_FILE=steady_state_diffusion_prj,
             )
             prefix = "steady_state_diffusion_" + str(n_edge_cells)
             model.replace_text(prefix, ".//prefix")
@@ -56,7 +54,7 @@ class ConvergenceTest(unittest.TestCase):
             sim_results, mesh_property, topology, refinement_ratio=2.0
         )
         np.testing.assert_allclose(conv["r"], richardson["r"], rtol=1e-10)
-        analytical = steady_state_diffusion_analytical_solution(topology)
+        analytical = analytical_diffusion(topology)
         np.testing.assert_allclose(
             richardson[mesh_property.data_name],
             analytical[mesh_property.data_name],

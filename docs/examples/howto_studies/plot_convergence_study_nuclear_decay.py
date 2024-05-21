@@ -38,7 +38,15 @@ from IPython.display import HTML
 from ogs6py import ogs
 from scipy.constants import Julian_year as sec_per_yr
 
-from ogstools import meshlib, msh2vtu, physics, propertylib, studies, workflow
+from ogstools import (
+    examples,
+    meshlib,
+    msh2vtu,
+    physics,
+    propertylib,
+    studies,
+    workflow,
+)
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
@@ -53,8 +61,8 @@ time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
 prefix = "stepsize_{0}"
 sim_results = []
 msh_path = temp_dir / "rect.msh"
-script_path = Path(studies.convergence.examples.nuclear_decay_bc).parent
-prj_path = studies.convergence.examples.nuclear_decay_prj
+script_path = Path(examples.nuclear_decay_bc).parent
+prj_path = examples.nuclear_decay_prj
 ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
 edge_cells = [5 * 2**i for i in range(n_refinements)]
 

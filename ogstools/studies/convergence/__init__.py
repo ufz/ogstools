@@ -7,7 +7,6 @@
 # Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """functions to generate a convergence study."""
 
-from . import examples
 from .convergence import (
     add_grid_spacing,
     convergence_metrics,
@@ -26,7 +25,6 @@ __all__ = [
     "add_grid_spacing",
     "convergence_metrics",
     "convergence_metrics_evolution",
-    "examples",
     "grid_convergence",
     "log_fit",
     "plot_convergence",

@@ -15,8 +15,9 @@ within the same figure.
 # Import Python packages, change some settings and load example data set
 import matplotlib.pyplot as plt
 
+from ogstools import examples
 from ogstools.meshlib import difference
-from ogstools.meshplotlib import examples, plot, setup
+from ogstools.meshplotlib import plot, setup
 from ogstools.propertylib import properties
 
 plt.rcParams.update({"font.size": 32})
@@ -24,7 +25,7 @@ plt.rcParams.update({"font.size": 32})
 setup.reset()
 setup.length.output_unit = "km"
 
-meshseries = examples.meshseries_THM_2D
+meshseries = examples.load_meshseries_THM_2D_PVD()
 
 
 # %%
