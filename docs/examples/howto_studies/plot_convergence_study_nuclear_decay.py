@@ -90,7 +90,7 @@ for sim_result, dt in zip(sim_results, time_step_sizes):
     for ts in mesh_series.timesteps:
         mesh = mesh_series.read(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
-    max_T = propertylib.presets.temperature.transform(results["temperature"])
+    max_T = propertylib.properties.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues) / sec_per_yr
@@ -159,7 +159,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # %%
 mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
-    mesh_series, propertylib.presets.temperature, units=["s", "yrs"]
+    mesh_series, propertylib.properties.temperature, units=["s", "yrs"]
 )
 
 # %% [markdown]

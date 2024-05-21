@@ -23,7 +23,7 @@ from ogstools.meshplotlib import (
     plot,
     setup,
 )
-from ogstools.propertylib.presets import temperature
+from ogstools.propertylib.properties import temperature
 
 plt.rcParams.update({"font.size": 32})
 

@@ -23,12 +23,12 @@ stress analysis:
 
 from ogstools.meshplotlib import examples, plot, setup
 from ogstools.meshplotlib.plot_features import plot_streamlines
-from ogstools.propertylib import mesh_dependent, presets
+from ogstools.propertylib import mesh_dependent, properties
 
 setup.reset()
 setup.length.output_unit = "km"
 mesh = examples.mesh_mechanics
-fig = plot(mesh, presets.displacement)
+fig = plot(mesh, properties.displacement)
 
 # %% [markdown]
 # Tensor components
@@ -36,8 +36,8 @@ fig = plot(mesh, presets.displacement)
 # We can inspect the stress (or strain) tensor components by indexing.
 
 # %%
-fig = plot(mesh, presets.stress["xx"])
-fig = plot(mesh, presets.stress["xy"])
+fig = plot(mesh, properties.stress["xx"])
+fig = plot(mesh, properties.stress["xy"])
 
 # %% [markdown]
 # Principal stresses
@@ -48,20 +48,20 @@ fig = plot(mesh, presets.stress["xy"])
 # compressive principal stress.
 
 # %%
-eigvecs = presets.stress.eigenvectors
-fig = plot(mesh, mesh_property=presets.stress.eigenvalues[0])
+eigvecs = properties.stress.eigenvectors
+fig = plot(mesh, mesh_property=properties.stress.eigenvalues[0])
 plot_streamlines(
     ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[0], plot_type="lines"
 )
 
 # %%
-fig = plot(mesh, mesh_property=presets.stress.eigenvalues[1])
+fig = plot(mesh, mesh_property=properties.stress.eigenvalues[1])
 plot_streamlines(
     ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[1], plot_type="lines"
 )
 
 # %%
-fig = plot(mesh, mesh_property=presets.stress.eigenvalues[2])
+fig = plot(mesh, mesh_property=properties.stress.eigenvalues[2])
 plot_streamlines(
     ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[2], plot_type="lines"
 )
@@ -72,7 +72,7 @@ plot_streamlines(
 # see: :py:func:`ogstools.propertylib.tensor_math.mean`
 
 # %%
-fig = plot(mesh, presets.stress.mean)
+fig = plot(mesh, properties.stress.mean)
 
 # %% [markdown]
 # Von Mises stress
@@ -80,7 +80,7 @@ fig = plot(mesh, presets.stress.mean)
 # see: :py:func:`ogstools.propertylib.tensor_math.von_mises`
 
 # %%
-fig = plot(mesh, presets.stress.von_Mises)
+fig = plot(mesh, properties.stress.von_Mises)
 
 # %% [markdown]
 # octahedral shear stress
@@ -88,7 +88,7 @@ fig = plot(mesh, presets.stress.von_Mises)
 # see: :py:func:`ogstools.propertylib.tensor_math.octahedral_shear`
 
 # %%
-fig = plot(mesh, presets.stress.octahedral_shear)
+fig = plot(mesh, properties.stress.octahedral_shear)
 
 # %% [markdown]
 # Integrity criteria
@@ -105,7 +105,7 @@ fig = plot(mesh, presets.stress.octahedral_shear)
 
 # %%
 mesh["pressure"] = mesh_dependent.p_fluid(mesh)
-fig = plot(mesh, presets.pressure)
+fig = plot(mesh, properties.pressure)
 
 # %% [markdown]
 # But since this assumes that the top of the model is equal to the ground
@@ -116,7 +116,7 @@ fig = plot(mesh, presets.pressure)
 mesh["depth"] = mesh_dependent.depth(mesh, use_coords=True)
 fig = plot(mesh, "depth")
 mesh["pressure"] = mesh_dependent.p_fluid(mesh)
-fig = plot(mesh, presets.pressure)
+fig = plot(mesh, properties.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
@@ -124,8 +124,8 @@ fig = plot(mesh, presets.pressure)
 # see: :py:func:`ogstools.propertylib.mesh_dependent.dilatancy_critescu`
 
 # %%
-fig = plot(mesh, presets.dilatancy_critescu_tot)
-fig = plot(mesh, presets.dilatancy_critescu_eff)
+fig = plot(mesh, properties.dilatancy_critescu_tot)
+fig = plot(mesh, properties.dilatancy_critescu_eff)
 
 # %% [markdown]
 # Fluid pressure criterion
@@ -133,4 +133,4 @@ fig = plot(mesh, presets.dilatancy_critescu_eff)
 # see: :py:func:`ogstools.propertylib.mesh_dependent.fluid_pressure_criterion`
 
 # %%
-fig = plot(mesh, presets.fluid_pressure_crit)
+fig = plot(mesh, properties.fluid_pressure_crit)

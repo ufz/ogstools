@@ -18,9 +18,9 @@ between meshes.
 
 from ogstools.meshlib import difference, difference_matrix, difference_pairwise
 from ogstools.meshplotlib.examples import meshseries_THM_2D
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
-mesh_property = presets.temperature
+mesh_property = properties.temperature
 
 # %%
 # 0. Introduction

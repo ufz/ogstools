@@ -13,7 +13,7 @@ from ogstools.meshlib import (
     examples,
 )
 from ogstools.meshplotlib import examples as examples_mpl
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
 
 class UtilsTest(unittest.TestCase):
@@ -52,10 +52,12 @@ class UtilsTest(unittest.TestCase):
     def test_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent property on meshseries."
         mesh_series = MeshSeries(examples.pvd_file)
-        agg_mesh = mesh_series.aggregate(presets.dilatancy_alkan, "max")
+        agg_mesh = mesh_series.aggregate(properties.dilatancy_alkan, "max")
         self.assertTrue(
             not np.any(
-                np.isnan(agg_mesh[presets.dilatancy_alkan.output_name + "_max"])
+                np.isnan(
+                    agg_mesh[properties.dilatancy_alkan.output_name + "_max"]
+                )
             )
         )
 
@@ -80,7 +82,7 @@ class UtilsTest(unittest.TestCase):
         mesh1 = meshseries.read(0)
         mesh2 = meshseries.read(-1)
         mesh_diff = difference(mesh1, mesh2, "temperature")
-        mesh_diff = difference(mesh1, mesh2, presets.temperature)
+        mesh_diff = difference(mesh1, mesh2, properties.temperature)
         self.assertTrue(isinstance(mesh_diff, UnstructuredGrid))
         mesh_diff = difference(mesh1, mesh2)
 
@@ -89,7 +91,9 @@ class UtilsTest(unittest.TestCase):
         meshseries = examples_mpl.meshseries_THM_2D
         meshes1 = [meshseries.read(0)] * n
         meshes2 = [meshseries.read(-1)] * n
-        meshes_diff = difference_pairwise(meshes1, meshes2, presets.temperature)
+        meshes_diff = difference_pairwise(
+            meshes1, meshes2, properties.temperature
+        )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray) and len(meshes_diff) == n
         )
@@ -99,7 +103,7 @@ class UtilsTest(unittest.TestCase):
         meshseries = examples_mpl.meshseries_THM_2D
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes_diff = difference_matrix(
-            meshes1, mesh_property=presets.temperature
+            meshes1, mesh_property=properties.temperature
         )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray)
@@ -111,7 +115,9 @@ class UtilsTest(unittest.TestCase):
         meshseries = examples_mpl.meshseries_THM_2D
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes2 = [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
-        meshes_diff = difference_matrix(meshes1, meshes2, presets.temperature)
+        meshes_diff = difference_matrix(
+            meshes1, meshes2, properties.temperature
+        )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray)
             and meshes_diff.shape == (len(meshes1), len(meshes2))

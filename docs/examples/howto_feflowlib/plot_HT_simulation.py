@@ -29,13 +29,13 @@ from ogstools.feflowlib.tools import (
     get_material_properties_of_HT_model,
 )
 from ogstools.meshlib import difference
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
 feflow_model = ifm.loadDocument(path_2D_HT_model)
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
-feflow_temperature_preset = presets.temperature.replace(data_name="P_TEMP")
+feflow_temperature_preset = properties.temperature.replace(data_name="P_TEMP")
 mpl.plot(feflow_pv_mesh, feflow_temperature_preset)
 
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
@@ -86,18 +86,18 @@ ogs_sim_res = pv.read(
     str(path_writing / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu")
 )
 # Plot the hydraulic head/height, which was simulated in OGS.
-ogs_head_preset = presets.temperature.replace(data_name="HEAD_OGS")
+ogs_head_preset = properties.temperature.replace(data_name="HEAD_OGS")
 mpl.plot(ogs_sim_res, ogs_head_preset)
 # %%
 # Plot the temperature, which was simulated in OGS.
-presets.temperature.data_name = "temperature"
-mpl.plot(ogs_sim_res, presets.temperature)
+properties.temperature.data_name = "temperature"
+mpl.plot(ogs_sim_res, properties.temperature)
 
 # %%
 # 6. Plot the difference between the FEFLOW and OGS simulation.
 feflow_pv_mesh["HEAD"] = feflow_pv_mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
-head_preset = presets.temperature.replace(data_name="HEAD")
+head_preset = properties.temperature.replace(data_name="HEAD")
 # Plot differences in hydraulic head/height.
 mpl.plot(
     difference(feflow_pv_mesh, ogs_sim_res, head_preset),
@@ -107,6 +107,6 @@ mpl.plot(
 feflow_pv_mesh["temperature"] = feflow_pv_mesh["P_TEMP"]
 # Plot differences in temperature.
 mpl.plot(
-    difference(feflow_pv_mesh, ogs_sim_res, presets.temperature),
-    presets.temperature,
+    difference(feflow_pv_mesh, ogs_sim_res, properties.temperature),
+    properties.temperature,
 )

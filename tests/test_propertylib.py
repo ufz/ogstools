@@ -7,7 +7,7 @@ import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
 from ogstools.meshplotlib.examples import mesh_mechanics
-from ogstools.propertylib import presets as pp
+from ogstools.propertylib import properties as pp
 from ogstools.propertylib.mesh_dependent import depth
 from ogstools.propertylib.property import u_reg
 

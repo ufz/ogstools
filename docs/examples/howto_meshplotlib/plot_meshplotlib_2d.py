@@ -13,7 +13,7 @@ the setup, this will automatically show the element edges.
 # %%
 import ogstools.meshplotlib as mpl
 from ogstools.meshplotlib.examples import meshseries_THM_2D
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
 mpl.setup.reset()
 mpl.setup.length.output_unit = "km"
@@ -30,7 +30,7 @@ mesh = meshseries_THM_2D.read(1)
 #
 
 # %%
-fig = mpl.plot(mesh, presets.material_id)
+fig = mpl.plot(mesh, properties.material_id)
 
 # %% [markdown]
 # Now, let's plot the temperature field (point_data) at the first timestep.
@@ -38,28 +38,28 @@ fig = mpl.plot(mesh, presets.material_id)
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%
-fig = mpl.plot(mesh, presets.temperature)
+fig = mpl.plot(mesh, properties.temperature)
 
 # %% [markdown]
 # We can also plot components of vector properties:
 
 # %%
-fig = mpl.plot(mesh, presets.displacement[0])
+fig = mpl.plot(mesh, properties.displacement[0])
 
 # %%
-fig = mpl.plot(mesh, presets.displacement[1])
+fig = mpl.plot(mesh, properties.displacement[1])
 
 # %% [markdown]
 # This example has hydraulically deactivated subdomains:
 
 # %%
-fig = mpl.plot(mesh, presets.pressure.get_mask())
+fig = mpl.plot(mesh, properties.pressure.get_mask())
 
 # %% [markdown]
 # Let's plot the fluid velocity field.
 
 # %%
-fig = mpl.plot(mesh, presets.velocity)
+fig = mpl.plot(mesh, properties.velocity)
 
 # %% [markdown]
 # Let's plot it again, this time log-scaled.
@@ -67,4 +67,4 @@ fig = mpl.plot(mesh, presets.velocity)
 # %%
 mpl.setup.log_scaled = True
 mpl.setup.p_min = -8
-fig = mpl.plot(mesh, presets.velocity)
+fig = mpl.plot(mesh, properties.velocity)

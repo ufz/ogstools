@@ -84,7 +84,7 @@ solution = steady_state_diffusion_analytical_solution(
     meshlib.MeshSeries(result_paths[-1]).read(0)
 )
 meshplotlib.setup.show_element_edges = True
-fig = meshplotlib.plot(solution, propertylib.presets.hydraulic_height)
+fig = meshplotlib.plot(solution, propertylib.properties.hydraulic_height)
 solution.save(analytical_solution_path)
 
 # %% [markdown]

@@ -23,7 +23,7 @@ from typeguard import typechecked
 
 from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Property, Vector
-from ogstools.propertylib.presets import get_preset
+from ogstools.propertylib.properties import get_preset
 from ogstools.propertylib.unit_registry import u_reg
 
 from . import plot_features as pf
