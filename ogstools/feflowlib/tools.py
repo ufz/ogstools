@@ -312,18 +312,24 @@ def get_material_properties_of_CT_model(
         "P_SORP": "sorption_coeff",
         "P_TDIS": "transversal_dispersivity",
         "P_COMP": "storage",
-        "P_CONDX": "permeability_X",
-        "P_CONDY": "permeability_Y",
-        "P_CONDZ": "permeability_Z",
         "retardation_factor": "retardation_factor",
     }
+
+    if "P_COND" in mesh.cell_data:
+        parameters_mapping["P_COND"] = "permeability"
+    elif "P_CONDX" in mesh.cell_data:
+        parameters_mapping["P_CONDX"] = "permeability_X"
+    if "P_CONDY" in mesh.cell_data:
+        parameters_mapping["P_CONDY"] = "permeability_Y"
+    if "P_CONDZ" in mesh.cell_data:
+        parameters_mapping["P_CONDZ"] = "permeability_Z"
 
     feflow_species_parameter = [
         cell_data
         for cell_data in mesh.cell_data
         if any(parameter in cell_data for parameter in parameters_mapping)
     ]
-
+    print(feflow_species_parameter)
     ogs_species_parameter = [
         feflow_species_para.replace(
             feflow_parameter, parameters_mapping[feflow_parameter]
@@ -332,6 +338,7 @@ def get_material_properties_of_CT_model(
         for feflow_parameter in parameters_mapping
         if feflow_parameter in feflow_species_para
     ]
+    print(ogs_species_parameter)
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
@@ -404,7 +411,7 @@ def add_species_to_prj_file(
                     + "']/properties",
                     taglist=["name", "type", "value"],
                     textlist=[
-                        parameter.replace(species, ""),
+                        parameter.replace(species + "_", ""),
                         "Constant",
                         str(parameter_val),
                     ],
@@ -787,16 +794,24 @@ def materials_in_HC(
             type="Constant",
             value=trans_disp_val,
         )
-        model.media.add_property(
-            medium_id=material_id,
-            name="permeability",
-            type="Constant",
-            value=str(material_properties[material_id]["permeability_X"])
-            + " "
-            + str(material_properties[material_id]["permeability_Y"])
-            + " "
-            + str(material_properties[material_id]["permeability_Z"]),
-        )
+        if "permeability_X" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=str(material_properties[material_id]["permeability_X"])
+                + " "
+                + str(material_properties[material_id]["permeability_Y"])
+                + " "
+                + str(material_properties[material_id]["permeability_Z"]),
+            )
+        elif "permeability" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=str(material_properties[material_id]["permeability"]),
+            )
 
     for material_id in material_properties:
         xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
