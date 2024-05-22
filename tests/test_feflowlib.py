@@ -14,7 +14,6 @@ from ogstools import examples
 pytest.importorskip("ifm")
 
 import ifm_contrib as ifm  # noqa: E402
-
 from ogstools.feflowlib import (  # noqa: E402
     convert_properties_mesh,
     extract_cell_boundary_conditions,
@@ -407,6 +406,59 @@ class TestSimulation_HT(unittest.TestCase):
         )
         model = setup_prj_file(
             self.vtu_path,
+            self.pv_mesh,
+            get_material_properties_of_HT_model(self.pv_mesh),
+            "hydro thermal",
+            model=model,
+        )
+        model.write_input(prjfile)
+        model.run_model(logfile=str(self.path_writing / "out.log"))
+        # Compare ogs simulation with FEFLOW simulation
+        ogs_sim_res = pv.read(
+            str(
+                self.path_writing
+                / "sim_HT_Dirichlet_ts_10_t_100000000000.000000.vtu"
+            )
+        )
+        dif_temp = (
+            ogs_sim_res.point_data["temperature"]
+            - self.pv_mesh.point_data["P_TEMP"]
+        )
+        np.testing.assert_array_less(np.abs(dif_temp), 9e-8)
+        dif_head = (
+            ogs_sim_res.point_data["HEAD_OGS"]
+            - self.pv_mesh.point_data["P_HEAD"]
+        )
+        np.testing.assert_array_less(np.abs(dif_head), 9e-8)
+
+
+class TestSimulation_CT(unittest.TestCase):
+    def setUp(self):
+        self.path_data = current_dir / "data/feflowlib/"
+        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.doc = ifm.loadDocument(
+            str(self.path_data / "HT_toymodel_Diri.fem")
+        )
+        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh.save(str(self.path_writing / "HT_Dirichlet.vtu"))
+        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+
+    def test_2D_line_CT(self):
+        """
+        Test if ogs simulation for a component transport process results
+        are equal to FEFLOW simulation results.
+        """
+        # Run ogs
+        if self.pv_mesh.celltypes[0] in [5, 9]:
+            dimension2D = True
+        prjfile = str(self.path_writing / "HT_Dirichlet.prj")
+        model = hydro_thermal(
+            str(self.path_writing / "sim_HT_Dirichlet"),
+            ogs.OGS(PROJECT_FILE=prjfile),
+            dimension2D,
+        )
+        model = setup_prj_file(
+            self.path_writing / "HT_Dirichlet.vtu",
             self.pv_mesh,
             get_material_properties_of_HT_model(self.pv_mesh),
             "hydro thermal",
