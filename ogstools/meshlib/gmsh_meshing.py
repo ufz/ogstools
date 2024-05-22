@@ -713,14 +713,16 @@ def gen_bhe_mesh_gmsh(
                 X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
             )
 
-            gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], delta, d + 7)
+            if BHE_array[i, 2] != 0:
+                gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], delta, d + 7)
+                bhe_top_nodes.append(d + 7)
+            else:
+                bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
             gmsh.model.mesh.embed(
                 0, [d, d + 1, d + 2, d + 3, d + 4, d + 5, d + 6], 2, 5
             )
-
-            bhe_top_nodes.append(d + 7)
 
             d = d + 8
 
@@ -1216,8 +1218,11 @@ def gen_bhe_mesh_gmsh(
                 X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
             )
 
-            gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], tag=d + 7)
-            bhe_top_nodes.append(d + 7)
+            if BHE_array[i, 2] != 0:
+                gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], tag=d + 7)
+                bhe_top_nodes.append(d + 7)
+            else:
+                bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
             gmsh.model.mesh.embed(
@@ -1956,7 +1961,7 @@ def gen_bhe_mesh(
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
     :param order:
-    :param out_name: name of the exported mesh, must end with .msh
+    :param out_name: name of the exported mesh, must end with .vtu
     :return: list of filenames of the created vtu mesh files
     """
 
