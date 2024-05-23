@@ -70,7 +70,7 @@ for n_edge_cells in edge_cells:
 
     model = ogs.OGS(
         PROJECT_FILE=temp_dir / "default.prj",
-        INPUT_FILE=examples.steady_state_diffusion_prj,
+        INPUT_FILE=examples.prj_steady_state_diffusion,
     )
     prefix = "steady_state_diffusion_" + str(n_edge_cells)
     model.replace_text(prefix, ".//prefix")

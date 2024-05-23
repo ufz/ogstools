@@ -19,7 +19,7 @@ Here we utilize the project file from the benchmark titled:
 import pandas as pd
 
 from ogstools.examples import (
-    const_viscosity_thermal_convection_log,
+    log_const_viscosity_thermal_convection,
 )
 from ogstools.logparser import (
     fill_ogs_context,
@@ -27,7 +27,7 @@ from ogstools.logparser import (
     time_step_vs_iterations,
 )
 
-records = parse_file(const_viscosity_thermal_convection_log)
+records = parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)
 df_ts_it = time_step_vs_iterations(df_log)
@@ -66,9 +66,9 @@ df_ts_it
 # All predefined analyses need the result of fill_ogs_context.
 # Here `const_viscosity_thermal_convection_log` is string representing the
 # location of the ogs log file.
-print(const_viscosity_thermal_convection_log)
+print(log_const_viscosity_thermal_convection)
 # %%
-records = parse_file(const_viscosity_thermal_convection_log)
+records = parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)
 

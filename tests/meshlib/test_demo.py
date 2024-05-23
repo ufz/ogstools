@@ -1,7 +1,7 @@
 import unittest
 from collections import Counter
 
-from ogstools.definitions import ROOT_DIR
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Gaussian2D, Surface
@@ -12,7 +12,7 @@ from ogstools.meshlib.region import (
     to_region_voxel,
 )
 
-meshpath = ROOT_DIR / "examples" / "meshlib"
+meshpath = EXAMPLES_DIR / "meshlib"
 
 
 class DemoTest(unittest.TestCase):

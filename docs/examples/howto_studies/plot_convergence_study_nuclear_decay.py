@@ -61,8 +61,8 @@ time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
 prefix = "stepsize_{0}"
 sim_results = []
 msh_path = temp_dir / "rect.msh"
-script_path = Path(examples.nuclear_decay_bc).parent
-prj_path = examples.nuclear_decay_prj
+script_path = Path(examples.pybc_nuclear_decay).parent
+prj_path = examples.prj_nuclear_decay
 ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
 edge_cells = [5 * 2**i for i in range(n_refinements)]
 

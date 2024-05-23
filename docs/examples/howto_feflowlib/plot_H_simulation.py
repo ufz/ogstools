@@ -18,7 +18,7 @@ import ifm_contrib as ifm
 import pyvista as pv
 from ogs6py import ogs
 
-from ogstools.examples import fem_box_Neumann
+from ogstools.examples import feflow_model_box_Neumann
 from ogstools.feflowlib import (
     convert_properties_mesh,
     extract_cell_boundary_conditions,
@@ -32,7 +32,7 @@ from ogstools.feflowlib.tools import (
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
-feflow_model = ifm.loadDocument(fem_box_Neumann)
+feflow_model = ifm.loadDocument(str(feflow_model_box_Neumann))
 pyvista_mesh = convert_properties_mesh(feflow_model)
 
 pv.global_theme.colorbar_orientation = "vertical"

@@ -12,14 +12,14 @@ In this example we show how a simple FEFLOW model consisting of two layers can b
 import ifm_contrib as ifm
 
 import ogstools.meshplotlib as mpl
-from ogstools.examples import fem_2layers_model
+from ogstools.examples import feflow_model_2layers
 from ogstools.feflowlib import (
     convert_geometry_mesh,
     update_geometry,
 )
 
 # Load a FEFLOW model (.fem) or FEFLOW results file (.dac) as a FEFLOW document.
-feflow_model = ifm.loadDocument(fem_2layers_model)
+feflow_model = ifm.loadDocument(str(feflow_model_2layers))
 pv_mesh = convert_geometry_mesh(feflow_model)
 pv_mesh.plot(show_edges=True, off_screen=True)
 # %%

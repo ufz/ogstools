@@ -9,7 +9,7 @@ import pytest
 import pyvista as pv
 from ogs6py import ogs
 
-from ogstools.definitions import ROOT_DIR
+from ogstools.definitions import EXAMPLES_DIR
 
 pytest.importorskip("ifm")
 
@@ -37,7 +37,7 @@ def test_cli():
 
 class TestSimulation_Neumann(unittest.TestCase):
     def setUp(self):
-        self.path_data = ROOT_DIR / "examples" / "feflow"
+        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -115,7 +115,7 @@ class TestSimulation_Neumann(unittest.TestCase):
 
 class TestSimulation_Robin(unittest.TestCase):
     def setUp(self):
-        self.path_data = ROOT_DIR / "examples" / "feflow"
+        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(
             str(self.path_data / "box_3D_cauchy_areal.fem")
@@ -193,7 +193,7 @@ class TestSimulation_Robin(unittest.TestCase):
 
 class TestSimulation_Well(unittest.TestCase):
     def setUp(self):
-        self.path_data = ROOT_DIR / "examples" / "feflow"
+        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_wellBC.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -269,7 +269,7 @@ class TestSimulation_Well(unittest.TestCase):
 class TestConverter(unittest.TestCase):
     def setUp(self):
         # Variables for the following tests:
-        self.path_data = ROOT_DIR / "examples" / "feflow"
+        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -387,7 +387,7 @@ class TestConverter(unittest.TestCase):
 
 class TestSimulation_HT(unittest.TestCase):
     def setUp(self):
-        self.path_data = ROOT_DIR / "examples" / "feflow"
+        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(
             str(self.path_data / "HT_toymodel_Diri.fem")

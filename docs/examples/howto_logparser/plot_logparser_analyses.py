@@ -16,8 +16,8 @@ and for the **staggered scheme** we use a prj from
 import pandas as pd
 
 from ogstools.examples import (
-    const_viscosity_thermal_convection_log,
-    staggered_log,
+    log_const_viscosity_thermal_convection,
+    log_staggered,
 )
 from ogstools.logparser import (
     analysis_convergence_coupling_iteration,
@@ -35,7 +35,7 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 # thoroughly explained in
 # :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_advanced.py`.
 
-log = const_viscosity_thermal_convection_log
+log = log_const_viscosity_thermal_convection
 records = parse_file(log)
 df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)
@@ -113,7 +113,7 @@ analysis_convergence_newton_iteration(df_log)
 # `ogs benchmark: HeatTransportInStationaryFlow
 # <https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj>`_
 #
-log = staggered_log
+log = log_staggered
 records = parse_file(log)
 df_records = pd.DataFrame(records)
 df_log = fill_ogs_context(df_records)

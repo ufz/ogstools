@@ -22,8 +22,8 @@ import numpy as np
 import pandas as pd
 
 from ogstools.examples import (
-    const_viscosity_thermal_convection_log,
-    parallel_log,
+    log_const_viscosity_thermal_convection,
+    log_parallel,
 )
 from ogstools.logparser import (
     analysis_time_step,
@@ -39,7 +39,7 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 # The log file to be investigated in this example is the result of a mpirun (-np 3) from https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj
 
 
-records = parse_file(parallel_log)
+records = parse_file(log_parallel)
 df_records = pd.DataFrame(records)
 df_parallel = fill_ogs_context(df_records)
 df_parallel
@@ -98,10 +98,10 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 #
 
 # Let us print the content of the log file in this example.
-with Path(const_viscosity_thermal_convection_log).open() as log_file:
+with Path(log_const_viscosity_thermal_convection).open() as log_file:
     print(log_file.read())
 
-records = parse_file(const_viscosity_thermal_convection_log)
+records = parse_file(log_const_viscosity_thermal_convection)
 # The list of records can directly be transformed into a pandas.DataFrame for further inspections. It is the raw representation of a filtered OGS log in pandas DataFrame format.
 df_records = pd.DataFrame(records)
 # The logparser is able to find the following entries:

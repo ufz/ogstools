@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
-from ogstools.definitions import ROOT_DIR
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib.boundary import Layer, LocationFrame, Raster
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Gaussian2D, Surface
@@ -17,7 +17,7 @@ from ogstools.meshlib.region import (
     to_region_voxel,
 )
 
-meshpath = ROOT_DIR / "examples" / "meshlib"
+meshpath = EXAMPLES_DIR / "meshlib"
 
 
 class LayerTest(unittest.TestCase):

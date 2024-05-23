@@ -1,9 +1,9 @@
 import unittest
 
-from ogstools.definitions import ROOT_DIR
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 
-meshpath = ROOT_DIR / "examples" / "meshlib"
+meshpath = EXAMPLES_DIR / "meshlib"
 
 
 class GeoModelComposeExampleTest(unittest.TestCase):

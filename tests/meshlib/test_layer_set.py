@@ -1,12 +1,12 @@
 import unittest
 
-from ogstools.definitions import ROOT_DIR
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
 from ogstools.meshlib.boundary_subset import Surface
 
-meshpath = ROOT_DIR / "examples" / "meshlib"
+meshpath = EXAMPLES_DIR / "meshlib"
 
 
 class LayerSetTest(unittest.TestCase):
