@@ -266,7 +266,14 @@ def subplot(
 
     if mesh_property.data_name in mesh.point_data:
         ax.tricontourf(  # type: ignore[call-overload]
-            x, y, tri, values, levels=levels, cmap=cmap, norm=norm
+            x,
+            y,
+            tri,
+            values,
+            levels=levels,
+            cmap=cmap,
+            norm=norm,
+            extend="both",
         )
         if _q_zero_line(mesh_property, levels):
             ax.tricontour(  # type: ignore[call-overload]

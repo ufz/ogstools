@@ -186,8 +186,9 @@ class MeshSeries:
             will be applied on each timestep and aggregation afterwards.
         :param func:
             The aggregation function to apply. It must be one of "min", "max",
-            "mean", "median", "sum", "std", "var". The equally named numpy
-            function will be used to aggregate over all timesteps.
+            "mean", "median", "sum", "std", "var", where the equally named numpy
+            function will be used to aggregate over all timesteps or "min_time"
+            or "max_time", which return the timevalue when the limit occurs.
         :returns:   A mesh with aggregated data according to the given function.
 
         """
@@ -199,6 +200,8 @@ class MeshSeries:
             "sum": np.sum,
             "std": np.std,
             "var": np.var,
+            "min_time": np.argmin,
+            "max_time": np.argmax,
         }[func]
         mesh = self.read(0).copy(deep=True)
         mesh.clear_data()
@@ -221,9 +224,12 @@ class MeshSeries:
             if isinstance(mesh_property, Property)
             else f"{mesh_property}_{func}"
         )
-        mesh[output_name] = np.empty(vals.shape[1:])
-        assert isinstance(np_func, type(np.max))
-        np_func(vals, out=mesh[output_name], axis=0)
+        if func in ["min_time", "max_time"]:
+            mesh[output_name] = self.timevalues[np_func(vals, axis=0)]
+        else:
+            mesh[output_name] = np.empty(vals.shape[1:])
+            assert isinstance(np_func, type(np.max))
+            np_func(vals, out=mesh[output_name], axis=0)
         return mesh
 
     def _probe_pvd(
