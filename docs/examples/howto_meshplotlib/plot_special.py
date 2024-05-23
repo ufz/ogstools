@@ -52,7 +52,7 @@ fig = plot(mesh, si)
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
-# However, here we have to create a new mseh_property to handle the units
+# However, here we have to create a new mesh_property to handle the units
 # correctly:
 
 # %%
