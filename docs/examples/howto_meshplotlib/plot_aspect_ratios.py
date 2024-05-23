@@ -23,6 +23,7 @@ print(f"{setup.max_ax_aspect=}")
 
 
 # sphinx_gallery_start_ignore
+# TODO: move to examples
 def custom_mesh(dx: float, dy: float):
     number_of_points = 50
     x = np.linspace(0, dx, num=number_of_points)

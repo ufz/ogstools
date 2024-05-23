@@ -30,7 +30,7 @@ def _h(points: np.ndarray) -> np.ndarray:
     return result
 
 
-def analytical_solution(
+def analytical_diffusion(
     topology: Union[Path, pv.UnstructuredGrid]
 ) -> pv.UnstructuredGrid:
     mesh = (

@@ -16,11 +16,11 @@ between meshes.
 
 # sphinx_gallery_end_ignore
 
+from ogstools import examples
 from ogstools.meshlib import difference, difference_matrix, difference_pairwise
-from ogstools.meshplotlib.examples import meshseries_THM_2D
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
-mesh_property = presets.temperature
+mesh_property = properties.temperature
 
 # %%
 # 0. Introduction
@@ -38,8 +38,9 @@ mesh_property = presets.temperature
 # that they belong to the same MeshSeries object. As long, as the meshes share
 # the same topology and contain the mesh_property of interest, the difference
 # will work fine.
-mesh1 = meshseries_THM_2D.read(0)
-mesh2 = meshseries_THM_2D.read(-1)
+mesh_series = examples.load_meshseries_THM_2D_PVD()
+mesh1 = mesh_series.read(0)
+mesh2 = mesh_series.read(-1)
 
 # %% [markdown]
 # The following call will return a mesh containing the difference of the

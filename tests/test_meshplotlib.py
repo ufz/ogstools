@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyvista import examples as pv_examples
 
+from ogstools import examples
 from ogstools.meshlib import difference
 from ogstools.meshplotlib import (
     clear_labels,
-    examples,
     label_spatial_axes,
     plot,
     plot_probe,
@@ -23,7 +23,7 @@ from ogstools.meshplotlib.core import get_ticklabels
 from ogstools.meshplotlib.levels import compute_levels
 from ogstools.meshplotlib.plot_features import plot_on_top
 from ogstools.meshplotlib.utils import justified_labels
-from ogstools.propertylib import Scalar, presets
+from ogstools.propertylib import Scalar, properties
 
 assert_allclose = partial(
     np.testing.assert_allclose, rtol=1e-7, atol=1e-100, verbose=True
@@ -122,13 +122,13 @@ class MeshplotlibTest(unittest.TestCase):
         setup.reset()
         setup.length.output_unit = "km"
         setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh = meshseries.read(1)
-        plot(mesh, presets.material_id)
-        plot(mesh, presets.temperature)
+        plot(mesh, properties.material_id)
+        plot(mesh, properties.temperature)
         plot(mesh, Scalar("pressure_active"))
-        plot(mesh.threshold((1, 3), "MaterialIDs"), presets.velocity)
-        fig = plot(mesh, presets.displacement[0])
+        plot(mesh.threshold((1, 3), "MaterialIDs"), properties.velocity)
+        fig = plot(mesh, properties.displacement[0])
         plot_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
@@ -136,31 +136,31 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_diff_plots(self):
         """Test creation of difference plots."""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh0 = meshseries.read(0)
         mesh1 = meshseries.read(1)
         plot(difference(mesh1, mesh0, "temperature"), "temperature_difference")
         for prop in [
-            presets.temperature,
-            presets.displacement,
-            presets.stress,
-            presets.stress.von_Mises,
+            properties.temperature,
+            properties.displacement,
+            properties.stress,
+            properties.stress.von_Mises,
         ]:
             plot(difference(mesh1, mesh0, prop), prop)
         plt.close()
 
     def test_user_defined_ax(self):
         """Test creating plot with subfigures and user provided ax"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         fig, ax = plt.subplots(3, 1, figsize=(40, 30))
-        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
+        plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0])
         ax[0].set_title(r"$T(\mathrm{t}_{0})$")
-        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
+        plot(meshseries.read(1), properties.temperature, fig=fig, ax=ax[1])
         ax[1].set_title(r"$T(\mathrm{t}_{end})$")
         diff_mesh = difference(
-            meshseries.read(0), meshseries.read(1), presets.temperature
+            meshseries.read(0), meshseries.read(1), properties.temperature
         )
-        plot(diff_mesh, presets.temperature, fig=fig, ax=ax[2])
+        plot(diff_mesh, properties.temperature, fig=fig, ax=ax[2])
         ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
         # fig.suptitle("Test user defined ax")
         fig.tight_layout()
@@ -168,22 +168,22 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_user_defined_ax_diff_vals(self):
         """Test creating plot with subfigures and user provided ax with different values plotted"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
-        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
-        plot(meshseries.read(1), presets.displacement, fig=fig, ax=ax[1])
+        plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0])
+        plot(meshseries.read(1), properties.displacement, fig=fig, ax=ax[1])
         fig.suptitle("Test user defined ax")
         plt.close()
 
     def test_user_defined_fig(self):
         """Test creating plot with subfigures and user provided fig"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
         plot(
             [meshseries.read(0), meshseries.read(1)],
-            presets.temperature,
+            properties.temperature,
             fig=fig,
         )
         fig.suptitle("Test user defined fig")
@@ -191,12 +191,12 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_update_font_sizes(self):
         """Test creating plot with subfigures and user provided fig"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
         plot(
             [meshseries.read(0), meshseries.read(1)],
-            presets.temperature,
+            properties.temperature,
             fig=fig,
         )
         fig = update_font_sizes(fig, fontsize=25)
@@ -205,31 +205,31 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_sharexy(self):
         """Test if labels are skipped if axis are shared"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh_a = meshseries.read(0)
         mesh_b = meshseries.read(1)
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
         ax = ax.flatten()
-        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
-        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
-        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
-        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
-        plot(diff_ab, presets.temperature, fig=fig, ax=ax[2])
-        plot(diff_ba, presets.temperature, fig=fig, ax=ax[3])
+        plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0])
+        plot(meshseries.read(1), properties.temperature, fig=fig, ax=ax[1])
+        diff_ab = difference(mesh_a, mesh_b, properties.temperature)
+        diff_ba = difference(mesh_b, mesh_a, properties.temperature)
+        plot(diff_ab, properties.temperature, fig=fig, ax=ax[2])
+        plot(diff_ba, properties.temperature, fig=fig, ax=ax[3])
         plt.close()
 
     def test_label_sharedxy(self):
         """Test labeling shared x and y axes"""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh_a = meshseries.read(0)
         mesh_b = meshseries.read(1)
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
-        plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0][0])
-        plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1][0])
-        diff_ab = difference(mesh_a, mesh_b, presets.temperature)
-        diff_ba = difference(mesh_b, mesh_a, presets.temperature)
-        plot(diff_ab, presets.temperature, fig=fig, ax=ax[0][1])
-        plot(diff_ba, presets.temperature, fig=fig, ax=ax[1][1])
+        plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0][0])
+        plot(meshseries.read(1), properties.temperature, fig=fig, ax=ax[1][0])
+        diff_ab = difference(mesh_a, mesh_b, properties.temperature)
+        diff_ba = difference(mesh_b, mesh_a, properties.temperature)
+        plot(diff_ab, properties.temperature, fig=fig, ax=ax[0][1])
+        plot(diff_ba, properties.temperature, fig=fig, ax=ax[1][1])
         label_spatial_axes(ax, "x", "y")
         plt.close()
 
@@ -248,41 +248,41 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_limit_plots(self):
         """Test creation of limit plots."""
-        mesh = examples.meshseries_CT_2D.aggregate("Si", "var")
+        mesh = examples.load_meshseries_CT_2D_XDMF().aggregate("Si", "var")
         plot(mesh, "Si_var")
         plt.close()
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
-        mesh_series = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
+        points = meshseries.read(0).center
+        plot_probe(meshseries, points, properties.temperature)
+        points = meshseries.read(0).points[[0, -1]]
+        plot_probe(meshseries, points, properties.temperature)
+        plot_probe(meshseries, points, properties.velocity)
+        plot_probe(meshseries, points, properties.stress)
+        plot_probe(meshseries, points, properties.stress.von_Mises)
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).center
-        plot_probe(mesh_series, points, presets.temperature)
-        points = mesh_series.read(0).points[[0, -1]]
-        plot_probe(mesh_series, points, presets.temperature)
-        plot_probe(mesh_series, points, presets.velocity)
-        plot_probe(mesh_series, points, presets.stress)
-        plot_probe(mesh_series, points, presets.stress.von_Mises)
-        mesh_series = examples.meshseries_XDMF
-        points = mesh_series.read(0).center
-        plot_probe(mesh_series, points, presets.temperature)
-        mesh_property = presets.velocity.replace(data_name="darcy_velocity")
+        plot_probe(mesh_series, points, properties.temperature)
+        mesh_property = properties.velocity.replace(data_name="darcy_velocity")
         plot_probe(mesh_series, points, mesh_property)
         plt.close()
 
     def test_animation(self):
         """Test creation of animation."""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         titles = [str(tv) for tv in timevalues]
-        anim = animate(meshseries, presets.temperature, timevalues, titles)
+        anim = animate(meshseries, properties.temperature, timevalues, titles)
         anim.to_jshtml()
         plt.close()
 
     def test_save_animation(self):
         """Test saving of an animation."""
-        meshseries = examples.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
-        anim = animate(meshseries, presets.temperature, timevalues)
+        anim = animate(meshseries, properties.temperature, timevalues)
         if not save_animation(anim, mkstemp()[1], 5):
             self.skipTest("Saving animation failed.")
         plt.close()
@@ -298,12 +298,12 @@ class MeshplotlibTest(unittest.TestCase):
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = examples.meshseries_CT_2D.read(0)
+        mesh = examples.load_meshseries_CT_2D_XDMF().read(0)
         plot(mesh, Scalar("Si"))
         plt.close()
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = examples.meshseries_XDMF.read(0)
-        plot(mesh, presets.pressure)
+        mesh = examples.load_meshseries_HT_2D_XDMF().read(0)
+        plot(mesh, properties.pressure)
         plt.close()

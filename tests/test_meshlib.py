@@ -5,27 +5,25 @@ import unittest
 import numpy as np
 from pyvista import UnstructuredGrid
 
+from ogstools import examples
 from ogstools.meshlib import (
     MeshSeries,
     difference,
     difference_matrix,
     difference_pairwise,
-    examples,
 )
-from ogstools.meshplotlib import examples as examples_mpl
-from ogstools.propertylib import presets
+from ogstools.propertylib import properties
 
 
 class UtilsTest(unittest.TestCase):
     """Test case for ogstools utilities."""
 
     def test_all_types(self):
-        pvd = MeshSeries(examples.pvd_file)
-        vtu = MeshSeries(examples.vtu_file)
-        xdmf = MeshSeries(examples.xdmf_file)
+        pvd = examples.load_meshseries_THM_2D_PVD()
+        xdmf = examples.load_meshseries_HT_2D_XDMF()
         self.assertRaises(TypeError, MeshSeries, __file__)
 
-        for mesh_series in [pvd, xdmf, vtu]:
+        for mesh_series in [pvd, xdmf]:
             self.assertTrue(
                 mesh_series.read(0) == mesh_series.read_closest(1e-6)
             )
@@ -41,7 +39,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_aggregate(self):
         "Test aggregation of meshseries."
-        mesh_series = MeshSeries(examples.xdmf_file)
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
         funcs = ["min", "max", "mean", "median", "sum", "std", "var"]
         for func in funcs:
             agg_mesh = mesh_series.aggregate("temperature", func)
@@ -51,17 +49,19 @@ class UtilsTest(unittest.TestCase):
 
     def test_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent property on meshseries."
-        mesh_series = MeshSeries(examples.pvd_file)
-        agg_mesh = mesh_series.aggregate(presets.dilatancy_alkan, "max")
+        mesh_series = examples.load_meshseries_THM_2D_PVD()
+        agg_mesh = mesh_series.aggregate(properties.dilatancy_alkan, "max")
         self.assertTrue(
             not np.any(
-                np.isnan(agg_mesh[presets.dilatancy_alkan.output_name + "_max"])
+                np.isnan(
+                    agg_mesh[properties.dilatancy_alkan.output_name + "_max"]
+                )
             )
         )
 
     def test_probe_pvd(self):
         "Test point probing on pvd."
-        mesh_series = MeshSeries(examples.pvd_file)
+        mesh_series = examples.load_meshseries_THM_2D_PVD()
         points = mesh_series.read(0).cell_centers().points
         for method in ["nearest", "probefilter"]:
             values = mesh_series.probe(points, "temperature", method)
@@ -69,37 +69,39 @@ class UtilsTest(unittest.TestCase):
 
     def test_probe_xdmf(self):
         "Test point probing on xdmf."
-        mesh_series = MeshSeries(examples.xdmf_file)
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).cell_centers().points
         for method in ["nearest", "linear", None]:
             values = mesh_series.probe(points, "temperature", method)
             self.assertTrue(not np.any(np.isnan(values)))
 
     def test_diff_two_meshes(self):
-        meshseries = examples_mpl.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh1 = meshseries.read(0)
         mesh2 = meshseries.read(-1)
         mesh_diff = difference(mesh1, mesh2, "temperature")
-        mesh_diff = difference(mesh1, mesh2, presets.temperature)
+        mesh_diff = difference(mesh1, mesh2, properties.temperature)
         self.assertTrue(isinstance(mesh_diff, UnstructuredGrid))
         mesh_diff = difference(mesh1, mesh2)
 
     def test_diff_pairwise(self):
         n = 5
-        meshseries = examples_mpl.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.read(0)] * n
         meshes2 = [meshseries.read(-1)] * n
-        meshes_diff = difference_pairwise(meshes1, meshes2, presets.temperature)
+        meshes_diff = difference_pairwise(
+            meshes1, meshes2, properties.temperature
+        )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray) and len(meshes_diff) == n
         )
         meshes_diff = difference_pairwise(meshes1, meshes2)
 
     def test_diff_matrix_single(self):
-        meshseries = examples_mpl.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes_diff = difference_matrix(
-            meshes1, mesh_property=presets.temperature
+            meshes1, mesh_property=properties.temperature
         )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray)
@@ -108,10 +110,12 @@ class UtilsTest(unittest.TestCase):
         meshes_diff = difference_matrix(meshes1)
 
     def test_diff_matrix_unequal(self):
-        meshseries = examples_mpl.meshseries_THM_2D
+        meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes2 = [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
-        meshes_diff = difference_matrix(meshes1, meshes2, presets.temperature)
+        meshes_diff = difference_matrix(
+            meshes1, meshes2, properties.temperature
+        )
         self.assertTrue(
             isinstance(meshes_diff, np.ndarray)
             and meshes_diff.shape == (len(meshes1), len(meshes2))

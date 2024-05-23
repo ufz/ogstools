@@ -7,14 +7,15 @@ Property Presets
 :py:mod:`ogstools.propertylib` provides classes (Scalar, Vector, Matrix) which
 encapsulate unit handling and data transformation for simplified processing of
 mesh data. There are several predefined properties stored under the module
-:py:mod:`ogstools.propertylib.presets`.
+:py:mod:`ogstools.propertylib.properties`.
 """
 
 # %%
-from ogstools.meshplotlib import examples, plot
-from ogstools.propertylib import Scalar, presets
+from ogstools import examples
+from ogstools.meshplotlib import plot
+from ogstools.propertylib import Scalar, properties
 
-presets.get_dataframe()
+properties.get_dataframe()
 
 # %% [markdown]
 # Scalar, Vector and Matrix inherit from the class Property with its
@@ -23,7 +24,7 @@ presets.get_dataframe()
 # applies a function if specified. In this case we convert from K to °C:
 
 # %%
-presets.temperature.transform(273.15)
+properties.temperature.transform(273.15)
 
 # %% [markdown]
 # You can also create your own properties by creating a Scalar, Vector or Matrix
@@ -37,7 +38,7 @@ custom_temperature.transform(273.15)
 
 # %% [markdown]
 # Or use existing presets as a template and replace some parameters:
-custom_temperature = presets.temperature.replace(output_unit="°F")
+custom_temperature = properties.temperature.replace(output_unit="°F")
 custom_temperature.transform(273.15)
 
 # %% [markdown]
@@ -48,16 +49,16 @@ custom_temperature.transform(273.15)
 # length 4 [xx, yy, zz, xy] or 6 [xx, yy, zz, xy, yz, xz].
 
 # %%
-presets.displacement[1].transform([0.01, 0.02, 0.03])
+properties.displacement[1].transform([0.01, 0.02, 0.03])
 
 # %%
-presets.strain["xx"].transform([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
+properties.strain["xx"].transform([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
 
 # %% [markdown]
 # Magnitude of a 2D displacement vector:
 
 # %%
-presets.displacement.magnitude.transform([0.03, 0.04])
+properties.displacement.magnitude.transform([0.03, 0.04])
 
 # %% [markdown]
 # We suggest specifying the properties and their transformations once.
@@ -66,7 +67,7 @@ presets.displacement.magnitude.transform([0.03, 0.04])
 # task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-fig = plot(examples.mesh_mechanics, presets.stress.von_Mises)
+fig = plot(examples.load_mesh_mechanics_2D(), properties.stress.von_Mises)
 
 # %% [markdown]
 # Have a look at

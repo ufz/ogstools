@@ -5,13 +5,21 @@ Read mesh from file (vtu or xdmf) into pyvista mesh
 """
 
 # %%
-from ogstools.meshlib import MeshSeries
-from ogstools.meshlib.examples import pvd_file, xdmf_file
+from ogstools import examples
+
+# %% [markdown]
+# To read your own data as a mesh series you can do:
+#
+# ..  code-block:: python
+#
+#   from ogstools.meshlib import MeshSeries
+#   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
+#
 
 # %%
-# MeshSeries takes as mandatory argument a str OR pathlib.Path that represents the location of the pvd or xdmf file.
-print(xdmf_file)
-ms = MeshSeries(xdmf_file)
+# MeshSeries takes as mandatory argument a str OR pathlib.Path that represents
+# the location of the pvd or xdmf file. Here, we load example data:
+ms = examples.load_meshseries_HT_2D_XDMF()
 
 
 # %%
@@ -43,7 +51,7 @@ mesh_ts10.plot(show_edges=True)
 # %%
 # MeshSeries from PVD file
 # =========================
-ms = MeshSeries(pvd_file)
+ms = examples.load_meshseries_THM_2D_PVD()
 ms.read(0).plot()
 
 # %%

@@ -15,15 +15,15 @@ under various conditions (shared and nor shared X and Y axes).
 # Import Python packages, change some settings and load example data set
 import matplotlib.pyplot as plt
 
+from ogstools import examples
 from ogstools.meshlib import difference
 from ogstools.meshplotlib import (
     clear_labels,
-    examples,
     label_spatial_axes,
     plot,
     setup,
 )
-from ogstools.propertylib.presets import temperature
+from ogstools.propertylib.properties import temperature
 
 plt.rcParams.update({"font.size": 32})
 
@@ -31,7 +31,7 @@ setup.reset()
 setup.length.output_unit = "km"
 setup.combined_colorbar = False
 
-meshseries = examples.meshseries_THM_2D
+meshseries = examples.load_meshseries_THM_2D_PVD()
 mesh_a = meshseries.read(0)
 mesh_b = meshseries.read(1)
 

@@ -24,12 +24,12 @@ Here we use a component transport example from the ogs benchmark gallery
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ogstools import meshplotlib
-from ogstools.meshplotlib.examples import meshseries_CT_2D as mesh_series
+from ogstools import examples, meshplotlib
 from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar
 
 meshplotlib.setup.reset()
+mesh_series = examples.load_meshseries_CT_2D_XDMF()
 si = Scalar(
     data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
 )

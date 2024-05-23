@@ -37,11 +37,15 @@ from tempfile import mkdtemp
 from IPython.display import HTML
 from ogs6py import ogs
 
-from ogstools import meshlib, meshplotlib, msh2vtu, propertylib, workflow
-from ogstools.studies import convergence
-from ogstools.studies.convergence.examples import (
-    steady_state_diffusion_analytical_solution,
+from ogstools import (
+    examples,
+    meshlib,
+    meshplotlib,
+    msh2vtu,
+    propertylib,
+    workflow,
 )
+from ogstools.studies import convergence
 
 meshplotlib.setup.reset()
 temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
@@ -66,7 +70,7 @@ for n_edge_cells in edge_cells:
 
     model = ogs.OGS(
         PROJECT_FILE=temp_dir / "default.prj",
-        INPUT_FILE=convergence.examples.steady_state_diffusion_prj,
+        INPUT_FILE=examples.prj_steady_state_diffusion,
     )
     prefix = "steady_state_diffusion_" + str(n_edge_cells)
     model.replace_text(prefix, ".//prefix")
@@ -80,11 +84,11 @@ for n_edge_cells in edge_cells:
 
 # %%
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
-solution = steady_state_diffusion_analytical_solution(
+solution = examples.analytical_diffusion(
     meshlib.MeshSeries(result_paths[-1]).read(0)
 )
 meshplotlib.setup.show_element_edges = True
-fig = meshplotlib.plot(solution, propertylib.presets.hydraulic_height)
+fig = meshplotlib.plot(solution, propertylib.properties.hydraulic_height)
 solution.save(analytical_solution_path)
 
 # %% [markdown]

@@ -3,6 +3,14 @@ from collections import defaultdict, namedtuple
 
 import pandas as pd
 
+from ogstools.examples import (
+    debug_parallel_3,
+    info_parallel_1,
+    serial_convergence_long,
+    serial_critical,
+    serial_info,
+    serial_warning_only,
+)
 from ogstools.logparser import (
     analysis_convergence_coupling_iteration,
     analysis_convergence_newton_iteration,
@@ -11,14 +19,6 @@ from ogstools.logparser import (
     fill_ogs_context,
     parse_file,
     time_step_vs_iterations,
-)
-from ogstools.logparser.examples import (
-    parallel_1_info,
-    parallel_3_debug,
-    serial_convergence_long,
-    serial_critical,
-    serial_info,
-    serial_warning_only,
 )
 
 
@@ -34,7 +34,7 @@ class LogparserTest(unittest.TestCase):
 
     def test_parallel_1_compare_serial_info(self):
         # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
-        records_p = parse_file(parallel_1_info, force_parallel=True)
+        records_p = parse_file(info_parallel_1, force_parallel=True)
         num_of_record_type_p = [len(i) for i in log_types(records_p).values()]
 
         records_s = parse_file(serial_info)
@@ -47,7 +47,7 @@ class LogparserTest(unittest.TestCase):
         )
 
     def test_parallel_3_debug(self):
-        records = parse_file(parallel_3_debug)
+        records = parse_file(debug_parallel_3)
         mpi_processes = 3
 
         self.assertEqual(

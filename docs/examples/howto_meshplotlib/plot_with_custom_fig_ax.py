@@ -15,16 +15,17 @@ within the same figure.
 # Import Python packages, change some settings and load example data set
 import matplotlib.pyplot as plt
 
+from ogstools import examples
 from ogstools.meshlib import difference
-from ogstools.meshplotlib import examples, plot, setup
-from ogstools.propertylib import presets
+from ogstools.meshplotlib import plot, setup
+from ogstools.propertylib import properties
 
 plt.rcParams.update({"font.size": 32})
 
 setup.reset()
 setup.length.output_unit = "km"
 
-meshseries = examples.meshseries_THM_2D
+meshseries = examples.load_meshseries_THM_2D_PVD()
 
 
 # %%
@@ -34,8 +35,8 @@ meshseries = examples.meshseries_THM_2D
 
 setup.combined_colorbar = False
 fig, ax = plt.subplots(2, 1, figsize=(15, 15))
-plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
-plot(meshseries.read(1), presets.displacement, fig=fig, ax=ax[1])
+plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0])
+plot(meshseries.read(1), properties.displacement, fig=fig, ax=ax[1])
 fig.suptitle("Compare temperature and displacement")
 fig.tight_layout()
 
@@ -45,14 +46,14 @@ fig.tight_layout()
 # Figure and Axes objects:
 
 fig, ax = plt.subplots(3, 1, figsize=(20, 30))
-plot(meshseries.read(0), presets.temperature, fig=fig, ax=ax[0])
+plot(meshseries.read(0), properties.temperature, fig=fig, ax=ax[0])
 ax[0].set_title(r"$T(\mathrm{t}_{0})$")
-plot(meshseries.read(1), presets.temperature, fig=fig, ax=ax[1])
+plot(meshseries.read(1), properties.temperature, fig=fig, ax=ax[1])
 ax[1].set_title(r"$T(\mathrm{t}_{end})$")
 diff_mesh = difference(
-    meshseries.read(1), meshseries.read(0), presets.temperature
+    meshseries.read(1), meshseries.read(0), properties.temperature
 )
-plot(diff_mesh, presets.temperature, fig=fig, ax=ax[2])
+plot(diff_mesh, properties.temperature, fig=fig, ax=ax[2])
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
 fig.suptitle("Plot two time steps and their difference - with colorbars")
 fig.tight_layout()

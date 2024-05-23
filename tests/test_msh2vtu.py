@@ -126,7 +126,7 @@ def test_gmsh(tmp_path: Path):
         "quarter_rectangle_with_hole.py",
         "line.py",
     ]:
-        runpy.run_module(f"ogstools.msh2vtu.examples.gmsh.{Path(script).stem}")
+        runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
         assert msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0

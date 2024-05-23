@@ -6,8 +6,8 @@ import numpy as np
 import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
-from ogstools.meshplotlib.examples import mesh_mechanics
-from ogstools.propertylib import presets as pp
+from ogstools import examples
+from ogstools.propertylib import properties as pp
 from ogstools.propertylib.mesh_dependent import depth
 from ogstools.propertylib.property import u_reg
 
@@ -98,7 +98,7 @@ class PhysicalPropertyTest(unittest.TestCase):
         self.equality(pp.stress.qp_ratio, [sig] * 2, Qty([-100] * 2, "percent"))
 
     def test_depth_2D(self):
-        mesh = mesh_mechanics
+        mesh = examples.load_mesh_mechanics_2D()
         mesh["depth"] = depth(mesh, use_coords=True)
         # y Axis is vertical axis
         self.assertTrue(np.all(mesh["depth"] == -mesh.points[..., 1]))
@@ -117,21 +117,12 @@ class PhysicalPropertyTest(unittest.TestCase):
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
         #  not working for arrays (only works for meshes)
         self.assertRaises(TypeError, pp.dilatancy_alkan.transform, sig)
-        self.assertGreater(
-            np.max(pp.dilatancy_alkan.transform(mesh_mechanics)), 0
-        )
-        self.assertGreater(
-            np.max(pp.dilatancy_alkan_eff.transform(mesh_mechanics)), 0
-        )
-        self.assertGreater(
-            np.max(pp.dilatancy_critescu_tot.transform(mesh_mechanics)), 0
-        )
-        self.assertGreater(
-            np.max(pp.dilatancy_critescu_eff.transform(mesh_mechanics)), 0
-        )
-        self.assertGreater(
-            np.max(pp.fluid_pressure_crit.transform(mesh_mechanics)), 0
-        )
+        mesh = examples.load_mesh_mechanics_2D()
+        self.assertGreater(np.max(pp.dilatancy_alkan.transform(mesh)), 0)
+        self.assertGreater(np.max(pp.dilatancy_alkan_eff.transform(mesh)), 0)
+        self.assertGreater(np.max(pp.dilatancy_critescu_tot.transform(mesh)), 0)
+        self.assertGreater(np.max(pp.dilatancy_critescu_eff.transform(mesh)), 0)
+        self.assertGreater(np.max(pp.fluid_pressure_crit.transform(mesh)), 0)
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
@@ -183,7 +174,7 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_get_preset(self):
         """Test find property function."""
-        mesh = mesh_mechanics
+        mesh = examples.load_mesh_mechanics_2D()
         mesh.point_data["scalar"] = mesh["temperature"]
         mesh.point_data["vector"] = mesh["displacement"]
         mesh.point_data["matrix"] = mesh["sigma"]

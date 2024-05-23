@@ -158,5 +158,5 @@ line-length = 80
 "docs/examples/**" = ["B018"]
 
 [tool.codespell]
-ignore-words-list = "methode"
+ignore-words-list = "methode,ot"
 skip = "*.vtu"
