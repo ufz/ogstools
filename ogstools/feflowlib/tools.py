@@ -745,54 +745,58 @@ def materials_in_HC(
         # Get a list of properties (porosity,transversal/longitunal_dispersivity)
         # across species. If there are more than one value, independent OGS-models
         # need to be set up manually.
-        porosity_val = str(
-            np.unique(
-                [
-                    material_properties[material_id][prop]
-                    for prop in material_properties[material_id]
-                    if "porosity" in prop
-                ]
-            )
+        porosity_val = np.unique(
+            [
+                material_properties[material_id][prop]
+                for prop in material_properties[material_id]
+                if "porosity" in prop
+            ]
         )
 
-        long_disp_val = str(
-            np.unique(
-                [
-                    material_properties[material_id][prop]
-                    for prop in material_properties[material_id]
-                    if "longitudinal_dispersivity" in prop
-                ]
-            )
+        long_disp_val = np.unique(
+            [
+                material_properties[material_id][prop]
+                for prop in material_properties[material_id]
+                if "longitudinal_dispersivity" in prop
+            ]
         )
 
-        trans_disp_val = str(
-            np.unique(
-                [
-                    material_properties[material_id][prop]
-                    for prop in material_properties[material_id]
-                    if "transversal_dispersivity" in prop
-                ]
-            )
+        trans_disp_val = np.unique(
+            [
+                material_properties[material_id][prop]
+                for prop in material_properties[material_id]
+                if "transversal_dispersivity" in prop
+            ]
         )
         model.media.add_property(
             medium_id=material_id,
             name="porosity",
             type="Constant",
-            value=porosity_val,
+            value=(
+                str(porosity_val) if len(porosity_val) > 1 else porosity_val[0]
+            ),
         )
 
         model.media.add_property(
             medium_id=material_id,
             name="longitudinal_dispersivity",
             type="Constant",
-            value=long_disp_val,
+            value=(
+                str(long_disp_val)
+                if len(long_disp_val) > 1
+                else long_disp_val[0]
+            ),
         )
 
         model.media.add_property(
             medium_id=material_id,
             name="transversal_dispersivity",
             type="Constant",
-            value=trans_disp_val,
+            value=(
+                str(trans_disp_val)
+                if len(trans_disp_val) > 1
+                else trans_disp_val[0]
+            ),
         )
         if "permeability_X" in material_properties[material_id]:
             model.media.add_property(
