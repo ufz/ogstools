@@ -9,7 +9,7 @@ import pytest
 import pyvista as pv
 from ogs6py import ogs
 
-from ogstools.definitions import EXAMPLES_DIR
+from ogstools import examples
 
 pytest.importorskip("ifm")
 
@@ -37,16 +37,16 @@ def test_cli():
 
 class TestSimulation_Neumann(unittest.TestCase):
     def setUp(self):
-        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
+        self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
         neumann = np.array(self.pv_mesh["P_BCFLOW_2ND"])
         neumann = neumann[~np.isnan(neumann)]
-        self.pv_mesh.save(str(self.path_writing / "boxNeumann.vtu"))
+        self.vtu_path = self.path_writing / "boxNeumann.vtu"
+        self.pv_mesh.save(str(self.vtu_path))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
-            self.path_writing / "boxNeumann.vtu", self.pv_mesh
+            self.vtu_path, self.pv_mesh
         )
         topsurface.save(path_topsurface)
 
@@ -62,7 +62,7 @@ class TestSimulation_Neumann(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxNeumann.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
@@ -93,7 +93,7 @@ class TestSimulation_Neumann(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxNeumann.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
@@ -115,16 +115,14 @@ class TestSimulation_Neumann(unittest.TestCase):
 
 class TestSimulation_Robin(unittest.TestCase):
     def setUp(self):
-        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(
-            str(self.path_data / "box_3D_cauchy_areal.fem")
-        )
+        self.doc = ifm.loadDocument(str(examples.feflow_model_box_Robin))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.pv_mesh.save(str(self.path_writing / "boxRobin.vtu"))
+        self.vtu_path = self.path_writing / "boxRobin.vtu"
+        self.pv_mesh.save(str(self.vtu_path))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
-            self.path_writing / "boxRobin.vtu", self.pv_mesh
+            self.vtu_path, self.pv_mesh
         )
         topsurface.save(path_topsurface)
 
@@ -140,7 +138,7 @@ class TestSimulation_Robin(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxRobin.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
@@ -171,7 +169,7 @@ class TestSimulation_Robin(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxRobin.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
@@ -193,14 +191,14 @@ class TestSimulation_Robin(unittest.TestCase):
 
 class TestSimulation_Well(unittest.TestCase):
     def setUp(self):
-        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(str(self.path_data / "box_3D_wellBC.fem"))
+        self.doc = ifm.loadDocument(str(examples.feflow_model_box_well_BC))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.pv_mesh.save(str(self.path_writing / "boxWell.vtu"))
+        self.vtu_path = self.path_writing / "boxWell.vtu"
+        self.pv_mesh.save(str(self.vtu_path))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
-            self.path_writing / "boxWell.vtu", self.pv_mesh
+            self.vtu_path, self.pv_mesh
         )
         topsurface.save(path_topsurface)
 
@@ -216,7 +214,7 @@ class TestSimulation_Well(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxWell.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
@@ -246,7 +244,7 @@ class TestSimulation_Well(unittest.TestCase):
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
-            self.path_writing / "boxWell.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "liquid flow",
@@ -269,16 +267,15 @@ class TestSimulation_Well(unittest.TestCase):
 class TestConverter(unittest.TestCase):
     def setUp(self):
         # Variables for the following tests:
-        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
-        self.doc = ifm.loadDocument(str(self.path_data / "box_3D_neumann.fem"))
+        self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
 
     def test_geometry(self):
         """
         Test if geometry can be converted correctly.
         """
-        doc = ifm.loadDocument(str(self.path_data / "2layers_model.fem"))
+        doc = ifm.loadDocument(str(examples.feflow_model_2layers))
         points, cells, celltypes = points_and_cells(doc)
         self.assertEqual(len(points), 75)
         self.assertEqual(len(celltypes), 32)
@@ -387,13 +384,11 @@ class TestConverter(unittest.TestCase):
 
 class TestSimulation_HT(unittest.TestCase):
     def setUp(self):
-        self.path_data = EXAMPLES_DIR / "feflow"
         self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(
-            str(self.path_data / "HT_toymodel_Diri.fem")
-        )
+        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT_model))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.pv_mesh.save(str(self.path_writing / "HT_Dirichlet.vtu"))
+        self.vtu_path = self.path_writing / "HT_Dirichlet.vtu"
+        self.pv_mesh.save(str(self.vtu_path))
         write_point_boundary_conditions(self.path_writing, self.pv_mesh)
 
     def test_Dirichlet_toymodel_ogs_HT(self):
@@ -411,7 +406,7 @@ class TestSimulation_HT(unittest.TestCase):
             dimension2D,
         )
         model = setup_prj_file(
-            self.path_writing / "HT_Dirichlet.vtu",
+            self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_HT_model(self.pv_mesh),
             "hydro thermal",
