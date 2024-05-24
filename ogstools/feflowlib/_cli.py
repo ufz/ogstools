@@ -198,10 +198,13 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             )
             process = "hydro thermal"
         elif "component_transport" in case:
+            if doc.getNumberOfDimensions() == 2:
+                dimension2D = True
             template_model = component_transport(
                 str(Path(output).name),
                 species,
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
+                dimension2D,
             )
             process = "component transport"
         else:
