@@ -41,7 +41,8 @@ class UtilsTest(unittest.TestCase):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         funcs = ["min", "max", "mean", "median", "sum", "std", "var"]
-        for func in funcs:
+        timefuncs = ["min_time", "max_time"]
+        for func in funcs + timefuncs:
             agg_mesh = mesh_series.aggregate("temperature", func)
             self.assertTrue(
                 not np.any(np.isnan(agg_mesh["temperature_" + func]))
@@ -50,14 +51,17 @@ class UtilsTest(unittest.TestCase):
     def test_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent property on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        agg_mesh = mesh_series.aggregate(properties.dilatancy_alkan, "max")
-        self.assertTrue(
-            not np.any(
-                np.isnan(
-                    agg_mesh[properties.dilatancy_alkan.output_name + "_max"]
+        for func in ["max", "max_time"]:
+            agg_mesh = mesh_series.aggregate(properties.dilatancy_alkan, func)
+            self.assertTrue(
+                not np.any(
+                    np.isnan(
+                        agg_mesh[
+                            properties.dilatancy_alkan.output_name + "_" + func
+                        ]
+                    )
                 )
             )
-        )
 
     def test_probe_pvd(self):
         "Test point probing on pvd."

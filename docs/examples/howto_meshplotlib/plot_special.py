@@ -42,14 +42,22 @@ si = Scalar(
 # aggregation function, e.g. "min", "max", "var"
 # (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate`).
 # The following code gets the maximum saturation for each point in the mesh over
-# all timesteps and plots it. Note: the aggragation function returns the
-# resulting mesh and a new property corresponding to the aggregated data, to
-# ensure no duplicate unit conversion or data transformation is happening in the
-# plot function.
+# all timesteps and plots it. Note: the data in the returned mesh has a suffix
+# equal to the aggregation functions name. The plot function will find the
+# correct data anyway if given the original mesh_property
 
 # %%
 mesh = mesh_series.aggregate(si, "max")
 fig = plot(mesh, si)
+
+# %% [markdown]
+# It is also possible to plot the time when the minimum or maximum occurs.
+# However, here we have to use a new mesh_property for the plot to handle the units
+# correctly:
+
+# %%
+mesh = mesh_series.aggregate(si, "max_time")
+fig = plot(mesh, Scalar("Saturation_max_time", "s", "a"))
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
