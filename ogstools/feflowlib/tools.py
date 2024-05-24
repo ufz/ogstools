@@ -329,7 +329,6 @@ def get_material_properties_of_CT_model(
         for cell_data in mesh.cell_data
         if any(parameter in cell_data for parameter in parameters_mapping)
     ]
-    print(feflow_species_parameter)
     ogs_species_parameter = [
         feflow_species_para.replace(
             feflow_parameter, parameters_mapping[feflow_parameter]
@@ -338,7 +337,6 @@ def get_material_properties_of_CT_model(
         for feflow_parameter in parameters_mapping
         if feflow_parameter in feflow_species_para
     ]
-    print(ogs_species_parameter)
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
@@ -391,7 +389,7 @@ def add_species_to_prj_file(
     """
     species_parameter = ["decay_rate", "retardation_factor", "diffusion"]
     model.add_element(parent_xpath=xpath, tag="components")
-    for species in np.unique(species_list)[1:]:
+    for species in species_list:
         model.add_block(
             blocktag="component",
             parent_xpath=xpath + "/components",
@@ -416,6 +414,66 @@ def add_species_to_prj_file(
                         str(parameter_val),
                     ],
                 )
+
+
+def add_global_process_coupling_CT(model, species):
+    """
+    Add the section of the prj-file that defines the global process coupling
+    in the time loop.
+    """
+    model.add_block(
+        blocktag="global_process_coupling",
+        parent_xpath="./time_loop",
+        taglist=["max_iter", "convergence_criteria"],
+        textlist=["6", ""],
+    )
+    for i in range(len(species) + 1):
+        model.add_block(
+            blocktag="convergence_criterion",
+            parent_xpath="./time_loop/global_process_coupling/convergence_criteria",
+            taglist=["type", "norm_type", "reltol"],
+            textlist=["DeltaX", "NORM2", "1e-14"],
+        )
+
+
+def add_missing_process(model, species, repeat_list=[1], delta_t_list=[1]):
+    """
+    Add the section of the prj-file that defines the global process coupling
+    in the time loop.
+    """
+    for i in range(len(species) + 1):
+        model.add_block(
+            blocktag="process",
+            block_attrib={"ref": "CT"},
+            parent_xpath="./time_loop/processes",
+            taglist=["nonlinear_solver"],
+            textlist=["basic_picard"],
+        )
+    model.add_block(
+        blocktag="convergence_criterion",
+        parent_xpath="./time_loop/processes/process",
+        taglist=["type", "norm_type", "reltol"],
+        textlist=["DeltaX", "NORM2", "1e-6"],
+    )
+    model.add_block(
+        blocktag="time_discretization",
+        parent_xpath="./time_loop/processes/process",
+        taglist=["type"],
+        textlist=["BackwardEuler"],
+    )
+    model.add_block(
+        blocktag="time_stepping",
+        parent_xpath="./time_loop/processes/process",
+        taglist=["type", "t_initial", "t_end", "timesteps"],
+        textlist=["FixedTimeStepping", "0", "4.8384E+07", ""],
+    )
+    for rep, delta_t in zip(repeat_list, delta_t_list):
+        model.add_block(
+            blocktag="pair",
+            parent_xpath="./time_loop/processes/process/time_stepping/timesteps",
+            taglist=["repeat", "delta_t"],
+            textlist=[str(rep), str(delta_t)],
+        )
 
 
 def combine_material_properties(
@@ -899,17 +957,30 @@ def setup_prj_file(
         )
         model.parameters.add_parameter(name="C0", type="Constant", value=0)
         if species_list is not None:
-            for spec in species_list:
-                model.processes.add_process_variable(
-                    process_variable="concentration_" + spec,
-                    process_variable_name=spec,
-                )
-                model.processvars.set_ic(
-                    process_variable_name=spec,
-                    components=1,
-                    order=1,
-                    initial_condition="C0",
-                )
+            if len(species_list) > 1:
+                for species in species_list:
+                    model.processes.add_process_variable(
+                        process_variable="concentration_" + species,
+                        process_variable_name=species,
+                    )
+                    model.processvars.set_ic(
+                        process_variable_name=species,
+                        components=1,
+                        order=1,
+                        initial_condition="C0",
+                    )
+            else:
+                for species in species_list:
+                    model.processes.add_process_variable(
+                        process_variable="concentration",
+                        process_variable_name=species,
+                    )
+                    model.processvars.set_ic(
+                        process_variable_name=species,
+                        components=1,
+                        order=1,
+                        initial_condition="C0",
+                    )
 
     else:
         model.processes.add_process_variable(
@@ -1044,6 +1115,13 @@ def setup_prj_file(
     elif process == "component transport":
         assert species_list is not None
         materials_in_HC(material_properties, species_list, model)
+        add_global_process_coupling_CT(model, species_list)
+        add_missing_process(
+            model,
+            species_list,
+            repeat_list=[10] * 8,
+            delta_t_list=[8.65 * 10**i for i in range(8)],
+        )
     else:
         msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
         raise ValueError(msg)
