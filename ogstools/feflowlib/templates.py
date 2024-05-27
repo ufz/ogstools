@@ -201,7 +201,7 @@ def component_transport(
     #    repeat="1",
     #    delta_t="1",
     # )
-    output_variables = species + ["pressure"]
+    output_variables = species + ["HEAD_OGS"]
     model.timeloop.add_output(
         type="VTK",
         prefix=str(saving_path),

@@ -1120,7 +1120,7 @@ def setup_prj_file(
             model,
             species_list,
             repeat_list=[10] * 8,
-            delta_t_list=[8.65 * 10**i for i in range(8)],
+            delta_t_list=[8.64 * 10**i for i in range(8)],
         )
     else:
         msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
