@@ -31,7 +31,7 @@ def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
         layer=[50, 50, 50],
         groundwater=(-50, 2, "+y"),
         BHE_Array=[
-            (50, 40, -1, -60, 0.076),
+            (50, 40, 0, -60, 0.076),
             (50, 30, -1, -60, 0.076),
             (50, 50, -1, -52, 0.076),
         ],

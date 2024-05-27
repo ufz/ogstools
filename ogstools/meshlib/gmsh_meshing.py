@@ -152,7 +152,7 @@ def gen_bhe_mesh_gmsh(
     out_name: Path = Path("bhe_mesh.msh"),
 ) -> None:
     """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the Top-Surface/BHE-begin, the groundwater end/start and the end of the BHE's. Currently only the same BHE begin depth for all BHE's is supported. See detailed description of the parameters below:
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
@@ -1565,11 +1565,6 @@ def gen_bhe_mesh_gmsh(
                 else:
                     BHE_to_soil[j, 2] = 0
 
-    for i in range(1, len(BHE_array)):
-        if BHE_array[0, 2] != BHE_array[i, 2]:  # pragma: no cover
-            msg = "All BHEs must start at the same height, different BHE begin heights not implemented yet!"
-            raise Exception(msg)
-
     # detect the soil layer, in which the BHE ends
     for j in range(0, len(BHE_array)):
         for i in range(0, len(layer)):
@@ -1581,7 +1576,7 @@ def gen_bhe_mesh_gmsh(
                     np.abs(BHE_array[j, 3]) - np.abs(BHE_array[j, 2])
                     <= n_refinement_layers * target_z_size_fine
                 ):  # pragma: no cover
-                    msg = "BHE to short, must be longer than 2m!"
+                    msg = "BHE to short, must be longer than n_refinement_layers * target_z_size_fine!"
                     raise Exception(msg)
                 if (
                     np.abs(BHE_array[j, 3]) - np.sum(layer[:i])
@@ -1620,13 +1615,18 @@ def gen_bhe_mesh_gmsh(
         BHE_end_depths = (
             []
         )  # only the interesting depths in the i-th layer ToDo: Rename the variable
+
         # filter, which BHE's ends in this layer
         BHE_end_in_Layer = BHE_to_soil[BHE_to_soil[:, 3] == i]
 
         for k in BHE_end_in_Layer[:, 0]:
             BHE_end_depths.append([BHE_array[k, 3], BHE_to_soil[k, 4]])
-            if i == BHE_to_soil[0, 1]:
-                BHE_end_depths.append([BHE_array[0, 2], BHE_to_soil[0, 2]])
+
+        # filter, which BHE's starts in this layer
+        BHE_starts_in_Layer = BHE_to_soil[BHE_to_soil[:, 1] == i]
+
+        for k in BHE_starts_in_Layer[:, 0]:
+            BHE_end_depths.append([BHE_array[k, 2], BHE_to_soil[k, 2]])
 
         groundwater_list_0 = np.array(
             [inner_list[0] for inner_list in groundwater_list]
@@ -1923,10 +1923,7 @@ def gen_bhe_mesh(
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
     submeshes at the top, at the bottom and the groundwater inflow, which is exported
-    in the OGS .msh format. Refinement layers are placed at the Top-Surface/BHE-begin,
-    the groundwater end/start and the end of the BHE's. Currently only the same BHE
-    begin depth for all BHE's is supported. See detailed description
-    of the parameters below:
+    in the OGS readable .vtu format. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
