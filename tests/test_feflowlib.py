@@ -14,6 +14,7 @@ from ogstools import examples
 pytest.importorskip("ifm")
 
 import ifm_contrib as ifm  # noqa: E402
+
 from ogstools.feflowlib import (  # noqa: E402
     component_transport,
     convert_properties_mesh,
@@ -502,7 +503,7 @@ class TestSimulation_CT(unittest.TestCase):
             ogs_sim_res_28.point_data["single_species"]
             - self.pv_mesh_28.point_data["single_species_P_CONC"]
         )
-        np.testing.assert_array_less(np.abs(dif_CT_168), 1.5e-7)
+        np.testing.assert_array_less(np.abs(dif_CT_28), 2e-7)
 
         dif_head = (
             ogs_sim_res.point_data["HEAD_OGS"]

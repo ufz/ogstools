@@ -6,10 +6,9 @@
 
 import logging as log
 
+import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
-
-import ifm_contrib as ifm
 
 ifm.forceLicense("Viewer")
 
@@ -299,15 +298,15 @@ def get_species_parameter(
                     for i in range(doc.getNumberOfSpecies()):
                         species = doc.getSpeciesName(i)
                         par = doc.getParameter(getattr(ifm.Enum, data), species)
-                        species_dict[point_or_cell][species + "_" + data] = (
-                            np.array(doc.getParamValues(par))
-                        )
+                        species_dict[point_or_cell][
+                            species + "_" + data
+                        ] = np.array(doc.getParamValues(par))
                 except RuntimeError:
                     species = "single_species"
                     par = doc.getParameter(getattr(ifm.Enum, data))
-                    species_dict[point_or_cell][species + "_" + data] = (
-                        np.array(doc.getParamValues(par))
-                    )
+                    species_dict[point_or_cell][
+                        species + "_" + data
+                    ] = np.array(doc.getParamValues(par))
 
     return species_dict, obsolete_data
 

@@ -8,7 +8,7 @@ import argparse
 import logging as log
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable, TypedDict
+from typing import Callable, Optional, TypedDict
 
 import numpy as np
 import pyvista as pv
@@ -416,10 +416,13 @@ def add_species_to_prj_file(
                 )
 
 
-def add_global_process_coupling_CT(model, species):
+def add_global_process_coupling_CT(model: ogs.OGS, species: list) -> None:
     """
     Add the section of the prj-file that defines the global process coupling
     in the time loop.
+
+    :param model: Model to setup prj-file, there the section of global process coupling will be added.
+    :param species: List of all species.
     """
     model.add_block(
         blocktag="global_process_coupling",
@@ -427,7 +430,7 @@ def add_global_process_coupling_CT(model, species):
         taglist=["max_iter", "convergence_criteria"],
         textlist=["6", ""],
     )
-    for i in range(len(species) + 1):
+    for _i in range(len(species) + 1):
         model.add_block(
             blocktag="convergence_criterion",
             parent_xpath="./time_loop/global_process_coupling/convergence_criteria",
@@ -436,12 +439,20 @@ def add_global_process_coupling_CT(model, species):
         )
 
 
-def add_missing_process(model, species, repeat_list=[1], delta_t_list=[1]):
+def add_process(
+    model: ogs.OGS,
+    species: list,
+    time_stepping: Optional[list] = None,
+) -> None:
     """
-    Add the section of the prj-file that defines the global process coupling
-    in the time loop.
+    Add the section of the prj-file that defines the process in the time loop.
+
+    :param model: Model to setup prj-file, there the section of global process coupling will be added.
+    :param species: List of all species.
+    :param repeat_list: List of how often a time step should be repeated.
+    :param delta_t_list: List of how long a time stept should be.
     """
-    for i in range(len(species) + 1):
+    for _i in range(len(species) + 1):
         model.add_block(
             blocktag="process",
             block_attrib={"ref": "CT"},
@@ -467,12 +478,14 @@ def add_missing_process(model, species, repeat_list=[1], delta_t_list=[1]):
         taglist=["type", "t_initial", "t_end", "timesteps"],
         textlist=["FixedTimeStepping", "0", "4.8384E+07", ""],
     )
-    for rep, delta_t in zip(repeat_list, delta_t_list):
+    if time_stepping is None:
+        time_stepping = [(1, 1)]
+    for time_step in time_stepping:
         model.add_block(
             blocktag="pair",
             parent_xpath="./time_loop/processes/process/time_stepping/timesteps",
             taglist=["repeat", "delta_t"],
-            textlist=[str(rep), str(delta_t)],
+            textlist=[str(time_step[0]), str(time_step[1])],
         )
 
 
@@ -1116,11 +1129,12 @@ def setup_prj_file(
         assert species_list is not None
         materials_in_HC(material_properties, species_list, model)
         add_global_process_coupling_CT(model, species_list)
-        add_missing_process(
+        add_process(
             model,
             species_list,
-            repeat_list=[10] * 8,
-            delta_t_list=[8.64 * 10**i for i in range(8)],
+            time_stepping=list(
+                zip([10] * 8, [8.64 * 10**i for i in range(8)])
+            ),
         )
     else:
         msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
