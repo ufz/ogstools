@@ -158,7 +158,7 @@ def gen_bhe_mesh_gmsh(
     :param width: Width of the model area in m (y-dimension)
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
-    :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
+    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
     :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
@@ -1930,9 +1930,8 @@ def gen_bhe_mesh(
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater inflow direction, , empty list [] for no groundwater flow
-        as string - supported '+x', '-x', '-y', '+y']
-    :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats:
+        isolation layer (count starts with 0), groundwater inflow direction, as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
         [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
         BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction,
