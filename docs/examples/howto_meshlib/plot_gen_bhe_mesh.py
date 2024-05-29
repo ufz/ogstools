@@ -2,11 +2,11 @@
 """
 Creating a BHE mesh (Borehole Heat Exchanger)
 ===================================================
-
-This example demonstrates how to use gen_bhe_mesh() to create
-a Borehole Heat Exchanger (BHE) mesh.
-
 """
+
+# %% [markdown]
+# This example demonstrates how to use :py:mod:`ogstools.meshlib.gmsh_meshing.gen_bhe_mesh` to create
+# a Borehole Heat Exchanger (BHE) mesh.
 
 # %%
 from pathlib import Path
@@ -20,7 +20,7 @@ from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
 # %% [markdown]
 # 0. Introduction
 # ----------------
-# This example shows the general usage of gen_bhe_mesh and how some of
+# This example shows the general usage of :py:mod:`ogstools.meshlib.gmsh_meshing.gen_bhe_mesh` and how some of
 # the parameters will effect the mesh. This section demonstrates the mesh
 # generation with only three soil layers, groundwater flow in one layer
 # and three BHE's. However, this tool provides multiple soil layers,
