@@ -7,7 +7,8 @@
 import math
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Optional, Union
+from typing import NamedTuple,Optional, Union
+
 
 import gmsh
 import numpy as np
@@ -126,18 +127,32 @@ def cuboid(
     gmsh.finalize()
 
 
+class Groundwater(NamedTuple):
+    begin: float
+    isolation_layer_id: int
+    flow_direction: str
+
+
+class BHE(NamedTuple):
+    x: float
+    y: float
+    z_begin: float
+    z_end: float
+    borehole_radius: float
+
+
 def gen_bhe_mesh_gmsh(
     length: float = 150.0,
     width: float = 100.0,
     layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[tuple[float, int, str], list[tuple[float, int, str]]] = (
+    groundwater: Union[Groundwater, list[Groundwater]] = (
         -30.0,
         1,
         "+x",
     ),
     BHE_Array: Union[
-        tuple[float, float, float, float, float],
-        list[tuple[float, float, float, float, float]],
+        BHE,
+        list[BHE],
     ] = (50.0, 50.0, -1.0, -60.0, 0.076),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
@@ -1890,14 +1905,14 @@ def gen_bhe_mesh(
     length: float = 150.0,
     width: float = 100.0,
     layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[tuple[float, int, str], list[tuple[float, int, str]]] = (
+    groundwater: Union[Groundwater, list[Groundwater]] = (
         -30.0,
         1,
         "+x",
     ),
     BHE_Array: Union[
-        tuple[float, float, float, float, float],
-        list[tuple[float, float, float, float, float]],
+        BHE,
+        list[BHE],
     ] = (50.0, 50.0, -1.0, -60.0, 0.076),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
