@@ -1472,16 +1472,7 @@ def gen_bhe_mesh_gmsh(
                 and start_groundwater == -1000
             ):
                 start_groundwater = i
-                # needed_extrusions=len(layer)+1
-                # icl=0
-                """
-                if (
-                    np.abs(groundwater[g][0])
-                    < n_refinement_layers * target_z_size_fine
-                ):  # pragma: no cover
-                    msg = "Groundwater layer must start in the soil, a beginning in the first 2 meter of the top surface is currently not possible!"
-                    raise Exception(msg)
-                """
+
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
                     np.abs(groundwater[g][0])
                     - np.sum(layer[:start_groundwater])
