@@ -314,15 +314,15 @@ def get_material_properties_of_CT_model(
         "P_COMP": "storage",
         "retardation_factor": "retardation_factor",
     }
-
-    if "P_COND" in mesh.cell_data:
-        parameters_mapping["P_COND"] = "permeability"
-    elif "P_CONDX" in mesh.cell_data:
-        parameters_mapping["P_CONDX"] = "permeability_X"
-    if "P_CONDY" in mesh.cell_data:
-        parameters_mapping["P_CONDY"] = "permeability_Y"
-    if "P_CONDZ" in mesh.cell_data:
-        parameters_mapping["P_CONDZ"] = "permeability_Z"
+    possible_permeability = {
+        "P_COND": "permeability",
+        "P_CONDX": "permeability_X",
+        "P_CONDY": "permeability_Y",
+        "P_CONDZ": "permeability_Z",
+    }
+    for perme in possible_permeability:
+        if perme in mesh.cell_data:
+            parameters_mapping[perme] = possible_permeability[perme]
 
     feflow_species_parameter = [
         cell_data
@@ -371,7 +371,7 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
     return species
 
 
-def add_species_to_prj_file(
+def _add_species_to_prj_file(
     xpath: str, parameter_dict: dict, species_list: list, model: ogs.OGS
 ) -> None:
     """
@@ -416,7 +416,7 @@ def add_species_to_prj_file(
                 )
 
 
-def add_global_process_coupling_CT(
+def _add_global_process_coupling_CT(
     model: ogs.OGS, species: list, max_iter: int = 1, rel_tol: float = 1e-10
 ) -> None:
     """
@@ -443,7 +443,7 @@ def add_global_process_coupling_CT(
         )
 
 
-def add_process(
+def _add_process(
     model: ogs.OGS,
     species: list,
     time_stepping: Optional[list] = None,
@@ -898,7 +898,7 @@ def materials_in_HC(
 
     for material_id in material_properties:
         xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
-        add_species_to_prj_file(
+        _add_species_to_prj_file(
             xpath, material_properties[material_id], species_list, model
         )
 
@@ -1150,8 +1150,8 @@ def setup_prj_file(
     elif process == "component transport":
         assert species_list is not None
         materials_in_HC(material_properties, species_list, model)
-        add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
-        add_process(
+        _add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
+        _add_process(
             model,
             species_list,
             time_stepping=time_stepping,
