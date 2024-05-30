@@ -366,18 +366,31 @@ class TestConverter(unittest.TestCase):
             "P_IOFLOW",
             "P_SOUF",
         ]
+        # Test if boundary conditions are written correctly.
         for parameter, parameter_expected in zip(
             parameters_list, parameters_list_expected
         ):
             self.assertEqual(parameter, parameter_expected)
-        """
-        boundary_conditions = root.find('process_variables/process_variable/boundary_conditions')
-        boundary_condtitions_list = [boundary_condition.find('parameter').text for boundary_condition in boundary_conditions.findall('parameter')]
-        """
+
+        boundary_conditions = prjfile_root.find(
+            "process_variables/process_variable/boundary_conditions"
+        )
+
+        boundary_condtitions_list = [
+            boundary_condition.find("mesh").text
+            for boundary_condition in boundary_conditions.findall(
+                "boundary_condition"
+            )
+        ]
+        for bc, bc_expected in zip(
+            boundary_condtitions_list, meshes_list_expected[2:]
+        ):
+            self.assertEqual(bc, bc_expected.replace(".vtu", ""))
+
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
         ).text
-        # The index [0] is because I need to compare one value from the list. And all
+        # The index [0] is because one needs to compare one value from the list. And all
         # values are the same.
         self.assertEqual(
             float(diffusion_value),
