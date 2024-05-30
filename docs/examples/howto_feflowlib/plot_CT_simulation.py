@@ -36,9 +36,9 @@ from ogstools.propertylib import Scalar
 feflow_model = ifm.loadDocument(str(feflow_model_2D_CT_t_560))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 
-path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-path_mesh = path_writing / "2D_CT_model.vtu"
-feflow_pv_mesh.save(path_mesh)
+temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
+feflow_pv_mesh.save(feflow_mesh_file)
 
 feflow_concentration = Scalar(
     data_name="single_species_P_CONC", data_unit="mg/l", output_unit="mg/l"
@@ -55,34 +55,26 @@ mpl.plot(
 # %%
 # 2. Extract the point boundary conditions and save them.
 
-point_BC_dict = extract_point_boundary_conditions(path_writing, feflow_pv_mesh)
-write_point_boundary_conditions(path_writing, feflow_pv_mesh)
+point_BC_dict = extract_point_boundary_conditions(temp_dir, feflow_pv_mesh)
+write_point_boundary_conditions(temp_dir, feflow_pv_mesh)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
-path_prjfile = path_mesh.with_suffix(".prj")
+path_prjfile = feflow_mesh_file.with_suffix(".prj")
 prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 species = get_species(feflow_pv_mesh)
 CT_model = component_transport(
-    path_writing / "sim_2D_CT_model",
-    species,
-    prjfile,
+    saving_path=temp_dir / "sim_2D_CT_model",
+    species=species,
+    model=prjfile,
     dimension=2,
-    fixed_out_times=[
-        2419200,
-        4838400,
-        7257600,
-        9676800,
-        14515200,
-        31449600,
-        48384000,
-    ],
+    fixed_out_times=[48384000],
 )
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
-    path_mesh,
-    feflow_pv_mesh,
-    get_material_properties_of_CT_model(feflow_pv_mesh),
-    "component transport",
+    bulk_mesh_path=feflow_mesh_file,
+    mesh=feflow_pv_mesh,
+    material_properties=get_material_properties_of_CT_model(feflow_pv_mesh),
+    process="component transport",
     species_list=species,
     model=CT_model,
     initial_time=0,
@@ -97,27 +89,31 @@ model.write_input(path_prjfile)
 ET.dump(ET.parse(path_prjfile))
 # %%
 # 4. Run the model.
-model.run_model(logfile=path_writing / "out.log")
+model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ogs_simulation = pv.read(
-    path_writing / "sim_2D_CT_model_ts_71_t_48384000.000000.vtu"
+ogs_simulation_result_mesh = pv.read(
+    temp_dir / "sim_2D_CT_model_ts_65_t_48384000.000000.vtu"
 )
-start = (0.038 + 1.0e-8, 0.005, 0)
-end = (0.045, 0.005, 0)
-ogs_line = ogs_simulation.sample_over_line(start, end, resolution=100)
-feflow_line = feflow_pv_mesh.sample_over_line(start, end, resolution=100)
+start_line = (0.038 + 1.0e-8, 0.005, 0)
+end_line = (0.045, 0.005, 0)
+ogs_line = ogs_simulation_result_mesh.sample_over_line(
+    start_line, end_line, resolution=100
+)
+feflow_line = feflow_pv_mesh.sample_over_line(
+    start_line, end_line, resolution=100
+)
 plt.rcParams.update({"font.size": 18})
 plt.figure()
 plt.plot(
-    ogs_line.point_data["Distance"] + 0.038 + 1.0e-8,
+    ogs_line.point_data["Distance"] + start_line[0],
     ogs_line.point_data["single_species"],
     linewidth=4,
     color="blue",
     label="ogs",
 )
 plt.plot(
-    feflow_line.point_data["Distance"] + 0.038 + 1.0e-8,
+    feflow_line.point_data["Distance"] + start_line[0],
     feflow_line.point_data["single_species_P_CONC"][:],
     linewidth=4,
     color="black",
@@ -134,7 +130,7 @@ plt.show()
 # 6. Plot the difference between the FEFLOW and OGS simulation.
 plt.figure()
 plt.plot(
-    ogs_line.point_data["Distance"] + 0.038 + 1.0e-8,
+    ogs_line.point_data["Distance"] + start_line[0],
     feflow_line.point_data["single_species_P_CONC"]
     - ogs_line.point_data["single_species"],
     linewidth=4,

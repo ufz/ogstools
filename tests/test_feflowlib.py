@@ -40,14 +40,14 @@ def test_cli():
 
 class TestSimulation_Neumann(unittest.TestCase):
     def setUp(self):
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
         neumann = np.array(self.pv_mesh["P_BCFLOW_2ND"])
         neumann = neumann[~np.isnan(neumann)]
-        self.vtu_path = self.path_writing / "boxNeumann.vtu"
+        self.vtu_path = self.temp_dir / "boxNeumann.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.vtu_path, self.pv_mesh
         )
@@ -59,9 +59,9 @@ class TestSimulation_Neumann(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxNeumann_test.prj"
+        prjfile = self.temp_dir / "boxNeumann_test.prj"
         ssd_model = steady_state_diffusion(
-            self.path_writing / "sim_boxNeumann",
+            self.temp_dir / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -72,11 +72,11 @@ class TestSimulation_Neumann(unittest.TestCase):
             model=ssd_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -90,9 +90,9 @@ class TestSimulation_Neumann(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxNeumann_test.prj"
+        prjfile = self.temp_dir / "boxNeumann_test.prj"
         lqf_model = liquid_flow(
-            self.path_writing / "sim_boxNeumann",
+            self.temp_dir / "sim_boxNeumann",
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -103,11 +103,11 @@ class TestSimulation_Neumann(unittest.TestCase):
             model=lqf_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -118,12 +118,12 @@ class TestSimulation_Neumann(unittest.TestCase):
 
 class TestSimulation_Robin(unittest.TestCase):
     def setUp(self):
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Robin))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.vtu_path = self.path_writing / "boxRobin.vtu"
+        self.vtu_path = self.temp_dir / "boxRobin.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.vtu_path, self.pv_mesh
         )
@@ -135,9 +135,9 @@ class TestSimulation_Robin(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxRobin_test.prj"
+        prjfile = self.temp_dir / "boxRobin_test.prj"
         ssd_model = steady_state_diffusion(
-            str(self.path_writing / "sim_boxRobin"),
+            str(self.temp_dir / "sim_boxRobin"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -148,11 +148,11 @@ class TestSimulation_Robin(unittest.TestCase):
             model=ssd_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxRobin_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxRobin_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -166,9 +166,9 @@ class TestSimulation_Robin(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxRobin_test.prj"
+        prjfile = self.temp_dir / "boxRobin_test.prj"
         lqf_model = liquid_flow(
-            str(self.path_writing / "sim_boxRobin"),
+            str(self.temp_dir / "sim_boxRobin"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -179,11 +179,11 @@ class TestSimulation_Robin(unittest.TestCase):
             model=lqf_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxRobin_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxRobin_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -194,12 +194,12 @@ class TestSimulation_Robin(unittest.TestCase):
 
 class TestSimulation_Well(unittest.TestCase):
     def setUp(self):
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_well_BC))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.vtu_path = self.path_writing / "boxWell.vtu"
+        self.vtu_path = self.temp_dir / "boxWell.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         path_topsurface, topsurface = extract_cell_boundary_conditions(
             self.vtu_path, self.pv_mesh
         )
@@ -211,9 +211,9 @@ class TestSimulation_Well(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxWell_test.prj"
+        prjfile = self.temp_dir / "boxWell_test.prj"
         ssd_model = steady_state_diffusion(
-            str(self.path_writing / "sim_boxWell"),
+            str(self.temp_dir / "sim_boxWell"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -224,10 +224,10 @@ class TestSimulation_Well(unittest.TestCase):
             model=ssd_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxWell_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -241,9 +241,9 @@ class TestSimulation_Well(unittest.TestCase):
         are similar to FEFLOW simulation results.
         """
         # Run ogs
-        prjfile = self.path_writing / "boxWell_test.prj"
+        prjfile = self.temp_dir / "boxWell_test.prj"
         lqf_model = liquid_flow(
-            str(self.path_writing / "sim_boxWell"),
+            str(self.temp_dir / "sim_boxWell"),
             ogs.OGS(PROJECT_FILE=prjfile),
         )
         model = setup_prj_file(
@@ -254,11 +254,11 @@ class TestSimulation_Well(unittest.TestCase):
             model=lqf_model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "sim_boxWell_ts_1_t_1.000000.vtu")
+            str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
         )
         dif = (
             ogs_sim_res.point_data["HEAD_OGS"]
@@ -270,7 +270,7 @@ class TestSimulation_Well(unittest.TestCase):
 class TestConverter(unittest.TestCase):
     def setUp(self):
         # Variables for the following tests:
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_converter"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
 
@@ -302,11 +302,11 @@ class TestConverter(unittest.TestCase):
         """
         Test if separate meshes for boundary condition are written correctly.
         """
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
-        bc_flow = pv.read(str(self.path_writing / "P_BC_FLOW.vtu"))
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        bc_flow = pv.read(str(self.temp_dir / "P_BC_FLOW.vtu"))
         self.assertEqual(bc_flow.n_points, 66)
         self.assertEqual(len(bc_flow.point_data), 2)
-        bc_flow_2nd = pv.read(str(self.path_writing / "P_BCFLOW_2ND.vtu"))
+        bc_flow_2nd = pv.read(str(self.temp_dir / "P_BCFLOW_2ND.vtu"))
         self.assertEqual(bc_flow_2nd.n_points, 66)
         self.assertEqual(len(bc_flow_2nd.point_data), 2)
 
@@ -315,7 +315,7 @@ class TestConverter(unittest.TestCase):
         Test if separate meshes for boundary condition are written correctly.
         """
         topsurface = extract_cell_boundary_conditions(
-            self.path_writing / "boxNeumann.vtu", self.pv_mesh
+            self.temp_dir / "boxNeumann.vtu", self.pv_mesh
         )[1]
         cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
         cell_data_list = list(topsurface.cell_data)
@@ -331,14 +331,14 @@ class TestConverter(unittest.TestCase):
         Test the prj_file that can be written
         """
         model = setup_prj_file(
-            self.path_writing / "boxNeumann_.vtu",
+            self.temp_dir / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
             "steady state diffusion",
         )
-        model.write_input(self.path_writing / "boxNeumann_.prj")
+        model.write_input(self.temp_dir / "boxNeumann_.prj")
         prjfile_root = ET.parse(
-            str(self.path_writing / "boxNeumann_.prj")
+            str(self.temp_dir / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
         self.assertEqual(len(elements), 8)
@@ -400,12 +400,12 @@ class TestConverter(unittest.TestCase):
 
 class TestSimulation_HT(unittest.TestCase):
     def setUp(self):
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT_model))
         self.pv_mesh = convert_properties_mesh(self.doc)
-        self.vtu_path = self.path_writing / "HT_Dirichlet.vtu"
+        self.vtu_path = self.temp_dir / "HT_Dirichlet.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh)
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
 
     def test_Dirichlet_toymodel_ogs_HT(self):
         """
@@ -415,9 +415,9 @@ class TestSimulation_HT(unittest.TestCase):
         # Run ogs
         if self.pv_mesh.celltypes[0] in [5, 9]:
             dimension = 2
-        prjfile = self.path_writing / "HT_Dirichlet.prj"
+        prjfile = self.temp_dir / "HT_Dirichlet.prj"
         model = hydro_thermal(
-            str(self.path_writing / "sim_HT_Dirichlet"),
+            str(self.temp_dir / "sim_HT_Dirichlet"),
             ogs.OGS(PROJECT_FILE=prjfile),
             dimension,
         )
@@ -429,11 +429,11 @@ class TestSimulation_HT(unittest.TestCase):
             model=model,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
             str(
-                self.path_writing
+                self.temp_dir
                 / "sim_HT_Dirichlet_ts_10_t_100000000000.000000.vtu"
             )
         )
@@ -451,17 +451,17 @@ class TestSimulation_HT(unittest.TestCase):
 
 class TestSimulation_CT(unittest.TestCase):
     def setUp(self):
-        self.path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
         self.pv_mesh_560 = convert_properties_mesh(self.doc)
-        self.pv_mesh_560.save(self.path_writing / "CT_2D_line.vtu")
+        self.pv_mesh_560.save(self.temp_dir / "CT_2D_line.vtu")
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_168))
         self.pv_mesh_168 = convert_properties_mesh(self.doc)
-        self.pv_mesh_168.save(self.path_writing / "CT_2D_line_168.vtu")
+        self.pv_mesh_168.save(self.temp_dir / "CT_2D_line_168.vtu")
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_28))
         self.pv_mesh_28 = convert_properties_mesh(self.doc)
-        self.pv_mesh_28.save(self.path_writing / "CT_2D_line_28.vtu")
-        write_point_boundary_conditions(self.path_writing, self.pv_mesh_560)
+        self.pv_mesh_28.save(self.temp_dir / "CT_2D_line_28.vtu")
+        write_point_boundary_conditions(self.temp_dir, self.pv_mesh_560)
 
     def test_2D_line_CT(self):
         """
@@ -472,25 +472,21 @@ class TestSimulation_CT(unittest.TestCase):
         if self.pv_mesh_560.celltypes[0] in [5, 9]:
             dimension = 2
 
-        prjfile = self.path_writing / "CT_2D_line.prj"
+        prjfile = self.temp_dir / "CT_2D_line.prj"
         species = get_species(self.pv_mesh_560)
         model = component_transport(
-            self.path_writing / "CT_2D_line",
+            self.temp_dir / "CT_2D_line",
             species,
             ogs.OGS(PROJECT_FILE=prjfile),
             dimension,
             fixed_out_times=[
                 2419200,
-                4838400,
-                7257600,
-                9676800,
                 14515200,
-                31449600,
                 48384000,
             ],
         )
         model = setup_prj_file(
-            self.path_writing / "CT_2D_line.vtu",
+            self.temp_dir / "CT_2D_line.vtu",
             self.pv_mesh_560,
             get_material_properties_of_CT_model(self.pv_mesh_560),
             "component transport",
@@ -505,10 +501,10 @@ class TestSimulation_CT(unittest.TestCase):
             rel_tol=1e-14,
         )
         model.write_input(prjfile)
-        model.run_model(logfile=str(self.path_writing / "out.log"))
+        model.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
-            str(self.path_writing / "CT_2D_line_ts_71_t_48384000.000000.vtu")
+            str(self.temp_dir / "CT_2D_line_ts_67_t_48384000.000000.vtu")
         )
         dif_CT_560 = (
             ogs_sim_res.point_data["single_species"]
@@ -517,7 +513,7 @@ class TestSimulation_CT(unittest.TestCase):
         np.testing.assert_array_less(np.abs(dif_CT_560), 9e-8)
 
         ogs_sim_res_168 = pv.read(
-            str(self.path_writing / "CT_2D_line_ts_65_t_14515200.000000.vtu")
+            str(self.temp_dir / "CT_2D_line_ts_62_t_14515200.000000.vtu")
         )
         dif_CT_168 = (
             ogs_sim_res_168.point_data["single_species"]
@@ -526,7 +522,7 @@ class TestSimulation_CT(unittest.TestCase):
         np.testing.assert_array_less(np.abs(dif_CT_168), 9e-8)
 
         ogs_sim_res_28 = pv.read(
-            str(self.path_writing / "CT_2D_line_ts_52_t_2419200.000000.vtu")
+            str(self.temp_dir / "CT_2D_line_ts_52_t_2419200.000000.vtu")
         )
         dif_CT_28 = (
             ogs_sim_res_28.point_data["single_species"]
