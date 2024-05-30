@@ -7,7 +7,7 @@
 import math
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Union
+from typing import Optional, Union
 
 import gmsh
 import numpy as np
@@ -52,9 +52,12 @@ def rect(
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_square.msh"),
+    msh_version: Optional[float] = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
+    if msh_version is not None:
+        gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
     gmsh.model.add("unit_square")
 
     _geo_square(gmsh.model.geo, lengths, n_edge_cells, structured_grid)
@@ -86,9 +89,12 @@ def cuboid(
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_cube.msh"),
+    msh_version: Optional[float] = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
+    if msh_version is not None:
+        gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
     gmsh.model.add("unit_cube")
     _geo_square(gmsh.model.geo, lengths, n_edge_cells, structured_grid)
 
