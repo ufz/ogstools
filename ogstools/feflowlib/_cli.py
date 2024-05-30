@@ -183,28 +183,25 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             )
             process = "steady state diffusion"
         elif "liquid_flow" in case:
-            dimension2D = doc.getNumberOfDimensions() == 2
             template_model = liquid_flow(
                 str(Path(output).name),
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
-                dimension2D,
+                dimension=doc.getNumberOfDimensions(),
             )
             process = "liquid flow"
         elif "hydro_thermal" in case:
-            dimension2D = doc.getNumberOfDimensions() == 2
             template_model = hydro_thermal(
                 str(Path(output).name),
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
-                dimension2D,
+                dimension=doc.getNumberOfDimensions(),
             )
             process = "hydro thermal"
         elif "component_transport" in case:
-            dimension2D = doc.getNumberOfDimensions() == 2
             template_model = component_transport(
                 str(Path(output).name),
                 species,
                 ogs.OGS(PROJECT_FILE=str(Path(output).with_suffix(".prj"))),
-                dimension2D,
+                dimension=doc.getNumberOfDimensions(),
             )
             process = "component transport"
         else:

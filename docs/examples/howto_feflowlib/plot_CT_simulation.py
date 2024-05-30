@@ -66,7 +66,7 @@ CT_model = component_transport(
     path_writing / "sim_2D_CT_model",
     species,
     prjfile,
-    dimension2D=True,
+    dimension=2,
     fixed_out_times=[
         2419200,
         4838400,

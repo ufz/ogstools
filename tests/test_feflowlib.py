@@ -414,12 +414,12 @@ class TestSimulation_HT(unittest.TestCase):
         """
         # Run ogs
         if self.pv_mesh.celltypes[0] in [5, 9]:
-            dimension2D = True
+            dimension = 2
         prjfile = str(self.path_writing / "HT_Dirichlet.prj")
         model = hydro_thermal(
             str(self.path_writing / "sim_HT_Dirichlet"),
             ogs.OGS(PROJECT_FILE=prjfile),
-            dimension2D,
+            dimension,
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -470,7 +470,7 @@ class TestSimulation_CT(unittest.TestCase):
         """
         # Run ogs
         if self.pv_mesh.celltypes[0] in [5, 9]:
-            dimension2D = True
+            dimension = 2
 
         prjfile = str(self.path_writing / "CT_2D_line.prj")
         species = get_species(self.pv_mesh)
@@ -478,7 +478,7 @@ class TestSimulation_CT(unittest.TestCase):
             str(self.path_writing / "CT_2D_line"),
             species,
             ogs.OGS(PROJECT_FILE=prjfile),
-            dimension2D,
+            dimension,
             fixed_out_times=[
                 2419200,
                 4838400,
