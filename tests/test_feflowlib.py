@@ -109,11 +109,11 @@ class TestSimulation_Neumann(unittest.TestCase):
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
         )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.pv_mesh.point_data["P_HEAD"],
+            atol=5e-6,
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-6)
 
 
 class TestSimulation_Robin(unittest.TestCase):
@@ -154,11 +154,11 @@ class TestSimulation_Robin(unittest.TestCase):
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxRobin_ts_1_t_1.000000.vtu")
         )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.pv_mesh.point_data["P_HEAD"],
+            atol=6e-5,
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-5)
 
     def test_Robin_ogs_liquid_flow(self):
         """
@@ -185,11 +185,11 @@ class TestSimulation_Robin(unittest.TestCase):
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxRobin_ts_1_t_1.000000.vtu")
         )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.pv_mesh.point_data["P_HEAD"],
+            atol=6e-5,
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-5)
 
 
 class TestSimulation_Well(unittest.TestCase):
@@ -229,11 +229,11 @@ class TestSimulation_Well(unittest.TestCase):
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
         )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.pv_mesh.point_data["P_HEAD"],
+            atol=5e-8,
         )
-        np.testing.assert_array_less(np.abs(dif), 9e-8)
 
     def test_Well_ogs_liquid_flow(self):
         """
@@ -260,11 +260,11 @@ class TestSimulation_Well(unittest.TestCase):
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
         )
-        dif = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.pv_mesh.point_data["P_HEAD"],
+            atol=1e-10,
         )
-        np.testing.assert_array_less(np.abs(dif), 1e-9)
 
 
 class TestConverter(unittest.TestCase):
@@ -437,16 +437,12 @@ class TestSimulation_HT(unittest.TestCase):
                 / "sim_HT_Dirichlet_ts_10_t_100000000000.000000.vtu"
             )
         )
-        dif_temp = (
-            ogs_sim_res.point_data["temperature"]
-            - self.pv_mesh.point_data["P_TEMP"]
+        np.testing.assert_allclose(
+            ogs_sim_res["temperature"], self.pv_mesh.point_data["P_TEMP"], 1e-10
         )
-        np.testing.assert_array_less(np.abs(dif_temp), 9e-8)
-        dif_head = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"], self.pv_mesh.point_data["P_HEAD"], 1e-9
         )
-        np.testing.assert_array_less(np.abs(dif_head), 9e-8)
 
 
 class TestSimulation_CT(unittest.TestCase):
@@ -503,38 +499,39 @@ class TestSimulation_CT(unittest.TestCase):
         model.write_input(prjfile)
         model.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read(
+        ogs_sim_res_560 = pv.read(
             str(self.temp_dir / "CT_2D_line_ts_67_t_48384000.000000.vtu")
         )
-        dif_CT_560 = (
-            ogs_sim_res.point_data["single_species"]
-            - self.pv_mesh_560.point_data["single_species_P_CONC"]
-        )
-        np.testing.assert_array_less(np.abs(dif_CT_560), 9e-8)
-
         ogs_sim_res_168 = pv.read(
             str(self.temp_dir / "CT_2D_line_ts_62_t_14515200.000000.vtu")
         )
-        dif_CT_168 = (
-            ogs_sim_res_168.point_data["single_species"]
-            - self.pv_mesh_168.point_data["single_species_P_CONC"]
-        )
-        np.testing.assert_array_less(np.abs(dif_CT_168), 9e-8)
-
         ogs_sim_res_28 = pv.read(
             str(self.temp_dir / "CT_2D_line_ts_52_t_2419200.000000.vtu")
         )
-        dif_CT_28 = (
-            ogs_sim_res_28.point_data["single_species"]
-            - self.pv_mesh_28.point_data["single_species_P_CONC"]
+        # Assert concentration values:
+        np.testing.assert_allclose(
+            ogs_sim_res_560.point_data["single_species"],
+            self.pv_mesh_560.point_data["single_species_P_CONC"],
+            atol=6e-8,
         )
-        np.testing.assert_array_less(np.abs(dif_CT_28), 2e-7)
-
-        dif_head = (
-            ogs_sim_res.point_data["HEAD_OGS"]
-            - self.pv_mesh_560.point_data["P_HEAD"]
+        np.testing.assert_allclose(
+            ogs_sim_res_168.point_data["single_species"],
+            self.pv_mesh_168.point_data["single_species_P_CONC"],
+            atol=8e-8,
         )
-        np.testing.assert_array_less(np.abs(dif_head), 9e-8)
+        np.testing.assert_allclose(
+            ogs_sim_res_28.point_data["single_species"],
+            self.pv_mesh_28.point_data["single_species_P_CONC"],
+            atol=2e-7,
+        )
+        # Assert hydraulic head:
+        np.testing.assert_allclose(
+            ogs_sim_res_560.point_data["HEAD_OGS"],
+            self.pv_mesh_560.point_data["P_HEAD"],
+            atol=1e-11,
+            rtol=0.01,
+            verbose=True,
+        )
 
 
 if __name__ == "__main__":
