@@ -22,7 +22,6 @@ from ogstools.examples import feflow_model_2D_CT_t_560
 from ogstools.feflowlib import (
     component_transport,
     convert_properties_mesh,
-    extract_point_boundary_conditions,
     get_material_properties_of_CT_model,
     get_species,
     setup_prj_file,
@@ -32,7 +31,8 @@ from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Scalar
 
 # %%
-# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
+# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
+# how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
 feflow_model = ifm.loadDocument(str(feflow_model_2D_CT_t_560))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 
@@ -53,12 +53,10 @@ mpl.plot(
 )
 
 # %%
-# 2. Extract the point boundary conditions and save them.
-
-point_BC_dict = extract_point_boundary_conditions(temp_dir, feflow_pv_mesh)
+# 2. Save the point boundary conditions (see: :py:mod:`ogstools.feflowlib.write_point_boundary_conditions`).
 write_point_boundary_conditions(temp_dir, feflow_pv_mesh)
 # %%
-# 3. Setup a prj-file to run a OGS-simulation
+# 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
 path_prjfile = feflow_mesh_file.with_suffix(".prj")
 prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 species = get_species(feflow_pv_mesh)

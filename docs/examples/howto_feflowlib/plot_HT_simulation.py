@@ -32,7 +32,8 @@ from ogstools.meshlib import MeshSeries, difference
 from ogstools.propertylib import properties
 
 # %%
-# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
+# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
+# how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
 feflow_model = ifm.loadDocument(str(feflow_model_2D_HT_model))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 feflow_temperature_preset = properties.temperature.replace(data_name="P_TEMP")
@@ -43,8 +44,7 @@ feflow_mesh_file = temp_dir / "2D_HT_model.vtu"
 feflow_pv_mesh.save(feflow_mesh_file)
 print(feflow_pv_mesh)
 # %%
-# 2. Extract the point conditions.
-
+# 2. Extract the point conditions (see: :py:mod:`ogstools.feflowlib.extract_point_boundary_conditions`).
 point_BC_dict = extract_point_boundary_conditions(temp_dir, feflow_pv_mesh)
 # Since there can be multiple point boundary conditions on the bulk mesh, they are plotted iteratively.
 plotter = pv.Plotter(shape=(len(point_BC_dict), 1))
@@ -55,7 +55,7 @@ for i, (path, boundary_condition) in enumerate(point_BC_dict.items()):
     plotter.view_xy()
 plotter.show()
 # %%
-# 3. Setup a prj-file to run a OGS-simulation
+# 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
 path_prjfile = feflow_mesh_file.with_suffix(".prj")
 prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 # Get the template prj-file configurations for a hydro thermal process.

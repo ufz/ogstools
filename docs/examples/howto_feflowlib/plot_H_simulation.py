@@ -32,7 +32,8 @@ from ogstools.feflowlib.tools import (
 from ogstools.meshlib import MeshSeries
 
 # %%
-# 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
+# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
+# how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
 feflow_model = ifm.loadDocument(str(feflow_model_box_Neumann))
 pyvista_mesh = convert_properties_mesh(feflow_model)
 
@@ -49,7 +50,7 @@ temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_mesh_file = temp_dir / "boxNeumann.vtu"
 pyvista_mesh.save(feflow_mesh_file)
 # %%
-# 2. Extract the point and cell boundary conditions and write them to a temporary directory.
+# 2. Extract the point conditions (see: :py:mod:`ogstools.feflowlib.extract_point_boundary_conditions`).
 point_BC_dict = extract_point_boundary_conditions(temp_dir, pyvista_mesh)
 # Since there can be multiple point boundary conditions on the bulk mesh,
 # they are saved and plotted iteratively.
@@ -66,7 +67,7 @@ path_topsurface, topsurface = extract_cell_boundary_conditions(
 # The boundary conditions on the topsurface of the model are required for generalization.
 topsurface.save(path_topsurface)
 # %%
-# 3. Setup a prj-file to run a OGS-simulation
+# 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
 path_prjfile = feflow_mesh_file.with_suffix(".prj")
 prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 # Get the template prj-file configurations for a steady state diffusion process
