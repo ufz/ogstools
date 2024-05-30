@@ -28,7 +28,7 @@ from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties_of_HT_model,
 )
-from ogstools.meshlib import difference
+from ogstools.meshlib import MeshSeries, difference
 from ogstools.propertylib import properties
 
 # %%
@@ -78,9 +78,15 @@ ET.dump(model_prjfile)
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
+ms = MeshSeries(temp_dir / "sim_2D_HT_model.pvd")
+# Read the last timestep:
+ogs_sim_res = ms.read(ms.timesteps[-1])
+"""
+It is also possible to read the file directly with pyvista:
 ogs_sim_res = pv.read(
-    temp_dir / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu"
+   temp_dir / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu"
 )
+"""
 # Plot the hydraulic head/height, which was simulated in OGS.
 ogs_head_preset = properties.temperature.replace(data_name="HEAD_OGS")
 mpl.plot(ogs_sim_res, ogs_head_preset)

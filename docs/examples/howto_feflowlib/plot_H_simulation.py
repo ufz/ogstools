@@ -29,6 +29,7 @@ from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties,
 )
+from ogstools.meshlib import MeshSeries
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
@@ -91,7 +92,13 @@ ET.dump(model_prjfile)
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
+ms = MeshSeries(temp_dir / "sim_boxNeumann.pvd")
+# Read the last timestep:
+ogs_sim_res = ms.read(ms.timesteps[-1])
+"""
+It is also possible to read the file directly with pyvista:
 ogs_sim_res = pv.read(temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+"""
 ogs_sim_res.plot(
     show_edges=True,
     off_screen=True,

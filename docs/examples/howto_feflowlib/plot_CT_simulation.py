@@ -15,7 +15,6 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 import matplotlib.pyplot as plt
-import pyvista as pv
 from ogs6py import ogs
 
 import ogstools.meshplotlib as mpl
@@ -29,6 +28,7 @@ from ogstools.feflowlib import (
     setup_prj_file,
     write_point_boundary_conditions,
 )
+from ogstools.meshlib import MeshSeries
 from ogstools.propertylib import Scalar
 
 # %%
@@ -92,14 +92,18 @@ ET.dump(ET.parse(path_prjfile))
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ogs_simulation_result_mesh = pv.read(
-    temp_dir / "sim_2D_CT_model_ts_65_t_48384000.000000.vtu"
+ms = MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
+# Read the last timestep:
+ogs_sim_res = ms.read(ms.timesteps[-1])
+"""
+It is also possible to read the file directly with pyvista:
+ogs_sim_res = pv.read(
+   temp_dir / "sim_2D_CT_model_ts_65_t_48384000.000000.vtu"
 )
+"""
 start_line = (0.038 + 1.0e-8, 0.005, 0)
 end_line = (0.045, 0.005, 0)
-ogs_line = ogs_simulation_result_mesh.sample_over_line(
-    start_line, end_line, resolution=100
-)
+ogs_line = ogs_sim_res.sample_over_line(start_line, end_line, resolution=100)
 feflow_line = feflow_pv_mesh.sample_over_line(
     start_line, end_line, resolution=100
 )
