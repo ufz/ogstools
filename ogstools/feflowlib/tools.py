@@ -794,13 +794,14 @@ def materials_in_HT(
     return model
 
 
-def materials_in_HC(
+def materials_in_CT(
     material_properties: dict,
     species_list: list,
     model: ogs.OGS,
 ) -> ogs.OGS:
     """
-    Create the section for material properties for HC processes in the prj-file.
+    Create the section for material properties for CT (component transport)
+    processes in the prj-file.
 
     :param material_properties: material properties
     :param model: model to setup prj-file
@@ -1149,7 +1150,7 @@ def setup_prj_file(
         materials_in_HT(material_properties, model)
     elif process == "component transport":
         assert species_list is not None
-        materials_in_HC(material_properties, species_list, model)
+        materials_in_CT(material_properties, species_list, model)
         _add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
         _add_process(
             model,
