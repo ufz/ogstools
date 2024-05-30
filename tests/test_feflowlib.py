@@ -466,6 +466,15 @@ class TestSimulation_CT(unittest.TestCase):
             species,
             ogs.OGS(PROJECT_FILE=prjfile),
             dimension2D,
+            fixed_out_times=[
+                2419200,
+                4838400,
+                7257600,
+                9676800,
+                14515200,
+                31449600,
+                48384000,
+            ],
         )
         model = setup_prj_file(
             self.path_writing / "CT_2D_line.vtu",
@@ -474,6 +483,13 @@ class TestSimulation_CT(unittest.TestCase):
             "component transport",
             species_list=species,
             model=model,
+            initial_time=0,
+            end_time=4.8384e07,
+            time_stepping=list(
+                zip([10] * 8, [8.64 * 10**i for i in range(8)])
+            ),
+            max_iter=6,
+            rel_tol=1e-14,
         )
         model.write_input(prjfile)
         model.run_model(logfile=str(self.path_writing / "out.log"))

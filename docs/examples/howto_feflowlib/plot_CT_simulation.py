@@ -67,6 +67,15 @@ CT_model = component_transport(
     species,
     prjfile,
     dimension2D=True,
+    fixed_out_times=[
+        2419200,
+        4838400,
+        7257600,
+        9676800,
+        14515200,
+        31449600,
+        48384000,
+    ],
 )
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
@@ -76,6 +85,11 @@ model = setup_prj_file(
     "component transport",
     species_list=species,
     model=CT_model,
+    initial_time=0,
+    end_time=4.8384e07,
+    time_stepping=list(zip([10] * 8, [8.64 * 10**i for i in range(8)])),
+    max_iter=6,
+    rel_tol=1e-14,
 )
 # The model must be written before it can be run.
 model.write_input(str(path_prjfile))
@@ -90,10 +104,10 @@ model.run_model(logfile=str(path_writing / "out.log"))
 ogs_simulation = pv.read(
     str(path_writing / "sim_2D_CT_model_ts_71_t_48384000.000000.vtu")
 )
-start = (0.038 + 1.0e-8, 0.01, 0)
-end = (1, 0.01, 0)
-ogs_line = ogs_simulation.sample_over_line(start, end, resolution=10000)
-feflow_line = feflow_pv_mesh.sample_over_line(start, end, resolution=10000)
+start = (0.038 + 1.0e-8, 0.005, 0)
+end = (0.045, 0.005, 0)
+ogs_line = ogs_simulation.sample_over_line(start, end, resolution=100)
+feflow_line = feflow_pv_mesh.sample_over_line(start, end, resolution=100)
 plt.rcParams.update({"font.size": 18})
 plt.figure()
 plt.plot(
@@ -113,7 +127,6 @@ plt.plot(
 )
 plt.ylabel("concentration [mg/l]")
 plt.xlabel("x [m]")
-plt.xlim(0.0375, 0.045)
 plt.legend(loc="best")
 plt.tight_layout()
 plt.show()
@@ -131,6 +144,5 @@ plt.plot(
 plt.ylabel("concentration [mg/l]")
 plt.xlabel("x [m]")
 plt.title("difference feflow-ogs")
-plt.xlim(0.0375, 0.045)
 plt.tight_layout()
 plt.show()

@@ -3,6 +3,8 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
+from typing import Optional
+
 from ogs6py import ogs
 
 
@@ -165,6 +167,7 @@ def component_transport(
     species: list,
     model: ogs.OGS = None,
     dimension2D: bool = False,
+    fixed_out_times: Optional[list] = None,
 ) -> ogs.OGS:
     """
     A template for component transport process to be simulated in ogs.
@@ -182,41 +185,15 @@ def component_transport(
         integration_order="2",
         specific_body_force=gravity,
     )
-    # Actually for each process variable, especially for each
-    # chemical species the following functions need to be called.
-    # But this feature is not supplied by ogs6py
-    # model.timeloop.add_process(
-    #    process="CT",
-    #    nonlinear_solver_name="basic_picard",
-    #    convergence_type="DeltaX",
-    #    norm_type="NORM2",
-    #    abstol="1e-10",
-    #    time_discretization="BackwardEuler",
-    # )
-    # model.timeloop.set_stepping(
-    #    process="CT",
-    #    type="FixedTimeStepping",
-    #    t_initial="0",
-    #    t_end="1",
-    #    repeat="1",
-    #    delta_t="1",
-    # )
     output_variables = species + ["HEAD_OGS"]
+    fixed_out_times = [1] if fixed_out_times is None else fixed_out_times
     model.timeloop.add_output(
         type="VTK",
         prefix=str(saving_path),
         repeat=1,
         each_steps=48384000,
         variables=output_variables,
-        fixed_output_times=[
-            2419200,
-            4838400,
-            7257600,
-            9676800,
-            14515200,
-            31449600,
-            48384000,
-        ],
+        fixed_output_times=fixed_out_times,
     )
     model.nonlinsolvers.add_non_lin_solver(
         name="basic_picard",

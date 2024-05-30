@@ -416,26 +416,30 @@ def add_species_to_prj_file(
                 )
 
 
-def add_global_process_coupling_CT(model: ogs.OGS, species: list) -> None:
+def add_global_process_coupling_CT(
+    model: ogs.OGS, species: list, max_iter: int = 1, rel_tol: float = 1e-10
+) -> None:
     """
     Add the section of the prj-file that defines the global process coupling
     in the time loop.
 
     :param model: Model to setup prj-file, there the section of global process coupling will be added.
     :param species: List of all species.
+    :param max_iter: Maximal iteration.
+    :param rel_tol: Relative tolerance.
     """
     model.add_block(
         blocktag="global_process_coupling",
         parent_xpath="./time_loop",
         taglist=["max_iter", "convergence_criteria"],
-        textlist=["6", ""],
+        textlist=[str(max_iter), ""],
     )
     for _i in range(len(species) + 1):
         model.add_block(
             blocktag="convergence_criterion",
             parent_xpath="./time_loop/global_process_coupling/convergence_criteria",
             taglist=["type", "norm_type", "reltol"],
-            textlist=["DeltaX", "NORM2", "1e-14"],
+            textlist=["DeltaX", "NORM2", str(rel_tol)],
         )
 
 
@@ -443,6 +447,8 @@ def add_process(
     model: ogs.OGS,
     species: list,
     time_stepping: Optional[list] = None,
+    initial_time: int = 1,
+    end_time: int = 1,
 ) -> None:
     """
     Add the section of the prj-file that defines the process in the time loop.
@@ -451,6 +457,8 @@ def add_process(
     :param species: List of all species.
     :param repeat_list: List of how often a time step should be repeated.
     :param delta_t_list: List of how long a time stept should be.
+    :param initial_time: Beginning of the simulation time.
+    :param end_time: End of the simulation time.
     """
     for _i in range(len(species) + 1):
         model.add_block(
@@ -476,7 +484,7 @@ def add_process(
         blocktag="time_stepping",
         parent_xpath="./time_loop/processes/process",
         taglist=["type", "t_initial", "t_end", "timesteps"],
-        textlist=["FixedTimeStepping", "0", "4.8384E+07", ""],
+        textlist=["FixedTimeStepping", str(initial_time), str(end_time), ""],
     )
     if time_stepping is None:
         time_stepping = [(1, 1)]
@@ -900,6 +908,11 @@ def materials_in_HC(
 class RequestParams(TypedDict):
     model: NotRequired[ogs.OGS]
     species_list: NotRequired[list]
+    initial_time: NotRequired[int]
+    end_time: NotRequired[int]
+    time_stepping: NotRequired[list]
+    max_iter: NotRequired[int]
+    rel_tol: NotRequired[float]
 
 
 def setup_prj_file(
@@ -922,6 +935,17 @@ def setup_prj_file(
        * *species_list* (``list``) --
          All chemical species that occur in a model, if the model is to simulate a
          Component Transport (HC/CT) process.
+       * *initial_time* (``int``) --
+         Initial time for CT process.
+       * *end_time* (``int``) --
+         End time for CT process.
+       * *time_stepping* (``list[tuple]``) --
+         List of tuples with time steps. First entry is the repetition of the time step
+         and the second the length of the time step.
+       * *max_iter* (``int``) --
+         Maximal iterations of process coupling in a CT process.
+       * *relative_tolerance* (``float``) --
+         Relative tolerance of process coupling in a CT process.
     :return: model
 
 
@@ -929,6 +953,13 @@ def setup_prj_file(
     # ToDo: Make sure that no non-valid arguments are chosen!
     model = kwargs["model"] if "model" in kwargs else None
     species_list = kwargs["species_list"] if "species_list" in kwargs else None
+    initial_time = kwargs["initial_time"] if "initial_time" in kwargs else 1
+    end_time = kwargs["end_time"] if "end_time" in kwargs else 1
+    time_stepping = (
+        kwargs["time_stepping"] if "time_stepping" in kwargs else None
+    )
+    max_iter = kwargs["max_iter"] if "max_iter" in kwargs else 1
+    rel_tol = kwargs["rel_tol"] if "rel_tol" in kwargs else 1e-10
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
@@ -970,31 +1001,22 @@ def setup_prj_file(
         )
         model.parameters.add_parameter(name="C0", type="Constant", value=0)
         if species_list is not None:
-            if len(species_list) > 1:
-                for species in species_list:
-                    model.processes.add_process_variable(
-                        process_variable="concentration_" + species,
-                        process_variable_name=species,
-                    )
-                    model.processvars.set_ic(
-                        process_variable_name=species,
-                        components=1,
-                        order=1,
-                        initial_condition="C0",
-                    )
-            else:
-                for species in species_list:
-                    model.processes.add_process_variable(
-                        process_variable="concentration",
-                        process_variable_name=species,
-                    )
-                    model.processvars.set_ic(
-                        process_variable_name=species,
-                        components=1,
-                        order=1,
-                        initial_condition="C0",
-                    )
+            for species in species_list:
+                if len(species_list) > 1:
+                    process_variable = "concentration_" + species
+                else:
+                    process_variable = "concentration"
 
+                model.processes.add_process_variable(
+                    process_variable=process_variable,
+                    process_variable_name=species,
+                )
+                model.processvars.set_ic(
+                    process_variable_name=species,
+                    components=1,
+                    order=1,
+                    initial_condition="C0",
+                )
     else:
         model.processes.add_process_variable(
             process_variable="process_variable",
@@ -1128,13 +1150,13 @@ def setup_prj_file(
     elif process == "component transport":
         assert species_list is not None
         materials_in_HC(material_properties, species_list, model)
-        add_global_process_coupling_CT(model, species_list)
+        add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
         add_process(
             model,
             species_list,
-            time_stepping=list(
-                zip([10] * 8, [8.64 * 10**i for i in range(8)])
-            ),
+            time_stepping=time_stepping,
+            initial_time=initial_time,
+            end_time=end_time,
         )
     else:
         msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
