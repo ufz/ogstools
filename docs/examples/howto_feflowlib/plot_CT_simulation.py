@@ -19,7 +19,7 @@ import pyvista as pv
 from ogs6py import ogs
 
 import ogstools.meshplotlib as mpl
-from ogstools.examples import feflow_model_2D_CT_560
+from ogstools.examples import feflow_model_2D_CT_t_560
 from ogstools.feflowlib import (
     component_transport,
     convert_properties_mesh,
@@ -33,7 +33,7 @@ from ogstools.propertylib import Scalar
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it.
-feflow_model = ifm.loadDocument(str(feflow_model_2D_CT_560))
+feflow_model = ifm.loadDocument(str(feflow_model_2D_CT_t_560))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
@@ -59,8 +59,8 @@ point_BC_dict = extract_point_boundary_conditions(path_writing, feflow_pv_mesh)
 write_point_boundary_conditions(path_writing, feflow_pv_mesh)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
-path_prjfile = str(path_mesh.with_suffix(".prj"))
-prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
+path_prjfile = path_mesh.with_suffix(".prj")
+prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 species = get_species(feflow_pv_mesh)
 CT_model = component_transport(
     path_writing / "sim_2D_CT_model",
@@ -92,17 +92,16 @@ model = setup_prj_file(
     rel_tol=1e-14,
 )
 # The model must be written before it can be run.
-model.write_input(str(path_prjfile))
+model.write_input(path_prjfile)
 # Print the prj-file as an example.
-model_prjfile = ET.parse(str(path_prjfile))
-ET.dump(model_prjfile)
+ET.dump(ET.parse(path_prjfile))
 # %%
 # 4. Run the model.
-model.run_model(logfile=str(path_writing / "out.log"))
+model.run_model(logfile=path_writing / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
 ogs_simulation = pv.read(
-    str(path_writing / "sim_2D_CT_model_ts_71_t_48384000.000000.vtu")
+    path_writing / "sim_2D_CT_model_ts_71_t_48384000.000000.vtu"
 )
 start = (0.038 + 1.0e-8, 0.005, 0)
 end = (0.045, 0.005, 0)

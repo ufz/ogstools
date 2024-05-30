@@ -56,14 +56,10 @@ for i, (path, boundary_condition) in enumerate(point_BC_dict.items()):
 plotter.show()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
-path_prjfile = str(path_mesh.with_suffix(".prj"))
-prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
+path_prjfile = path_mesh.with_suffix(".prj")
+prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 # Get the template prj-file configurations for a hydro thermal process.
-HT_model = hydro_thermal(
-    path_writing / "sim_2D_HT_model",
-    prjfile,
-    True,
-)
+HT_model = hydro_thermal(path_writing / "sim_2D_HT_model", prjfile, dimension=2)
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
     path_mesh,
@@ -73,17 +69,17 @@ model = setup_prj_file(
     model=HT_model,
 )
 # The model must be written before it can be run.
-model.write_input(str(path_prjfile))
+model.write_input(path_prjfile)
 # Print the prj-file as an example.
-model_prjfile = ET.parse(str(path_prjfile))
+model_prjfile = ET.parse(path_prjfile)
 ET.dump(model_prjfile)
 # %%
 # 4. Run the model.
-model.run_model(logfile=str(path_writing / "out.log"))
+model.run_model(logfile=path_writing / "out.log")
 # %%
 # 5. Read the results and plot them.
 ogs_sim_res = pv.read(
-    str(path_writing / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu")
+    path_writing / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu"
 )
 # Plot the hydraulic head/height, which was simulated in OGS.
 ogs_head_preset = properties.temperature.replace(data_name="HEAD_OGS")

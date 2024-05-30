@@ -46,7 +46,7 @@ pyvista_mesh.plot(
 print(pyvista_mesh)
 path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
 path_mesh = path_writing / "boxNeumann.vtu"
-pyvista_mesh.save(str(path_mesh))
+pyvista_mesh.save(path_mesh)
 # %%
 # 2. Extract the point and cell boundary conditions and write them to a temporary directory.
 point_BC_dict = extract_point_boundary_conditions(path_writing, pyvista_mesh)
@@ -66,8 +66,8 @@ path_topsurface, topsurface = extract_cell_boundary_conditions(
 topsurface.save(path_topsurface)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation
-path_prjfile = str(path_mesh.with_suffix(".prj"))
-prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
+path_prjfile = path_mesh.with_suffix(".prj")
+prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 # Get the template prj-file configurations for a steady state diffusion process
 ssd_model = steady_state_diffusion(
     path_writing / "sim_boxNeumann",
@@ -82,16 +82,16 @@ model = setup_prj_file(
     model=ssd_model,
 )
 # The model must be written before it can be run.
-model.write_input(str(path_prjfile))
+model.write_input(path_prjfile)
 # Simply print the prj-file as an example.
-model_prjfile = ET.parse(str(path_prjfile))
+model_prjfile = ET.parse(path_prjfile)
 ET.dump(model_prjfile)
 # %%
 # 4. Run the model
-model.run_model(logfile=str(path_writing / "out.log"))
+model.run_model(logfile=path_writing / "out.log")
 # %%
 # 5. Read the results and plot them.
-ogs_sim_res = pv.read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
+ogs_sim_res = pv.read(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu")
 ogs_sim_res.plot(
     show_edges=True,
     off_screen=True,
