@@ -294,16 +294,15 @@ def get_species_parameter(
         for data in data_dict[point_or_cell]:
             if data in species_parameters:
                 obsolete_data[data] = point_or_cell
-                try:
-                    for i in range(doc.getNumberOfSpecies()):
+                # If there is only a single species in the model, doc.getSpeciesName(i) throws a
+                # RunTimeError.
+                for i in range(doc.getNumberOfSpecies()):
+                    try:
                         species = doc.getSpeciesName(i)
                         par = doc.getParameter(getattr(ifm.Enum, data), species)
-                        species_dict[point_or_cell][
-                            species + "_" + data
-                        ] = np.array(doc.getParamValues(par))
-                except RuntimeError:
-                    species = "single_species"
-                    par = doc.getParameter(getattr(ifm.Enum, data))
+                    except RuntimeError:
+                        species = "single_species"
+                        par = doc.getParameter(getattr(ifm.Enum, data))
                     species_dict[point_or_cell][
                         species + "_" + data
                     ] = np.array(doc.getParamValues(par))
