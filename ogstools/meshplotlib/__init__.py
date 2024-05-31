@@ -16,8 +16,9 @@ from .core import (
     update_font_sizes,
     label_spatial_axes,
     clear_labels,
+    color_twin_axes,
 )
-from .plot_features import plot_contour, plot_on_top
+from .plot_features import plot_contour, plot_on_top, plot_profile, lineplot
 
 __all__ = [
     "setup",
@@ -29,4 +30,7 @@ __all__ = [
     "update_font_sizes",
     "label_spatial_axes",
     "clear_labels",
+    "plot_profile",
+    "lineplot",
+    "color_twin_axes",
 ]

@@ -13,7 +13,7 @@ via pint.
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import pyvista as pv
@@ -52,6 +52,10 @@ class Property:
     """Should this property be displayed with a bilinear cmap?"""
     categoric: bool = False
     """Does this property only have categoric values?"""
+    color: Optional[str] = None
+    """Default color for the variable to be used by meshplotlib"""
+    linestyle: Optional[tuple] = None
+    """Default linestyle for the variable to be used by meshplotlib"""
 
     def __post_init__(self) -> None:
         if not self.output_name:
