@@ -27,6 +27,21 @@ T_MASK = "temperature_active"
 H_MASK = "pressure_active"
 M_MASK = "displacement_active"
 
+# Default style for meshplotlib plots
+# For now for Scalars only
+# TODO: expand to Matrix and Vector
+line_styles = [
+    (0, ()),  # solid
+    (0, (1, 1)),  # dotted
+    (0, (5, 5)),  # dashed
+    (0, (3, 5, 1, 5)),  # dash dotted
+    (0, (3, 5, 1, 5, 1, 5)),  # dash dot dotted
+    (0, (3, 10, 1, 10)),  # loosely dash dotted
+]
+group_color_thermal = "C6"
+group_color_hydraulic = "C0"
+group_color_mechanical = "C14"
+
 # general
 material_id = Scalar(data_name="MaterialIDs", categoric=True, cmap="tab20")
 
@@ -39,8 +54,15 @@ temperature = Scalar(
     mask=T_MASK,
     cmap=temperature_cmap,
     bilinear_cmap=True,
+    color=group_color_thermal,
+    linestyle=line_styles[0],
 )
-heatflowrate = Scalar(data_name="HeatFlowRate", mask=T_MASK)
+heatflowrate = Scalar(
+    data_name="HeatFlowRate",
+    mask=T_MASK,
+    color=group_color_thermal,
+    linestyle=line_styles[1],
+)
 
 # hydraulic
 pressure = Scalar(
@@ -50,6 +72,8 @@ pressure = Scalar(
     output_name="pore_pressure",
     mask=H_MASK,
     cmap="Blues",
+    color=group_color_hydraulic,
+    linestyle=line_styles[0],
 )
 hydraulic_height = Scalar(
     data_name="pressure",
@@ -58,6 +82,8 @@ hydraulic_height = Scalar(
     output_name="hydraulic_height",
     mask=H_MASK,
     cmap="Blues",
+    color=group_color_hydraulic,
+    linestyle=line_styles[1],
 )
 velocity = Vector(
     data_name="velocity",
@@ -98,6 +124,8 @@ effective_pressure = Scalar(
     output_name="effective_pressure",
     mask=M_MASK,
     func=tensor_math.effective_pressure,
+    color=group_color_mechanical,
+    linestyle=line_styles[0],
 )
 dilatancy_critescu_tot = Scalar(
     data_name="sigma",
@@ -109,10 +137,13 @@ dilatancy_critescu_tot = Scalar(
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
+    color=group_color_mechanical,
+    linestyle=line_styles[1],
 )
 dilatancy_critescu_eff = dilatancy_critescu_tot.replace(
     output_name="effective_dilatancy_criterion",
     func=partial(mesh_dependent.dilatancy_critescu, effective=True),
+    linestyle=line_styles[2],
 )
 
 dilatancy_alkan = Scalar(
@@ -125,10 +156,13 @@ dilatancy_alkan = Scalar(
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
+    color=group_color_mechanical,
+    linestyle=line_styles[3],
 )
 dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
     func=partial(mesh_dependent.dilatancy_alkan, effective=True),
+    linestyle=line_styles[4],
 )
 
 fluid_pressure_crit = Scalar(
@@ -141,6 +175,8 @@ fluid_pressure_crit = Scalar(
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
+    color=group_color_mechanical,
+    linestyle=line_styles[5],
 )
 nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 

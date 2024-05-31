@@ -13,8 +13,10 @@ from ogstools.meshlib import difference
 from ogstools.meshplotlib import (
     clear_labels,
     label_spatial_axes,
+    lineplot,
     plot,
     plot_probe,
+    plot_profile,
     setup,
     update_font_sizes,
 )
@@ -199,7 +201,7 @@ class MeshplotlibTest(unittest.TestCase):
             properties.temperature,
             fig=fig,
         )
-        fig = update_font_sizes(fig, fontsize=25)
+        fig, ax = update_font_sizes(fig=fig, fontsize=25)
         fig.suptitle("Test user defined fig")
         plt.close()
 
@@ -265,6 +267,7 @@ class MeshplotlibTest(unittest.TestCase):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).center
         plot_probe(mesh_series, points, properties.temperature)
+        # TODO: fix darcy_velocity vs velocity problem @ FZ & FK
         mesh_property = properties.velocity.replace(data_name="darcy_velocity")
         plot_probe(mesh_series, points, mesh_property)
         plt.close()
@@ -307,3 +310,45 @@ class MeshplotlibTest(unittest.TestCase):
         mesh = examples.load_meshseries_HT_2D_XDMF().read(0)
         plot(mesh, properties.pressure)
         plt.close()
+
+    def test_lineplot(self):
+        """Test creation of a linesplot from sampled profile data"""
+        ms_HT = examples.load_meshseries_HT_2D_XDMF()
+        profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        ax = lineplot(
+            x="dist",
+            y=["pressure", "temperature"],
+            mesh=ms_HT.read(-1),
+            profile_points=profile_HT,
+            ax=ax,
+            twinx=True,
+            fontsize=15,
+        )
+        plt.close()
+
+    def test_plot_profile(self):
+        """Test creation of a profile plot from sampled profile data"""
+        ms_CT = examples.load_meshseries_CT_2D_XDMF()
+        profile_CT = np.array(
+            [
+                [47.0, 1.17, 72.0],  # Point A
+                [-4.5, 1.17, -59.0],  # Point B
+            ]
+        )
+        si = Scalar(
+            data_name="Si",
+            data_unit="",
+            output_unit="%",
+            output_name="Saturation",
+        )
+        fig, ax = plot_profile(
+            ms_CT.read(11),
+            si,
+            profile_CT,
+            resolution=100,
+            plot_nodal_pts=True,
+            profile_plane=[0, 2],  # This profile is in XZ plane, not XY!
+        )
+        fig, ax = update_font_sizes(label_axes="none", fig=fig)
+        fig.tight_layout()

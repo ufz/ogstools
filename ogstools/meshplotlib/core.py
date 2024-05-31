@@ -333,7 +333,11 @@ def clear_labels(axes: Union[plt.Axes, np.ndarray]) -> None:
 
 @typechecked
 def label_spatial_axes(
-    axes: Union[plt.Axes, np.ndarray], x_label: str = "x", y_label: str = "y"
+    axes: Union[plt.Axes, np.ndarray],
+    x_label: str = "x",
+    y_label: str = "y",
+    label_axes: str = "both",
+    fontsize: int = 20,
 ) -> None:
     """
     Add labels to x and y axis.
@@ -343,12 +347,24 @@ def label_spatial_axes(
     if isinstance(axes, np.ndarray):
         ax: plt.Axes
         for ax in axes[-1, :]:
-            ax.set_xlabel(f"{x_label} / {setup.length.output_unit}")
+            if label_axes in ["x", "both"]:
+                ax.set_xlabel(
+                    f"{x_label} / {setup.length.output_unit}", fontsize=fontsize
+                )
         for ax in axes[:, 0]:
-            ax.set_ylabel(f"{y_label} / {setup.length.output_unit}")
+            if label_axes in ["y", "both"]:
+                ax.set_ylabel(
+                    f"{y_label} / {setup.length.output_unit}", fontsize=fontsize
+                )
     else:
-        axes.set_xlabel(f"{x_label} / {setup.length.output_unit}")
-        axes.set_ylabel(f"{y_label} / {setup.length.output_unit}")
+        if label_axes in ["x", "both"]:
+            axes.set_xlabel(
+                f"{x_label} / {setup.length.output_unit}", fontsize=fontsize
+            )
+        if label_axes in ["y", "both"]:
+            axes.set_ylabel(
+                f"{y_label} / {setup.length.output_unit}", fontsize=fontsize
+            )
 
 
 def _get_rows_cols(
@@ -535,20 +551,43 @@ def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
 
 
 def update_font_sizes(
-    fig: mfigure.Figure,
     fontsize: int = 20,
+    label_axes: str = "both",
+    fig: Optional[mfigure.Figure] = None,
+    ax: Optional[plt.axes] = None,
 ) -> mfigure.Figure:
     """
-    Update font sizes of lebels and ticks in all subplots
+    Update font sizes of labels and ticks in all subplots
 
     :param fig: Matplotlib Figure object to use for plotting
-    :param int: New font size for the labels and ticks (optional)
+    :param fontsize: New font size for the labels and ticks (optional)
+    :param label_axes: Apply labels to axis: "x", "y", "both", "none"
     """
-    x_label = f"X / {setup.length.output_unit}"
-    y_label = f"Y / {setup.length.output_unit}"
-    for subax in fig.axes:
-        subax.set_xlabel(x_label, fontsize=fontsize)
-        subax.set_ylabel(y_label, fontsize=fontsize)
+    # TODO: Remove labeling axes from this function
+    if fig is None and ax is None:
+        err_msg = "Neither Figure nor Axes was provided"
+        raise ValueError(err_msg)
+    if isinstance(ax, np.ndarray):
+        err_msg = "If you want apply this function to multiple subplots,\
+            please provide Figure."
+        raise ValueError(err_msg)
+    if fig is not None and ax is None:
+        axes = fig.get_axes()
+    elif fig is None and ax is not None:
+        axes = np.array([ax])
+    else:
+        err_msg = "Invalid combination of Axis and Figure!"
+        raise ValueError(err_msg)
+
+    for subax in axes:
+        if label_axes != "none":
+            label_spatial_axes(
+                subax,
+                x_label="X",
+                y_label="Y",
+                label_axes=label_axes,
+                fontsize=fontsize,
+            )
         subax_xlim = subax.get_xlim()
         subax_ylim = subax.get_ylim()
         subax.set_xticks(
@@ -563,7 +602,9 @@ def update_font_sizes(
         )
         subax.set_xlim(subax_xlim)
         subax.set_ylim(subax_ylim)
-    return fig
+        subax.xaxis.label.set_fontsize(fontsize)
+        subax.yaxis.label.set_fontsize(fontsize)
+    return fig, ax
 
 
 # TODO: add as arguments: cmap, limits
@@ -705,6 +746,7 @@ def plot_probe(
     if labels is not None:
         ax.legend(facecolor="white", framealpha=1, prop={"family": "monospace"})
     ax.set_axisbelow(True)
+    # TODO: wrap this in apply_mpl_style()
     ax.grid(which="major", color="lightgrey", linestyle="-")
     ax.grid(which="minor", color="0.95", linestyle="--")
     ax.set_xlabel(x_label)
@@ -712,3 +754,12 @@ def plot_probe(
     ax.label_outer()
     ax.minorticks_on()
     return fig
+
+
+def color_twin_axes(axes: list, colors: list) -> None:
+    for ax_temp, color_temp in zip(axes, colors):
+        ax_temp.tick_params(axis="y", which="both", colors=color_temp)
+        ax_temp.yaxis.label.set_color(color_temp)
+    # Axis spine color has to be applied on twin axis for both sides
+    axes[1].spines["left"].set_color(colors[0])
+    axes[1].spines["right"].set_color(colors[1])
