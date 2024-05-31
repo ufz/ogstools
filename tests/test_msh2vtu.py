@@ -2,7 +2,6 @@
 Tests (pytest) for msh2vtu
 """
 
-
 import os
 import runpy
 import sys
@@ -85,14 +84,17 @@ def test_multiple_groups_per_element(tmp_path: Path):
 def test_rect(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "rect.msh")
-    permutations = product([1.0, 2.0], [1, 2], [True, False], [1, 2])
-    for edge_length, n_edge_cells, structured, order in permutations:
+    permutations = product(
+        [1.0, 2.0], [1, 2], [True, False], [1, 2], [None, 2.2]
+    )
+    for edge_length, n_edge_cells, structured, order, version in permutations:
         gmsh_meshing.rect(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             structured_grid=structured,
             order=order,
             out_name=msh_file,
+            msh_version=version,
         )
         assert msh2vtu(msh_file, tmp_path, output_prefix="rect") == 0
 
@@ -100,14 +102,17 @@ def test_rect(tmp_path: Path):
 def test_cuboid(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "cuboid.msh")
-    permutations = product([1.0, 2.0], [1, 2], [True, False], [1, 2])
-    for edge_length, n_edge_cells, structured, order in permutations:
+    permutations = product(
+        [1.0, 2.0], [1, 2], [True, False], [1, 2], [None, 2.2]
+    )
+    for edge_length, n_edge_cells, structured, order, version in permutations:
         gmsh_meshing.cuboid(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             structured_grid=structured,
             order=order,
             out_name=msh_file,
+            msh_version=version,
         )
         assert msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
 

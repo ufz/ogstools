@@ -199,25 +199,27 @@ def msh2vtu(
     if isinstance(dim, list):
         assert len(dim) < 3, "Specify at most 3 dim values."
     filename = Path(filename)
-    # some variable declarations
-    ph_index = 0  # to access physical group id in field data
-    geo_index = 1  # to access geometrical dimension in field data
-    dim0 = 0
-    dim1 = 1
-    dim2 = 2
-    dim3 = 3
+
+    # ====== CONSTANTS ======
+    # pylint: disable=invalid-name
+    PH_INDEX = 0  # index of physical group id in field data of meshio objects
+    GEO_INDEX = 1  # index of geometrical dim in field data of meshio objects
+    DIM0 = 0
+    DIM1 = 1
+    DIM2 = 2
+    DIM3 = 3
     # for all points, as the selection goes via the cells and subsequent trim
-    ogs_point_data_key = "bulk_node_ids"
+    OGS_POINT_DATA_KEY = "bulk_node_ids"
     # to associate domain points with original points
-    ogs_domain_point_data_key = "original_node_number"
-    available_cell_types = {
-        dim0: {"vertex"},
-        dim1: {"line", "line3", "line4"},
-        dim2: {
+    OGS_DOMAIN_POINT_DATA_KEY = "original_node_number"
+    AVAILABLE_CELL_TYPES = {
+        DIM0: {"vertex"},
+        DIM1: {"line", "line3", "line4"},
+        DIM2: {
             *["triangle", "triangle6", "triangle9", "triangle10"],
             *["quad", "quad8", "quad9"],
         },
-        dim3: {
+        DIM3: {
             *["tetra", "tetra10"],
             *["pyramid", "pyramid13", "pyramid15", "pyramid14"],
             *["wedge", "wedge15", "wedge18"],
@@ -225,9 +227,10 @@ def msh2vtu(
             *["prism", "prism15", "prism18"],
         },
     }
-    gmsh_physical_cell_data_key = "gmsh:physical"
-    ogs_domain_cell_data_key = "MaterialIDs"
-    ogs_boundary_cell_data_key = "bulk_elem_ids"
+    GMSH_PHYSICAL_CELL_DATA_KEY = "gmsh:physical"
+    OGS_DOMAIN_CELL_DATA_KEY = "MaterialIDs"
+    OGS_BOUNDARY_CELL_DATA_KEY = "bulk_elem_ids"
+    # pylint: enable=invalid-name
     ogs = not keep_ids
 
     # check if input file exists and is in gmsh-format
@@ -262,7 +265,7 @@ def msh2vtu(
 
     # check if element types are supported in current version of this script
     all_available_cell_types: set[str] = set()
-    for cell_types in available_cell_types.values():
+    for cell_types in AVAILABLE_CELL_TYPES.values():
         all_available_cell_types = all_available_cell_types.union(cell_types)
     for cell_type in existing_cell_types:
         if cell_type not in all_available_cell_types:
@@ -272,8 +275,8 @@ def msh2vtu(
     if dim == 0:
         assert isinstance(dim, int)
         # automatically detect spatial dimension of mesh
-        _dim = dim0  # initial value
-        for test_dim, test_cell_types in available_cell_types.items():
+        _dim = DIM0  # initial value
+        for test_dim, test_cell_types in AVAILABLE_CELL_TYPES.items():
             if (
                 len(test_cell_types.intersection(existing_cell_types))
                 and test_dim > dim
@@ -288,7 +291,7 @@ def msh2vtu(
 
     # delete third dimension if wanted by user
     if delz:
-        if _dim <= dim2:
+        if _dim <= DIM2:
             logging.info("Remove z coordinate of all points.")
             points = mesh.points[:, :2]
         else:
@@ -303,23 +306,23 @@ def msh2vtu(
         points[:, 0], points[:, 1] = points[:, 1], -points[:, 0]
 
     # boundary and domain cell types depend on dimension
-    if dim1 <= _dim <= dim3:
+    if DIM1 <= _dim <= DIM3:
         boundary_dim = _dim - 1
         domain_dim = _dim
         boundary_cell_types = existing_cell_types.intersection(
-            available_cell_types[boundary_dim]
+            AVAILABLE_CELL_TYPES[boundary_dim]
         )
         domain_cell_types = existing_cell_types.intersection(
-            available_cell_types[domain_dim]
+            AVAILABLE_CELL_TYPES[domain_dim]
             if isinstance(dim, int)
-            else set().union(*[available_cell_types[d] for d in dim])
+            else set().union(*[AVAILABLE_CELL_TYPES[d] for d in dim])
         )
     else:
         logging.warning("Error, invalid dimension dim=%s!", str(_dim))
         return 1  # sys.exit()
 
     # Check for existence of physical groups
-    if gmsh_physical_cell_data_key in cell_data:
+    if GMSH_PHYSICAL_CELL_DATA_KEY in cell_data:
         physical_groups_found = True
 
         # reconstruct field data, when empty (physical groups may have a number,
@@ -328,25 +331,25 @@ def msh2vtu(
         if field_data == {}:
             # detect dimension by cell type
             for pg_cell_type, pg_cell_data in cell_data_dict[
-                gmsh_physical_cell_data_key
+                GMSH_PHYSICAL_CELL_DATA_KEY
             ].items():
-                if pg_cell_type in available_cell_types[dim0]:
-                    pg_dim = dim0
-                if pg_cell_type in available_cell_types[dim1]:
-                    pg_dim = dim1
-                if pg_cell_type in available_cell_types[dim2]:
-                    pg_dim = dim2
-                if pg_cell_type in available_cell_types[dim3]:
-                    pg_dim = dim3
+                if pg_cell_type in AVAILABLE_CELL_TYPES[DIM0]:
+                    pg_dim = DIM0
+                if pg_cell_type in AVAILABLE_CELL_TYPES[DIM1]:
+                    pg_dim = DIM1
+                if pg_cell_type in AVAILABLE_CELL_TYPES[DIM2]:
+                    pg_dim = DIM2
+                if pg_cell_type in AVAILABLE_CELL_TYPES[DIM3]:
+                    pg_dim = DIM3
                 pg_ids = np.unique(pg_cell_data)
                 for pg_id in pg_ids:
                     pg_key = "PhysicalGroup_" + str(pg_id)
                     field_data[pg_key] = np.array([pg_id, pg_dim])
 
         id_list_domains = [
-            physical_group[ph_index]
+            physical_group[PH_INDEX]
             for physical_group in field_data.values()
-            if physical_group[geo_index] == domain_dim
+            if physical_group[GEO_INDEX] == domain_dim
         ]
         id_offset = min(id_list_domains, default=0) if reindex else 0
 
@@ -365,7 +368,7 @@ def msh2vtu(
         # to associate domain points later
         original_point_numbers = np.arange(number_of_original_points)
         all_point_data = {}
-        all_point_data[ogs_domain_point_data_key] = np.uint64(
+        all_point_data[OGS_DOMAIN_POINT_DATA_KEY] = np.uint64(
             original_point_numbers
         )
     else:
@@ -375,9 +378,9 @@ def msh2vtu(
 
     domain_cells = []
     if ogs:
-        domain_cell_data_key = ogs_domain_cell_data_key
+        domain_cell_data_key = OGS_DOMAIN_CELL_DATA_KEY
     else:
-        domain_cell_data_key = gmsh_physical_cell_data_key
+        domain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
     domain_cell_data: dict[str, list[int]] = {}
     domain_cell_data[domain_cell_data_key] = []
 
@@ -390,7 +393,7 @@ def msh2vtu(
 
         # cell_data
         if physical_groups_found:
-            if domain_cell_type in cell_data_dict[gmsh_physical_cell_data_key]:
+            if domain_cell_type in cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY]:
                 domain_in_physical_group = True
             else:
                 domain_in_physical_group = False
@@ -400,7 +403,7 @@ def msh2vtu(
         if domain_in_physical_group:
             if ogs:
                 domain_cell_data_values = cell_data_dict[
-                    gmsh_physical_cell_data_key
+                    GMSH_PHYSICAL_CELL_DATA_KEY
                 ][domain_cell_type]
                 # ogs needs MaterialIDs as int32, possibly beginning with zero
                 # (by id_offset)
@@ -409,7 +412,7 @@ def msh2vtu(
                 )
             else:
                 domain_cell_data_values = cell_data_dict[
-                    gmsh_physical_cell_data_key
+                    GMSH_PHYSICAL_CELL_DATA_KEY
                 ][domain_cell_type]
         else:
             domain_cell_data_values = np.zeros(
@@ -451,7 +454,7 @@ def msh2vtu(
             # initialize with non-existing number --> error when bulk_id for
             # non-domain mesh should be written
             for domain_point_index, original_point_index in enumerate(
-                domain_mesh.point_data[ogs_domain_point_data_key]
+                domain_mesh.point_data[OGS_DOMAIN_POINT_DATA_KEY]
             ):
                 original2domain_point_table[
                     original_point_index
@@ -497,7 +500,7 @@ def msh2vtu(
     if ogs:
         all_point_data = {}
         # now containing domain node numbers
-        all_point_data[ogs_point_data_key] = np.uint64(
+        all_point_data[OGS_POINT_DATA_KEY] = np.uint64(
             original2domain_point_table
         )
     else:
@@ -508,9 +511,9 @@ def msh2vtu(
     boundary_cells = []
     boundary_cell_data: dict[str, list] = {}
     if ogs:
-        boundary_cell_data_key = ogs_boundary_cell_data_key
+        boundary_cell_data_key = OGS_BOUNDARY_CELL_DATA_KEY
     else:
-        boundary_cell_data_key = gmsh_physical_cell_data_key
+        boundary_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
     boundary_cell_data[boundary_cell_data_key] = []
 
     for boundary_cell_type in boundary_cell_types:
@@ -551,7 +554,7 @@ def msh2vtu(
 
         # cell_data
         boundary_in_physical_group = physical_groups_found and (
-            boundary_cell_type in cell_data_dict[gmsh_physical_cell_data_key]
+            boundary_cell_type in cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY]
         )
 
         if ogs:
@@ -559,7 +562,7 @@ def msh2vtu(
         else:
             if boundary_in_physical_group:
                 boundary_cell_data_values = cell_data_dict[
-                    gmsh_physical_cell_data_key
+                    GMSH_PHYSICAL_CELL_DATA_KEY
                 ][boundary_cell_type]
             else:
                 # cells of specific type
@@ -602,10 +605,11 @@ def msh2vtu(
         return 0
 
     for name, data in field_data.items():
-        subdomain_dim = data[geo_index]  # 0 or 1 or 2 or 3
-        if dim0 <= subdomain_dim and subdomain_dim <= dim3:
+        ph_id = data[PH_INDEX]  # only used for old versions of MSH
+        subdomain_dim = data[GEO_INDEX]
+        if subdomain_dim >= DIM0 and subdomain_dim <= DIM3:
             subdomain_cell_types = existing_cell_types.intersection(
-                available_cell_types[subdomain_dim]
+                AVAILABLE_CELL_TYPES[subdomain_dim]
             )
         else:
             logging.warning("Invalid dimension found in physical groups.")
@@ -616,7 +620,7 @@ def msh2vtu(
         # actions
         if ogs:
             all_point_data = {}
-            all_point_data[ogs_point_data_key] = np.uint64(
+            all_point_data[OGS_POINT_DATA_KEY] = np.uint64(
                 original2domain_point_table
             )
         else:
@@ -629,15 +633,15 @@ def msh2vtu(
         subdomain_cell_data: dict[str, list] = {}  # dict
         if ogs:
             if subdomain_dim == domain_dim:
-                subdomain_cell_data_key = ogs_domain_cell_data_key
+                subdomain_cell_data_key = OGS_DOMAIN_CELL_DATA_KEY
             elif subdomain_dim == boundary_dim:
-                subdomain_cell_data_key = ogs_boundary_cell_data_key
+                subdomain_cell_data_key = OGS_BOUNDARY_CELL_DATA_KEY
             else:
                 # use gmsh, as the requirements from OGS
-                subdomain_cell_data_key = gmsh_physical_cell_data_key
+                subdomain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
         else:
             # same for all dimensions
-            subdomain_cell_data_key = gmsh_physical_cell_data_key
+            subdomain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
         subdomain_cell_data[subdomain_cell_data_key] = []  # list
         # flag to indicate invalid bulk_element_ids, then no cell data will be
         # written
@@ -646,12 +650,18 @@ def msh2vtu(
         for cell_type in subdomain_cell_types:
             # cells
             all_false = np.full(
-                cell_data_dict[gmsh_physical_cell_data_key][cell_type].shape,
+                cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][cell_type].shape,
                 False,
             )
-            selection_index = mesh.cell_sets_dict[name].get(
-                cell_type, all_false
-            )
+            if mesh.cell_sets_dict != {}:
+                selection_index = mesh.cell_sets_dict[name].get(
+                    cell_type, all_false
+                )
+            else:
+                selection_index = (
+                    cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][cell_type]
+                    == ph_id
+                )
             selection_cells_values = cells_dict[cell_type][selection_index]
             if len(selection_cells_values):  # if there are some data
                 selection_cells_block = (cell_type, selection_cells_values)
@@ -686,7 +696,7 @@ def msh2vtu(
                             subdomain_cell_data_trouble = True
                     elif subdomain_dim == domain_dim:
                         selection_cell_data_values = np.int32(
-                            cell_data_dict[gmsh_physical_cell_data_key][
+                            cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][
                                 cell_type
                             ][selection_index]
                             - id_offset
@@ -694,14 +704,14 @@ def msh2vtu(
 
                     else:  # any cells of lower dimension than boundary
                         selection_cell_data_values = np.int32(
-                            cell_data_dict[gmsh_physical_cell_data_key][
+                            cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][
                                 cell_type
                             ][selection_index]
                         )
 
                 else:
                     selection_cell_data_values = cell_data_dict[
-                        gmsh_physical_cell_data_key
+                        GMSH_PHYSICAL_CELL_DATA_KEY
                     ][cell_type][selection_index]
 
                 subdomain_cell_data[subdomain_cell_data_key].append(
