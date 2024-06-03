@@ -41,11 +41,13 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=Groundwater(-30, 1, "+x"),
+    groundwater=Groundwater(
+        begin=-30, isolation_layer_id=1, flow_direction="+x"
+    ),
     BHE_Array=[
-        BHE(50, 40, -1, -60, 0.076),
-        BHE(50, 50, -1, -60, 0.076),
-        BHE(50, 60, -1, -60, 0.076),
+        BHE(x=50, y=40, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=50, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=60, z_begin=-1, z_end=-60, borehole_radius=0.076),
     ],
     meshing_type="prism",
     out_name=vtu_file,
