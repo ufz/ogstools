@@ -15,7 +15,7 @@ from tempfile import mkdtemp
 import pyvista as pv
 from pyvista.plotting import Plotter
 
-from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
 # 0. Introduction
@@ -41,11 +41,11 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(-30, 1, "+x"),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(50, 40, -1, -60, 0.076),
+        BHE(50, 50, -1, -60, 0.076),
+        BHE(50, 60, -1, -60, 0.076),
     ],
     meshing_type="prism",
     out_name=vtu_file,
@@ -98,11 +98,11 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(-30, 1, "+x"),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(50, 40, -1, -60, 0.076),
+        BHE(50, 50, -1, -60, 0.076),
+        BHE(50, 60, -1, -60, 0.076),
     ],
     meshing_type="structured",
     out_name=vtu_file,
@@ -156,11 +156,11 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(-30, 1, "+x"),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(50, 40, -1, -60, 0.076),
+        BHE(50, 50, -1, -60, 0.076),
+        BHE(50, 60, -1, -60, 0.076),
     ],
     meshing_type="structured",
     target_z_size_coarse=10,  # default value 7.5
