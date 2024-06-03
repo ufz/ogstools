@@ -23,7 +23,7 @@ dependencies = [
   "Pillow>=9.2.0",
   "pandas>=1.4.0",
   "papermill>=2.4.0",
-  "ogs>=6.5.1",
+  "ogs==6.5.2.dev230",
   "ogs6py>=0.370",
   "tqdm>=4.60",
   "typeguard>=4.0.0",
