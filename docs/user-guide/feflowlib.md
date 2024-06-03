@@ -12,21 +12,23 @@ Together they are referred as FEFLOW-converter, as they allow the conversion of 
 This converter was developed in the Python language and interacts with the Python API of FEFLOW.
 `pyvista` is used especially for the creation of unstructured grids.
 With the usage of [`ogs6py`](https://joergbuchwald.github.io/ogs6py-doc/index.html) it is possible to create a `prj-file` from the converted model to enable simulations with `OGS`.
-At the moment `steady state diffusion`, `liquid flow` and `hydro thermal` processes are supported to set up the `prj-file`.
+At the moment `steady state diffusion`, `liquid flow`, `hydro thermal` and `component/mass transport` processes are supported to set up the `prj-file`.
 
 ## Features
 
-All in all, the converter can be used to convert `steady state diffusion`, `liquid flow` and `hydro thermal` processes from FEFLOW.
+All in all, the converter can be used to convert `steady state diffusion`, `liquid flow`, `hydro thermal` and `component/mass transport` models from FEFLOW.
 This includes the conversion of the bulk mesh together with the boundary conditions, as well as the creation of the corresponding mesh `vtk-files`.
-In addition, (in)complete `prj files` can be created automatically.
-The `prj file` is set up of a model-specific part and a part that is read from a template and defines the solver and process configuration.
+In addition, (in)complete `prj-files` can be created automatically.
+The `prj-file` is set up of a model-specific part and a part that is read from a template and defines the solver and process configuration.
+This means that the converter supplies a suggestion for a `prj-file`, which is not guaranteed
+to be working.
 The current status enables:
 
 ### Main features:
 
 - conversion of FEFLOW meshes
 - extraction of boundary condition
-- creation of OGS-models for `steady state diffusion`, `liquid flow` and `hydro thermal` processes
+- creation of OGS-models for `steady state diffusion`, `liquid flow`, `hydro thermal` and `component transport` processes
 - usage via *command line interface* or as *Python library*
 
 ### specific features:
@@ -56,15 +58,13 @@ graph TD
     FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_BOUNDARY:::InputStyle
     FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_SOURCE:::InputStyle
     FEFLOW(FEFLOW model):::FEFLOWStyle -->|feflowlib| OGS_INHOMOGENEOUS:::InputStyle
-    SSD(steady state diffusion <br> liquid flow <br> hydro thermal):::TemplateStyle -->|template| OGS_PRJ:::InputStyle
+    SSD(steady state diffusion <br> liquid flow <br> hydro thermal <br> component transport):::TemplateStyle -->|template| OGS_PRJ:::InputStyle
     OGS_PRJ[project file]:::InputStyle -->|xml format| OGS
     OGS_BULK[bulk mesh]:::InputStyle -->|vtu format| OGS
     OGS_BOUNDARY[boundary meshes]:::InputStyle -->|vtu format| OGS
     OGS_INHOMOGENEOUS[inhomogeneous material mesh]:::InputStyle -->|vtu format| OGS
     OGS_SOURCE[source term meshes]:::InputStyle -->|vtu format| OGS
-    OGS(OpenGeoSys):::OGSStyle -->|vtu format| OGS_PRESSURE[simulation results: Hydraulic Head]:::OGSOutputStyle
-    OGS -->|vtu format| OGS_VELO[simulation results: Darcy Velocity]:::OGSOutputStyle
-    OGS -->|vtu format| OGS_TEMP["simulation results: Temperature <br> <i>(only for hydro thermal process)</i>"]:::TempOutputStlye
+    OGS(OpenGeoSys):::OGSStyle -->|vtu format| OGS_PRESSURE[Simulation results: Hydraulic Head <br> Darcy Velocity, Temperature, Concentration]:::OGSOutputStyle
 
 
 classDef InputStyle fill:#9090ff
@@ -73,7 +73,6 @@ classDef FEFLOWStyle fill:#1e690a, color:#ffffff
 classDef feflowlibStyle fill:#081f6a, color:#ffffff
 classDef OGSOutputStyle fill:#a0a0f0
 classDef TemplateStyle fill:#009c21, color:#ffffff
-classDef TempOutputStlye fill:#ff6c00, color:#ffffff
 ```
 
 ## Requirements
