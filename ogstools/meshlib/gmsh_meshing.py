@@ -5,7 +5,6 @@
 #
 
 import math
-from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import NamedTuple, Optional, Union
@@ -127,8 +126,7 @@ def cuboid(
     gmsh.finalize()
 
 
-@dataclass
-class Groundwater:
+class Groundwater(NamedTuple):
     begin: float = -30
     isolation_layer_id: int = 1
     flow_direction: str = "+x"
