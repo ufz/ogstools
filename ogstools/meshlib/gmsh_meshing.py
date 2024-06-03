@@ -131,6 +131,15 @@ class Groundwater(NamedTuple):
     isolation_layer_id: int = 1
     flow_direction: str = "+x"
 
+    """
+    Base Class for the Groundwater layer
+
+    :param begin: depth of groundwater begin (negative)
+    :param isolation_layer_id: number of the groundwater isolation layer (count starts with 0)
+    :param flow_direction:  groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'
+
+    """
+
 
 class BHE(NamedTuple):
     x: float = 50.0
@@ -138,6 +147,17 @@ class BHE(NamedTuple):
     z_begin: float = -1.0
     z_end: float = -60.0
     borehole_radius: float = 0.076
+
+    """
+    Base Class for the BHE
+
+    :param x: x-coordinate of the BHE in m
+    :param y: y-coordinate of the BHE in m
+    :param z_begin: BHE begin depth (zero or negative)
+    :param z_end: BHE end depth (zero or negative)
+    :param borehole_radius: borehole radius in m
+
+    """
 
 
 def gen_bhe_mesh_gmsh(
