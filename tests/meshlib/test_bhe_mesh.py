@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 import numpy as np
 import pyvista as pv
 
-from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import Groundwater, gen_bhe_mesh
 
 
 def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:

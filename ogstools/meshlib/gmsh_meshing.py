@@ -5,10 +5,10 @@
 #
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import NamedTuple,Optional, Union
-
+from typing import NamedTuple, Optional, Union
 
 import gmsh
 import numpy as np
@@ -127,33 +127,30 @@ def cuboid(
     gmsh.finalize()
 
 
-class Groundwater(NamedTuple):
-    begin: float
-    isolation_layer_id: int
-    flow_direction: str
+@dataclass
+class Groundwater:
+    begin: float = -30
+    isolation_layer_id: int = 1
+    flow_direction: str = "+x"
 
 
 class BHE(NamedTuple):
-    x: float
-    y: float
-    z_begin: float
-    z_end: float
-    borehole_radius: float
+    x: float = 50.0
+    y: float = 50.0
+    z_begin: float = -1.0
+    z_end: float = -60.0
+    borehole_radius: float = 0.076
 
 
 def gen_bhe_mesh_gmsh(
-    length: float = 150.0,
-    width: float = 100.0,
-    layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[Groundwater, list[Groundwater]] = (
-        -30.0,
-        1,
-        "+x",
-    ),
+    length: float,
+    width: float,
+    layer: Union[float, list[float]],
+    groundwater: Union[Groundwater, list[Groundwater]],
     BHE_Array: Union[
         BHE,
         list[BHE],
-    ] = (50.0, 50.0, -1.0, -60.0, 0.076),
+    ],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -1902,18 +1899,14 @@ def gen_bhe_mesh_gmsh(
 
 
 def gen_bhe_mesh(
-    length: float = 150.0,
-    width: float = 100.0,
-    layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[Groundwater, list[Groundwater]] = (
-        -30.0,
-        1,
-        "+x",
-    ),
+    length: float,  # e.g. 150.0
+    width: float,  # e.g. 100
+    layer: Union[float, list[float]],  # e.g. 100
+    groundwater: Union[Groundwater, list[Groundwater]],
     BHE_Array: Union[
         BHE,
         list[BHE],
-    ] = (50.0, 50.0, -1.0, -60.0, 0.076),
+    ],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
