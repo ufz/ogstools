@@ -91,6 +91,55 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         ax.add_collection(pc)
 
 
+def _vectorfield(
+    mesh: pv.DataSet,
+    mesh_property: Vector,
+    projection: Optional[int] = None,
+) -> tuple[float, float, float, float, float]:
+    """
+    Compute necessary data for streamlines or quiverplots.
+
+    :param mesh:            Mesh containing the vector property
+    :param mesh_property:   Vector property to visualize
+    :param projection:      Index of flat dimension (e.g. 2 for z axis),
+                            gets automatically determined if not given
+    """
+
+    n_pts = setup.num_streamline_interp_pts
+    n_pts = 50 if n_pts is None else n_pts
+    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
+    if projection is None:
+        projection = int(np.argmax(mean_normal))
+    i_id, j_id = np.delete([0, 1, 2], projection)
+    _mesh = mesh.copy()
+    for key in _mesh.point_data:
+        if key not in [mesh_property.data_name, mesh_property.mask]:
+            del _mesh.point_data[key]
+    i_pts = np.linspace(mesh.bounds[2 * i_id], mesh.bounds[2 * i_id + 1], n_pts)
+    j_pts = np.linspace(mesh.bounds[2 * j_id], mesh.bounds[2 * j_id + 1], n_pts)
+    i_size = i_pts[-1] - i_pts[0]
+    j_size = j_pts[-1] - j_pts[0]
+    grid = pv.Plane(
+        _mesh.center, mean_normal, i_size, j_size, n_pts - 1, n_pts - 1
+    )
+
+    grid = grid.sample(_mesh, pass_cell_data=False)
+    values = mesh_property.transform(grid.point_data[mesh_property.data_name])
+    values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
+    if np.shape(values)[-1] == 3:
+        values = np.delete(values, projection, 1)
+    val = np.reshape(values, (n_pts, n_pts, 2))
+
+    if mesh_property.mask in grid.point_data:
+        mask = np.reshape(grid.point_data[mesh_property.mask], (n_pts, n_pts))
+        val[mask == 0, :] = 0
+    val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
+    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
+    lw *= setup.rcParams_scaled["lines.linewidth"]
+    i_grid, j_grid = setup.length.transform(np.meshgrid(i_pts, j_pts))
+    return (i_grid, j_grid, val[..., 0], val[..., 1], lw)
+
+
 def plot_streamlines(
     ax: plt.Axes,
     mesh: pv.DataSet,
@@ -108,55 +157,27 @@ def plot_streamlines(
                             gets automatically determined if not given
     :param plot_type:       Whether to plot streamlines, arrows or lines.
     """
-    if (n_pts := setup.num_streamline_interp_pts) is None:
+
+    if (setup.num_streamline_interp_pts) is None:
         return
-    if plot_type != "streamlines":
-        n_pts = 50
-    if projection is None:
-        mean_normal = np.abs(
-            np.mean(mesh.extract_surface().cell_normals, axis=0)
-        )
-        projection = int(np.argmax(mean_normal))
-    x_id, y_id = np.delete([0, 1, 2], projection)
-    bounds = [float(b) for b in mesh.bounds]
-    x = np.linspace(bounds[2 * x_id], bounds[2 * x_id + 1], n_pts)
-    y = np.linspace(bounds[2 * y_id], bounds[2 * y_id + 1], n_pts)
-    z = np.array([np.mean(mesh.points[..., projection])])
-
-    _mesh = mesh.copy()
-    for key in _mesh.point_data:
-        if key not in [mesh_property.data_name, mesh_property.mask]:
-            del _mesh.point_data[key]
-    grid = pv.RectilinearGrid(
-        [x, y, z][x_id], [x, y, z][y_id], [x, y, z][projection]
-    )
-    grid = grid.sample(_mesh, pass_cell_data=False)
-    values = mesh_property.transform(grid.point_data[mesh_property.data_name])
-    values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
-    if np.shape(values)[-1] == 3:
-        values = np.delete(values, projection, 1)
-    val = np.reshape(values, (n_pts, n_pts, 2))
-
-    if mesh_property.mask in grid.point_data:
-        mask = np.reshape(grid.point_data[mesh_property.mask], (n_pts, n_pts))
-        val[mask == 0, :] = 0
-    val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
-    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
-    lw *= setup.rcParams_scaled["lines.linewidth"]
-    x_g, y_g = setup.length.transform(np.meshgrid(x, y))
+    i_grid, j_grid, u, v, lw = _vectorfield(mesh, mesh_property, projection)
     if plot_type == "streamlines":
-        ax.streamplot(x_g, y_g, val[..., 0], val[..., 1],
-                      color="k", linewidth=lw, density=1.5)  # fmt: skip
+        ax.streamplot(
+            i_grid, j_grid, u, v, color="k", linewidth=lw, density=1.5
+        )
     else:
-        line_args = (
-            dict(  # noqa: C408
-                headlength=0, headaxislength=0, headwidth=1, pivot="mid"
-            )
-            if plot_type == "lines"
+        line_args: dict = (
+            {
+                "headlength": 0,
+                "headaxislength": 0,
+                "headwidth": 1,
+                "pivot": "mid",
+            }
+            if plot_type == "line"
             else {}
         )
         scale = 1.0 / 0.03
-        ax.quiver(x_g, y_g, val[..., 0], val[..., 1], **line_args, scale=scale)
+        ax.quiver(i_grid, j_grid, u, v, **line_args, scale=scale)
 
 
 def plot_on_top(
