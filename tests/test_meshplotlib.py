@@ -23,7 +23,7 @@ from ogstools.meshplotlib import (
 from ogstools.meshplotlib.animation import animate, save_animation
 from ogstools.meshplotlib.core import get_ticklabels
 from ogstools.meshplotlib.levels import compute_levels
-from ogstools.meshplotlib.plot_features import plot_on_top
+from ogstools.meshplotlib.plot_features import _vectorfield, plot_on_top
 from ogstools.meshplotlib.utils import justified_labels
 from ogstools.propertylib import Scalar, properties
 
@@ -297,6 +297,24 @@ class MeshplotlibTest(unittest.TestCase):
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
         plot(meshes, "Spatial Point Data")
         plot(mesh.slice([1, -2, 0]), "Spatial Point Data")
+        plt.close()
+
+    def test_streamlines(self):
+        """Test streamlines on arbitrarily oriented slices."""
+        mesh = pv_examples.load_uniform()
+        mesh.point_data["velocity"] = np.random.default_rng().random(
+            (mesh.n_points, 3)
+        )
+        for axis in ["x", "y", "z", [1, 1, 0]]:
+            fig, ax = plt.subplots()
+            i_grid, j_grid, u, v, lw = _vectorfield(
+                mesh.slice(axis), properties.velocity
+            )
+            for vals in [i_grid, j_grid, u, v, lw]:
+                assert not np.all(np.isnan(vals))
+            ax.streamplot(
+                i_grid, j_grid, u, v, color="k", linewidth=lw, density=1.5
+            )
         plt.close()
 
     def test_xdmf(self):
