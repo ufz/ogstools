@@ -1464,15 +1464,15 @@ def gen_bhe_mesh_gmsh(
 
     layer = layer if isinstance(layer, list) else [layer]
 
-    groundwater = (
-        [groundwater] if isinstance(groundwater, tuple) else groundwater
+    groundwaters: list[Groundwater] = (
+        [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
     BHE_Array = [BHE_Array] if isinstance(BHE_Array, tuple) else BHE_Array
 
     # detect the soil layer, in which the groundwater flow starts
     groundwater_list: list = []
-    for g in range(0, len(groundwater)):
+    for g in range(0, len(groundwaters)):
         start_groundwater = -1000
         icl: float = (
             -1
@@ -1480,26 +1480,26 @@ def gen_bhe_mesh_gmsh(
         # needed_medias_in_ogs=len(layer)+1
         for i in range(0, len(layer)):
             if (
-                np.abs(groundwater[g][0]) < np.sum(layer[: i + 1])
+                np.abs(groundwaters[g].begin) < np.sum(layer[: i + 1])
                 and start_groundwater == -1000
             ):
                 start_groundwater = i
 
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
-                    np.abs(groundwater[g][0])
+                    np.abs(groundwaters[g].begin)
                     - np.sum(layer[:start_groundwater])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - GW')
                     icl = 1
-                    if np.abs(groundwater[g][0]) == np.sum(
+                    if np.abs(groundwaters[g].begin) == np.sum(
                         layer[:start_groundwater]
                     ):  # beginning of groundwater at a transition of two soil layers - special case
                         icl = 3
                         # needed_medias_in_ogs=len(layer) #needed_extrusions=len(layer)
                     elif (
                         np.sum(layer[: start_groundwater + 1])
-                        - np.abs(groundwater[g][0])
+                        - np.abs(groundwaters[g].begin)
                         < n_refinement_layers * target_z_size_fine
                     ):
                         icl = (
@@ -1507,7 +1507,7 @@ def gen_bhe_mesh_gmsh(
                         )
                 elif (
                     np.sum(layer[: start_groundwater + 1])
-                    - np.abs(groundwater[g][0])
+                    - np.abs(groundwaters[g].begin)
                     < n_refinement_layers * target_z_size_fine
                     and icl != 1.2
                 ):
@@ -1519,9 +1519,9 @@ def gen_bhe_mesh_gmsh(
             [
                 start_groundwater,
                 icl,
-                groundwater[g][0],
-                groundwater[g][1],
-                groundwater[g][2],
+                groundwaters[g].begin,
+                groundwaters[g].isolation_layer_id,
+                groundwaters[g].flow_direction,
             ]
         )
 
@@ -1638,9 +1638,9 @@ def gen_bhe_mesh_gmsh(
             if len(np.argwhere(groundwater_list_0 == i)) == 1:
                 BHE_end_depths.append(
                     [
-                        groundwater[np.argwhere(groundwater_list_0 == i)[0, 0]][
-                            0
-                        ],
+                        groundwaters[
+                            np.argwhere(groundwater_list_0 == i)[0, 0]
+                        ].begin,
                         icl,
                     ]
                 )
@@ -1990,7 +1990,7 @@ def gen_bhe_mesh(
     ]
 
     groundwater = (
-        [groundwater] if isinstance(groundwater, tuple) else groundwater
+        [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
     for i in range(0, len(groundwater)):
