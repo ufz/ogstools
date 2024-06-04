@@ -136,7 +136,7 @@ class Groundwater:
     """
     Base Class for the Groundwater layer
 
-    :param begin: depth of groundwater begin (negative)
+    :param begin: depth of groundwater begin (negative) in m
     :param isolation_layer_id: number of the groundwater isolation layer (count starts with 0)
     :param flow_direction:  groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'
 
@@ -156,8 +156,8 @@ class BHE:
 
     :param x: x-coordinate of the BHE in m
     :param y: y-coordinate of the BHE in m
-    :param z_begin: BHE begin depth (zero or negative)
-    :param z_end: BHE end depth (zero or negative)
+    :param z_begin: BHE begin depth (zero or negative) in m
+    :param z_end: BHE end depth (zero or negative) in m
     :param borehole_radius: borehole radius in m
 
     """
@@ -196,10 +196,10 @@ def gen_bhe_mesh_gmsh(
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
     :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box
-    :param outer_mesh_size: mesh size outside of the refinement box
+    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
+    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
+    :param inner_mesh_size: mesh size inside the refinement box in m
+    :param outer_mesh_size: mesh size outside of the refinement box in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .msh
@@ -1959,13 +1959,13 @@ def gen_bhe_mesh(
     :param n_refinement_layers: number of refinement layers which are evenly set above and
         beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box
-    :param outer_mesh_size: mesh size outside of the refinement box
+    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
+    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
+    :param inner_mesh_size: mesh size inside the refinement box in m
+    :param outer_mesh_size: mesh size outside of the refinement box in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
-    :param order:
+    :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .vtu
     :return: list of filenames of the created vtu mesh files
     """
