@@ -1491,7 +1491,7 @@ def gen_bhe_mesh_gmsh(
         [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
-    BHE_Array = [BHE_Array] if isinstance(BHE_Array, tuple) else BHE_Array
+    BHE_Array = [BHE_Array] if isinstance(BHE_Array, BHE) else BHE_Array
 
     # detect the soil layer, in which the groundwater flow starts
     groundwater_list: list = []

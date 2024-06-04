@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 import numpy as np
 import pyvista as pv
 
-from ogstools.meshlib.gmsh_meshing import Groundwater, gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 
 
 def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
@@ -18,7 +18,7 @@ def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
             2,
             "-y",
         ),  # case for confinded aquifer, the top level of groundwater ends at soil layer transition
-        BHE_Array=(25, 30, -5, -50, 0.076),
+        BHE_Array=BHE(25, 30, -5, -50, 0.076),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
     )
@@ -31,9 +31,9 @@ def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
         layer=[50, 50, 50],
         groundwater=Groundwater(-50, 2, "+y"),
         BHE_Array=[
-            (50, 40, 0, -60, 0.076),
-            (50, 30, -1, -60, 0.076),
-            (50, 50, -1, -52, 0.076),
+            BHE(50, 40, 0, -60, 0.076),
+            BHE(50, 30, -1, -60, 0.076),
+            BHE(50, 50, -1, -52, 0.076),
         ],
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
@@ -47,9 +47,9 @@ def case_3(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
         layer=[50, 50, 40],
         groundwater=[Groundwater(-3, 1, "-x"), Groundwater(-130, 3, "+x")],
         BHE_Array=[
-            (50, 25, -1, -60, 0.076),
-            (50, 30, -1, -49, 0.076),
-            (50, 35, -1, -60, 0.076),
+            BHE(50, 25, -1, -60, 0.076),
+            BHE(50, 30, -1, -49, 0.076),
+            BHE(50, 35, -1, -60, 0.076),
         ],
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
@@ -63,9 +63,9 @@ def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
         layer=[50, 2, 48, 20],
         groundwater=[Groundwater(-3, 1, "-x")],
         BHE_Array=[
-            (40, 15, -1, -60, 0.076),
-            (50, 15, -1, -49, 0.076),
-            (60, 15, -1, -60, 0.076),
+            BHE(40, 15, -1, -60, 0.076),
+            BHE(50, 15, -1, -49, 0.076),
+            BHE(60, 15, -1, -60, 0.076),
         ],
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
