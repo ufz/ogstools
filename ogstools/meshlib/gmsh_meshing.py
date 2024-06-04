@@ -130,37 +130,27 @@ def cuboid(
 @dataclass(frozen=True)
 class Groundwater:
     begin: float = -30
+    """ depth of groundwater begin (negative) in m """
     isolation_layer_id: int = 1
+    """ number of the groundwater isolation layer (count starts with 0)"""
     flow_direction: str = "+x"
-
-    """
-    Base Class for the Groundwater layer
-
-    :param begin: depth of groundwater begin (negative) in m
-    :param isolation_layer_id: number of the groundwater isolation layer (count starts with 0)
-    :param flow_direction:  groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'
-
-    """
+    """ groundwater inflow direction as string - supported '+x', '-x', '-y', '+y' """
 
 
 @dataclass(frozen=True)
 class BHE:
+    """(B)orehole (H)eat (E)xchanger"""
+
     x: float = 50.0
+    """x-coordinate of the BHE in m"""
     y: float = 50.0
+    """y-coordinate of the BHE in m"""
     z_begin: float = -1.0
+    """BHE begin depth (zero or negative) in m"""
     z_end: float = -60.0
+    """BHE end depth (zero or negative) in m"""
     borehole_radius: float = 0.076
-
-    """
-    Base Class for the BHE
-
-    :param x: x-coordinate of the BHE in m
-    :param y: y-coordinate of the BHE in m
-    :param z_begin: BHE begin depth (zero or negative) in m
-    :param z_end: BHE end depth (zero or negative) in m
-    :param borehole_radius: borehole radius in m
-
-    """
+    """borehole radius in m"""
 
 
 def gen_bhe_mesh_gmsh(
