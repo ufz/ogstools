@@ -1570,7 +1570,7 @@ def gen_bhe_mesh_gmsh(
                     np.abs(BHE_array[j].z_end) - np.abs(BHE_array[j].z_begin)
                     <= n_refinement_layers * target_z_size_fine
                 ):  # pragma: no cover
-                    msg = "BHE to short, must be longer than 2m!"
+                    msg = "BHE to short, must be longer than n_refinement_layers * target_z_size_fine!"
                     raise Exception(msg)
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
                     np.abs(BHE_array[j].z_begin) - np.sum(layer[:i])
@@ -1598,12 +1598,6 @@ def gen_bhe_mesh_gmsh(
                 BHE_array[j].z_end
             ) >= np.sum(layer[:i]):
                 BHE_to_soil[j, 3] = i
-                if (
-                    np.abs(BHE_array[j].z_end) - np.abs(BHE_array[j].z_begin)
-                    <= n_refinement_layers * target_z_size_fine
-                ):  # pragma: no cover
-                    msg = "BHE to short, must be longer than n_refinement_layers * target_z_size_fine!"
-                    raise Exception(msg)
                 if (
                     np.abs(BHE_array[j].z_end) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
