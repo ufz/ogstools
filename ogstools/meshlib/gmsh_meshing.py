@@ -5,6 +5,7 @@
 #
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import Optional, Union
@@ -126,19 +127,41 @@ def cuboid(
     gmsh.finalize()
 
 
+@dataclass(frozen=True)
+class Groundwater:
+    begin: float = -30
+    """ depth of groundwater begin (negative) in m """
+    isolation_layer_id: int = 1
+    """ number of the groundwater isolation layer (count starts with 0)"""
+    flow_direction: str = "+x"
+    """ groundwater inflow direction as string - supported '+x', '-x', '-y', '+y' """
+
+
+@dataclass(frozen=True)
+class BHE:
+    """(B)orehole (H)eat (E)xchanger"""
+
+    x: float = 50.0
+    """x-coordinate of the BHE in m"""
+    y: float = 50.0
+    """y-coordinate of the BHE in m"""
+    z_begin: float = -1.0
+    """BHE begin depth (zero or negative) in m"""
+    z_end: float = -60.0
+    """BHE end depth (zero or negative) in m"""
+    borehole_radius: float = 0.076
+    """borehole radius in m"""
+
+
 def gen_bhe_mesh_gmsh(
-    length: float = 150.0,
-    width: float = 100.0,
-    layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[tuple[float, int, str], list[tuple[float, int, str]]] = (
-        -30.0,
-        1,
-        "+x",
-    ),
+    length: float,
+    width: float,
+    layer: Union[float, list[float]],
+    groundwater: Union[Groundwater, list[Groundwater]],
     BHE_Array: Union[
-        tuple[float, float, float, float, float],
-        list[tuple[float, float, float, float, float]],
-    ] = (50.0, 50.0, -1.0, -60.0, 0.076),
+        BHE,
+        list[BHE],
+    ],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -152,21 +175,21 @@ def gen_bhe_mesh_gmsh(
     out_name: Path = Path("bhe_mesh.msh"),
 ) -> None:
     """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the Top-Surface/BHE-begin, the groundwater end/start and the end of the BHE's. Currently only the same BHE begin depth for all BHE's is supported. See detailed description of the parameters below:
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
-    :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
+    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
     :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box
-    :param outer_mesh_size: mesh size outside of the refinement box
+    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
+    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
+    :param inner_mesh_size: mesh size inside the refinement box in m
+    :param outer_mesh_size: mesh size outside of the refinement box in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .msh
@@ -189,10 +212,7 @@ def gen_bhe_mesh_gmsh(
                     - space_next_layer_refined
                 )
                 if space_next_layer_refined == 0:
-                    if (
-                        space
-                        <= (n_refinement_layers + 1) * target_z_size_coarse
-                    ):
+                    if space <= target_z_size_fine:
                         absolute_height_of_layers.append(
                             np.abs(z_min - z_max)
                         )  # space
@@ -208,20 +228,12 @@ def gen_bhe_mesh_gmsh(
                         number_of_layers[len(number_of_layers) - 1].append(
                             n_refinement_layers
                         )
-                        absolute_height_of_layers.append(
-                            space - n_refinement_layers * target_z_size_fine
-                        )
+                        absolute_height_of_layers.append(space)
                         number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(
-                                (
-                                    space
-                                    - n_refinement_layers * target_z_size_fine
-                                )
-                                / target_z_size_coarse
-                            )
+                            math.ceil((space) / target_z_size_coarse)
                         )
                 else:
-                    if space <= target_z_size_coarse:
+                    if space <= target_z_size_fine:
                         absolute_height_of_layers.append(
                             space
                             + n_refinement_layers * target_z_size_fine
@@ -685,11 +697,11 @@ def gen_bhe_mesh_gmsh(
 
         # insert BHE's in the model
         for i in range(len(BHE_array)):
-            X = BHE_array[i, 0]
-            Y = BHE_array[i, 1]
+            X = BHE_array[i].x
+            Y = BHE_array[i].y
             Z = 0
             delta = (
-                alpha * BHE_array[i, 4]
+                alpha * BHE_array[i].borehole_radius
             )  # meshsize at BHE and distance of the surrounding optimal mesh points
 
             gmsh.model.geo.addPoint(
@@ -713,14 +725,18 @@ def gen_bhe_mesh_gmsh(
                 X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
             )
 
-            gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], delta, d + 7)
+            if BHE_array[i].z_begin != 0:
+                gmsh.model.geo.addPoint(
+                    X, Y, BHE_array[i].z_begin, delta, d + 7
+                )
+                bhe_top_nodes.append(d + 7)
+            else:
+                bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
             gmsh.model.mesh.embed(
                 0, [d, d + 1, d + 2, d + 3, d + 4, d + 5, d + 6], 2, 5
             )
-
-            bhe_top_nodes.append(d + 7)
 
             d = d + 8
 
@@ -794,7 +810,7 @@ def gen_bhe_mesh_gmsh(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
-                BHE_array[i, 3] - BHE_array[i, 2],
+                BHE_array[i].z_end - BHE_array[i].z_begin,
                 BHE_extrusion_layers[i],
                 BHE_extrusion_depths[i],
                 True,
@@ -1188,11 +1204,11 @@ def gen_bhe_mesh_gmsh(
 
         # insert BHE's in the model
         for i in range(len(BHE_array)):
-            X = BHE_array[i, 0]
-            Y = BHE_array[i, 1]
+            X = BHE_array[i].x
+            Y = BHE_array[i].y
             Z = 0
             delta = (
-                alpha * BHE_array[i, 4]
+                alpha * BHE_array[i].borehole_radius
             )  # meshsize at BHE and distance of the surrounding optimal mesh points
 
             gmsh.model.geo.addPoint(
@@ -1216,8 +1232,11 @@ def gen_bhe_mesh_gmsh(
                 X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
             )
 
-            gmsh.model.geo.addPoint(X, Y, BHE_array[i, 2], tag=d + 7)
-            bhe_top_nodes.append(d + 7)
+            if BHE_array[i].z_begin != 0:
+                gmsh.model.geo.addPoint(X, Y, BHE_array[i].z_begin, tag=d + 7)
+                bhe_top_nodes.append(d + 7)
+            else:
+                bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
             gmsh.model.mesh.embed(
@@ -1270,7 +1289,7 @@ def gen_bhe_mesh_gmsh(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
-                BHE_array[i, 3] - BHE_array[i, 2],
+                BHE_array[i].z_end - BHE_array[i].z_begin,
                 BHE_extrusion_layers[i],
                 BHE_extrusion_depths[i],
             )
@@ -1458,15 +1477,15 @@ def gen_bhe_mesh_gmsh(
 
     layer = layer if isinstance(layer, list) else [layer]
 
-    groundwater = (
-        [groundwater] if isinstance(groundwater, tuple) else groundwater
+    groundwaters: list[Groundwater] = (
+        [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
-    BHE_Array = [BHE_Array] if isinstance(BHE_Array, tuple) else BHE_Array
+    BHE_Array = [BHE_Array] if isinstance(BHE_Array, BHE) else BHE_Array
 
     # detect the soil layer, in which the groundwater flow starts
     groundwater_list: list = []
-    for g in range(0, len(groundwater)):
+    for g in range(0, len(groundwaters)):
         start_groundwater = -1000
         icl: float = (
             -1
@@ -1474,33 +1493,26 @@ def gen_bhe_mesh_gmsh(
         # needed_medias_in_ogs=len(layer)+1
         for i in range(0, len(layer)):
             if (
-                np.abs(groundwater[g][0]) < np.sum(layer[: i + 1])
+                np.abs(groundwaters[g].begin) < np.sum(layer[: i + 1])
                 and start_groundwater == -1000
             ):
                 start_groundwater = i
-                # needed_extrusions=len(layer)+1
-                # icl=0
-                if (
-                    np.abs(groundwater[g][0])
-                    < n_refinement_layers * target_z_size_fine
-                ):  # pragma: no cover
-                    msg = "Groundwater layer must start in the soil, a beginning in the first 2 meter of the top surface is currently not possible!"
-                    raise Exception(msg)
+
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
-                    np.abs(groundwater[g][0])
+                    np.abs(groundwaters[g].begin)
                     - np.sum(layer[:start_groundwater])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - GW')
                     icl = 1
-                    if np.abs(groundwater[g][0]) == np.sum(
+                    if np.abs(groundwaters[g].begin) == np.sum(
                         layer[:start_groundwater]
                     ):  # beginning of groundwater at a transition of two soil layers - special case
                         icl = 3
                         # needed_medias_in_ogs=len(layer) #needed_extrusions=len(layer)
                     elif (
                         np.sum(layer[: start_groundwater + 1])
-                        - np.abs(groundwater[g][0])
+                        - np.abs(groundwaters[g].begin)
                         < n_refinement_layers * target_z_size_fine
                     ):
                         icl = (
@@ -1508,7 +1520,7 @@ def gen_bhe_mesh_gmsh(
                         )
                 elif (
                     np.sum(layer[: start_groundwater + 1])
-                    - np.abs(groundwater[g][0])
+                    - np.abs(groundwaters[g].begin)
                     < n_refinement_layers * target_z_size_fine
                     and icl != 1.2
                 ):
@@ -1520,9 +1532,9 @@ def gen_bhe_mesh_gmsh(
             [
                 start_groundwater,
                 icl,
-                groundwater[g][0],
-                groundwater[g][1],
-                groundwater[g][2],
+                groundwaters[g].begin,
+                groundwaters[g].isolation_layer_id,
+                groundwaters[g].flow_direction,
             ]
         )
 
@@ -1537,31 +1549,31 @@ def gen_bhe_mesh_gmsh(
 
     for j in range(0, len(BHE_array)):
         for i in range(0, len(layer)):
-            if np.abs(BHE_array[j, 2]) < np.sum(layer[: i + 1]) and np.abs(
-                BHE_array[j, 2]
+            if np.abs(BHE_array[j].z_begin) < np.sum(layer[: i + 1]) and np.abs(
+                BHE_array[j].z_begin
             ) >= np.sum(
                 layer[:i]
             ):  # Auswertung für BHE_Beginn
                 BHE_to_soil[j, 0] = j
                 BHE_to_soil[j, 1] = i
                 if (
-                    np.abs(BHE_array[j, 3]) - np.abs(BHE_array[j, 2])
+                    np.abs(BHE_array[j].z_end) - np.abs(BHE_array[j].z_begin)
                     <= n_refinement_layers * target_z_size_fine
                 ):  # pragma: no cover
-                    msg = "BHE to short, must be longer than 2m!"
+                    msg = "BHE to short, must be longer than n_refinement_layers * target_z_size_fine!"
                     raise Exception(msg)
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
-                    np.abs(BHE_array[j, 2]) - np.sum(layer[:i])
+                    np.abs(BHE_array[j].z_begin) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
                     BHE_to_soil[j, 2] = 1
-                    if np.abs(BHE_array[j, 2]) == np.sum(
+                    if np.abs(BHE_array[j].z_begin) == np.sum(
                         layer[:i]
                     ):  # beginning a transition of two soil layers - special case
                         BHE_to_soil[j, 2] = 3
                 elif (
-                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j, 2])
+                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_begin)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
@@ -1569,51 +1581,42 @@ def gen_bhe_mesh_gmsh(
                 else:
                     BHE_to_soil[j, 2] = 0
 
-    for i in range(1, len(BHE_array)):
-        if BHE_array[0, 2] != BHE_array[i, 2]:  # pragma: no cover
-            msg = "All BHEs must start at the same height, different BHE begin heights not implemented yet!"
-            raise Exception(msg)
-
     # detect the soil layer, in which the BHE ends
     for j in range(0, len(BHE_array)):
         for i in range(0, len(layer)):
-            if np.abs(BHE_array[j, 3]) < np.sum(layer[: i + 1]) and np.abs(
-                BHE_array[j, 3]
+            if np.abs(BHE_array[j].z_end) < np.sum(layer[: i + 1]) and np.abs(
+                BHE_array[j].z_end
             ) >= np.sum(layer[:i]):
                 BHE_to_soil[j, 3] = i
                 if (
-                    np.abs(BHE_array[j, 3]) - np.abs(BHE_array[j, 2])
-                    <= n_refinement_layers * target_z_size_fine
-                ):  # pragma: no cover
-                    msg = "BHE to short, must be longer than 2m!"
-                    raise Exception(msg)
-                if (
-                    np.abs(BHE_array[j, 3]) - np.sum(layer[:i])
+                    np.abs(BHE_array[j].z_end) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
                     BHE_to_soil[j, 4] = 1
-                    if np.abs(BHE_array[j, 3]) == np.sum(
+                    if np.abs(BHE_array[j].z_end) == np.sum(
                         layer[:i]
                     ):  # beginning at a transition of two soil layers - special case
                         BHE_to_soil[j, 4] = 3
 
                     elif (
-                        np.sum(layer[: i + 1]) - np.abs(BHE_array[j, 3])
+                        np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
                         < n_refinement_layers * target_z_size_fine
                     ):
                         BHE_to_soil[
                             j, 4
                         ] = 1.2  # for layers, which are top and bottom critical
                 elif (
-                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j, 3])
+                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
                     BHE_to_soil[j, 4] = 2
                 else:
                     BHE_to_soil[j, 4] = 0
-            elif np.abs(BHE_array[j, 3]) >= np.sum(layer):  # pragma: no cover
+            elif np.abs(BHE_array[j].z_end) >= np.sum(
+                layer
+            ):  # pragma: no cover
                 raise Exception(
                     "BHE %d ends at bottom boundary or outside of the model area"
                     % j
@@ -1624,13 +1627,18 @@ def gen_bhe_mesh_gmsh(
         BHE_end_depths = (
             []
         )  # only the interesting depths in the i-th layer ToDo: Rename the variable
+
         # filter, which BHE's ends in this layer
         BHE_end_in_Layer = BHE_to_soil[BHE_to_soil[:, 3] == i]
 
         for k in BHE_end_in_Layer[:, 0]:
-            BHE_end_depths.append([BHE_array[k, 3], BHE_to_soil[k, 4]])
-            if i == BHE_to_soil[0, 1]:
-                BHE_end_depths.append([BHE_array[0, 2], BHE_to_soil[0, 2]])
+            BHE_end_depths.append([BHE_array[k].z_end, BHE_to_soil[k, 4]])
+
+        # filter, which BHE's starts in this layer
+        BHE_starts_in_Layer = BHE_to_soil[BHE_to_soil[:, 1] == i]
+
+        for k in BHE_starts_in_Layer[:, 0]:
+            BHE_end_depths.append([BHE_array[k].z_begin, BHE_to_soil[k, 2]])
 
         groundwater_list_0 = np.array(
             [inner_list[0] for inner_list in groundwater_list]
@@ -1639,9 +1647,9 @@ def gen_bhe_mesh_gmsh(
             if len(np.argwhere(groundwater_list_0 == i)) == 1:
                 BHE_end_depths.append(
                     [
-                        groundwater[np.argwhere(groundwater_list_0 == i)[0, 0]][
-                            0
-                        ],
+                        groundwaters[
+                            np.argwhere(groundwater_list_0 == i)[0, 0]
+                        ].begin,
                         icl,
                     ]
                 )
@@ -1655,9 +1663,6 @@ def gen_bhe_mesh_gmsh(
         )
         if i in groundwater_list_3:
             BHE_end_depths.append([-np.sum(layer[:i]), 3])
-
-        if i == BHE_to_soil[0, 1]:
-            BHE_end_depths.append([BHE_array[0, 2], BHE_to_soil[0, 2]])
 
         BHE_end_depths.append([-np.sum(layer[:i]), 0])
         BHE_end_depths.append([-np.sum(layer[: i + 1]), 0])
@@ -1831,25 +1836,28 @@ def gen_bhe_mesh_gmsh(
     for i in range(0, len(BHE_array)):
         needed_extrusion = all_extrusion[
             (
-                (all_extrusion[:, 0] >= np.abs(BHE_array[i, 2]))
+                (all_extrusion[:, 0] >= np.abs(BHE_array[i].z_begin))
                 & (
-                    all_extrusion[:, 0] <= np.abs(BHE_array[i, 3]) + 0.001
+                    all_extrusion[:, 0] <= np.abs(BHE_array[i].z_end) + 0.001
                 )  # add little relax tolerance 0.001
             )
         ]
 
         BHE_extrusion_layers.append(needed_extrusion[:, 1])
         BHE_extrusion_depths.append(
-            (needed_extrusion[:, 0] - np.abs(BHE_array[i, 2]))
-            / (needed_extrusion[-1, 0] - np.abs(BHE_array[i, 2]))
+            (needed_extrusion[:, 0] - np.abs(BHE_array[i].z_begin))
+            / (needed_extrusion[-1, 0] - np.abs(BHE_array[i].z_begin))
         )
 
     # define the inner square with BHE inside
     # compute the box size from the BHE-Coordinates
-    x_min = np.min(BHE_array[:, 0]) - dist_box_x
-    x_max = np.max(BHE_array[:, 0]) + dist_box_x
-    y_min = np.min(BHE_array[:, 1]) - dist_box_y
-    y_max = np.max(BHE_array[:, 1]) + dist_box_y
+    x_BHE = [BHE_array[i].x for i in range(0, len(BHE_array))]
+    y_BHE = [BHE_array[i].y for i in range(0, len(BHE_array))]
+
+    x_min = np.min(x_BHE) - dist_box_x
+    x_max = np.max(x_BHE) + dist_box_x
+    y_min = np.min(y_BHE) - dist_box_y
+    y_max = np.max(y_BHE) + dist_box_y
 
     # Index for the right export of the groundwater inflow surface and adapt mesh sizes according to GW-flow
     plus_x_mesh_size = inner_mesh_size
@@ -1900,18 +1908,14 @@ def gen_bhe_mesh_gmsh(
 
 
 def gen_bhe_mesh(
-    length: float = 150.0,
-    width: float = 100.0,
-    layer: Union[float, list[float]] = 100.0,
-    groundwater: Union[tuple[float, int, str], list[tuple[float, int, str]]] = (
-        -30.0,
-        1,
-        "+x",
-    ),
+    length: float,  # e.g. 150.0
+    width: float,  # e.g. 100
+    layer: Union[float, list[float]],  # e.g. 100
+    groundwater: Union[Groundwater, list[Groundwater]],
     BHE_Array: Union[
-        tuple[float, float, float, float, float],
-        list[tuple[float, float, float, float, float]],
-    ] = (50.0, 50.0, -1.0, -60.0, 0.076),
+        BHE,
+        list[BHE],
+    ],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -1927,19 +1931,15 @@ def gen_bhe_mesh(
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
     submeshes at the top, at the bottom and the groundwater inflow, which is exported
-    in the OGS .msh format. Refinement layers are placed at the Top-Surface/BHE-begin,
-    the groundwater end/start and the end of the BHE's. Currently only the same BHE
-    begin depth for all BHE's is supported. See detailed description
-    of the parameters below:
+    in the OGS readable .vtu format. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater inflow direction, , empty list [] for no groundwater flow
-        as string - supported '+x', '-x', '-y', '+y']
-    :param BHE_Array: List of BHEs, where every BHE is specified by a list of five floats:
+        isolation layer (count starts with 0), groundwater inflow direction, as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
         [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
         BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction,
@@ -1949,14 +1949,14 @@ def gen_bhe_mesh(
     :param n_refinement_layers: number of refinement layers which are evenly set above and
         beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box
-    :param outer_mesh_size: mesh size outside of the refinement box
+    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
+    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
+    :param inner_mesh_size: mesh size inside the refinement box in m
+    :param outer_mesh_size: mesh size outside of the refinement box in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
-    :param order:
-    :param out_name: name of the exported mesh, must end with .msh
+    :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
+    :param out_name: name of the exported mesh, must end with .vtu
     :return: list of filenames of the created vtu mesh files
     """
 
@@ -1999,7 +1999,7 @@ def gen_bhe_mesh(
     ]
 
     groundwater = (
-        [groundwater] if isinstance(groundwater, tuple) else groundwater
+        [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
     for i in range(0, len(groundwater)):

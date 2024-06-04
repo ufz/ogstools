@@ -2,11 +2,11 @@
 """
 Creating a BHE mesh (Borehole Heat Exchanger)
 ===================================================
-
-This example demonstrates how to use gen_bhe_mesh() to create
-a Borehole Heat Exchanger (BHE) mesh.
-
 """
+
+# %% [markdown]
+# This example demonstrates how to use :py:mod:`ogstools.meshlib.gmsh_meshing.gen_bhe_mesh` to create
+# a Borehole Heat Exchanger (BHE) mesh.
 
 # %%
 from pathlib import Path
@@ -15,12 +15,12 @@ from tempfile import mkdtemp
 import pyvista as pv
 from pyvista.plotting import Plotter
 
-from ogstools.meshlib.gmsh_meshing import gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
 # 0. Introduction
 # ----------------
-# This example shows the general usage of gen_bhe_mesh and how some of
+# This example shows the general usage of :py:mod:`ogstools.meshlib.gmsh_meshing.gen_bhe_mesh` and how some of
 # the parameters will effect the mesh. This section demonstrates the mesh
 # generation with only three soil layers, groundwater flow in one layer
 # and three BHE's. However, this tool provides multiple soil layers,
@@ -41,11 +41,13 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(
+        begin=-30, isolation_layer_id=1, flow_direction="+x"
+    ),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(x=50, y=40, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=50, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=60, z_begin=-1, z_end=-60, borehole_radius=0.076),
     ],
     meshing_type="prism",
     out_name=vtu_file,
@@ -98,11 +100,13 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(
+        begin=-30, isolation_layer_id=1, flow_direction="+x"
+    ),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(x=50, y=40, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=50, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=60, z_begin=-1, z_end=-60, borehole_radius=0.076),
     ],
     meshing_type="structured",
     out_name=vtu_file,
@@ -156,11 +160,11 @@ bhe_meshes = gen_bhe_mesh(
     length=150,
     width=100,
     layer=[50, 50, 50],
-    groundwater=(-30, 1, "+x"),
+    groundwater=Groundwater(-30, 1, "+x"),
     BHE_Array=[
-        (50, 40, -1, -60, 0.076),
-        (50, 50, -1, -60, 0.076),
-        (50, 60, -1, -60, 0.076),
+        BHE(50, 40, -1, -60, 0.076),
+        BHE(50, 50, -1, -60, 0.076),
+        BHE(50, 60, -1, -60, 0.076),
     ],
     meshing_type="structured",
     target_z_size_coarse=10,  # default value 7.5
