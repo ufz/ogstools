@@ -3,10 +3,13 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
+from pathlib import Path
+from typing import Optional
+
 from ogs6py import ogs
 
 
-def steady_state_diffusion(saving_path: str, model: ogs.OGS = None) -> ogs.OGS:
+def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
     """
     A template for a steady state diffusion process to be simulated in ogs.
 
@@ -16,7 +19,7 @@ def steady_state_diffusion(saving_path: str, model: ogs.OGS = None) -> ogs.OGS:
     model.processes.set_process(
         name="SteadyStateDiffusion",
         type="STEADY_STATE_DIFFUSION",
-        integration_order="2",
+        integration_order=2,
     )
     model.processes.add_process_variable(
         secondary_variable="darcy_velocity", output_name="v"
@@ -79,23 +82,31 @@ def steady_state_diffusion(saving_path: str, model: ogs.OGS = None) -> ogs.OGS:
 
 
 def liquid_flow(
-    saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
+    saving_path: Path, model: ogs.OGS = None, dimension: int = 3
 ) -> ogs.OGS:
     """
     A template for a steady liquid flow process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
     :param model: ogs model, which shall be used with the template
+    :param dimension: True, if the model is 2 dimensional.
     """
     # FEFLOW uses hydraulic HEAD instead of pressure as primary variable,
     # which is why the gravity is calculated in the hydraulic conductivity.
     # That is why, in this case we can set the gravity to 0 in all needed spatial
     # directions.
-    gravity = "0 0" if dimension2D else "0 0 0"
+    if dimension == 1:
+        gravity = "0"
+    elif dimension == 2:
+        gravity = "0 0"
+    elif dimension == 3:
+        gravity = "0 0 0"
+    else:
+        ValueError("Dimension can be either 1,2 or 3.")
     model.processes.set_process(
         name="LiquidFlow",
         type="LIQUID_FLOW",
-        integration_order="2",
+        integration_order=2,
         specific_body_force=gravity,
         linear="true",
     )
@@ -160,7 +171,11 @@ def liquid_flow(
 
 
 def component_transport(
-    saving_path: str, species: list, model: ogs.OGS = None
+    saving_path: Path,
+    species: list,
+    model: ogs.OGS = None,
+    dimension: int = 3,
+    fixed_out_times: Optional[list] = None,
 ) -> ogs.OGS:
     """
     A template for component transport process to be simulated in ogs.
@@ -168,40 +183,32 @@ def component_transport(
     :param saving_path: path of ogs simulation results
     :param species:
     :param model: ogs model, which shall be used with the template
+    :param dimension: True, if the model is 2 dimensional.
     """
+    if dimension == 1:
+        gravity = "0"
+    elif dimension == 2:
+        gravity = "0 0"
+    elif dimension == 3:
+        gravity = "0 0 0"
+    else:
+        ValueError("Dimension can be either 1,2 or 3.")
     model.processes.set_process(
         name="CT",
         type="ComponentTransport",
         coupling_scheme="staggered",
-        integration_order="2",
-        specific_body_force="0 0 0",
+        integration_order=2,
+        specific_body_force=gravity,
     )
-    # Actually for each process variable, especially for each
-    # chemical species the following functions need to be called.
-    # But this feature is not supplied by ogs6py
-    model.timeloop.add_process(
-        process="CT",
-        nonlinear_solver_name="basic_picard",
-        convergence_type="DeltaX",
-        norm_type="NORM2",
-        abstol="1e-10",
-        time_discretization="BackwardEuler",
-    )
-    model.timeloop.set_stepping(
-        process="CT",
-        type="FixedTimeStepping",
-        t_initial="0",
-        t_end="1",
-        repeat="1",
-        delta_t="1",
-    )
-    output_variables = species + ["pressure"]
+    output_variables = species + ["HEAD_OGS"]
+    fixed_out_times = [1] if fixed_out_times is None else fixed_out_times
     model.timeloop.add_output(
         type="VTK",
         prefix=str(saving_path),
-        repeat="1",
-        each_steps="1",
+        repeat=1,
+        each_steps=48384000,
         variables=output_variables,
+        fixed_output_times=fixed_out_times,
     )
     model.nonlinsolvers.add_non_lin_solver(
         name="basic_picard",
@@ -238,20 +245,27 @@ def component_transport(
 
 
 def hydro_thermal(
-    saving_path: str, model: ogs.OGS = None, dimension2D: bool = False
+    saving_path: Path, model: ogs.OGS = None, dimension: int = 3
 ) -> ogs.OGS:
     """
     A template for a hydro-thermal process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
     :param model: ogs model, which shall be used with the template
-    :param dimension2D: to known if the model is 2D or not
+    :param dimension: to known if the model is 2D or not
     """
-    gravity = "0 0" if dimension2D else "0 0 0"
+    if dimension == 1:
+        gravity = "0"
+    elif dimension == 2:
+        gravity = "0 0"
+    elif dimension == 3:
+        gravity = "0 0 0"
+    else:
+        ValueError("Dimension can be either 1,2 or 3.")
     model.processes.set_process(
         name="HydroThermal",
         type="HT",
-        integration_order="3",
+        integration_order=3,
         specific_body_force=gravity,
     )
     model.processes.add_process_variable(

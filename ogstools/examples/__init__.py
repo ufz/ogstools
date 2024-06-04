@@ -45,6 +45,9 @@ feflow_model_box_Neumann = _feflow_dir / "box_3D_neumann.fem"
 feflow_model_box_Robin = _feflow_dir / "box_3D_cauchy_areal.fem"
 feflow_model_box_well_BC = _feflow_dir / "box_3D_wellBC.fem"
 feflow_model_2D_HT_model = _feflow_dir / "HT_toymodel_Diri.fem"
+feflow_model_2D_CT_t_560 = _feflow_dir / "CT_2D_line_560.fem"
+feflow_model_2D_CT_t_168 = _feflow_dir / "CT_2D_line_168.fem"
+feflow_model_2D_CT_t_28 = _feflow_dir / "CT_2D_line_28.fem"
 
 log_const_viscosity_thermal_convection = (
     _logs_dir / "ConstViscosityThermalConvection.log"

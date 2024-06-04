@@ -29,9 +29,11 @@ from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties,
 )
+from ogstools.meshlib import MeshSeries
 
 # %%
-# 1. Load a FEFLOW model (.fem) as a FEFLOW document and convert it.
+# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
+# how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
 feflow_model = ifm.loadDocument(str(feflow_model_box_Neumann))
 pyvista_mesh = convert_properties_mesh(feflow_model)
 
@@ -44,12 +46,12 @@ pyvista_mesh.plot(
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 print(pyvista_mesh)
-path_writing = Path(tempfile.mkdtemp("feflow_test_simulation"))
-path_mesh = path_writing / "boxNeumann.vtu"
-pyvista_mesh.save(str(path_mesh))
+temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+feflow_mesh_file = temp_dir / "boxNeumann.vtu"
+pyvista_mesh.save(feflow_mesh_file)
 # %%
-# 2. Extract the point and cell boundary conditions and write them to a temporary directory.
-point_BC_dict = extract_point_boundary_conditions(path_writing, pyvista_mesh)
+# 2. Extract the point conditions (see: :py:mod:`ogstools.feflowlib.extract_point_boundary_conditions`).
+point_BC_dict = extract_point_boundary_conditions(temp_dir, pyvista_mesh)
 # Since there can be multiple point boundary conditions on the bulk mesh,
 # they are saved and plotted iteratively.
 plotter = pv.Plotter(shape=(len(point_BC_dict), 1))
@@ -59,39 +61,45 @@ for i, (path, boundary_condition) in enumerate(point_BC_dict.items()):
     plotter.add_mesh(boundary_condition, scalars=Path(path).stem)
 plotter.show()
 path_topsurface, topsurface = extract_cell_boundary_conditions(
-    path_mesh, pyvista_mesh
+    feflow_mesh_file, pyvista_mesh
 )
 # On the topsurface can be cell based boundary condition.
 # The boundary conditions on the topsurface of the model are required for generalization.
 topsurface.save(path_topsurface)
 # %%
-# 3. Setup a prj-file to run a OGS-simulation
-path_prjfile = str(path_mesh.with_suffix(".prj"))
-prjfile = ogs.OGS(PROJECT_FILE=str(path_prjfile))
+# 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
+path_prjfile = feflow_mesh_file.with_suffix(".prj")
+prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
 # Get the template prj-file configurations for a steady state diffusion process
 ssd_model = steady_state_diffusion(
-    path_writing / "sim_boxNeumann",
+    temp_dir / "sim_boxNeumann",
     prjfile,
 )
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
-    path_mesh,
-    pyvista_mesh,
-    get_material_properties(pyvista_mesh, "P_CONDX"),
-    "steady state diffusion",
+    bulk_mesh_path=feflow_mesh_file,
+    mesh=pyvista_mesh,
+    material_properties=get_material_properties(pyvista_mesh, "P_CONDX"),
+    process="steady state diffusion",
     model=ssd_model,
 )
 # The model must be written before it can be run.
-model.write_input(str(path_prjfile))
+model.write_input(path_prjfile)
 # Simply print the prj-file as an example.
-model_prjfile = ET.parse(str(path_prjfile))
+model_prjfile = ET.parse(path_prjfile)
 ET.dump(model_prjfile)
 # %%
 # 4. Run the model
-model.run_model(logfile=str(path_writing / "out.log"))
+model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
-ogs_sim_res = pv.read(str(path_writing / "sim_boxNeumann_ts_1_t_1.000000.vtu"))
+ms = MeshSeries(temp_dir / "sim_boxNeumann.pvd")
+# Read the last timestep:
+ogs_sim_res = ms.read(ms.timesteps[-1])
+"""
+It is also possible to read the file directly with pyvista:
+ogs_sim_res = pv.read(temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
+"""
 ogs_sim_res.plot(
     show_edges=True,
     off_screen=True,

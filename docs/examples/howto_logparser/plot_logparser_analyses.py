@@ -56,7 +56,7 @@ df_ts_it
 # Analysis of computational efficiency by time step
 # -------------------------------------------------
 # The resulting table represents performance metrics for different parts of the simulation,
-# organized by time step. Is utilizes :py:mod:`ogstools.logparser.analysis_time_step`.
+# organized by time step. It utilizes :py:mod:`ogstools.logparser.analysis_time_step`.
 # displaying metrics such
 # as output time [s], step size [s], time step solution time [s], assembly time [s],
 # Dirichlet time [s], and linear solver time [s].
