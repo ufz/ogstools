@@ -7,7 +7,7 @@
 """Specialized plot features."""
 
 import string
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np

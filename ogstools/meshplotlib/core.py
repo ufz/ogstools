@@ -8,7 +8,7 @@
 
 import warnings
 from math import nextafter
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import pyvista as pv
