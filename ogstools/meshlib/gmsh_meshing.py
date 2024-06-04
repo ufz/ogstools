@@ -1680,9 +1680,6 @@ def gen_bhe_mesh_gmsh(
         if i in groundwater_list_3:
             BHE_end_depths.append([-np.sum(layer[:i]), 3])
 
-        if i == BHE_to_soil[0, 1]:
-            BHE_end_depths.append([BHE_array[0].z_begin, BHE_to_soil[0, 2]])
-
         BHE_end_depths.append([-np.sum(layer[:i]), 0])
         BHE_end_depths.append([-np.sum(layer[: i + 1]), 0])
         depths = np.unique(BHE_end_depths, axis=0)  # [::-1]
