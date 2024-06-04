@@ -150,6 +150,7 @@ devcontainer image:
   rules:
     - changes:
         - .devcontainer/*
+    - when: manual
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - devcontainer build --workspace-folder . --push true --image-name ${DOCKER_IMAGE}
