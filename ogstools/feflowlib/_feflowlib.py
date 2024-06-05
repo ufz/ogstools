@@ -16,15 +16,6 @@ ifm.forceLicense("Viewer")
 logger = log.getLogger(__name__)
 
 
-def _getSpeciesName(doc: ifm.FeflowDoc, i: int) -> str:
-    try:
-        species = doc.getSpeciesName(i)
-    except RuntimeError:
-        species = "single_species"
-
-    return species
-
-
 def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     """
     Get points and cells in a pyvista compatible format.
@@ -305,8 +296,12 @@ def get_species_parameter(
                 obsolete_data[data] = point_or_cell
                 # If there is only a single species in the model, doc.getSpeciesName(i) throws a
                 # RunTimeError.
-                for i in range(doc.getNumberOfSpecies()):
-                    species = _getSpeciesName(doc, i)
+                number_of_species = doc.getNumberOfSpecies()
+                for species_id in range(number_of_species):
+                    if number_of_species > 1:
+                        species = doc.getSpeciesName(species_id)
+                    else:
+                        species = "single_species"
                     par = (
                         doc.getParameter(getattr(ifm.Enum, data), species)
                         if species != "single_species"

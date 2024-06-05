@@ -6,7 +6,6 @@ stages:
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
   DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9
-  DOCKER_IMAGE_PINNED: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.9:feflow-8.0
   DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.9
 
 workflow:
@@ -20,7 +19,7 @@ workflow:
     - if: $CI_COMMIT_TAG
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH == "ogs/tools/ogstools"'
 
-image: $DOCKER_IMAGE_PINNED
+image: $DOCKER_IMAGE
 
 cache:
   paths:
@@ -151,6 +150,7 @@ devcontainer image:
   rules:
     - changes:
         - .devcontainer/*
+    - when: manual
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - devcontainer build --workspace-folder . --push true --image-name ${DOCKER_IMAGE}
