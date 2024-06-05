@@ -24,14 +24,14 @@ This means that the converter supplies a suggestion for a `prj-file`, which is n
 to be working.
 The current status enables:
 
-### Main features:
+### Main features
 
 - conversion of FEFLOW meshes
 - extraction of boundary condition
 - creation of OGS-models for `steady state diffusion`, `liquid flow`, `hydro thermal` and `component transport` processes
 - usage via *command line interface* or as *Python library*
 
-### specific features:
+### specific features
 
 - get point, cells and celltypes to array according to pyvista convention for [pyvista.UnstructuredGrid](https://docs.pyvista.org/version/stable/api/core/_autosummary/pyvista.UnstructuredGrid.html)
 - write MaterialIDs to a dictionary
@@ -90,7 +90,7 @@ The converter requires FEFLOW to be installed.
 There are different ways to fulfill this requirement, either one installs FEFLOW or works with a [Docker container](./docker.md) that has FEFLOW installed.
 
 ::::{note}
-If you use an old version of FEFLOW, make sure it is compatible with `Python 3.9`, as this is a requirement for using of ogstools and the FEFLOW-converter.
+If you use an old version of FEFLOW, make sure it is compatible with `Python 3.10`, as this is a requirement for using of ogstools and the FEFLOW-converter.
 ::::
 
 ::::{tab-set}
