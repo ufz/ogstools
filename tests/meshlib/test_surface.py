@@ -1,6 +1,5 @@
-import unittest
-
 import numpy as np
+import pytest
 import pyvista as pv
 
 from ogstools.definitions import EXAMPLES_DIR
@@ -9,20 +8,20 @@ from ogstools.meshlib.boundary_subset import Surface
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
-class SurfaceTest(unittest.TestCase):
+class TestSurface:
     """
     Collects all steps that are necessary to create a prism mesh
     """
 
-    def testsurfaceFromFileValid(self):
+    def testsurface_from_file_valid(self):
         """
         OK if file can be loaded - if not it raises an exception
         """
         filename = meshpath / "mesh1/surface_data/00_KB.vtu"
         s = Surface(filename, 0)  # checks
-        self.assertEqual(s.filename, filename)
+        assert s.filename == filename
 
-    def testurfaceFromPyvista(self):
+    def testurface_from_pyvista(self):
         """
         test if file can be loaded - if not it raises an exception
         """
@@ -33,25 +32,25 @@ class SurfaceTest(unittest.TestCase):
         surface_mesh = pv.StructuredGrid(X1, Y1, Z1)
 
         s = Surface(surface_mesh, 0)
-        self.assertGreater(s.mesh.GetNumberOfPoints(), 0)
+        assert s.mesh.GetNumberOfPoints() > 0
 
         pv.save_meshio(filename=s.filename, mesh=s.mesh)
         s2 = Surface(s.filename, material_id=2)
-        self.assertGreater(s2.mesh.GetNumberOfPoints(), 0)
+        assert s2.mesh.GetNumberOfPoints() > 0
 
-    def testsurfaceFromFileInvalid(self):
+    def testsurface_from_file_invalid(self):
         """
         OK if file can be loaded - if not it raises an exception
         """
-        self.assertRaises(
-            Exception,
-            Surface.__init__,
-            meshpath / "mesh1/surface_data/notexisting.vtu",
-            0,
-            0,
-        )
+        with pytest.raises(
+            ValueError, match=r".*/notexisting.vtu does not exist."
+        ):
+            Surface(
+                meshpath / "mesh1/surface_data/notexisting.vtu",
+                0,
+            )
 
-    def testsurfaceToRaster(self):
+    def testsurface_to_raster(self):
         s1 = Surface(
             meshpath / "mesh1/surface_data/00_KB.vtu",
             0,
@@ -60,4 +59,4 @@ class SurfaceTest(unittest.TestCase):
 
         with outfile.open() as f:
             lines = f.readlines()
-            self.assertTrue("cellsize" in lines[4])
+            assert "cellsize" in lines[4]

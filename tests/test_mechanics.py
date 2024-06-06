@@ -1,6 +1,5 @@
 """Unit tests for solid mechanics."""
 
-import unittest
 
 import numpy as np
 from parameterized import parameterized
@@ -14,7 +13,7 @@ def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
     np.testing.assert_allclose(vals1, vals2, verbose=True, rtol=rtol, atol=atol)
 
 
-class MechanicsTest(unittest.TestCase):
+class TestMechanics:
     """Test case for physical properties."""
 
     rng = np.random.default_rng()

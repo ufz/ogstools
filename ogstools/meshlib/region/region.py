@@ -303,12 +303,11 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
         path = outfile.parent
         os.listdir(path)
 
-    materials_in_domain: list[int] = sum(
-        [
+    materials_in_domain: list[int] = list(
+        chain.from_iterable(
             [layer.material_id] * (layer.num_subdivisions + 1)
             for layer in layer_set.layers
-        ],
-        [],
+        )
     )
 
     region_attribute_name = "cell_scalars"
@@ -371,9 +370,8 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     if ret:
         raise ValueError()
 
-    materials_in_domain: list[int] = sum(
-        [[layer.material_id] for layer in layer_set.layers],
-        [],
+    materials_in_domain = list(
+        chain.from_iterable([layer.material_id] for layer in layer_set.layers)
     )
 
     region_attribute_name = "MaterialIDs"

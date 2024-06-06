@@ -1,6 +1,5 @@
 import subprocess
 import tempfile
-import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -38,8 +37,8 @@ def test_cli():
     subprocess.run(["feflow2ogs", "--help"], check=True)
 
 
-class TestSimulation_Neumann(unittest.TestCase):
-    def setUp(self):
+class TestSimulation_Neumann:
+    def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -53,7 +52,7 @@ class TestSimulation_Neumann(unittest.TestCase):
         )
         topsurface.save(path_topsurface)
 
-    def test_Neumann_ogs_steady_state_diffusion(self):
+    def test_neumann_ogs_steady_state_diffusion(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -84,7 +83,7 @@ class TestSimulation_Neumann(unittest.TestCase):
         )
         np.testing.assert_array_less(np.abs(dif), 9e-6)
 
-    def test_Neumann_ogs_liquid_flow(self):
+    def test_neumann_ogs_liquid_flow(self):
         """
         Test if ogs simulation with liquid flow results
         are similar to FEFLOW simulation results.
@@ -116,8 +115,8 @@ class TestSimulation_Neumann(unittest.TestCase):
         )
 
 
-class TestSimulation_Robin(unittest.TestCase):
-    def setUp(self):
+class TestSimulation_Robin:
+    def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Robin))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -129,7 +128,7 @@ class TestSimulation_Robin(unittest.TestCase):
         )
         topsurface.save(path_topsurface)
 
-    def test_Robin_ogs_steady_state_diffusion(self):
+    def test_robin_ogs_steady_state_diffusion(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -160,7 +159,7 @@ class TestSimulation_Robin(unittest.TestCase):
             atol=6e-5,
         )
 
-    def test_Robin_ogs_liquid_flow(self):
+    def test_robin_ogs_liquid_flow(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -192,8 +191,8 @@ class TestSimulation_Robin(unittest.TestCase):
         )
 
 
-class TestSimulation_Well(unittest.TestCase):
-    def setUp(self):
+class TestSimulation_Well:
+    def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_well_BC))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -205,7 +204,7 @@ class TestSimulation_Well(unittest.TestCase):
         )
         topsurface.save(path_topsurface)
 
-    def test_Well_ogs_steady_state_diffusion(self):
+    def test_well_ogs_steady_state_diffusion(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -235,7 +234,7 @@ class TestSimulation_Well(unittest.TestCase):
             atol=5e-8,
         )
 
-    def test_Well_ogs_liquid_flow(self):
+    def test_well_ogs_liquid_flow(self):
         """
         Test if ogs simulation for a steady state diffusion results
         are similar to FEFLOW simulation results.
@@ -267,8 +266,8 @@ class TestSimulation_Well(unittest.TestCase):
         )
 
 
-class TestConverter(unittest.TestCase):
-    def setUp(self):
+class TestConverter:
+    def setup_method(self):
         # Variables for the following tests:
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
@@ -280,9 +279,9 @@ class TestConverter(unittest.TestCase):
         """
         doc = ifm.loadDocument(str(examples.feflow_model_2layers))
         points, cells, celltypes = points_and_cells(doc)
-        self.assertEqual(len(points), 75)
-        self.assertEqual(len(celltypes), 32)
-        self.assertEqual(celltypes[0], pv.CellType.HEXAHEDRON)
+        assert len(points) == 75
+        assert len(celltypes) == 32
+        assert celltypes[0] == pv.CellType.HEXAHEDRON
 
     def test_toymodel_mesh_conversion(self):
         """
@@ -290,13 +289,13 @@ class TestConverter(unittest.TestCase):
         """
         # 1. Test if geometry is fine
         points, cells, celltypes = points_and_cells(self.doc)
-        self.assertEqual(len(points), 6768)
-        self.assertEqual(len(celltypes), 11462)
-        self.assertEqual(celltypes[0], pv.CellType.WEDGE)
+        assert len(points) == 6768
+        assert len(celltypes) == 11462
+        assert celltypes[0] == pv.CellType.WEDGE
 
         # 2. Test data arrays
-        self.assertEqual(len(self.pv_mesh.cell_data), 12)
-        self.assertEqual(len(self.pv_mesh.point_data), 11)
+        assert len(self.pv_mesh.cell_data) == 12
+        assert len(self.pv_mesh.point_data) == 11
 
     def test_toymodel_point_boundary_condition(self):
         """
@@ -304,11 +303,11 @@ class TestConverter(unittest.TestCase):
         """
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         bc_flow = pv.read(str(self.temp_dir / "P_BC_FLOW.vtu"))
-        self.assertEqual(bc_flow.n_points, 66)
-        self.assertEqual(len(bc_flow.point_data), 2)
+        assert bc_flow.n_points == 66
+        assert len(bc_flow.point_data) == 2
         bc_flow_2nd = pv.read(str(self.temp_dir / "P_BCFLOW_2ND.vtu"))
-        self.assertEqual(bc_flow_2nd.n_points, 66)
-        self.assertEqual(len(bc_flow_2nd.point_data), 2)
+        assert bc_flow_2nd.n_points == 66
+        assert len(bc_flow_2nd.point_data) == 2
 
     def test_toymodel_cell_boundary_condition(self):
         """
@@ -322,9 +321,9 @@ class TestConverter(unittest.TestCase):
         for cell_data, cell_data_expected in zip(
             cell_data_list, cell_data_list_expected
         ):
-            self.assertEqual(cell_data, cell_data_expected)
-        self.assertEqual(topsurface.n_points, 564)
-        self.assertEqual(topsurface.n_cells, 1042)
+            assert cell_data == cell_data_expected
+        assert topsurface.n_points == 564
+        assert topsurface.n_cells == 1042
 
     def test_toymodel_prj_file(self):
         """
@@ -341,7 +340,7 @@ class TestConverter(unittest.TestCase):
             str(self.temp_dir / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
-        self.assertEqual(len(elements), 8)
+        assert len(elements) == 8
         # Test if the meshes are correct
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
@@ -352,7 +351,7 @@ class TestConverter(unittest.TestCase):
             "P_BCFLOW_2ND.vtu",
         ]
         for mesh, mesh_expected in zip(meshes_list, meshes_list_expected):
-            self.assertEqual(mesh, mesh_expected)
+            assert mesh == mesh_expected
         # Test if the parameters are correct
         parameters = prjfile_root.find("parameters")
         parameters_list = [
@@ -370,7 +369,7 @@ class TestConverter(unittest.TestCase):
         for parameter, parameter_expected in zip(
             parameters_list, parameters_list_expected
         ):
-            self.assertEqual(parameter, parameter_expected)
+            assert parameter == parameter_expected
 
         boundary_conditions = prjfile_root.find(
             "process_variables/process_variable/boundary_conditions"
@@ -385,21 +384,20 @@ class TestConverter(unittest.TestCase):
         for bc, bc_expected in zip(
             boundary_condtitions_list, meshes_list_expected[2:]
         ):
-            self.assertEqual(bc, bc_expected.replace(".vtu", ""))
+            assert bc == bc_expected.replace(".vtu", "")
 
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
         ).text
         # The index [0] is because one needs to compare one value from the list. And all
         # values are the same.
-        self.assertEqual(
-            float(diffusion_value),
-            float(self.pv_mesh.cell_data["P_CONDX"][0]),
+        assert float(diffusion_value) == float(
+            self.pv_mesh.cell_data["P_CONDX"][0]
         )
 
 
-class TestSimulation_HT(unittest.TestCase):
-    def setUp(self):
+class TestSimulation_HT:
+    def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT_model))
         self.pv_mesh = convert_properties_mesh(self.doc)
@@ -407,7 +405,7 @@ class TestSimulation_HT(unittest.TestCase):
         self.pv_mesh.save(self.vtu_path)
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
 
-    def test_Dirichlet_toymodel_ogs_HT(self):
+    def test_dirichlet_toymodel_ogs_ht(self):
         """
         Test if ogs simulation for a hydro thermal process results
         are equal to FEFLOW simulation results.
@@ -445,8 +443,8 @@ class TestSimulation_HT(unittest.TestCase):
         )
 
 
-class TestSimulation_CT(unittest.TestCase):
-    def setUp(self):
+class TestSimulation_CT:
+    def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
         self.pv_mesh_560 = convert_properties_mesh(self.doc)
@@ -459,7 +457,7 @@ class TestSimulation_CT(unittest.TestCase):
         self.pv_mesh_28.save(self.temp_dir / "CT_2D_line_28.vtu")
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh_560)
 
-    def test_2D_line_CT(self):
+    def test_2_d_line_ct(self):
         """
         Test if ogs simulation for a component transport process results
         are equal to FEFLOW simulation results.
@@ -532,7 +530,3 @@ class TestSimulation_CT(unittest.TestCase):
             rtol=0.01,
             verbose=True,
         )
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)

@@ -36,7 +36,7 @@ def dataframe_from_csv(
     dfs = dfs[dfs["set_id"] == layer_set_id]
     if len(dfs) == 0:
         msg = f"no model defined with {layer_set_id}"
-        raise Exception(msg)
+        raise ValueError(msg)
     dfm = pd.read_csv(parameters_csvfile, delimiter=",")
     model_df = dfs.merge(dfm)
     vtu_names = model_df.apply(layer_names(str(surfaces_folder)), axis=1)

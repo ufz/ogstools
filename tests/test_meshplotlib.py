@@ -1,11 +1,11 @@
 """Unit tests for meshplotlib."""
 
-import unittest
 from functools import partial
 from tempfile import mkstemp
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from pyvista import examples as pv_examples
 
 from ogstools import examples
@@ -32,7 +32,7 @@ assert_allclose = partial(
 )
 
 
-class MeshplotlibTest(unittest.TestCase):
+class TestMeshplotlib:
     """Test case for meshplotlib.
 
     Most of these tests only test for no-throw, currently."""
@@ -68,8 +68,8 @@ class MeshplotlibTest(unittest.TestCase):
             labels, offset = get_ticklabels(
                 np.asarray(compute_levels(lower, upper, n_ticks=precision))
             )
-            self.assertTrue(np.all(labels == ref_labels))
-            self.assertEqual(offset, ref_offset)
+            assert np.all(labels == ref_labels)
+            assert offset == ref_offset
 
         compare(1, 10, 6, ["1", "2", "4", "6", "8", "10"])
         compare(1, 10.01, 6, ["1", "2", "4", "6", "8", "10", "10.01"])
@@ -112,14 +112,14 @@ class MeshplotlibTest(unittest.TestCase):
         )
         labels = justified_labels(points)
         str_lens = np.asarray([len(label) for label in labels])
-        self.assertTrue(np.all(str_lens == str_lens[0]))
+        assert np.all(str_lens == str_lens[0])
 
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        self.assertRaises(KeyError, plot, mesh, Scalar("missing_data"))
+        pytest.raises(KeyError, plot, mesh, Scalar("missing_data"))
 
-    def test_plot_2D(self):
+    def test_plot_2_d(self):
         """Test creation of 2D plots."""
         setup.reset()
         setup.length.output_unit = "km"
@@ -287,10 +287,10 @@ class MeshplotlibTest(unittest.TestCase):
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = animate(meshseries, properties.temperature, timevalues)
         if not save_animation(anim, mkstemp()[1], 5):
-            self.skipTest("Saving animation failed.")
+            pytest.skip("Saving animation failed.")
         plt.close()
 
-    def test_plot_3D(self):
+    def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
         plot(mesh.slice((1, 1, 0)), "Spatial Point Data")
