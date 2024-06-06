@@ -128,6 +128,13 @@ pyvista.OFF_SCREEN = True
 # Disable progress bars in sphinx
 os.environ["TQDM_DISABLE"] = "1"
 
+
+def reset_plot_setup(*_):
+    "Reset the ogstools plot setup to its default values"
+
+    ogstools.plot.setup.reset()
+
+
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],
     "gallery_dirs": ["auto_examples"],
@@ -135,6 +142,7 @@ sphinx_gallery_conf = {
     "download_all_examples": False,
     "image_scrapers": ("matplotlib", DynamicScraper()),
     "matplotlib_animations": True,
+    "reset_modules": ("matplotlib", reset_plot_setup),
 }
 
 # feflowlib is optional
