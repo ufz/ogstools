@@ -198,7 +198,7 @@ def _point_and_cell_data(
     cell_data = {key: [cell_data[key]] for key in cell_data}
 
     # 6. add MaterialIDs to cell data
-    cell_data["MaterialIDs"] = list(MaterialIDs)
+    cell_data["MaterialIDs"] = MaterialIDs
 
     # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
     # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
@@ -360,7 +360,12 @@ def update_geometry(
     for pt_data in point_data:
         mesh.point_data.update({pt_data: point_data[pt_data]})
     for c_data in cell_data:
-        mesh.cell_data.update({c_data: cell_data[c_data][0]})
+        values = (
+            cell_data[c_data][0]
+            if c_data != "MaterialIDs"
+            else cell_data[c_data]
+        )
+        mesh.cell_data.update({c_data: values})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
     if doc.getProblemClass() in [1, 3]:
