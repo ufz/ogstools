@@ -130,7 +130,7 @@ def _material_ids_from_selections(
     # 4. log the dictionary of the MaterialIDs
     logger.info("MaterialIDs refer to: %s", dict_matid)
     # MaterialIDs must be int32
-    return  np.array(mat_ids_mesh).astype(np.int32)
+    return np.array(mat_ids_mesh).astype(np.int32)
 
 
 def fetch_user_data(
@@ -198,7 +198,7 @@ def _point_and_cell_data(
     cell_data = {key: [cell_data[key]] for key in cell_data}
 
     # 6. add MaterialIDs to cell data
-    cell_data['MaterialIDs'] = list(MaterialIDs)
+    cell_data["MaterialIDs"] = list(MaterialIDs)
 
     # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
     # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
