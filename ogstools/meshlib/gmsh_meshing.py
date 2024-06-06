@@ -18,8 +18,8 @@ from ogstools.msh2vtu import msh2vtu
 
 def _geo_square(
     geo: gmsh.model.geo,
-    lengths: Union[float, list[float]],
-    n_edge_cells: Union[int, list[int]],
+    lengths: float | list[float],
+    n_edge_cells: int | list[int],
     structured: bool,
 ) -> None:
     _lengths = lengths if isinstance(lengths, list) else [lengths] * 2

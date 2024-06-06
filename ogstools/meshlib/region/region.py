@@ -2,7 +2,7 @@ import os
 import tempfile
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable
 
 import numpy as np
 import pyvista as pv
@@ -19,7 +19,7 @@ class RegionSet:
     subsets. Each subset within a region is uniquely identified by "MaterialID".
     """
 
-    def __init__(self, input: Union[Path, pv.UnstructuredGrid]):
+    def __init__(self, input: Path | pv.UnstructuredGrid):
         if type(input) is Path:
             self.filename = input
             self.mesh = None

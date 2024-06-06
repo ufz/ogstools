@@ -216,12 +216,12 @@ def plot_contour(
 
 def plot_profile(
     mesh: pv.UnstructuredGrid,
-    properties: Union[str, list, Property],
+    properties: str | list, Property,
     profile_points: np.ndarray,
-    profile_plane: Union[tuple, list] = (0, 1),
-    resolution: Optional[int] = None,
-    plot_nodal_pts: Optional[bool] = True,
-    nodal_pts_labels: Optional[Union[str, list]] = None,
+    profile_plane: tuple | list = (0, 1),
+    resolution: int | None = None,
+    plot_nodal_pts: bool | None = True,
+    nodal_pts_labels: str | list | None = None,
 ) -> tuple[mfigure, plt.Axes]:
     """
     Default plot for the data obtained from sampling along a profile on a mesh.
