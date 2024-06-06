@@ -43,7 +43,7 @@ class TestSurface:
         OK if file can be loaded - if not it raises an exception
         """
         with pytest.raises(
-            ValueError, match=r".*/notexisting.vtu does not exist."
+            ValueError, match=r".*notexisting.vtu does not exist."
         ):
             Surface(
                 meshpath / "mesh1/surface_data/notexisting.vtu",
