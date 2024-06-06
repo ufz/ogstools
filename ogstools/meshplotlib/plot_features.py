@@ -95,8 +95,7 @@ def _vectorfield(
     mesh: pv.DataSet,
     mesh_property: Vector,
     projection: Optional[int] = None,
-    plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
-) -> None:
+) -> tuple:
     """
     Compute necessary data for streamlines or quiverplots.
 

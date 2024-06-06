@@ -952,15 +952,13 @@ def setup_prj_file(
 
     """
     # ToDo: Make sure that no non-valid arguments are chosen!
-    model = kwargs["model"] if "model" in kwargs else None
-    species_list = kwargs["species_list"] if "species_list" in kwargs else None
-    initial_time = kwargs["initial_time"] if "initial_time" in kwargs else 1
-    end_time = kwargs["end_time"] if "end_time" in kwargs else 1
-    time_stepping = (
-        kwargs["time_stepping"] if "time_stepping" in kwargs else None
-    )
-    max_iter = kwargs["max_iter"] if "max_iter" in kwargs else 1
-    rel_tol = kwargs["rel_tol"] if "rel_tol" in kwargs else 1e-10
+    model = kwargs.get("model", None)
+    species_list = kwargs.get("species_list", None)
+    initial_time = kwargs.get("initial_time", 1)
+    end_time = kwargs.get("end_time", 1)
+    time_stepping = kwargs.get("time_stepping", None)
+    max_iter = kwargs.get("max_iter", 1)
+    rel_tol = kwargs.get("rel_tol", 1e-10)
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)
