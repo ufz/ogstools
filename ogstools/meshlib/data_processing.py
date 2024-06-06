@@ -5,7 +5,6 @@
 #
 
 from itertools import product
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -32,7 +31,7 @@ def _raw_differences_all_data(
 def difference(
     mesh1: pv.UnstructuredGrid,
     mesh2: pv.UnstructuredGrid,
-    mesh_property: Union[Property, str] | None = None,
+    mesh_property: Property | str | None = None,
 ) -> pv.UnstructuredGrid:
     """
     Compute the difference of properties between two meshes.
@@ -63,9 +62,9 @@ def difference(
 
 
 def difference_pairwise(
-    meshes_1: Union[list, np.ndarray],
-    meshes_2: Union[list, np.ndarray],
-    mesh_property: Union[Property, str] | None = None,
+    meshes_1: list | np.ndarray,
+    meshes_2: list | np.ndarray,
+    mesh_property: Property | str | None = None,
 ) -> np.ndarray:
     """
     Compute pairwise difference between meshes from two lists/arrays
@@ -96,9 +95,9 @@ def difference_pairwise(
 
 @typechecked
 def difference_matrix(
-    meshes_1: Union[list, np.ndarray],
-    meshes_2: Optional[Union[list, np.ndarray]] = None,
-    mesh_property: Union[Property, str] | None = None,
+    meshes_1: list | np.ndarray,
+    meshes_2: list | np.ndarray | None = None,
+    mesh_property: Property | str | None = None,
 ) -> np.ndarray:
     """
     Compute the difference between all combinations of two meshes
@@ -218,9 +217,9 @@ def distance_in_profile(points: np.ndarray) -> np.ndarray:
 
 def sample_polyline(
     mesh: pv.UnstructuredGrid,
-    properties: Union[str, Property, list],
+    properties: str | Property | list,
     profile_nodes: np.ndarray,
-    resolution: Optional[int] = 100,
+    resolution: int | None = 100,
 ) -> tuple[pd.DataFrame, np.array]:
     """
     Sample one or more properties along a polyline.

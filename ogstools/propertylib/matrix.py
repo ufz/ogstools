@@ -5,7 +5,7 @@
 #
 
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal
 
 from ogstools.propertylib import tensor_math
 from ogstools.propertylib.property import Property, Scalar
@@ -21,7 +21,7 @@ class Matrix(Property):
     """
 
     def __getitem__(
-        self, index: Union[int, Literal["xx", "yy", "zz", "xy", "yz", "xz"]]
+        self, index: int | Literal["xx", "yy", "zz", "xy", "yz", "xz"]
     ) -> Scalar:
         "A scalar property as a matrix component."
         int_index = (

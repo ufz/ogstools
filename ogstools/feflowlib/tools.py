@@ -7,8 +7,9 @@
 import argparse
 import logging as log
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import pyvista as pv
@@ -446,7 +447,7 @@ def _add_global_process_coupling_CT(
 def _add_process(
     model: ogs.OGS,
     species: list,
-    time_stepping: Optional[list] = None,
+    time_stepping: list | None = None,
     initial_time: int = 1,
     end_time: int = 1,
 ) -> None:

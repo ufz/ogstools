@@ -10,7 +10,8 @@
 #              http://www.opengeosys.org/project/license
 
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -31,7 +32,7 @@ def _check_input(
         msg = "Column(s) of context ({}) is/are not present in table"
         raise Exception(
             msg,
-            ",".format(),
+            ",",
         )
 
 

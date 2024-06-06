@@ -6,7 +6,6 @@
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pyvista as pv
@@ -31,7 +30,7 @@ def _h(points: np.ndarray) -> np.ndarray:
 
 
 def analytical_diffusion(
-    topology: Union[Path, pv.UnstructuredGrid]
+    topology: Path | pv.UnstructuredGrid,
 ) -> pv.UnstructuredGrid:
     mesh = (
         topology

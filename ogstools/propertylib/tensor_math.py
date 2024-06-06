@@ -47,7 +47,7 @@ def _split_quantity(values: ValType) -> tuple[np.ndarray, PlainUnit | None]:
 
 def _to_quantity(
     values: np.ndarray, unit: PlainUnit | None
-) -> Union[np.ndarray, PlainQuantity]:
+) -> np.ndarray | PlainQuantity:
     return values if unit is None else u_reg.Quantity(values, unit)
 
 

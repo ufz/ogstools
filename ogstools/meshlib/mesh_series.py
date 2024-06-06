@@ -7,7 +7,7 @@
 """A class to handle Meshseries data."""
 
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal
 
 import meshio
 import numpy as np
@@ -30,7 +30,7 @@ class MeshSeries:
     """
 
     def __init__(
-        self, filepath: Union[str, Path], time_unit: str | None = "s"
+        self, filepath: str | Path, time_unit: str | None = "s"
     ) -> None:
         """
         Initialize a MeshSeries object
@@ -175,7 +175,7 @@ class MeshSeries:
 
     def aggregate(
         self,
-        mesh_property: Union[Property, str],
+        mesh_property: Property | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
     ) -> pv.UnstructuredGrid:
         """Aggregate data over all timesteps using a specified function.

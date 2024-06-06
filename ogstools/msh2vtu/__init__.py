@@ -7,7 +7,7 @@
 # Author: Dominik Kern (TU Bergakademie Freiberg)
 import logging
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import meshio
 import numpy as np
@@ -159,13 +159,13 @@ def msh2vtu(
     filename: Path,
     output_path: Path = Path(),
     output_prefix: str = "",
-    dim: Union[int, list[int]] = 0,
+    dim: int | list[int] = 0,
     delz: bool = False,
     swapxy: bool = False,
     reindex: bool = False,
     keep_ids: bool = False,
     ascii: bool = False,
-    log_level: Union[int, str] = "DEBUG",
+    log_level: int | str = "DEBUG",
 ) -> int:
     """
     Convert a gmsh mesh (.msh) to an unstructured grid file (.vtu).
@@ -669,7 +669,7 @@ def msh2vtu(
 
                 # cell data
                 if ogs:
-                    selection_cell_data_values: Union[np.int32, np.uint64]
+                    selection_cell_data_values: np.int32 | np.uint64
                     if subdomain_dim == boundary_dim:
                         (
                             connected_cells,

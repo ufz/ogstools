@@ -10,8 +10,9 @@
 #              http://www.opengeosys.org/project/license
 
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any
 
 from ogstools.logparser.regexes import Log, ogs_regexes
 
@@ -55,7 +56,7 @@ def _try_match_serial_line(
     return None
 
 
-def mpi_processes(file_name: Union[str, Path]) -> int:
+def mpi_processes(file_name: str | Path) -> int:
     """
     Counts the number of MPI processes started by OpenGeoSys-6 by detecting
     specific log entries in a given file. It assumes that each MPI process

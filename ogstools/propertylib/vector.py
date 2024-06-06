@@ -32,7 +32,7 @@ class Vector(Property):
     Vector components can be accesses with brackets e.g. displacement[0]
     """
 
-    def __getitem__(self, index: Union[int, Literal["x", "y", "z"]]) -> Scalar:
+    def __getitem__(self, index: int | Literal["x", "y", "z"]) -> Scalar:
         """
         Get a scalar property as a specific component of the vector property.
 

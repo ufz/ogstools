@@ -7,7 +7,6 @@
 """Plot configuration setup."""
 
 from dataclasses import dataclass
-from typing import Union
 
 from ogstools.propertylib.property import Scalar
 
@@ -53,7 +52,7 @@ class PlotSetup:
     rcParams: dict
     """Matplotlib runtime configuration. See
     :obj:`ogstools.meshplotlib.plot_setup_defaults`"""
-    show_element_edges: Union[bool, str]
+    show_element_edges: bool | str
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
     property data name."""

@@ -1,8 +1,8 @@
 import os
 import tempfile
+from collections.abc import Callable
 from itertools import chain
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import pyvista as pv

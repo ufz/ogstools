@@ -8,7 +8,6 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Optional, Union
 
 import gmsh
 import numpy as np
@@ -48,12 +47,12 @@ def _geo_square(
 
 
 def rect(
-    lengths: Union[float, list[float]] = 1.0,
-    n_edge_cells: Union[int, list[int]] = 1,
+    lengths: float | list[float] = 1.0,
+    n_edge_cells: int | list[int] = 1,
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_square.msh"),
-    msh_version: Optional[float] = None,
+    msh_version: float | None = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
@@ -85,12 +84,12 @@ def rect(
 
 
 def cuboid(
-    lengths: Union[float, list[float]] = 1.0,
-    n_edge_cells: Union[int, list[int]] = 1,
+    lengths: float | list[float] = 1.0,
+    n_edge_cells: int | list[int] = 1,
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_cube.msh"),
-    msh_version: Optional[float] = None,
+    msh_version: float | None = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
@@ -156,12 +155,9 @@ class BHE:
 def gen_bhe_mesh_gmsh(
     length: float,
     width: float,
-    layer: Union[float, list[float]],
-    groundwater: Union[Groundwater, list[Groundwater]],
-    BHE_Array: Union[
-        BHE,
-        list[BHE],
-    ],
+    layer: float | list[float],
+    groundwater: Groundwater | list[Groundwater],
+    BHE_Array: (BHE | list[BHE]),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -1906,12 +1902,9 @@ def gen_bhe_mesh_gmsh(
 def gen_bhe_mesh(
     length: float,  # e.g. 150.0
     width: float,  # e.g. 100
-    layer: Union[float, list[float]],  # e.g. 100
-    groundwater: Union[Groundwater, list[Groundwater]],
-    BHE_Array: Union[
-        BHE,
-        list[BHE],
-    ],
+    layer: float | list[float],  # e.g. 100
+    groundwater: Groundwater | list[Groundwater],
+    BHE_Array: (BHE | list[BHE]),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,

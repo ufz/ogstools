@@ -7,7 +7,8 @@
 """Specialized plot features."""
 
 import string
-from typing import Callable, Literal, Optional, Union
+from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -94,7 +95,7 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
 def _vectorfield(
     mesh: pv.DataSet,
     mesh_property: Vector,
-    projection: Optional[int] = None,
+    projection: int | None = None,
 ) -> tuple:
     """
     Compute necessary data for streamlines or quiverplots.
@@ -144,7 +145,7 @@ def plot_streamlines(
     ax: plt.Axes,
     mesh: pv.DataSet,
     mesh_property: Vector,
-    projection: Optional[int] = None,
+    projection: int | None = None,
     plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
 ) -> None:
     """
@@ -216,7 +217,7 @@ def plot_contour(
 
 def plot_profile(
     mesh: pv.UnstructuredGrid,
-    properties: str | list, Property,
+    properties: str | list | Property,
     profile_points: np.ndarray,
     profile_plane: tuple | list = (0, 1),
     resolution: int | None = None,
@@ -306,13 +307,13 @@ def plot_profile(
 
 def lineplot(
     x: str,
-    y: Union[str, Property, list, np.ndarray],
+    y: str | Property | list | np.ndarray,
     mesh: pv.UnstructuredGrid,
     profile_points: np.ndarray,
     ax: plt.axes = None,
     fontsize: int = 20,
-    twinx: Optional[bool] = False,
-    resolution: Optional[int] = 100,
+    twinx: bool | None = False,
+    resolution: int | None = 100,
 ) -> plt.axes:
     """
     Plot selected properties obtained from sample_over_polyline function, \
