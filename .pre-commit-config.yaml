@@ -20,6 +20,18 @@ repos:
     hooks:
       - id: black
         args: [--config=./pyproject.toml]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
+    hooks:
+      - id: pyupgrade
+        name: pyupgrade
+        description: Automatically upgrade syntax for newer versions.
+        entry: pyupgrade
+        language: python
+        types: [python]
+        # for backward compatibility
+        files: ''
+        minimum_pre_commit_version: 0.15.0
   # black-formats code blocks in documentation files
   - repo: https://github.com/asottile/blacken-docs
     rev: 1.14.0
