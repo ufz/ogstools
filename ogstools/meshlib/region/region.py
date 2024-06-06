@@ -1,5 +1,6 @@
 import os
 import tempfile
+from itertools import chain
 from pathlib import Path
 from typing import Callable, Union
 
@@ -131,12 +132,11 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     if ret:
         raise ValueError
 
-    materials_in_domain: list[int] = sum(
-        [
+    materials_in_domain: list[int] = list(
+        chain.from_iterable(
             [layer.material_id] * (layer.num_subdivisions + 1)
             for layer in layer_set.layers
-        ],
-        [],
+        )
     )
 
     pv_mesh = pv.XMLUnstructuredGridReader(outfile).read()
