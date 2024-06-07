@@ -27,7 +27,7 @@ T_MASK = "temperature_active"
 H_MASK = "pressure_active"
 M_MASK = "displacement_active"
 
-# Default style for meshplotlib plots
+# Default style to be used in plotting functions
 # For now for Scalars only
 # TODO: expand to Matrix and Vector
 line_styles = [
@@ -42,10 +42,9 @@ group_color_thermal = "C6"
 group_color_hydraulic = "C0"
 group_color_mechanical = "C14"
 
-# general
+# ====== general ======
 material_id = Scalar(data_name="MaterialIDs", categoric=True, cmap="tab20")
-
-# thermal
+# ====== thermal ======
 temperature = Scalar(
     data_name="temperature",
     data_unit="K",
@@ -64,7 +63,7 @@ heatflowrate = Scalar(
     linestyle=line_styles[1],
 )
 
-# hydraulic
+# ====== hydraulic ======
 pressure = Scalar(
     data_name="pressure",
     data_unit="Pa",
@@ -94,7 +93,7 @@ velocity = Vector(
 )
 massflowrate = Scalar(data_name="MassFlowRate", mask=H_MASK)
 
-# mechanical
+# ====== mechanical ======
 displacement = Vector(
     data_name="displacement",
     data_unit="m",
@@ -180,6 +179,10 @@ fluid_pressure_crit = Scalar(
 )
 nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 
+# ====== other ======
+saturation = Scalar(
+    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
+)
 
 all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
