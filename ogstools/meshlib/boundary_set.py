@@ -82,7 +82,7 @@ class LayerSet(BoundarySet):
                 bottom=Surface(bottom.mesh, material_id=bottom.material_id),
                 num_subdivisions=bottom.resolution,
             )
-            for top, bottom in zip(surfaces, surfaces[1:], strict=False)
+            for top, bottom in pairwise(surfaces)
         ]
         return cls(layers=base_layer)
 

@@ -1,5 +1,6 @@
 import re
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -56,7 +57,7 @@ class TestLayer:
             )
             for id, height in enumerate(heights)
         ]
-        layers = zip(planes, planes[1:], strict=False)
+        layers = pairwise(planes)
         base_layers = [
             Layer(
                 top=top,
