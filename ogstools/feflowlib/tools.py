@@ -287,7 +287,7 @@ def get_material_properties_of_HT_model(
     ]
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
-        parameters_feflow, parameters_ogs
+        parameters_feflow, parameters_ogs, strict=False
     ):
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
@@ -341,12 +341,14 @@ def get_material_properties_of_CT_model(
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
-        feflow_species_parameter, ogs_species_parameter
+        feflow_species_parameter, ogs_species_parameter, strict=False
     ):
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
         ).items():
-            material_properties[material_id][parameter_ogs] = property_value[0]
+            material_properties[int(material_id)][
+                parameter_ogs
+            ] = property_value[0]
 
     return material_properties
 
@@ -545,7 +547,9 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
+    zipped = list(
+        zip(*[material_mesh[prop] for prop in property_list], strict=False)
+    )
     material_mesh[new_property] = zipped
     # correct the unit
     material_mesh[new_property] = material_mesh[new_property]

@@ -479,7 +479,7 @@ def msh2vtu(
             # add connectivities of current cell type to entries (sets) of total
             # connectivity (list of sets)
             for total_list, block_list in zip(
-                domain_cells_at_node, block_domain_cells_at_node
+                domain_cells_at_node, block_domain_cells_at_node, strict=False
             ):
                 total_list.update(block_list)
 

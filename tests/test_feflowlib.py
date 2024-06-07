@@ -319,7 +319,7 @@ class TestConverter:
         cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
         cell_data_list = list(topsurface.cell_data)
         for cell_data, cell_data_expected in zip(
-            cell_data_list, cell_data_list_expected
+            cell_data_list, cell_data_list_expected, strict=False
         ):
             assert cell_data == cell_data_expected
         assert topsurface.n_points == 564
@@ -350,7 +350,9 @@ class TestConverter:
             "P_BC_FLOW.vtu",
             "P_BCFLOW_2ND.vtu",
         ]
-        for mesh, mesh_expected in zip(meshes_list, meshes_list_expected):
+        for mesh, mesh_expected in zip(
+            meshes_list, meshes_list_expected, strict=False
+        ):
             assert mesh == mesh_expected
         # Test if the parameters are correct
         parameters = prjfile_root.find("parameters")
@@ -367,7 +369,7 @@ class TestConverter:
         ]
         # Test if boundary conditions are written correctly.
         for parameter, parameter_expected in zip(
-            parameters_list, parameters_list_expected
+            parameters_list, parameters_list_expected, strict=False
         ):
             assert parameter == parameter_expected
 
@@ -382,7 +384,7 @@ class TestConverter:
             )
         ]
         for bc, bc_expected in zip(
-            boundary_condtitions_list, meshes_list_expected[2:]
+            boundary_condtitions_list, meshes_list_expected[2:], strict=False
         ):
             assert bc == bc_expected.replace(".vtu", "")
 
@@ -489,7 +491,7 @@ class TestSimulation_CT:
             initial_time=0,
             end_time=4.8384e07,
             time_stepping=list(
-                zip([10] * 8, [8.64 * 10**i for i in range(8)])
+                zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
             ),
             max_iter=6,
             rel_tol=1e-14,

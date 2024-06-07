@@ -111,7 +111,7 @@ def cuboid(
 
     surf_tags = [1, top_tag] + side_tags
     surf_names = ["bottom", "top", "front", "right", "back", "left"]
-    for surf_tag, surf_name in zip(surf_tags, surf_names):
+    for surf_tag, surf_name in zip(surf_tags, surf_names, strict=False):
         side_name = gmsh.model.addPhysicalGroup(dim=2, tags=[surf_tag])
         gmsh.model.setPhysicalName(dim=2, tag=side_name, name=surf_name)
 

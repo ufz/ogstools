@@ -143,7 +143,9 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     intermediate_vtu_ids = list(set(pv_mesh.cell_data["MaterialIDs"]))
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    id_mapping = dict(zip(intermediate_vtu_ids, materials_in_domain[::-1]))
+    id_mapping = dict(
+        zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
+    )
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
     ]
@@ -323,7 +325,9 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
     )
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    id_mapping = dict(zip(intermediate_vtu_ids, materials_in_domain[::-1]))
+    id_mapping = dict(
+        zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
+    )
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
     ]
@@ -386,7 +390,7 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     )
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    k = zip(intermediate_vtu_ids, materials_in_domain[::-1])
+    k = zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
     id_mapping = dict(k)
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]

@@ -56,7 +56,7 @@ class TestLayer:
             )
             for id, height in enumerate(heights)
         ]
-        layers = zip(planes, planes[1:])
+        layers = zip(planes, planes[1:], strict=False)
         base_layers = [
             Layer(
                 top=top,

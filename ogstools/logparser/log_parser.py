@@ -32,7 +32,9 @@ def _try_match_parallel_line(
             ts,
             line_nr,
         ) + match.groups()
-        return [ctor(s) for ctor, s in zip(types, match_with_line)]
+        return [
+            ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
+        ]
     return None
 
 
@@ -52,7 +54,9 @@ def _try_match_serial_line(
             line_nr,
             0,
         ) + match.groups()
-        return [ctor(s) for ctor, s in zip(types, match_with_line)]
+        return [
+            ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
+        ]
     return None
 
 

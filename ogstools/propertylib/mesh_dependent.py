@@ -59,7 +59,9 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
         )
         are_above = [
             edge_center[vertical_dim] > adj_center[vertical_dim]
-            for edge_center, adj_center in zip(edge_centers, adj_centers)
+            for edge_center, adj_center in zip(
+                edge_centers, adj_centers, strict=False
+            )
         ]
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical

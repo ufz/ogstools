@@ -88,7 +88,7 @@ def difference_pairwise(
     return np.asarray(
         [
             difference(m1, m2, mesh_property)
-            for m1, m2 in zip(meshes_1, meshes_2)
+            for m1, m2 in zip(meshes_1, meshes_2, strict=False)
         ]
     )
 

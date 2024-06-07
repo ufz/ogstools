@@ -31,7 +31,7 @@ data = Scalar("facies", categoric=True)
 
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
 fig = mpl.plot(slices, data)
-for ax, slice in zip(fig.axes, np.ravel(slices)):
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
 
 # %%
@@ -39,7 +39,7 @@ for ax, slice in zip(fig.axes, np.ravel(slices)):
 
 slices = np.reshape(mesh.slice_along_axis(n=3, axis="y"), (1, -1))
 fig = mpl.plot(slices, data)
-for ax, slice in zip(fig.axes, np.ravel(slices)):
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"y = {slice.center[1]:.1f} {mpl.setup.length.data_unit}")
 
 # %%
