@@ -10,6 +10,10 @@ from math import nextafter
 
 import numpy as np
 
+from ogstools.plot.shared import setup
+from ogstools.propertylib import Property
+from ogstools.propertylib.properties import get_preset
+
 
 def nice_num(val: float) -> float:
     """
@@ -77,3 +81,44 @@ def median_exponent(vals: np.ndarray) -> int:
     log = np.log10(np.abs(vals), out=np.zeros_like(vals), where=(vals != 0.0))
     exponents = np.floor(log).astype(int)
     return int(np.median(exponents))
+
+
+def combined_levels(
+    meshes: np.ndarray, mesh_property: Property | str
+) -> np.ndarray:
+    """
+    Calculate well spaced levels for the encompassing property range in meshes.
+    """
+    mesh_property = get_preset(mesh_property, meshes.ravel()[0])
+    p_min, p_max = np.inf, -np.inf
+    unique_vals = np.array([])
+    for mesh in np.ravel(meshes):
+        values = mesh_property.magnitude.transform(mesh)
+        if setup.log_scaled:  # TODO: can be improved
+            values = np.log10(np.where(values > 1e-14, values, 1e-14))
+        p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
+        p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
+        unique_vals = np.unique(
+            np.concatenate((unique_vals, np.unique(values)))
+        )
+    p_min = setup.p_min if setup.p_min is not None else p_min
+    p_max = setup.p_max if setup.p_max is not None else p_max
+    if p_min == p_max:
+        return np.array([p_min, p_max + 1e-12])
+    if (
+        all(val.is_integer() for val in unique_vals)
+        and setup.p_min is None
+        and setup.p_max is None
+    ):
+        return unique_vals[(p_min <= unique_vals) & (unique_vals <= p_max)]
+    return compute_levels(p_min, p_max, setup.num_levels)
+
+
+def level_boundaries(levels: np.ndarray) -> np.ndarray:
+    return np.array(
+        [
+            levels[0] - 0.5 * (levels[1] - levels[0]),
+            *0.5 * (levels[:-1] + levels[1:]),
+            levels[-1] + 0.5 * (levels[-1] - levels[-2]),
+        ]
+    )

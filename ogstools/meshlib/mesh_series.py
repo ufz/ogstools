@@ -304,3 +304,159 @@ class MeshSeries:
         return self._probe_pvd(
             points, data_name, interp_method, interp_backend_pvd
         )
+
+    def plot_probe(
+        self,
+        points: np.ndarray,
+        mesh_property: Union[Property, str],
+        mesh_property_abscissa: Optional[Union[Property, str]] = None,
+        labels: Optional[list[str]] = None,
+        time_unit: Optional[str] = "s",
+        interp_method: Optional[
+            Literal["nearest", "linear", "probefilter"]
+        ] = None,
+        interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
+        colors: Optional[list] = None,
+        linestyles: Optional[list] = None,
+        ax: Optional[plt.Axes] = None,
+        fill_between: bool = False,
+        **kwargs: Any,
+    ) -> Optional[mfigure.Figure]:
+        """
+        Plot the transient property on the observation points in the MeshSeries.
+
+            :param points:          The points to sample at.
+            :param mesh_property:   The property to be sampled.
+            :param labels:          The labels for each observation point.
+            :param time_unit:       Output unit of the timevalues.
+            :param interp_method:   Choose the interpolation method, defaults to
+                                    `linear` for xdmf MeshSeries and
+                                    `probefilter` for pvd MeshSeries.
+            :param interp_backend:  Interpolation backend for PVD MeshSeries.
+            :param kwargs:          Keyword arguments passed to matplotlib's
+                                    plot function.
+
+            :returns:   A matplotlib Figure
+        """
+        points = np.asarray(points)
+        if len(points.shape) == 1:
+            points = points[np.newaxis]
+        mesh_property = get_preset(mesh_property, self.read(0))
+        values = mesh_property.magnitude.transform(
+            self.probe(
+                points,
+                mesh_property.data_name,
+                interp_method,
+                interp_backend_pvd,
+            )
+        )
+        if values.shape[0] == 1:
+            values = values.flatten()
+        Q_ = u_reg.Quantity
+        time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
+        if mesh_property_abscissa is None:
+            x_values = time_unit_conversion * self.timevalues
+            x_label = f"time / {time_unit}" if time_unit else "time"
+        else:
+            mesh_property_abscissa = get_preset(
+                mesh_property_abscissa, self.read(0)
+            )
+            x_values = mesh_property_abscissa.magnitude.transform(
+                self.probe(
+                    points,
+                    mesh_property_abscissa.data_name,
+                    interp_method,
+                    interp_backend_pvd,
+                )
+            )
+            x_unit_str = (
+                f" / {mesh_property_abscissa.get_output_unit()}"
+                if mesh_property_abscissa.get_output_unit()
+                else ""
+            )
+            x_label = (
+                mesh_property_abscissa.output_name.replace("_", " ")
+                + x_unit_str
+            )
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
+        ax.set_prop_cycle(
+            plot.utils.get_style_cycler(len(points), colors, linestyles)
+        )
+        if fill_between:
+            ax.fill_between(
+                x_values,
+                np.min(values, axis=-1),
+                np.max(values, axis=-1),
+                label=labels,
+                **kwargs,
+            )
+        else:
+            ax.plot(x_values, values, label=labels, **kwargs)
+        if labels is not None:
+            ax.legend(
+                facecolor="white", framealpha=1, prop={"family": "monospace"}
+            )
+        ax.set_axisbelow(True)
+        ax.grid(which="major", color="lightgrey", linestyle="-")
+        ax.grid(which="minor", color="0.95", linestyle="--")
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(mesh_property.get_label())
+        ax.label_outer()
+        ax.minorticks_on()
+        return fig
+
+    def animate(
+        self,
+        mesh_property: Property,
+        timesteps: Optional[Sequence] = None,
+        titles: Optional[list[str]] = None,
+    ) -> FuncAnimation:
+        """
+        Create an animation for a property with given timesteps.
+
+        :param property: the property field to be visualized on all timesteps
+        :param timesteps: if sequence of int: the timesteps to animate
+                        if sequence of float: the timevalues to animate
+        :param titles: the title on top of the animation for each frame
+        """
+        plot.setup.layout = "tight"
+
+        ts = self.timesteps if timesteps is None else timesteps
+
+        fig = self.read(0, False).contourf(mesh_property)
+
+        def init() -> None:
+            pass
+
+        def animate_func(i: Union[int, float], fig: mfigure.Figure) -> None:
+            index = np.argmin(np.abs(np.asarray(ts) - i))
+
+            fig.axes[-1].remove()  # remove colorbar
+            for ax in np.ravel(np.asarray(fig.axes)):
+                ax.clear()
+            if titles is not None:
+                plot.setup.title_center = titles[index]
+            if isinstance(i, int):
+                mesh = self.read(i)
+            else:
+                mesh = self.read_interp(i, True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                fig = plot.contourplots._draw_plot(mesh, mesh_property, fig=fig)  # type: ignore[assignment]
+
+        _func = partial(animate_func, fig=fig)
+
+        return FuncAnimation(
+            fig,  # type: ignore[arg-type]
+            _func,  # type: ignore[arg-type]
+            frames=tqdm(ts),
+            blit=False,
+            interval=50,
+            repeat=False,
+            init_func=init,  # type: ignore[arg-type]
+        )
+
+    # TODO: add member function to MeshSeries to get a difference for to timesteps
