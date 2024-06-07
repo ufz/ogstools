@@ -521,11 +521,8 @@ def gen_bhe_mesh_gmsh(
                     n_refinement_layers
                 )
 
-    def _flatten_concatenation(
-        matrix: list[list[float]],
-    ) -> (
-        list
-    ):  # to flat a list, seems not so easy with a ready to use function --> this code is from https://realpython.com/python-flatten-list/
+    # to flat a list, seems not so easy with a ready to use function --> this code is from https://realpython.com/python-flatten-list/
+    def _flatten_concatenation(matrix: list[list[float]]) -> list:
         flat_list = []
         for row in matrix:
             flat_list += row

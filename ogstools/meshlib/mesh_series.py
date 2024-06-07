@@ -6,37 +6,49 @@
 
 """A class to handle Meshseries data."""
 
+import warnings
+from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import meshio
 import numpy as np
 import pyvista as pv
 import vtuIO
 from h5py import File
+from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from tqdm.auto import tqdm
 
-from ogstools.propertylib import Property
+from ogstools import plot
+from ogstools.propertylib.properties import Property, get_preset
+from ogstools.propertylib.unit_registry import u_reg
 
+from .mesh import Mesh
 from .xdmf_reader import XDMFReader
 
 
 class MeshSeries:
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
-
-    Will be replaced by own module in ogstools with similar interface.
     """
 
     def __init__(
-        self, filepath: Union[str, Path], time_unit: Optional[str] = "s"
+        self,
+        filepath: Union[str, Path],
+        time_unit: Optional[str] = "s",
+        spatial_unit: str = "m",
+        spatial_output_unit: str = "m",
     ) -> None:
         """
         Initialize a MeshSeries object
 
             :param filepath:    Path to the PVD or XDMF file.
             :param time_unit:   Data unit of the timevalues.
+            :param data_length_unit:    Length unit of the mesh data.
+            :param output_length_unit:  Length unit in plots.
 
             :returns:           A MeshSeries object
         """
@@ -44,7 +56,9 @@ class MeshSeries:
             filepath = str(filepath)
         self.filepath = filepath
         self.time_unit = time_unit
-        self._data: dict[int, pv.UnstructuredGrid] = {}
+        self.spatial_unit = spatial_unit
+        self.spatial_output_unit = spatial_output_unit
+        self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
@@ -78,12 +92,14 @@ class MeshSeries:
         meshio_mesh = meshio.Mesh(points, cells, point_data, cell_data)
         return pv.from_meshio(meshio_mesh)
 
-    def read(
-        self, timestep: int, lazy_eval: bool = True
-    ) -> pv.UnstructuredGrid:
+    def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Lazy read function."""
         if timestep in self._data:
-            return self._data[timestep]
+            return Mesh(
+                self._data[timestep],
+                self.spatial_unit,
+                self.spatial_output_unit,
+            )
         if self._data_type == "pvd":
             mesh = self._read_pvd(timestep)
         elif self._data_type == "xdmf":
@@ -92,7 +108,7 @@ class MeshSeries:
             mesh = self._vtu_reader.read()
         if lazy_eval:
             self._data[timestep] = mesh
-        return mesh
+        return Mesh(mesh, self.spatial_unit, self.spatial_output_unit)
 
     def clear(self) -> None:
         self._data.clear()
@@ -130,13 +146,11 @@ class MeshSeries:
         """Return the closest timevalue to a timevalue."""
         return self.timevalues[self.closest_timestep(timevalue)]
 
-    def read_closest(self, timevalue: float) -> pv.UnstructuredGrid:
+    def read_closest(self, timevalue: float) -> Mesh:
         """Return the closest timestep in the data for a given timevalue."""
         return self.read(self.closest_timestep(timevalue))
 
-    def read_interp(
-        self, timevalue: float, lazy_eval: bool = True
-    ) -> pv.UnstructuredGrid:
+    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
         t_vals = self.timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
@@ -177,7 +191,7 @@ class MeshSeries:
         self,
         mesh_property: Union[Property, str],
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-    ) -> pv.UnstructuredGrid:
+    ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
 
         :param mesh_property:
@@ -224,7 +238,9 @@ class MeshSeries:
             if isinstance(mesh_property, Property)
             else f"{mesh_property}_{func}"
         )
+        # TODO: put in separate function
         if func in ["min_time", "max_time"]:
+            assert isinstance(np_func, type(np.argmax))
             mesh[output_name] = self.timevalues[np_func(vals, axis=0)]
         else:
             mesh[output_name] = np.empty(vals.shape[1:])
@@ -321,7 +337,7 @@ class MeshSeries:
         ax: Optional[plt.Axes] = None,
         fill_between: bool = False,
         **kwargs: Any,
-    ) -> Optional[mfigure.Figure]:
+    ) -> Optional[plt.Figure]:
         """
         Plot the transient property on the observation points in the MeshSeries.
 
@@ -426,12 +442,12 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = self.read(0, False).contourf(mesh_property)
+        fig = self.read(0, False).plot_contourf(mesh_property)
 
         def init() -> None:
             pass
 
-        def animate_func(i: Union[int, float], fig: mfigure.Figure) -> None:
+        def animate_func(i: Union[int, float], fig: plt.Figure) -> None:
             index = np.argmin(np.abs(np.asarray(ts) - i))
 
             fig.axes[-1].remove()  # remove colorbar
