@@ -143,3 +143,20 @@ plt.xlabel("x [m]")
 plt.title("difference feflow-ogs")
 plt.tight_layout()
 plt.show()
+
+# %%
+# 7. Concentration difference plotted on the mesh.
+feflow_pv_mesh["concentration"] = feflow_pv_mesh["single_species_P_CONC"]
+ogs_sim_res["concentration"] = ogs_sim_res["single_species"]
+diff = feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
+ogs_sim_res["concentration_difference"] = diff
+concentration = Scalar(
+    data_name="concentration_difference", data_unit="mg/l", output_unit="mg/l"
+)
+
+bounds = [0.038, 0.045, 0, 0.01, 0, 0]
+
+mpl.plot(
+    ogs_sim_res.clip_box(bounds, invert=False),
+    concentration,
+)
