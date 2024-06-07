@@ -25,20 +25,19 @@ def fluid_pressure_criterion(
     """Return the fluid pressure criterion.
 
     Defined as the difference between fluid pressure and minimal principal
-    stress (compression positive).
+    stress (compression positive). Requires "pressure" to be availabel in the
+    mesh's point_data.
 
     .. math::
 
         F_{p} = p_{fl} - \\sigma_{min}
-
-    Fluid pressure is evaluated via
-    :py:func:`ogstools.propertylib.mesh_dependent.p_fluid`.
     """
 
     Qty = u_reg.Quantity
     sigma = mesh[mesh_property.data_name]
+    pressure = mesh["pressure"]
     sig_min = _split_quantity(eigenvalues(-sigma))[0][..., 0]
-    return p_fluid(mesh) - Qty(sig_min, mesh_property.data_unit)
+    return Qty(pressure, "Pa") - Qty(sig_min, mesh_property.data_unit)
 
 
 def dilatancy_critescu(
@@ -60,8 +59,8 @@ def dilatancy_critescu(
 
         F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
 
-    for effective stresses
-    (uses :func:`~ogstools.propertylib.mesh_dependent.p_fluid`).
+    for effective stresses. Requires "pressure" to be availabel in the
+    mesh's point_data.
 
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
     """
@@ -70,8 +69,9 @@ def dilatancy_critescu(
     sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
     sigma_0 = Qty(1, "MPa")
     sigma_m = mean(sigma)
+    pressure = mesh["pressure"]
     if effective:
-        sigma_m -= p_fluid(mesh)
+        sigma_m -= Qty(pressure, "Pa")
     tau_oct = octahedral_shear(sigma)
     return (
         tau_oct / sigma_0 - a * (sigma_m / sigma_0) ** 2 - b * sigma_m / sigma_0
@@ -96,8 +96,8 @@ def dilatancy_alkan(
 
         F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
 
-    for effective stresses
-    (uses :func:`~ogstools.propertylib.mesh_dependent.p_fluid`).
+    for effective stresses. Requires "pressure" to be availabel in the
+    mesh's point_data.
 
     <https://www.sciencedirect.com/science/article/pii/S1365160906000979>
     """
@@ -106,7 +106,8 @@ def dilatancy_alkan(
     sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
     tau_max = Qty(33, "MPa")
     sigma_m = mean(sigma)
+    pressure = mesh["pressure"]
     if effective:
-        sigma_m -= p_fluid(mesh)
+        sigma_m -= Qty(pressure, "Pa")
     tau = octahedral_shear(sigma)
     return tau - tau_max * (b * sigma_m / (Qty(1, "MPa") + b * sigma_m))
