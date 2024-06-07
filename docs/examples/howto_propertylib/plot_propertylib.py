@@ -12,7 +12,7 @@ mesh data. There are several predefined properties stored under the module
 
 # %%
 from ogstools import examples
-from ogstools.meshplotlib import plot
+from ogstools.plot import contourf
 from ogstools.propertylib import Scalar, properties
 
 properties.get_dataframe()
@@ -63,12 +63,12 @@ properties.displacement.magnitude.transform([0.03, 0.04])
 # %% [markdown]
 # We suggest specifying the properties and their transformations once.
 # These can be reused in different kind of post processing. When plotting
-# with :py:mod:`ogstools.meshplotlib` we can use these presets to simplify the
+# with :py:mod:`ogstools.plot` we can use these presets to simplify the
 # task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-fig = plot(examples.load_mesh_mechanics_2D(), properties.stress.von_Mises)
+fig = contourf(examples.load_mesh_mechanics_2D(), properties.stress.von_Mises)
 
 # %% [markdown]
 # Have a look at
-# :ref:`sphx_glr_auto_examples_howto_meshplotlib` for more examples.
+# :ref:`sphx_glr_auto_examples_howto_plot` for more examples.

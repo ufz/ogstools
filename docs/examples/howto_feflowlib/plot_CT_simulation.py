@@ -17,7 +17,7 @@ import ifm_contrib as ifm
 import matplotlib.pyplot as plt
 from ogs6py import ogs
 
-import ogstools.meshplotlib as mpl
+import ogstools.plot as mpl
 from ogstools.examples import feflow_model_2D_CT_t_560
 from ogstools.feflowlib import (
     component_transport,

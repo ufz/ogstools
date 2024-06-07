@@ -17,7 +17,7 @@ import ifm_contrib as ifm
 import pyvista as pv
 from ogs6py import ogs
 
-import ogstools.meshplotlib as mpl
+import ogstools.plot as mpl
 from ogstools.examples import feflow_model_2D_HT_model
 from ogstools.feflowlib import (
     convert_properties_mesh,
@@ -37,7 +37,7 @@ from ogstools.propertylib import properties
 feflow_model = ifm.loadDocument(str(feflow_model_2D_HT_model))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
 feflow_temperature_preset = properties.temperature.replace(data_name="P_TEMP")
-mpl.plot(feflow_pv_mesh, feflow_temperature_preset)
+mpl.contourf(feflow_pv_mesh, feflow_temperature_preset)
 
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_mesh_file = temp_dir / "2D_HT_model.vtu"
@@ -89,11 +89,11 @@ ogs_sim_res = pv.read(
 """
 # Plot the hydraulic head/height, which was simulated in OGS.
 ogs_head_preset = properties.temperature.replace(data_name="HEAD_OGS")
-mpl.plot(ogs_sim_res, ogs_head_preset)
+mpl.contourf(ogs_sim_res, ogs_head_preset)
 # %%
 # Plot the temperature, which was simulated in OGS.
 properties.temperature.data_name = "temperature"
-mpl.plot(ogs_sim_res, properties.temperature)
+mpl.contourf(ogs_sim_res, properties.temperature)
 
 # %%
 # 6. Plot the difference between the FEFLOW and OGS simulation.
@@ -101,14 +101,14 @@ feflow_pv_mesh["HEAD"] = feflow_pv_mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
 head_preset = properties.temperature.replace(data_name="HEAD")
 # Plot differences in hydraulic head/height.
-mpl.plot(
+mpl.contourf(
     difference(feflow_pv_mesh, ogs_sim_res, head_preset),
     head_preset,
 )
 # %%
 feflow_pv_mesh["temperature"] = feflow_pv_mesh["P_TEMP"]
 # Plot differences in temperature.
-mpl.plot(
+mpl.contourf(
     difference(feflow_pv_mesh, ogs_sim_res, properties.temperature),
     properties.temperature,
 )

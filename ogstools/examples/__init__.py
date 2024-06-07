@@ -4,10 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
-import pyvista as pv
-
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.meshlib import MeshSeries
+from ogstools.meshlib import Mesh, MeshSeries
 
 from .analytical_solutions.steady_state_diffusion import analytical_diffusion
 
@@ -17,10 +15,13 @@ _meshseries_dir = EXAMPLES_DIR / "meshseries"
 _feflow_dir = EXAMPLES_DIR / "feflow"
 _logs_dir = EXAMPLES_DIR / "logs"
 _prj_dir = EXAMPLES_DIR / "prj"
+_surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
 
 
 def load_meshseries_THM_2D_PVD():
-    return MeshSeries(str(_meshseries_dir / "2D.pvd"), time_unit="s")
+    return MeshSeries(
+        str(_meshseries_dir / "2D.pvd"), time_unit="s", spatial_output_unit="km"
+    )
 
 
 def load_meshseries_CT_2D_XDMF():
@@ -35,9 +36,9 @@ def load_meshseries_HT_2D_XDMF():
 
 
 def load_mesh_mechanics_2D():
-    return pv.XMLUnstructuredGridReader(
-        str(_meshseries_dir / "mechanics_example.vtu")
-    ).read()
+    return Mesh.read(
+        _meshseries_dir / "mechanics_example.vtu", spatial_output_unit="km"
+    )
 
 
 feflow_model_2layers = _feflow_dir / "2layers_model.fem"
@@ -66,3 +67,8 @@ serial_warning_only = _logs_dir / "serial_warning_only.txt"
 prj_steady_state_diffusion = _prj_dir / "steady_state_diffusion.prj"
 prj_nuclear_decay = _prj_dir / "nuclear_decay.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
+
+surface_paths = [
+    _surface_dir / (file + ".vtu")
+    for file in ["00_KB", "01_q", "02_krl", "03_S3", "04_krp"]
+]

@@ -11,7 +11,7 @@ In this example we show how a simple FEFLOW model consisting of two layers can b
 # 1. Let us convert only the points and cells at first.
 import ifm_contrib as ifm
 
-import ogstools.meshplotlib as mpl
+import ogstools as ot
 from ogstools.examples import feflow_model_2layers
 from ogstools.feflowlib import (
     convert_geometry_mesh,
@@ -35,5 +35,5 @@ print(pv_mesh)
 # This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
 pv_mesh.save("2layers_model.vtu")
 # %%
-# 4. As the converted mesh is a pyvista.UnstructuredGrid, we can plot it using meshplotlib.
-fig = mpl.plot(pv_mesh.slice("z"), "P_HEAD")
+# 4. Use the ogstools plotting functionalities.
+fig = ot.plot.contourf(pv_mesh.slice("z"), "P_HEAD")

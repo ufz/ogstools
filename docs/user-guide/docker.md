@@ -21,7 +21,7 @@ feflow2ogs -h
 ...
 python
 # Now in a Python console:
-import ogstools.meshplotlib as mpl
+import ogstools as ot
 ...
 ```
 
@@ -39,7 +39,7 @@ feflow2ogs -h
 ...
 python
 # Now in a Python console:
-import ogstools.meshplotlib as mpl
+import ogstools as ot
 ...
 ```
 
