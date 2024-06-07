@@ -25,7 +25,7 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
-from typing import TypeVar, Union
+from typing import TypeAlias, TypeVar
 
 import numpy as np
 from numpy import linalg as LA
@@ -33,7 +33,7 @@ from pint.facets.plain import PlainQuantity, PlainUnit
 
 from .unit_registry import u_reg
 
-ValType = Union[PlainQuantity, np.ndarray]
+ValType: TypeAlias = PlainQuantity | np.ndarray
 
 
 T = TypeVar("T")

@@ -116,13 +116,13 @@ class Property:
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
         if self.mesh_dependent:
-            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This property can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)

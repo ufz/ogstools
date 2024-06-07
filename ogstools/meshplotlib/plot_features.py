@@ -341,7 +341,7 @@ def lineplot(
     :return: Matplotlib Axes object
     """
     # TODO: Vector properties with 2 values should be handled automatically
-    if isinstance(y, (list, np.ndarray)) and twinx:
+    if isinstance(y, list | np.ndarray) and twinx:
         if len(y) == 1:
             twinx = False
         elif len(y) > 2:

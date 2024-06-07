@@ -5,7 +5,7 @@
 #
 
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal, TypeAlias
 
 import numpy as np
 from pint.facets.plain import PlainQuantity
@@ -14,7 +14,7 @@ from ogstools.propertylib.property import Property, Scalar
 
 from .tensor_math import _split_quantity, _to_quantity
 
-ValType = Union[PlainQuantity, np.ndarray]
+ValType: TypeAlias = PlainQuantity | np.ndarray
 
 
 def vector_norm(values: ValType) -> ValType:
