@@ -17,7 +17,7 @@ import ifm_contrib as ifm
 import matplotlib.pyplot as plt
 from ogs6py import ogs
 
-import ogstools.plot as mpl
+import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
 from ogstools.feflowlib import (
     component_transport,
@@ -27,8 +27,6 @@ from ogstools.feflowlib import (
     setup_prj_file,
     write_point_boundary_conditions,
 )
-from ogstools.meshlib import MeshSeries
-from ogstools.propertylib import Scalar
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
@@ -40,12 +38,12 @@ temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
 feflow_pv_mesh.save(feflow_mesh_file)
 
-feflow_concentration = Scalar(
+feflow_concentration = ot.properties.Scalar(
     data_name="single_species_P_CONC", data_unit="mg/l", output_unit="mg/l"
 )
 # The original mesh is clipped to focus on the relevant part of it, where concentration is larger
 # than 1e-9 mg/l. The rest of the mesh has concentration values of 0.
-mpl.plot(
+ot.plot.contourf(
     feflow_pv_mesh.clip_scalar(
         scalars="single_species_P_CONC", invert=False, value=1.0e-9
     ),
@@ -92,7 +90,7 @@ ET.dump(ET.parse(path_prjfile))
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ms = MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
+ms = ot.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.read(ms.timesteps[-1])
 """
