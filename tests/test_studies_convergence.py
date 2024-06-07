@@ -1,4 +1,4 @@
-"""Unit tests for meshplotlib."""
+"""Unit tests for convergence studies."""
 
 import unittest
 from pathlib import Path

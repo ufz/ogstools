@@ -15,6 +15,7 @@ pytest.importorskip("ifm")
 
 import ifm_contrib as ifm  # noqa: E402
 
+# pylint: disable=C0413,C0412
 from ogstools.feflowlib import (  # noqa: E402
     component_transport,
     convert_properties_mesh,
@@ -29,9 +30,7 @@ from ogstools.feflowlib import (  # noqa: E402
     steady_state_diffusion,
     write_point_boundary_conditions,
 )
-from ogstools.feflowlib.tools import (  # noqa: E402
-    get_material_properties,
-)
+from ogstools.feflowlib.tools import get_material_properties  # noqa: E402
 
 
 def test_cli():
