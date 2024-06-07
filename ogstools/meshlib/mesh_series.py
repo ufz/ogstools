@@ -218,7 +218,8 @@ class MeshSeries:
             "max_time": np.argmax,
         }[func]
         mesh = self.read(0).copy(deep=True)
-        mesh.clear_data()
+        mesh.clear_point_data()
+        mesh.clear_cell_data()
         if isinstance(mesh_property, Property):
             if mesh_property.mesh_dependent:
                 vals = np.asarray(

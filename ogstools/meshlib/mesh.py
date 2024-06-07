@@ -9,6 +9,7 @@
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pyvista as pv
 
 from ogstools import plot
@@ -81,10 +82,9 @@ class Mesh(pv.UnstructuredGrid):
             super().__init__(**kwargs)
         else:
             super().__init__(pv_mesh, **kwargs)
-        self.field_data[SPATIAL_UNITS_KEY] = [
-            [ord(u) for u in unit]
-            for unit in [spatial_unit, spatial_output_unit]
-        ]
+        self.field_data[SPATIAL_UNITS_KEY] = np.asarray(
+            [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
+        )
 
     @classmethod
     def read(
@@ -103,8 +103,7 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
-        mesh.field_data[SPATIAL_UNITS_KEY] = [
-            [ord(char) for char in unit]
-            for unit in [spatial_unit, spatial_output_unit]
-        ]
+        mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
+            [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
+        )
         return mesh

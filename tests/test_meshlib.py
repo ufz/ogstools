@@ -135,16 +135,16 @@ class TestUtils:
         mesh = examples.load_mesh_mechanics_2D()
         mesh["depth"] = mesh.depth(use_coords=True)
         # y Axis is vertical axis
-        self.assertTrue(np.all(mesh["depth"] == -mesh.points[..., 1]))
+        assert np.all(mesh["depth"] == -mesh.points[..., 1])
         mesh["depth"] = mesh.depth()
-        self.assertTrue(np.all(mesh["depth"] < -mesh.points[..., 1]))
+        assert np.all(mesh["depth"] < -mesh.points[..., 1])
 
     def test_depth_3D(self):
         mesh = ot.Mesh(SolidSphere(100, center=(0, 0, -101)))
         mesh["depth"] = mesh.depth(use_coords=True)
-        self.assertTrue(np.all(mesh["depth"] == -mesh.points[..., -1]))
+        assert np.all(mesh["depth"] == -mesh.points[..., -1])
         mesh["depth"] = mesh.depth()
-        self.assertTrue(np.all(mesh["depth"] < -mesh.points[..., -1]))
+        assert np.all(mesh["depth"] < -mesh.points[..., -1])
 
     def test_interp_points(self):
         profile = np.array(

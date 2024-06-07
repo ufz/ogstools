@@ -20,7 +20,7 @@
 - Introduction of functionality to probe points on `MeshSeries`.
 - Function to aggregate all timesteps in a `MeshSeries` given an aggregation function.
 
-[`meshplotlib`](../user-guide/meshplotlib.md) got:
+[`meshplotlib`](../user-guide/plot.md) got:
 
 - Functionality and documentation for (mechanical) stress analyses.
 - Both, Custom figure and axes objects, can now be passed to plot function.
