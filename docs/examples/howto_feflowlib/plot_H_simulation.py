@@ -15,9 +15,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import ifm_contrib as ifm
+import numpy as np
 import pyvista as pv
 from ogs6py import ogs
 
+import ogstools.meshplotlib as mpl
 from ogstools.examples import feflow_model_box_Neumann
 from ogstools.feflowlib import (
     convert_properties_mesh,
@@ -30,6 +32,7 @@ from ogstools.feflowlib.tools import (
     get_material_properties,
 )
 from ogstools.meshlib import MeshSeries
+from ogstools.propertylib import Scalar
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
@@ -107,6 +110,11 @@ ogs_sim_res.plot(
     cpos=[0, 1, 0.5],
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
+# %%
+# 5.1 Plot the hydraulic head simulated in OGS with :py:mod:`ogstools.meshplotlib.plot`.
+head = Scalar(data_name="HEAD_OGS", data_unit="m", output_unit="m")
+fig = mpl.plot(ogs_sim_res.slice(normal="z", origin=[50, 50, 0]), head)
+
 
 # %%
 # 6. Calculate the difference to the FEFLOW simulation and plot it.
@@ -120,3 +128,17 @@ pyvista_mesh.plot(
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 # %%
+# 6.1 Plot the differences in the hydraulic head with :py:mod:`ogstools.meshplotlib.plot`.
+# Slices are taken along the z-axis.
+diff_head = Scalar(data_name="diff_HEAD", data_unit="m", output_unit="m")
+slices = np.reshape(list(pyvista_mesh.slice_along_axis(n=4, axis="z")), (2, 2))
+fig = mpl.plot(slices, diff_head)
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
+    ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
+
+# %%
+# Slices are taken along the y-axis.
+slices = np.reshape(list(pyvista_mesh.slice_along_axis(n=4, axis="y")), (2, 2))
+fig = mpl.plot(slices, diff_head)
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
+    ax.set_title(f"y = {slice.center[1]:.1f} {mpl.setup.length.data_unit}")
