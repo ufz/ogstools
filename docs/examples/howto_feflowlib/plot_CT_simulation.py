@@ -28,6 +28,7 @@ from ogstools.feflowlib import (
     write_point_boundary_conditions,
 )
 
+mpl.setup.show_element_edges = True
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
 # how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
@@ -146,10 +147,9 @@ plt.show()
 
 # %%
 # 7. Concentration difference plotted on the mesh.
-feflow_pv_mesh["concentration"] = feflow_pv_mesh["single_species_P_CONC"]
-ogs_sim_res["concentration"] = ogs_sim_res["single_species"]
-diff = feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
-ogs_sim_res["concentration_difference"] = diff
+ogs_sim_res["concentration_difference"] = (
+    feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
+)
 concentration = Scalar(
     data_name="concentration_difference", data_unit="mg/l", output_unit="mg/l"
 )
