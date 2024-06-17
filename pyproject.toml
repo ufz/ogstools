@@ -22,6 +22,7 @@ dependencies = [
   "Pint>=0.22",
   "Pillow>=9.2.0",
   "pandas>=1.4.0",
+  "tenacity<8.4.0", # fix for papermill https://github.com/nteract/papermill/issues/510
   "papermill>=2.4.0",
   "ogs>=6.5.2",
   "ogs6py>=0.370",
