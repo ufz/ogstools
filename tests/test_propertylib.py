@@ -1,8 +1,7 @@
 """Unit tests for physical properties."""
 
-import unittest
-
 import numpy as np
+import pytest
 from pint.facets.plain import PlainQuantity
 
 from ogstools import examples
@@ -12,7 +11,7 @@ from ogstools.propertylib.property import u_reg
 Qty = u_reg.Quantity
 
 
-class PhysicalPropertyTest(unittest.TestCase):
+class TestPhysicalProperty:
     """Test case for physical properties."""
 
     EPS = 1e-7
@@ -34,6 +33,7 @@ class PhysicalPropertyTest(unittest.TestCase):
 
     def test_temperature(self):
         """Test temperature property."""
+
         self.equality(pp.temperature, 293.15, Qty(20, "°C"))
         self.equality(pp.temperature, [293.15, 303.15], Qty([20, 30], "°C"))
 
@@ -99,62 +99,62 @@ class PhysicalPropertyTest(unittest.TestCase):
         """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
         #  not working for arrays (only works for meshes)
-        self.assertRaises(TypeError, pp.dilatancy_alkan.transform, sig)
+        pytest.raises(TypeError, pp.dilatancy_alkan.transform, sig)
         mesh = examples.load_mesh_mechanics_2D()
         mesh.point_data["pressure"] = mesh.p_fluid()
-        self.assertGreater(np.max(pp.dilatancy_alkan.transform(mesh)), 0)
-        self.assertGreater(np.max(pp.dilatancy_alkan_eff.transform(mesh)), 0)
-        self.assertGreater(np.max(pp.dilatancy_critescu_tot.transform(mesh)), 0)
-        self.assertGreater(np.max(pp.dilatancy_critescu_eff.transform(mesh)), 0)
-        self.assertGreater(np.max(pp.fluid_pressure_crit.transform(mesh)), 0)
+        assert np.max(pp.dilatancy_alkan.transform(mesh)) > 0
+        assert np.max(pp.dilatancy_alkan_eff.transform(mesh)) > 0
+        assert np.max(pp.dilatancy_critescu_tot.transform(mesh)) > 0
+        assert np.max(pp.dilatancy_critescu_eff.transform(mesh)) > 0
+        assert np.max(pp.fluid_pressure_crit.transform(mesh)) > 0
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
         # data needs to be a 2D array
         sig = np.asarray([[4, 1, 2, 1, 1, 1]]) * 1e6
-        self.assertTrue(np.all(pp.stress.eigenvalues.transform(sig) >= 0))
+        assert np.all(pp.stress.eigenvalues.transform(sig) >= 0)
         for i in range(3):
             np.testing.assert_allclose(
                 pp.stress.eigenvectors[i].magnitude.transform(sig), 1.0
             )
-        self.assertGreater(pp.stress.det.transform(sig), 0)
-        self.assertGreater(pp.stress.invariant_1.transform(sig), 0)
-        self.assertGreater(pp.stress.invariant_2.transform(sig), 0)
-        self.assertGreater(pp.stress.invariant_3.transform(sig), 0)
-        self.assertGreater(pp.stress.mean.transform(sig), 0)
-        self.assertGreater(pp.stress.deviator.magnitude.transform(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_1.transform(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_2.transform(sig), 0)
-        self.assertGreater(pp.stress.deviator_invariant_3.transform(sig), 0)
-        self.assertGreater(pp.stress.octahedral_shear.transform(sig), 0)
+        assert pp.stress.det.transform(sig) > 0
+        assert pp.stress.invariant_1.transform(sig) > 0
+        assert pp.stress.invariant_2.transform(sig) > 0
+        assert pp.stress.invariant_3.transform(sig) > 0
+        assert pp.stress.mean.transform(sig) > 0
+        assert pp.stress.deviator.magnitude.transform(sig) > 0
+        assert pp.stress.deviator_invariant_1.transform(sig) > 0
+        assert pp.stress.deviator_invariant_2.transform(sig) > 0
+        assert pp.stress.deviator_invariant_3.transform(sig) > 0
+        assert pp.stress.octahedral_shear.transform(sig) > 0
 
     def test_simple(self):
         """Test call functionality."""
-        self.assertEqual(
-            pp.temperature.transform(273.15, strip_unit=False), Qty(0, "°C")
+        assert pp.temperature.transform(273.15, strip_unit=False) == Qty(
+            0, "°C"
         )
-        self.assertEqual(
-            pp.displacement[0].transform([1, 2, 3], strip_unit=False),
-            Qty(1, "m"),
+
+        assert pp.displacement[0].transform([1, 2, 3], strip_unit=False) == Qty(
+            1, "m"
         )
-        self.assertEqual(
-            pp.displacement.transform([1, 2, 3], strip_unit=False)[1],
-            Qty(2, "m"),
+
+        assert pp.displacement.transform([1, 2, 3], strip_unit=False)[1] == Qty(
+            2, "m"
         )
 
     def test_values(self):
         """Test values functionality."""
-        self.assertEqual(pp.temperature.transform(273.15), 0.0)
+        assert pp.temperature.transform(273.15) == 0.0
 
     def test_units(self):
         """Test get_output_unit functionality."""
-        self.assertEqual(pp.temperature.get_output_unit(), "°C")
-        self.assertEqual(pp.pressure.get_output_unit(), "MPa")
-        self.assertEqual(pp.strain.get_output_unit(), "%")
+        assert pp.temperature.get_output_unit() == "°C"
+        assert pp.pressure.get_output_unit() == "MPa"
+        assert pp.strain.get_output_unit() == "%"
 
     def test_mask(self):
         """Test mask functionality."""
-        self.assertTrue(pp.temperature.get_mask().is_mask())
+        assert pp.temperature.get_mask().is_mask()
 
     def test_get_preset(self):
         """Test find property function."""
@@ -162,13 +162,13 @@ class PhysicalPropertyTest(unittest.TestCase):
         mesh.point_data["scalar"] = mesh["temperature"]
         mesh.point_data["vector"] = mesh["displacement"]
         mesh.point_data["matrix"] = mesh["sigma"]
-        self.assertEqual(pp.get_preset("temperature", mesh), pp.temperature)
-        self.assertEqual(pp.get_preset("displacement", mesh), pp.displacement)
-        self.assertEqual(pp.get_preset("sigma", mesh), pp.stress)
-        self.assertEqual(pp.get_preset("scalar", mesh), pp.Scalar("scalar"))
-        self.assertEqual(pp.get_preset("vector", mesh), pp.Vector("vector"))
-        self.assertEqual(pp.get_preset("matrix", mesh), pp.Matrix("matrix"))
-        self.assertRaises(KeyError, pp.get_preset, "test", mesh)
+        assert pp.get_preset("temperature", mesh) == pp.temperature
+        assert pp.get_preset("displacement", mesh) == pp.displacement
+        assert pp.get_preset("sigma", mesh) == pp.stress
+        assert pp.get_preset("scalar", mesh) == pp.Scalar("scalar")
+        assert pp.get_preset("vector", mesh) == pp.Vector("vector")
+        assert pp.get_preset("matrix", mesh) == pp.Matrix("matrix")
+        pytest.raises(KeyError, pp.get_preset, "test", mesh)
 
     def test_copy_ctor(self):
         """Test replace constructor."""
@@ -182,7 +182,7 @@ class PhysicalPropertyTest(unittest.TestCase):
             func=pp.strain.func,
         )
 
-        self.assertEqual(pp.strain, strain_copy)
+        assert pp.strain == strain_copy
 
     def test_get_label(self):
-        self.assertEqual(pp.pressure.get_label(), "pore pressure / MPa")
+        assert pp.pressure.get_label() == "pore pressure / MPa"

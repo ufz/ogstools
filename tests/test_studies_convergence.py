@@ -1,6 +1,5 @@
 """Unit tests for convergence studies."""
 
-import unittest
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -15,7 +14,7 @@ from ogstools.propertylib import Scalar
 from ogstools.studies import convergence
 
 
-class ConvergenceTest(unittest.TestCase):
+class TestConvergence:
     """Test case for convergent meshes."""
 
     def test_steady_state_diffusion(self):
@@ -70,7 +69,7 @@ class ConvergenceTest(unittest.TestCase):
         np.testing.assert_array_less(2.0, ratio)
 
         order, _ = convergence.log_fit(el_len, re_max)
-        self.assertGreater(order, 2.0)
+        assert order > 2.0
 
         _ = convergence.plot_convergence(metrics, mesh_property)
         _ = convergence.plot_convergence_errors(metrics)

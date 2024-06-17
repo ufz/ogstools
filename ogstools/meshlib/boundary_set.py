@@ -7,6 +7,7 @@
 import tempfile
 from abc import ABC, abstractmethod
 from collections import namedtuple
+from itertools import pairwise
 from pathlib import Path
 
 import pandas as pd
@@ -49,7 +50,7 @@ class LayerSet(BoundarySet):
         In neighboring layers, layers share the same surface (upper bottom == low top).
         """
 
-        for upper, lower in zip(layers, layers[1:]):
+        for upper, lower in pairwise(layers):
             if upper.bottom != lower.top:
                 msg = "Layerset is not consistent."
                 raise ValueError(msg)
@@ -81,7 +82,7 @@ class LayerSet(BoundarySet):
                 bottom=Surface(bottom.mesh, material_id=bottom.material_id),
                 num_subdivisions=bottom.resolution,
             )
-            for top, bottom in zip(surfaces, surfaces[1:])
+            for top, bottom in pairwise(surfaces)
         ]
         return cls(layers=base_layer)
 

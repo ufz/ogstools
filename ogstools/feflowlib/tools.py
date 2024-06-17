@@ -7,8 +7,9 @@
 import argparse
 import logging as log
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import pyvista as pv
@@ -236,7 +237,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
             # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
             # WARNING: This is not a generic method at the moment. A dictionary with all the
             # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
-            material_properties[material_id] = [property_of_material[0]]
+            material_properties[int(material_id)] = [property_of_material[0]]
         else:
             material_properties[material_id] = ["inhomogeneous"]
             logger.info(
@@ -286,7 +287,7 @@ def get_material_properties_of_HT_model(
     ]
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
-        parameters_feflow, parameters_ogs
+        parameters_feflow, parameters_ogs, strict=False
     ):
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
@@ -340,12 +341,14 @@ def get_material_properties_of_CT_model(
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in zip(
-        feflow_species_parameter, ogs_species_parameter
+        feflow_species_parameter, ogs_species_parameter, strict=False
     ):
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
         ).items():
-            material_properties[material_id][parameter_ogs] = property_value[0]
+            material_properties[int(material_id)][
+                parameter_ogs
+            ] = property_value[0]
 
     return material_properties
 
@@ -446,7 +449,7 @@ def _add_global_process_coupling_CT(
 def _add_process(
     model: ogs.OGS,
     species: list,
-    time_stepping: Optional[list] = None,
+    time_stepping: list | None = None,
     initial_time: int = 1,
     end_time: int = 1,
 ) -> None:
@@ -544,7 +547,9 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    zipped = list(zip(*[material_mesh[prop] for prop in property_list]))
+    zipped = list(
+        zip(*[material_mesh[prop] for prop in property_list], strict=False)
+    )
     material_mesh[new_property] = zipped
     # correct the unit
     material_mesh[new_property] = material_mesh[new_property]
@@ -952,15 +957,13 @@ def setup_prj_file(
 
     """
     # ToDo: Make sure that no non-valid arguments are chosen!
-    model = kwargs["model"] if "model" in kwargs else None
-    species_list = kwargs["species_list"] if "species_list" in kwargs else None
-    initial_time = kwargs["initial_time"] if "initial_time" in kwargs else 1
-    end_time = kwargs["end_time"] if "end_time" in kwargs else 1
-    time_stepping = (
-        kwargs["time_stepping"] if "time_stepping" in kwargs else None
-    )
-    max_iter = kwargs["max_iter"] if "max_iter" in kwargs else 1
-    rel_tol = kwargs["rel_tol"] if "rel_tol" in kwargs else 1e-10
+    model = kwargs.get("model", None)
+    species_list = kwargs.get("species_list", None)
+    initial_time = kwargs.get("initial_time", 1)
+    end_time = kwargs.get("end_time", 1)
+    time_stepping = kwargs.get("time_stepping", None)
+    max_iter = kwargs.get("max_iter", 1)
+    rel_tol = kwargs.get("rel_tol", 1e-10)
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
         model = ogs.OGS(PROJECT_FILE=prjfile)

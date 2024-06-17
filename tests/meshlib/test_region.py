@@ -1,5 +1,3 @@
-import unittest
-
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
@@ -10,7 +8,7 @@ from ogstools.meshlib.region import (
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
-class RegionTest(unittest.TestCase):
+class TestRegion:
     layerset = meshpath / "compose_geomodel/layersets.csv"
     materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"

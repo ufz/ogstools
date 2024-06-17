@@ -77,7 +77,9 @@ model = setup_prj_file(
     model=CT_model,
     initial_time=0,
     end_time=4.8384e07,
-    time_stepping=list(zip([10] * 8, [8.64 * 10**i for i in range(8)])),
+    time_stepping=list(
+        zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
+    ),
     max_iter=6,
     rel_tol=1e-14,
 )

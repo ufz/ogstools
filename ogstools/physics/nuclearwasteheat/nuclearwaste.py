@@ -5,7 +5,6 @@
 #
 
 from dataclasses import dataclass
-from typing import Optional, Union
 
 import numpy as np
 from pint.facets.plain import PlainQuantity
@@ -19,27 +18,27 @@ class NuclearWaste:
 
     name: str
     "Name of this type of waste."
-    nuclide_powers: Union[PlainQuantity, np.ndarray]
+    nuclide_powers: PlainQuantity | np.ndarray
     "Powers for the different leading nuclides."
-    decay_consts: Union[PlainQuantity, np.ndarray]
+    decay_consts: PlainQuantity | np.ndarray
     "Decay constants for the different leading nuclides."
     num_bundles: int
     "Number of nuclear waste bundles."
-    time_interim: Union[PlainQuantity, float]
+    time_interim: PlainQuantity | float
     "Interim storage time before heat evaluation."
-    time_deposit: Union[PlainQuantity, float] = 0.0
+    time_deposit: PlainQuantity | float = 0.0
     "Number of active bundles linearly increases until this time is reached."
-    factor: Union[PlainQuantity, float] = 1.0
+    factor: PlainQuantity | float = 1.0
     "Scale the calculated heat by this factor."
 
     def heat(
         self,
-        t: Union[PlainQuantity, float, np.ndarray],
+        t: PlainQuantity | float | np.ndarray,
         baseline: bool = False,
-        ncl_id: Optional[int] = None,
+        ncl_id: int | None = None,
         time_unit: str = "s",
         power_unit: str = "W",
-    ) -> Union[float, np.ndarray]:
+    ) -> float | np.ndarray:
         """Calculate the heat of a nuclear waste proxy model.
 
         :param t:           Timevalue(s) at which the heat is calculated.
@@ -77,7 +76,7 @@ class Repository:
     waste: list[NuclearWaste]
     "Waste inventory of the repository."
 
-    def time_deposit(self, time_unit: str = "s") -> Union[float, list[float]]:
+    def time_deposit(self, time_unit: str = "s") -> float | list[float]:
         "Deposition time for each nuclear waste type."
         if len(self.waste) == 1:
             return Q_(self.waste[0].time_deposit).to(time_unit).magnitude
@@ -87,12 +86,12 @@ class Repository:
 
     def heat(
         self,
-        t: Union[PlainQuantity, float, np.ndarray],
+        t: PlainQuantity | float | np.ndarray,
         baseline: bool = False,
-        ncl_id: Optional[int] = None,
+        ncl_id: int | None = None,
         time_unit: str = "s",
         power_unit: str = "W",
-    ) -> Union[float, np.ndarray]:
+    ) -> float | np.ndarray:
         """Calculate the heat produced by the repository at time t.
 
         :param t:           Timevalue(s) at which the heat is calculated.

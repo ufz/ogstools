@@ -445,7 +445,7 @@ def contourf(
         _fig, _ax = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
         fig = _draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
         assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is None:
         _draw_plot(meshes, mesh_property, axes=ax)
@@ -453,10 +453,10 @@ def contourf(
     elif ax is None and fig is not None:
         fig = _draw_plot(meshes, mesh_property, fig=fig)
         assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is not None:
         _draw_plot(meshes, mesh_property, fig=fig, axes=ax)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     return fig

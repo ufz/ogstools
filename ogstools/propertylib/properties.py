@@ -11,7 +11,6 @@
 """
 
 from functools import partial
-from typing import Union
 
 import pandas as pd
 import pyvista as pv
@@ -188,7 +187,7 @@ all_properties = [v for v in locals().values() if isinstance(v, Property)]
 
 
 def get_preset(
-    mesh_property: Union[Property, str], mesh: pv.UnstructuredGrid
+    mesh_property: Property | str, mesh: pv.UnstructuredGrid
 ) -> Property:
     """
     Returns a Property preset or creates one with correct type.

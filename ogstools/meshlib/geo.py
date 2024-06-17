@@ -5,7 +5,7 @@ from pint.facets.plain import PlainQuantity
 from ogstools.propertylib.unit_registry import u_reg
 
 
-def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> PlainQuantity:
+def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
     """Returns the depth values of the mesh.
 
     For 2D, the last axis of the plane wherein the mesh is lying is used as
@@ -48,7 +48,9 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> PlainQuantity:
         )
         are_above = [
             edge_center[vertical_dim] > adj_center[vertical_dim]
-            for edge_center, adj_center in zip(edge_centers, adj_centers)
+            for edge_center, adj_center in zip(
+                edge_centers, adj_centers, strict=False
+            )
         ]
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical

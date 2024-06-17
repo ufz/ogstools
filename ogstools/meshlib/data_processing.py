@@ -5,7 +5,7 @@
 #
 
 from itertools import product
-from typing import Optional, TypeVar, Union
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ from typeguard import typechecked
 from ogstools.propertylib import Property
 from ogstools.propertylib.properties import get_preset
 
-Mesh = TypeVar("Mesh")
+Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
 
 def _raw_differences_all_data(base_mesh: Mesh, subtract_mesh: Mesh) -> Mesh:
@@ -34,7 +34,7 @@ def _raw_differences_all_data(base_mesh: Mesh, subtract_mesh: Mesh) -> Mesh:
 def difference(
     base_mesh: Mesh,
     subtract_mesh: Mesh,
-    mesh_property: Optional[Union[Property, str]] = None,
+    mesh_property: Property | str | None = None,
 ) -> Mesh:
     """
     Compute the difference of properties between two meshes.
@@ -71,9 +71,9 @@ def difference(
 
 
 def difference_pairwise(
-    meshes_1: Union[list, np.ndarray],
-    meshes_2: Union[list, np.ndarray],
-    mesh_property: Optional[Union[Property, str]] = None,
+    meshes_1: list | np.ndarray,
+    meshes_2: list | np.ndarray,
+    mesh_property: Property | str | None = None,
 ) -> np.ndarray:
     """
     Compute pairwise difference between meshes from two lists/arrays
@@ -97,16 +97,16 @@ def difference_pairwise(
     return np.asarray(
         [
             difference(m1, m2, mesh_property)
-            for m1, m2 in zip(meshes_1, meshes_2)
+            for m1, m2 in zip(meshes_1, meshes_2, strict=False)
         ]
     )
 
 
 @typechecked
 def difference_matrix(
-    meshes_1: Union[list, np.ndarray],
-    meshes_2: Optional[Union[list, np.ndarray]] = None,
-    mesh_property: Optional[Union[Property, str]] = None,
+    meshes_1: list | np.ndarray,
+    meshes_2: list | np.ndarray | None = None,
+    mesh_property: Property | str | None = None,
 ) -> np.ndarray:
     """
     Compute the difference between all combinations of two meshes
@@ -226,9 +226,9 @@ def distance_in_profile(points: np.ndarray) -> np.ndarray:
 
 def sample_polyline(
     mesh: pv.UnstructuredGrid,
-    properties: Union[str, Property, list[str], list[Property]],
+    properties: str | Property | list[str] | list[Property],
     profile_nodes: np.ndarray,
-    resolution: Optional[int] = 100,
+    resolution: int | None = 100,
 ) -> tuple[pd.DataFrame, np.ndarray]:
     """
     Sample one or more properties along a polyline.
@@ -267,6 +267,8 @@ def sample_polyline(
 
     output_data = {["x", "y", "z"][i]: profile_points[:, i] for i in [0, 1, 2]}
 
+    # TODO: data should be written in output_name otherwise different
+    # properties with the same data_name will override each other
     for property_current in properties:
         # TODO: workaround for Issue 59
         if property_current.data_name in sampled_data.point_data:

@@ -28,7 +28,7 @@ mesh.plot(cmap="bwr")
 
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
 fig = ot.plot.contourf(slices, data)
-for ax, slice in zip(fig.axes, np.ravel(slices)):
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"z = {slice.center[2]:.1f}")
 
 # %%
@@ -36,7 +36,7 @@ for ax, slice in zip(fig.axes, np.ravel(slices)):
 
 slices = np.reshape(mesh.slice_along_axis(n=3, axis="y"), (1, -1))
 fig = ot.plot.contourf(slices, data)
-for ax, slice in zip(fig.axes, np.ravel(slices)):
+for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"y = {slice.center[1]:.1f}")
 
 # %%

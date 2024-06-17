@@ -5,7 +5,6 @@
 #
 
 from pathlib import Path
-from typing import Optional
 
 from ogstools.definitions import ROOT_DIR
 from ogstools.workflow import jupytext_to_jupyter
@@ -17,7 +16,7 @@ def run_convergence_study(
     property_name: str,
     timevalue: float = 0.0,
     refinement_ratio: float = 2.0,
-    reference_solution_path: Optional[Path] = None,
+    reference_solution_path: Path | None = None,
     prepare_only: bool = False,
     show_progress: bool = False,
 ) -> None:

@@ -1,11 +1,11 @@
 """Unit tests for plotting."""
 
-import unittest
 from functools import partial
 from tempfile import mkstemp
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from pyvista import examples as pv_examples
 
 import ogstools as ot
@@ -17,7 +17,7 @@ assert_allclose = partial(
 )
 
 
-class PlottingTest(unittest.TestCase):
+class TestPlotting:
     """Test case for plotting."""
 
     # TODO: Most of these tests only test for no-throw, currently.
@@ -59,8 +59,8 @@ class PlottingTest(unittest.TestCase):
                     ot.plot.compute_levels(lower, upper, n_ticks=precision)
                 )
             )
-            self.assertTrue(np.all(labels == ref_labels))
-            self.assertEqual(offset, ref_offset)
+            assert np.all(labels == ref_labels)
+            assert offset == ref_offset
 
         compare(1, 10, 6, ["1", "2", "4", "6", "8", "10"])
         compare(1, 10.01, 6, ["1", "2", "4", "6", "8", "10", "10.01"])
@@ -103,14 +103,14 @@ class PlottingTest(unittest.TestCase):
         )
         labels = ot.plot.utils.justified_labels(points)
         str_lens = np.asarray([len(label) for label in labels])
-        self.assertTrue(np.all(str_lens == str_lens[0]))
+        assert np.all(str_lens == str_lens[0])
 
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        self.assertRaises(KeyError, ot.plot.contourf, mesh, "missing_data")
+        pytest.raises(KeyError, ot.plot.contourf, mesh, "missing_data")
 
-    def test_plot_2D(self):
+    def test_plot_2_d(self):
         """Test creation of 2D plots."""
         ot.plot.setup.reset()
         ot.plot.setup.material_names = {
@@ -282,10 +282,10 @@ class PlottingTest(unittest.TestCase):
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(ot.properties.temperature, timevalues)
         if not ot.plot.utils.save_animation(anim, mkstemp()[1], 5):
-            self.skipTest("Saving animation failed.")
+            pytest.skip("Saving animation failed.")
         plt.close()
 
-    def test_plot_3D(self):
+    def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
         ot.plot.contourf(mesh.slice((1, 1, 0)), "Spatial Point Data")

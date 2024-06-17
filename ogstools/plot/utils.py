@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -17,8 +16,8 @@ from typeguard import typechecked
 
 def get_style_cycler(
     min_number_of_styles: int,
-    colors: Optional[Optional[list]] = None,
-    linestyles: Optional[list] = None,
+    colors: list | None | None = None,
+    linestyles: list | None = None,
 ) -> Cycler:
     if colors is None:
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -77,7 +76,7 @@ def update_font_sizes(
     fontsize: int = 20,
     label_axes: str = "both",
     fig: plt.Figure | None = None,
-    ax: plt.Axes | None = None,
+    ax: plt.Axes | np.ndarray | None = None,
 ) -> None:
     """
     Update font sizes of labels and ticks in all subplots
@@ -97,7 +96,7 @@ def update_font_sizes(
     if fig is not None and ax is None:
         axes = fig.get_axes()
     elif fig is None and ax is not None:
-        axes = np.array([ax])
+        axes = [ax]
     else:
         err_msg = "Invalid combination of Axis and Figure!"
         raise ValueError(err_msg)
@@ -189,7 +188,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
         "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
     ).split(" ")
 
-    writer: Optional[Union[FFMpegWriter, ImageMagickWriter]] = None
+    writer: FFMpegWriter | ImageMagickWriter | None = None
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
         filename += ".mp4"

@@ -1,4 +1,3 @@
-import unittest
 from collections import Counter
 
 from ogstools.definitions import EXAMPLES_DIR
@@ -15,7 +14,7 @@ from ogstools.meshlib.region import (
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
-class DemoTest(unittest.TestCase):
+class TestDemo:
     def test_allcompare(self):
         # To define a mesh with 3 layers from example input, create 4 surfaces (3 bottom surface + 1 top surface)
         surface1 = Surface(
@@ -44,27 +43,27 @@ class DemoTest(unittest.TestCase):
         number_of_layers = len(layer_set.layers)
 
         sm = to_region_simplified(layer_set, 200, 3)
-        self.assertEqual(
-            len(Counter(sm.mesh.cell_data["MaterialIDs"]).keys()),
-            number_of_layers,
+        assert (
+            len(Counter(sm.mesh.cell_data["MaterialIDs"]).keys())
+            == number_of_layers
         )
 
         tm = to_region_tetraeder(layer_set, 200)
-        self.assertEqual(
-            len(Counter(tm.mesh.cell_data["MaterialIDs"]).keys()),
-            number_of_layers,
+        assert (
+            len(Counter(tm.mesh.cell_data["MaterialIDs"]).keys())
+            == number_of_layers
         )
 
         pm = to_region_prism(layer_set, 200)
-        self.assertEqual(
-            len(Counter(pm.mesh.cell_data["MaterialIDs"]).keys()),
-            number_of_layers,
+        assert (
+            len(Counter(pm.mesh.cell_data["MaterialIDs"]).keys())
+            == number_of_layers
         )
 
         vm = to_region_voxel(layer_set, [200, 200, 50])
-        self.assertEqual(
-            len(Counter(vm.mesh.cell_data["MaterialIDs"]).keys()),
-            number_of_layers,
+        assert (
+            len(Counter(vm.mesh.cell_data["MaterialIDs"]).keys())
+            == number_of_layers
         )
 
     def test_gettingstarted(self):
@@ -82,4 +81,4 @@ class DemoTest(unittest.TestCase):
 
         ls = LayerSet([Layer(surface_test1, surface_test2, material_id=1)])
         pm = to_region_prism(ls, 40)
-        self.assertGreater(pm.mesh.number_of_cells, 0)
+        assert pm.mesh.number_of_cells > 0

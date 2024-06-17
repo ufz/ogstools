@@ -1,5 +1,5 @@
 from string import ascii_uppercase
-from typing import Optional, Union
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +12,7 @@ from ogstools.propertylib.properties import Property, get_preset
 
 
 def _color_twin_axes(axes: list[plt.Axes], colors: list) -> None:
-    for ax_temp, color_temp in zip(axes, colors):
+    for ax_temp, color_temp in zip(axes, colors, strict=False):
         ax_temp.tick_params(axis="y", which="both", colors=color_temp)
         ax_temp.yaxis.label.set_color(color_temp)
     # Axis spine color has to be applied on twin axis for both sides
@@ -23,12 +23,12 @@ def _color_twin_axes(axes: list[plt.Axes], colors: list) -> None:
 def linesample(
     mesh: pv.UnstructuredGrid,
     x: str,
-    y: Union[str, Property, list[str], list[Property], np.ndarray],
+    y: str | Property | list[str] | list[Property] | np.ndarray,
     profile_points: np.ndarray,
-    ax: plt.Axes = None,
+    ax: plt.Axes | np.ndarray | None = None,
     fontsize: int = 20,
-    twinx: Optional[bool] = False,
-    resolution: Optional[int] = 100,
+    twinx: bool | None = False,
+    resolution: int | None = 100,
 ) -> plt.Axes:
     """
     Plot selected properties obtained from sample_over_polyline function,
@@ -51,7 +51,7 @@ def linesample(
     :return: Matplotlib Axes object
     """
     # TODO: Vector properties with 2 values should be handled automatically
-    if isinstance(y, (list, np.ndarray)) and twinx:
+    if isinstance(y, list | np.ndarray) and twinx:
         if len(y) == 1:
             twinx = False
         elif len(y) > 2:
@@ -63,17 +63,18 @@ def linesample(
                 which axis, so I will accept only plt.axes as ax parameter!"
             raise ValueError(err_msg)
 
-    y = [y] if not isinstance(y, list) else y
-    y = [get_preset(y_i, mesh) for y_i in y]
+    _mesh_properties = [y] if not isinstance(y, list | np.ndarray) else y
+    mesh_properties = [get_preset(y_i, mesh) for y_i in _mesh_properties]
 
     mesh_sp, _ = sample_polyline(
-        mesh, y, profile_nodes=profile_points, resolution=resolution
+        mesh, mesh_properties, profile_points, resolution
     )
 
+    assert isinstance(ax, plt.Axes)
     if twinx:
-        ax_twinx = ax.twinx()
+        ax_twinx = cast(plt.Axes, ax.twinx())
 
-    for prop in y:
+    for prop in mesh_properties:
         ax.plot(
             mesh_sp[x],
             mesh_sp[prop.data_name],
@@ -93,14 +94,17 @@ def linesample(
     if twinx:
         ax_twinx.plot(
             mesh_sp[x],
-            mesh_sp[y[-1].data_name],
-            label=y[-1].data_name,
-            color=y[-1].color,
-            linestyle=y[-1].linestyle,
+            mesh_sp[mesh_properties[-1].data_name],
+            label=mesh_properties[-1].data_name,
+            color=mesh_properties[-1].color,
+            linestyle=mesh_properties[-1].linestyle,
         )
-        ax_twinx.set_ylabel(y[-1].get_label())
+        ax_twinx.set_ylabel(mesh_properties[-1].get_label())
         ax_twinx.minorticks_on()
-        _color_twin_axes([ax, ax_twinx], [y[0].color, y[-1].color])
+        _color_twin_axes(
+            [ax, ax_twinx],
+            [mesh_properties[0].color, mesh_properties[-1].color],
+        )
         update_font_sizes(ax=ax_twinx, label_axes="none", fontsize=fontsize)
 
     update_font_sizes(ax=ax, label_axes="none", fontsize=fontsize)
@@ -114,12 +118,12 @@ def linesample(
 
 def linesample_contourf(
     mesh: pv.UnstructuredGrid,
-    properties: Union[str, list, Property],
+    properties: str | list | Property,
     profile_points: np.ndarray,
-    profile_plane: Union[tuple, list] = (0, 1),
-    resolution: Optional[int] = None,
-    plot_nodal_pts: Optional[bool] = True,
-    nodal_pts_labels: Optional[Union[str, list]] = None,
+    profile_plane: tuple | list = (0, 1),
+    resolution: int | None = None,
+    plot_nodal_pts: bool | None = True,
+    nodal_pts_labels: str | list | None = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     """
     Default plot for the data obtained from sampling along a profile on a mesh.
@@ -153,7 +157,7 @@ def linesample_contourf(
     ax = ax.reshape((2, len(properties)))
 
     for property_id, property_current in enumerate(properties):
-        fig = contourf(
+        contourf(
             mesh,
             property_current,
             fig=fig,

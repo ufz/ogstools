@@ -10,7 +10,7 @@ import warnings
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 import meshio
 import numpy as np
@@ -37,8 +37,8 @@ class MeshSeries:
 
     def __init__(
         self,
-        filepath: Union[str, Path],
-        time_unit: Optional[str] = "s",
+        filepath: str | Path,
+        time_unit: str | None = "s",
         spatial_unit: str = "m",
         spatial_output_unit: str = "m",
     ) -> None:
@@ -189,7 +189,7 @@ class MeshSeries:
 
     def aggregate(
         self,
-        mesh_property: Union[Property, str],
+        mesh_property: Property | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
     ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
@@ -252,8 +252,8 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[Literal["nearest", "probefilter"]] = None,
-        interp_backend: Optional[Literal["vtk", "scipy"]] = None,
+        interp_method: Literal["nearest", "probefilter"] | None = None,
+        interp_backend: Literal["vtk", "scipy"] | None = None,
     ) -> np.ndarray:
         obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
         dim = self.read(0).get_cell(0).dimension
@@ -270,7 +270,7 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[Literal["nearest", "linear"]] = None,
+        interp_method: Literal["nearest", "linear"] | None = None,
     ) -> np.ndarray:
         values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
         geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
@@ -295,10 +295,9 @@ class MeshSeries:
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Optional[
-            Literal["nearest", "linear", "probefilter"]
-        ] = None,
-        interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
+        interp_method: Literal["nearest", "linear", "probefilter"]
+        | None = None,
+        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
     ) -> np.ndarray:
         """
         Probe the MeshSeries at observation points.
@@ -324,20 +323,19 @@ class MeshSeries:
     def plot_probe(
         self,
         points: np.ndarray,
-        mesh_property: Union[Property, str],
-        mesh_property_abscissa: Optional[Union[Property, str]] = None,
-        labels: Optional[list[str]] = None,
-        time_unit: Optional[str] = "s",
-        interp_method: Optional[
-            Literal["nearest", "linear", "probefilter"]
-        ] = None,
-        interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
-        colors: Optional[list] = None,
-        linestyles: Optional[list] = None,
-        ax: Optional[plt.Axes] = None,
+        mesh_property: Property | str,
+        mesh_property_abscissa: Property | str | None = None,
+        labels: list[str] | None = None,
+        time_unit: str | None = "s",
+        interp_method: None
+        | (Literal["nearest", "linear", "probefilter"]) = None,
+        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        colors: list | None = None,
+        linestyles: list | None = None,
+        ax: plt.Axes | None = None,
         fill_between: bool = False,
         **kwargs: Any,
-    ) -> Optional[plt.Figure]:
+    ) -> plt.Figure | None:
         """
         Plot the transient property on the observation points in the MeshSeries.
 
@@ -427,8 +425,8 @@ class MeshSeries:
     def animate(
         self,
         mesh_property: Property,
-        timesteps: Optional[Sequence] = None,
-        titles: Optional[list[str]] = None,
+        timesteps: Sequence | None = None,
+        titles: list[str] | None = None,
     ) -> FuncAnimation:
         """
         Create an animation for a property with given timesteps.
@@ -447,7 +445,7 @@ class MeshSeries:
         def init() -> None:
             pass
 
-        def animate_func(i: Union[int, float], fig: plt.Figure) -> None:
+        def animate_func(i: int | float, fig: plt.Figure) -> None:
             index = np.argmin(np.abs(np.asarray(ts) - i))
 
             fig.axes[-1].remove()  # remove colorbar

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,8 +12,8 @@ from .shared import setup, spatial_quantity
 def _vectorfield(
     mesh: pv.DataSet,
     mesh_property: Vector,
-    projection: Optional[int] = None,
-) -> tuple[float, float, float, float, float]:
+    projection: int | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Plot the vector streamlines or arrows on a matplotlib axis.
 
@@ -23,7 +23,7 @@ def _vectorfield(
                             gets automatically determined if not given
     """
     if (n_pts := setup.num_streamline_interp_pts) is None:
-        return (0, 0, 0, 0, 0)
+        return (np.zeros(1),) * 5
     mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
     if projection is None:
         projection = int(np.argmax(mean_normal))
@@ -69,7 +69,7 @@ def streamlines(
     mesh: pv.DataSet,
     ax: plt.Axes,
     mesh_property: Vector,
-    projection: Optional[int] = None,
+    projection: int | None = None,
 ) -> None:
     """
     Plot the vector streamlines on a matplotlib axis.
@@ -90,7 +90,7 @@ def quiver(
     mesh: pv.DataSet,
     ax: plt.Axes,
     mesh_property: Vector,
-    projection: Optional[int] = None,
+    projection: int | None = None,
     glyph_type: Literal["arrow", "line"] = "arrow",
 ) -> None:
     """

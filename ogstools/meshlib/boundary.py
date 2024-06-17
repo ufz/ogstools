@@ -87,7 +87,7 @@ class Layer(Boundary):
             raise ValueError
         new_names = [
             outfile.with_name(outfile.stem + str(i) + ".asc")
-            for i in range(0, self.num_subdivisions)
+            for i in range(self.num_subdivisions)
         ]
 
         rasters = [top_raster]

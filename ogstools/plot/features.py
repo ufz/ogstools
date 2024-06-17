@@ -6,7 +6,7 @@
 
 """Specialized plot features."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,7 +72,9 @@ def element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
     cell_types = [surf.get_cell(i).type for i in range(surf.n_cells)]
     for cell_type in np.unique(cell_types):
         cell_pts = [
-            cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
+            cp
+            for cp, ct in zip(cell_points, cell_types, strict=False)
+            if ct == cell_type
         ]
         verts = spatial_quantity(surf).transform(
             np.delete(cell_pts, projection, -1)
@@ -99,7 +101,9 @@ def shape_on_top(
     )
     x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
     y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
-    contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
+    contour_vals = [
+        y + scaling * contour(x) for y, x in zip(y_vals, x_vals, strict=False)
+    ]
     spatial = spatial_quantity(surf).transform
     ax.set_ylim(top=float(spatial(np.max(contour_vals))))
     ax.fill_between(

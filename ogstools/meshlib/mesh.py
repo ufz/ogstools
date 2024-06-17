@@ -7,7 +7,7 @@
 """A class to handle Mesh data."""
 
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import pyvista as pv
 
@@ -63,7 +63,7 @@ class Mesh(pv.UnstructuredGrid):
 
     def __init__(
         self,
-        pv_mesh: Optional[pv.UnstructuredGrid] = None,
+        pv_mesh: pv.UnstructuredGrid | None = None,
         spatial_unit: str = "m",
         spatial_output_unit: str = "m",
         **kwargs: dict,
@@ -81,12 +81,15 @@ class Mesh(pv.UnstructuredGrid):
             super().__init__(**kwargs)
         else:
             super().__init__(pv_mesh, **kwargs)
-        self.field_data[SPATIAL_UNITS_KEY] = [spatial_unit, spatial_output_unit]
+        self.field_data[SPATIAL_UNITS_KEY] = [
+            [ord(u) for u in unit]
+            for unit in [spatial_unit, spatial_output_unit]
+        ]
 
     @classmethod
     def read(
         cls,
-        filepath: Union[str, Path],
+        filepath: str | Path,
         spatial_unit: str = "m",
         spatial_output_unit: str = "m",
     ) -> "Mesh":
@@ -100,5 +103,8 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
-        mesh.field_data[SPATIAL_UNITS_KEY] = [spatial_unit, spatial_output_unit]
+        mesh.field_data[SPATIAL_UNITS_KEY] = [
+            [ord(char) for char in unit]
+            for unit in [spatial_unit, spatial_output_unit]
+        ]
         return mesh

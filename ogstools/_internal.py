@@ -1,7 +1,8 @@
 # source: https://github.com/python/typing/issues/270#issuecomment-1344537820
 
 import functools
-from typing import Callable, Concatenate, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Concatenate, ParamSpec, TypeVar
 
 S = TypeVar("S")
 P = ParamSpec("P")

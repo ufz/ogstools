@@ -1,7 +1,8 @@
 import os
 import tempfile
+from collections.abc import Callable
+from itertools import chain
 from pathlib import Path
-from typing import Callable, Union
 
 import numpy as np
 import pyvista as pv
@@ -18,7 +19,7 @@ class RegionSet:
     subsets. Each subset within a region is uniquely identified by "MaterialID".
     """
 
-    def __init__(self, input: Union[Path, pv.UnstructuredGrid]):
+    def __init__(self, input: Path | pv.UnstructuredGrid):
         if type(input) is Path:
             self.filename = input
             self.mesh = None
@@ -131,19 +132,20 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     if ret:
         raise ValueError
 
-    materials_in_domain: list[int] = sum(
-        [
+    materials_in_domain: list[int] = list(
+        chain.from_iterable(
             [layer.material_id] * (layer.num_subdivisions + 1)
             for layer in layer_set.layers
-        ],
-        [],
+        )
     )
 
     pv_mesh = pv.XMLUnstructuredGridReader(outfile).read()
     intermediate_vtu_ids = list(set(pv_mesh.cell_data["MaterialIDs"]))
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    id_mapping = dict(zip(intermediate_vtu_ids, materials_in_domain[::-1]))
+    id_mapping = dict(
+        zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
+    )
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
     ]
@@ -303,12 +305,11 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
         path = outfile.parent
         os.listdir(path)
 
-    materials_in_domain: list[int] = sum(
-        [
+    materials_in_domain: list[int] = list(
+        chain.from_iterable(
             [layer.material_id] * (layer.num_subdivisions + 1)
             for layer in layer_set.layers
-        ],
-        [],
+        )
     )
 
     region_attribute_name = "cell_scalars"
@@ -324,7 +325,9 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
     )
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    id_mapping = dict(zip(intermediate_vtu_ids, materials_in_domain[::-1]))
+    id_mapping = dict(
+        zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
+    )
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
     ]
@@ -371,9 +374,8 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     if ret:
         raise ValueError()
 
-    materials_in_domain: list[int] = sum(
-        [[layer.material_id] for layer in layer_set.layers],
-        [],
+    materials_in_domain = list(
+        chain.from_iterable([layer.material_id] for layer in layer_set.layers)
     )
 
     region_attribute_name = "MaterialIDs"
@@ -388,7 +390,7 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     )
     # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
     # up, but we number the layers from top to bottom
-    k = zip(intermediate_vtu_ids, materials_in_domain[::-1])
+    k = zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
     id_mapping = dict(k)
     new_ids = [
         id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]

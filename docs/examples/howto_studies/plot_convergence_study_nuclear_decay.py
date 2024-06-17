@@ -63,7 +63,7 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 # Now the actual simulations:
 
 # %%
-for dt, n_cells in zip(time_step_sizes, edge_cells):
+for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
     ot.meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
     _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
 
@@ -85,7 +85,7 @@ heat = repo.heat(time, time_unit="yrs", power_unit="kW")
 fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
-for sim_result, dt in zip(sim_results, time_step_sizes):
+for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
     mesh_series = ot.MeshSeries(sim_result)
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:

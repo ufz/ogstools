@@ -6,7 +6,6 @@
 
 "Functions related to stress analysis which can be only applied to a mesh."
 
-from typing import Union
 
 import numpy as np
 import pyvista as pv
@@ -16,8 +15,6 @@ from .property import Property
 from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
 
-ValType = Union[PlainQuantity, np.ndarray]
-
 
 def fluid_pressure_criterion(
     mesh: pv.UnstructuredGrid, mesh_property: Property
@@ -25,7 +22,7 @@ def fluid_pressure_criterion(
     """Return the fluid pressure criterion.
 
     Defined as the difference between fluid pressure and minimal principal
-    stress (compression positive). Requires "pressure" to be availabel in the
+    stress (compression positive). Requires "pressure" to be available in the
     mesh's point_data.
 
     .. math::
@@ -59,7 +56,7 @@ def dilatancy_critescu(
 
         F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
 
-    for effective stresses. Requires "pressure" to be availabel in the
+    for effective stresses. Requires "pressure" to be available in the
     mesh's point_data.
 
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
@@ -83,7 +80,7 @@ def dilatancy_alkan(
     mesh_property: Property,
     b: float = 0.04,
     effective: bool = False,
-) -> ValType:
+) -> PlainQuantity | np.ndarray:
     """Return the dilatancy criterion defined as:
 
     .. math::
@@ -96,7 +93,7 @@ def dilatancy_alkan(
 
         F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
 
-    for effective stresses. Requires "pressure" to be availabel in the
+    for effective stresses. Requires "pressure" to be available in the
     mesh's point_data.
 
     <https://www.sciencedirect.com/science/article/pii/S1365160906000979>
