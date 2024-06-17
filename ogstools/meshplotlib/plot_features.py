@@ -7,7 +7,8 @@
 """Specialized plot features."""
 
 import string
-from typing import Callable, Literal, Optional, Union
+from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,7 +82,9 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
     cell_types = [surf.get_cell(i).type for i in range(surf.n_cells)]
     for cell_type in np.unique(cell_types):
         cell_pts = [
-            cp for cp, ct in zip(cell_points, cell_types) if ct == cell_type
+            cp
+            for cp, ct in zip(cell_points, cell_types, strict=False)
+            if ct == cell_type
         ]
         verts = setup.length.transform(np.delete(cell_pts, projection, -1))
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
@@ -94,8 +97,8 @@ def plot_element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
 def _vectorfield(
     mesh: pv.DataSet,
     mesh_property: Vector,
-    projection: Optional[int] = None,
-) -> tuple[float, float, float, float, float]:
+    projection: int | None = None,
+) -> tuple:
     """
     Compute necessary data for streamlines or quiverplots.
 
@@ -144,7 +147,7 @@ def plot_streamlines(
     ax: plt.Axes,
     mesh: pv.DataSet,
     mesh_property: Vector,
-    projection: Optional[int] = None,
+    projection: int | None = None,
     plot_type: Literal["streamlines", "arrows", "lines"] = "streamlines",
 ) -> None:
     """
@@ -195,7 +198,9 @@ def plot_on_top(
     )
     x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
     y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
-    contour_vals = [y + scaling * contour(x) for y, x in zip(y_vals, x_vals)]
+    contour_vals = [
+        y + scaling * contour(x) for y, x in zip(y_vals, x_vals, strict=False)
+    ]
     ax.set_ylim(top=float(setup.length.transform(np.max(contour_vals))))
     ax.fill_between(
         setup.length.transform(x_vals),
@@ -216,12 +221,12 @@ def plot_contour(
 
 def plot_profile(
     mesh: pv.UnstructuredGrid,
-    properties: Union[str, list, Property],
+    properties: str | list | Property,
     profile_points: np.ndarray,
-    profile_plane: Union[tuple, list] = (0, 1),
-    resolution: Optional[int] = None,
-    plot_nodal_pts: Optional[bool] = True,
-    nodal_pts_labels: Optional[Union[str, list]] = None,
+    profile_plane: tuple | list = (0, 1),
+    resolution: int | None = None,
+    plot_nodal_pts: bool | None = True,
+    nodal_pts_labels: str | list | None = None,
 ) -> tuple[mfigure, plt.Axes]:
     """
     Default plot for the data obtained from sampling along a profile on a mesh.
@@ -306,13 +311,13 @@ def plot_profile(
 
 def lineplot(
     x: str,
-    y: Union[str, Property, list, np.ndarray],
+    y: str | Property | list | np.ndarray,
     mesh: pv.UnstructuredGrid,
     profile_points: np.ndarray,
     ax: plt.axes = None,
     fontsize: int = 20,
-    twinx: Optional[bool] = False,
-    resolution: Optional[int] = 100,
+    twinx: bool | None = False,
+    resolution: int | None = 100,
 ) -> plt.axes:
     """
     Plot selected properties obtained from sample_over_polyline function, \
@@ -336,7 +341,7 @@ def lineplot(
     :return: Matplotlib Axes object
     """
     # TODO: Vector properties with 2 values should be handled automatically
-    if isinstance(y, (list, np.ndarray)) and twinx:
+    if isinstance(y, list | np.ndarray) and twinx:
         if len(y) == 1:
             twinx = False
         elif len(y) > 2:

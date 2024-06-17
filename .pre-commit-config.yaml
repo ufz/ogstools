@@ -20,6 +20,19 @@ repos:
     hooks:
       - id: black
         args: [--config=./pyproject.toml]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
+    hooks:
+      - id: pyupgrade
+        name: pyupgrade
+        description: Automatically upgrade syntax for newer versions.
+        entry: pyupgrade
+        language: python
+        types: [python]
+        # for backward compatibility
+        files: ''
+        minimum_pre_commit_version: 0.15.0
+        args: [--py310-plus]
   # black-formats code blocks in documentation files
   - repo: https://github.com/asottile/blacken-docs
     rev: 1.14.0
@@ -28,7 +41,7 @@ repos:
         additional_dependencies:
           - black==23.3.0 # keep in sync with black hook
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.277"
+    rev: "v0.4.5"
     hooks:
       - id: ruff
         args: ["--show-fixes", "--fix"]

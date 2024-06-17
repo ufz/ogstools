@@ -5,7 +5,7 @@
 #
 
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal, TypeAlias
 
 import numpy as np
 from pint.facets.plain import PlainQuantity
@@ -14,7 +14,7 @@ from ogstools.propertylib.property import Property, Scalar
 
 from .tensor_math import _split_quantity, _to_quantity
 
-ValType = Union[PlainQuantity, np.ndarray]
+ValType: TypeAlias = PlainQuantity | np.ndarray
 
 
 def vector_norm(values: ValType) -> ValType:
@@ -32,7 +32,7 @@ class Vector(Property):
     Vector components can be accesses with brackets e.g. displacement[0]
     """
 
-    def __getitem__(self, index: Union[int, Literal["x", "y", "z"]]) -> Scalar:
+    def __getitem__(self, index: int | Literal["x", "y", "z"]) -> Scalar:
         """
         Get a scalar property as a specific component of the vector property.
 

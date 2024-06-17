@@ -25,7 +25,10 @@ print(
 print("Heat for a timeseries: ")
 time = np.geomspace(1, 1e5, num=6)
 heat = repo.heat(t=time, **units)
-print(*[f"{t:6n} yrs: {q:10.1f} kW" for t, q in zip(time, heat)], sep="\n")
+print(
+    *[f"{t:6n} yrs: {q:10.1f} kW" for t, q in zip(time, heat, strict=False)],
+    sep="\n",
+)
 
 
 # %%
@@ -71,7 +74,7 @@ fig, axs = plt.subplots(
 axs: list[plt.Axes] = np.reshape(axs, (-1))
 
 colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-for ax, model, color in zip(axs, models, colors):
+for ax, model, color in zip(axs, models, colors, strict=False):
     q = model.heat(time, baseline=True, **units)
     ax.loglog(time, q, label=model.name, lw=2.5, c=color)
     for i in range(len(model.nuclide_powers)):

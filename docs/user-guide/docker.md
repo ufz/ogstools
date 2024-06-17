@@ -13,7 +13,7 @@ A prebuilt [Docker](https://www.docker.com) image with the latest (nightly build
 :sync: unix
 
 ```bash
-docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.9:feflow-8.0
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.10
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -31,7 +31,7 @@ import ogstools.meshplotlib as mpl
 This command works only in the powershell.
 
 ```powershell
-docker run --rm -it -v ${PWD}:/working_dir -w /working_dir registry.opengeosys.org/ogs/tools/ogstools/main-3.9:feflow-8.0
+docker run --rm -it -v ${PWD}:/working_dir -w /working_dir registry.opengeosys.org/ogs/tools/ogstools/main-3.10
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -70,7 +70,7 @@ ______________________________________________________________________
 The prebuilt Docker image can also be run with [Apptainer](https://apptainer.org) (formerly known as *Singularity*):
 
 ```bash
-apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/main-3.9
+apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/main-10
 ```
 
 The above command will open a shell in the container. Your home-directory is automatically mounted and you are the same user as outside the container. There will be no file permission issues as with Docker.

@@ -6,7 +6,6 @@
 
 "Functions related to stress analysis which can be only applied to a mesh."
 
-from typing import Union
 
 import numpy as np
 import pyvista as pv
@@ -15,8 +14,6 @@ from pint.facets.plain import PlainQuantity
 from .property import Property
 from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
-
-ValType = Union[PlainQuantity, np.ndarray]
 
 
 def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
@@ -62,7 +59,9 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
         )
         are_above = [
             edge_center[vertical_dim] > adj_center[vertical_dim]
-            for edge_center, adj_center in zip(edge_centers, adj_centers)
+            for edge_center, adj_center in zip(
+                edge_centers, adj_centers, strict=False
+            )
         ]
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical
@@ -168,7 +167,7 @@ def dilatancy_alkan(
     mesh_property: Property,
     b: float = 0.04,
     effective: bool = False,
-) -> ValType:
+) -> PlainQuantity | np.ndarray:
     """Return the dilatancy criterion defined as:
 
     .. math::

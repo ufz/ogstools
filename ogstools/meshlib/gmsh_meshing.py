@@ -8,7 +8,6 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Optional, Union
 
 import gmsh
 import numpy as np
@@ -18,8 +17,8 @@ from ogstools.msh2vtu import msh2vtu
 
 def _geo_square(
     geo: gmsh.model.geo,
-    lengths: Union[float, list[float]],
-    n_edge_cells: Union[int, list[int]],
+    lengths: float | list[float],
+    n_edge_cells: int | list[int],
     structured: bool,
 ) -> None:
     _lengths = lengths if isinstance(lengths, list) else [lengths] * 2
@@ -48,12 +47,12 @@ def _geo_square(
 
 
 def rect(
-    lengths: Union[float, list[float]] = 1.0,
-    n_edge_cells: Union[int, list[int]] = 1,
+    lengths: float | list[float] = 1.0,
+    n_edge_cells: int | list[int] = 1,
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_square.msh"),
-    msh_version: Optional[float] = None,
+    msh_version: float | None = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
@@ -85,12 +84,12 @@ def rect(
 
 
 def cuboid(
-    lengths: Union[float, list[float]] = 1.0,
-    n_edge_cells: Union[int, list[int]] = 1,
+    lengths: float | list[float] = 1.0,
+    n_edge_cells: int | list[int] = 1,
     structured_grid: bool = True,
     order: int = 1,
     out_name: Path = Path("unit_cube.msh"),
-    msh_version: Optional[float] = None,
+    msh_version: float | None = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
@@ -112,7 +111,7 @@ def cuboid(
 
     surf_tags = [1, top_tag] + side_tags
     surf_names = ["bottom", "top", "front", "right", "back", "left"]
-    for surf_tag, surf_name in zip(surf_tags, surf_names):
+    for surf_tag, surf_name in zip(surf_tags, surf_names, strict=False):
         side_name = gmsh.model.addPhysicalGroup(dim=2, tags=[surf_tag])
         gmsh.model.setPhysicalName(dim=2, tag=side_name, name=surf_name)
 
@@ -156,12 +155,9 @@ class BHE:
 def gen_bhe_mesh_gmsh(
     length: float,
     width: float,
-    layer: Union[float, list[float]],
-    groundwater: Union[Groundwater, list[Groundwater]],
-    BHE_Array: Union[
-        BHE,
-        list[BHE],
-    ],
+    layer: float | list[float],
+    groundwater: Groundwater | list[Groundwater],
+    BHE_Array: (BHE | list[BHE]),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -759,7 +755,7 @@ def gen_bhe_mesh_gmsh(
             (2, 8),
             (2, 9),
         ]
-        for j in range(0, len(number_of_layers)):
+        for j in range(len(number_of_layers)):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
             R = gmsh.model.geo.extrude(
                 surface_list,
@@ -775,7 +771,7 @@ def gen_bhe_mesh_gmsh(
             surface_list = []
 
             # i=1
-            for i in range(0, 9):
+            for i in range(9):
                 volume_list.append(R[1 + i * 6][1])
                 surface_list.append(R[i * 6])
 
@@ -805,7 +801,7 @@ def gen_bhe_mesh_gmsh(
 
         k = 0
         BHE = []
-        for i in range(0, len(BHE_array)):
+        for i in range(len(BHE_array)):
             G = gmsh.model.geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
@@ -819,11 +815,11 @@ def gen_bhe_mesh_gmsh(
 
         gmsh.model.geo.synchronize()
 
-        for i in range(0, len(number_of_layers)):
+        for i in range(len(number_of_layers)):
             gmsh.model.addPhysicalGroup(3, volumes_list_for_layers[i], i)
             k = i
 
-        for i in range(0, len(BHE_array)):
+        for i in range(len(BHE_array)):
             gmsh.model.addPhysicalGroup(1, [BHE[i]], k + 1)
             k += 1
 
@@ -836,7 +832,7 @@ def gen_bhe_mesh_gmsh(
         )
 
         counter_for_gw_start_at_soil_layer = 0
-        for i in range(0, len(groundwater_list)):
+        for i in range(len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
                 if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
@@ -1256,7 +1252,7 @@ def gen_bhe_mesh_gmsh(
         boundary_groundwater_list_minusy = []
 
         surface_list = [(2, 1)]
-        for j in range(0, len(number_of_layers)):
+        for j in range(len(number_of_layers)):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
             R = gmsh.model.geo.extrude(
                 surface_list,
@@ -1284,7 +1280,7 @@ def gen_bhe_mesh_gmsh(
 
         BHE = []
 
-        for i in range(0, len(BHE_array)):
+        for i in range(len(BHE_array)):
             G = gmsh.model.geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
@@ -1299,12 +1295,12 @@ def gen_bhe_mesh_gmsh(
         k = 0
 
         for i in range(
-            0, len(number_of_layers)
+            len(number_of_layers)
         ):  # len(layer) is right, but len(number_of_layers) for testing only
             gmsh.model.addPhysicalGroup(3, volumes_list_for_layers[i], i)
             k = i
 
-        for i in range(0, len(BHE_array)):
+        for i in range(len(BHE_array)):
             gmsh.model.addPhysicalGroup(1, [BHE[i]], k + 1)
             k += 1
 
@@ -1317,7 +1313,7 @@ def gen_bhe_mesh_gmsh(
         )
 
         counter_for_gw_start_at_soil_layer = 0
-        for i in range(0, len(groundwater_list)):
+        for i in range(len(groundwater_list)):
             # add loop for different groundwater flow directions
             if groundwater_list[i][4] == "+x":
                 if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
@@ -1485,13 +1481,13 @@ def gen_bhe_mesh_gmsh(
 
     # detect the soil layer, in which the groundwater flow starts
     groundwater_list: list = []
-    for g in range(0, len(groundwaters)):
+    for g in range(len(groundwaters)):
         start_groundwater = -1000
         icl: float = (
             -1
         )  # Index for critical layer structure, 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - groundwater at layer transition
         # needed_medias_in_ogs=len(layer)+1
-        for i in range(0, len(layer)):
+        for i in range(len(layer)):
             if (
                 np.abs(groundwaters[g].begin) < np.sum(layer[: i + 1])
                 and start_groundwater == -1000
@@ -1547,8 +1543,8 @@ def gen_bhe_mesh_gmsh(
         shape=(len(BHE_array), 5), dtype=np.int8
     )  # [:,0] - index of BHE; Array, in welcher Schicht die jeweilige BHE anfängt [:,1] endet [:,3] und wo ein kritischer Übergang folgt [:,2] für BHE_Begin und [:,4] für BHE_End mit 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
 
-    for j in range(0, len(BHE_array)):
-        for i in range(0, len(layer)):
+    for j in range(len(BHE_array)):
+        for i in range(len(layer)):
             if np.abs(BHE_array[j].z_begin) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_array[j].z_begin
             ) >= np.sum(
@@ -1582,8 +1578,8 @@ def gen_bhe_mesh_gmsh(
                     BHE_to_soil[j, 2] = 0
 
     # detect the soil layer, in which the BHE ends
-    for j in range(0, len(BHE_array)):
-        for i in range(0, len(layer)):
+    for j in range(len(BHE_array)):
+        for i in range(len(layer)):
             if np.abs(BHE_array[j].z_end) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_array[j].z_end
             ) >= np.sum(layer[:i]):
@@ -1623,7 +1619,7 @@ def gen_bhe_mesh_gmsh(
                 )
 
     needed_depths: list = []  # interesting depths
-    for i in range(0, len(layer)):
+    for i in range(len(layer)):
         BHE_end_depths = (
             []
         )  # only the interesting depths in the i-th layer ToDo: Rename the variable
@@ -1694,7 +1690,7 @@ def gen_bhe_mesh_gmsh(
     number_of_layers: list = []
     cummulative_height_of_layers: list = []
     depth_of_extrusion: list = []
-    for i in range(0, len(layer)):  # Schleife zum Berechnen der Layer-Struktur
+    for i in range(len(layer)):  # Schleife zum Berechnen der Layer-Struktur
         list_of_needed_depths = needed_depths[
             i
         ]  # all depths, which needs a node in the mesh
@@ -1712,8 +1708,6 @@ def gen_bhe_mesh_gmsh(
                 )
                 if space_last_layer_refined < target_z_size_fine:
                     space_last_layer_refined = target_z_size_fine
-                else:
-                    space_last_layer_refined = space_last_layer_refined
             else:
                 space_last_layer_refined = 0
         else:
@@ -1738,8 +1732,6 @@ def gen_bhe_mesh_gmsh(
                     )
                     if space_next_layer_refined < target_z_size_fine:
                         space_next_layer_refined = target_z_size_fine
-                    else:
-                        space_next_layer_refined = space_next_layer_refined
             else:
                 space_next_layer_refined = 0  # nichts beim layering zu beachten
         elif i + 1 in groundwater_list_3:  # i+1 == groundwater[1]:
@@ -1808,7 +1800,7 @@ def gen_bhe_mesh_gmsh(
     All_extrusion_layers: list = []
 
     last_height = 0
-    for i in range(0, len(number_of_layers)):
+    for i in range(len(number_of_layers)):
         (
             depth_of_extrusion[i] * np.array(cummulative_height_of_layers[i])
             + last_height
@@ -1833,7 +1825,7 @@ def gen_bhe_mesh_gmsh(
     BHE_extrusion_layers: list = []
     BHE_extrusion_depths: list = []
     # evaluate the extrusion for the BHE's
-    for i in range(0, len(BHE_array)):
+    for i in range(len(BHE_array)):
         needed_extrusion = all_extrusion[
             (
                 (all_extrusion[:, 0] >= np.abs(BHE_array[i].z_begin))
@@ -1851,8 +1843,8 @@ def gen_bhe_mesh_gmsh(
 
     # define the inner square with BHE inside
     # compute the box size from the BHE-Coordinates
-    x_BHE = [BHE_array[i].x for i in range(0, len(BHE_array))]
-    y_BHE = [BHE_array[i].y for i in range(0, len(BHE_array))]
+    x_BHE = [BHE_array[i].x for i in range(len(BHE_array))]
+    y_BHE = [BHE_array[i].y for i in range(len(BHE_array))]
 
     x_min = np.min(x_BHE) - dist_box_x
     x_max = np.max(x_BHE) + dist_box_x
@@ -1910,12 +1902,9 @@ def gen_bhe_mesh_gmsh(
 def gen_bhe_mesh(
     length: float,  # e.g. 150.0
     width: float,  # e.g. 100
-    layer: Union[float, list[float]],  # e.g. 100
-    groundwater: Union[Groundwater, list[Groundwater]],
-    BHE_Array: Union[
-        BHE,
-        list[BHE],
-    ],
+    layer: float | list[float],  # e.g. 100
+    groundwater: Groundwater | list[Groundwater],
+    BHE_Array: (BHE | list[BHE]),
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -2002,7 +1991,7 @@ def gen_bhe_mesh(
         [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
-    for i in range(0, len(groundwater)):
+    for i in range(len(groundwater)):
         mesh_names.append(
             f"{mesh_name}_physical_group_Groundwater_Inflow_{i}.vtu"
         )

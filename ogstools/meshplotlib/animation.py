@@ -7,7 +7,6 @@
 import warnings
 from collections.abc import Sequence
 from functools import partial
-from typing import Optional, Union
 
 import matplotlib as mpl
 import numpy as np
@@ -25,8 +24,8 @@ from .core import _draw_plot, plot
 def animate(
     mesh_series: MeshSeries,
     property: Property,
-    timesteps: Optional[Sequence] = None,
-    titles: Optional[list[str]] = None,
+    timesteps: Sequence | None = None,
+    titles: list[str] | None = None,
 ) -> FuncAnimation:
     """
     Create an animation for a property of a mesh series with given timesteps.
@@ -46,7 +45,7 @@ def animate(
     def init() -> None:
         pass
 
-    def animate_func(i: Union[int, float], fig: mfigure.Figure) -> None:
+    def animate_func(i: int | float, fig: mfigure.Figure) -> None:
         index = np.argmin(np.abs(np.asarray(ts) - i))
 
         fig.axes[-1].remove()  # remove colorbar
@@ -91,7 +90,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
         "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
     ).split(" ")
 
-    writer: Optional[Union[FFMpegWriter, ImageMagickWriter]] = None
+    writer: FFMpegWriter | ImageMagickWriter | None = None
     if FFMpegWriter.isAvailable():
         writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
         filename += ".mp4"

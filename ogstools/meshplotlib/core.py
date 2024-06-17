@@ -8,7 +8,7 @@
 
 import warnings
 from math import nextafter
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 import numpy as np
 import pyvista as pv
@@ -63,7 +63,7 @@ def get_cmap_norm(
         continuous_cmap = colormaps[mesh_property.cmap]
     else:
         continuous_cmap = mesh_property.cmap
-    conti_norm: Union[mcolors.TwoSlopeNorm, mcolors.Normalize]
+    conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
     if mesh_property.bilinear_cmap:
         if vmin <= 0.0 <= vmax:
             vcenter = 0.0
@@ -92,7 +92,7 @@ def get_cmap_norm(
     return cmap, norm
 
 
-def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], Optional[str]]:
+def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
     """Get formatted tick labels and optional offset str.
 
     If all values in ticks are too close together offset notation is used.
@@ -133,11 +133,11 @@ def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], Optional[str]]:
 
 def add_colorbars(
     fig: mfigure.Figure,
-    ax: Union[plt.Axes, list[plt.Axes]],
+    ax: plt.Axes | list[plt.Axes],
     mesh_property: Property,
     levels: np.ndarray,
     pad: float = 0.05,
-    labelsize: Optional[float] = None,
+    labelsize: float | None = None,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     ticks = levels
@@ -217,9 +217,9 @@ def get_projection(
 
 def subplot(
     mesh: pv.UnstructuredGrid,
-    mesh_property: Union[Property, str],
+    mesh_property: Property | str,
     ax: plt.Axes,
-    levels: Optional[np.ndarray] = None,
+    levels: np.ndarray | None = None,
 ) -> None:
     """
     Plot the property field of a mesh on a matplotlib.axis.
@@ -324,7 +324,7 @@ def subplot(
         secax.set_xlabel(f'{"xyz"[projection]} / {setup.length.output_unit}')
 
 
-def clear_labels(axes: Union[plt.Axes, np.ndarray]) -> None:
+def clear_labels(axes: plt.Axes | np.ndarray) -> None:
     ax: plt.Axes
     for ax in np.ravel(np.array(axes)):
         ax.set_xlabel("")
@@ -333,7 +333,7 @@ def clear_labels(axes: Union[plt.Axes, np.ndarray]) -> None:
 
 @typechecked
 def label_spatial_axes(
-    axes: Union[plt.Axes, np.ndarray],
+    axes: plt.Axes | np.ndarray,
     x_label: str = "x",
     y_label: str = "y",
     label_axes: str = "both",
@@ -368,12 +368,12 @@ def label_spatial_axes(
 
 
 def _get_rows_cols(
-    meshes: Union[
-        list[pv.UnstructuredGrid],
-        np.ndarray,
-        pv.UnstructuredGrid,
-        pv.MultiBlock,
-    ],
+    meshes: (
+        list[pv.UnstructuredGrid]
+        | np.ndarray
+        | pv.UnstructuredGrid
+        | pv.MultiBlock
+    ),
 ) -> tuple[int, ...]:
     if isinstance(meshes, np.ndarray):
         if meshes.ndim in [1, 2]:
@@ -418,7 +418,7 @@ def _fig_init(
 
 
 def get_combined_levels(
-    meshes: np.ndarray, mesh_property: Union[Property, str]
+    meshes: np.ndarray, mesh_property: Property | str
 ) -> np.ndarray:
     """
     Calculate well spaced levels for the encompassing property range in meshes.
@@ -452,11 +452,11 @@ def get_combined_levels(
 
 
 def _draw_plot(
-    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
+    meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     mesh_property: Property,
-    fig: Optional[mfigure.Figure] = None,
-    axes: Optional[plt.Axes] = None,
-) -> Optional[mfigure.Figure]:
+    fig: mfigure.Figure | None = None,
+    axes: plt.Axes | None = None,
+) -> mfigure.Figure | None:
     """
     Plot the property field of meshes on existing figure.
 
@@ -553,8 +553,8 @@ def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
 def update_font_sizes(
     fontsize: int = 20,
     label_axes: str = "both",
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.axes] = None,
+    fig: mfigure.Figure | None = None,
+    ax: plt.Axes | None = None,
 ) -> mfigure.Figure:
     """
     Update font sizes of labels and ticks in all subplots
@@ -610,11 +610,11 @@ def update_font_sizes(
 # TODO: add as arguments: cmap, limits
 # TODO: num_levels should be min_levels
 def plot(
-    meshes: Union[list[pv.UnstructuredGrid], np.ndarray, pv.UnstructuredGrid],
-    mesh_property: Union[Property, str],
-    fig: Optional[mfigure.Figure] = None,
-    ax: Optional[plt.Axes] = None,
-) -> Optional[mfigure.Figure]:
+    meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
+    mesh_property: Property | str,
+    fig: mfigure.Figure | None = None,
+    ax: plt.Axes | None = None,
+) -> mfigure.Figure | None:
     """
     Plot the property field of meshes with default settings.
 
@@ -643,7 +643,7 @@ def plot(
         _fig, _ax = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
         fig = _draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
         assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is None:
         _draw_plot(meshes, mesh_property, axes=ax)
@@ -651,11 +651,11 @@ def plot(
     elif ax is None and fig is not None:
         fig = _draw_plot(meshes, mesh_property, fig=fig)
         assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is not None:
         _draw_plot(meshes, mesh_property, fig=fig, axes=ax)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects):
+        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     return fig
 
@@ -663,18 +663,18 @@ def plot(
 def plot_probe(
     mesh_series: MeshSeries,
     points: np.ndarray,
-    mesh_property: Union[Property, str],
-    mesh_property_abscissa: Optional[Union[Property, str]] = None,
-    labels: Optional[list[str]] = None,
-    time_unit: Optional[str] = "s",
-    interp_method: Optional[Literal["nearest", "linear", "probefilter"]] = None,
-    interp_backend_pvd: Optional[Literal["vtk", "scipy"]] = None,
-    colors: Optional[list] = None,
-    linestyles: Optional[list] = None,
-    ax: Optional[plt.Axes] = None,
+    mesh_property: Property | str,
+    mesh_property_abscissa: Property | str | None = None,
+    labels: list[str] | None = None,
+    time_unit: str | None = "s",
+    interp_method: Literal["nearest", "linear", "probefilter"] | None = None,
+    interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+    colors: list | None = None,
+    linestyles: list | None = None,
+    ax: plt.Axes | None = None,
     fill_between: bool = False,
     **kwargs: Any,
-) -> Optional[mfigure.Figure]:
+) -> mfigure.Figure | None:
     """
     Plot the transient property on the observation points in the MeshSeries.
 
@@ -757,7 +757,7 @@ def plot_probe(
 
 
 def color_twin_axes(axes: list, colors: list) -> None:
-    for ax_temp, color_temp in zip(axes, colors):
+    for ax_temp, color_temp in zip(axes, colors, strict=False):
         ax_temp.tick_params(axis="y", which="both", colors=color_temp)
         ax_temp.yaxis.label.set_color(color_temp)
     # Axis spine color has to be applied on twin axis for both sides

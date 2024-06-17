@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 from pathlib import Path
-from typing import Optional
 
 from ogs6py import ogs
 
@@ -175,7 +174,7 @@ def component_transport(
     species: list,
     model: ogs.OGS = None,
     dimension: int = 3,
-    fixed_out_times: Optional[list] = None,
+    fixed_out_times: list | None = None,
 ) -> ogs.OGS:
     """
     A template for component transport process to be simulated in ogs.

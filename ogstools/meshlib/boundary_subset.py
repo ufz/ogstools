@@ -6,7 +6,6 @@
 
 import tempfile
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pyvista as pv
@@ -27,7 +26,7 @@ class Surface:
         return self._material_id
 
     @typechecked
-    def __init__(self, input: Union[Path, pv.DataObject], material_id: int):
+    def __init__(self, input: Path | pv.DataObject, material_id: int):
         """Initialize a surface mesh. Either from pyvista or from a file."""
         self._material_id = material_id
 

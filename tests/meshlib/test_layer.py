@@ -1,9 +1,10 @@
 import re
 import tempfile
-import unittest
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
+import pytest
 import pyvista as pv
 
 from ogstools.definitions import EXAMPLES_DIR
@@ -20,7 +21,7 @@ from ogstools.meshlib.region import (
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
-class LayerTest(unittest.TestCase):
+class TestLayer:
     def test_intermediate_1(self):
         """
         Create a layer from vtu input
@@ -38,14 +39,10 @@ class LayerTest(unittest.TestCase):
             num_subdivisions=1,
         )
         all_subrasters = layer1.create_raster(300)
-        self.assertEqual(
-            len(all_subrasters),
-            3,
-            "Expected 1 top + 1 bottom + 1 intermediate = 3 surfaces to be created.",
-        )
-        self.assertTrue(
-            all(Path(subraster).exists() for subraster in all_subrasters)
-        )
+        assert (
+            len(all_subrasters) == 3
+        ), "Expected 1 top + 1 bottom + 1 intermediate = 3 surfaces to be created."
+        assert all(Path(subraster).exists() for subraster in all_subrasters)
 
     def test_plane_surfaces(self):
         """
@@ -60,7 +57,7 @@ class LayerTest(unittest.TestCase):
             )
             for id, height in enumerate(heights)
         ]
-        layers = zip(planes, planes[1:])
+        layers = pairwise(planes)
         base_layers = [
             Layer(
                 top=top,
@@ -80,13 +77,13 @@ class LayerTest(unittest.TestCase):
         # Voxel mesh has some limitation that resolution must fit, here height (900) is multiple of resolution (100)
         vm = to_region_voxel(ls1, [200, 200, 100])
 
-        self.assertGreater(vm.mesh.number_of_cells, sm.mesh.number_of_cells)
-        self.assertGreater(pm.mesh.number_of_cells, vm.mesh.number_of_cells)
+        assert vm.mesh.number_of_cells > sm.mesh.number_of_cells
+        assert pm.mesh.number_of_cells > vm.mesh.number_of_cells
 
-        self.assertGreater(tm.mesh.number_of_cells, pm.mesh.number_of_cells)
+        assert tm.mesh.number_of_cells > pm.mesh.number_of_cells
 
 
-class RasterTest(unittest.TestCase):
+class TestRaster:
     def testgmlwrite(self):
         """
         Checks if GML is created and its content (some parts)
@@ -101,9 +98,9 @@ class RasterTest(unittest.TestCase):
             match = re.search(pattern=pattern, string=lines[4])
             if match:
                 y_value = float(match.group(1))
-                self.assertAlmostEqual(x.ymin, y_value, 0.0001)
+                assert x.ymin == pytest.approx(y_value), 0.0001
             else:
-                self.assertTrue(False)
+                pytest.fail("Pattern not found in file.")
 
     def testrasterfilewrite(self):
         """
@@ -118,5 +115,5 @@ class RasterTest(unittest.TestCase):
         # expect a new file to written and now able to read as vtu
         mesh = pv.read(vtu)
         cells = mesh.number_of_cells
-        self.assertEqual(cells, 2, "4 lines + 4 triangles")
+        assert cells == 2, "4 lines + 4 triangles"
         # self.assertAlmostEqual((0, 20.0, -1.4, 12.4, 0, 0), mesh.bounds,0.1)

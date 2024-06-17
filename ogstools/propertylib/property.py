@@ -11,9 +11,9 @@ way (e.g. temperature, pressure, displacement, …). Unit conversion is handled
 via pint.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 import numpy as np
 import pyvista as pv
@@ -46,15 +46,15 @@ class Property:
     """If the function to be applied is dependent on the mesh itself"""
     process_with_units: bool = False
     """If true, apply the function on values with units."""
-    cmap: Union[Colormap, str] = "coolwarm"
+    cmap: Colormap | str = "coolwarm"
     """Colormap to use for plotting."""
     bilinear_cmap: bool = False
     """Should this property be displayed with a bilinear cmap?"""
     categoric: bool = False
     """Does this property only have categoric values?"""
-    color: Optional[str] = None
+    color: str | None = None
     """Default color for the variable to be used by meshplotlib"""
-    linestyle: Optional[tuple] = None
+    linestyle: tuple | None = None
     """Default linestyle for the variable to be used by meshplotlib"""
 
     def __post_init__(self) -> None:
@@ -98,7 +98,7 @@ class Property:
 
     def transform(
         self,
-        data: Union[int, float, np.ndarray, pv.UnstructuredGrid, Sequence],
+        data: int | float | np.ndarray | pv.UnstructuredGrid | Sequence,
         strip_unit: bool = True,
     ) -> np.ndarray:
         """
@@ -116,13 +116,13 @@ class Property:
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
         if self.mesh_dependent:
-            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This property can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, (pv.DataSet, pv.UnstructuredGrid)):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)
