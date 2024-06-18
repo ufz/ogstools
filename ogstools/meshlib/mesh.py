@@ -4,8 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-"""A class to handle Mesh data."""
-
 from pathlib import Path
 from typing import Any
 

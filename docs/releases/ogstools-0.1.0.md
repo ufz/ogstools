@@ -12,7 +12,7 @@ ______________________________________________________________________
 
 [`meshplotlib`](../user-guide/plot.md) is a new package to visualize {ref}`2D <sphx_glr_auto_examples_howto_plot_plot_contourf_2d.py>` and {ref}`3D <sphx_glr_auto_examples_howto_plot_plot_contourf_3d.py>` mesh data. It also can generate {ref}`animations <sphx_glr_auto_examples_howto_plot_plot_animation.py>`:
 
-![](../auto_examples/howto_meshplotlib/images/sphx_glr_plot_animation_001.gif)
+![](../auto_examples/howto_plot/images/sphx_glr_plot_animation_001.gif)
 
 ______________________________________________________________________
 

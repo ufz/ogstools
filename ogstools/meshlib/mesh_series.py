@@ -4,8 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-"""A class to handle Meshseries data."""
-
 import warnings
 from collections.abc import Sequence
 from functools import partial
