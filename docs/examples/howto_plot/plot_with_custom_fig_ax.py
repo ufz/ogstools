@@ -31,7 +31,6 @@ plt.rcParams.update({"font.size": 32})
 fig, ax = plt.subplots(2, 1, figsize=(15, 15))
 meshseries.read(0).plot_contourf(ot.properties.temperature, fig=fig, ax=ax[0])
 meshseries.read(1).plot_contourf(ot.properties.displacement, fig=fig, ax=ax[1])
-fig.suptitle("")
 fig.tight_layout()
 
 # %% [markdown]

@@ -59,4 +59,4 @@ def centered_range(min_val: float, max_val: float, step: float) -> np.ndarray:
 
     left = np.arange(center, l_bound - step, -step)
     right = np.arange(center, r_bound + step, step)
-    return np.unique(np.concatenate((left, [center], right)))
+    return np.unique(np.concatenate((left, np.asarray([center]), right)))

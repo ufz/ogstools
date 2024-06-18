@@ -438,6 +438,7 @@ class MeshSeries:
         :param titles: the title on top of the animation for each frame
         """
         plot.setup.layout = "tight"
+        plot.setup.combined_colorbar = True
 
         ts = self.timesteps if timesteps is None else timesteps
 
