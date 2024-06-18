@@ -360,7 +360,12 @@ def update_geometry(
     for pt_data in point_data:
         mesh.point_data.update({pt_data: point_data[pt_data]})
     for c_data in cell_data:
-        mesh.cell_data.update({c_data: cell_data[c_data][0]})
+        values = (
+            cell_data[c_data][0]
+            if c_data != "MaterialIDs"
+            else cell_data[c_data]
+        )
+        mesh.cell_data.update({c_data: values})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
     if doc.getProblemClass() in [1, 3]:
