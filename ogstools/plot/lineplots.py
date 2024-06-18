@@ -7,6 +7,7 @@ import pyvista as pv
 
 from ogstools.meshlib.data_processing import sample_polyline
 from ogstools.plot import contourf
+from ogstools.plot.shared import spatial_quantity
 from ogstools.plot.utils import update_font_sizes
 from ogstools.propertylib.properties import Property, get_preset
 
@@ -74,16 +75,17 @@ def linesample(
     if twinx:
         ax_twinx = cast(plt.Axes, ax.twinx())
 
+    spatial_qty = spatial_quantity(mesh)
     for prop in mesh_properties:
         ax.plot(
-            mesh_sp[x],
+            spatial_qty.transform(mesh_sp[x]),
             mesh_sp[prop.data_name],
             label=prop.data_name,
             color=prop.color,
             linestyle=prop.linestyle,
         )
         # TODO: this shouldn't be hard-coded
-        ax.set_xlabel("Profile distance / m")
+        ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
         ax.set_ylabel(prop.get_label())
         # % TODO: rethink this awkward structure, maybe check if units match?
         if twinx:
@@ -93,7 +95,7 @@ def linesample(
 
     if twinx:
         ax_twinx.plot(
-            mesh_sp[x],
+            spatial_qty.transform(mesh_sp[x]),
             mesh_sp[mesh_properties[-1].data_name],
             label=mesh_properties[-1].data_name,
             color=mesh_properties[-1].color,
@@ -156,6 +158,7 @@ def linesample_contourf(
     )
     ax = ax.reshape((2, len(properties)))
 
+    spatial_qty = spatial_quantity(mesh)
     for property_id, property_current in enumerate(properties):
         contourf(
             mesh,
@@ -178,8 +181,8 @@ def linesample_contourf(
                     ascii_uppercase[0 : len(profile_points)]
                 )
             ax[0][property_id].plot(
-                profile_points[:, profile_plane[0]],
-                profile_points[:, profile_plane[1]],  # type: ignore[index]
+                spatial_qty.transform(profile_points[:, profile_plane[0]]),
+                spatial_qty.transform(profile_points[:, profile_plane[1]]),  # type: ignore[index]
                 "-*",
                 linewidth=2,
                 markersize=7,
@@ -187,8 +190,12 @@ def linesample_contourf(
             )
             for nodal_pt_id, nodal_pt in enumerate(dist_at_knot):
                 ax[0][property_id].text(
-                    profile_points[:, profile_plane[0]][nodal_pt_id],  # type: ignore[index]
-                    profile_points[:, profile_plane[1]][nodal_pt_id],  # type: ignore[index]
+                    spatial_qty.transform(
+                        profile_points[:, profile_plane[0]][nodal_pt_id]
+                    ),  # type: ignore[index]
+                    spatial_qty.transform(
+                        profile_points[:, profile_plane[1]][nodal_pt_id]
+                    ),  # type: ignore[index]
                     nodal_pts_labels[nodal_pt_id],
                     color="orange",
                     fontsize=15,
@@ -196,10 +203,17 @@ def linesample_contourf(
                     va="center",
                 )
                 ax[1][property_id].axvline(
-                    nodal_pt, linestyle="--", color="orange", linewidth=2
+                    spatial_qty.transform(nodal_pt),
+                    linestyle="--",
+                    color="orange",
+                    linewidth=2,
                 )
             ax_twiny = ax[1][property_id].twiny()
             ax_twiny.set_xlim(ax[1][property_id].get_xlim())
-            ax_twiny.set_xticks(dist_at_knot, nodal_pts_labels, color="orange")
+            ax_twiny.set_xticks(
+                spatial_qty.transform(dist_at_knot),
+                nodal_pts_labels,
+                color="orange",
+            )
 
     return fig, ax
