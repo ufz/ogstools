@@ -23,15 +23,9 @@ stress analysis:
 
 import ogstools as ot
 from ogstools import examples
-from ogstools.meshplotlib import plot, setup
-from ogstools.meshplotlib.plot_features import plot_streamlines
-from ogstools.propertylib import mesh_dependent, properties
 
-setup.reset()
-setup.length.output_unit = "km"
 mesh = examples.load_mesh_mechanics_2D()
-mesh_property = ot.properties.displacement
-fig = plot(mesh, mesh_property)
+fig = mesh.plot_contourf(ot.properties.displacement)
 
 # %% [markdown]
 # Tensor components
@@ -39,8 +33,8 @@ fig = plot(mesh, mesh_property)
 # We can inspect the stress (or strain) tensor components by indexing.
 
 # %%
-fig = plot(mesh, properties.stress["xx"])
-fig = plot(mesh, properties.stress["xy"])
+fig = mesh.plot_contourf(ot.properties.stress["xx"])
+fig = mesh.plot_contourf(ot.properties.stress["xy"])
 
 # %% [markdown]
 # Principal stresses
@@ -51,23 +45,17 @@ fig = plot(mesh, properties.stress["xy"])
 # compressive principal stress.
 
 # %%
-eigvecs = properties.stress.eigenvectors
-fig = plot(mesh, mesh_property=properties.stress.eigenvalues[0])
-plot_streamlines(
-    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[0], plot_type="lines"
-)
+eigvecs = ot.properties.stress.eigenvectors
+fig = mesh.plot_contourf(mesh_property=ot.properties.stress.eigenvalues[0])
+mesh.plot_quiver(ax=fig.axes[0], mesh_property=eigvecs[0], glyph_type="line")
 
 # %%
-fig = plot(mesh, mesh_property=properties.stress.eigenvalues[1])
-plot_streamlines(
-    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[1], plot_type="lines"
-)
+fig = mesh.plot_contourf(mesh_property=ot.properties.stress.eigenvalues[1])
+mesh.plot_quiver(ax=fig.axes[0], mesh_property=eigvecs[1], glyph_type="line")
 
 # %%
-fig = plot(mesh, mesh_property=properties.stress.eigenvalues[2])
-plot_streamlines(
-    ax=fig.axes[0], mesh=mesh, mesh_property=eigvecs[2], plot_type="lines"
-)
+fig = mesh.plot_contourf(mesh_property=ot.properties.stress.eigenvalues[2])
+mesh.plot_quiver(ax=fig.axes[0], mesh_property=eigvecs[2], glyph_type="line")
 
 # %% [markdown]
 # We can also plot the mean of the principal stress, i.e. the magnitude of the
@@ -75,7 +63,7 @@ plot_streamlines(
 # see: :py:func:`ogstools.propertylib.tensor_math.mean`
 
 # %%
-fig = plot(mesh, properties.stress.mean)
+fig = mesh.plot_contourf(ot.properties.stress.mean)
 
 # %% [markdown]
 # Von Mises stress
@@ -83,7 +71,7 @@ fig = plot(mesh, properties.stress.mean)
 # see: :py:func:`ogstools.propertylib.tensor_math.von_mises`
 
 # %%
-fig = plot(mesh, properties.stress.von_Mises)
+fig = mesh.plot_contourf(ot.properties.stress.von_Mises)
 
 # %% [markdown]
 # octahedral shear stress
@@ -91,7 +79,7 @@ fig = plot(mesh, properties.stress.von_Mises)
 # see: :py:func:`ogstools.propertylib.tensor_math.octahedral_shear`
 
 # %%
-fig = plot(mesh, properties.stress.octahedral_shear)
+fig = mesh.plot_contourf(ot.properties.stress.octahedral_shear)
 
 # %% [markdown]
 # Integrity criteria
@@ -107,8 +95,8 @@ fig = plot(mesh, properties.stress.octahedral_shear)
 # calculated as the following:
 
 # %%
-mesh["pressure"] = mesh_dependent.p_fluid(mesh)
-fig = plot(mesh, properties.pressure)
+mesh["pressure"] = mesh.p_fluid()
+fig = mesh.plot_contourf(ot.properties.pressure)
 
 # %% [markdown]
 # But since this assumes that the top of the model is equal to the ground
@@ -116,10 +104,10 @@ fig = plot(mesh, properties.pressure)
 # correct the depth manually. Then the pressure is calculated correctly:
 
 # %%
-mesh["depth"] = mesh_dependent.depth(mesh, use_coords=True)
-fig = plot(mesh, "depth")
-mesh["pressure"] = mesh_dependent.p_fluid(mesh)
-fig = plot(mesh, properties.pressure)
+mesh["depth"] = mesh.depth(use_coords=True)
+fig = mesh.plot_contourf("depth")
+mesh["pressure"] = mesh.p_fluid()
+fig = mesh.plot_contourf(ot.properties.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
@@ -127,8 +115,8 @@ fig = plot(mesh, properties.pressure)
 # see: :py:func:`ogstools.propertylib.mesh_dependent.dilatancy_critescu`
 
 # %%
-fig = plot(mesh, properties.dilatancy_critescu_tot)
-fig = plot(mesh, properties.dilatancy_critescu_eff)
+fig = mesh.plot_contourf(ot.properties.dilatancy_critescu_tot)
+fig = mesh.plot_contourf(ot.properties.dilatancy_critescu_eff)
 
 # %% [markdown]
 # Fluid pressure criterion
@@ -136,4 +124,4 @@ fig = plot(mesh, properties.dilatancy_critescu_eff)
 # see: :py:func:`ogstools.propertylib.mesh_dependent.fluid_pressure_criterion`
 
 # %%
-fig = plot(mesh, properties.fluid_pressure_crit)
+fig = mesh.plot_contourf(ot.properties.fluid_pressure_crit)

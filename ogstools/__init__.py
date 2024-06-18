@@ -4,10 +4,12 @@
 #            http://www.opengeosys.org/project/license
 #
 
-"""
-"""
+""" """
+
 from importlib import metadata
 
+from . import plot
+from .meshlib import Mesh, MeshSeries  # noqa: F401
 from .propertylib import properties
 
 __version__ = metadata.version(__package__)
@@ -17,5 +19,8 @@ del metadata  # optional, avoids polluting the results of dir(__package__)
 
 
 __all__ = [
+    "plot",
+    # "Mesh",
+    # "MeshSeries",
     "properties",
 ]

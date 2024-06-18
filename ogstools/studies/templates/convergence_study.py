@@ -20,16 +20,16 @@ reference_solution_path = None
 
 # %% tags=["remove_input"]
 # Import required modules and customize plot settings.
-
+# pylint:disable=C0413
 import numpy as np  # noqa: E402
 import pyvista as pv  # noqa: E402
 
-from ogstools import meshlib, meshplotlib, propertylib, studies  # noqa: E402
+from ogstools import meshlib, plot, propertylib, studies  # noqa: E402
 
-meshplotlib.setup.reset()
-meshplotlib.setup.show_element_edges = True
-meshplotlib.setup.fig_scale = 0.5
-meshplotlib.setup.combined_colorbar = False
+plot.setup.reset()
+plot.setup.show_element_edges = True
+plot.setup.fig_scale = 0.5
+plot.setup.combined_colorbar = False
 
 # %% tags=["remove_input"]
 # Here, the meshes are read, a Property object is created from the property
@@ -53,7 +53,7 @@ richardson = studies.convergence.richardson_extrapolation(
 # asymptotic range of convergence.
 
 # %% tags=["remove_input"]
-fig = meshplotlib.plot(richardson, "grid_convergence")
+fig = plot.contourf(richardson, "grid_convergence")
 
 # %% [markdown]
 # ## Grid comparison
@@ -61,7 +61,7 @@ fig = meshplotlib.plot(richardson, "grid_convergence")
 # Visualizing the requested mesh property on the 3 finest discretizations:
 
 # %% tags=["remove_input"]
-fig = meshplotlib.plot(meshes[-3:], mesh_property)
+fig = plot.contourf(meshes[-3:], mesh_property)
 
 # %% [markdown]
 # ## Richardson extrapolation.
@@ -72,14 +72,14 @@ fig = meshplotlib.plot(meshes[-3:], mesh_property)
 # the Richardson extrapolation is shown.
 
 # %% tags=["remove_input"]
-fig = meshplotlib.plot(richardson, mesh_property)
+fig = plot.contourf(richardson, mesh_property)
 
 data_key = mesh_property.data_name
 if reference_solution_path is None:
     diff_mesh = meshlib.difference(
         richardson, topology.sample(meshes[-1]), mesh_property
     )
-    fig = meshplotlib.plot(diff_mesh, mesh_property)
+    fig = plot.contourf(diff_mesh, mesh_property)
 else:
     reference_solution = topology.sample(
         meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
@@ -87,7 +87,7 @@ else:
     diff_mesh = meshlib.difference(
         reference_solution, richardson, mesh_property
     )
-    fig = meshplotlib.plot(diff_mesh, mesh_property)
+    fig = plot.contourf(diff_mesh, mesh_property)
 
 # %% [markdown]
 # ## Convergence metrics
@@ -102,7 +102,7 @@ metrics.style.format("{:,.5g}").hide()
 # ## Relative errors
 
 # %% tags=["remove_input"]
-meshplotlib.core.plt.rcdefaults()
+plot.contourplots.plt.rcdefaults()
 fig = studies.convergence.plot_convergence_errors(metrics)
 
 # %% [markdown]

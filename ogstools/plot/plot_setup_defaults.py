@@ -5,7 +5,7 @@
 #
 
 """
-.. literalinclude:: ../../ogstools/meshplotlib/plot_setup_defaults.py
+.. literalinclude:: ../../ogstools/plot/plot_setup_defaults.py
    :language: python
    :linenos:
    :lines: 9-
@@ -36,7 +36,7 @@ setup_dict = {
     "x_label": None,
     "y_label": None,
     "log_scaled": False,
-    "combined_colorbar": True,
+    "combined_colorbar": False,
     "rcParams": {
         "font.weight": "normal",
         "font.family": "sans-serif",

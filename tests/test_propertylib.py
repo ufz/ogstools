@@ -2,12 +2,10 @@
 
 import numpy as np
 import pytest
-import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
 from ogstools import examples
 from ogstools.propertylib import properties as pp
-from ogstools.propertylib.mesh_dependent import depth
 from ogstools.propertylib.property import u_reg
 
 Qty = u_reg.Quantity
@@ -97,27 +95,13 @@ class TestPhysicalProperty:
         self.equality(pp.stress.qp_ratio, sig, Qty(-100, "percent"))
         self.equality(pp.stress.qp_ratio, [sig] * 2, Qty([-100] * 2, "percent"))
 
-    def test_depth_2D(self):
-        mesh = examples.load_mesh_mechanics_2D()
-        mesh["depth"] = depth(mesh, use_coords=True)
-        # y Axis is vertical axis
-        assert np.all(mesh["depth"] == -mesh.points[..., 1])
-        mesh["depth"] = depth(mesh)
-        assert np.all(mesh["depth"] < -mesh.points[..., 1])
-
-    def test_depth_3D(self):
-        mesh = pv.SolidSphere(100, center=(0, 0, -101))
-        mesh["depth"] = depth(mesh, use_coords=True)
-        assert np.all(mesh["depth"] == -mesh.points[..., -1])
-        mesh["depth"] = depth(mesh)
-        assert np.all(mesh["depth"] < -mesh.points[..., -1])
-
     def test_integrity_criteria(self):
         """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
         #  not working for arrays (only works for meshes)
         pytest.raises(TypeError, pp.dilatancy_alkan.transform, sig)
         mesh = examples.load_mesh_mechanics_2D()
+        mesh.point_data["pressure"] = mesh.p_fluid()
         assert np.max(pp.dilatancy_alkan.transform(mesh)) > 0
         assert np.max(pp.dilatancy_alkan_eff.transform(mesh)) > 0
         assert np.max(pp.dilatancy_critescu_tot.transform(mesh)) > 0

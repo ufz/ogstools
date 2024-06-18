@@ -53,9 +53,9 @@ class Property:
     categoric: bool = False
     """Does this property only have categoric values?"""
     color: str | None = None
-    """Default color for the variable to be used by meshplotlib"""
+    """Default color for plotting"""
     linestyle: tuple | None = None
-    """Default linestyle for the variable to be used by meshplotlib"""
+    """Default linestyle for plotting"""
 
     def __post_init__(self) -> None:
         if not self.output_name:

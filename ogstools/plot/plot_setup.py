@@ -19,7 +19,7 @@ class PlotSetup:
     Configuration class for easy plot adjustments.
 
     Each entry has a default value as listed in
-    :obj:`ogstools.meshplotlib.plot_setup_defaults`.
+    :obj:`ogstools.plot.plot_setup_defaults`.
     """
 
     combined_colorbar: bool
@@ -42,7 +42,7 @@ class PlotSetup:
     "A dictionary that maps material names to regions (MaterialIDs)."
     num_levels: int
     """The aimed number of levels / bins of the colorbar. See
-    :obj:`ogstools.meshplotlib.levels`"""
+    :obj:`ogstools.plot.levels`"""
     num_streamline_interp_pts: int | None
     "The number of interpolation points for streamlines."
     p_max: float | None
@@ -51,7 +51,7 @@ class PlotSetup:
     "The fixed lower limit for the current scale."
     rcParams: dict
     """Matplotlib runtime configuration. See
-    :obj:`ogstools.meshplotlib.plot_setup_defaults`"""
+    :obj:`ogstools.plot.plot_setup_defaults`"""
     show_element_edges: bool | str
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
@@ -115,6 +115,3 @@ class PlotSetup:
         """Reset the plot setup to default values."""
         for k, v in self.from_dict(setup_dict).__dict__.items():
             self.__dict__[k] = v
-
-
-_setup = PlotSetup.from_dict(setup_dict)

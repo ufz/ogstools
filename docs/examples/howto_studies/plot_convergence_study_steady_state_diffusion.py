@@ -37,17 +37,10 @@ from tempfile import mkdtemp
 from IPython.display import HTML
 from ogs6py import ogs
 
-from ogstools import (
-    examples,
-    meshlib,
-    meshplotlib,
-    msh2vtu,
-    propertylib,
-    workflow,
-)
+import ogstools as ot
+from ogstools import examples, msh2vtu, propertylib, workflow
 from ogstools.studies import convergence
 
-meshplotlib.setup.reset()
 temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
 report_name = str(temp_dir / "report.ipynb")
 result_paths = []
@@ -63,7 +56,7 @@ refinements = 6
 edge_cells = [2**i for i in range(refinements)]
 for n_edge_cells in edge_cells:
     msh_path = temp_dir / "square.msh"
-    meshlib.gmsh_meshing.rect(
+    ot.meshlib.gmsh_meshing.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
     msh2vtu.msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
@@ -85,10 +78,10 @@ for n_edge_cells in edge_cells:
 # %%
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
 solution = examples.analytical_diffusion(
-    meshlib.MeshSeries(result_paths[-1]).read(0)
+    ot.MeshSeries(result_paths[-1]).read(0)
 )
-meshplotlib.setup.show_element_edges = True
-fig = meshplotlib.plot(solution, propertylib.properties.hydraulic_height)
+ot.plot.setup.show_element_edges = True
+fig = ot.plot.contourf(solution, propertylib.properties.hydraulic_height)
 solution.save(analytical_solution_path)
 
 # %% [markdown]

@@ -8,19 +8,14 @@ To demonstrate the creation of an animated plot we use a component transport
 example from the ogs benchmark gallery
 (https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
 """
+
 # %%
 import numpy as np
 
+import ogstools as ot
 from ogstools import examples
-from ogstools.meshplotlib import setup
-from ogstools.meshplotlib.animation import animate
-from ogstools.propertylib import Scalar
 
-setup.reset()
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-mesh_property = Scalar(
-    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
-)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -38,9 +33,9 @@ mesh_property = Scalar(
 # Let's use fixed scale limits to prevent rescaling during the animation.
 
 # %%
-setup.p_min = 0
-setup.p_max = 100
-setup.dpi = 50
+ot.plot.setup.p_min = 0
+ot.plot.setup.p_max = 100
+ot.plot.setup.dpi = 50
 
 # %% [markdown]
 # You can choose which timesteps to render by passing either an int array
@@ -61,15 +56,14 @@ timevalues = np.linspace(
 
 # %%
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-anim = animate(mesh_series, mesh_property, timevalues, titles)
+anim = mesh_series.animate(ot.properties.saturation, timevalues, titles)
 
 # %% [markdown]
 # The animation can be saved (as mp4) like so:
 #
 # ..  code-block:: python
 #
-#   from ogstools.meshplotlib.animation import save_animation
-#   save_animation(anim, "Saturation", fps=5)
+#   ot.plot.utils.save_animation(anim, "Saturation", fps=5)
 #
 
 # sphinx_gallery_start_ignore

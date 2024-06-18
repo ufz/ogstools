@@ -1,4 +1,4 @@
-"""Unit tests for meshplotlib."""
+"""Unit tests for convergence studies."""
 
 from pathlib import Path
 from shutil import rmtree

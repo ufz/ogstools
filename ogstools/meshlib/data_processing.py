@@ -5,6 +5,7 @@
 #
 
 from itertools import product
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -14,48 +15,56 @@ from typeguard import typechecked
 from ogstools.propertylib import Property
 from ogstools.propertylib.properties import get_preset
 
+Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
-def _raw_differences_all_data(
-    mesh1: pv.UnstructuredGrid, mesh2: pv.UnstructuredGrid
-) -> pv.UnstructuredGrid:
-    diff_mesh = mesh1.copy(deep=True)
-    for point_data_key in mesh1.point_data:
-        diff_mesh.point_data[point_data_key] -= mesh2.point_data[point_data_key]
-    for cell_data_key in mesh1.cell_data:
+
+def _raw_differences_all_data(base_mesh: Mesh, subtract_mesh: Mesh) -> Mesh:
+    diff = base_mesh.copy(deep=True)
+    for point_data_key in base_mesh.point_data:
+        diff.point_data[point_data_key] -= subtract_mesh.point_data[
+            point_data_key
+        ]
+    for cell_data_key in base_mesh.cell_data:
         if cell_data_key == "MaterialIDs":
             continue
-        diff_mesh.cell_data[cell_data_key] -= mesh2.cell_data[cell_data_key]
-    return diff_mesh
+        diff.cell_data[cell_data_key] -= subtract_mesh.cell_data[cell_data_key]
+    return diff
 
 
 def difference(
-    mesh1: pv.UnstructuredGrid,
-    mesh2: pv.UnstructuredGrid,
+    base_mesh: Mesh,
+    subtract_mesh: Mesh,
     mesh_property: Property | str | None = None,
-) -> pv.UnstructuredGrid:
+) -> Mesh:
     """
     Compute the difference of properties between two meshes.
 
-    :param mesh1: The first mesh to be subtracted from.
-    :param mesh2: The second mesh whose data is subtracted from the first mesh.
-    :param mesh_property:   The property of interest. If not given, all point
-                            and cell_data will be processed raw.
-    :returns:   A new mesh containing the difference of `mesh_property` or all
-                datasets between mesh1 and mesh2.
+    :param base_mesh:       The mesh to subtract from.
+    :param subtract_mesh:   The mesh whose data is to be subtracted.
+    :param mesh_property:   The property of interest. If not given, all
+                            point and cell_data will be processed raw.
+    :returns:   A new mesh containing the difference of `mesh_property` or
+                of all datasets between both meshes.
     """
     if mesh_property is None:
-        return _raw_differences_all_data(mesh1, mesh2)
+        return _raw_differences_all_data(base_mesh, subtract_mesh)
     if isinstance(mesh_property, Property):
         vals = np.asarray(
-            [mesh_property.transform(mesh) for mesh in [mesh1, mesh2]]
+            [
+                mesh_property.transform(mesh)
+                for mesh in [base_mesh, subtract_mesh]
+            ]
         )
         outname = mesh_property.output_name + "_difference"
     else:
-        vals = np.asarray([mesh[mesh_property] for mesh in [mesh1, mesh2]])
+        vals = np.asarray(
+            [mesh[mesh_property] for mesh in [base_mesh, subtract_mesh]]
+        )
         outname = mesh_property + "_difference"
 
-    diff_mesh = mesh1.copy(deep=True)
-    diff_mesh.clear_data()
+    diff_mesh = base_mesh.copy(deep=True)
+    diff_mesh.clear_point_data()
+    diff_mesh.clear_cell_data()
     diff_mesh[outname] = np.empty(vals.shape[1:])
     diff_mesh[outname] = vals[0] - vals[1]
     return diff_mesh
@@ -217,10 +226,10 @@ def distance_in_profile(points: np.ndarray) -> np.ndarray:
 
 def sample_polyline(
     mesh: pv.UnstructuredGrid,
-    properties: str | Property | list,
+    properties: str | Property | list[str] | list[Property],
     profile_nodes: np.ndarray,
     resolution: int | None = 100,
-) -> tuple[pd.DataFrame, np.array]:
+) -> tuple[pd.DataFrame, np.ndarray]:
     """
     Sample one or more properties along a polyline.
     Profiles created by user can be passed as profile_nodes parameter. In this \
@@ -236,15 +245,14 @@ def sample_polyline(
         and Numpy array of distances from the beginning of the profile at \
             points defined in profile_points.
     """
-    properties = (
+    _properties = (
         [properties] if not isinstance(properties, list) else properties
     )
-    properties = [get_preset(prop, mesh) for prop in properties]
+    properties = [get_preset(prop, mesh) for prop in _properties]
 
     if resolution is None:
         # Only cumulative distance alongside the profile will be returned
         profile_points = profile_nodes
-        dist_at_nodes = np.empty()
     assert isinstance(resolution, int)
     profile_points = interp_points(profile_nodes, resolution=resolution)
     sampled_data_dist_in_segment = distance_in_segments(
@@ -257,9 +265,10 @@ def sample_polyline(
     line = pv.PolyData(profile_points)
     sampled_data = line.sample(mesh)
 
-    # Structure the output data
     output_data = {["x", "y", "z"][i]: profile_points[:, i] for i in [0, 1, 2]}
 
+    # TODO: data should be written in output_name otherwise different
+    # properties with the same data_name will override each other
     for property_current in properties:
         # TODO: workaround for Issue 59
         if property_current.data_name in sampled_data.point_data:

@@ -10,20 +10,15 @@ a component transport example from the ogs benchmark gallery
 (https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
 
 To see this benchmark results over all timesteps have a look at
-:ref:`sphx_glr_auto_examples_howto_meshplotlib_plot_animation.py`.
+:ref:`sphx_glr_auto_examples_howto_plot_plot_animation.py`.
 """
 
 # %%
+import ogstools as ot
 from ogstools import examples
-from ogstools.meshlib import difference
-from ogstools.meshplotlib import plot, setup
-from ogstools.propertylib import Scalar
 
-setup.reset()
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = Scalar(
-    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
-)
+si = ot.properties.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -48,16 +43,16 @@ si = Scalar(
 
 # %%
 mesh = mesh_series.aggregate(si, "max")
-fig = plot(mesh, si)
+fig = mesh.plot_contourf(si)
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
-# However, here we have to use a new mesh_property for the plot to handle the units
-# correctly:
+# However, here we have to use a new mesh_property for the plot to handle the
+# units correctly:
 
 # %%
 mesh = mesh_series.aggregate(si, "max_time")
-fig = plot(mesh, Scalar("Saturation_max_time", "s", "a"))
+fig = mesh.plot_contourf(ot.properties.Scalar("Saturation_max_time", "s", "a"))
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
@@ -65,11 +60,11 @@ fig = plot(mesh, Scalar("Saturation_max_time", "s", "a"))
 
 # %%
 mesh = mesh_series.aggregate(si, "var")
-fig = plot(mesh, si)
+fig = mesh.plot_contourf(si)
 
 # %% [markdown]
 # Difference between the last and the first timestep:
 
 # %%
-mesh = difference(mesh_series.read(-1), mesh_series.read(0), si)
-fig = plot(mesh, si)
+mesh = mesh_series.read(-1).difference(mesh_series.read(0), si)
+fig = mesh.plot_contourf(si)

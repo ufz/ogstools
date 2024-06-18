@@ -38,15 +38,8 @@ from IPython.display import HTML
 from ogs6py import ogs
 from scipy.constants import Julian_year as sec_per_yr
 
-from ogstools import (
-    examples,
-    meshlib,
-    msh2vtu,
-    physics,
-    propertylib,
-    studies,
-    workflow,
-)
+import ogstools as ot
+from ogstools import examples, meshlib, msh2vtu, physics, studies, workflow
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
@@ -71,7 +64,7 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %%
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
-    meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
+    ot.meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
     _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
 
     model = ogs.OGS(PROJECT_FILE=temp_dir / "default.prj", INPUT_FILE=prj_path)
@@ -93,12 +86,12 @@ fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
 for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
-    mesh_series = meshlib.MeshSeries(sim_result)
+    mesh_series = ot.MeshSeries(sim_result)
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
         mesh = mesh_series.read(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
-    max_T = propertylib.properties.temperature.transform(results["temperature"])
+    max_T = ot.properties.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues) / sec_per_yr
@@ -167,7 +160,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # %%
 mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
-    mesh_series, propertylib.properties.temperature, units=["s", "yrs"]
+    mesh_series, ot.properties.temperature, units=["s", "yrs"]
 )
 
 # %% [markdown]

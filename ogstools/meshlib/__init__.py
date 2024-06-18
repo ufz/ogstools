@@ -6,7 +6,7 @@
 
 from .boundary import Boundary, Layer, LocationFrame, Raster
 from .boundary_set import LayerSet
-from .boundary_subset import Surface
+from .boundary_subset import Gaussian2D, Surface
 from .data_processing import (
     difference,
     difference_matrix,
@@ -17,23 +17,36 @@ from .data_processing import (
     sample_polyline,
 )
 from .gmsh_meshing import cuboid, rect
+from .mesh import Mesh
 from .mesh_series import MeshSeries
+from .region import (
+    to_region_prism,
+    to_region_simplified,
+    to_region_tetraeder,
+    to_region_voxel,
+)
 
 __all__ = [
-    "Surface",
-    "Layer",
-    "Raster",
-    "LocationFrame",
     "Boundary",
-    "MeshSeries",
+    "Gaussian2D",
+    "Layer",
     "LayerSet",
+    "LocationFrame",
+    "Mesh",
+    "MeshSeries",
+    "Raster",
+    "Surface",
+    "cuboid",
     "difference",
-    "difference_pairwise",
     "difference_matrix",
-    "interp_points",
+    "difference_pairwise",
     "distance_in_profile",
     "distance_in_segments",
-    "sample_polyline",
+    "interp_points",
     "rect",
-    "cuboid",
+    "sample_polyline",
+    "to_region_prism",
+    "to_region_simplified",
+    "to_region_tetraeder",
+    "to_region_voxel",
 ]

@@ -4,39 +4,49 @@
 #            http://www.opengeosys.org/project/license
 #
 
-"""A class to handle Meshseries data."""
-
+import warnings
+from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import meshio
 import numpy as np
 import pyvista as pv
 import vtuIO
 from h5py import File
+from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from tqdm.auto import tqdm
 
-from ogstools.propertylib import Property
+from ogstools import plot
+from ogstools.propertylib.properties import Property, get_preset
+from ogstools.propertylib.unit_registry import u_reg
 
+from .mesh import Mesh
 from .xdmf_reader import XDMFReader
 
 
 class MeshSeries:
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
-
-    Will be replaced by own module in ogstools with similar interface.
     """
 
     def __init__(
-        self, filepath: str | Path, time_unit: str | None = "s"
+        self,
+        filepath: str | Path,
+        time_unit: str | None = "s",
+        spatial_unit: str = "m",
+        spatial_output_unit: str = "m",
     ) -> None:
         """
         Initialize a MeshSeries object
 
             :param filepath:    Path to the PVD or XDMF file.
             :param time_unit:   Data unit of the timevalues.
+            :param data_length_unit:    Length unit of the mesh data.
+            :param output_length_unit:  Length unit in plots.
 
             :returns:           A MeshSeries object
         """
@@ -44,7 +54,9 @@ class MeshSeries:
             filepath = str(filepath)
         self.filepath = filepath
         self.time_unit = time_unit
-        self._data: dict[int, pv.UnstructuredGrid] = {}
+        self.spatial_unit = spatial_unit
+        self.spatial_output_unit = spatial_output_unit
+        self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
@@ -78,12 +90,14 @@ class MeshSeries:
         meshio_mesh = meshio.Mesh(points, cells, point_data, cell_data)
         return pv.from_meshio(meshio_mesh)
 
-    def read(
-        self, timestep: int, lazy_eval: bool = True
-    ) -> pv.UnstructuredGrid:
+    def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Lazy read function."""
         if timestep in self._data:
-            return self._data[timestep]
+            return Mesh(
+                self._data[timestep],
+                self.spatial_unit,
+                self.spatial_output_unit,
+            )
         if self._data_type == "pvd":
             mesh = self._read_pvd(timestep)
         elif self._data_type == "xdmf":
@@ -92,7 +106,7 @@ class MeshSeries:
             mesh = self._vtu_reader.read()
         if lazy_eval:
             self._data[timestep] = mesh
-        return mesh
+        return Mesh(mesh, self.spatial_unit, self.spatial_output_unit)
 
     def clear(self) -> None:
         self._data.clear()
@@ -130,13 +144,11 @@ class MeshSeries:
         """Return the closest timevalue to a timevalue."""
         return self.timevalues[self.closest_timestep(timevalue)]
 
-    def read_closest(self, timevalue: float) -> pv.UnstructuredGrid:
+    def read_closest(self, timevalue: float) -> Mesh:
         """Return the closest timestep in the data for a given timevalue."""
         return self.read(self.closest_timestep(timevalue))
 
-    def read_interp(
-        self, timevalue: float, lazy_eval: bool = True
-    ) -> pv.UnstructuredGrid:
+    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
         t_vals = self.timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
@@ -177,7 +189,7 @@ class MeshSeries:
         self,
         mesh_property: Property | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-    ) -> pv.UnstructuredGrid:
+    ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
 
         :param mesh_property:
@@ -204,7 +216,8 @@ class MeshSeries:
             "max_time": np.argmax,
         }[func]
         mesh = self.read(0).copy(deep=True)
-        mesh.clear_data()
+        mesh.clear_point_data()
+        mesh.clear_cell_data()
         if isinstance(mesh_property, Property):
             if mesh_property.mesh_dependent:
                 vals = np.asarray(
@@ -224,7 +237,9 @@ class MeshSeries:
             if isinstance(mesh_property, Property)
             else f"{mesh_property}_{func}"
         )
+        # TODO: put in separate function
         if func in ["min_time", "max_time"]:
+            assert isinstance(np_func, type(np.argmax))
             mesh[output_name] = self.timevalues[np_func(vals, axis=0)]
         else:
             mesh[output_name] = np.empty(vals.shape[1:])
@@ -303,3 +318,161 @@ class MeshSeries:
         return self._probe_pvd(
             points, data_name, interp_method, interp_backend_pvd
         )
+
+    def plot_probe(
+        self,
+        points: np.ndarray,
+        mesh_property: Property | str,
+        mesh_property_abscissa: Property | str | None = None,
+        labels: list[str] | None = None,
+        time_unit: str | None = "s",
+        interp_method: None
+        | (Literal["nearest", "linear", "probefilter"]) = None,
+        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        colors: list | None = None,
+        linestyles: list | None = None,
+        ax: plt.Axes | None = None,
+        fill_between: bool = False,
+        **kwargs: Any,
+    ) -> plt.Figure | None:
+        """
+        Plot the transient property on the observation points in the MeshSeries.
+
+            :param points:          The points to sample at.
+            :param mesh_property:   The property to be sampled.
+            :param labels:          The labels for each observation point.
+            :param time_unit:       Output unit of the timevalues.
+            :param interp_method:   Choose the interpolation method, defaults to
+                                    `linear` for xdmf MeshSeries and
+                                    `probefilter` for pvd MeshSeries.
+            :param interp_backend:  Interpolation backend for PVD MeshSeries.
+            :param kwargs:          Keyword arguments passed to matplotlib's
+                                    plot function.
+
+            :returns:   A matplotlib Figure
+        """
+        points = np.asarray(points)
+        if len(points.shape) == 1:
+            points = points[np.newaxis]
+        mesh_property = get_preset(mesh_property, self.read(0))
+        values = mesh_property.magnitude.transform(
+            self.probe(
+                points,
+                mesh_property.data_name,
+                interp_method,
+                interp_backend_pvd,
+            )
+        )
+        if values.shape[0] == 1:
+            values = values.flatten()
+        Q_ = u_reg.Quantity
+        time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
+        if mesh_property_abscissa is None:
+            x_values = time_unit_conversion * self.timevalues
+            x_label = f"time / {time_unit}" if time_unit else "time"
+        else:
+            mesh_property_abscissa = get_preset(
+                mesh_property_abscissa, self.read(0)
+            )
+            x_values = mesh_property_abscissa.magnitude.transform(
+                self.probe(
+                    points,
+                    mesh_property_abscissa.data_name,
+                    interp_method,
+                    interp_backend_pvd,
+                )
+            )
+            x_unit_str = (
+                f" / {mesh_property_abscissa.get_output_unit()}"
+                if mesh_property_abscissa.get_output_unit()
+                else ""
+            )
+            x_label = (
+                mesh_property_abscissa.output_name.replace("_", " ")
+                + x_unit_str
+            )
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
+        ax.set_prop_cycle(
+            plot.utils.get_style_cycler(len(points), colors, linestyles)
+        )
+        if fill_between:
+            ax.fill_between(
+                x_values,
+                np.min(values, axis=-1),
+                np.max(values, axis=-1),
+                label=labels,
+                **kwargs,
+            )
+        else:
+            ax.plot(x_values, values, label=labels, **kwargs)
+        if labels is not None:
+            ax.legend(
+                facecolor="white", framealpha=1, prop={"family": "monospace"}
+            )
+        ax.set_axisbelow(True)
+        ax.grid(which="major", color="lightgrey", linestyle="-")
+        ax.grid(which="minor", color="0.95", linestyle="--")
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(mesh_property.get_label())
+        ax.label_outer()
+        ax.minorticks_on()
+        return fig
+
+    def animate(
+        self,
+        mesh_property: Property,
+        timesteps: Sequence | None = None,
+        titles: list[str] | None = None,
+    ) -> FuncAnimation:
+        """
+        Create an animation for a property with given timesteps.
+
+        :param property: the property field to be visualized on all timesteps
+        :param timesteps: if sequence of int: the timesteps to animate
+                        if sequence of float: the timevalues to animate
+        :param titles: the title on top of the animation for each frame
+        """
+        plot.setup.layout = "tight"
+        plot.setup.combined_colorbar = True
+
+        ts = self.timesteps if timesteps is None else timesteps
+
+        fig = self.read(0, False).plot_contourf(mesh_property)
+
+        def init() -> None:
+            pass
+
+        def animate_func(i: int | float, fig: plt.Figure) -> None:
+            index = np.argmin(np.abs(np.asarray(ts) - i))
+
+            fig.axes[-1].remove()  # remove colorbar
+            for ax in np.ravel(np.asarray(fig.axes)):
+                ax.clear()
+            if titles is not None:
+                plot.setup.title_center = titles[index]
+            if isinstance(i, int):
+                mesh = self.read(i)
+            else:
+                mesh = self.read_interp(i, True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                fig = plot.contourplots.draw_plot(
+                    mesh, mesh_property, fig=fig, axes=fig.axes[0]
+                )  # type: ignore[assignment]
+
+        _func = partial(animate_func, fig=fig)
+
+        return FuncAnimation(
+            fig,  # type: ignore[arg-type]
+            _func,  # type: ignore[arg-type]
+            frames=tqdm(ts),
+            blit=False,
+            interval=50,
+            repeat=False,
+            init_func=init,  # type: ignore[arg-type]
+        )
+
+    # TODO: add member function to MeshSeries to get a difference for to timesteps

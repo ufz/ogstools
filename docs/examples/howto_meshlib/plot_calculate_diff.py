@@ -16,11 +16,10 @@ between meshes.
 
 # sphinx_gallery_end_ignore
 
+import ogstools as ot
 from ogstools import examples
-from ogstools.meshlib import difference, difference_matrix, difference_pairwise
-from ogstools.propertylib import properties
 
-mesh_property = properties.temperature
+mesh_property = ot.properties.temperature
 
 # %%
 # 0. Introduction
@@ -51,7 +50,7 @@ mesh2 = mesh_series.read(-1)
 #   \text{Mesh}_1 - \text{Mesh}_2
 #
 
-mesh_diff = difference(mesh1, mesh2, mesh_property)
+mesh_diff = mesh1.difference(mesh2, mesh_property)
 
 # %% [markdown]
 # This returned object will be a PyVista UnstructuredGrid object:
@@ -89,7 +88,9 @@ print(f"Type of mesh_diff: {type(mesh_diff)}")
 meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
-mesh_diff_pair_wise = difference_pairwise(meshes_1, meshes_2, mesh_property)
+mesh_diff_pair_wise = ot.meshlib.difference_pairwise(
+    meshes_1, meshes_2, mesh_property
+)
 
 # %%
 print(f"Length of mesh_list1: {len(meshes_1)}")
@@ -123,7 +124,9 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = difference_matrix(mesh_list, mesh_property=mesh_property)
+mesh_diff_matrix = ot.meshlib.difference_matrix(
+    mesh_list, mesh_property=mesh_property
+)
 
 # %%
 print(f"Length of mesh_list1: {len(mesh_list)}")
@@ -160,7 +163,7 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
-mesh_diff_matrix = difference_matrix(
+mesh_diff_matrix = ot.meshlib.difference_matrix(
     mesh_list_matrix_1, mesh_list_matrix_2, mesh_property
 )
 

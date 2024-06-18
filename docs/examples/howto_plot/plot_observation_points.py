@@ -24,15 +24,11 @@ Here we use a component transport example from the ogs benchmark gallery
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ogstools import examples, meshplotlib
-from ogstools.meshplotlib.utils import justified_labels
-from ogstools.propertylib import Scalar
+import ogstools as ot
+from ogstools import examples
 
-meshplotlib.setup.reset()
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = Scalar(
-    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
-)
+si = ot.properties.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -54,20 +50,19 @@ points = np.asarray(
     [[x, 0, 60] for x in [0, 40, 80, 120]]
     + [[x, 0, 40] for x in [0, 40, 80, 120]]
 )
-fig = meshplotlib.plot(mesh_series.read(0), si)
+fig = mesh_series.read(0).plot_contourf(si)
 fig.axes[0].scatter(points[:, 0], points[:, 2], s=50, fc="none", ec="r", lw=3)
 for i, point in enumerate(points):
     fig.axes[0].annotate(str(i), (point[0], point[2] - 5), va="top")
-plt.rcdefaults()
+plt.rcdefaults()  # TODO
 
 # %% [markdown]
 # And now probe the points and the values over time:
 
-# %%
-labels = [f"{i}: {label}" for i, label in enumerate(justified_labels(points))]
-fig = meshplotlib.plot_probe(
-    mesh_series=mesh_series, points=points[:4], mesh_property=si,
-    time_unit="a", labels=labels[:4]
+# %%,
+labels = [f"{i}: {label}" for i, label in enumerate(ot.plot.utils.justified_labels(points))]
+fig = mesh_series.plot_probe(
+    points=points[:4], mesh_property=si, time_unit="a", labels=labels[:4]
 )
 # %% [markdown]
 # You can also pass create your own matplotlib figure and pass the axes object.
@@ -78,10 +73,10 @@ fig = meshplotlib.plot_probe(
 
 # %%
 fig, axs = plt.subplots(nrows=2, figsize=[10, 5])
-meshplotlib.plot_probe(
-    mesh_series, points[:4], si, time_unit="a", ax=axs[0], colors=["k"],
+mesh_series.plot_probe(
+    points[:4], si, time_unit="a", ax=axs[0], colors=["k"],
     labels=labels[:4], marker=".")
-meshplotlib.plot_probe(
-    mesh_series, points[4:], si, time_unit="a", ax=axs[1], linestyles=["-"],
+mesh_series.plot_probe(
+    points[4:], si, time_unit="a", ax=axs[1], linestyles=["-"],
     labels=labels[4:], linewidth=1,
 )
