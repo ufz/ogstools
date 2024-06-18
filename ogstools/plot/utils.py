@@ -134,7 +134,7 @@ def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
     return abs(lims[x_id + 1] - lims[x_id]) / abs(lims[y_id + 1] - lims[y_id])
 
 
-def _get_rows_cols(
+def get_rows_cols(
     meshes: list[pv.UnstructuredGrid]
     | np.ndarray
     | pv.UnstructuredGrid

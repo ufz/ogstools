@@ -460,7 +460,9 @@ class MeshSeries:
                 mesh = self.read_interp(i, True)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                fig = plot.contourplots._draw_plot(mesh, mesh_property, fig=fig)  # type: ignore[assignment]
+                fig = plot.contourplots.draw_plot(
+                    mesh, mesh_property, fig=fig, axes=fig.axes[0]
+                )  # type: ignore[assignment]
 
         _func = partial(animate_func, fig=fig)
 

@@ -321,7 +321,7 @@ def _fig_init(
 # TODO: Have a look at fig and ax logic and make it more readable
 
 
-def _draw_plot(
+def draw_plot(
     meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     mesh_property: Property,
     fig: plt.Figure | None = None,
@@ -335,7 +335,7 @@ def _draw_plot(
     :param fig: Matplotlib figure to use for plotting (optional)
     :param axes: Matplotlib Axes to use for plotting (optional)
     """
-    shape = utils._get_rows_cols(meshes)
+    shape = utils.get_rows_cols(meshes)
     np_meshes = np.reshape(meshes, shape)
     if fig is not None and axes is not None:
         np_axs = np.reshape(np.array(axes), shape)
@@ -404,7 +404,13 @@ def _draw_plot(
                     _levels = combined_levels(
                         np_meshes[i, j, None], mesh_property
                     )
-                    add_colorbars(fig, np_axs[i, j], mesh_property, _levels)
+                    add_colorbars(
+                        fig,
+                        np_axs[i, j],
+                        mesh_property,
+                        _levels,
+                        pad=0.05 / shape[1],
+                    )
     return fig
 
 
@@ -429,7 +435,7 @@ def contourf(
     :param ax: Matplotlib Axis object to use for plotting (optional)
     """
     rcParams.update(setup.rcParams_scaled)
-    shape = utils._get_rows_cols(meshes)
+    shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
     mesh_property = get_preset(mesh_property, _meshes[0])
     data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
@@ -443,20 +449,20 @@ def contourf(
     n_axs = shape[0] * shape[1]
     if ax is None and fig is None:
         _fig, _ax = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
-        fig = _draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
+        fig = draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
         assert isinstance(fig, plt.Figure)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is None:
-        _draw_plot(meshes, mesh_property, axes=ax)
+        draw_plot(meshes, mesh_property, axes=ax)
         ax.set_aspect(1.0 / ax_aspects[0])
     elif ax is None and fig is not None:
-        fig = _draw_plot(meshes, mesh_property, fig=fig)
+        fig = draw_plot(meshes, mesh_property, fig=fig)
         assert isinstance(fig, plt.Figure)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     elif ax is not None and fig is not None:
-        _draw_plot(meshes, mesh_property, fig=fig, axes=ax)
+        draw_plot(meshes, mesh_property, fig=fig, axes=ax)
         for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
             ax.set_aspect(1.0 / aspect)
     return fig
