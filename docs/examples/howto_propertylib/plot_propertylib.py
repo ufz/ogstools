@@ -11,11 +11,10 @@ mesh data. There are several predefined properties stored under the module
 """
 
 # %%
+import ogstools as ot
 from ogstools import examples
-from ogstools.plot import contourf
-from ogstools.propertylib import Scalar, properties
 
-properties.get_dataframe()
+ot.properties.get_dataframe()
 
 # %% [markdown]
 # Scalar, Vector and Matrix inherit from the class Property with its
@@ -24,22 +23,22 @@ properties.get_dataframe()
 # applies a function if specified. In this case we convert from K to °C:
 
 # %%
-properties.temperature.transform(273.15)
+ot.properties.temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
 # You can also create your own properties by creating a Scalar, Vector or Matrix
 # property. The following doesn't do any unit conversion.
 
 # %%
-custom_temperature = Scalar(
+custom_temperature = ot.properties.Scalar(
     data_name="temperature", data_unit="K", output_unit="K"
 )
-custom_temperature.transform(273.15)
+custom_temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
 # Or use existing presets as a template and replace some parameters:
-custom_temperature = properties.temperature.replace(output_unit="°F")
-custom_temperature.transform(273.15)
+custom_temperature = ot.properties.temperature.replace(output_unit="°F")
+custom_temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
 # Components of Vector properties and Matrix properties can be accessed with
@@ -49,16 +48,18 @@ custom_temperature.transform(273.15)
 # length 4 [xx, yy, zz, xy] or 6 [xx, yy, zz, xy, yz, xz].
 
 # %%
-properties.displacement[1].transform([0.01, 0.02, 0.03])
+ot.properties.displacement[1].transform([0.01, 0.02, 0.03], strip_unit=False)
 
 # %%
-properties.strain["xx"].transform([0.01, 0.02, 0.03, 0.04, 0.05, 0.06])
+ot.properties.strain["xx"].transform(
+    [0.01, 0.02, 0.03, 0.04, 0.05, 0.06], strip_unit=False
+)
 
 # %% [markdown]
 # Magnitude of a 2D displacement vector:
 
 # %%
-properties.displacement.magnitude.transform([0.03, 0.04])
+ot.properties.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 
 # %% [markdown]
 # We suggest specifying the properties and their transformations once.
@@ -67,7 +68,9 @@ properties.displacement.magnitude.transform([0.03, 0.04])
 # task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-fig = contourf(examples.load_mesh_mechanics_2D(), properties.stress.von_Mises)
+fig = ot.plot.contourf(
+    examples.load_mesh_mechanics_2D(), ot.properties.stress.von_Mises
+)
 
 # %% [markdown]
 # Have a look at
