@@ -913,7 +913,7 @@ def materials_in_CT(
 
 class RequestParams(TypedDict):
     model: NotRequired[ogs.OGS]
-    species_list: NotRequired[list]
+    species_list: NotRequired[list | None]
     initial_time: NotRequired[int]
     end_time: NotRequired[int]
     time_stepping: NotRequired[list]

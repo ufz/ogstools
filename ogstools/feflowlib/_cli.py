@@ -214,7 +214,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             mesh,
             material_properties,
             process,
-            species_list=species,
+            species_list=species if "component_transport" in case else None,
             model=template_model,
         )
 
