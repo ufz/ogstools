@@ -19,7 +19,7 @@ import numpy as np
 import pyvista as pv
 from ogs6py import ogs
 
-import ogstools.meshplotlib as mpl
+import ogstools as ot
 from ogstools.examples import feflow_model_box_Neumann
 from ogstools.feflowlib import (
     convert_properties_mesh,
@@ -31,8 +31,6 @@ from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties,
 )
-from ogstools.meshlib import MeshSeries
-from ogstools.propertylib import Scalar
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
@@ -96,7 +94,7 @@ ET.dump(model_prjfile)
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
-ms = MeshSeries(temp_dir / "sim_boxNeumann.pvd")
+ms = ot.MeshSeries(temp_dir / "sim_boxNeumann.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.read(ms.timesteps[-1])
 """
@@ -111,9 +109,11 @@ ogs_sim_res.plot(
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 # %%
-# 5.1 Plot the hydraulic head simulated in OGS with :py:mod:`ogstools.meshplotlib.plot`.
-head = Scalar(data_name="HEAD_OGS", data_unit="m", output_unit="m")
-fig = mpl.plot(ogs_sim_res.slice(normal="z", origin=[50, 50, 0]), head)
+# 5.1 Plot the hydraulic head simulated in OGS with :py:mod:`ogstools.plot.contourf`.
+head = ot.properties.Scalar(
+    data_name="HEAD_OGS", data_unit="m", output_unit="m"
+)
+fig = ot.plot.contourf(ogs_sim_res.slice(normal="z", origin=[50, 50, 0]), head)
 
 
 # %%
@@ -128,17 +128,19 @@ pyvista_mesh.plot(
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 # %%
-# 6.1 Plot the differences in the hydraulic head with :py:mod:`ogstools.meshplotlib.plot`.
+# 6.1 Plot the differences in the hydraulic head with :py:mod:`ogstools.plot.contourf`.
 # Slices are taken along the z-axis.
-diff_head = Scalar(data_name="diff_HEAD", data_unit="m", output_unit="m")
+diff_head = ot.properties.Scalar(
+    data_name="diff_HEAD", data_unit="m", output_unit="m"
+)
 slices = np.reshape(list(pyvista_mesh.slice_along_axis(n=4, axis="z")), (2, 2))
-fig = mpl.plot(slices, diff_head)
+fig = ot.plot.contourf(slices, diff_head)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
-    ax.set_title(f"z = {slice.center[2]:.1f} {mpl.setup.length.data_unit}")
+    ax.set_title(f"z = {slice.center[2]:.1f} {ms.spatial_output_unit}")
 
 # %%
 # Slices are taken along the y-axis.
 slices = np.reshape(list(pyvista_mesh.slice_along_axis(n=4, axis="y")), (2, 2))
-fig = mpl.plot(slices, diff_head)
+fig = ot.plot.contourf(slices, diff_head)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
-    ax.set_title(f"y = {slice.center[1]:.1f} {mpl.setup.length.data_unit}")
+    ax.set_title(f"y = {slice.center[1]:.1f} {ms.spatial_output_unit}")
