@@ -1,11 +1,17 @@
 """Unit tests for meshlib."""
 
+from pathlib import Path
+from tempfile import mkdtemp
+
 import numpy as np
 import pytest
+from ogs6py import ogs
 from pyvista import SolidSphere, UnstructuredGrid
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.meshlib import rect
+from ogstools.msh2vtu import msh2vtu
 
 
 class TestUtils:
@@ -238,3 +244,54 @@ class TestUtils:
             np.abs(ms_sp["darcy_velocity_1"].to_numpy())
             > np.zeros_like(ms_sp["darcy_velocity_1"].to_numpy())
         ).all()
+
+    def test_ip_mesh(self):
+        "Test creation of integration point meshes."
+
+        tmp_path = Path(mkdtemp())
+        mesh_path = Path(tmp_path) / "mesh.msh"
+        sigma_ip = ot.properties.stress.replace(data_name="sigma_ip")
+
+        def run_and_check(
+            elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
+        ):
+            rect(
+                n_edge_cells=6,
+                n_layers=2,
+                structured_grid=quads,
+                order=elem_order,
+                out_name=mesh_path,
+                mixed_elements=mixed,
+            )
+            msh2vtu(mesh_path, tmp_path, log_level="ERROR")
+
+            model = ogs.OGS(
+                PROJECT_FILE=tmp_path / "default.prj",
+                INPUT_FILE=examples.prj_mechanics,
+            )
+            model.replace_text(intpt_order, xpath=".//integration_order")
+            model.write_input()
+            model.run_model(
+                write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
+            )
+            mesh = ot.MeshSeries(tmp_path / "mesh.pvd").read(-1)
+            int_pts = mesh.to_ip_point_cloud()
+            ip_mesh = mesh.to_ip_mesh()
+            assert int_pts.number_of_points == ip_mesh.number_of_cells
+            containing_cells = ip_mesh.find_containing_cell(int_pts.points)
+            # check for integration points coinciding with the tessellated cells
+            assert np.all(
+                sigma_ip.magnitude.transform(ip_mesh)[containing_cells]
+                == sigma_ip.magnitude.transform(int_pts)
+            )
+
+        run_and_check(elem_order=1, quads=False, intpt_order=2)
+        run_and_check(elem_order=1, quads=False, intpt_order=3)
+        run_and_check(elem_order=1, quads=False, intpt_order=4)
+        run_and_check(elem_order=2, quads=False, intpt_order=4)
+        run_and_check(elem_order=1, quads=True, intpt_order=2)
+        run_and_check(elem_order=1, quads=True, intpt_order=3)
+        run_and_check(elem_order=1, quads=True, intpt_order=4)
+        run_and_check(elem_order=2, quads=True, intpt_order=4)
+        run_and_check(elem_order=2, quads=True, intpt_order=4)
+        run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
