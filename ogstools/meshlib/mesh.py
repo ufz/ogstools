@@ -25,6 +25,8 @@ class Mesh(pv.UnstructuredGrid):
     Contains additional data and functions mainly for postprocessing.
     """
 
+    filepath: Path | None = None
+
     # pylint: disable=C0116
     @copy_method_signature(data_processing.difference)
     def difference(self, *args: Any, **kwargs: Any) -> Any:
@@ -101,6 +103,7 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
+        mesh.filepath = Path(filepath)
         mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )

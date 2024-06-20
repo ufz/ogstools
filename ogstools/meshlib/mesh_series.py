@@ -60,6 +60,10 @@ class MeshSeries:
         self._data_type = filepath.split(".")[-1]
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
+            self.timestep_files = [
+                str(Path(filepath).parent / dataset.path)
+                for dataset in self._pvd_reader.datasets
+            ]
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
             self._read_xdmf(0)  # necessary to initialize hdf5_files
@@ -99,14 +103,17 @@ class MeshSeries:
                 self.spatial_output_unit,
             )
         if self._data_type == "pvd":
-            mesh = self._read_pvd(timestep)
+            pv_mesh = self._read_pvd(timestep)
         elif self._data_type == "xdmf":
-            mesh = self._read_xdmf(timestep)
+            pv_mesh = self._read_xdmf(timestep)
         elif self._data_type == "vtu":
-            mesh = self._vtu_reader.read()
+            pv_mesh = self._vtu_reader.read()
         if lazy_eval:
-            self._data[timestep] = mesh
-        return Mesh(mesh, self.spatial_unit, self.spatial_output_unit)
+            self._data[timestep] = pv_mesh
+        mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
+        if self._data_type == "pvd":
+            mesh.filepath = Path(self.timestep_files[timestep])
+        return mesh
 
     def clear(self) -> None:
         self._data.clear()
