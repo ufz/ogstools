@@ -107,9 +107,9 @@ def linesample(
             [ax, ax_twinx],
             [mesh_properties[0].color, mesh_properties[-1].color],
         )
-        update_font_sizes(ax=ax_twinx, label_axes="none", fontsize=fontsize)
+        update_font_sizes(ax=ax_twinx, fontsize=fontsize)
 
-    update_font_sizes(ax=ax, label_axes="none", fontsize=fontsize)
+    update_font_sizes(ax=ax, fontsize=fontsize)
     # TODO: this should be in apply_mpl_style()
     ax.grid(which="major", color="lightgrey", linestyle="-")
     ax.grid(which="minor", color="0.95", linestyle="--")

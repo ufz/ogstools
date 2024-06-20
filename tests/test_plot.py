@@ -9,8 +9,8 @@ import pytest
 from pyvista import examples as pv_examples
 
 import ogstools as ot
-import ogstools.plot.utils
 from ogstools import examples
+from ogstools.plot import utils
 
 assert_allclose = partial(
     np.testing.assert_allclose, rtol=1e-7, atol=1e-100, verbose=True
@@ -101,7 +101,7 @@ class TestPlotting:
                 for z in np.linspace(1e-6, 1e6, 7)
             ]
         )
-        labels = ot.plot.utils.justified_labels(points)
+        labels = utils.justified_labels(points)
         str_lens = np.asarray([len(label) for label in labels])
         assert np.all(str_lens == str_lens[0])
 
@@ -205,8 +205,14 @@ class TestPlotting:
             ot.properties.temperature,
             fig=fig,
         )
-        ogstools.plot.utils.update_font_sizes(fig=fig, fontsize=25)
-        fig.suptitle("Test user defined fig")
+        utils.update_font_sizes(fig=fig, fontsize=25)
+        utils.update_font_sizes(ax=ax, fontsize=25)
+        err_msg = "Neither Figure nor Axes was provided!"
+        with pytest.raises(ValueError, match=err_msg):
+            utils.update_font_sizes(fig=None, ax=None)
+        err_msg = "Please only provide a figure OR axes!"
+        with pytest.raises(ValueError, match=err_msg):
+            utils.update_font_sizes(fig=fig, ax=ax)
         plt.close()
 
     def test_sharexy(self):
@@ -245,20 +251,20 @@ class TestPlotting:
         diff_ba = mesh_b.difference(mesh_a, ot.properties.temperature)
         diff_ab.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[0][1])
         diff_ba.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[1][1])
-        ogstools.plot.utils.label_spatial_axes(ax, "x", "y")
+        utils.label_spatial_axes(ax, "x", "y")
         plt.close()
 
     def test_spatial_label(self):
         """Test axes labeling"""
         fig, ax = plt.subplots(2, 2)
-        ogstools.plot.utils.label_spatial_axes(ax, "x", "y")
+        utils.label_spatial_axes(ax, "x", "y")
         plt.close()
 
     def test_spatial_label_clear(self):
         """Test axes labels clearing"""
         fig, ax = plt.subplots(2, 2)
-        ogstools.plot.utils.label_spatial_axes(ax, "x", "y")
-        ogstools.plot.utils.clear_labels(ax)
+        utils.label_spatial_axes(ax, "x", "y")
+        utils.clear_labels(ax)
         plt.close()
 
     def test_limit_plots(self):
@@ -281,7 +287,7 @@ class TestPlotting:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(ot.properties.temperature, timevalues)
-        if not ot.plot.utils.save_animation(anim, mkstemp()[1], 5):
+        if not utils.save_animation(anim, mkstemp()[1], 5):
             pytest.skip("Saving animation failed.")
         plt.close()
 
@@ -356,5 +362,5 @@ class TestPlotting:
             plot_nodal_pts=True,
             profile_plane=[0, 2],  # This profile is in XZ plane, not XY!
         )
-        ogstools.plot.utils.update_font_sizes(label_axes="none", fig=fig)
+        utils.update_font_sizes(ax=ax)
         fig.tight_layout()

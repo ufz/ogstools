@@ -74,52 +74,35 @@ def label_spatial_axes(
 
 def update_font_sizes(
     fontsize: int = 20,
-    label_axes: str = "both",
     fig: plt.Figure | None = None,
     ax: plt.Axes | np.ndarray | None = None,
 ) -> None:
     """
     Update font sizes of labels and ticks in all subplots
 
-    :param fig: Matplotlib Figure object to use for plotting
-    :param fontsize: New font size for the labels and ticks (optional)
-    :param label_axes: Apply labels to axis: "x", "y", "both", "none"
+    :param fontsize: font size for the labels and ticks
+    :param fig: matplotlib figure which should be updated
+    :param ax: matplotlib axes which should be updated
     """
-    # TODO: Remove labeling axes from this function
-    if fig is None and ax is None:
-        err_msg = "Neither Figure nor Axes was provided"
-        raise ValueError(err_msg)
-    if isinstance(ax, np.ndarray):
-        err_msg = "If you want apply this function to multiple subplots,\
-            please provide Figure."
-        raise ValueError(err_msg)
-    if fig is not None and ax is None:
-        axes = fig.get_axes()
-    elif fig is None and ax is not None:
-        axes = [ax]
-    else:
-        err_msg = "Invalid combination of Axis and Figure!"
-        raise ValueError(err_msg)
+    match fig, ax:
+        case None, None:
+            err_msg = "Neither Figure nor Axes was provided!"
+            raise ValueError(err_msg)
+        case fig, None:
+            assert isinstance(fig, plt.Figure)
+            axes = fig.get_axes()
+        case None, ax:
+            axes = [ax] if isinstance(ax, plt.Axes) else np.ravel(ax)
+        case fig, ax:
+            err_msg = "Please only provide a figure OR axes!"
+            raise ValueError(err_msg)
 
     for subax in axes:
-        if label_axes != "none":
-            label_spatial_axes(subax)
-        subax_xlim = subax.get_xlim()
-        subax_ylim = subax.get_ylim()
-        subax.set_xticks(
-            subax.get_xticks(),
-            [label.get_text() for label in subax.get_xticklabels()],
-            fontsize=fontsize,
-        )
-        subax.set_yticks(
-            subax.get_yticks(),
-            [label.get_text() for label in subax.get_yticklabels()],
-            fontsize=fontsize,
-        )
-        subax.set_xlim(subax_xlim)
-        subax.set_ylim(subax_ylim)
+        subax.tick_params(axis="both", which="major", labelsize=fontsize)
+        subax.tick_params(axis="both", which="minor", labelsize=fontsize)
         subax.xaxis.label.set_fontsize(fontsize)
         subax.yaxis.label.set_fontsize(fontsize)
+        subax.yaxis.get_offset_text().set_fontsize(fontsize)
     return
 
 
