@@ -5,6 +5,7 @@
 #
 
 import math
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
@@ -15,18 +16,89 @@ import numpy as np
 from ogstools.msh2vtu import msh2vtu
 
 
-def _geo_square(
-    geo: gmsh.model.geo,
-    lengths: float | list[float],
-    n_edge_cells: int | list[int],
-    structured: bool,
-) -> None:
-    _lengths = lengths if isinstance(lengths, list) else [lengths] * 2
-    _n = n_edge_cells if isinstance(n_edge_cells, list) else [n_edge_cells] * 2
+def _line(
+    geo: gmsh.model.geo, length: float, n_edge_cells: int, structured: bool
+) -> int:
     geo.addPoint(0, 0, 0, tag=1)
-    geo.addPoint(_lengths[0], 0, 0, tag=2)
-    geo.addPoint(_lengths[0], _lengths[1], 0, tag=3)
-    geo.addPoint(0, _lengths[1], 0, tag=4)
+    geo.addPoint(length, 0, 0, tag=2)
+    line_tag = geo.addLine(1, 2, tag=1)
+    geo.mesh.setTransfiniteCurve(1, n_edge_cells + 1)
+
+    if structured:
+        geo.mesh.setTransfiniteSurface(1)
+        geo.mesh.setRecombine(dim=1, tag=1)
+    return line_tag
+
+
+def rect(
+    lengths: float | tuple[float, float] = 1.0,
+    n_edge_cells: int | tuple[int, int] = 1,
+    n_layers: int = 1,
+    structured_grid: bool = True,
+    order: int = 1,
+    mixed_elements: bool = False,
+    out_name: Path = Path("rect.msh"),
+    msh_version: float | None = None,
+) -> None:
+    gmsh.initialize()
+    gmsh.option.set_number("General.Verbosity", 0)
+    if msh_version is not None:
+        gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
+    name = Path(out_name).stem
+    gmsh.model.add(name)
+    dx, dy = lengths if isinstance(lengths, Collection) else [lengths] * 2
+    nx, ny = (
+        n_edge_cells
+        if isinstance(n_edge_cells, Collection)
+        else [n_edge_cells] * 2
+    )
+    bottom_tag = _line(gmsh.model.geo, dx, nx, structured_grid)
+    right_tags = []
+    left_tags = []
+    top_tag = bottom_tag
+    for n in range(n_layers):
+        recombine = n % 2 if mixed_elements else structured_grid
+        newEntities = gmsh.model.geo.extrude(
+            dimTags=[(1, top_tag)],
+            dx=0,
+            dy=dy / n_layers,
+            dz=0,
+            numElements=[ny],
+            recombine=recombine,  # fmt: skip
+        )
+        top_tag = abs(newEntities[0][1])
+        plane_tag = abs(newEntities[1][1])
+        layer_name = f"Layer {n}" if n_layers > 1 else name
+        tag = -1 if n != 0 else 0
+        gmsh.model.addPhysicalGroup(
+            dim=2, tags=[plane_tag], name=layer_name, tag=tag
+        )
+        right_tags += [abs(newEntities[2][1])]
+        left_tags += [abs(newEntities[3][1])]
+
+    gmsh.model.addPhysicalGroup(dim=1, tags=[bottom_tag], name="bottom")
+    gmsh.model.addPhysicalGroup(dim=1, tags=[top_tag], name="top")
+    gmsh.model.addPhysicalGroup(dim=1, tags=right_tags, name="right")
+    gmsh.model.addPhysicalGroup(dim=1, tags=left_tags, name="left")
+
+    gmsh.model.geo.synchronize()
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    gmsh.model.mesh.generate(dim=2)
+    gmsh.model.mesh.setOrder(order)
+    gmsh.write(str(out_name))
+    gmsh.finalize()
+
+
+def _square(
+    geo: gmsh.model.geo,
+    lengths: tuple[float, float],
+    n_edge_cells: tuple[int, int],
+    structured: bool,
+) -> int:
+    geo.addPoint(0, 0, 0, tag=1)
+    geo.addPoint(lengths[0], 0, 0, tag=2)
+    geo.addPoint(lengths[0], lengths[1], 0, tag=3)
+    geo.addPoint(0, lengths[1], 0, tag=4)
 
     geo.addLine(1, 2, tag=1)
     geo.addLine(2, 3, tag=2)
@@ -34,60 +106,26 @@ def _geo_square(
     geo.addLine(4, 1, tag=4)
 
     geo.addCurveLoop([1, 2, 3, 4], tag=1)
-    geo.addPlaneSurface([1], tag=1)
+    plane_tag = geo.addPlaneSurface([1], tag=1)
 
-    geo.mesh.setTransfiniteCurve(1, _n[0] + 1)
-    geo.mesh.setTransfiniteCurve(2, _n[1] + 1)
-    geo.mesh.setTransfiniteCurve(3, _n[0] + 1)
-    geo.mesh.setTransfiniteCurve(4, _n[1] + 1)
+    geo.mesh.setTransfiniteCurve(1, n_edge_cells[0] + 1)
+    geo.mesh.setTransfiniteCurve(2, n_edge_cells[1] + 1)
+    geo.mesh.setTransfiniteCurve(3, n_edge_cells[0] + 1)
+    geo.mesh.setTransfiniteCurve(4, n_edge_cells[1] + 1)
 
     if structured:
         geo.mesh.setTransfiniteSurface(1)
         geo.mesh.setRecombine(dim=2, tag=1)
-
-
-def rect(
-    lengths: float | list[float] = 1.0,
-    n_edge_cells: int | list[int] = 1,
-    structured_grid: bool = True,
-    order: int = 1,
-    out_name: Path = Path("unit_square.msh"),
-    msh_version: float | None = None,
-) -> None:
-    gmsh.initialize()
-    gmsh.option.set_number("General.Verbosity", 0)
-    if msh_version is not None:
-        gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
-    gmsh.model.add("unit_square")
-
-    _geo_square(gmsh.model.geo, lengths, n_edge_cells, structured_grid)
-
-    rectangle = gmsh.model.addPhysicalGroup(dim=2, tags=[1], tag=0)
-    bottom = gmsh.model.addPhysicalGroup(dim=1, tags=[1])
-    right = gmsh.model.addPhysicalGroup(dim=1, tags=[2])
-    top = gmsh.model.addPhysicalGroup(dim=1, tags=[3])
-    left = gmsh.model.addPhysicalGroup(dim=1, tags=[4])
-
-    gmsh.model.setPhysicalName(dim=2, tag=rectangle, name="unit_square")
-    gmsh.model.setPhysicalName(dim=1, tag=bottom, name="bottom")
-    gmsh.model.setPhysicalName(dim=1, tag=right, name="right")
-    gmsh.model.setPhysicalName(dim=1, tag=top, name="top")
-    gmsh.model.setPhysicalName(dim=1, tag=left, name="left")
-
-    gmsh.model.geo.synchronize()
-    gmsh.model.mesh.generate(dim=2)
-    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-    gmsh.model.mesh.setOrder(order)
-    gmsh.write(str(out_name))
-
-    gmsh.finalize()
+    return plane_tag
 
 
 def cuboid(
-    lengths: float | list[float] = 1.0,
-    n_edge_cells: int | list[int] = 1,
+    lengths: float | tuple[float, float, float] = 1.0,
+    n_edge_cells: int | tuple[int, int, int] = 1,
+    n_layers: int = 1,
     structured_grid: bool = True,
     order: int = 1,
+    mixed_elements: bool = False,
     out_name: Path = Path("unit_cube.msh"),
     msh_version: float | None = None,
 ) -> None:
@@ -95,28 +133,56 @@ def cuboid(
     gmsh.option.set_number("General.Verbosity", 0)
     if msh_version is not None:
         gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
-    gmsh.model.add("unit_cube")
-    _geo_square(gmsh.model.geo, lengths, n_edge_cells, structured_grid)
+    name = Path(out_name).stem
+    gmsh.model.add(name)
+    _lengths = lengths if isinstance(lengths, Collection) else (lengths,) * 3
+    _n_edge_cells = (
+        n_edge_cells
+        if isinstance(n_edge_cells, Collection)
+        else (n_edge_cells,) * 3
+    )
+    bottom_tag = _square(
+        gmsh.model.geo,
+        _lengths[1:],
+        _n_edge_cells[1:],
+        structured_grid and not mixed_elements,
+    )
 
     dz = lengths if isinstance(lengths, float) else lengths[2]
     nz = n_edge_cells if isinstance(n_edge_cells, int) else n_edge_cells[2]
-    newEntities = gmsh.model.geo.extrude(
-        dimTags=[(2, 1)], dx=0, dy=0, dz=dz,
-        numElements=[nz], recombine=structured_grid  # fmt: skip
-    )
+    front_tags = []
+    right_tags = []
+    back_tags = []
+    left_tags = []
+    top_tag = 1
+    for n in range(n_layers):
+        recombine = n % 2 if mixed_elements else structured_grid
+        newEntities = gmsh.model.geo.extrude(
+            dimTags=[(2, top_tag)],
+            dx=0,
+            dy=0,
+            dz=dz / n_layers,
+            numElements=[nz],
+            recombine=recombine,  # fmt: skip
+        )
+        top_tag = abs(newEntities[0][1])
+        vol_tag = abs(newEntities[1][1])
+        layer_name = f"Layer {n}" if n_layers > 1 else name
+        tag = -1 if n != 0 else 0
+        gmsh.model.addPhysicalGroup(
+            dim=3, tags=[vol_tag], name=layer_name, tag=tag
+        )
+        front_tags += [abs(newEntities[2][1])]
+        right_tags += [abs(newEntities[3][1])]
+        back_tags += [abs(newEntities[4][1])]
+        left_tags += [abs(newEntities[5][1])]
 
-    top_tag = newEntities[0][1]
-    vol_tag = newEntities[1][1]
-    side_tags = [nE[1] for nE in newEntities[2:]]
-
-    surf_tags = [1, top_tag] + side_tags
-    surf_names = ["bottom", "top", "front", "right", "back", "left"]
-    for surf_tag, surf_name in zip(surf_tags, surf_names, strict=False):
-        side_name = gmsh.model.addPhysicalGroup(dim=2, tags=[surf_tag])
-        gmsh.model.setPhysicalName(dim=2, tag=side_name, name=surf_name)
-
-    vol = gmsh.model.addPhysicalGroup(dim=3, tags=[vol_tag], tag=0)
-    gmsh.model.setPhysicalName(dim=3, tag=vol, name="volume")
+    gmsh.model.addPhysicalGroup(dim=2, tags=[bottom_tag], name="bottom")
+    gmsh.model.addPhysicalGroup(dim=2, tags=[top_tag], name="top")
+    gmsh.model.addPhysicalGroup(dim=2, tags=front_tags, name="front")
+    gmsh.model.addPhysicalGroup(dim=2, tags=right_tags, name="right")
+    gmsh.model.addPhysicalGroup(dim=2, tags=back_tags, name="back")
+    gmsh.model.addPhysicalGroup(dim=2, tags=left_tags, name="left")
 
     gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(dim=3)
