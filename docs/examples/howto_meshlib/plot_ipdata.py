@@ -61,12 +61,25 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     fig.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
-    ip_mesh.plot_contourf(sigma_ip)
+    fig = ip_mesh.plot_contourf(sigma_ip)
+    fig.axes[0].scatter(
+        int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
+    )
 
 
 # %% [markdown]
 # Triangles with increasing integration point order
 # -------------------------------------------------
+# .. dropdown:: Why does the stress not change with the integration point order?
+#
+#     In linear triangular finite elements, the shape functions used
+#     to interpolate displacements are linear functions of the coordinates.
+#     As this is a linear elastic example, the displacements are linear.
+#     The strain, which is obtained by differentiating the displacement, will
+#     thus be constant throughout the element. The stress, which is related to
+#     the strain through a constitutive relationship will also be constant
+#     throughout the element. Thus, the stress is not affected by the
+#     integration point order.
 
 simulate_and_plot(elem_order=1, quads=False, intpt_order=2)
 
@@ -85,6 +98,13 @@ simulate_and_plot(elem_order=2, quads=False, intpt_order=4)
 # %% [markdown]
 # Quadrilaterals with increasing integration point order
 # ------------------------------------------------------
+# .. dropdown:: Why does the stress change here?
+#
+#     In contrast to triangular elements, quadrilateral elements use bilinear
+#     shape functions. Thus, the differentiation of the displacement leads to
+#     bilinear strain. The stress in turn is bilinear as well and can change
+#     within the elements. The number of integration points consequently
+#     affects the resulting stress field.
 
 simulate_and_plot(elem_order=1, quads=True, intpt_order=2)
 
