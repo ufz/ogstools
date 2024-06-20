@@ -5,9 +5,11 @@
 #
 
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import Any
 
 import numpy as np
+import ogs
 import pyvista as pv
 
 from ogstools import plot
@@ -16,6 +18,7 @@ from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
 from . import data_processing, geo
+from .ip_mesh import tessellate
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -108,3 +111,44 @@ class Mesh(pv.UnstructuredGrid):
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )
         return mesh
+
+    def to_ip_point_cloud(self) -> "Mesh":
+        "Convert integration point data to a pyvista point cloud."
+        if self.filepath is None:
+            filepath = Path(mkdtemp()) / "mesh.vtu"
+            self.save(filepath)
+        else:
+            filepath = self.filepath
+        ip_mesh_path = filepath.parent / "ip_mesh.vtu"
+        ogs.cli.ipDataToPointCloud(i=str(filepath), o=str(ip_mesh_path))
+        return Mesh.read(filepath=ip_mesh_path)
+
+    def to_ip_mesh(self) -> "Mesh":
+        "Create a mesh with cells centered around integration points."
+        meta = self.field_data["IntegrationPointMetaData"]
+        meta_str = "".join([chr(val) for val in meta])
+        integration_order = int(
+            meta_str.split('"integration_order":')[1].split(",")[0]
+        )
+        ip_mesh = self.to_ip_point_cloud()
+
+        cell_types = list({cell.type for cell in self.cell})
+        new_meshes: list[pv.PolyData] = []
+        for cell_type in cell_types:
+            mesh = self.extract_cells_by_type(cell_type)
+            new_meshes += [tessellate(mesh, cell_type, integration_order)]
+        new_mesh = new_meshes[0]
+        new_mesh.field_data[SPATIAL_UNITS_KEY] = self.field_data[
+            SPATIAL_UNITS_KEY
+        ]
+        for mesh in new_meshes[1:]:
+            new_mesh = new_mesh.merge(mesh)
+        new_mesh = new_mesh.clean()
+
+        ordering = new_mesh.find_containing_cell(ip_mesh.points)
+        ip_data = {
+            k: v[np.argsort(ordering)] for k, v in ip_mesh.point_data.items()
+        }
+        new_mesh.cell_data.update(ip_data)
+
+        return Mesh(new_mesh)
