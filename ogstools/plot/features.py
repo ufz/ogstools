@@ -19,18 +19,20 @@ from matplotlib.transforms import blended_transform_factory as btf
 from .shared import setup, spatial_quantity
 
 
-def layer_boundaries(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
+def layer_boundaries(
+    ax: plt.Axes, mesh: pv.UnstructuredGrid, projection: int
+) -> None:
     """Plot the material boundaries of a surface on a matplotlib axis."""
-    mat_ids = np.unique(surf.cell_data["MaterialIDs"])
+    mat_ids = np.unique(mesh.cell_data["MaterialIDs"])
     x_id, y_id = np.delete([0, 1, 2], projection)
     for mat_id in mat_ids:
-        m_i = surf.threshold((mat_id, mat_id), "MaterialIDs")
+        m_i = mesh.threshold((mat_id, mat_id), "MaterialIDs")
         # the pyvista connectivity call adds RegionID cell data
         segments = m_i.extract_feature_edges().connectivity(largest=False)
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
             edges = segment.extract_surface().strip(True, 10000)
-            x_b, y_b = spatial_quantity(surf).transform(
+            x_b, y_b = spatial_quantity(mesh).transform(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
             lw = setup.rcParams_scaled["lines.linewidth"]
@@ -44,7 +46,7 @@ def layer_boundaries(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
         if setup.material_names is not None and mat_id in setup.material_names:
             c = setup.embedded_region_names_color
             m = ">" if mat_id % 2 == 0 else "<"
-            outline = [patheffects.withStroke(linewidth=1, foreground="k")]
+            outline_eff = [patheffects.withStroke(linewidth=1, foreground="k")]
             plt.scatter(
                 round(x_pos) + 0.2 * (x_pos - round(x_pos)),
                 y_pos,
@@ -62,27 +64,28 @@ def layer_boundaries(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
                 weight="bold",
                 ha=ha,
                 va="center",
-                path_effects=outline,
+                path_effects=outline_eff,
             )
 
 
-def element_edges(ax: plt.Axes, surf: pv.DataSet, projection: int) -> None:
+def element_edges(
+    ax: plt.Axes, mesh: pv.UnstructuredGrid, projection: int
+) -> None:
     """Plot the element edges of a surface on a matplotlib axis."""
-    cell_points = [surf.get_cell(i).points for i in range(surf.n_cells)]
-    cell_types = [surf.get_cell(i).type for i in range(surf.n_cells)]
+    lin_mesh = mesh.linear_copy()
+    cell_points = [lin_mesh.get_cell(i).points for i in range(lin_mesh.n_cells)]
+    cell_types = [lin_mesh.get_cell(i).type for i in range(lin_mesh.n_cells)]
     for cell_type in np.unique(cell_types):
         cell_pts = [
             cp
             for cp, ct in zip(cell_points, cell_types, strict=False)
             if ct == cell_type
         ]
-        verts = spatial_quantity(surf).transform(
+        verts = spatial_quantity(lin_mesh).transform(
             np.delete(cell_pts, projection, -1)
         )
         lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
-        pc = PolyCollection(
-            verts, fc="None", ec="black", lw=lw  # type: ignore[arg-type]
-        )
+        pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
 
 

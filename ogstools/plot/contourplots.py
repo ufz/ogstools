@@ -208,16 +208,13 @@ def subplot(
             ax.tripcolor(x, y, tri, facecolors=values, mask=(values == 1),
                          cmap=cmap, norm=norm, hatch="/")  # fmt: skip
 
-    surf = mesh.extract_surface()
-
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
         show_edges = setup.show_element_edges == mesh_property.data_name
     if show_edges:
-        features.element_edges(ax, surf, projection)
-
+        features.element_edges(ax, mesh, projection)
     if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
-        features.layer_boundaries(ax, surf, projection)
+        features.layer_boundaries(ax, mesh, projection)
 
     if isinstance(mesh_property, Vector):
         streamlines(surf_tri, ax, mesh_property, projection)

@@ -79,8 +79,6 @@ simulate_and_plot(elem_order=1, quads=False, intpt_order=4)
 # %% [markdown]
 # Quadratic triangles
 # -------------------
-# .. warning::
-#     Unfortunately quadratic elements show faulty element edges
 
 simulate_and_plot(elem_order=2, quads=False, intpt_order=4)
 
@@ -99,7 +97,5 @@ simulate_and_plot(elem_order=1, quads=True, intpt_order=4)
 # %% [markdown]
 # Quadratic quadrilateral
 # -----------------------
-# .. warning::
-#     Unfortunately quadratic elements show faulty element edges
 
 simulate_and_plot(elem_order=2, quads=True, intpt_order=4)
