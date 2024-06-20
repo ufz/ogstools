@@ -7,19 +7,18 @@
 """Plotting core utilitites."""
 
 import warnings
-from math import nextafter
 
 import numpy as np
 import pyvista as pv
 from matplotlib import cm as mcm
-from matplotlib import colormaps, rcParams
-from matplotlib import colors as mcolors
 from matplotlib import pyplot as plt
+from matplotlib import rcParams
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
 
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
+from ogstools.plot.utils import get_cmap_norm
 from ogstools.propertylib.properties import Property, Vector, get_preset
 
 from . import features
@@ -34,46 +33,6 @@ def _q_zero_line(mesh_property: Property, levels: np.ndarray) -> bool:
     return mesh_property.bilinear_cmap or (
         mesh_property.data_name == "temperature" and levels[0] < 0 < levels[-1]
     )
-
-
-def get_cmap_norm(
-    levels: np.ndarray, mesh_property: Property
-) -> tuple[mcolors.Colormap, mcolors.Normalize]:
-    """Construct a discrete colormap and norm for the property field."""
-    vmin, vmax = (levels[0], levels[-1])
-    if mesh_property.categoric:
-        vmin += 0.5
-        vmax += 0.5
-
-    if isinstance(mesh_property.cmap, str):
-        continuous_cmap = colormaps[mesh_property.cmap]
-    else:
-        continuous_cmap = mesh_property.cmap
-    conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
-    if mesh_property.bilinear_cmap:
-        if vmin <= 0.0 <= vmax:
-            vcenter = 0.0
-            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
-            conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
-        else:
-            # only use one half of the diverging colormap
-            col_range = np.linspace(0.0, nextafter(0.5, -np.inf), 128)
-            if vmax > 0.0:
-                col_range += 0.5
-            continuous_cmap = mcolors.LinearSegmentedColormap.from_list(
-                "half_cmap", continuous_cmap(col_range)
-            )
-            conti_norm = mcolors.Normalize(vmin, vmax)
-    else:
-        conti_norm = mcolors.Normalize(vmin, vmax)
-    mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
-    colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
-    cmap = mcolors.ListedColormap(colors, name="custom")
-    boundaries = level_boundaries(levels) if mesh_property.categoric else levels
-    norm = mcolors.BoundaryNorm(
-        boundaries=boundaries, ncolors=len(boundaries), clip=False
-    )
-    return cmap, norm
 
 
 def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
