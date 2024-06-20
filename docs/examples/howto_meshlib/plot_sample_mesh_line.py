@@ -119,7 +119,7 @@ mesh_sp.head(5)
 fig, ax = mesh.plot_linesample_contourf(
     ot.properties.saturation, profile_CT, resolution=100, profile_plane=[0, 2]
 )
-ot.plot.utils.update_font_sizes(label_axes="none", fig=fig)
+ot.plot.utils.update_font_sizes(fig=fig)
 fig.tight_layout()
 
 
@@ -202,6 +202,6 @@ fig, ax = mesh.plot_linesample_contourf(
     profile_THM,
     resolution=100,
 )
-ot.plot.utils.update_font_sizes(label_axes="none", fig=fig)
+ot.plot.utils.update_font_sizes(fig=fig)
 fig.tight_layout()
 # %%
