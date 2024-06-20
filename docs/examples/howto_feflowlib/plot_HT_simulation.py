@@ -86,7 +86,10 @@ ogs_sim_res = pv.read(
 )
 """
 # Plot the hydraulic head/height, which was simulated in OGS.
-ot.plot.contourf(ogs_sim_res, "HEAD_OGS")
+hydraulic_head = ot.properties.Scalar(
+    data_name="HEAD_OGS", data_unit="m", output_unit="m"
+)
+ot.plot.contourf(ogs_sim_res, hydraulic_head)
 # %%
 # Plot the temperature, which was simulated in OGS.
 ot.plot.contourf(ogs_sim_res, ot.properties.temperature)
@@ -97,7 +100,10 @@ feflow_pv_mesh["HEAD"] = feflow_pv_mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
 # Plot differences in hydraulic head/height.
 diff_mesh = ot.meshlib.difference(feflow_pv_mesh, ogs_sim_res, "HEAD")
-ot.plot.contourf(diff_mesh, "HEAD_difference")
+hydraulic_head_diff = ot.properties.Scalar(
+    data_name="HEAD_difference", data_unit="m", output_unit="m"
+)
+ot.plot.contourf(diff_mesh, hydraulic_head_diff)
 # %%
 feflow_pv_mesh["temperature"] = feflow_pv_mesh["P_TEMP"]
 # Plot differences in temperature.
