@@ -64,6 +64,7 @@ serial_info = _logs_dir / "serial_info.txt"
 serial_time_step_rejected = _logs_dir / "serial_time_step_rejected.txt"
 serial_warning_only = _logs_dir / "serial_warning_only.txt"
 
+prj_mechanics = _prj_dir / "mechanics.prj"
 prj_steady_state_diffusion = _prj_dir / "steady_state_diffusion.prj"
 prj_nuclear_decay = _prj_dir / "nuclear_decay.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
