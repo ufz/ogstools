@@ -1,0 +1,105 @@
+"""
+Analyzing integration point data
+================================
+
+This examples shall demonstrate how we can better visualize integration point
+data, by tesselating elements in such a way, that each integration point is
+represented by one subsection of a cell.
+"""
+
+# %% [markdown]
+# For brevity of this example we wrap the entire workflow from meshing and
+# simulation to plotting in a parameterized function. The main function of
+# importance is :meth:`~ogstools.meshlib.mesh.Mesh.to_ip_mesh`. We will use this
+# function to show the tessellated visualization of the integration point data
+# for different element and integration point orders and element types.
+
+from pathlib import Path
+from tempfile import mkdtemp
+
+from ogs6py import ogs
+
+import ogstools as ot
+from ogstools import examples
+from ogstools.meshlib.gmsh_meshing import rect
+from ogstools.msh2vtu import msh2vtu
+
+ot.plot.setup.dpi = 75
+ot.plot.setup.show_element_edges = True
+
+sigma_ip = ot.properties.stress.replace(
+    data_name="sigma_ip", output_name="integration_point_stress"
+)
+
+tmp_dir = Path(mkdtemp())
+mesh_path = tmp_dir / "mesh.msh"
+vtu_path = tmp_dir / "mesh_domain.vtu"
+
+
+def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
+    rect(
+        lengths=1,
+        n_edge_cells=6,
+        structured_grid=quads,
+        order=elem_order,
+        out_name=mesh_path,
+    )
+    msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+
+    model = ogs.OGS(
+        PROJECT_FILE=tmp_dir / "default.prj",
+        INPUT_FILE=examples.prj_mechanics,
+    )
+    model.replace_text(intpt_order, xpath=".//integration_order")
+    model.write_input()
+    model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
+    mesh = ot.MeshSeries(tmp_dir / "mesh.pvd").read(-1)
+    int_pts = mesh.to_ip_point_cloud()
+    ip_mesh = mesh.to_ip_mesh()
+
+    fig = mesh.plot_contourf(ot.properties.stress)
+    fig.axes[0].scatter(
+        int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
+    )
+    ip_mesh.plot_contourf(sigma_ip)
+
+
+# %% [markdown]
+# Triangles with increasing integration point order
+# -------------------------------------------------
+
+simulate_and_plot(elem_order=1, quads=False, intpt_order=2)
+
+# %%
+simulate_and_plot(elem_order=1, quads=False, intpt_order=3)
+
+# %%
+simulate_and_plot(elem_order=1, quads=False, intpt_order=4)
+
+# %% [markdown]
+# Quadratic triangles
+# -------------------
+# .. warning::
+#     Unfortunately quadratic elements show faulty element edges
+
+simulate_and_plot(elem_order=2, quads=False, intpt_order=4)
+
+# %% [markdown]
+# Quadrilaterals with increasing integration point order
+# ------------------------------------------------------
+
+simulate_and_plot(elem_order=1, quads=True, intpt_order=2)
+
+# %%
+simulate_and_plot(elem_order=1, quads=True, intpt_order=3)
+
+# %%
+simulate_and_plot(elem_order=1, quads=True, intpt_order=4)
+
+# %% [markdown]
+# Quadratic quadrilateral
+# -----------------------
+# .. warning::
+#     Unfortunately quadratic elements show faulty element edges
+
+simulate_and_plot(elem_order=2, quads=True, intpt_order=4)
