@@ -1,5 +1,5 @@
 from string import ascii_uppercase
-from typing import cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +30,7 @@ def linesample(
     fontsize: int = 20,
     twinx: bool | None = False,
     resolution: int | None = 100,
+    **kwargs: Any,
 ) -> plt.Axes:
     """
     Plot selected properties obtained from sample_over_polyline function,
@@ -77,12 +78,18 @@ def linesample(
 
     spatial_qty = spatial_quantity(mesh)
     for prop in mesh_properties:
+        if "label" not in kwargs:
+            kwargs["label"] = prop.data_name
+        if "color" not in kwargs:
+            kwargs["color"] = prop.color
+        if "linestyle" not in kwargs:
+            kwargs["linestyle"] = prop.linestyle
+        if "ls" in kwargs and kwargs["ls"] != kwargs["linestyle"]:
+            kwargs.pop("linestyle")
         ax.plot(
             spatial_qty.transform(mesh_sp[x]),
             mesh_sp[prop.data_name],
-            label=prop.data_name,
-            color=prop.color,
-            linestyle=prop.linestyle,
+            **kwargs,
         )
         # TODO: this shouldn't be hard-coded
         ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
@@ -94,12 +101,18 @@ def linesample(
             break
 
     if twinx:
+        if "label" not in kwargs:
+            kwargs["label"] = mesh_properties[-1].data_name
+        if "color" not in kwargs:
+            kwargs["color"] = mesh_properties[-1].color
+        if "linestyle" not in kwargs:
+            kwargs["linestyle"] = mesh_properties[-1].linestyle
+        if "ls" in kwargs and kwargs["ls"] != kwargs["linestyle"]:
+            kwargs.pop("linestyle")
         ax_twinx.plot(
             spatial_qty.transform(mesh_sp[x]),
             mesh_sp[mesh_properties[-1].data_name],
-            label=mesh_properties[-1].data_name,
-            color=mesh_properties[-1].color,
-            linestyle=mesh_properties[-1].linestyle,
+            **kwargs,
         )
         ax_twinx.set_ylabel(mesh_properties[-1].get_label())
         ax_twinx.minorticks_on()
