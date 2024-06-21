@@ -119,15 +119,23 @@ ogs_sim_res.plot_linesample(
     resolution=1000,
     fontsize=18,
     ax=ax,
+    label="OGS",
+    color="black",
+    linewidth=2,
 )
 Mesh(feflow_pv_mesh).plot_linesample(
     "dist",
     feflow_concentration,
     profile_points=profile,
     resolution=1000,
-    fontsize=18,
+    fontsize=16,
     ax=ax,
+    label="FEFLOW",
+    ls=":",
+    linewidth=2,
+    color="red",
 )
+ax.legend(loc="best", fontsize=16)
 fig.tight_layout()
 
 
@@ -159,5 +167,9 @@ ogs_sim_res.plot_linesample(
     resolution=1000,
     fontsize=18,
     ax=ax,
+    linewidth=2,
+    color="green",
+    label="Difference FEFLOW-OGS",
 )
+ax.legend(loc="best", fontsize=16)
 fig.tight_layout()
