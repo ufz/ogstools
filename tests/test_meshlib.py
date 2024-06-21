@@ -280,9 +280,9 @@ class TestUtils:
             assert int_pts.number_of_points == ip_mesh.number_of_cells
             containing_cells = ip_mesh.find_containing_cell(int_pts.points)
             # check for integration points coinciding with the tessellated cells
-            assert np.all(
-                sigma_ip.magnitude.transform(ip_mesh)[containing_cells]
-                == sigma_ip.magnitude.transform(int_pts)
+            np.testing.assert_equal(
+                sigma_ip.magnitude.transform(ip_mesh)[containing_cells],
+                sigma_ip.magnitude.transform(int_pts),
             )
 
         run_and_check(elem_order=1, quads=False, intpt_order=2)

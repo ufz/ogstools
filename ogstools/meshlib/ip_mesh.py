@@ -1,9 +1,21 @@
+from pathlib import Path
+from tempfile import mkdtemp
+from typing import TypeVar
+
 import numpy as np
+import ogs
 import pyvista as pv
+
+from ogstools.definitions import SPATIAL_UNITS_KEY
+
+Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
 
 def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
-    "Return the list of point ids, which form tessellated cells."
+    """Return the list of point ids, which form tessellated cells.
+
+    For now only 2D elements are covered.
+    """
     if integration_order == 2:
         if cell_type == pv.CellType.TRIANGLE:
             return [[0, 3, 6, 5], [1, 4, 6, 3], [2, 5, 6, 4]]
@@ -148,13 +160,9 @@ def _compute_points(
     raise TypeError(msg)
 
 
-def tessellate(
-    mesh: pv.DataSet, cell_type: pv.CellType, integration_order: int
-) -> pv.PolyData:
-    "Create a tessellated mesh with one subcell per integration point."
-    subcell_ids = _tessellation_map(cell_type, integration_order)
-    points = _compute_points(mesh, cell_type, integration_order)
-
+def _connectivity(
+    mesh: pv.DataSet, points: np.ndarray, subcell_ids: list
+) -> list:
     connectivity = []
     for index in range(mesh.number_of_cells):
         offset = index * points.shape[1]
@@ -162,9 +170,60 @@ def tessellate(
             connectivity += [len(ids)] + (np.asarray(ids) + offset).astype(
                 int
             ).tolist()
+    return connectivity
+
+
+def tessellate(
+    mesh: pv.DataSet, cell_type: pv.CellType, integration_order: int
+) -> pv.PolyData:
+    "Create a tessellated mesh with one subcell per integration point."
+    subcell_ids = _tessellation_map(cell_type, integration_order)
+    points = _compute_points(mesh, cell_type, integration_order)
+    connectivity = _connectivity(mesh, points, subcell_ids)
 
     return pv.PolyData(
         np.reshape(points, (-1, 3)),
         faces=connectivity,
         n_faces=len(subcell_ids) * points.shape[0],
     )
+
+
+def to_ip_point_cloud(mesh: Mesh) -> Mesh:
+    "Convert integration point data to a pyvista point cloud."
+    if mesh.filepath is None:
+        filepath = Path(mkdtemp()) / "mesh.vtu"
+        mesh.save(filepath)
+    else:
+        filepath = mesh.filepath
+    ip_mesh_path = filepath.parent / "ip_mesh.vtu"
+    ogs.cli.ipDataToPointCloud(i=str(filepath), o=str(ip_mesh_path))
+    return pv.XMLUnstructuredGridReader(ip_mesh_path).read()
+
+
+def to_ip_mesh(mesh: Mesh) -> Mesh:
+    "Create a mesh with cells centered around integration points."
+    meta = mesh.field_data["IntegrationPointMetaData"]
+    meta_str = "".join([chr(val) for val in meta])
+    integration_order = int(
+        meta_str.split('"integration_order":')[1].split(",")[0]
+    )
+    ip_mesh = mesh.to_ip_point_cloud()
+
+    cell_types = list({cell.type for cell in mesh.cell})
+    new_meshes: list[pv.PolyData] = []
+    for cell_type in cell_types:
+        _mesh = mesh.extract_cells_by_type(cell_type)
+        new_meshes += [tessellate(_mesh, cell_type, integration_order)]
+    new_mesh = new_meshes[0]
+    new_mesh.field_data[SPATIAL_UNITS_KEY] = mesh.field_data[SPATIAL_UNITS_KEY]
+    for _mesh in new_meshes[1:]:
+        new_mesh = new_mesh.merge(_mesh)
+    new_mesh = new_mesh.clean()
+
+    ordering = new_mesh.find_containing_cell(ip_mesh.points)
+    ip_data = {
+        k: v[np.argsort(ordering)] for k, v in ip_mesh.point_data.items()
+    }
+    new_mesh.cell_data.update(ip_data)
+
+    return new_mesh

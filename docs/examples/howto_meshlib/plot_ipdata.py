@@ -3,7 +3,8 @@ Analyzing integration point data
 ================================
 
 This examples shall demonstrate how we can better visualize integration point
-data, by tesselating elements in such a way, that each integration point is
+data (raw data used in OGS's equation system assembly without output related
+artefacts), by tesselating elements in such a way that each integration point is
 represented by one subsection of a cell.
 """
 
