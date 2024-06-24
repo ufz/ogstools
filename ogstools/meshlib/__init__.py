@@ -17,6 +17,7 @@ from .data_processing import (
     sample_polyline,
 )
 from .gmsh_meshing import cuboid, rect
+from .ip_mesh import to_ip_mesh, to_ip_point_cloud
 from .mesh import Mesh
 from .mesh_series import MeshSeries
 from .region import (
@@ -45,6 +46,8 @@ __all__ = [
     "interp_points",
     "rect",
     "sample_polyline",
+    "to_ip_mesh",
+    "to_ip_point_cloud",
     "to_region_prism",
     "to_region_simplified",
     "to_region_tetraeder",

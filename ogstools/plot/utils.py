@@ -5,13 +5,20 @@
 #
 
 
+from math import nextafter
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
 from cycler import Cycler
+from matplotlib import colormaps
+from matplotlib import colors as mcolors
 from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
 from typeguard import typechecked
+
+from ogstools.plot.levels import level_boundaries
+from ogstools.propertylib.properties import Property
 
 
 def get_style_cycler(
@@ -193,3 +200,43 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
         print("\nSaving Animation failed with the following error:")
         print(err)
         return False
+
+
+def get_cmap_norm(
+    levels: np.ndarray, mesh_property: Property
+) -> tuple[mcolors.Colormap, mcolors.Normalize]:
+    """Construct a discrete colormap and norm for the property field."""
+    vmin, vmax = (levels[0], levels[-1])
+    if mesh_property.categoric:
+        vmin += 0.5
+        vmax += 0.5
+
+    if isinstance(mesh_property.cmap, str):
+        continuous_cmap = colormaps[mesh_property.cmap]
+    else:
+        continuous_cmap = mesh_property.cmap
+    conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
+    if mesh_property.bilinear_cmap:
+        if vmin <= 0.0 <= vmax:
+            vcenter = 0.0
+            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
+            conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
+        else:
+            # only use one half of the diverging colormap
+            col_range = np.linspace(0.0, nextafter(0.5, -np.inf), 128)
+            if vmax > 0.0:
+                col_range += 0.5
+            continuous_cmap = mcolors.LinearSegmentedColormap.from_list(
+                "half_cmap", continuous_cmap(col_range)
+            )
+            conti_norm = mcolors.Normalize(vmin, vmax)
+    else:
+        conti_norm = mcolors.Normalize(vmin, vmax)
+    mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
+    colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
+    cmap = mcolors.ListedColormap(colors, name="custom")
+    boundaries = level_boundaries(levels) if mesh_property.categoric else levels
+    norm = mcolors.BoundaryNorm(
+        boundaries=boundaries, ncolors=len(boundaries), clip=False
+    )
+    return cmap, norm

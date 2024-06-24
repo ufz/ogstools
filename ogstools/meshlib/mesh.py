@@ -15,7 +15,7 @@ from ogstools._internal import copy_method_signature
 from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
-from . import data_processing, geo
+from . import data_processing, geo, ip_mesh
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -24,6 +24,8 @@ class Mesh(pv.UnstructuredGrid):
 
     Contains additional data and functions mainly for postprocessing.
     """
+
+    filepath: Path | None = None
 
     # pylint: disable=C0116
     @copy_method_signature(data_processing.difference)
@@ -57,6 +59,14 @@ class Mesh(pv.UnstructuredGrid):
     @copy_method_signature(lineplots.linesample_contourf)
     def plot_linesample_contourf(self, *args: Any, **kwargs: Any) -> Any:
         return lineplots.linesample_contourf(self, *args, **kwargs)
+
+    @copy_method_signature(ip_mesh.to_ip_mesh)
+    def to_ip_mesh(self, *args: Any, **kwargs: Any) -> Any:
+        return Mesh(ip_mesh.to_ip_mesh(self, *args, **kwargs))
+
+    @copy_method_signature(ip_mesh.to_ip_point_cloud)
+    def to_ip_point_cloud(self, *args: Any, **kwargs: Any) -> Any:
+        return Mesh(ip_mesh.to_ip_point_cloud(self, *args, **kwargs))
 
     # pylint: enable=C0116
 
@@ -101,6 +111,7 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
+        mesh.filepath = Path(filepath)
         mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )

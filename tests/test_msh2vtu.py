@@ -85,14 +85,30 @@ def test_rect(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "rect.msh")
     permutations = product(
-        [1.0, 2.0], [1, 2], [True, False], [1, 2], [None, 2.2]
+        [1.0, 2.0],
+        [1, 2],
+        [1, 2],
+        [True, False],
+        [1, 2],
+        [None, 2.2],
+        [True, False],
     )
-    for edge_length, n_edge_cells, structured, order, version in permutations:
+    for (
+        edge_length,
+        n_edge_cells,
+        n_layers,
+        structured,
+        order,
+        version,
+        mixed_elements,
+    ) in permutations:
         gmsh_meshing.rect(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
+            n_layers=n_layers,
             structured_grid=structured,
             order=order,
+            mixed_elements=mixed_elements,
             out_name=msh_file,
             msh_version=version,
         )
@@ -103,14 +119,33 @@ def test_cuboid(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "cuboid.msh")
     permutations = product(
-        [1.0, 2.0], [1, 2], [True, False], [1, 2], [None, 2.2]
+        [1.0, 2.0],
+        [1, 2],
+        [1, 2],
+        [True, False],
+        [1, 2],
+        [True, False],
+        [None, 2.2],
     )
-    for edge_length, n_edge_cells, structured, order, version in permutations:
+    for (
+        edge_length,
+        n_edge_cells,
+        n_layers,
+        structured,
+        order,
+        mixed_elements,
+        version,
+    ) in permutations:
+        # this combination doesn't work with msh2vtu (yet?)
+        if order == 2 and mixed_elements:
+            continue
         gmsh_meshing.cuboid(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
+            n_layers=n_layers,
             structured_grid=structured,
             order=order,
+            mixed_elements=mixed_elements,
             out_name=msh_file,
             msh_version=version,
         )
