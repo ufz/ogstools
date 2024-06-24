@@ -277,3 +277,12 @@ def padded(ax: plt.Axes, x: float, y: float) -> tuple[float, float]:
     # Unpacking this here helps type hinting. Direct return doesn't work.
     x, y = ax.transLimits.inverted().transform((x, y))
     return x, y
+
+    
+def color_twin_axes(axes: list[plt.Axes], colors: list) -> None:
+    for ax_temp, color_temp in zip(axes, colors, strict=False):
+        ax_temp.tick_params(axis="y", which="both", colors=color_temp)
+        ax_temp.yaxis.label.set_color(color_temp)
+    # Axis spine color has to be applied on twin axis for both sides
+    axes[1].spines["left"].set_color(colors[0])
+    axes[1].spines["right"].set_color(colors[1])

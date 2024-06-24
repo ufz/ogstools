@@ -2,6 +2,7 @@
 
 from functools import partial
 from tempfile import mkstemp
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -276,15 +277,22 @@ class TestPlotting:
 
     def test_lineplot(self):
         """Test creation of a linesplot from sampled profile data"""
-        ms_HT = examples.load_meshseries_HT_2D_XDMF()
+        mesh = examples.load_meshseries_HT_2D_XDMF().read(-1)
         profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-        ax = ms_HT.read(-1).plot_linesample(
+        ax = mesh.plot_linesample(
             x="dist",
-            y=["pressure", "temperature"],
+            y_property="pressure",
             profile_points=profile_HT,
             ax=ax,
-            twinx=True,
+            fontsize=15,
+        )
+        ax_twinx = cast(plt.Axes, ax.twinx())
+        ax_twinx = mesh.plot_linesample(
+            x="dist",
+            y_property="temperature",
+            profile_points=profile_HT,
+            ax=ax_twinx,
             fontsize=15,
         )
         plt.close()

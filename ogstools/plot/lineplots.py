@@ -1,5 +1,5 @@
 from string import ascii_uppercase
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,23 +12,13 @@ from ogstools.plot.utils import update_font_sizes
 from ogstools.propertylib.properties import Property, get_preset
 
 
-def _color_twin_axes(axes: list[plt.Axes], colors: list) -> None:
-    for ax_temp, color_temp in zip(axes, colors, strict=False):
-        ax_temp.tick_params(axis="y", which="both", colors=color_temp)
-        ax_temp.yaxis.label.set_color(color_temp)
-    # Axis spine color has to be applied on twin axis for both sides
-    axes[1].spines["left"].set_color(colors[0])
-    axes[1].spines["right"].set_color(colors[1])
-
-
 def linesample(
     mesh: pv.UnstructuredGrid,
     x: str,
-    y: str | Property | list[str] | list[Property] | np.ndarray,
+    y_property: str | Property,
     profile_points: np.ndarray,
     ax: plt.Axes | np.ndarray | None = None,
     fontsize: int = 20,
-    twinx: bool | None = False,
     resolution: int | None = 100,
     **kwargs: Any,
 ) -> plt.Axes:
@@ -45,8 +35,6 @@ def linesample(
         points within all profile segments.
     :param fontsize: Font size to be used for all captions and labels in the
         plot
-    :param twinx: Enable plotting second property on twin-x axis (only works
-        if exactly two properties are provided in props param)
     :param resolution: Resolution of the sampled profile. Total number of
         points within all profile segments.
     :param kwargs: (optional) kwargs are used to specify properties like
@@ -56,6 +44,7 @@ def linesample(
     :return: Matplotlib Axes object
     """
     # TODO: Vector properties with 2 values should be handled automatically
+    """
     if isinstance(y, list | np.ndarray) and twinx:
         if len(y) == 1:
             twinx = False
@@ -67,63 +56,28 @@ def linesample(
             err_msg = "If you want me to plot on twinx, I need to know on \
                 which axis, so I will accept only plt.axes as ax parameter!"
             raise ValueError(err_msg)
-
-    _mesh_properties = [y] if not isinstance(y, list | np.ndarray) else y
-    mesh_properties = [get_preset(y_i, mesh) for y_i in _mesh_properties]
-
+    """
+    mesh_property = get_preset(y_property, mesh)
     mesh_sp, _ = sample_polyline(
-        mesh, mesh_properties, profile_points, resolution
+        mesh, mesh_property, profile_points, resolution
     )
 
     assert isinstance(ax, plt.Axes)
-    if twinx:
-        ax_twinx = cast(plt.Axes, ax.twinx())
 
     spatial_qty = spatial_quantity(mesh)
-    for prop in mesh_properties:
-        if "label" not in kwargs:
-            kwargs["label"] = prop.data_name
-        if "color" not in kwargs:
-            kwargs["color"] = prop.color
-        if "linestyle" not in kwargs:
-            kwargs["linestyle"] = prop.linestyle
-        if "ls" in kwargs and kwargs["ls"] != kwargs["linestyle"]:
-            kwargs.pop("linestyle")
-        ax.plot(
-            spatial_qty.transform(mesh_sp[x]),
-            mesh_sp[prop.data_name],
-            **kwargs,
-        )
-        # TODO: this shouldn't be hard-coded
-        ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
-        ax.set_ylabel(prop.get_label())
-        # % TODO: rethink this awkward structure, maybe check if units match?
-        if twinx:
-            # Break after first property, as second one will be
-            # handled outside of the loop
-            break
+    kwargs.setdefault("label", mesh_property.data_name)
+    kwargs.setdefault("color", mesh_property.color)
+    kwargs.setdefault("linestyle", mesh_property.linestyle)
+    if "ls" in kwargs:
+        kwargs.pop("linestyle")
 
-    if twinx:
-        if "label" not in kwargs:
-            kwargs["label"] = mesh_properties[-1].data_name
-        if "color" not in kwargs:
-            kwargs["color"] = mesh_properties[-1].color
-        if "linestyle" not in kwargs:
-            kwargs["linestyle"] = mesh_properties[-1].linestyle
-        if "ls" in kwargs and kwargs["ls"] != kwargs["linestyle"]:
-            kwargs.pop("linestyle")
-        ax_twinx.plot(
-            spatial_qty.transform(mesh_sp[x]),
-            mesh_sp[mesh_properties[-1].data_name],
-            **kwargs,
-        )
-        ax_twinx.set_ylabel(mesh_properties[-1].get_label())
-        ax_twinx.minorticks_on()
-        _color_twin_axes(
-            [ax, ax_twinx],
-            [mesh_properties[0].color, mesh_properties[-1].color],
-        )
-        update_font_sizes(axes=ax_twinx, fontsize=fontsize)
+    ax.plot(
+        spatial_qty.transform(mesh_sp[x]),
+        mesh_sp[mesh_property.data_name],
+        **kwargs,
+    )
+    ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
+    ax.set_ylabel(mesh_property.get_label())
 
     update_font_sizes(axes=ax, fontsize=fontsize)
     # TODO: this should be in apply_mpl_style()
@@ -185,7 +139,7 @@ def linesample_contourf(
         linesample(
             mesh,
             x="dist",
-            y=property_current,
+            y_property=property_current,
             profile_points=profile_points,
             ax=ax[1, property_id],
             resolution=resolution,
