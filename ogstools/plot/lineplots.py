@@ -49,6 +49,9 @@ def linesample(
         if exactly two properties are provided in props param)
     :param resolution: Resolution of the sampled profile. Total number of
         points within all profile segments.
+    :param kwargs: (optional) kwargs are used to specify properties like
+        a line label (for auto legends), linewidth, antialiasing, marker face color.
+        They are passed to matplotlib.pyplot.plot so that all kwargs for this function are legitimate.
 
     :return: Matplotlib Axes object
     """
