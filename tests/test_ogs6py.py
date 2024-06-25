@@ -1,0 +1,679 @@
+import unittest
+
+import pandas as pd
+
+import tempfile
+import os
+import shutil
+import hashlib
+from lxml import etree as ET
+
+from ogstools import ogs6py
+# this needs to be replaced with regexes from specific ogs version
+from collections import namedtuple, defaultdict
+
+
+def log_types(records):
+    d = defaultdict(list)
+    for record in records:
+        d[type(record)].append(record)
+    return d
+
+class TestiOGS(unittest.TestCase):
+
+    def test_buildfromscratch(self):
+        model = ogs6py.OGS(PROJECT_FILE="tunnel_ogs6py.prj", MKL=True, OMP_NUM_THREADS=4)
+        model.mesh.add_mesh(filename="tunnel.vtu")
+        model.mesh.add_mesh(filename="tunnel_left.vtu")
+        model.mesh.add_mesh(filename="tunnel_right.vtu")
+        model.mesh.add_mesh(filename="tunnel_bottom.vtu")
+        model.mesh.add_mesh(filename="tunnel_top.vtu")
+        model.mesh.add_mesh(filename="tunnel_inner.vtu")
+        model.processes.set_process(
+            name="THERMO_RICHARDS_MECHANICS",
+            type="THERMO_RICHARDS_MECHANICS",
+            integration_order="3",
+            specific_body_force="0 0",
+            initial_stress="Initial_stress")
+        model.processes.set_constitutive_relation(type="LinearElasticIsotropic",
+                                                youngs_modulus="E",
+                                                poissons_ratio="nu")
+        model.processes.add_process_variable(process_variable="displacement",
+                                        process_variable_name="displacement")
+        model.processes.add_process_variable(process_variable="pressure",
+                                        process_variable_name="pressure")
+        model.processes.add_process_variable(process_variable="temperature",
+                                        process_variable_name="temperature")
+        model.processes.add_secondary_variable(internal_name="sigma",
+                                        output_name="sigma")
+        model.processes.add_secondary_variable(internal_name="epsilon",
+                                        output_name="epsilon")
+        model.processes.add_secondary_variable(internal_name="velocity",
+                                        output_name="velocity")
+        model.processes.add_secondary_variable(internal_name="saturation",
+                                        output_name="saturation")
+
+        model.media.add_property(medium_id="0",
+                                phase_type="AqueousLiquid",
+                                name="specific_heat_capacity",
+                                type="Constant",
+                                value="4280.0")
+        model.media.add_property(medium_id="0",
+                                phase_type="AqueousLiquid",
+                                name="thermal_conductivity",
+                                type="Constant",
+                                value="0.6")
+        model.media.add_property(medium_id="0",
+                            phase_type="AqueousLiquid",
+                            name="density",
+                            type="Linear",
+                            reference_value="999.1",
+                            independent_variables={"phase_pressure": {
+                                "reference_condition": "1e5",
+                                "slope": "4.5999999999999996e-10"
+                                }})
+        model.media.add_property(medium_id="0",
+                                phase_type="AqueousLiquid",
+                                name="thermal_expansivity",
+                                type="Constant",
+                                value="3.98e-4")
+        model.media.add_property(medium_id="0",
+                                phase_type="AqueousLiquid",
+                                name="viscosity",
+                                type="Constant",
+                                value="1.e-3")
+        model.media.add_property(medium_id="0",
+                                name="permeability",
+                                type="Constant",
+                                value="1e-17")
+        model.media.add_property(medium_id="0",
+                                name="porosity",
+                                type="Constant",
+                                value="0.15")
+        model.media.add_property(medium_id="0",
+                                phase_type="Solid",
+                                name="density",
+                                type="Constant",
+                                value="2300")
+        model.media.add_property(medium_id="0",
+                                phase_type="Solid",
+                                name="thermal_conductivity",
+                                type="Constant",
+                                value="1.9")
+        model.media.add_property(medium_id="0",
+                                phase_type="Solid",
+                                name="specific_heat_capacity",
+                                type="Constant",
+                                value="800")
+        model.media.add_property(medium_id="0",
+                                name="biot_coefficient",
+                                type="Constant",
+                                value="0.6")
+        model.media.add_property(medium_id="0",
+                                phase_type="Solid",
+                                name="thermal_expansivity",
+                                type="Constant",
+                                value="1.7e-5")
+        model.media.add_property(medium_id="0",
+                                name="thermal_conductivity",
+                                type="EffectiveThermalConductivityPorosityMixing")
+        model.media.add_property(medium_id="0",
+                                name="saturation",
+                                type="Constant",
+                                value="1")
+        model.media.add_property(medium_id="0",
+                                name="relative_permeability",
+                                type="Constant",
+                                value="1")
+        model.media.add_property(medium_id="0",
+                                name="bishops_effective_stress",
+                                type="BishopsPowerLaw",
+                                exponent="1")
+        model.media.add_property(medium_id="1",
+                                name="thermal_conductivity",
+                                type="SaturationWeightedThermalConductivity",
+                                mean_type="geometric",
+                                dry_thermal_conductivity="0.2",
+                                wet_thermal_conductivity="1.2",)
+        model.media.add_property(medium_id="1",
+                                name="density", type="WaterDensityIAPWSIF97Region1")
+        model.time_loop.add_process(process="THERMO_RICHARDS_MECHANICS",
+                                nonlinear_solver_name="nonlinear_solver",
+                                convergence_type="PerComponentDeltaX",
+                                norm_type="NORM2",
+                                abstols="1e-4 1e-4 1e-10 1e-10",
+                                time_discretization="BackwardEuler")
+        model.time_loop.set_stepping(process="THERMO_RICHARDS_MECHANICS",
+                                type="IterationNumberBasedTimeStepping",
+                                t_initial=0,
+                                t_end=8,
+                                initial_dt=0.1,
+                                minimum_dt=1e-7,
+                                maximum_dt=0.1,
+                                number_iterations=[1, 4, 10, 20],
+                                multiplier=[1.2, 1.0, 0.9, 0.8])
+        model.time_loop.add_output(
+            type="VTK",
+            prefix="tunnel",
+            repeat="10000",
+            each_steps="1",
+            variables=["displacement", "pressure", "temperature",
+                    "sigma", "epsilon", "velocity", "saturation"],
+            fixed_output_times=[1, 2, 3],
+            suffix="_ts_{:timestep}_t_{:time}")
+        model.parameters.add_parameter(name="Initial_stress", type="Function",
+                                    mesh="tunnel", expression=["-5e6", "-5e6", "-5e6", "0"])
+        model.parameters.add_parameter(name="E", type="Constant", value="2e9")
+        model.parameters.add_parameter(name="nu", type="Constant", value="0.3")
+        model.parameters.add_parameter(name="T0", type="Constant", value="273.15")
+        model.parameters.add_parameter(name="displacement0",
+                                    type="Constant",
+                                    values="0 0")
+
+        model.parameters.add_parameter(name="pressure_ic", type="Constant", value="1e6")
+        model.parameters.add_parameter(name="dirichlet0", type="Constant", value="0")
+        model.parameters.add_parameter(name="temperature_ic",
+                                    type="Constant",
+                                    value="293.15")
+        model.parameters.add_parameter(name="pressure_bc",
+                                    type="CurveScaled",
+                                    curve="excavation_curve",
+                                    parameter="pressure_ic")
+        model.parameters.add_parameter(name="PressureLoad",
+                                    type="CurveScaled",
+                                    curve="excavation_curve",
+                                    parameter="PressureLoadValue")
+        model.parameters.add_parameter(
+                                name="PressureLoadValue", type="Constant", value="-5.6e6")
+        model.parameters.add_parameter(name="heat_bv",
+                                    type="Constant",
+                                    value="25")
+        model.curves.add_curve(name="excavation_curve", coords=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+                            values=[1.0, 1.0, 0.8, 0.6, 0.4, 0.2, 0.1, 0.0])
+        model.process_variables.set_ic(process_variable_name="temperature",
+                                components="1",
+                                order="1",
+                                initial_condition="temperature_ic")
+        model.process_variables.add_bc(process_variable_name="temperature",
+                                mesh="tunnel_right",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="temperature_ic")
+        model.process_variables.add_bc(process_variable_name="temperature",
+                                mesh="tunnel_left",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="temperature_ic")
+        model.process_variables.add_bc(process_variable_name="temperature",
+                                mesh="tunnel_bottom",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="temperature_ic")
+        model.process_variables.add_bc(process_variable_name="temperature",
+                                mesh="tunnel_top",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="temperature_ic")
+
+        model.process_variables.set_ic(process_variable_name="displacement",
+                                components="2",
+                                order="1",
+                                initial_condition="displacement0")
+        model.process_variables.add_bc(process_variable_name="displacement",
+                                mesh="tunnel_right",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="dirichlet0")
+        model.process_variables.add_bc(process_variable_name="displacement",
+                                mesh="tunnel_left",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="dirichlet0")
+        model.process_variables.add_bc(process_variable_name="displacement",
+                                mesh="tunnel_top",
+                                type="Dirichlet",
+                                component="1",
+                                parameter="dirichlet0")
+        model.process_variables.add_bc(process_variable_name="displacement",
+                                mesh="tunnel_bottom",
+                                type="Dirichlet",
+                                component="1",
+                                parameter="dirichlet0")
+        model.process_variables.add_bc(process_variable_name="displacement",
+                                mesh="tunnel_inner",
+                                type="NormalTraction",
+                                parameter="PressureLoad")
+        model.process_variables.set_ic(process_variable_name="pressure",
+                                components="1",
+                                order="1",
+                                initial_condition="pressure_ic")
+        model.process_variables.add_bc(process_variable_name="pressure",
+                                mesh="tunnel_right",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="pressure_ic")
+        model.process_variables.add_bc(process_variable_name="pressure",
+                                mesh="tunnel_left",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="pressure_ic")
+        model.process_variables.add_bc(process_variable_name="pressure",
+                                mesh="tunnel_top",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="pressure_ic")
+        model.process_variables.add_bc(process_variable_name="pressure",
+                                mesh="tunnel_bottom",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="pressure_ic")
+        model.process_variables.add_bc(process_variable_name="pressure",
+                                mesh="tunnel_inner",
+                                type="Dirichlet",
+                                component="0",
+                                parameter="pressure_bc")
+
+        model.nonlinear_solvers.add_non_lin_solver(name="nonlinear_solver",
+                                            type="Newton",
+                                            max_iter="50",
+                                            linear_solver="general_linear_solver")
+        model.linear_solvers.add_lin_solver(name="general_linear_solver",
+                                    kind="eigen",
+                                    solver_type="PardisoLU")
+        model.add_element(parent_xpath="./linear_solvers/linear_solver/eigen", tag="scaling", text="1")
+        model.add_block("parameter", parent_xpath="./parameters", taglist=["name", "type", "value"], textlist=["T1", "Constant", "300"])
+        model.write_input()
+        with open("tunnel_ogs6py.prj", "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), 'd863d5842910030357e1f68586c5c48d')
+
+    def test_buildfromscratch_bhe(self):
+        model = ogs6py.OGS(PROJECT_FILE="HeatTransportBHE_ogs6py.prj", MKL=False)
+        model.mesh.add_mesh(filename="bhe_mesh.vtu")
+        model.mesh.add_mesh(filename="bhe_mesh_inflowsf.vtu")
+        model.mesh.add_mesh(filename="bhe_mesh_bottomsf.vtu")
+        model.mesh.add_mesh(filename="bhe_mesh_topsf.vtu")
+        model.processes.set_process(
+                name="HeatTransportBHE",
+                type="HEAT_TRANSPORT_BHE",
+                integration_order="2")
+        model.processes.add_process_variable(process_variable="process_variable",
+                                   process_variable_name="temperature_soil")
+        model.processes.add_process_variable(process_variable="process_variable",
+                                   process_variable_name="temperature_BHE1")
+        model.processes.add_bhe_type(bhe_type = "2U")
+        model.processes.add_bhe_component(comp_type = "borehole",
+                                   length = "90",
+                                   diameter = "0.152")
+        model.processes.add_bhe_component(comp_type = "pipes",
+                                   inlet_diameter = "0.0262",
+                                   inlet_wall_thickness = "0.0029",
+                                   inlet_wall_thermal_conductivity = "0.4",
+                                   outlet_diameter = "0.0262",
+                                   outlet_wall_thickness = "0.0029",
+                                   outlet_wall_thermal_conductivity = "0.4",
+                                   distance_between_pipes = "0.06",
+                                   longitudinal_dispersion_length = "0.001")
+        model.processes.add_bhe_component(comp_type = "flow_and_temperature_control",
+                                   type = "PowerCurveConstantFlow",
+                                   power_curve = "scaled_power_curve",
+                                   flow_rate = "0.00037")
+        model.processes.add_bhe_component(comp_type = "grout",
+                                   density = "1",
+                                   porosity = "0",
+                                   specific_heat_capacity = "1910000",
+                                   thermal_conductivity = "0.6")
+        model.processes.add_bhe_component(comp_type = "refrigerant",
+                                   density = "1052",
+                                   viscosity = "0.0052",
+                                   specific_heat_capacity = "3795",
+                                   thermal_conductivity = "0.48",
+                                   reference_temperature = "20")
+        model.process_variables.set_ic(process_variable_name="temperature_soil",
+                        components="1",
+                        order="1",
+                        initial_condition="T0")
+        model.process_variables.add_bc(process_variable_name="temperature_soil",
+                        mesh= "bhe_mesh_topsf",
+                        type="Dirichlet",
+                        parameter="T_Surface")
+        model.process_variables.add_bc(process_variable_name="temperature_soil",
+                        mesh="bhe_mesh_bottomsf",
+                        type="Neumann",
+                        parameter="dT_Groundsource")
+        model.process_variables.add_bc(process_variable_name="temperature_soil",
+                        mesh="bhe_mesh_inflowsf",
+                        type="Dirichlet",
+                        parameter="T_Inflow")
+        model.process_variables.set_ic(process_variable_name="temperature_BHE1",
+                        components="8",
+                        order="1",
+                        initial_condition="T0_BHE1")
+        model.media.add_property(medium_id="0",
+                            phase_type="Solid",
+                            name="specific_heat_capacity",
+                            type="Constant",
+                            value="2150000")
+        model.media.add_property(medium_id="0",
+                            phase_type="Solid",
+                            name="density",
+                            type="Constant",
+                            value="1")
+        model.media.add_property(medium_id="0",
+                            phase_type="AqueousLiquid",
+                            name="phase_velocity",
+                            type="Constant",
+                            value="0 0 0")
+        model.media.add_property(medium_id="0",
+                            phase_type="AqueousLiquid",
+                            name="specific_heat_capacity",
+                            type="Constant",
+                            value="4000")
+        model.media.add_property(medium_id="0",
+                            phase_type="AqueousLiquid",
+                            name="density",
+                            type="Constant",
+                            value="1000")
+        model.media.add_property(medium_id="0",
+                            name="porosity",
+                            type="Constant",
+                            value="0.1")
+        model.media.add_property(medium_id="0",
+                            name="thermal_conductivity",
+                            type="Constant",
+                            value="2.5")
+        model.media.add_property(medium_id="0",
+                            name="thermal_longitudinal_dispersivity",
+                            type="Constant",
+                            value="0")
+        model.media.add_property(medium_id="0",
+                            name="thermal_transversal_dispersivity",
+                            type="Constant",
+                            value="0")
+        model.media.add_property(medium_id="1",
+                            phase_type="Solid",
+                            name="specific_heat_capacity",
+                            type="Constant",
+                            value="1800000")
+        model.media.add_property(medium_id="1",
+                            phase_type="Solid",
+                            name="density",
+                            type="Constant",
+                            value="1")
+        model.media.add_property(medium_id="1",
+                            phase_type="AqueousLiquid",
+                            name="phase_velocity",
+                            type="Constant",
+                            value="0 2e-7 0")
+        model.media.add_property(medium_id="1",
+                            phase_type="AqueousLiquid",
+                            name="specific_heat_capacity",
+                            type="Constant",
+                            value="4000")
+        model.media.add_property(medium_id="1",
+                            phase_type="AqueousLiquid",
+                            name="density",
+                            type="Constant",
+                            value="1000")
+        model.media.add_property(medium_id="1",
+                            name="porosity",
+                            type="Constant",
+                            value="0.1")
+        model.media.add_property(medium_id="1",
+                            name="thermal_conductivity",
+                            type="Constant",
+                            value="2")
+        model.media.add_property(medium_id="1",
+                            name="thermal_longitudinal_dispersivity",
+                            type="Constant",
+                            value="0")
+        model.media.add_property(medium_id="1",
+                            name="thermal_transversal_dispersivity",
+                            type="Constant",
+                            value="0")
+        model.time_loop.add_process(process="HeatTransportBHE",
+                          nonlinear_solver_name="basic_picard",
+                          convergence_type="DeltaX",
+                          norm_type="NORM2",
+                          reltol="1e-5",
+                          time_discretization="BackwardEuler")
+        model.time_loop.set_stepping(process="HeatTransportBHE",
+                           type="FixedTimeStepping",
+                           t_initial="0",
+                           t_end="31536000",
+                           repeat="365",
+                           delta_t="86400")
+        model.time_loop.add_output(
+                        type="VTK",
+                        prefix="HTbhe_test",
+                        repeat="1",
+                        each_steps="1",
+                        variables=["temperature_soil", "temperature_BHE1"])
+        model.parameters.add_parameter(name="T0",
+                            type="MeshNode",
+                            mesh="bhe_mesh",
+                            field_name="temperature_soil")
+        model.parameters.add_parameter(name="T0_BHE1",
+                            type="Constant",
+                            values="11 11 11 11 11 11 11 11")
+        model.parameters.add_parameter(name="T_Surface",
+                            type="CurveScaled",
+                            curve="surface_temperature",
+                            parameter="T_CurveScaled")
+        model.parameters.add_parameter(name="T_CurveScaled",
+                            type="Constant",
+                            value="1")
+        model.parameters.add_parameter(name="T_Inflow",
+                                type="MeshNode",
+                                mesh="bhe_mesh_inflowsf",
+                                field_name="temperature_soil")
+        model.parameters.add_parameter(name="dT_Groundsource",
+                            type="Constant",
+                            value="0.06")
+        model.curves.add_curve(name="scaled_power_curve",
+                            coords=["0 1576800 31536000"],
+                            values=["-1600 0 -1600"])
+        model.curves.add_curve(name="surface_temperature",
+                            coords=["0 1576800 31536000"],
+                            values=["3 20 3"])
+        model.nonlinear_solvers.add_non_lin_solver(name="basic_picard",
+                                type="Picard",
+                                max_iter="500",
+                                linear_solver="general_linear_solver")
+        model.linear_solvers.add_lin_solver(name="general_linear_solver",
+                              kind="lis",
+                              solver_type="cg",
+                              precon_type="jacobi",
+                              max_iteration_step="100",
+                              error_tolerance="1e-16")
+        model.linear_solvers.add_lin_solver(name="general_linear_solver",
+                              kind="eigen",
+                              solver_type="BiCGSTAB",
+                              precon_type="ILUT",
+                              max_iteration_step="100",
+                              error_tolerance="1e-16")
+        model.linear_solvers.add_lin_solver(name="general_linear_solver",
+                              kind="petsc",
+                              prefix="gw",
+                              solver_type="cg",
+                              precon_type="bjacobi",
+                              max_iteration_step="100",
+                              error_tolerance="1e-16")
+        model.write_input()
+        with open("HeatTransportBHE_ogs6py.prj", "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), "2e1eaa4013742d06cfe75f378b3e5662")
+
+    def test_replace_text(self):
+        prjfile = "tunnel_ogs6py_replace.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_text("tunnel_replace", xpath="./time_loop/output/prefix")
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./time_loop/output/prefix")
+        self.assertEqual("tunnel_replace", find[0].text)
+
+    def test_empty_replace(self):
+        inputfile="tests/tunnel_ogs6py.prj"
+        prjfile = "tunnel_ogs6py_empty_replace.prj"
+        model = ogs6py.OGS(INPUT_FILE=inputfile, PROJECT_FILE=prjfile)
+        model.write_input()
+        with open(inputfile, "rb") as f:
+            inputfile_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                inputfile_hash.update(chunk)
+        with open(prjfile, "rb") as f:
+            prjfile_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                prjfile_hash.update(chunk)
+        self.assertEqual(inputfile_hash.hexdigest(), prjfile_hash.hexdigest())
+    def test_replace_phase_property(self):
+        prjfile = "tunnel_ogs6py_replace.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_phase_property_value(mediumid=0, phase="Solid", name="thermal_expansivity", value=5)
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./media/medium/phases/phase[type='Solid']/properties/property[name='thermal_expansivity']/value")
+        self.assertEqual("5", find[0].text)
+    def test_replace_medium_property(self):
+        prjfile = "tunnel_ogs6py_replace.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_medium_property_value(mediumid=0, name="porosity", value=42)
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./media/medium/properties/property[name='porosity']/value")
+        self.assertEqual("42", find[0].text)
+    def test_replace_parameter(self):
+        prjfile = "tunnel_ogs6py_replace.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_parameter_value(name="E", value=32)
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./parameters/parameter[name='E']/value")
+        self.assertEqual("32", find[0].text)
+    def test_replace_mesh(self):
+        prjfile = "tunnel_ogs6py_replacemesh.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_mesh(oldmesh="tunnel_inner.vtu", newmesh="tunnel_inner_new.vtu")
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./meshes/mesh")
+        self.assertEqual("tunnel_inner_new.vtu", find[-1].text)
+        find = root.findall("./process_variables/process_variable/boundary_conditions/boundary_condition/mesh")
+        self.assertEqual("tunnel_right", find[0].text)
+        self.assertEqual("tunnel_left", find[1].text)
+        self.assertEqual("tunnel_bottom", find[2].text)
+        self.assertEqual("tunnel_top", find[3].text)
+        self.assertEqual("tunnel_right", find[4].text)
+        self.assertEqual("tunnel_left", find[5].text)
+        self.assertEqual("tunnel_top", find[6].text)
+        self.assertEqual("tunnel_bottom", find[7].text)
+        self.assertEqual("tunnel_right", find[9].text)
+        self.assertEqual("tunnel_left", find[10].text)
+        self.assertEqual("tunnel_top", find[11].text)
+        self.assertEqual("tunnel_bottom", find[12].text)
+        self.assertEqual("tunnel_inner_new", find[8].text)
+        self.assertEqual("tunnel_inner_new", find[13].text)
+    def test_add_entry(self):
+        prjfile = "tunnel_ogs6py_add_entry.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.add_element(tag="geometry", parent_xpath=".", text="geometry.gml")
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./geometry")
+        self.assertEqual("geometry.gml", find[0].text)
+    def test_add_block(self):
+        prjfile = "tunnel_ogs6py_add_block.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.add_block("parameter", parent_xpath="./parameters", taglist=["name", "type", "value"],
+                textlist=["mu","Constant","0.001"])
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./parameters/parameter[name='mu']/value")
+        self.assertEqual("0.001", find[0].text)
+    def test_remove_element(self):
+        prjfile = "tunnel_ogs6py_remove_element.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.remove_element(xpath="./parameters/parameter[name='E']")
+        model.write_input()
+        root = ET.parse(prjfile)
+        find = root.findall("./parameters/parameter[name='E']/value")
+        self.assertEqual(0, len(find))
+    def test_replace_block_by_include(self):
+        prjfile = "tunnel_ogs6py_solid_inc.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model.replace_block_by_include(xpath="./media/medium/phases/phase[type='Solid']", filename="solid.xml")
+        model.write_input(keep_includes=True)
+        with open(prjfile, "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), 'cb08710c20a9ff178f4899cc80ef4ef5')
+        with open("tests/solid.xml", "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), '83bd4df36ac148eff94c36da4b7fc27f')
+    def test_replace_property_in_include(self):
+        prjfile = "tunnel_ogs6py_includetest.prj"
+        model = ogs6py.OGS(INPUT_FILE="tests/includetest.prj", PROJECT_FILE=prjfile)
+        model.replace_phase_property_value(mediumid=0, phase="Solid", name="thermal_expansivity", value=1e-3)
+        model.write_input(keep_includes=True)
+        with open(prjfile, "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), 'a5ca3722007055f9c1672d1ffc8994f8')
+        with open("tests/solid_inc.xml", "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        self.assertEqual(file_hash.hexdigest(), '0e80d35b207c07abb0af020d864b277b')
+
+    def test_model_run(self):
+        prjfile = "tests/tunnel_ogs6py.prj"
+        # dummy *.SIF file
+        sif_file = tempfile.NamedTemporaryFile(suffix=".sif")
+        # dummy *.notSIF file
+        x_file = tempfile.NamedTemporaryFile(suffix=".x")
+        # dummy directory
+        sing_dir = tempfile.TemporaryDirectory()
+
+        # case: path is not a dir
+        model = ogs6py.OGS(INPUT_FILE=prjfile, PROJECT_FILE=prjfile)
+        with self.assertRaises(RuntimeError) as cm:
+            model.run_model(path="not/a/dir", container_path=sif_file.name)
+        self.assertEqual('The specified path is not a directory. Please provide a directory containing the Singularity executable.',
+            str(cm.exception))
+        # case: container_path is not a file:
+        with self.assertRaises(RuntimeError) as cm:
+            model.run_model(container_path="not/a/file")
+        self.assertEqual('The specific container-path is not a file. Please provide a path to the OGS container.',
+            str(cm.exception))
+        # case: container_path is not a *.sif file
+        with self.assertRaises(RuntimeError) as cm:
+            model.run_model(container_path=x_file.name)
+        self.assertEqual('The specific file is not a Singularity container. Please provide a *.sif file containing OGS.',
+            str(cm.exception))
+        # case Singularity executable not found without path
+        if shutil.which(os.path.join("singularity")) is None:
+            with self.assertRaises(RuntimeError) as cm:
+                model.run_model(container_path=sif_file.name)
+            self.assertEqual('The Singularity executable was not found. See https://www.opengeosys.org/docs/userguide/basics/container/ for installation instructions.',
+                str(cm.exception))
+        # case Singularity executable not found in path
+        with self.assertRaises(RuntimeError) as cm:
+            model.run_model(path=sing_dir.name, container_path=sif_file.name)
+        self.assertEqual('The Singularity executable was not found. See https://www.opengeosys.org/docs/userguide/basics/container/ for installation instructions.',
+            str(cm.exception))
+
+        # clean up the temporary dir
+        sing_dir.cleanup()
+
+
+if __name__ == '__main__':
+    unittest.main()
