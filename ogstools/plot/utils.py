@@ -6,6 +6,7 @@
 
 
 from math import nextafter
+from typing import Any, cast
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -19,6 +20,8 @@ from typeguard import typechecked
 
 from ogstools.plot.levels import level_boundaries
 from ogstools.propertylib.properties import Property
+
+from .shared import setup
 
 
 def get_style_cycler(
@@ -80,36 +83,51 @@ def label_spatial_axes(
 
 
 def update_font_sizes(
-    fontsize: int = 20,
+    fontsize: float | None = None,
     fig: plt.Figure | None = None,
-    ax: plt.Axes | np.ndarray | None = None,
+    axes: plt.Axes | np.ndarray | list[plt.Axes] | None = None,
 ) -> None:
     """
-    Update font sizes of labels and ticks in all subplots
+    Update font sizes of labels and ticks in provided matplotlib objects.
 
     :param fontsize: font size for the labels and ticks
     :param fig: matplotlib figure which should be updated
     :param ax: matplotlib axes which should be updated
     """
-    match fig, ax:
+    match fig, axes:
         case None, None:
             err_msg = "Neither Figure nor Axes was provided!"
             raise ValueError(err_msg)
         case fig, None:
             assert isinstance(fig, plt.Figure)
             axes = fig.get_axes()
-        case None, ax:
-            axes = [ax] if isinstance(ax, plt.Axes) else np.ravel(ax)
-        case fig, ax:
+        case None, axes:
+            axes = (
+                [axes]
+                if isinstance(axes, plt.Axes)
+                else np.ravel(np.asarray(axes)).tolist()
+            )
+        case fig, axes:
             err_msg = "Please only provide a figure OR axes!"
             raise ValueError(err_msg)
 
-    for subax in axes:
-        subax.tick_params(axis="both", which="major", labelsize=fontsize)
-        subax.tick_params(axis="both", which="minor", labelsize=fontsize)
-        subax.xaxis.label.set_fontsize(fontsize)
-        subax.yaxis.label.set_fontsize(fontsize)
-        subax.yaxis.get_offset_text().set_fontsize(fontsize)
+    if fontsize is None:
+        fontsize = setup.fontsize
+    axes = cast(list[plt.Axes], axes)
+    ax: plt.Axes
+    for ax in axes:
+        tick_labels = ax.get_xticklabels() + ax.get_yticklabels()
+        labels = [ax.title, ax.xaxis.label, ax.yaxis.label]
+        offset_text = ax.yaxis.get_offset_text()
+        ax.tick_params(
+            axis="both",
+            which="both",
+            labelsize=fontsize,
+            pad=setup.tick_pad,
+            length=setup.tick_length,
+        )
+        for item in tick_labels + labels + [offset_text]:
+            item.set_fontsize(fontsize)
     return
 
 
@@ -142,26 +160,20 @@ def get_rows_cols(
     return (1, 1)
 
 
-def clear_labels(axes: plt.Axes | np.ndarray) -> None:
-    ax: plt.Axes
-    for ax in np.ravel(np.array(axes)):
-        ax.set_xlabel("")
-        ax.set_ylabel("")
-
-
 def get_projection(
     mesh: pv.UnstructuredGrid,
-) -> tuple[int, int]:
+) -> tuple[int, int, int, np.ndarray]:
     """
     Identify which projection is used: XY, XZ or YZ.
 
     :param mesh: singular mesh
+    :returns: x_id, y_id, projection, mean_normal
 
     """
     mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
     projection = int(np.argmax(mean_normal))
     x_id, y_id = np.delete([0, 1, 2], projection)
-    return x_id, y_id
+    return x_id, y_id, projection, mean_normal
 
 
 def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
@@ -217,7 +229,7 @@ def get_cmap_norm(
         continuous_cmap = mesh_property.cmap
     conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
     if mesh_property.bilinear_cmap:
-        if vmin <= 0.0 <= vmax:
+        if vmin < 0.0 < vmax:
             vcenter = 0.0
             vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
             conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
@@ -234,9 +246,34 @@ def get_cmap_norm(
         conti_norm = mcolors.Normalize(vmin, vmax)
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
     colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
-    cmap = mcolors.ListedColormap(colors, name="custom")
+    if setup.custom_cmap is None:
+        cmap = mcolors.ListedColormap(colors, name="custom")
+    else:
+        cmap = setup.custom_cmap
     boundaries = level_boundaries(levels) if mesh_property.categoric else levels
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=False
     )
     return cmap, norm
+
+
+# TODO: use ColorType when matplotlib can be upgraded to 3.8
+def contrast_color(color: Any) -> Any:
+    """Return black or white - whichever has more contrast to color.
+
+    https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
+    """
+    r, g, b = mcolors.to_rgb(color)
+    # threshold lowered on purpose to prefer black coloring to only use white
+    # when it is really necessary
+    return "k" if (r * 0.299 + g * 0.587 + b * 0.114) > 0.2 else "w"
+
+
+def padded(ax: plt.Axes, x: float, y: float) -> tuple[float, float]:
+    "Add a padding to x and y towards the axes center."
+    x, y = ax.transLimits.transform((x, y))
+    # x += (2 * (x <= 0.5) - 1) * 0.075
+    y += (2 * (y <= 0.5) - 1) * 0.075
+    # Unpacking this here helps type hinting. Direct return doesn't work.
+    x, y = ax.transLimits.inverted().transform((x, y))
+    return x, y

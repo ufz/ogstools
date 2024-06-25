@@ -154,21 +154,16 @@ class TestPlotting:
         meshseries.read(0).plot_contourf(
             ot.properties.temperature, fig=fig, ax=ax[0]
         )
-        ax[0].set_title(r"$T(\mathrm{t}_{0})$")
         meshseries.read(1).plot_contourf(
             ot.properties.temperature, fig=fig, ax=ax[1]
         )
-        ax[1].set_title(r"$T(\mathrm{t}_{end})$")
         diff_mesh = meshseries.read(0).difference(
             meshseries.read(1), ot.properties.temperature
         )
         diff_mesh.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[2])
-        ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
-        # fig.suptitle("Test user defined ax")
-        fig.tight_layout()
         plt.close()
 
-    def test_user_defined_ax_diff_vals(self):
+    def test_user_defined_ax_two_properties(self):
         """Test creating plot with subfigures and user provided ax with different values plotted"""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         ot.plot.setup.combined_colorbar = False
@@ -206,65 +201,13 @@ class TestPlotting:
             fig=fig,
         )
         utils.update_font_sizes(fig=fig, fontsize=25)
-        utils.update_font_sizes(ax=ax, fontsize=25)
+        utils.update_font_sizes(axes=ax, fontsize=25)
         err_msg = "Neither Figure nor Axes was provided!"
         with pytest.raises(ValueError, match=err_msg):
-            utils.update_font_sizes(fig=None, ax=None)
+            utils.update_font_sizes(fig=None, axes=None)
         err_msg = "Please only provide a figure OR axes!"
         with pytest.raises(ValueError, match=err_msg):
-            utils.update_font_sizes(fig=fig, ax=ax)
-        plt.close()
-
-    def test_sharexy(self):
-        """Test if labels are skipped if axis are shared"""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        mesh_a = meshseries.read(0)
-        mesh_b = meshseries.read(1)
-        fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
-        ax: list[plt.Axes] = ax.flatten()
-        meshseries.read(0).plot_contourf(
-            ot.properties.temperature, fig=fig, ax=ax[0]
-        )
-        meshseries.read(1).plot_contourf(
-            ot.properties.temperature, fig=fig, ax=ax[1]
-        )
-        diff_ab = mesh_a.difference(mesh_b, ot.properties.temperature)
-        diff_ba = mesh_b.difference(mesh_a, ot.properties.temperature)
-        diff_ab.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[2])
-        diff_ba.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[3])
-        plt.close()
-
-    def test_label_sharedxy(self):
-        """Test labeling shared x and y axes"""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        mesh_a = meshseries.read(0)
-        mesh_b = meshseries.read(1)
-        fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
-
-        meshseries.read(0).plot_contourf(
-            ot.properties.temperature, fig=fig, ax=ax[0][0]
-        )
-        meshseries.read(1).plot_contourf(
-            ot.properties.temperature, fig=fig, ax=ax[1][0]
-        )
-        diff_ab = mesh_a.difference(mesh_b, ot.properties.temperature)
-        diff_ba = mesh_b.difference(mesh_a, ot.properties.temperature)
-        diff_ab.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[0][1])
-        diff_ba.plot_contourf(ot.properties.temperature, fig=fig, ax=ax[1][1])
-        utils.label_spatial_axes(ax, "x", "y")
-        plt.close()
-
-    def test_spatial_label(self):
-        """Test axes labeling"""
-        fig, ax = plt.subplots(2, 2)
-        utils.label_spatial_axes(ax, "x", "y")
-        plt.close()
-
-    def test_spatial_label_clear(self):
-        """Test axes labels clearing"""
-        fig, ax = plt.subplots(2, 2)
-        utils.label_spatial_axes(ax, "x", "y")
-        utils.clear_labels(ax)
+            utils.update_font_sizes(fig=fig, axes=ax)
         plt.close()
 
     def test_limit_plots(self):
@@ -349,12 +292,7 @@ class TestPlotting:
     def test_plot_profile(self):
         """Test creation of a profile plot from sampled profile data"""
         ms_CT = examples.load_meshseries_CT_2D_XDMF()
-        profile_CT = np.array(
-            [
-                [47.0, 1.17, 72.0],  # Point A
-                [-4.5, 1.17, -59.0],  # Point B
-            ]
-        )
+        profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
         fig, ax = ms_CT.read(11).plot_linesample_contourf(
             ot.properties.saturation,
             profile_CT,
@@ -362,5 +300,4 @@ class TestPlotting:
             plot_nodal_pts=True,
             profile_plane=[0, 2],  # This profile is in XZ plane, not XY!
         )
-        utils.update_font_sizes(ax=ax)
-        fig.tight_layout()
+        plt.close()

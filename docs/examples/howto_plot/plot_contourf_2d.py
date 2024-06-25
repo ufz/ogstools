@@ -6,8 +6,10 @@ Visualizing 2D model data
 
 To demonstrate the creation of filled contour plots we load a 2D THM meshseries
 example. In the ``plot.setup`` we can provide a dictionary to map names
-to material ids. First, let's plot the material ids (cell_data). Per default in
-the setup, this will automatically show the element edges.
+to material ids. Other plot configurations are also available, see:
+:py:obj:`ogstools.plot.plot_setup.PlotSetup`. Some of these options are also
+available as keyword arguments in the function call. Please see
+:py:obj:`ogstools.plot.contourplots.contourf` for more information.
 """
 
 # %%
@@ -25,7 +27,8 @@ mesh = examples.load_meshseries_THM_2D_PVD().read(1)
 #   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
 #
 
-# %%
+# %% First, let's plot the material ids (cell_data). Per default in
+# the setup, this will automatically show the element edges.
 fig = mesh.plot_contourf(ot.properties.material_id)
 
 # %% [markdown]
@@ -34,33 +37,35 @@ fig = mesh.plot_contourf(ot.properties.material_id)
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%
-fig = mesh.plot_contourf(ot.properties.temperature)
+fig = mesh.plot_contourf(ot.properties.temperature, show_max=True)
 
 # %% [markdown]
 # We can also plot components of vector properties:
 
 # %%
-fig = mesh.plot_contourf(ot.properties.displacement[0])
+fig = mesh.plot_contourf(
+    ot.properties.displacement[0], show_min=True, show_max=True
+)
 
 # %%
-fig = mesh.plot_contourf(ot.properties.displacement[1])
+fig = mesh.plot_contourf(
+    ot.properties.displacement[1], show_max=True, show_edges=True
+)
 
 # %% [markdown]
 # This example has hydraulically deactivated subdomains:
 
 # %%
-fig = mesh.plot_contourf(ot.properties.pressure.get_mask())
+fig = mesh.plot_contourf(ot.properties.pressure.get_mask(), fontsize=40)
 
 # %% [markdown]
 # Let's plot the fluid velocity field.
 
 # %%
-fig = mesh.plot_contourf(ot.properties.velocity)
+fig = mesh.plot_contourf(ot.properties.velocity, show_region_bounds=False)
 
 # %% [markdown]
 # Let's plot it again, this time log-scaled.
 
 # %%
-ot.plot.setup.log_scaled = True
-ot.plot.setup.p_min = -8
-fig = mesh.plot_contourf(ot.properties.velocity)
+fig = mesh.plot_contourf(ot.properties.velocity, log_scaled=True, vmin=-8)

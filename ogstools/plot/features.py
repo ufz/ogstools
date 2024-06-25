@@ -12,9 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyvista as pv
-from matplotlib import patheffects
 from matplotlib.collections import PolyCollection
-from matplotlib.transforms import blended_transform_factory as btf
 
 from .shared import setup, spatial_quantity
 
@@ -35,37 +33,7 @@ def layer_boundaries(
             x_b, y_b = spatial_quantity(mesh).transform(
                 edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
             )
-            lw = setup.rcParams_scaled["lines.linewidth"]
-            ax.plot(x_b, y_b, "-k", lw=lw)
-        x_pos = 0.01 if mat_id % 2 == 0 else 0.99
-        ha = "left" if mat_id % 2 == 0 else "right"
-        x_b_lim = x_b.min() if mat_id % 2 == 0 else x_b.max()
-        y_pos = np.mean(y_b[x_b == x_b_lim])
-        if not setup.embedded_region_names_color:
-            continue
-        if setup.material_names is not None and mat_id in setup.material_names:
-            c = setup.embedded_region_names_color
-            m = ">" if mat_id % 2 == 0 else "<"
-            outline_eff = [patheffects.withStroke(linewidth=1, foreground="k")]
-            plt.scatter(
-                round(x_pos) + 0.2 * (x_pos - round(x_pos)),
-                y_pos,
-                transform=btf(ax.transAxes, ax.transData),
-                color=c,
-                marker=m,
-            )
-            plt.text(
-                x_pos,
-                y_pos,
-                setup.material_names[mat_id],
-                fontsize=plt.rcParams["font.size"] * 0.75,
-                transform=btf(ax.transAxes, ax.transData),
-                color=c,
-                weight="bold",
-                ha=ha,
-                va="center",
-                path_effects=outline_eff,
-            )
+            ax.plot(x_b, y_b, "-k", lw=setup.linewidth)
 
 
 def element_edges(
@@ -84,8 +52,8 @@ def element_edges(
         verts = spatial_quantity(lin_mesh).transform(
             np.delete(cell_pts, projection, -1)
         )
-        lw = 0.5 * setup.rcParams_scaled["lines.linewidth"]
-        pc = PolyCollection(verts, fc="None", ec="black", lw=lw)
+        lw = 0.5 * setup.linewidth
+        pc = PolyCollection(verts.tolist(), fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
 
 

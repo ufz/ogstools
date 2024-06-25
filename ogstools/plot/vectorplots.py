@@ -58,8 +58,7 @@ def _vectorfield(
         mask = np.reshape(grid.point_data[mesh_property.mask], (n_pts, n_pts))
         val[mask == 0, :] = 0
     val_norm = np.linalg.norm(np.nan_to_num(val), axis=-1)
-    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm))
-    lw *= setup.rcParams_scaled["lines.linewidth"]
+    lw = 2.5 * val_norm / max(1e-16, np.max(val_norm)) * setup.linewidth
     i_grid, j_grid = spatial_quantity(mesh).transform(np.meshgrid(i_pts, j_pts))
 
     return (i_grid, j_grid, val[..., 0], val[..., 1], lw)

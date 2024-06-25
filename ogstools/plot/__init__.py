@@ -12,20 +12,16 @@ from .contourplots import contourf, subplot
 from .features import outline, shape_on_top
 from .levels import compute_levels
 from .shared import setup
-from .utils import clear_labels, label_spatial_axes, update_font_sizes
 from .vectorplots import quiver, streamlines
 
 __all__ = [
-    "clear_labels",
     "compute_levels",
     "contourf",
-    "label_spatial_axes",
     "outline",
     "quiver",
     "setup",
     "shape_on_top",
     "streamlines",
     "subplot",
-    "update_font_sizes",
     "utils",
 ]
