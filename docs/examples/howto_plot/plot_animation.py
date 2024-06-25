@@ -33,8 +33,8 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 # Let's use fixed scale limits to prevent rescaling during the animation.
 
 # %%
-ot.plot.setup.p_min = 0
-ot.plot.setup.p_max = 100
+ot.plot.setup.vmin = 0
+ot.plot.setup.vmax = 100
 ot.plot.setup.dpi = 50
 
 # %% [markdown]

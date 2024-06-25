@@ -7,8 +7,10 @@
 """Utilities to create nicely spaced levels."""
 
 from math import nextafter
+from typing import Any
 
 import numpy as np
+from pyvista import UnstructuredGrid
 
 from ogstools.plot.shared import setup
 from ogstools.propertylib import Property
@@ -84,34 +86,43 @@ def median_exponent(vals: np.ndarray) -> int:
 
 
 def combined_levels(
-    meshes: np.ndarray, mesh_property: Property | str
+    meshes: np.ndarray, mesh_property: Property | str, **kwargs: Any
 ) -> np.ndarray:
     """
     Calculate well spaced levels for the encompassing property range in meshes.
     """
     mesh_property = get_preset(mesh_property, meshes.ravel()[0])
-    p_min, p_max = np.inf, -np.inf
+    vmin, vmax = np.inf, -np.inf
+    VMIN = kwargs.get("vmin", setup.vmin)
+    VMAX = kwargs.get("vmax", setup.vmax)
     unique_vals = np.array([])
+    mesh: UnstructuredGrid
     for mesh in np.ravel(meshes):
-        values = mesh_property.magnitude.transform(mesh)
-        if setup.log_scaled:  # TODO: can be improved
+        values = mesh_property.magnitude.transform(
+            mesh.ctp(True).threshold(value=[1, 1], scalars=mesh_property.mask)
+            if mesh_property.mask_used(mesh)
+            else mesh
+        )
+        if kwargs.get("log_scaled", setup.log_scaled):
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
-        p_min = min(p_min, np.nanmin(values)) if setup.p_min is None else p_min
-        p_max = max(p_max, np.nanmax(values)) if setup.p_max is None else p_max
+        vmin = min(vmin, np.nanmin(values)) if VMIN is None else vmin
+        vmax = max(vmax, np.nanmax(values)) if VMAX is None else vmax
         unique_vals = np.unique(
             np.concatenate((unique_vals, np.unique(values)))
         )
-    p_min = setup.p_min if setup.p_min is not None else p_min
-    p_max = setup.p_max if setup.p_max is not None else p_max
-    if p_min == p_max:
-        return np.array([p_min, p_max + 1e-12])
+    vmin = vmin if VMIN is None else VMIN
+    vmax = vmax if VMAX is None else VMAX
+    if vmin == vmax:
+        return np.array([vmin, vmax + 1e-12])
     if (
         all(val.is_integer() for val in unique_vals)
-        and setup.p_min is None
-        and setup.p_max is None
+        and VMIN is None
+        and VMAX is None
     ):
-        return unique_vals[(p_min <= unique_vals) & (unique_vals <= p_max)]
-    return compute_levels(p_min, p_max, setup.num_levels)
+        return unique_vals[(vmin <= unique_vals) & (unique_vals <= vmax)]
+    return compute_levels(
+        vmin, vmax, kwargs.get("num_levels", setup.num_levels)
+    )
 
 
 def level_boundaries(levels: np.ndarray) -> np.ndarray:

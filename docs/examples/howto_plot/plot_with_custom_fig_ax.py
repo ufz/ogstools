@@ -18,7 +18,6 @@ from ogstools import examples
 meshseries = examples.load_meshseries_THM_2D_PVD()
 
 ot.plot.setup.combined_colorbar = False
-plt.rcParams.update({"font.size": 32})
 
 # %% [markdown]
 # Compare different properties

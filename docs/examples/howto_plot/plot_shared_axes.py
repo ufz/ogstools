@@ -31,13 +31,14 @@ fig = ot.plot.contourf([mesh_0, mesh_1], mesh_property)
 # On user defined figure and axis the axis belonging to specific subplot has to
 # be passed. For technical reasons, the axes label are present on all subplots.
 
-fig, axs = plt.subplots(2, 2, figsize=(40, 20), sharex=True, sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(40, 17), sharex=True, sharey=True)
 diff_a = mesh_0.difference(mesh_1, mesh_property)
 diff_b = mesh_1.difference(mesh_0, mesh_property)
 ot.plot.contourf(mesh_0, mesh_property, fig=fig, ax=axs[0][0])
 ot.plot.contourf(mesh_1, mesh_property, fig=fig, ax=axs[1][0])
 ot.plot.contourf(diff_a, mesh_property, fig=fig, ax=axs[0][1])
 ot.plot.contourf(diff_b, mesh_property, fig=fig, ax=axs[1][1])
+fig.tight_layout()
 plt.show()
 
 # %%

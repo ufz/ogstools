@@ -28,7 +28,6 @@ from ogstools import meshlib, plot, propertylib, studies  # noqa: E402
 
 plot.setup.reset()
 plot.setup.show_element_edges = True
-plot.setup.fig_scale = 0.5
 plot.setup.combined_colorbar = False
 
 # %% tags=["remove_input"]

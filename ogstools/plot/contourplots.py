@@ -7,18 +7,17 @@
 """Plotting core utilitites."""
 
 import warnings
+from typing import Any
 
 import numpy as np
 import pyvista as pv
-from matplotlib import cm as mcm
+from matplotlib import cm
 from matplotlib import pyplot as plt
-from matplotlib import rcParams
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
 
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
-from ogstools.plot.utils import get_cmap_norm
 from ogstools.propertylib.properties import Property, Vector, get_preset
 
 from . import features
@@ -29,18 +28,12 @@ from .vectorplots import streamlines
 # TODO: define default data_name for regions in setup
 
 
-def _q_zero_line(mesh_property: Property, levels: np.ndarray) -> bool:
-    return mesh_property.bilinear_cmap or (
-        mesh_property.data_name == "temperature" and levels[0] < 0 < levels[-1]
-    )
-
-
 def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
     """Get formatted tick labels and optional offset str.
 
     If all values in ticks are too close together offset notation is used.
     """
-    if median_exponent(ticks) >= 2 + median_exponent(ticks[-1] - ticks[0]):
+    if median_exponent(ticks) >= 3 + median_exponent(ticks[-1] - ticks[0]):
         # use offset notation
         label_lens = np.asarray([len(str(tick)) for tick in ticks])
         offset = ticks[np.argmin(label_lens)]
@@ -79,8 +72,7 @@ def add_colorbars(
     ax: plt.Axes | list[plt.Axes],
     mesh_property: Property,
     levels: np.ndarray,
-    pad: float = 0.05,
-    labelsize: float | None = None,
+    **kwargs: Any,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
     ticks = levels
@@ -88,18 +80,18 @@ def add_colorbars(
         bounds = level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
-    cmap, norm = get_cmap_norm(levels, mesh_property)
-    cm = mcm.ScalarMappable(norm=norm, cmap=cmap)
+    cmap, norm = utils.get_cmap_norm(levels, mesh_property)
+    scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
 
     cb = fig.colorbar(
-        cm,
+        scalar_mappable,
         norm=norm,
         ax=ax,
         ticks=ticks,
         drawedges=True,
-        location="right",
+        location=kwargs.get("cb_loc", "right"),
         spacing="uniform",
-        pad=pad,  # fmt: skip
+        pad=kwargs.get("cb_pad", 0.05),
     )
     # Formatting the colorbar label and ticks
 
@@ -110,11 +102,9 @@ def add_colorbars(
             cb_label += " + " + offset[1:]
         else:
             cb_label += " - " + offset
-    if setup.log_scaled:
+    if kwargs.get("log_scaled", setup.log_scaled):
         cb_label = f"log$_{{10}}$( {cb_label} )"
-    labelsize = (
-        setup.rcParams_scaled["font.size"] if labelsize is None else labelsize
-    )
+    labelsize = kwargs.get("cb_labelsize", setup.fontsize)
     cb.set_label(cb_label, size=labelsize)
 
     # special formatting for MaterialIDs
@@ -137,10 +127,8 @@ def add_colorbars(
         cb.ax.add_patch(Rect((0, 0.5), 1, -1, lw=0, fc="none", hatch="/"))
     if setup.invert_colorbar:
         cb.ax.invert_yaxis()
-    if _q_zero_line(mesh_property, ticks):
-        cb.ax.axhline(
-            y=0, color="w", lw=2 * setup.rcParams_scaled["lines.linewidth"]
-        )
+    if mesh_property.bilinear_cmap:
+        cb.ax.axhline(y=0, color="w", lw=2 * setup.linewidth)
 
 
 def subplot(
@@ -148,6 +136,7 @@ def subplot(
     mesh_property: Property | str,
     ax: plt.Axes,
     levels: np.ndarray | None = None,
+    **kwargs: Any,
 ) -> None:
     "Plot the property field of a mesh on a matplotlib.axis."
 
@@ -159,17 +148,13 @@ def subplot(
     ax.axis("auto")
 
     if mesh_property.mask_used(mesh):
-        subplot(mesh, mesh_property.get_mask(), ax)
+        subplot(mesh, mesh_property.get_mask(), ax, **kwargs)
         mesh = mesh.ctp(True).threshold(
             value=[1, 1], scalars=mesh_property.mask
         )
 
     surf_tri = mesh.triangulate().extract_surface()
-
-    # get projection
-    x_id, y_id = utils.get_projection(mesh)
-    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
-    projection = int(np.argmax(mean_normal))
+    x_id, y_id, projection, mean_normal = utils.get_projection(mesh)
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
@@ -177,49 +162,73 @@ def subplot(
     x, y = spatial.transform(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = mesh_property.magnitude.transform(surf_tri)
-    if setup.log_scaled:
+    if kwargs.get("log_scaled", setup.log_scaled):
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
-    p_min, p_max = np.nanmin(values), np.nanmax(values)
+    vmin, vmax = np.nanmin(values), np.nanmax(values)
 
     if levels is None:
-        num_levels = min(setup.num_levels, len(np.unique(values)))
-        levels = compute_levels(p_min, p_max, num_levels)
-    cmap, norm = get_cmap_norm(levels, mesh_property)
+        num_levels = min(
+            kwargs.get("num_levels", setup.num_levels), len(np.unique(values))
+        )
+        levels = compute_levels(vmin, vmax, num_levels)
+    cmap, norm = utils.get_cmap_norm(levels, mesh_property)
 
     if mesh_property.data_name in mesh.point_data:
         ax.tricontourf(  # type: ignore[call-overload]
-            x,
-            y,
-            tri,
-            values,
-            levels=levels,
-            cmap=cmap,
-            norm=norm,
-            extend="both",
-        )
-        if _q_zero_line(mesh_property, levels):
+            x, y, tri, values, levels=kwargs.get("levels", levels),
+            cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
+        )  # fmt: skip
+        if mesh_property.bilinear_cmap:
             ax.tricontour(  # type: ignore[call-overload]
                 x, y, tri, values, levels=[0], colors="w"
             )
     else:
+        cmap = kwargs.get("cmap", cmap)
         ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
         if mesh_property.is_mask():
-            ax.tripcolor(x, y, tri, facecolors=values, mask=(values == 1),
-                         cmap=cmap, norm=norm, hatch="/")  # fmt: skip
+            ax.tripcolor(
+                x, y, tri, facecolors=values, mask=(values == 1),
+                cmap=cmap, norm=norm, hatch="/"
+            )  # fmt: skip
 
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
         show_edges = setup.show_element_edges == mesh_property.data_name
+    show_edges = kwargs.get("show_edges", show_edges)
     if show_edges:
         features.element_edges(ax, mesh, projection)
-    if setup.show_region_bounds and "MaterialIDs" in mesh.cell_data:
+    show_region_bounds = kwargs.get(
+        "show_region_bounds", setup.show_region_bounds
+    )
+    if show_region_bounds and "MaterialIDs" in mesh.cell_data:
         features.layer_boundaries(ax, mesh, projection)
 
     if isinstance(mesh_property, Vector):
         streamlines(surf_tri, ax, mesh_property, projection)
 
     ax.margins(0, 0)  # otherwise it shrinks the plot content
+    show_max = kwargs.get("show_max", False) and not mesh_property.is_mask()
+    show_min = kwargs.get("show_min", False) and not mesh_property.is_mask()
+
+    for show, func, level_index in zip(
+        [show_min, show_max], [np.argmin, np.argmax], [0, -1], strict=True
+    ):
+        if not show:
+            continue
+        index = np.unravel_index(func(values), values.shape)[0]
+        x_pos, y_pos = spatial.transform(mesh.points[index, [x_id, y_id]])
+        value = values[mesh.find_closest_point(mesh.points[index])]
+        color = utils.contrast_color(cmap(norm(value)))
+        fontsize = kwargs.get("fontsize", setup.fontsize)
+        ax.plot(
+            x_pos, y_pos, color=color, marker="x", clip_on=False,
+            markersize=fontsize*0.625, markeredgewidth=3
+        )  # fmt: skip
+        text_xy = utils.padded(ax, x_pos, y_pos)
+        text = f"{levels[level_index]:.3g}"
+        ha, va = ("center", "center")
+        ax.text(*text_xy, s=text, ha=ha, va=va, fontsize=fontsize, color=color)
 
     if abs(max(mean_normal) - 1) > 1e-6:
         sec_id = np.argmax(np.delete(mean_normal, projection))
@@ -248,25 +257,26 @@ def subplot(
 
 
 def _fig_init(
-    rows: int, cols: int, aspect: float = 1.0
+    rows: int, cols: int, aspect: float = 1.0, **kwargs: Any
 ) -> tuple[plt.Figure, plt.Axes]:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
     cb_width = 3
     y_label_width = 2
     x_label_height = 1
-    figsize = setup.fig_scale * np.asarray(
+    figsize = np.asarray(
         [
             default_size * cols * aspect + cb_width * nx_cb + y_label_width,
             default_size * rows + x_label_height,
         ]
     )
+    # TODO: maybe use height and width_ratios argument?
     fig, ax = plt.subplots(
         rows,
         cols,
-        dpi=setup.dpi * setup.fig_scale,
-        figsize=figsize,
-        layout=setup.layout,
+        dpi=kwargs.get("dpi", setup.dpi),
+        figsize=kwargs.get("figsize", figsize),
+        layout=kwargs.get("layout", setup.layout),
         sharex=True,
         sharey=True,
     )
@@ -277,107 +287,90 @@ def _fig_init(
 # TODO: Have a look at fig and ax logic and make it more readable
 
 
+def _take_axes(
+    fig: plt.Figure | None, axes: plt.Axes | None, shape: tuple[int, ...]
+) -> np.ndarray:
+    match fig, axes:
+        case None, None:
+            msg = "Neither figure nor axes was provided."
+            raise TypeError(msg)
+        case fig, None:
+            msg = (
+                "This is not a good practice. Consider providing both fig "
+                "and axes instead. This option may lead to unexpected "
+                "behaviour and may be removed in the future."
+            )
+            warnings.warn(msg, Warning, stacklevel=4)
+            assert isinstance(fig, plt.Figure)
+            return np.reshape(np.asarray(fig.axes), shape)
+        case None, axes:
+            if shape != (1, 1):
+                msg = (
+                    "You provided only one axes but multiple meshes."
+                    "Provide one mesh per axes or provide a figure."
+                )
+                raise ValueError(msg)
+            return np.reshape(np.array(axes), (1, 1))
+    return np.reshape(np.asarray(axes), shape)
+
+
 def draw_plot(
     meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     mesh_property: Property,
     fig: plt.Figure | None = None,
     axes: plt.Axes | None = None,
+    **kwargs: Any,
 ) -> plt.Figure | None:
     """
-    Plot the property field of meshes on existing figure.
+    Plot the property field of meshes on an existing figure or axis.
 
-    :param meshes: Singular mesh of 2D numpy array of meshes
+    :param meshes: singular mesh or 2D numpy array of meshes
     :param property: the property field to be visualized on all meshes
-    :param fig: Matplotlib figure to use for plotting (optional)
-    :param axes: Matplotlib Axes to use for plotting (optional)
+    :param fig: matplotlib figure to use for plotting
+    :param axes: matplotlib axes to use for plotting
     """
     shape = utils.get_rows_cols(meshes)
     np_meshes = np.reshape(meshes, shape)
-    if fig is not None and axes is not None:
-        np_axs = np.reshape(np.array(axes), shape)
-    elif fig is not None and axes is None:
-        # Only Fig is given
-        # Multiple meshes should be accepted
-        warnings.warn(
-            "This is not a good practice. Consider providing both fig and ax instead. This option may lead to unexpected behaviour and may be removed without warning in the future.",
-            Warning,
-            stacklevel=4,
-        )
-        np_axs = np.reshape(np.asarray(fig.axes), shape)
-    elif fig is None and axes is not None:
-        # Only ax is given
-        # Only one mesh should be accepted
-        if shape != (1, 1):
-            msg = "You have provided only one Axis object but multiple meshes. Provide only one mesh per Axis object, or provide Figure object instead."
-            raise ValueError(msg)
-        np_axs = np.reshape(np.array(axes), (1, 1))
-    else:
-        msg = "Neither Figure nor Axis object was provided."
-        raise TypeError(msg)
+    np_axs = _take_axes(fig, axes, shape)
+
     if setup.combined_colorbar:
-        levels_combined = combined_levels(np_meshes, mesh_property)
-    for i in range(shape[0]):
-        for j in range(shape[1]):
-            _levels = (
-                levels_combined
-                if setup.combined_colorbar
-                else combined_levels(np_meshes[i, j, None], mesh_property)
+        _levels = combined_levels(np_meshes, mesh_property, **kwargs)
+    for i, j in [(r0, r1) for r0 in range(shape[0]) for r1 in range(shape[1])]:
+        if "levels" in kwargs:
+            _levels = np.asarray(kwargs.pop("levels"))
+        elif not setup.combined_colorbar:
+            _levels = combined_levels(
+                np_meshes[i, j, None], mesh_property, **kwargs
             )
-            subplot(np_meshes[i, j], mesh_property, np_axs[i, j], _levels)
+        subplot(np_meshes[i, j], mesh_property, np_axs[i, j], _levels, **kwargs)
+        if fig is None or setup.combined_colorbar:
+            continue
+        add_colorbars(fig, np_axs[i, j], mesh_property, _levels, **kwargs)
 
     # One mesh is sufficient, it should be the same for all of them
-    x_id, y_id = utils.get_projection(np_meshes[0, 0])
-    utils.label_spatial_axes(np_axs, "xyz"[x_id], "xyz"[y_id])
+    x_id, y_id, _, _ = utils.get_projection(np_meshes[0, 0])
+    spatial_unit = spatial_quantity(np_meshes[0, 0]).output_unit
+    utils.label_spatial_axes(
+        np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=spatial_unit
+    )
     np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
     np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
     np_axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
     # make extra space for the upper limit of the colorbar
     if setup.layout == "tight":
         plt.tight_layout(pad=1.4)
-    if setup.combined_colorbar:
-        if fig is None:
-            warnings.warn(
-                "Cannot plot combined colorbar if Figure object is not provided!",
-                Warning,
-                stacklevel=4,
-            )
-        else:
-            cb_axs = np.ravel(np.asarray(fig.axes)).tolist()
-            add_colorbars(
-                fig, cb_axs, mesh_property, levels_combined, pad=0.05 / shape[1]
-            )
-    else:
-        # TODO: restructure this logic
-        if fig is None:
-            warnings.warn(
-                "Figure object is required to plot individual colorbars for Axes objects.",
-                Warning,
-                stacklevel=4,
-            )
-        else:
-            for i in range(shape[0]):
-                for j in range(shape[1]):
-                    _levels = combined_levels(
-                        np_meshes[i, j, None], mesh_property
-                    )
-                    add_colorbars(
-                        fig,
-                        np_axs[i, j],
-                        mesh_property,
-                        _levels,
-                        pad=0.05 / shape[1],
-                    )
+    if fig is not None and setup.combined_colorbar:
+        cb_axs = np.ravel(np.asarray(fig.axes)).tolist()
+        add_colorbars(fig, cb_axs, mesh_property, _levels, **kwargs)
     return fig
 
 
-# TODO: add as arguments: cmap, limits
-# TODO: num_levels should be min_levels
-# TODO: split for single mesh plot and multi mesh plot
 def contourf(
     meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     mesh_property: Property | str,
     fig: plt.Figure | None = None,
     ax: plt.Axes | None = None,
+    **kwargs: Any,
 ) -> plt.Figure | None:
     """
     Plot the property field of meshes with default settings.
@@ -387,10 +380,25 @@ def contourf(
 
     :param meshes:      Singular mesh of 2D numpy array of meshes
     :param property:    The property field to be visualized on all meshes
-    :param fig: Matplotlib Figure object to use for plotting (optional)
-    :param ax: Matplotlib Axis object to use for plotting (optional)
+    :param fig:         matplotlib figure to use for plotting
+    :param ax:          matplotlib axis to use for plotting
+    :Keyword Arguments:
+        - cb_labelsize:       colorbar labelsize
+        - cb_loc:             colorbar location ('left' or 'right')
+        - cb_pad:             colorbar padding
+        - cmap:               colormap
+        - dpi:                resolution
+        - figsize:            figure size
+        - fontsize            size for labels and captions
+        - levels:             user defined levels
+        - log_scaled:         logarithmic scaling
+        - show_edges:         show element edges
+        - show_max:           mark the location of the maximum value
+        - show_min:           mark the location of the minimum value
+        - show_region_bounds: show the edges of the different regions
+        - vmin:               minimum value
+        - vmax:               maximum value
     """
-    rcParams.update(setup.rcParams_scaled)
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
     mesh_property = get_preset(mesh_property, _meshes[0])
@@ -403,22 +411,15 @@ def contourf(
         )
     ax_aspects = fig_aspect / data_aspects
     n_axs = shape[0] * shape[1]
-    if ax is None and fig is None:
-        _fig, _ax = _fig_init(rows=shape[0], cols=shape[1], aspect=fig_aspect)
-        fig = draw_plot(meshes, mesh_property, fig=_fig, axes=_ax)
-        assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
-            ax.set_aspect(1.0 / aspect)
-    elif ax is not None and fig is None:
-        draw_plot(meshes, mesh_property, axes=ax)
+    if fig is None and ax is None:
+        fig, ax = _fig_init(shape[0], shape[1], fig_aspect, **kwargs)
+    fig = draw_plot(meshes, mesh_property, fig=fig, axes=ax, **kwargs)
+    if fig is not None:
+        for _ax, aspect in zip(fig.axes[:n_axs], ax_aspects, strict=True):
+            _ax.set_aspect(1.0 / aspect)
+    elif ax is not None:
         ax.set_aspect(1.0 / ax_aspects[0])
-    elif ax is None and fig is not None:
-        fig = draw_plot(meshes, mesh_property, fig=fig)
-        assert isinstance(fig, plt.Figure)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
-            ax.set_aspect(1.0 / aspect)
-    elif ax is not None and fig is not None:
-        draw_plot(meshes, mesh_property, fig=fig, axes=ax)
-        for ax, aspect in zip(fig.axes[: n_axs + 1], ax_aspects, strict=False):
-            ax.set_aspect(1.0 / aspect)
+    utils.update_font_sizes(
+        fontsize=kwargs.get("fontsize", setup.fontsize), fig=fig
+    )
     return fig
