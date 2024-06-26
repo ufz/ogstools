@@ -10,6 +10,7 @@ Extract a 1D profile from 2D and plot it
 # --------------------
 
 # %%
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -55,11 +56,22 @@ mesh_sp.head(10)
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ax = mesh.plot_linesample(
     x="dist",
-    y=["pressure", "temperature"],
+    y_property="pressure",
     profile_points=profile_HT,
     ax=ax,
-    twinx=True,
     fontsize=15,
+)
+ax_twinx = ax.twinx()
+ax_twinx = mesh.plot_linesample(
+    x="dist",
+    y_property="temperature",
+    profile_points=profile_HT,
+    ax=ax_twinx,
+    fontsize=15,
+)
+ot.plot.utils.color_twin_axes(
+    [ax, ax_twinx],
+    [ot.properties.pressure.color, ot.properties.temperature.color],
 )
 fig.tight_layout()
 
