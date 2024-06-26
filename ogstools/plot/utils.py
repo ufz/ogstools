@@ -278,7 +278,7 @@ def padded(ax: plt.Axes, x: float, y: float) -> tuple[float, float]:
     x, y = ax.transLimits.inverted().transform((x, y))
     return x, y
 
-    
+
 def color_twin_axes(axes: list[plt.Axes], colors: list) -> None:
     for ax_temp, color_temp in zip(axes, colors, strict=False):
         ax_temp.tick_params(axis="y", which="both", colors=color_temp)
