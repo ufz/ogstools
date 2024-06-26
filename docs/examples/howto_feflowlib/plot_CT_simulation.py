@@ -15,6 +15,7 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 import matplotlib.pyplot as plt
+import numpy as np
 from ogs6py import ogs
 
 import ogstools as ot
@@ -27,7 +28,9 @@ from ogstools.feflowlib import (
     setup_prj_file,
     write_point_boundary_conditions,
 )
+from ogstools.meshlib import Mesh
 
+ot.plot.setup.show_element_edges = True
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
 # how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
@@ -39,7 +42,10 @@ feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
 feflow_pv_mesh.save(feflow_mesh_file)
 
 feflow_concentration = ot.properties.Scalar(
-    data_name="single_species_P_CONC", data_unit="mg/l", output_unit="mg/l"
+    data_name="single_species_P_CONC",
+    output_name="concentration",
+    data_unit="mg/l",
+    output_unit="mg/l",
 )
 # The original mesh is clipped to focus on the relevant part of it, where concentration is larger
 # than 1e-9 mg/l. The rest of the mesh has concentration values of 0.
@@ -99,47 +105,71 @@ ogs_sim_res = pv.read(
    temp_dir / "sim_2D_CT_model_ts_65_t_48384000.000000.vtu"
 )
 """
-start_line = (0.038 + 1.0e-8, 0.005, 0)
-end_line = (0.045, 0.005, 0)
-ogs_line = ogs_sim_res.sample_over_line(start_line, end_line, resolution=100)
-feflow_line = feflow_pv_mesh.sample_over_line(
-    start_line, end_line, resolution=100
-)
-plt.rcParams.update({"font.size": 18})
-plt.figure()
-plt.plot(
-    ogs_line.point_data["Distance"] + start_line[0],
-    ogs_line.point_data["single_species"],
-    linewidth=4,
-    color="blue",
-    label="ogs",
-)
-plt.plot(
-    feflow_line.point_data["Distance"] + start_line[0],
-    feflow_line.point_data["single_species_P_CONC"][:],
-    linewidth=4,
+profile = np.array([[0.038 + 1.0e-8, 0.005, 0], [0.045, 0.005, 0]])
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+ogs_sim_res.plot_linesample(
+    "dist",
+    ot.properties.Scalar(
+        data_name="single_species",
+        output_name="concentration",
+        data_unit="mg/l",
+        output_unit="mg/l",
+    ),
+    profile_points=profile,
+    resolution=1000,
+    fontsize=18,
+    ax=ax,
+    label="OGS",
     color="black",
-    ls=":",
-    label="FEFLOW",
+    linewidth=2,
 )
-plt.ylabel("concentration [mg/l]")
-plt.xlabel("x [m]")
-plt.legend(loc="best")
-plt.tight_layout()
-plt.show()
-
-# %%
-# 6. Plot the difference between the FEFLOW and OGS simulation.
-plt.figure()
-plt.plot(
-    ogs_line.point_data["Distance"] + start_line[0],
-    feflow_line.point_data["single_species_P_CONC"]
-    - ogs_line.point_data["single_species"],
-    linewidth=4,
+Mesh(feflow_pv_mesh).plot_linesample(
+    "dist",
+    feflow_concentration,
+    profile_points=profile,
+    resolution=1000,
+    fontsize=16,
+    ax=ax,
+    label="FEFLOW",
+    ls=":",
+    linewidth=2,
     color="red",
 )
-plt.ylabel("concentration [mg/l]")
-plt.xlabel("x [m]")
-plt.title("difference feflow-ogs")
-plt.tight_layout()
-plt.show()
+ax.legend(loc="best", fontsize=16)
+fig.tight_layout()
+
+
+# %%
+# 6. Concentration difference plotted on the mesh.
+ogs_sim_res["concentration_difference"] = (
+    feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
+)
+concentration_difference = ot.properties.Scalar(
+    data_name="concentration_difference",
+    output_name="concentration",
+    data_unit="mg/l",
+    output_unit="mg/l",
+)
+
+bounds = [0.038, 0.045, 0, 0.01, 0, 0]
+
+ot.plot.contourf(
+    ogs_sim_res.clip_box(bounds, invert=False),
+    concentration_difference,
+)
+# %%
+# 6.1 Concentration difference plotted along a line.
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+ogs_sim_res.plot_linesample(
+    "dist",
+    concentration_difference,
+    profile_points=profile,
+    resolution=1000,
+    fontsize=18,
+    ax=ax,
+    linewidth=2,
+    color="green",
+    label="Difference FEFLOW-OGS",
+)
+ax.legend(loc="best", fontsize=16)
+fig.tight_layout()
