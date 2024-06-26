@@ -6,9 +6,8 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.meshlib.data_processing import sample_polyline
-from ogstools.plot import contourf
+from ogstools.plot import contourf, utils
 from ogstools.plot.shared import spatial_quantity
-from ogstools.plot.utils import update_font_sizes
 from ogstools.propertylib.properties import Property, get_preset
 
 
@@ -17,8 +16,7 @@ def linesample(
     x: str,
     y_property: str | Property,
     profile_points: np.ndarray,
-    ax: plt.Axes | np.ndarray | None = None,
-    fontsize: int = 20,
+    ax: plt.Axes,
     resolution: int | None = 100,
     **kwargs: Any,
 ) -> plt.Axes:
@@ -28,35 +26,20 @@ def linesample(
     refer to columns of the DataFrame returned by it.
 
     :param x: Value to be used on x-axis of the plot
-    :param y: Values to be used on y-axis of the plot
+    :param y_property: Values to be used on y-axis of the plot
     :param profile_points: Points defining the profile (and its segments)
     :param ax: User-created array of Matplotlib axis object
     :param resolution: Resolution of the sampled profile. Total number of
         points within all profile segments.
-    :param fontsize: Font size to be used for all captions and labels in the
-        plot
     :param resolution: Resolution of the sampled profile. Total number of
         points within all profile segments.
-    :param kwargs: (optional) kwargs are used to specify properties like
-        a line label (for auto legends), linewidth, antialiasing, marker face color.
-        They are passed to matplotlib.pyplot.plot so that all kwargs for this function are legitimate.
+    :param kwargs: Optional keyword arguments passed to matplotlib.pyplot.plot
+        to customize plot options like a line label (for auto legends), linewidth,
+        antialiasing, marker face color.
 
     :return: Matplotlib Axes object
     """
-    # TODO: Vector properties with 2 values should be handled automatically
-    """
-    if isinstance(y, list | np.ndarray) and twinx:
-        if len(y) == 1:
-            twinx = False
-        elif len(y) > 2:
-            err_msg = "Only two properties are accepted for plot with twin \
-                x-axis. If more are provided, I don't know how to split them!"
-            raise ValueError(err_msg)
-        if isinstance(ax, np.ndarray):
-            err_msg = "If you want me to plot on twinx, I need to know on \
-                which axis, so I will accept only plt.axes as ax parameter!"
-            raise ValueError(err_msg)
-    """
+
     mesh_property = get_preset(y_property, mesh)
     mesh_sp, _ = sample_polyline(
         mesh, mesh_property, profile_points, resolution
@@ -71,6 +54,7 @@ def linesample(
     if "ls" in kwargs:
         kwargs.pop("linestyle")
 
+    utils.update_font_sizes(axes=ax, fontsize=kwargs.pop("fontsize", 20))
     ax.plot(
         spatial_qty.transform(mesh_sp[x]),
         mesh_sp[mesh_property.data_name],
@@ -79,7 +63,6 @@ def linesample(
     ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
     ax.set_ylabel(mesh_property.get_label())
 
-    update_font_sizes(axes=ax, fontsize=fontsize)
     # TODO: this should be in apply_mpl_style()
     ax.grid(which="major", color="lightgrey", linestyle="-")
     ax.grid(which="minor", color="0.95", linestyle="--")
@@ -185,7 +168,7 @@ def linesample_contourf(
                 nodal_pts_labels,
                 color="orange",
             )
-    update_font_sizes(fig=fig)
+    utils.update_font_sizes(fig=fig)
     fig.tight_layout()
 
     return fig, ax

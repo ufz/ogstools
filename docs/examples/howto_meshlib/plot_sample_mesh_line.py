@@ -10,7 +10,6 @@ Extract a 1D profile from 2D and plot it
 # --------------------
 
 # %%
-from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,7 +61,7 @@ ax = mesh.plot_linesample(
     ax=ax,
     fontsize=15,
 )
-ax_twinx = cast(plt.Axes, ax.twinx())
+ax_twinx = ax.twinx()
 ax_twinx = mesh.plot_linesample(
     x="dist",
     y_property="temperature",

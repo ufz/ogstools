@@ -2,7 +2,6 @@
 
 from functools import partial
 from tempfile import mkstemp
-from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -287,7 +286,7 @@ class TestPlotting:
             ax=ax,
             fontsize=15,
         )
-        ax_twinx = cast(plt.Axes, ax.twinx())
+        ax_twinx = ax.twinx()
         ax_twinx = mesh.plot_linesample(
             x="dist",
             y_property="temperature",
