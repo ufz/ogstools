@@ -986,7 +986,7 @@ def setup_prj_file(
             process_variable="temperature",
             process_variable_name="temperature",
         )
-        model.processvars.set_ic(
+        model.process_variables.set_ic(
             process_variable_name="temperature",
             components=1,
             order=1,
@@ -1015,7 +1015,7 @@ def setup_prj_file(
                     process_variable=process_variable,
                     process_variable_name=species,
                 )
-                model.processvars.set_ic(
+                model.process_variables.set_ic(
                     process_variable_name=species,
                     components=1,
                     order=1,
@@ -1027,7 +1027,7 @@ def setup_prj_file(
             process_variable_name="HEAD_OGS",
         )
 
-    model.processvars.set_ic(
+    model.process_variables.set_ic(
         process_variable_name="HEAD_OGS",
         components=1,
         order=1,
@@ -1061,7 +1061,7 @@ def setup_prj_file(
                     type="Constant",
                     value=np.unique(mesh.cell_data["P_TRAF_IN"])[1],
                 )
-                model.processvars.add_bc(
+                model.process_variables.add_bc(
                     process_variable_name=process_var,
                     type="Robin",
                     alpha="alpha",
@@ -1075,7 +1075,7 @@ def setup_prj_file(
                     field_name=point_data,
                     mesh=point_data,
                 )
-                model.processvars.add_st(
+                model.process_variables.add_st(
                     process_variable_name=process_var,
                     type="Nodal",
                     mesh=point_data,
@@ -1083,7 +1083,7 @@ def setup_prj_file(
                 )
             else:
                 # Add boundary conditions
-                model.processvars.add_bc(
+                model.process_variables.add_bc(
                     process_variable_name=process_var,
                     type=next(
                         val
@@ -1115,7 +1115,7 @@ def setup_prj_file(
         ):
             if cell_data in ["P_IOFLOW"]:
                 # Add boundary conditions
-                model.processvars.add_bc(
+                model.process_variables.add_bc(
                     process_variable_name="HEAD_OGS",
                     type=next(
                         val
@@ -1126,7 +1126,7 @@ def setup_prj_file(
                     mesh="topsurface_" + bulk_mesh_path.stem,
                 )
             elif cell_data in ["P_SOUF"]:
-                model.processvars.add_st(
+                model.process_variables.add_st(
                     process_variable_name="HEAD_OGS",
                     type=next(
                         val

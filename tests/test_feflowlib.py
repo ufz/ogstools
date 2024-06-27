@@ -339,7 +339,7 @@ class TestConverter:
             str(self.temp_dir / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
-        assert len(elements) == 8
+        assert len(elements) == 9
         # Test if the meshes are correct
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
