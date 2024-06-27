@@ -6,7 +6,7 @@
 
 
 from math import nextafter
-from typing import Any, cast
+from typing import Any
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -83,49 +83,23 @@ def label_spatial_axes(
 
 
 def update_font_sizes(
+    axes: plt.Axes | np.ndarray | list[plt.Axes],
     fontsize: float | None = None,
-    fig: plt.Figure | None = None,
-    axes: plt.Axes | np.ndarray | list[plt.Axes] | None = None,
 ) -> None:
     """
-    Update font sizes of labels and ticks in provided matplotlib objects.
+    Update font sizes of labels and texts.
 
-    :param fontsize: font size for the labels and ticks
-    :param fig: matplotlib figure which should be updated
     :param ax: matplotlib axes which should be updated
+    :param fontsize: font size for the labels and ticks
     """
-    match fig, axes:
-        case None, None:
-            err_msg = "Neither Figure nor Axes was provided!"
-            raise ValueError(err_msg)
-        case fig, None:
-            assert isinstance(fig, plt.Figure)
-            axes = fig.get_axes()
-        case None, axes:
-            axes = (
-                [axes]
-                if isinstance(axes, plt.Axes)
-                else np.ravel(np.asarray(axes)).tolist()
-            )
-        case fig, axes:
-            err_msg = "Please only provide a figure OR axes!"
-            raise ValueError(err_msg)
-
     if fontsize is None:
         fontsize = setup.fontsize
-    axes = cast(list[plt.Axes], axes)
     ax: plt.Axes
-    for ax in axes:
+    for ax in np.ravel(np.asarray(axes)):
         tick_labels = ax.get_xticklabels() + ax.get_yticklabels()
         labels = [ax.title, ax.xaxis.label, ax.yaxis.label]
         offset_text = ax.yaxis.get_offset_text()
-        ax.tick_params(
-            axis="both",
-            which="both",
-            labelsize=fontsize,
-            pad=setup.tick_pad,
-            length=setup.tick_length,
-        )
+        ax.tick_params(axis="both", which="both", labelsize=fontsize)
         for item in tick_labels + labels + [offset_text]:
             item.set_fontsize(fontsize)
     return
