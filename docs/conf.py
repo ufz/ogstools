@@ -154,7 +154,7 @@ except ImportError:
         ["reference/ogstools.feflowlib.*", "user-guide/feflowlib*"]
     )
     apidoc_excluded_paths.append("../**/feflowlib/**")
-    sphinx_gallery_conf["ignore_pattern"] = r".*feflowlib/.*"
+    sphinx_gallery_conf["ignore_pattern"] = r".*_feflowlib_*"
 
 
 suppress_warnings = ["config.cache"]
