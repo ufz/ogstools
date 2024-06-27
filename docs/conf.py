@@ -11,7 +11,7 @@ from datetime import datetime
 
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
-from sphinx_gallery.sorting import FileNameSortKey
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 import ogstools
 
@@ -144,6 +144,16 @@ sphinx_gallery_conf = {
     "image_scrapers": ("matplotlib", DynamicScraper()),
     "matplotlib_animations": True,
     "reset_modules": ("matplotlib", reset_plot_setup),
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/howto_quickstart",
+            "examples/howto_preprocessing",
+            "examples/howto_postprocessing",
+            "examples/howto_plot",
+            "examples/howto_studies",
+            "examples/howto_advanced",
+        ]
+    ),
     "within_subsection_order": FileNameSortKey,
 }
 
