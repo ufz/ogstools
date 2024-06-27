@@ -1,6 +1,6 @@
 """
-Convergence study (spatial & temporal refinement)
-=================================================
+Spatial & temporal refinement - nuclear decay
+=============================================
 
 This example shows one possible implementation of how to do a convergence study
 with spatial and temporal refinement. For this, a simple model using a time

@@ -1,6 +1,6 @@
 """
-Differences between meshes
-==========================
+Calculate differences between meshes
+====================================
 
 .. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
