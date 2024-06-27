@@ -23,7 +23,7 @@ Terrain meshing
 # * `PyVista <https://docs.pyvista.org/index.html>`_
 # * `TetGen <https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1>`_
 #
-# .. image:: ../../examples/howto_B_preprocessing/terrain_meshing/terrain.png
+# .. image:: ../../examples/howto_preprocessing/terrain_meshing/terrain.png
 #
 
 # %% [markdown]
@@ -47,7 +47,7 @@ Terrain meshing
 # *z*-coordinate specified in the script. In addition it creates physical
 # groups for all bounding surfaces.
 #
-# .. image:: ../../examples/howto_B_preprocessing/terrain_meshing/gmsh.png
+# .. image:: ../../examples/howto_preprocessing/terrain_meshing/gmsh.png
 #
 # .. literalinclude:: ../../../ogstools/examples/mesh_terrain/gmsh_mesh.py
 #   :language: python
@@ -68,7 +68,7 @@ Terrain meshing
 #    createLayeredMeshFromRasters -i tri2d_mesh.vtu -o wedge3d_mesh.vtu -r layer_file_list
 #    Vtu2Grid -i wedge3d_mesh.vtu -o hex3d_mesh.vtu -x 0.4
 #
-# .. image:: ../../examples/howto_B_preprocessing/terrain_meshing/ogstools.png
+# .. image:: ../../examples/howto_preprocessing/terrain_meshing/ogstools.png
 #
 
 # %% [markdown]
@@ -85,7 +85,7 @@ Terrain meshing
 #
 # generates a structured mesh on the relief and extrudes it downwards to 3D.
 #
-# .. image:: ../../examples/howto_B_preprocessing/terrain_meshing/pyvista.png
+# .. image:: ../../examples/howto_preprocessing/terrain_meshing/pyvista.png
 #
 # .. literalinclude:: ../../../ogstools/examples/mesh_terrain/pyvista_mesh.py
 #   :language: python

@@ -33,7 +33,7 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 # %%
 # The preprocessing of logs remains consistent across all examples and
 # thoroughly explained in
-# :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_advanced.py`.
+# :ref:`sphx_glr_auto_examples_howto_advanced_plot_I_logparser_advanced.py`.
 
 log = log_const_viscosity_thermal_convection
 records = parse_file(log)
@@ -44,7 +44,7 @@ df_log = fill_ogs_context(df_records)
 # Analysis of iterations per time step
 # ------------------------------------
 # For detailed explanation, refer to:
-# :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_intro.py`.
+# :ref:`sphx_glr_auto_examples_howto_advanced_plot_G_logparser_intro.py`.
 # (Section: Use predefined analyses)
 #
 # :py:mod:`ogstools.logparser.analysis_time_step`

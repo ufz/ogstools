@@ -62,7 +62,7 @@ df_ts_it
 # -------------
 # The functions :py:mod:`ogstools.logparser.parse_file` and
 # :py:mod:`ogstools.logparser.fill_ogs_context` are explained in
-# :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_advanced.py`.
+# :ref:`sphx_glr_auto_examples_howto_advanced_plot_I_logparser_advanced.py`.
 # All predefined analyses need the result of fill_ogs_context.
 # Here `const_viscosity_thermal_convection_log` is string representing the
 # location of the ogs log file.
@@ -77,7 +77,7 @@ df_log = fill_ogs_context(df_records)
 # -----------------------
 # :py:mod:`ogstools.logparser.time_step_vs_iterations` is one of many predefined
 # analyses. All possibilities are shown here:
-# :ref:`sphx_glr_auto_examples_howto_logparser_plot_logparser_analyses.py`.
+# :ref:`sphx_glr_auto_examples_howto_advanced_plot_H_logparser_analyses.py`.
 #
 # Here we are interested in every time step of the simulation and how many
 # iterations have been needed.

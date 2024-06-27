@@ -11,5 +11,8 @@ It uses `pint` for unit conversion.
 
 ## Getting started
 
-- Examples demonstrating the usage of the propertylib can be found at: [](../auto_examples/howto_propertylib/index).
-- You can access the comprehensive API documentation at: [](../reference/ogstools.propertylib).
+Following examples demonstrate the usage of the propertylib:
+
+- [](../auto_examples/howto_postprocessing/plot_propertylib.rst).
+
+You can access the comprehensive API documentation at: [](../reference/ogstools.propertylib).

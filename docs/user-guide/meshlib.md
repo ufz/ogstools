@@ -13,5 +13,9 @@ A unique aspect of `meshlib` is its seamless integration with both pyvista and o
 
 ## Getting started
 
-- Examples demonstrating the usage of the meshlib can be found at: [](../auto_examples/howto_meshlib/index).
-- You can access the comprehensive API documentation at: [](../reference/ogstools.meshlib).
+Following examples demonstrate the usage of the meshlib:
+
+- [](../auto_examples/howto_preprocessing/plot_meshlib_pyvista_input.rst)
+- [](../auto_examples/howto_preprocessing/plot_meshlib_vtu_input.rst)
+
+You can access the comprehensive API documentation at: [](../reference/ogstools.meshlib).
