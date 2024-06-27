@@ -1,6 +1,6 @@
 """
 Logparser: Predefined Analyses
-===================
+==============================
 
 In this section, we showcase various predefined analyses available in the log parser.
 We utilize project files from the following benchmarks:

@@ -1,6 +1,6 @@
 """
-Advanced topics
-===============
+Logparser: Advanced topics
+==========================
 
 We address to following:
 

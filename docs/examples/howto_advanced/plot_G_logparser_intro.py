@@ -1,6 +1,6 @@
 """
 Logparser: Introduction
-============
+=======================
 
 This simple example demonstrates how to analyze the OGS (OpenGeoSys) log output to
 extract performance information regarding various computational parts of OGS.

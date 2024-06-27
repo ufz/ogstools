@@ -1,6 +1,6 @@
 """
 Feflowlib: Hydraulic model - conversion and simulation
-===========================================
+======================================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 

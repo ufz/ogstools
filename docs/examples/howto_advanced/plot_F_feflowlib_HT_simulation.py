@@ -1,6 +1,6 @@
 """
 Feflowlib: Hydro-thermal model - conversion and simulation
-===============================================
+==========================================================
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple hydro thermal FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
