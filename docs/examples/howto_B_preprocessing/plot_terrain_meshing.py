@@ -6,6 +6,14 @@ Terrain meshing
 
 """
 
+# %%
+
+# sphinx_gallery_start_ignore
+
+# sphinx_gallery_thumbnail_path = '_static/examples/preprocessing/terrain.png'
+
+# sphinx_gallery_end_ignore
+
 # %% [markdown]
 # Here we show different tools to mesh a minimum example of a terrain, given by
 # raster data. These are:
