@@ -6,11 +6,6 @@ Extract a 1D profile from 2D and plot it
 """
 
 # %%
-# 0. Setup and imports
-# --------------------
-
-# %%
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,7 +13,7 @@ import ogstools as ot
 from ogstools import examples
 
 # %% [markdown]
-# 1. Single fracture
+# Single fracture
 # ------------------
 # Define a profile line by providing a list of points in x, y, z coordinates
 # and load an example data set:
@@ -100,7 +95,7 @@ mesh_sp.head(5)
 
 
 # %% [markdown]
-# 2. Elder benchmark
+# Elder benchmark
 # ------------------
 # In this example we will use a Property object from the ogstools to
 # sample the data. This allows "sample_over_polyline" to automatically
@@ -133,7 +128,7 @@ fig, ax = mesh.plot_linesample_contourf(
 )
 
 # %% [markdown]
-# 3. THM
+# THM
 # ------
 # It is also possible to obtain more than one property at the same time using
 # more complex profiles. They can be constructed by providing more than

@@ -18,7 +18,7 @@ from pyvista.plotting import Plotter
 from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
-# 0. Introduction
+# Introduction
 # ----------------
 # This example shows the general usage of :py:mod:`ogstools.meshlib.gmsh_meshing.gen_bhe_mesh` and how some of
 # the parameters will effect the mesh. This section demonstrates the mesh
@@ -30,7 +30,7 @@ from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 # Feel free to try it out!
 
 # %% [markdown]
-# 1. Create a simple prism mesh
+# Create a simple prism mesh
 # --------------------------------
 # Generate a customizable prism BHE mesh:
 
@@ -89,7 +89,7 @@ p.add_axes()
 p.show()
 
 # %% [markdown]
-# 1. Create a simple structured mesh
+# Create a simple structured mesh
 # -----------------------------------
 # Generate a customizable structured BHE mesh:
 
@@ -148,7 +148,7 @@ p.add_axes()
 p.show()
 
 # %% [markdown]
-# 2. Create an advanced structured mesh
+# Create an advanced structured mesh
 # --------------------------------------
 # Generate a customizable structured BHE mesh with advanced mesh
 # sizing options (using gmsh). To understand the specific

@@ -22,7 +22,7 @@ from ogstools import examples
 mesh_property = ot.properties.temperature
 
 # %%
-# 0. Introduction
+# Introduction
 # ---------------
 # This example shows how to calculate differences between meshes.
 # It is possible to calculate the difference between multiple meshes at the same
@@ -30,7 +30,7 @@ mesh_property = ot.properties.temperature
 # 4 ways of calculating the difference are presented here.
 
 # %%
-# 1. Difference between two meshes
+# Difference between two meshes
 # --------------------------------
 # The simplest case is calculating the difference between two meshes. For this
 # example, we read two different timesteps from a MeshSeries. It is not required
@@ -59,7 +59,7 @@ mesh_diff = mesh1.difference(mesh2, mesh_property)
 print(f"Type of mesh_diff: {type(mesh_diff)}")
 
 # %% [markdown]
-# 2. Pairwise difference
+# Pairwise difference
 # ----------------------
 # In order to calculate pairwise differences, two lists or arrays of equal
 # length have to be provided as the input. They can contain an arbitrary number
@@ -102,7 +102,7 @@ print(f"Length of mesh_list2: {len(meshes_2)}")
 print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 
 # %% [markdown]
-# 3. Matrix difference - one array
+# Matrix difference - one array
 # --------------------------------
 # If only one list or array is provided, the differences between every possible
 # pair of objects in the array will be returned.
@@ -135,7 +135,7 @@ print(f"Length of mesh_list1: {len(mesh_list)}")
 print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 
 # %% [markdown]
-# 4. Matrix difference - two arrays of different length
+# Matrix difference - two arrays of different length
 # -----------------------------------------------------
 # Unlike difference_pairwise(), difference_matrix() can accept two lists/arrays
 # of different lengths. As in Section 3, the differences between all possible
