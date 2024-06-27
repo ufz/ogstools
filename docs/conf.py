@@ -11,6 +11,7 @@ from datetime import datetime
 
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
+from sphinx_gallery.sorting import FileNameSortKey
 
 import ogstools
 
@@ -143,6 +144,7 @@ sphinx_gallery_conf = {
     "image_scrapers": ("matplotlib", DynamicScraper()),
     "matplotlib_animations": True,
     "reset_modules": ("matplotlib", reset_plot_setup),
+    "within_subsection_order": FileNameSortKey,
 }
 
 # feflowlib is optional

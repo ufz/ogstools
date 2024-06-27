@@ -8,8 +8,6 @@ covered.
 .. toctree::
    :maxdepth: 3
 
-   ../examples/howto_mesh_terrain/index
-
 .. contents:: Contents
    :local:
    :depth: 3
