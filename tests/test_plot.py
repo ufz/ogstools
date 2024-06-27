@@ -190,26 +190,6 @@ class TestPlotting:
         fig.suptitle("Test user defined fig")
         plt.close()
 
-    def test_update_font_sizes(self):
-        """Test creating plot with subfigures and user provided fig"""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        ot.plot.setup.combined_colorbar = False
-        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
-        ot.plot.contourf(
-            [meshseries.read(0), meshseries.read(1)],
-            ot.properties.temperature,
-            fig=fig,
-        )
-        utils.update_font_sizes(fig=fig, fontsize=25)
-        utils.update_font_sizes(axes=ax, fontsize=25)
-        err_msg = "Neither Figure nor Axes was provided!"
-        with pytest.raises(ValueError, match=err_msg):
-            utils.update_font_sizes(fig=None, axes=None)
-        err_msg = "Please only provide a figure OR axes!"
-        with pytest.raises(ValueError, match=err_msg):
-            utils.update_font_sizes(fig=fig, axes=ax)
-        plt.close()
-
     def test_limit_plots(self):
         """Test creation of limit plots."""
         mesh = examples.load_meshseries_CT_2D_XDMF().aggregate("Si", "var")
@@ -305,6 +285,5 @@ class TestPlotting:
             profile_CT,
             resolution=100,
             plot_nodal_pts=True,
-            profile_plane=[0, 2],  # This profile is in XZ plane, not XY!
         )
         plt.close()

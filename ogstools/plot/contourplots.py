@@ -420,6 +420,15 @@ def contourf(
     elif ax is not None:
         ax.set_aspect(1.0 / ax_aspects[0])
     utils.update_font_sizes(
-        fontsize=kwargs.get("fontsize", setup.fontsize), fig=fig
+        fig.axes, fontsize=kwargs.get("fontsize", setup.fontsize)
     )
+    min_tick_length = setup.tick_length * 2.0 / 3.5  # mpl default
+    for ax in fig.axes:
+        ax.tick_params(
+            "both", which="major", pad=setup.tick_pad, length=setup.tick_length
+        )
+        ax.tick_params(
+            "both", which="minor", pad=setup.tick_pad, length=min_tick_length
+        )
+
     return fig

@@ -129,7 +129,7 @@ mesh_sp.head(5)
 
 # %%
 fig, ax = mesh.plot_linesample_contourf(
-    ot.properties.saturation, profile_CT, resolution=100, profile_plane=[0, 2]
+    ot.properties.saturation, profile_CT, resolution=100
 )
 
 # %% [markdown]
