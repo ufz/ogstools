@@ -11,5 +11,9 @@ runs.
 
 ## Getting started
 
-- Examples demonstrating the usage of the studies can be found at: [](../auto_examples/howto_studies/index).
-- You can access the comprehensive API documentation at: [](../reference/ogstools.studies).
+Following examples demonstrate the usage of the studies:
+
+- [](../auto_examples/howto_postprocessing/plot_convergence_study_steady_state_diffusion.rst)
+- [](../auto_examples/howto_postprocessing/plot_convergence_study_nuclear_decay.rst)
+
+You can access the comprehensive API documentation at: [](../reference/ogstools.studies).
