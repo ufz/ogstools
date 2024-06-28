@@ -1006,13 +1006,8 @@ def setup_prj_file(
         model.parameters.add_parameter(name="C0", type="Constant", value=0)
         if species_list is not None:
             for species in species_list:
-                if len(species_list) > 1:
-                    process_variable = "concentration_" + species
-                else:
-                    process_variable = "concentration"
-
                 model.processes.add_process_variable(
-                    process_variable=process_variable,
+                    process_variable="concentration",
                     process_variable_name=species,
                 )
                 model.process_variables.set_ic(
