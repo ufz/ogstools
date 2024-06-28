@@ -148,10 +148,10 @@ sphinx_gallery_conf = {
         [
             "examples/howto_quickstart",
             "examples/howto_preprocessing",
+            "examples/howto_simulation",
             "examples/howto_postprocessing",
             "examples/howto_plot",
-            "examples/howto_studies",
-            "examples/howto_advanced",
+            "examples/howto_conversions",
         ]
     ),
     "within_subsection_order": FileNameSortKey,
