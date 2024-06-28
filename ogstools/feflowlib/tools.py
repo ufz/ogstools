@@ -446,60 +446,6 @@ def _add_global_process_coupling_CT(
         )
 
 
-def _add_process(
-    model: ogs.OGS,
-    species: list,
-    time_stepping: list | None = None,
-    initial_time: int = 1,
-    end_time: int = 1,
-) -> None:
-    """
-    Add the section of the prj-file that defines the process in the time loop.
-
-    :param model: Model to setup prj-file, there the section of global process coupling will be added.
-    :param species: List of all species.
-    :param repeat_list: List of how often a time step should be repeated.
-    :param delta_t_list: List of how long a time stept should be.
-    :param initial_time: Beginning of the simulation time.
-    :param end_time: End of the simulation time.
-    """
-    for _i in range(len(species) + 1):
-        model.add_block(
-            blocktag="process",
-            block_attrib={"ref": "CT"},
-            parent_xpath="./time_loop/processes",
-            taglist=["nonlinear_solver"],
-            textlist=["basic_picard"],
-        )
-    model.add_block(
-        blocktag="convergence_criterion",
-        parent_xpath="./time_loop/processes/process",
-        taglist=["type", "norm_type", "reltol"],
-        textlist=["DeltaX", "NORM2", "1e-6"],
-    )
-    model.add_block(
-        blocktag="time_discretization",
-        parent_xpath="./time_loop/processes/process",
-        taglist=["type"],
-        textlist=["BackwardEuler"],
-    )
-    model.add_block(
-        blocktag="time_stepping",
-        parent_xpath="./time_loop/processes/process",
-        taglist=["type", "t_initial", "t_end", "timesteps"],
-        textlist=["FixedTimeStepping", str(initial_time), str(end_time), ""],
-    )
-    if time_stepping is None:
-        time_stepping = [(1, 1)]
-    for time_step in time_stepping:
-        model.add_block(
-            blocktag="pair",
-            parent_xpath="./time_loop/processes/process/time_stepping/timesteps",
-            taglist=["repeat", "delta_t"],
-            textlist=[str(time_step[0]), str(time_step[1])],
-        )
-
-
 def combine_material_properties(
     mesh: pv.UnstructuredGrid, properties_list: list
 ) -> defaultdict:
@@ -914,9 +860,6 @@ def materials_in_CT(
 class RequestParams(TypedDict):
     model: NotRequired[ogs.OGS]
     species_list: NotRequired[list | None]
-    initial_time: NotRequired[int]
-    end_time: NotRequired[int]
-    time_stepping: NotRequired[list]
     max_iter: NotRequired[int]
     rel_tol: NotRequired[float]
 
@@ -941,13 +884,6 @@ def setup_prj_file(
        * *species_list* (``list``) --
          All chemical species that occur in a model, if the model is to simulate a
          Component Transport (HC/CT) process.
-       * *initial_time* (``int``) --
-         Initial time for CT process.
-       * *end_time* (``int``) --
-         End time for CT process.
-       * *time_stepping* (``list[tuple]``) --
-         List of tuples with time steps. First entry is the repetition of the time step
-         and the second the length of the time step.
        * *max_iter* (``int``) --
          Maximal iterations of process coupling in a CT process.
        * *relative_tolerance* (``float``) --
@@ -959,9 +895,6 @@ def setup_prj_file(
     # ToDo: Make sure that no non-valid arguments are chosen!
     model = kwargs.get("model", None)
     species_list = kwargs.get("species_list", None)
-    initial_time = kwargs.get("initial_time", 1)
-    end_time = kwargs.get("end_time", 1)
-    time_stepping = kwargs.get("time_stepping", None)
     max_iter = kwargs.get("max_iter", 1)
     rel_tol = kwargs.get("rel_tol", 1e-10)
     prjfile = bulk_mesh_path.with_suffix(".prj")
@@ -1150,13 +1083,6 @@ def setup_prj_file(
         assert species_list is not None
         materials_in_CT(material_properties, species_list, model)
         _add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
-        _add_process(
-            model,
-            species_list,
-            time_stepping=time_stepping,
-            initial_time=initial_time,
-            end_time=end_time,
-        )
     else:
         msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
         raise ValueError(msg)
