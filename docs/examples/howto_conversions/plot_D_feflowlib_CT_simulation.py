@@ -70,6 +70,11 @@ CT_model = component_transport(
     model=prjfile,
     dimension=2,
     fixed_out_times=[48384000],
+    initial_time=0,
+    end_time=int(4.8384e07),
+    time_stepping=list(
+        zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
+    ),
 )
 # Include the mesh specific configurations to the template.
 model = setup_prj_file(
@@ -79,11 +84,6 @@ model = setup_prj_file(
     process="component transport",
     species_list=species,
     model=CT_model,
-    initial_time=0,
-    end_time=4.8384e07,
-    time_stepping=list(
-        zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
-    ),
     max_iter=6,
     rel_tol=1e-14,
 )

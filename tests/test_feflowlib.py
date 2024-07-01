@@ -339,7 +339,7 @@ class TestConverter:
             str(self.temp_dir / "boxNeumann_.prj")
         ).getroot()
         elements = list(prjfile_root)
-        assert len(elements) == 9
+        assert len(elements) == 8
         # Test if the meshes are correct
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
@@ -479,6 +479,11 @@ class TestSimulation_CT:
                 14515200,
                 48384000,
             ],
+            initial_time=0,
+            end_time=int(4.8384e07),
+            time_stepping=list(
+                zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
+            ),
         )
         model = setup_prj_file(
             self.temp_dir / "CT_2D_line.vtu",
@@ -487,11 +492,6 @@ class TestSimulation_CT:
             "component transport",
             species_list=species,
             model=model,
-            initial_time=0,
-            end_time=4.8384e07,
-            time_stepping=list(
-                zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
-            ),
             max_iter=6,
             rel_tol=1e-14,
         )
