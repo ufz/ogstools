@@ -16,6 +16,7 @@ _feflow_dir = EXAMPLES_DIR / "feflow"
 _logs_dir = EXAMPLES_DIR / "logs"
 _prj_dir = EXAMPLES_DIR / "prj"
 _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
+_shp_dir = EXAMPLES_DIR / "shapefiles"
 
 
 def load_meshseries_THM_2D_PVD():
@@ -73,3 +74,5 @@ surface_paths = [
     _surface_dir / (file + ".vtu")
     for file in ["00_KB", "01_q", "02_krl", "03_S3", "04_krp"]
 ]
+
+test_shapefile = _shp_dir / "test_shape.shp"
