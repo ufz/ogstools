@@ -123,11 +123,11 @@ If you want to link to a gallery page from another page use the following syntax
 In order to maintain consistency in style and structure between different
 examples, please follow those recommendations when creating a new one:
 
-1. All imports and global settings must be done in first python block.
-1. No heading for import and settings cell.
-1. Examples that cover multiple steps and/or datasets must contain section.
-1. Sections have to be give a title, indicated by highest level heading.
-1. Section titles cannot start with ordinal number or letter (no 1./I./A. Example section title)
+- All imports and global settings must be done in first python block.
+- No heading for import and settings cell.
+- Examples that cover multiple steps and/or datasets must contain section.
+- Sections have to be give a title, indicated by highest level heading.
+- Section titles cannot start with ordinal number or letter (no 1./I./A. Example section title)
 
 ### Further information
 
