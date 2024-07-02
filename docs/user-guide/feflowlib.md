@@ -147,4 +147,9 @@ Further information can be found at: [](../reference/ogstools.feflowlib).
 
 ## Example
 
-An example of how the API can be used is given at: [](../auto_examples/howto_feflowlib/index).
+Following examples demonstrate the usage of the feflowlib::
+
+- [](../auto_examples/howto_conversions/plot_C_feflowlib_2layers_model.rst)
+- [](../auto_examples/howto_conversions/plot_D_feflowlib_CT_simulation.rst)
+- [](../auto_examples/howto_conversions/plot_E_feflowlib_H_simulation.rst)
+- [](../auto_examples/howto_conversions/plot_F_feflowlib_HT_simulation.rst)

@@ -1,6 +1,6 @@
 """
-Convergence study (spatial refinement)
-======================================
+Spatial refinement - steady state diffusion
+===========================================
 
 This example shows one possible implementation of how to do a convergence study.
 It uses the project file from the following benchmark with multiple

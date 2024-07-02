@@ -10,5 +10,8 @@ the temperature process variable.
 
 ## Getting started
 
-- Examples demonstrating the usage of the nuclearwasteheat can be found at: [](../auto_examples/howto_nuclearwasteheat/index).
-- You can access the comprehensive API documentation at: [](../reference/ogstools.physics.nuclearwasteheat).
+Following examples demonstrate the usage of the nuclearwasteheat:
+
+- [](../auto_examples/howto_postprocessing/plot_nuclearwasteheat.rst).
+
+You can access the comprehensive API documentation at: [](../reference/ogstools.physics.nuclearwasteheat).

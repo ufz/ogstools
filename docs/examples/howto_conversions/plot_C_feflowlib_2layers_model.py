@@ -1,6 +1,6 @@
 """
-How to work with FEFLOW data in pyvista.
-========================================
+Feflowlib: How to work with FEFLOW data in pyvista.
+===================================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 

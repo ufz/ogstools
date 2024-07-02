@@ -11,6 +11,7 @@ from datetime import datetime
 
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 import ogstools
 
@@ -143,6 +144,17 @@ sphinx_gallery_conf = {
     "image_scrapers": ("matplotlib", DynamicScraper()),
     "matplotlib_animations": True,
     "reset_modules": ("matplotlib", reset_plot_setup),
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/howto_quickstart",
+            "examples/howto_preprocessing",
+            "examples/howto_simulation",
+            "examples/howto_postprocessing",
+            "examples/howto_plot",
+            "examples/howto_conversions",
+        ]
+    ),
+    "within_subsection_order": FileNameSortKey,
 }
 
 # feflowlib is optional
@@ -154,7 +166,7 @@ except ImportError:
         ["reference/ogstools.feflowlib.*", "user-guide/feflowlib*"]
     )
     apidoc_excluded_paths.append("../**/feflowlib/**")
-    sphinx_gallery_conf["ignore_pattern"] = r".*feflowlib/.*"
+    sphinx_gallery_conf["ignore_pattern"] = r".*_feflowlib_*"
 
 
 suppress_warnings = ["config.cache"]

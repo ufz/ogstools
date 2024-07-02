@@ -1,11 +1,13 @@
 Examples
 ========
 
-.. toctree::
-   :maxdepth: 1
+On this page you will find practical examples of using various features of
+how ogstools can be used. Different stages of the simulation workflow are
+covered.
 
-   ../examples/howto_mesh_terrain/index
+.. toctree::
+   :maxdepth: 3
 
 .. contents:: Contents
    :local:
-   :depth: 2
+   :depth: 3

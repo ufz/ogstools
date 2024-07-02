@@ -168,3 +168,6 @@ cython_debug/
 
 # ignore jupyter notebooks in main folder (useful for testing, annoying for git)
 /**.ipynb
+
+# Ignore file created by running webpage preview locally
+docs/sg_execution_times.rst

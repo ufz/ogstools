@@ -30,7 +30,7 @@ si = ot.properties.saturation
 #
 # You can also use a property from the available presets instead of needing to
 # create your own:
-# :ref:`sphx_glr_auto_examples_howto_propertylib_plot_propertylib.py`
+# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_propertylib.py`
 
 # %% [markdown]
 # You aggregate the data in MeshSeries over all timesteps given some
