@@ -4,6 +4,14 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from .meshing import geodataframe_meshing, prepare_shp_for_meshing
+from .meshing import (
+    geodataframe_meshing,
+    prepare_shp_for_meshing,
+    create_pyvista_mesh,
+)
 
-__all__ = ["geodataframe_meshing", "prepare_shp_for_meshing"]
+__all__ = [
+    "geodataframe_meshing",
+    "prepare_shp_for_meshing",
+    "create_pyvista_mesh",
+]
