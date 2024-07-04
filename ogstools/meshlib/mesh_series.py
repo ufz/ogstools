@@ -91,7 +91,9 @@ class MeshSeries:
         _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
             timestep
         )
-        meshio_mesh = meshio.Mesh(points, cells, point_data, cell_data)
+        meshio_mesh = meshio.Mesh(
+            points, cells, point_data, cell_data, field_data
+        )
         return pv.from_meshio(meshio_mesh)
 
     def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:

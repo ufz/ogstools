@@ -419,6 +419,8 @@ def contourf(
             _ax.set_aspect(1.0 / aspect)
     elif ax is not None:
         ax.set_aspect(1.0 / ax_aspects[0])
+    if fig is None:
+        return None
     utils.update_font_sizes(
         fig.axes, fontsize=kwargs.get("fontsize", setup.fontsize)
     )
