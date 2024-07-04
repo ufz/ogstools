@@ -319,6 +319,7 @@ class MeshSeries:
 
         :returns:   `numpy` array of interpolated data at observation points.
         """
+        points = np.asarray(points).reshape((-1, 3))
         if self._data_type == "xdmf":
             assert interp_method != "probefilter"
             return self._probe_xdmf(points, data_name, interp_method)
@@ -360,9 +361,7 @@ class MeshSeries:
 
             :returns:   A matplotlib Figure
         """
-        points = np.asarray(points)
-        if len(points.shape) == 1:
-            points = points[np.newaxis]
+        points = np.asarray(points).reshape((-1, 3))
         mesh_property = get_preset(mesh_property, self.read(0))
         values = mesh_property.magnitude.transform(
             self.probe(
