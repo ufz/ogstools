@@ -56,19 +56,27 @@ def identity(vals: T) -> T:
     return vals
 
 
-def sym_tensor_to_mat(vals: np.ndarray) -> np.ndarray:
+def sym_tensor_to_mat(values: ValType) -> ValType:
     "Convert an symmetric tensor to a 3x3 matrix."
+    vals, unit = _split_quantity(values)
     assert np.shape(vals)[-1] in [4, 6]
     shape = list(np.shape(vals))[:-1] + [3, 3]
     mat = np.zeros(shape)
-    idx = np.asarray([[0, 0], [1, 1], [2, 2], [0, 1], [1, 2], [0, 2]])
-    for i in range(np.shape(vals)[-1]):
-        mat[..., idx[i, 0], idx[i, 1]] = vals[..., i]
-    return mat
+    mat[..., 0, 0] = vals[..., 0]
+    mat[..., 1, 1] = vals[..., 1]
+    mat[..., 2, 2] = vals[..., 2]
+    mat[..., 0, 1] = vals[..., 3]
+    mat[..., 1, 0] = vals[..., 3]
+    if np.shape(vals)[-1] == 6:
+        mat[..., 0, 2] = vals[..., 4]
+        mat[..., 2, 0] = vals[..., 4]
+        mat[..., 1, 2] = vals[..., 5]
+        mat[..., 2, 1] = vals[..., 5]
+    return _to_quantity(mat, unit)
 
 
 def trace(values: ValType) -> ValType:
-    """Return the trace.
+    """Return the trace of the given symmetric tensor.
 
     :math:`tr(\\mathbf{\\sigma}) = \\sum\\limits_{i=1}^3 \\sigma_{ii}`
     """
@@ -76,10 +84,19 @@ def trace(values: ValType) -> ValType:
     return _to_quantity(np.sum(vals[..., :3], axis=-1), unit)
 
 
+def matrix_trace(values: ValType) -> ValType:
+    """Return the trace of the given matrix.
+
+    :math:`tr(\\mathbf{\\sigma}) = \\sum\\limits_{i=1}^3 \\sigma_{ii}`
+    """
+    vals, unit = _split_quantity(values)
+    return _to_quantity(np.trace(vals, axis1=-2, axis2=-1), unit)
+
+
 def eigenvalues(values: ValType) -> ValType:
     "Return the eigenvalues."
-    vals, unit = _split_quantity(values)
-    eigvals: np.ndarray = LA.eigvals(sym_tensor_to_mat(vals))
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    eigvals: np.ndarray = LA.eigvals(mat_vals)
     eigvals.sort(axis=-1)
     assert np.all(eigvals[..., 0] <= eigvals[..., 1])
     assert np.all(eigvals[..., 1] <= eigvals[..., 2])
@@ -88,8 +105,8 @@ def eigenvalues(values: ValType) -> ValType:
 
 def eigenvectors(values: ValType) -> ValType:
     "Return the eigenvectors."
-    vals, unit = _split_quantity(values)
-    eigvals, eigvecs = LA.eig(sym_tensor_to_mat(vals))
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    eigvals, eigvecs = LA.eig(mat_vals)
     ids = eigvals.argsort(axis=-1)
     eigvals = np.take_along_axis(eigvals, ids, axis=-1)
     eigvecs = np.take_along_axis(eigvecs, ids[:, np.newaxis], axis=-1)
@@ -100,8 +117,10 @@ def eigenvectors(values: ValType) -> ValType:
 
 def det(values: ValType) -> ValType:
     "Return the determinants."
-    vals, unit = _split_quantity(values)
-    return _to_quantity(np.linalg.det(sym_tensor_to_mat(vals)), unit)
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    if unit is not None:
+        unit *= unit
+    return _to_quantity(np.linalg.det(mat_vals), unit)
 
 
 def frobenius_norm(values: ValType) -> ValType:
@@ -109,10 +128,8 @@ def frobenius_norm(values: ValType) -> ValType:
 
     :math:`||\\mathbf{\\sigma}||_F = \\sqrt{ \\sum\\limits_{i=1}^m \\sum\\limits_{j=1}^n |\\sigma_{ij}|^2 }`
     """
-    vals, unit = _split_quantity(values)
-    return _to_quantity(
-        np.linalg.norm(sym_tensor_to_mat(vals), axis=(-2, -1)), unit
-    )
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    return _to_quantity(np.linalg.norm(mat_vals, axis=(-2, -1)), unit)
 
 
 def invariant_1(values: ValType) -> ValType:
@@ -128,7 +145,8 @@ def invariant_2(values: ValType) -> ValType:
 
     :math:`I2 = \\frac{1}{2} \\left[(tr(\\mathbf{\\sigma}))^2 - tr(\\mathbf{\\sigma}^2) \\right]`
     """
-    return 0.5 * (trace(values) ** 2 - trace(values**2))
+    mat_vals = sym_tensor_to_mat(values)
+    return 0.5 * (trace(values) ** 2 - matrix_trace(mat_vals @ mat_vals))
 
 
 def invariant_3(values: ValType) -> ValType:
@@ -188,7 +206,8 @@ def deviator_invariant_2(values: ValType) -> ValType:
 
     :math:`J2 = \\frac{1}{2} tr(\\mathbf{s}^2)`
     """
-    return 0.5 * trace(deviator(values) ** 2)
+    mat_dev = sym_tensor_to_mat(deviator(values))
+    return 0.5 * matrix_trace(mat_dev @ mat_dev)
 
 
 def deviator_invariant_3(values: ValType) -> ValType:
@@ -196,7 +215,8 @@ def deviator_invariant_3(values: ValType) -> ValType:
 
     :math:`J3 = \\frac{1}{3} tr(\\mathbf{s}^3)`
     """
-    return (1.0 / 3.0) * trace(deviator(values) ** 3)
+    mat_dev = sym_tensor_to_mat(deviator(values))
+    return (1.0 / 3.0) * matrix_trace(mat_dev @ mat_dev @ mat_dev)
 
 
 def octahedral_shear(values: ValType) -> ValType:
