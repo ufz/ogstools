@@ -69,7 +69,7 @@ def rect(
         top_tag = abs(newEntities[0][1])
         plane_tag = abs(newEntities[1][1])
         layer_name = f"Layer {n}" if n_layers > 1 else name
-        tag = -1 if n != 0 else 0
+        tag = -1 if n_layers > 1 else 0
         gmsh.model.addPhysicalGroup(
             dim=2, tags=[plane_tag], name=layer_name, tag=tag
         )
@@ -168,7 +168,7 @@ def cuboid(
         top_tag = abs(newEntities[0][1])
         vol_tag = abs(newEntities[1][1])
         layer_name = f"Layer {n}" if n_layers > 1 else name
-        tag = -1 if n != 0 else 0
+        tag = -1 if n_layers > 1 else 0
         gmsh.model.addPhysicalGroup(
             dim=3, tags=[vol_tag], name=layer_name, tag=tag
         )
