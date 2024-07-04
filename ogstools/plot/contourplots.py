@@ -7,6 +7,7 @@
 """Plotting core utilitites."""
 
 import warnings
+from math import nextafter
 from typing import Any
 
 import numpy as np
@@ -33,7 +34,10 @@ def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
 
     If all values in ticks are too close together offset notation is used.
     """
-    if median_exponent(ticks) >= 3 + median_exponent(ticks[-1] - ticks[0]):
+    if (
+        median_exponent(ticks) >= 3 + median_exponent(ticks[-1] - ticks[0])
+        and nextafter(ticks[0], np.inf) != ticks[-1]
+    ):
         # use offset notation
         label_lens = np.asarray([len(str(tick)) for tick in ticks])
         offset = ticks[np.argmin(label_lens)]
@@ -45,7 +49,12 @@ def get_ticklabels(ticks: np.ndarray) -> tuple[list[str], str | None]:
         )
 
     for precision in [1, 2, 3, 4]:
-        fmt = "f" if abs(median_exponent(ticks - offset)) <= 2 else "e"
+        fmt = (
+            "f"
+            if abs(median_exponent(ticks - offset)) <= 2
+            or nextafter(ticks[0], np.inf) == ticks[-1]
+            else "e"
+        )
         tick_labels: list[str] = [
             f"{0.0 + tick:.{precision}{fmt}}" for tick in ticks - offset
         ]
@@ -92,6 +101,7 @@ def add_colorbars(
         location=kwargs.get("cb_loc", "right"),
         spacing="uniform",
         pad=kwargs.get("cb_pad", 0.05),
+        extendrect=True,
     )
     # Formatting the colorbar label and ticks
 
