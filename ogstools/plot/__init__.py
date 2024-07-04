@@ -18,6 +18,7 @@ __all__ = [
     "compute_levels",
     "contourf",
     "outline",
+    "plot_time_slice",
     "quiver",
     "setup",
     "shape_on_top",
