@@ -1,5 +1,4 @@
 from pathlib import Path
-from tempfile import mkdtemp
 from typing import TypeVar
 
 import numpy as np
@@ -190,14 +189,18 @@ def tessellate(
 
 def to_ip_point_cloud(mesh: Mesh) -> Mesh:
     "Convert integration point data to a pyvista point cloud."
-    if mesh.filepath is None:
-        filepath = Path(mkdtemp()) / "mesh.vtu"
-        mesh.save(filepath)
-    else:
-        filepath = mesh.filepath
-    ip_mesh_path = filepath.parent / "ip_mesh.vtu"
-    ogs.cli.ipDataToPointCloud(i=str(filepath), o=str(ip_mesh_path))
-    return pv.XMLUnstructuredGridReader(ip_mesh_path).read()
+    # ipDataToPointCloud can't handle this
+    bad_keys = [SPATIAL_UNITS_KEY, "material_state_variable_ElasticStrain_ip"]
+    _mesh = mesh.copy()
+    for key in bad_keys:
+        if key in _mesh.field_data:
+            _mesh.field_data.remove(key)
+    filepath = Path() if _mesh.filepath is None else _mesh.filepath.parent
+    input_file = filepath / "ipDataToPointCloud_input.vtu"
+    _mesh.save(input_file)
+    output_file = filepath / "ip_mesh.vtu"
+    ogs.cli.ipDataToPointCloud(i=str(input_file), o=str(output_file))
+    return pv.XMLUnstructuredGridReader(output_file).read()
 
 
 def to_ip_mesh(mesh: Mesh) -> Mesh:

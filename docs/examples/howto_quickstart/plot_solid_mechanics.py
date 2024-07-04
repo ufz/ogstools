@@ -16,7 +16,7 @@ stress analysis:
 
 # sphinx_gallery_start_ignore
 
-# sphinx_gallery_thumbnail_number = -1
+# sphinx_gallery_thumbnail_number = -3
 
 # sphinx_gallery_end_ignore
 

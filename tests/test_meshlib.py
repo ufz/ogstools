@@ -263,7 +263,7 @@ class TestUtils:
                 out_name=mesh_path,
                 mixed_elements=mixed,
             )
-            msh2vtu(mesh_path, tmp_path, log_level="ERROR")
+            msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
 
             model = ogs.OGS(
                 PROJECT_FILE=tmp_path / "default.prj",

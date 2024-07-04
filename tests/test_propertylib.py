@@ -57,11 +57,11 @@ class TestPhysicalProperty:
 
     def test_strain(self):
         """Test strain property."""
-        eps = np.array([1, 3, 9, 1, 2, 2]) * 1e-2
+        eps = np.array([1, 5, 8, 1, 0, 2]) * 1e-2
         self.equality(pp.strain.magnitude, eps, Qty(10, "%"))
         self.equality(pp.strain.magnitude, [eps, eps], Qty([10, 10], "%"))
-        self.equality(pp.strain.trace, eps, Qty(13, "%"))
-        self.equality(pp.strain.trace, [eps, eps], Qty([13, 13], "%"))
+        self.equality(pp.strain.trace, eps, Qty(14, "%"))
+        self.equality(pp.strain.trace, [eps, eps], Qty([14, 14], "%"))
 
     def test_components(self):
         """Test strain components."""
@@ -77,11 +77,11 @@ class TestPhysicalProperty:
 
     def test_von_mises(self):
         """Test von_mises_stress property."""
-        sig_3D = np.array([3, 1, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.von_Mises, sig_3D, Qty(2, "MPa"))
-        self.equality(pp.stress.von_Mises, [sig_3D, sig_3D], Qty([2, 2], "MPa"))
-        sig_2D = np.array([2, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.von_Mises, sig_2D, Qty(1, "MPa"))
+        sig_3D = np.array([2, 2, 2, 1, 1, 1]) * 1e6
+        self.equality(pp.stress.von_Mises, sig_3D, Qty(3, "MPa"))
+        self.equality(pp.stress.von_Mises, [sig_3D, sig_3D], Qty([3, 3], "MPa"))
+        sig_2D = np.array([2, 2, 2, 3**0.5]) * 1e6
+        self.equality(pp.stress.von_Mises, sig_2D, Qty(3, "MPa"))
 
     def test_eff_pressure(self):
         """Test effective_pressure property."""
@@ -91,9 +91,9 @@ class TestPhysicalProperty:
 
     def test_qp_ratio(self):
         """Test qp_ratio property."""
-        sig = np.array([4, 4, 1, 1, 1, 1]) * 1e6
-        self.equality(pp.stress.qp_ratio, sig, Qty(-100, "percent"))
-        self.equality(pp.stress.qp_ratio, [sig] * 2, Qty([-100] * 2, "percent"))
+        sig = np.array([4, 4, 4, 1, 1, 1]) * 1e6
+        self.equality(pp.stress.qp_ratio, sig, Qty(-75, "percent"))
+        self.equality(pp.stress.qp_ratio, [sig] * 2, Qty([-75] * 2, "percent"))
 
     def test_integrity_criteria(self):
         """Test integrity criteria."""

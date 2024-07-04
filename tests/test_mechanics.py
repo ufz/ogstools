@@ -1,6 +1,5 @@
 """Unit tests for solid mechanics."""
 
-
 import numpy as np
 from parameterized import parameterized
 
@@ -74,11 +73,12 @@ class TestMechanics:
     def test_deviator_invariant_2(self, symten_len: int):
         """Test second deviator invariant."""
         sig = self.generate_random_sig(symten_len)
+        mat_sig = tensor_math.sym_tensor_to_mat(sig)
         assert_allclose(
             tensor_math.deviator_invariant_2(sig),
             0.5
             * (
-                tensor_math.trace(sig**2)
+                tensor_math.matrix_trace(mat_sig @ mat_sig)
                 - (1.0 / 3.0) * tensor_math.trace(sig) ** 2
             ),
         )
@@ -87,20 +87,14 @@ class TestMechanics:
     def test_deviator_invariant_3(self, symten_len: int):
         """Test third deviator invariant."""
         sig = self.generate_random_sig(symten_len)
-        # not exactly sure why, but for stresses where the below condition
-        # is very close to zero, the error of this test shoots up.
-        # Probably some floating point precision issue.
-        mask = (
-            np.abs(tensor_math.trace(sig - tensor_math.mean(sig)[..., None]))
-            > 1e-9
-        )
-        sig = sig[mask]
+        mat_sig = tensor_math.sym_tensor_to_mat(sig)
         assert_allclose(
             tensor_math.deviator_invariant_3(sig),
             (1.0 / 3.0)
             * (
-                tensor_math.trace(sig**3)
-                - tensor_math.trace(sig**2) * tensor_math.trace(sig)
+                tensor_math.matrix_trace(mat_sig @ mat_sig @ mat_sig)
+                - tensor_math.matrix_trace(mat_sig @ mat_sig)
+                * tensor_math.trace(sig)
                 + (2.0 / 9.0) * tensor_math.trace(sig) ** 3.0
             ),
         )

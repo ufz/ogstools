@@ -69,11 +69,14 @@ def compute_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     if lower == upper:
         return np.asarray([lower, nextafter(lower, np.inf)])
     result = nice_range(lower, upper, n_ticks)
-    return np.unique(
+    levels = np.unique(
         adaptive_rounding(
             np.append(np.append(lower, result), upper), precision=3
         )
     )
+    if levels[0] == levels[-1]:
+        return np.array([levels[0], nextafter(levels[0], np.inf)])
+    return levels
 
 
 def median_exponent(vals: np.ndarray) -> int:
@@ -113,7 +116,7 @@ def combined_levels(
     vmin = vmin if VMIN is None else VMIN
     vmax = vmax if VMAX is None else VMAX
     if vmin == vmax:
-        return np.array([vmin, vmax + 1e-12])
+        return np.array([vmin, nextafter(vmax, np.inf)])
     if (
         all(val.is_integer() for val in unique_vals)
         and VMIN is None

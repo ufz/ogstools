@@ -37,7 +37,7 @@ def rect(
     structured_grid: bool = True,
     order: int = 1,
     mixed_elements: bool = False,
-    out_name: Path = Path("rect.msh"),
+    out_name: Path | str = Path("rect.msh"),
     msh_version: float | None = None,
 ) -> None:
     gmsh.initialize()
@@ -63,13 +63,13 @@ def rect(
             dx=0,
             dy=dy / n_layers,
             dz=0,
-            numElements=[ny],
+            numElements=[ny] if structured_grid else [],
             recombine=recombine,  # fmt: skip
         )
         top_tag = abs(newEntities[0][1])
         plane_tag = abs(newEntities[1][1])
         layer_name = f"Layer {n}" if n_layers > 1 else name
-        tag = -1 if n != 0 else 0
+        tag = -1 if n_layers > 1 else 0
         gmsh.model.addPhysicalGroup(
             dim=2, tags=[plane_tag], name=layer_name, tag=tag
         )
@@ -83,6 +83,9 @@ def rect(
 
     gmsh.model.geo.synchronize()
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    if not structured_grid:
+        gmsh.option.setNumber("Mesh.MeshSizeMin", dx / nx)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", dx / nx)
     gmsh.model.mesh.generate(dim=2)
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
@@ -162,13 +165,13 @@ def cuboid(
             dx=0,
             dy=0,
             dz=dz / n_layers,
-            numElements=[nz],
+            numElements=[nz] if structured_grid else [],
             recombine=recombine,  # fmt: skip
         )
         top_tag = abs(newEntities[0][1])
         vol_tag = abs(newEntities[1][1])
         layer_name = f"Layer {n}" if n_layers > 1 else name
-        tag = -1 if n != 0 else 0
+        tag = -1 if n_layers > 1 else 0
         gmsh.model.addPhysicalGroup(
             dim=3, tags=[vol_tag], name=layer_name, tag=tag
         )
@@ -187,6 +190,13 @@ def cuboid(
     gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(dim=3)
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    if not structured_grid:
+        gmsh.option.setNumber(
+            "Mesh.MeshSizeMin", _lengths[0] / _n_edge_cells[0]
+        )
+        gmsh.option.setNumber(
+            "Mesh.MeshSizeMax", _lengths[0] / _n_edge_cells[0]
+        )
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
     gmsh.finalize()

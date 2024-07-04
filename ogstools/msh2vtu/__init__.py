@@ -351,7 +351,11 @@ def msh2vtu(
             for physical_group in field_data.values()
             if physical_group[GEO_INDEX] == domain_dim
         ]
-        id_offset = min(id_list_domains, default=0) if reindex else 0
+        id_offset = (
+            min(id_list_domains, default=0)
+            if reindex and len(id_list_domains) > 1
+            else 0
+        )
 
     else:
         logging.info("No physical groups found.")
