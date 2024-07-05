@@ -232,7 +232,7 @@ def get_cmap_norm(
         boundaries=boundaries,
         ncolors=len(boundaries) + 1,
         clip=False,
-        extend=extend,
+        extend=extend,  # type: ignore[arg-type]
     )
     return cmap, norm
 

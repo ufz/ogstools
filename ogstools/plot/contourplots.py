@@ -114,7 +114,9 @@ def add_colorbars(
             cb_label += " - " + offset
     if kwargs.get("log_scaled", setup.log_scaled):
         cb_label = f"log$_{{10}}$( {cb_label} )"
-    labelsize = kwargs.get("cb_labelsize", setup.fontsize)
+    labelsize = kwargs.get(
+        "cb_labelsize", kwargs.get("fontsize", setup.fontsize)
+    )
     cb.set_label(cb_label, size=labelsize)
 
     # special formatting for MaterialIDs
@@ -389,7 +391,7 @@ def contourf(
     For 2D, the whole domain, for 3D a set of slices is displayed.
 
     :param meshes:      Singular mesh of 2D numpy array of meshes
-    :param property:    The property field to be visualized on all meshes
+    :param mesh_property:   The property field to be visualized on all meshes
     :param fig:         matplotlib figure to use for plotting
     :param ax:          matplotlib axis to use for plotting
     :Keyword Arguments:
