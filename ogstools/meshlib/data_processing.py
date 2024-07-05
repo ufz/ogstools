@@ -147,24 +147,19 @@ def interp_points(points: np.ndarray, resolution: int = 100) -> np.ndarray:
     :returns: Numpy array of shape (N, 3), without duplicated nodal points.
     """
     profile = np.zeros([0, 3])
-
-    # Get total length of the profile:
-    diffs = np.diff(points, axis=0)
-    distances = np.linalg.norm(diffs, axis=1)
+    distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
 
     npoints_per_segment = np.ceil(
-        (distances / np.sum(distances)) * resolution
+        distances / np.sum(distances) * resolution
     ).astype(int)
 
     for index in range(len(points) - 1):
-        vector = points[index + 1] - points[index]
-        interp = np.linspace(0, 1, npoints_per_segment[index], endpoint=False)
-        new_seg_points = (
-            points[index][:, None] + vector[:, None] @ interp[None, :]
+        new_seg_points = np.linspace(
+            points[index], points[index + 1], npoints_per_segment[index], False
         )
-        profile = np.vstack([profile, new_seg_points.T])
+        profile = np.vstack([profile, new_seg_points])
 
-    return np.vstack([profile, points[-1, :]])
+    return np.vstack([profile, points[-1]])
 
 
 @typechecked
@@ -181,34 +176,27 @@ def distance_in_segments(
     :return: 1D array of distances in each segment to its starting point \
         of shape (N, 3), where N is the number of points in profile
     """
-    # Get distances within the segment
-    point_index = []
-    for point in profile_nodes:
-        point_index.append(np.sum(np.abs(profile - point), axis=1).argmin())
+    point_index = [
+        np.argmin(np.sum(np.abs(profile - pt), axis=1)) for pt in profile_nodes
+    ]
     if not (point_index[0] == 0 and point_index[-1] == profile.shape[0] - 1):
         err_msg = "Something went wrong with generating profile_points!"
         raise ValueError(err_msg)
-    sampled_data_dist_in_segment = np.zeros(
-        [
-            profile.shape[0],
-        ]
-    )
+    dist_in_segment = np.zeros([profile.shape[0]])
     for pt_id in range(len(point_index) - 1):
         dist_current_segment = (
-            profile[point_index[pt_id] : point_index[pt_id + 1], :]
+            profile[point_index[pt_id] : point_index[pt_id + 1]]
             - profile[point_index[pt_id]]
         )
         dist_current_segment = np.linalg.norm(dist_current_segment, axis=1)
-        sampled_data_dist_in_segment[
+        dist_in_segment[
             point_index[pt_id] : point_index[pt_id + 1],
         ] = dist_current_segment
 
     # Handle last point
-    dist_last_point = profile[-1, :] - profile_nodes[-2, :]
-    dist_last_point = np.linalg.norm(dist_last_point)
-    sampled_data_dist_in_segment[-1] = dist_last_point
+    dist_in_segment[-1] = np.linalg.norm(profile[-1] - profile_nodes[-2])
 
-    return sampled_data_dist_in_segment
+    return dist_in_segment
 
 
 @typechecked
@@ -219,9 +207,9 @@ def distance_in_profile(points: np.ndarray) -> np.ndarray:
     :return: 1D array of distances of each point to the beginning of the \
           profile (first row in points), shape of (N,)
     """
-    diffs = np.diff(points, axis=0)
-    distances = np.linalg.norm(diffs, axis=1)
-    return np.concatenate(([0], np.cumsum(distances)))
+    return np.concatenate(
+        ([0], np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1)))
+    )
 
 
 def sample_polyline(

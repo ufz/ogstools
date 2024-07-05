@@ -53,6 +53,15 @@ class TestUtils:
             data_name = ot.properties.dilatancy_alkan.output_name + "_" + func
             assert not np.any(np.isnan(agg_mesh[data_name]))
 
+    def test_time_slice(self):
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
+        points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
+        mesh_series.plot_time_slice("temperature", points, levels=[78, 79, 80])
+        mesh_series.plot_time_slice(
+            "temperature", points, y_axis="y", interpolate=False, time_unit="h",
+            time_logscale=True, cb_loc="left", dpi=50, fontsize=10
+        )  # fmt: skip
+
     def test_probe_pvd(self):
         "Test point probing on pvd."
         mesh_series = examples.load_meshseries_THM_2D_PVD()

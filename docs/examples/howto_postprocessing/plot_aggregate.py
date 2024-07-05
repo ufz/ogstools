@@ -1,6 +1,6 @@
 """
-Analyzing Meshseries Data
-=========================
+Aggregation of Meshseries Data
+==============================
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 

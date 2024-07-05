@@ -17,7 +17,11 @@ import vtuIO
 from h5py import File
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+from scipy.interpolate import (
+    LinearNDInterpolator,
+    NearestNDInterpolator,
+    RegularGridInterpolator,
+)
 from tqdm.auto import tqdm
 
 from ogstools import plot
@@ -36,7 +40,7 @@ class MeshSeries:
     def __init__(
         self,
         filepath: str | Path,
-        time_unit: str | None = "s",
+        time_unit: str = "s",
         spatial_unit: str = "m",
         spatial_output_unit: str = "m",
     ) -> None:
@@ -285,10 +289,9 @@ class MeshSeries:
         values = np.swapaxes(values, 0, 1)
 
         # remove flat dimensions for interpolation
-        for index, axis in enumerate(geom.T):
-            if np.all(np.isclose(axis, axis[0])):
-                geom = np.delete(geom, index, 1)
-                points = np.delete(points, index, 1)
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        geom = np.delete(geom, flat_axis, 1)
+        points = np.delete(points, flat_axis, 1)
 
         if interp_method is None:
             interp_method = "linear"
@@ -470,6 +473,7 @@ class MeshSeries:
                 fig = plot.contourplots.draw_plot(
                     mesh, mesh_property, fig=fig, axes=fig.axes[0]
                 )  # type: ignore[assignment]
+                plot.utils.update_font_sizes(fig.axes)
 
         _func = partial(animate_func, fig=fig)
 
@@ -482,5 +486,124 @@ class MeshSeries:
             repeat=False,
             init_func=init,  # type: ignore[arg-type]
         )
+
+    def plot_time_slice(
+        self,
+        mesh_property: Property | str,
+        points: np.ndarray,
+        y_axis: Literal["x", "y", "z", "dist", "auto"] = "auto",
+        interpolate: bool = True,
+        time_unit: str = "s",
+        time_logscale: bool = False,
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        cbar: bool = True,
+        **kwargs: Any,
+    ) -> plt.Figure:
+        """
+        :param mesh_property:   The property to be visualized.
+        :param points:  The points along which the data is sampled over time.
+        :param y_axis:  The component of the sampling points which labels the
+                        y-axis. By default, if only one coordinate of the points
+                        is changing, this axis is taken, otherwise the distance
+                        along the line is taken.
+        :param interpolate:     Smoothen the result be interpolation.
+        :param time_unit:       Time unit displayed on the x-axis.
+        :param time_logscale:   Should log-scaling be applied to the time-axis?
+        :param fig:             matplotlib figure to use for plotting.
+        :param ax:              matplotlib axis to use for plotting.
+        :param cb_loc:          Colorbar location. If None, omit colorbar.
+
+        :Keyword Arguments:
+            - cb_labelsize:       colorbar labelsize
+            - cb_loc:             colorbar location ('left' or 'right')
+            - cb_pad:             colorbar padding
+            - cmap:               colormap
+            - vmin:               minimum value for colorbar
+            - vmax:               maximum value for colorbar
+            - num_levels:         number of levels for colorbar
+            - figsize:            figure size
+            - dpi:                resolution
+        """
+        if ax is None and fig is None:
+            fig, ax = plt.subplots(
+                figsize=kwargs.get("figsize", [18, 14]),
+                dpi=kwargs.get("dpi", 100),
+            )
+        elif ax is None or fig is None:
+            msg = "Please provide fig and ax together or not at all."
+            raise ValueError(msg)
+
+        time = Property("", self.time_unit, time_unit).transform(
+            self.timevalues
+        )
+        if time_logscale:
+            time = np.log10(time, where=time != 0)
+            time[0] = time[1] - (time[2] - time[1])
+
+        mesh_property = get_preset(mesh_property, self.read(0))
+        values = mesh_property.transform(
+            self.probe(points, mesh_property.data_name)
+        )
+        if "levels" in kwargs:
+            levels = np.asarray(kwargs.pop("levels"))
+        else:
+            levels = plot.levels.compute_levels(
+                kwargs.get("vmin", plot.setup.vmin) or np.nanmin(values),
+                kwargs.get("vmax", plot.setup.vmax) or np.nanmax(values),
+                kwargs.get("num_levels", plot.setup.num_levels),
+            )
+        cmap, norm = plot.utils.get_cmap_norm(levels, mesh_property)
+        cmap = kwargs.get("cmap", cmap)
+
+        non_flat_axis = np.argwhere(
+            np.invert(np.all(np.isclose(points, points[0]), axis=0))
+        )
+        if y_axis == "auto" and non_flat_axis.shape[0] == 1:
+            y = points[:, non_flat_axis[0, 0]]
+            ylabel = "xyz"[non_flat_axis[0, 0]]
+        elif y_axis in "xyz":
+            y = points[:, "xyz".index(y_axis)]
+            ylabel = y_axis
+        else:
+            y = np.linalg.norm(points - points[0], axis=1)
+            ylabel = "distance"
+
+        if interpolate:
+            grid_interp = RegularGridInterpolator(
+                (time, y), values, method="cubic"
+            )
+            tmin, tmax = (np.min(time), np.max(time))
+            ymin, ymax = (np.min(y), np.max(y))
+            t_linspace = np.linspace(tmin, tmax, num=100)
+            y_linspace = np.linspace(ymin, ymax, num=100)
+            z_grid = grid_interp(tuple(np.meshgrid(t_linspace, y_linspace)))
+            ax.imshow(
+                z_grid[::-1],
+                cmap=cmap,
+                norm=norm,
+                extent=(tmin, tmax, ymin, ymax),
+                aspect=(tmax - tmin) / (ymax - ymin),
+                interpolation="bicubic",
+            )
+            if mesh_property.bilinear_cmap and levels[0] < 0.0 < levels[-1]:
+                ax.contour(time, y, values, [0], colors="white")
+        else:
+            ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
+
+        spatial = plot.shared.spatial_quantity(self.read(0))
+        fontsize = kwargs.get("fontsize", plot.setup.fontsize)
+        ax.set_ylabel(ylabel + " / " + spatial.output_unit, fontsize=fontsize)
+        xlabel = "time / " + time_unit
+        if time_logscale:
+            xlabel = "log10( " + xlabel + " )"
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+        ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
+        if cbar:
+            plot.contourplots.add_colorbars(
+                fig, ax, mesh_property, levels, **kwargs
+            )
+        plot.utils.update_font_sizes(fig.axes, fontsize)
+        return fig
 
     # TODO: add member function to MeshSeries to get a difference for to timesteps

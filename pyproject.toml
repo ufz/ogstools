@@ -26,7 +26,7 @@ dependencies = [
   "tenacity<8.4.0", # fix for papermill https://github.com/nteract/papermill/issues/510
   "papermill>=2.4.0",
   "ogs>=6.5.2",
-  "ogs6py>=0.370",
+  "ogs6py==0.370",
   "tqdm>=4.60",
   "typeguard>=4.0.0",
   "VTUinterface>=0.704",
