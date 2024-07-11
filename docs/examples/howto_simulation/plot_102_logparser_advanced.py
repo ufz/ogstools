@@ -62,24 +62,18 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # ------------------------------------------
 #
 # To reduce the computation to evaluate the logs, you can either
-# (2.1) Reduce set of regular expressions, when you exactly know,
-# what you final analysis will need
-
-# AND / OR
-
-# (2.2.) Save and load the pandas.DataFrame for the records.
+# - Reduce set of regular expressions, when you exactly know, what you final analysis will need AND / OR
+# - Save and load the pandas.DataFrame for the records.
 #
-# 2.1. Reduce regular expression
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Reduce regular expression
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 # The logparser tries to find matching regular expressions for each line. By default it iterates over all entries specified in :py:mod:`ogstools.logparser.ogs_regexes`.
 # You can reduce it to the amount of entries you are actually interested in.
 # For this example we are only interested in the number of iterations per time step.
 # Because the parsing process is expensive, it is useful to store the records to a file.
 # According to :py:mod:`ogstools.logparser.parse_file`
 # via parameter `regexes` a list of reduced or custom regexes can be provided.
-
-
-# %% [markdown]
+#
 # 2.2. Save and load records
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We recommend saving the records by any of these methodes http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
