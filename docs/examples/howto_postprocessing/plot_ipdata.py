@@ -29,7 +29,7 @@ ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
 
 sigma_ip = ot.properties.stress.replace(
-    data_name="sigma_ip", output_name="integration_point_stress"
+    data_name="sigma_ip", output_name="IP_stress"
 )
 
 tmp_dir = Path(mkdtemp())

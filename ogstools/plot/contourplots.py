@@ -106,7 +106,7 @@ def add_colorbars(
     # Formatting the colorbar label and ticks
 
     tick_labels, offset = get_ticklabels(ticks)
-    cb_label = mesh_property.get_label()
+    cb_label = mesh_property.magnitude.get_label(setup.label_split)
     if offset is not None:
         if offset[0] == "-":
             cb_label += " + " + offset[1:]

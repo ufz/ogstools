@@ -44,6 +44,7 @@ class Vector(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + f"_{index}",
+            symbol=f"{{{self.symbol}}}_{index}",
             func=lambda x: self.func(x)[..., int_index],
             bilinear_cmap=True,
         )
@@ -54,6 +55,7 @@ class Vector(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_magnitude",
+            symbol=f"||{{{self.symbol}}}||",
             func=lambda x: vector_norm(self.func(x)),
         )
 
@@ -67,5 +69,6 @@ class VectorList(Property):
         return Vector.from_property(
             self,
             output_name=self.output_name + f"_{index}",
+            symbol=f"{{{self.symbol}}}_{index}",
             func=lambda x: np.take(self.func(x), index, axis=-1),
         )

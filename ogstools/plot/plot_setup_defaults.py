@@ -37,4 +37,5 @@ setup_dict = {
     "tick_length": 14,
     "fontsize": 32,
     "linewidth": 1,
+    "label_split": 37,
 }

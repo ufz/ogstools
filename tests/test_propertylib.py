@@ -178,6 +178,7 @@ class TestPhysicalProperty:
             data_unit=pp.strain.data_unit,
             output_unit=pp.strain.output_unit,
             output_name=pp.strain.output_name,
+            symbol=pp.strain.symbol,
             mask=pp.strain.mask,
             func=pp.strain.func,
         )
@@ -185,4 +186,7 @@ class TestPhysicalProperty:
         assert pp.strain == strain_copy
 
     def test_get_label(self):
-        assert pp.pressure.get_label() == "pore pressure / MPa"
+        assert pp.pressure.get_label() == "pore pressure $p$ / MPa"
+        name_len = len(pp.stress.output_name) + 8  # for symbol and unit
+        assert "\n" in pp.stress.get_label(name_len)
+        assert "\n" not in pp.stress.get_label(name_len + 1)

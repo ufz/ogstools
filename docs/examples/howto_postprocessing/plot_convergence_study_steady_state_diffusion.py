@@ -81,7 +81,7 @@ solution = examples.analytical_diffusion(
     ot.MeshSeries(result_paths[-1]).read(0)
 )
 ot.plot.setup.show_element_edges = True
-fig = ot.plot.contourf(solution, propertylib.properties.hydraulic_height)
+fig = ot.plot.contourf(solution, propertylib.properties.hydraulic_head)
 solution.save(analytical_solution_path)
 
 # %% [markdown]
@@ -96,7 +96,7 @@ solution.save(analytical_solution_path)
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
-    property_name="hydraulic_height",
+    property_name="hydraulic_head",
     timevalue=1,
     refinement_ratio=2.0,
     reference_solution_path=str(analytical_solution_path),

@@ -49,6 +49,7 @@ temperature = Scalar(
     data_unit="K",
     output_name="temperature",
     output_unit="°C",
+    symbol="T",
     mask=T_MASK,
     cmap=temperature_cmap,
     bilinear_cmap=True,
@@ -68,16 +69,18 @@ pressure = Scalar(
     data_unit="Pa",
     output_unit="MPa",
     output_name="pore_pressure",
+    symbol="p",
     mask=H_MASK,
     cmap="Blues",
     color=group_color_hydraulic,
     linestyle=line_styles[0],
 )
-hydraulic_height = Scalar(
+hydraulic_head = Scalar(
     data_name="pressure",
     data_unit="m",
     output_unit="m",
-    output_name="hydraulic_height",
+    output_name="hydraulic_head",
+    symbol="h",
     mask=H_MASK,
     cmap="Blues",
     color=group_color_hydraulic,
@@ -88,6 +91,7 @@ velocity = Vector(
     data_unit="m/s",
     output_unit="m/s",
     output_name="darcy_velocity",
+    symbol="v",
     mask=H_MASK,
 )
 massflowrate = Scalar(data_name="MassFlowRate", mask=H_MASK)
@@ -97,6 +101,7 @@ displacement = Vector(
     data_name="displacement",
     data_unit="m",
     output_unit="m",
+    symbol="u",
     mask=M_MASK,
     cmap="PRGn",
     bilinear_cmap=True,
@@ -106,6 +111,7 @@ strain = Matrix(
     data_unit="",
     output_unit="percent",
     output_name="strain",
+    symbol=r"\varepsilon",
     mask=M_MASK,
 )
 stress = Matrix(
@@ -113,6 +119,7 @@ stress = Matrix(
     data_unit="Pa",
     output_unit="MPa",
     output_name="stress",
+    symbol=r"\sigma",
     mask=M_MASK,
 )
 effective_pressure = Scalar(
@@ -120,6 +127,7 @@ effective_pressure = Scalar(
     data_unit="Pa",
     output_unit="MPa",
     output_name="effective_pressure",
+    symbol=r"\pi",
     mask=M_MASK,
     func=tensor_math.effective_pressure,
     color=group_color_mechanical,
@@ -130,6 +138,7 @@ dilatancy_critescu_tot = Scalar(
     data_unit="Pa",
     output_unit="",
     output_name="dilatancy_criterion",
+    symbol=r"F_\mathrm{dil}",
     mask=M_MASK,
     func=mesh_dependent.dilatancy_critescu,
     mesh_dependent=True,
@@ -149,6 +158,7 @@ dilatancy_alkan = Scalar(
     data_unit="Pa",
     output_unit="MPa",
     output_name="dilatancy_criterion",
+    symbol=r"F_\mathrm{dil}",
     mask=M_MASK,
     func=mesh_dependent.dilatancy_alkan,
     mesh_dependent=True,
@@ -168,6 +178,7 @@ fluid_pressure_crit = Scalar(
     data_unit="Pa",
     output_unit="MPa",
     output_name="fluid_pressure_criterion",
+    symbol="F_p",
     mask=M_MASK,
     func=mesh_dependent.fluid_pressure_criterion,
     mesh_dependent=True,
@@ -180,7 +191,11 @@ nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 
 # ====== other ======
 saturation = Scalar(
-    data_name="Si", data_unit="", output_unit="%", output_name="Saturation"
+    data_name="Si",
+    data_unit="",
+    output_unit="%",
+    output_name="Saturation",
+    symbol="s",
 )
 
 all_properties = [v for v in locals().values() if isinstance(v, Property)]
@@ -223,6 +238,7 @@ def get_preset(
             data_unit=mesh_property.output_unit,
             output_unit=mesh_property.output_unit,
             output_name=data_key,
+            symbol=mesh_property.symbol,
             func=identity,
             mesh_dependent=False,
         )

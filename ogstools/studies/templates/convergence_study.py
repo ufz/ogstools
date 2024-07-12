@@ -63,7 +63,7 @@ fig = plot.contourf(richardson, "grid_convergence")
 fig = plot.contourf(meshes[-3:], mesh_property)
 
 # %% [markdown]
-# ## Richardson extrapolation.
+# ## Richardson extrapolation
 #
 # Visualizing the Richardson extrapolation of the requested mesh property.
 # If a reference solution is provided, the difference between the two is shown

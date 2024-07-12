@@ -427,7 +427,7 @@ class MeshSeries:
         ax.grid(which="major", color="lightgrey", linestyle="-")
         ax.grid(which="minor", color="0.95", linestyle="--")
         ax.set_xlabel(x_label)
-        ax.set_ylabel(mesh_property.get_label())
+        ax.set_ylabel(mesh_property.get_label(plot.setup.label_split))
         ax.label_outer()
         ax.minorticks_on()
         return fig

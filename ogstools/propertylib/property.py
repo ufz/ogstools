@@ -37,6 +37,8 @@ class Property:
     """The output unit of the property."""
     output_name: str = ""
     """The output name of the property."""
+    symbol: str = ""
+    """The symbol representing this property."""
     mask: str = ""
     """The name of the mask data in the mesh."""
     func: Callable = identity
@@ -88,6 +90,7 @@ class Property:
             data_unit=new_property.data_unit,
             output_unit=new_property.output_unit,
             output_name=new_property.output_name,
+            symbol=new_property.symbol,
             mask=new_property.mask,
             func=new_property.func,
             mesh_dependent=new_property.mesh_dependent,
@@ -144,7 +147,7 @@ class Property:
         quantity = u_reg.Quantity(1, self.output_unit)
         diff_quantity: PlainQuantity = quantity - quantity
         diff_unit = str(diff_quantity.units)
-        if diff_unit == "delta_degC":
+        if str(diff_quantity.units) in ["degC", "°C"]:
             diff_unit = "kelvin"
         outname = self.output_name + "_difference"
         return self.replace(
@@ -152,6 +155,7 @@ class Property:
             data_unit=diff_unit,
             output_unit=diff_unit,
             output_name=outname,
+            symbol=r"\Delta " + self.symbol,
             bilinear_cmap=True,
             func=identity,
             mesh_dependent=False,
@@ -204,12 +208,46 @@ class Property:
             ]
         return mesh[self.data_name]
 
-    def get_label(self) -> str:
+    def get_label(self, split_at: int | None = None) -> str:
         "Creates property label in format 'property_name / property_unit'"
         unit_str = (
             f" / {self.get_output_unit()}" if self.get_output_unit() else ""
         )
-        return self.output_name.replace("_", " ") + unit_str
+        symbol_str = " " + f"${self.symbol}$" if self.symbol != "" else ""
+        name = self.output_name
+        if symbol_str != "":
+            for suffix in ["xx", "yy", "zz", "yx", "yz", "xz", "x", "y", "z"]:
+                if name.endswith(suffix):
+                    name = name[: -(len(suffix) + 1)]
+            for suffix in [str(num) for num in range(10)]:
+                if name.endswith(str(suffix)):
+                    name = name[:-2]
+        label = name.replace("_", " ") + symbol_str + unit_str
+        if split_at is None:
+            return label
+        return self._split_long_label(split_at, name, label)
+
+    def _split_long_label(self, split_at: int, name: str, label: str) -> str:
+        render_label = label.translate({ord(i): None for i in "{}$_^"})
+        is_greek = False
+        length = 0
+        for c in render_label:
+            if not is_greek:
+                length += 1
+            if is_greek and not c.isalpha():
+                is_greek = False
+                length += 1
+            if c == "\\":
+                is_greek = True
+        if length >= split_at:
+            try:
+                split_index = min(
+                    len(name), split_at - label[:split_at][::-1].index(" ")
+                )
+            except ValueError:
+                split_index = len(name)
+            label = label[0:split_index] + "\n" + label[split_index:]
+        return label
 
 
 @dataclass
