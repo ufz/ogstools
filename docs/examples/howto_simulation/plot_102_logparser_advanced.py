@@ -34,7 +34,7 @@ from ogstools.logparser import (
 pd.set_option("display.max_rows", 8)  # for visualization only
 
 # %%
-# 1. Logs from parallel computations (with MPI)
+# Logs from parallel computations (with MPI)
 # ---------------------------------------------
 # The log file to be investigated in this example is the result of a mpirun (-np 3) from https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj
 
@@ -48,7 +48,7 @@ df_ts = analysis_time_step(df_parallel)
 # For each mpi_process and each time_step we get the measurements (e.g. output_time)
 df_ts
 # %% [markdown]
-# 1.1. Aggregate measurements over all MPI processes
+# Aggregate measurements over all MPI processes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # If you are not particularly interested in the performance of each MPI_process pandas gives you all you need to further process data. However, for performance measurement it is recommended to consider always the slowest MPI_process for meaningful interpretation of overall performance (because of synchronization barriers in the evaluation scheme of OGS).
 # Then the resulting DataFrame has the same structure like a DataFrame gained from serial OGS log.
@@ -58,30 +58,24 @@ df_ts.groupby("time_step").max()
 df_ts[["output_time", "assembly_time"]].boxplot()
 
 # %% [markdown]
-# 2. Reduce computation time to process logs
-# ------------------------------------------
+# Reduce computation time to process logs
+# ---------------------------------------
 #
 # To reduce the computation to evaluate the logs, you can either
-# (2.1) Reduce set of regular expressions, when you exactly know,
-# what you final analysis will need
-
-# AND / OR
-
-# (2.2.) Save and load the pandas.DataFrame for the records.
+# - Reduce set of regular expressions, when you exactly know, what you final analysis will need AND / OR
+# - Save and load the pandas.DataFrame for the records.
 #
-# 2.1. Reduce regular expression
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Reduce regular expression
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 # The logparser tries to find matching regular expressions for each line. By default it iterates over all entries specified in :py:mod:`ogstools.logparser.ogs_regexes`.
 # You can reduce it to the amount of entries you are actually interested in.
 # For this example we are only interested in the number of iterations per time step.
 # Because the parsing process is expensive, it is useful to store the records to a file.
 # According to :py:mod:`ogstools.logparser.parse_file`
 # via parameter `regexes` a list of reduced or custom regexes can be provided.
-
-
-# %% [markdown]
-# 2.2. Save and load records
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Save and load records
+# ~~~~~~~~~~~~~~~~~~~~~
 # We recommend saving the records by any of these methodes http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
 # For example with HDF:
 # ```python
@@ -90,10 +84,10 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # ```
 
 # %%
-# 3. Custom analyses
-# ------------------
-# 3.1. Introduction into functions of the logparser
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Custom analyses
+# ---------------
+# Introduction into functions of the logparser
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The function :py:mod:`ogstools.logparser.parse_file` iterates over all lines in the log file. For a specific set of regular expressions it finds and creates a new entry into a list (here named records)
 #
 
@@ -117,8 +111,8 @@ df_log = fill_ogs_context(df_records)
 df_log
 
 # %%
-# 3.2. Custom analyses - example
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Custom analyses - example
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 # We create a pivot_table where for each time step we can see the step_size and the number of iterations.
 
 
