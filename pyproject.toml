@@ -23,6 +23,7 @@ dependencies = [
   "Pint>=0.22",
   "Pillow>=9.2.0",
   "pandas>=1.4.0",
+  "pandamesh>=0.1.6",
   "tenacity<8.4.0", # fix for papermill https://github.com/nteract/papermill/issues/510
   "papermill>=2.4.0",
   "ogs>=6.5.2",
@@ -49,6 +50,7 @@ fallback_version = "0.1.0.post0+no-scm" # Manually increment on release!
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 feflow2ogs = 'ogstools.feflowlib._cli:cli'
+shp2mesh = 'ogstools.shapemeshlib._cli:cli'
 
 [project.optional-dependencies]
 dev = ["pre-commit>=2.20", "build", "black"]

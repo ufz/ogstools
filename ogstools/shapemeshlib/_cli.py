@@ -1,7 +1,5 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-import geopandas as gp
-
 from ogstools.shapemeshlib import (
     create_pyvista_mesh,
     geodataframe_meshing,
@@ -21,7 +19,11 @@ parser.add_argument(
     "The extension defines the format according to meshio",
 )
 parser.add_argument(
-    "-c", "--cellsize", help="The cellsize for the mesh.", type=float
+    "-c",
+    "--cellsize",
+    help="The cellsize for the mesh.",
+    type=float,
+    default=None,
 )
 parser.add_argument(
     "meshing",
@@ -42,12 +44,17 @@ parser.add_argument(
     nargs="?",
     const=1,
 )
-args = parser.parse_args()
 
-gdf = gp.read_file(args.input)
-geodataframe = prepare_shp_for_meshing(gdf)
-points_cells = geodataframe_meshing(geodataframe)
-pyvista_mesh = create_pyvista_mesh(
-    points=points_cells[0], cells=points_cells[1]
-)
-pyvista_mesh.write(args.output)
+
+def cli() -> None:
+    args = parser.parse_args()
+    simple = "simplified" in args.simplify
+    triangle = "Triangle" in args.meshing
+    geodataframe = prepare_shp_for_meshing(args.input)
+    points_cells = geodataframe_meshing(
+        geodataframe, simple, triangle, args.cellsize
+    )
+    pyvista_mesh = create_pyvista_mesh(
+        points=points_cells[0], cells=points_cells[1]
+    )
+    pyvista_mesh.save(args.output)
