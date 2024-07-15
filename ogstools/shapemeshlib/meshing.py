@@ -1,12 +1,10 @@
 from pathlib import Path
 
 import numpy as np
+import pandamesh as pm
+import pyvista as pv
 from geopandas import GeoDataFrame, read_file
 from pyvista import UnstructuredGrid
-
-import pandamesh as pm
-import meshio
-import pyvista as pv
 
 
 def prepare_shp_for_meshing(shape_file: Path) -> GeoDataFrame:
@@ -18,24 +16,18 @@ def prepare_shp_for_meshing(shape_file: Path) -> GeoDataFrame:
     :param shape_file: Path of shape-file to be prepared for meshing.
     """
     gdf = read_file(shape_file)
-    if "MultiPolygon" in gdf["geometry"].geom_type.values:
+    if "MultiPolygon" in gdf["geometry"].geom_type.to_numpy():
         # break down multipolygon to multiple polygons
         exploded_data = gdf.explode()
         # from geoseries to geodataframe
-        gdf = GeoDataFrame(
-            geometry=[polygon for polygon in exploded_data["geometry"]]
-        )
+        gdf = GeoDataFrame(geometry=list(exploded_data["geometry"]))
     # get rid off intersections
     union = gdf.union_all()
     # union to geodataframe
     union_gdf = GeoDataFrame(geometry=[union])
     # breakdown multipolygon again
     exploded_union = union_gdf.explode()
-    # create final geodataframe
-    final_gdf = GeoDataFrame(
-        geometry=[polygon for polygon in exploded_union["geometry"]]
-    )
-    return final_gdf
+    return GeoDataFrame(geometry=list(exploded_union["geometry"]))
 
 
 def geodataframe_meshing(
@@ -47,6 +39,11 @@ def geodataframe_meshing(
     """
     Generate a triangle- or GMSH-mesh from a shapefile read as GeoDataFrame.
     """
+    if cellsize is None:
+        bounds = geodataframe.total_bounds
+        x_length = bounds[2] - bounds[0]
+        y_length = bounds[3] - bounds[1]
+        cellsize = x_length / 100 if x_length > y_length else y_length / 100
     if simplify:
         geodataframe.geometry = geodataframe.geometry.buffer(cellsize / 20)
         geodataframe["dissolve_column"] = 0
@@ -54,14 +51,7 @@ def geodataframe_meshing(
         geodataframe.geometry = geodataframe.geometry.simplify(cellsize / 2)
         exploded_union = geodataframe.explode()
         # create final geodataframe
-        geodataframe = GeoDataFrame(
-            geometry=[polygon for polygon in exploded_union["geometry"]]
-        )
-    if cellsize == None:
-        bounds = geodataframe.total_bounds
-        x_length = bounds[2] - bounds[0]
-        y_length = bounds[3] - bounds[1]
-        cellsize = x_length / 100 if x_length > y_length else y_length / 100
+        geodataframe = GeoDataFrame(geometry=list(exploded_union["geometry"]))
     geodataframe["cellsize"] = cellsize
     # choose the meshing algorithm: also GmshMesher() possible,
     # but requires installation of gmsh or triangle
@@ -74,7 +64,9 @@ def geodataframe_meshing(
     return mesher.generate()
 
 
-def create_pyvista_mesh(points, cells) -> UnstructuredGrid:
+def create_pyvista_mesh(
+    points: np.ndarray, cells: np.ndarray
+) -> UnstructuredGrid:
     """
     Create a PyVista UnstructuredGrid from points and cells.
 
@@ -101,7 +93,5 @@ def create_pyvista_mesh(points, cells) -> UnstructuredGrid:
     # Create the cell types array
     cell_types = np.full(len(cells), pv.CellType.POLYGON)
 
-    # Create the UnstructuredGrid
-    mesh = UnstructuredGrid(np.array(cell_array), cell_types, points)
-
-    return mesh
+    # Return the UnstructuredGrid
+    return UnstructuredGrid(np.array(cell_array), cell_types, points)

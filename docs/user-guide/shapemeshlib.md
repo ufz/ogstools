@@ -42,7 +42,7 @@ More detailed description of the arguments:
 ```
 positional arguments:
   {Triangle,GMSH}
-  Either Triangle or GMSH can be choosen for meshing.
+  Either Triangle or GMSH can be chosen for meshing.
   (default: triangle)
 
   {simplified,original}

@@ -2,6 +2,12 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 import geopandas as gp
 
+from ogstools.shapemeshlib import (
+    create_pyvista_mesh,
+    geodataframe_meshing,
+    prepare_shp_for_meshing,
+)
+
 parser = ArgumentParser(
     description="This tool allows meshing of shapefiles.",
     formatter_class=RawTextHelpFormatter,
@@ -22,7 +28,7 @@ parser.add_argument(
     choices=["Triangle", "GMSH"],
     default="Triangle",
     type=str,
-    help="Either Triangle or GMSH can be choosen for meshing.",
+    help="Either Triangle or GMSH can be chosen for meshing.",
     nargs="?",
     const=1,
 )
@@ -39,6 +45,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 gdf = gp.read_file(args.input)
-
-mesh = geodataframe_meshing()
-mesh.write(args.output)
+geodataframe = prepare_shp_for_meshing(gdf)
+points_cells = geodataframe_meshing(geodataframe)
+pyvista_mesh = create_pyvista_mesh(
+    points=points_cells[0], cells=points_cells[1]
+)
+pyvista_mesh.write(args.output)

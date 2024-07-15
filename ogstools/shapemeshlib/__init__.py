@@ -5,9 +5,9 @@
 #
 
 from .meshing import (
+    create_pyvista_mesh,
     geodataframe_meshing,
     prepare_shp_for_meshing,
-    create_pyvista_mesh,
 )
 
 __all__ = [

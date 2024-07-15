@@ -9,7 +9,11 @@ In this example we present how to create a unstructured grid (*.vtu) from a shap
 # %%
 # 0. Necessary imports
 from ogstools.examples import test_shapefile
-from ogstools.shapemeshlib import *
+from ogstools.shapemeshlib import (
+    create_pyvista_mesh,
+    geodataframe_meshing,
+    prepare_shp_for_meshing,
+)
 
 # %%
 # 1. Prepare the shapefile for meshing
@@ -23,3 +27,4 @@ pyvista_mesh = create_pyvista_mesh(
 # %%
 # 3. Visualize the data.
 pyvista_mesh.plot()
+# %%
