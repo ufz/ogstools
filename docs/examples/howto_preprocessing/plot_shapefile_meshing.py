@@ -1,9 +1,10 @@
-"""
+r"""
 Meshing a shapefile
 ===================
+
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-In this example we present how to create a unstructured grid (*.vtu) from a shapefile.
+In this example we present how to create a unstructured grid in vtk format (\*.vtu) from a shapefile.
 """
 
 # %%
@@ -26,5 +27,4 @@ pyvista_mesh = create_pyvista_mesh(
 )
 # %%
 # 3. Visualize the data.
-pyvista_mesh.plot()
-# %%
+pyvista_mesh.plot(show_edges=True)
