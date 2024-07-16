@@ -63,7 +63,7 @@ def linesample(
         **kwargs,
     )
     ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
-    ax.set_ylabel(mesh_property.get_label())
+    ax.set_ylabel(mesh_property.get_label(setup.label_split))
 
     if grid in ["both", "major"]:
         ax.grid(which="major", color="lightgrey", linestyle="-")

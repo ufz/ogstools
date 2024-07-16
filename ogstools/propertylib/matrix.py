@@ -32,6 +32,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + f"_{index}",
+            symbol=f"{{{self.symbol}}}_{{{index}}}",
             func=lambda x: self.func(x)[..., int_index],
             bilinear_cmap=True,
         )
@@ -42,6 +43,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_magnitude",
+            symbol=rf"||{{{self.symbol}}}||_\mathrm{{F}}",
             func=lambda x: tensor_math.frobenius_norm(self.func(x)),
         )
 
@@ -51,6 +53,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_trace",
+            symbol=rf"\mathrm{{tr}}({{{self.symbol}}})",
             func=tensor_math.trace,
         )
 
@@ -60,6 +63,7 @@ class Matrix(Property):
         return Vector.from_property(
             self,
             output_name=self.output_name + "_eigenvalues",
+            symbol=r"\lambda",
             func=lambda x: tensor_math.eigenvalues(self.func(x)),
         )
 
@@ -69,6 +73,7 @@ class Matrix(Property):
         return VectorList.from_property(
             self,
             output_name=self.output_name + "_eigenvectors",
+            symbol="v",
             data_unit="",
             output_unit="",
             func=lambda x: tensor_math.eigenvectors(self.func(x)),
@@ -80,6 +85,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name=self.output_name + "_det",
+            symbol=rf"\mathrm{{det}} {{{self.symbol}}}",
             func=lambda x: tensor_math.det(self.func(x)),
         )
 
@@ -118,6 +124,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name="mean_" + self.output_name,
+            symbol=r"\pi",
             func=lambda x: tensor_math.mean(self.func(x)),
         )
 
@@ -127,6 +134,7 @@ class Matrix(Property):
         return Matrix.from_property(
             self,
             output_name="hydrostatic_" + self.output_name + "_component",
+            symbol=rf"p^{{{self.symbol}}}",
             func=lambda x: tensor_math.hydrostatic_component(self.func(x)),
         )
 
@@ -136,6 +144,7 @@ class Matrix(Property):
         return Matrix.from_property(
             self,
             output_name=self.output_name + "_deviator",
+            symbol=rf"s^{{{self.symbol}}}",
             func=lambda x: tensor_math.deviator(self.func(x)),
         )
 
@@ -172,6 +181,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name="octahedral_shear_" + self.output_name,
+            symbol=r"\tau_\mathrm{oct}",
             func=lambda x: tensor_math.octahedral_shear(self.func(x)),
         )
 
@@ -181,6 +191,7 @@ class Matrix(Property):
         return Scalar.from_property(
             self,
             output_name="von_Mises_" + self.output_name,
+            symbol=rf"{{{self.symbol}}}_\mathrm{{Mises}}",
             func=lambda x: tensor_math.von_mises(self.func(x)),
         )
 
@@ -191,6 +202,7 @@ class Matrix(Property):
             self,
             output_name="qp_ratio",
             output_unit="percent",
+            symbol="qp",
             func=lambda x: tensor_math.qp_ratio(self.func(x)),
             process_with_units=True,
         )

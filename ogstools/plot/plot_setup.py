@@ -68,6 +68,8 @@ class PlotSetup:
     "Size for all texts."
     linewidth: float
     "Thickness of lines."
+    label_split: int | None
+    "Split Property labels if they exceed this value."
 
     @classmethod
     def from_dict(cls: type["PlotSetup"], obj: dict) -> "PlotSetup":
@@ -95,6 +97,7 @@ class PlotSetup:
             tick_length=obj["tick_length"],
             fontsize=obj["fontsize"],
             linewidth=obj["linewidth"],
+            label_split=obj["label_split"],
         )
 
     def reset(self) -> None:
