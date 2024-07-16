@@ -26,6 +26,7 @@ def linesample(
     this function calls to it internally. Values provided in param x and y
     refer to columns of the DataFrame returned by it.
 
+    :param mesh: mesh to sample from.
     :param x: Value to be used on x-axis of the plot
     :param y_property: Values to be used on y-axis of the plot
     :param profile_points: Points defining the profile (and its segments)

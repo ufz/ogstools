@@ -118,6 +118,7 @@ autodoc_class_signature = "separated"
 autodoc_member_order = "bysource"
 autodoc_preserve_defaults = True
 autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented_params"
 
 autodoc_default_options = {"special-members": "__call__, __getitem__"}
 
