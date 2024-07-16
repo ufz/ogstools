@@ -30,6 +30,13 @@ def copy_method_signature(
         def wrapped(self: S, *args: P.args, **kwargs: P.kwargs) -> T:
             return target(self, *args, **kwargs)
 
+        # remove first param entry
+        doc = wrapped.__doc__
+        if doc is not None and ":param" in doc:
+            param1_start = doc.index(":param")
+            param1_end = param1_start + doc[param1_start:].index("\n")
+            wrapped.__doc__ = doc[:param1_start] + doc[param1_end:]
+
         return wrapped
 
     return wrapper
