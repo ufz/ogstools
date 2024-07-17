@@ -10,7 +10,7 @@ In this example we present how to create a unstructured grid in vtk format (\*.v
 # %%
 # 0. Necessary imports
 from ogstools.examples import test_shapefile
-from ogstools.shapemeshlib import (
+from ogstools.meshlib import (
     create_pyvista_mesh,
     geodataframe_meshing,
     prepare_shp_for_meshing,

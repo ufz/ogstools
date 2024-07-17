@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-from ogstools.shapemeshlib import (
+from ogstools.meshlib import (
     create_pyvista_mesh,
     geodataframe_meshing,
     prepare_shp_for_meshing,

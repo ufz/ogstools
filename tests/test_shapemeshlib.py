@@ -1,7 +1,7 @@
 import subprocess
 
 from ogstools.examples import test_shapefile
-from ogstools.shapemeshlib import (
+from ogstools.meshlib import (
     create_pyvista_mesh,
     geodataframe_meshing,
     prepare_shp_for_meshing,
@@ -9,7 +9,7 @@ from ogstools.shapemeshlib import (
 
 
 def test_cli():
-    subprocess.run(["shp2mesh", "--help"], check=True)
+    subprocess.run(["shp2msh", "--help"], check=True)
 
 
 class TestMeshing:
