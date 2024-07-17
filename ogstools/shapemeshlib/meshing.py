@@ -14,6 +14,7 @@ def prepare_shp_for_meshing(shape_file: Path) -> GeoDataFrame:
     prepared for meshing.
 
     :param shape_file: Path of shape-file to be prepared for meshing.
+    :return: GeoDataFrame ready to get meshed.
     """
     gdf = read_file(shape_file)
     if "MultiPolygon" in gdf["geometry"].geom_type.to_numpy():
@@ -38,6 +39,12 @@ def geodataframe_meshing(
 ) -> tuple:
     """
     Generate a triangle- or GMSH-mesh from a shapefile read as GeoDataFrame.
+
+    :param geodataframe: GeoDataFrame to be meshed.
+    :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
+    is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
+    Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
+    :return: tuple of points and cells of the mesh.
     """
     if cellsize is None:
         bounds = geodataframe.total_bounds
@@ -70,12 +77,10 @@ def create_pyvista_mesh(
     """
     Create a PyVista UnstructuredGrid from points and cells.
 
-    Parameters:
-    points (np.array): An array of shape (n_points, 3) containing the coordinates of each point.
-    cells (list): A list of lists, where each inner list represents a cell and contains the indices of its points.
+    :param points: An array of shape (n_points, 3) containing the coordinates of each point.
+    :param cells: An array of lists, where each inner list represents a cell and contains the indices of its points.
 
-    Returns:
-    pv.UnstructuredGrid: The created PyVista UnstructuredGrid object.
+    :return: The created PyVista UnstructuredGrid mesh object.
     """
     # Convert points to numpy array if it's not already
     points = np.array(points)
