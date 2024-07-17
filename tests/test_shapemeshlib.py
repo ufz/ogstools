@@ -32,3 +32,14 @@ class TestMeshing:
         )
         assert pyvista_mesh.n_points == len(points_cells[0])
         assert pyvista_mesh.n_cells == len(points_cells[1])
+
+    def test_gmsh_meshing(self):
+        points_cells = geodataframe_meshing(
+            self.geodataframe, True, False, 100000
+        )
+        print(points_cells)
+        pyvista_mesh = create_pyvista_mesh(
+            points=points_cells[0], cells=points_cells[1]
+        )
+        assert pyvista_mesh.n_points == len(points_cells[0])
+        assert pyvista_mesh.n_cells == len(points_cells[1])

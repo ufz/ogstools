@@ -84,7 +84,8 @@ def create_pyvista_mesh(
     """
     # Convert points to numpy array if it's not already
     points = np.array(points)
-
+    if cells.dtype != np.int32:
+        cells = cells.astype(np.int32, copy=False)
     # Append the zeros column to the points, if they refer to 2D data.
     if points.shape[1] == 2:
         zeros_column = np.zeros((points.shape[0], 1), dtype=int)
