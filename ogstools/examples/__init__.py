@@ -76,3 +76,7 @@ surface_paths = [
 ]
 
 test_shapefile = _shp_dir / "test_shape.shp"
+
+elder_h5 = _meshseries_dir / "elder.h5"
+elder_xdmf = _meshseries_dir / "elder.xdmf"
+mechanics_vtu = _meshseries_dir / "mechanics_example.vtu"

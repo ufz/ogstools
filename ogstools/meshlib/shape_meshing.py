@@ -7,7 +7,7 @@ from geopandas import GeoDataFrame, read_file
 from pyvista import UnstructuredGrid
 
 
-def prepare_shp_for_meshing(shape_file: Path) -> GeoDataFrame:
+def prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     """
     This function is to prepare the shapefile for meshing with pandamesh.
     Therefore it is read with geopands as a GeoDataFrame. The GeoDataFrame is
@@ -16,6 +16,7 @@ def prepare_shp_for_meshing(shape_file: Path) -> GeoDataFrame:
     :param shape_file: Path of shape-file to be prepared for meshing.
     :return: GeoDataFrame ready to get meshed.
     """
+    shape_file = Path(shape_file)
     gdf = read_file(shape_file)
     if "MultiPolygon" in gdf["geometry"].geom_type.to_numpy():
         # break down multipolygon to multiple polygons

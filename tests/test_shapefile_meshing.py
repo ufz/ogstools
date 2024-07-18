@@ -1,5 +1,6 @@
 import subprocess
 
+import ogstools.meshlib as ml
 from ogstools.examples import test_shapefile
 from ogstools.meshlib import (
     create_pyvista_mesh,
@@ -41,5 +42,12 @@ class TestMeshing:
         pyvista_mesh = create_pyvista_mesh(
             points=points_cells[0], cells=points_cells[1]
         )
+        assert pyvista_mesh.n_points == len(points_cells[0])
+        assert pyvista_mesh.n_cells == len(points_cells[1])
+
+    def test_meshclass_reading(self):
+        pyvista_mesh = ml.Mesh.read(test_shapefile)
+        points_cells = geodataframe_meshing(self.geodataframe)
+
         assert pyvista_mesh.n_points == len(points_cells[0])
         assert pyvista_mesh.n_cells == len(points_cells[1])

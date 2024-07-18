@@ -9,8 +9,8 @@ from ogs6py import ogs
 from pyvista import SolidSphere, UnstructuredGrid
 
 import ogstools as ot
+import ogstools.meshlib as ml
 from ogstools import examples
-from ogstools.meshlib import rect
 from ogstools.msh2vtu import msh2vtu
 
 
@@ -264,7 +264,7 @@ class TestUtils:
         def run_and_check(
             elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
         ):
-            rect(
+            ml.rect(
                 n_edge_cells=6,
                 n_layers=2,
                 structured_grid=quads,
@@ -304,3 +304,13 @@ class TestUtils:
         run_and_check(elem_order=2, quads=True, intpt_order=4)
         run_and_check(elem_order=2, quads=True, intpt_order=4)
         run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
+
+    def test_reader(self):
+        h5_file = examples.elder_h5
+        assert type(ml.Mesh.read(h5_file)) == ml.Mesh
+        xdmf_file = examples.elder_xdmf
+        assert type(ml.Mesh.read(xdmf_file)) == ml.Mesh
+        vtu_file = examples.mechanics_vtu
+        assert type(ml.Mesh.read(vtu_file)) == ml.Mesh
+        shape_file = examples.test_shapefile
+        assert type(ml.Mesh.read(shape_file)) == ml.Mesh

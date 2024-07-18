@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 
+import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
 from ogstools.definitions import SPATIAL_UNITS_KEY
@@ -110,8 +111,17 @@ class Mesh(pv.UnstructuredGrid):
 
             :returns:                   A Mesh object
         """
-        mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
-        mesh.filepath = Path(filepath)
+        if Path(filepath).suffix == ".shp":
+            gdf = ml.prepare_shp_for_meshing(filepath)
+            points_cells = ml.geodataframe_meshing(gdf)
+            mesh = cls(
+                ml.create_pyvista_mesh(
+                    points=points_cells[0], cells=points_cells[1]
+                )
+            )
+        else:
+            mesh = cls(pv.read(filepath))
+        mesh.filepath = Path(filepath).with_suffix(".vtu")
         mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )
