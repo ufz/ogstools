@@ -27,9 +27,7 @@ from .region import (
     to_region_voxel,
 )
 from .shape_meshing import (
-    create_pyvista_mesh,
-    geodataframe_meshing,
-    prepare_shp_for_meshing,
+    shapefile_meshing,
 )
 
 __all__ = [
@@ -57,7 +55,5 @@ __all__ = [
     "to_region_simplified",
     "to_region_tetraeder",
     "to_region_voxel",
-    "geodataframe_meshing",
-    "prepare_shp_for_meshing",
-    "create_pyvista_mesh",
+    "shapefile_meshing",
 ]

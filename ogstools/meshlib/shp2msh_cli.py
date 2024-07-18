@@ -1,10 +1,6 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-from ogstools.meshlib import (
-    create_pyvista_mesh,
-    geodataframe_meshing,
-    prepare_shp_for_meshing,
-)
+import ogstools.meshlib as ml
 
 parser = ArgumentParser(
     description="This tool allows meshing of shapefiles.",
@@ -50,11 +46,7 @@ def cli() -> None:
     args = parser.parse_args()
     simple = "simplified" in args.simplify
     triangle = "Triangle" in args.meshing
-    geodataframe = prepare_shp_for_meshing(args.input)
-    points_cells = geodataframe_meshing(
-        geodataframe, simple, triangle, args.cellsize
+    points, cells = ml.shapefile_meshing(
+        args.input, simplify=simple, triangle=triangle, cellsize=args.cellsize
     )
-    pyvista_mesh = create_pyvista_mesh(
-        points=points_cells[0], cells=points_cells[1]
-    )
-    pyvista_mesh.save(args.output)
+    ml.Mesh.from_points_cells(points=points, cells=cells).save(args.output)

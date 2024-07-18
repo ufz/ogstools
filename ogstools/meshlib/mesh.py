@@ -10,13 +10,13 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 
-import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
 from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
 from . import data_processing, geo, ip_mesh
+from .shape_meshing import shapefile_meshing
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -118,11 +118,10 @@ class Mesh(pv.UnstructuredGrid):
             points = np.column_stack((points, zeros_column))
         # Prepare the cell array
         cell_array = np.concatenate([np.r_[len(cell), cell] for cell in cells])
-        un = np.unique([len(cell) for cell in cells])
-        print(un)
-        assert len(un) == 1
+        assert (
+            len(np.unique([len(cell) for cell in cells])) == 1
+        ), "All cells must be of the same type. Hence, have the same number of points. If not use pyvista.UnstructuredGrid directly."
         # choose the celltype:
-        print(cell_array[0])
         if cell_array[0] == 4:
             celltype = pv.CellType.TETRA
         elif cell_array[0] == 8:
@@ -163,8 +162,7 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         if Path(filepath).suffix == ".shp":
-            gdf = ml.prepare_shp_for_meshing(filepath)
-            points_cells = ml.geodataframe_meshing(gdf)
+            points_cells = shapefile_meshing(filepath)
             mesh = cls.from_points_cells(points_cells[0], points_cells[1])
         else:
             mesh = cls(pv.read(filepath))

@@ -1,13 +1,10 @@
 from pathlib import Path
 
-import numpy as np
 import pandamesh as pm
-import pyvista as pv
 from geopandas import GeoDataFrame, read_file
-from pyvista import UnstructuredGrid
 
 
-def prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
+def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     """
     This function is to prepare the shapefile for meshing with pandamesh.
     Therefore it is read with geopands as a GeoDataFrame. The GeoDataFrame is
@@ -21,33 +18,34 @@ def prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     if "MultiPolygon" in gdf["geometry"].geom_type.to_numpy():
         # break down multipolygon to multiple polygons
         exploded_data = gdf.explode()
-        # from geoseries to geodataframe
         gdf = GeoDataFrame(geometry=list(exploded_data["geometry"]))
     # get rid off intersections
     union = gdf.union_all()
-    # union to geodataframe
     union_gdf = GeoDataFrame(geometry=[union])
     # breakdown multipolygon again
     exploded_union = union_gdf.explode()
     return GeoDataFrame(geometry=list(exploded_union["geometry"]))
 
 
-def geodataframe_meshing(
-    geodataframe: GeoDataFrame,
+def shapefile_meshing(
+    shapefile: str | Path,
     simplify: bool = False,
     triangle: bool = True,
     cellsize: int | None = None,
 ) -> tuple:
     """
-    Generate a triangle- or GMSH-mesh from a shapefile read as GeoDataFrame.
+    Generate a triangle- or GMSH-mesh from a shapefile.
 
-    :param geodataframe: GeoDataFrame to be meshed.
+    :param shapefile: Shapefile to be meshed.
     :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
         is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
         Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
+    :param triangle: Use the triangle-mesher. If False, the gmsh-mesher is used.
+    :param cellsize: Size of the cells in the mesh.
 
     :return: tuple of points and cells of the mesh.
     """
+    geodataframe = _prepare_shp_for_meshing(shapefile)
     if cellsize is None:
         bounds = geodataframe.total_bounds
         x_length = bounds[2] - bounds[0]
@@ -59,47 +57,11 @@ def geodataframe_meshing(
         geodataframe = geodataframe.dissolve(by="dissolve_column")
         geodataframe.geometry = geodataframe.geometry.simplify(cellsize / 2)
         exploded_union = geodataframe.explode()
-        # create final geodataframe
         geodataframe = GeoDataFrame(geometry=list(exploded_union["geometry"]))
     geodataframe["cellsize"] = cellsize
-    # choose the meshing algorithm: also GmshMesher() possible,
-    # but requires installation of gmsh or triangle
+
     if triangle:
         mesher = pm.TriangleMesher(geodataframe)
     else:
-        # ToDo: GmshMesher does not supply correct structure of point and
-        # cell data to create pyvista UnstructuredGrid.
         mesher = pm.GmshMesher(geodataframe)
     return mesher.generate()
-
-
-def create_pyvista_mesh(
-    points: np.ndarray, cells: np.ndarray
-) -> UnstructuredGrid:
-    """
-    Create a PyVista UnstructuredGrid from points and cells.
-
-    :param points: An array of shape (n_points, 3) containing the coordinates of each point.
-    :param cells: An array of lists, where each inner list represents a cell and contains the indices of its points.
-
-    :return: The created PyVista UnstructuredGrid mesh object.
-    """
-    # Convert points to numpy array if it's not already
-    points = np.array(points)
-    if cells.dtype != np.int32:
-        cells = cells.astype(np.int32, copy=False)
-    # Append the zeros column to the points, if they refer to 2D data.
-    if points.shape[1] == 2:
-        zeros_column = np.zeros((points.shape[0], 1), dtype=int)
-        points = np.column_stack((points, zeros_column))
-    # Prepare the cell array
-    cell_array = []
-    for cell in cells:
-        cell_array.append(len(cell))
-        cell_array.extend(cell)
-
-    # Create the cell types array
-    cell_types = np.full(len(cells), pv.CellType.POLYGON)
-
-    # Return the UnstructuredGrid
-    return UnstructuredGrid(np.array(cell_array), cell_types, points)
