@@ -42,8 +42,9 @@ def geodataframe_meshing(
 
     :param geodataframe: GeoDataFrame to be meshed.
     :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
-    is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
-    Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
+        is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
+        Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
+
     :return: tuple of points and cells of the mesh.
     """
     if cellsize is None:
