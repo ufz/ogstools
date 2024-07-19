@@ -10,32 +10,29 @@ def test_cli():
 
 class TestMeshing:
     def test_meshing(self):
-        points, cells = ml._points_cells_from_shapefile(test_shapefile)
-        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
-        assert pyvista_mesh.n_points == len(points)
-        assert pyvista_mesh.n_cells == len(cells)
+        pyvista_mesh = ml.read_shape(
+            test_shapefile
+        )  # simplify_false, triangle_true
+        assert pyvista_mesh.n_points == 233465
+        assert pyvista_mesh.n_cells == 344431
 
     # Same for simplified mesh.
     def test_simple_meshing(self):
-        points, cells = ml._points_cells_from_shapefile(
-            test_shapefile, simplify=True
-        )
-        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
-        assert pyvista_mesh.n_points == len(points)
-        assert pyvista_mesh.n_cells == len(cells)
+        pyvista_mesh = ml.read_shape(test_shapefile, simplify=True)
+
+        assert pyvista_mesh.n_points == 6413
+        assert pyvista_mesh.n_cells == 10291
 
     def test_gmsh_meshing(self):
-        points, cells = ml._points_cells_from_shapefile(
+        pyvista_mesh = ml.read_shape(
             test_shapefile, simplify=True, triangle=False
         )
-        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
 
-        assert pyvista_mesh.n_points == len(points)
-        assert pyvista_mesh.n_cells == len(cells)
+        assert pyvista_mesh.n_points == 12618
+        assert pyvista_mesh.n_cells == 22915
 
     def test_meshclass_reading(self):
-        pyvista_mesh = ml.Mesh.read(test_shapefile)
-        points, cells = ml._points_cells_from_shapefile(test_shapefile)
-
-        assert pyvista_mesh.n_points == len(points)
-        assert pyvista_mesh.n_cells == len(cells)
+        ogs_mesh = ml.Mesh.read(test_shapefile)
+        pyvista_mesh = ml.read_shape(test_shapefile)
+        assert pyvista_mesh.n_points == ogs_mesh.n_points
+        assert pyvista_mesh.n_cells == ogs_mesh.n_cells

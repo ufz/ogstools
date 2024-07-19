@@ -112,7 +112,7 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         if Path(filepath).suffix == ".shp":
-            mesh = ml.read_shape(filepath, simplify=True, triangle=False)
+            mesh = ml.read_shape(filepath)
         else:
             mesh = cls(pv.read(filepath))
 
