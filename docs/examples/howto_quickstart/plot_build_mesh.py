@@ -17,7 +17,7 @@ points = np.array(
     [[1.0, 1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, 1.0]]
 )
 
-mesh = ml.mesh_from_points_cells(points, cells)
+mesh = ml._mesh_from_points_cells(points, cells)
 mesh.plot(show_edges=True)
 
 # %%

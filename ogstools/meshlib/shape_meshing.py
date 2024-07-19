@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandamesh as pm
+import pyvista as pv
 from geopandas import GeoDataFrame, read_file
 
 
@@ -28,7 +29,7 @@ def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     return GeoDataFrame(geometry=list(exploded_union["geometry"]))
 
 
-def shapefile_meshing(
+def _points_cells_from_shapefile(
     shapefile: str | Path,
     simplify: bool = False,
     triangle: bool = True,
@@ -69,7 +70,7 @@ def shapefile_meshing(
     return mesher.generate()
 
 
-def mesh_from_points_cells(
+def _mesh_from_points_cells(
     points: np.ndarray, cells: np.ndarray
 ) -> pv.UnstructuredGrid:
     """

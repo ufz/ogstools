@@ -10,30 +10,32 @@ def test_cli():
 
 class TestMeshing:
     def test_meshing(self):
-        points, cells = ml.shapefile_meshing(test_shapefile)
-        pyvista_mesh = ml.mesh_from_points_cells(points=points, cells=cells)
+        points, cells = ml._points_cells_from_shapefile(test_shapefile)
+        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
         assert pyvista_mesh.n_points == len(points)
         assert pyvista_mesh.n_cells == len(cells)
 
     # Same for simplified mesh.
     def test_simple_meshing(self):
-        points, cells = ml.shapefile_meshing(test_shapefile, simplify=True)
-        pyvista_mesh = ml.mesh_from_points_cells(points=points, cells=cells)
+        points, cells = ml._points_cells_from_shapefile(
+            test_shapefile, simplify=True
+        )
+        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
         assert pyvista_mesh.n_points == len(points)
         assert pyvista_mesh.n_cells == len(cells)
 
     def test_gmsh_meshing(self):
-        points, cells = ml.shapefile_meshing(
+        points, cells = ml._points_cells_from_shapefile(
             test_shapefile, simplify=True, triangle=False
         )
-        pyvista_mesh = ml.mesh_from_points_cells(points=points, cells=cells)
+        pyvista_mesh = ml._mesh_from_points_cells(points=points, cells=cells)
 
         assert pyvista_mesh.n_points == len(points)
         assert pyvista_mesh.n_cells == len(cells)
 
     def test_meshclass_reading(self):
         pyvista_mesh = ml.Mesh.read(test_shapefile)
-        points, cells = ml.shapefile_meshing(test_shapefile)
+        points, cells = ml._points_cells_from_shapefile(test_shapefile)
 
         assert pyvista_mesh.n_points == len(points)
         assert pyvista_mesh.n_cells == len(cells)

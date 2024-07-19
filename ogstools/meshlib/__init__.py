@@ -26,7 +26,7 @@ from .region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-from .shape_meshing import mesh_from_points_cells, shapefile_meshing
+from .shape_meshing import _mesh_from_points_cells, _points_cells_from_shapefile
 
 __all__ = [
     "Boundary",
@@ -53,6 +53,6 @@ __all__ = [
     "to_region_simplified",
     "to_region_tetraeder",
     "to_region_voxel",
-    "shapefile_meshing",
-    "mesh_from_points_cells",
+    "_points_cells_from_shapefile",
+    "_mesh_from_points_cells",
 ]

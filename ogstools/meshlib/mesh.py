@@ -112,8 +112,8 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
         if Path(filepath).suffix == ".shp":
-            points_cells = ml.shapefile_meshing(filepath)
-            mesh = ml.mesh_from_points_cells(points_cells[0], points_cells[1])
+            points_cells = ml._points_cells_from_shapefile(filepath)
+            mesh = ml._mesh_from_points_cells(points_cells[0], points_cells[1])
         else:
             mesh = cls(pv.read(filepath))
         mesh.filepath = Path(filepath).with_suffix(".vtu")
