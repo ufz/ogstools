@@ -42,7 +42,8 @@ def shapefile_meshing(
         is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
         Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
     :param triangle: Use the triangle-mesher. If False, the gmsh-mesher is used.
-    :param cellsize: Size of the cells in the mesh.
+    :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
+        If None - cellsize is 1/100 of larger bound (x or y).
 
     :return: tuple of points and cells of the mesh.
     """
