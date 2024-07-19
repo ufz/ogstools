@@ -114,3 +114,28 @@ def _mesh_from_points_cells(
     cell_types = np.full(len(cells), celltype)
     # Return the UnstructuredGrid
     return pv.UnstructuredGrid(np.asarray(cell_array), cell_types, points)
+
+
+def read_shape(
+    shapefile: str | Path,
+    simplify: bool = False,
+    triangle: bool = True,
+    cellsize: int | None = None,
+) -> pv.UnstructuredGrid:
+    """
+    Generate a pyvista Unstructured grid from a shapefile.
+
+    :param shapefile: Shapefile to be meshed.
+    :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
+        is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
+        Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
+    :param triangle: Use the triangle-mesher. If False, the gmsh-mesher is used.
+    :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
+        If None - cellsize is 1/100 of larger bound (x or y).
+
+    :return: pv.UnstructuredGrid
+    """
+    points_cells = _points_cells_from_shapefile(
+        shapefile, simplify, triangle, cellsize
+    )
+    return _mesh_from_points_cells(points_cells[0], points_cells[1])
