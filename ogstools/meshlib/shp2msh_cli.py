@@ -49,4 +49,4 @@ def cli() -> None:
     points, cells = ml.shapefile_meshing(
         args.input, simplify=simple, triangle=triangle, cellsize=args.cellsize
     )
-    ml.Mesh.from_points_cells(points=points, cells=cells).save(args.output)
+    ml.mesh_from_points_cells(points=points, cells=cells).save(args.output)
