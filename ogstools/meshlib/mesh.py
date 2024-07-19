@@ -16,7 +16,7 @@ from ogstools._internal import copy_method_signature
 from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
-from . import data_processing, geo, ip_mesh
+from . import data_processing, geo, ip_mesh, shape_meshing
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -121,3 +121,16 @@ class Mesh(pv.UnstructuredGrid):
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )
         return mesh
+
+    @classmethod
+    @copy_method_signature(shape_meshing.read_shape)
+    def read_shape(
+        cls,
+        shapefile: str | Path,
+        simplify: bool = False,
+        triangle: bool = True,
+        cellsize: int | None = None,
+    ) -> "Mesh":
+        return cls(
+            shape_meshing.read_shape(shapefile, simplify, triangle, cellsize)
+        )

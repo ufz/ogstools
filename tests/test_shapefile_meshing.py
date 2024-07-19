@@ -56,6 +56,9 @@ class TestShapeFileMeshing:
 
     def test_meshclass_reading(self):
         ogs_mesh = ml.Mesh.read(test_shapefile)
+        ogs_mesh_special = ml.Mesh.read_shape(test_shapefile)
         pyvista_mesh = ml.read_shape(test_shapefile)
         assert pyvista_mesh.n_points == ogs_mesh.n_points
         assert pyvista_mesh.n_cells == ogs_mesh.n_cells
+        assert pyvista_mesh.n_points == ogs_mesh_special.n_points
+        assert pyvista_mesh.n_cells == ogs_mesh_special.n_cells
