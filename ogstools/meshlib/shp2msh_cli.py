@@ -46,7 +46,7 @@ def cli() -> None:
     args = parser.parse_args()
     simple = "simplified" in args.simplify
     triangle = "Triangle" in args.meshing
-    points, cells = ml._points_cells_from_shapefile(
+
+    ml.read_shape(
         args.input, simplify=simple, triangle=triangle, cellsize=args.cellsize
-    )
-    ml._mesh_from_points_cells(points=points, cells=cells).save(args.output)
+    ).save(args.output)
