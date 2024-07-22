@@ -32,7 +32,7 @@ def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
 def _points_cells_from_shapefile(
     shapefile: str | Path,
     simplify: bool = False,
-    triangle: bool = True,
+    mesh_generator: str = "triangle",
     cellsize: int | None = None,
 ) -> tuple:
     """
@@ -63,9 +63,14 @@ def _points_cells_from_shapefile(
         geodataframe = GeoDataFrame(geometry=list(exploded_union["geometry"]))
     geodataframe["cellsize"] = cellsize
 
-    if triangle:
+    assert mesh_generator in [
+        "triangle",
+        "gmsh",
+    ], "mesh_generator must be 'triangle' or 'gmsh'"
+
+    if mesh_generator == "triangle":
         mesher = pm.TriangleMesher(geodataframe)
-    else:
+    elif mesh_generator == "gmsh":
         mesher = pm.GmshMesher(geodataframe)
     return mesher.generate()
 
@@ -81,6 +86,7 @@ def _mesh_from_points_cells(
     https://docs.pyvista.org/version/stable/api/core/_autosummary/pyvista.unstructuredgrid
     :param points: An array of shape (n_points, 3) containing the coordinates of each point.
     :param cells: An array of lists, where each inner list represents a cell and contains the indices of its points.
+
     :return: A Mesh object
     """
     # Convert points to numpy array if it's not already
@@ -119,7 +125,7 @@ def _mesh_from_points_cells(
 def read_shape(
     shapefile: str | Path,
     simplify: bool = False,
-    triangle: bool = True,
+    mesh_generator: str = "triangle",
     cellsize: int | None = None,
 ) -> pv.UnstructuredGrid:
     """
@@ -129,13 +135,13 @@ def read_shape(
     :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
         is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
         Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
-    :param triangle: Use the triangle-mesher. If False, the gmsh-mesher is used.
+    :param mesh_generator: Choose between 'triangle' and 'gmsh' to generate the mesh.
     :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
         If None - cellsize is 1/100 of larger bound (x or y).
 
     :return: pv.UnstructuredGrid
     """
     points_cells = _points_cells_from_shapefile(
-        shapefile, simplify, triangle, cellsize
+        shapefile, simplify, mesh_generator, cellsize
     )
     return _mesh_from_points_cells(points_cells[0], points_cells[1])

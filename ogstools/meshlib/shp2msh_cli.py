@@ -23,8 +23,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "meshing",
-    choices=["Triangle", "GMSH"],
-    default="Triangle",
+    choices=["triangle", "gmsh"],
+    default="triangle",
     type=str,
     help="Either Triangle or GMSH can be chosen for meshing.",
     nargs="?",
@@ -45,8 +45,10 @@ parser.add_argument(
 def cli() -> None:
     args = parser.parse_args()
     simple = "simplified" in args.simplify
-    triangle = "Triangle" in args.meshing
 
     ml.read_shape(
-        args.input, simplify=simple, triangle=triangle, cellsize=args.cellsize
+        args.input,
+        simplify=simple,
+        mesh_generator=args.meshing,
+        cellsize=args.cellsize,
     ).save(args.output)

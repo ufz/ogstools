@@ -1,4 +1,5 @@
 import subprocess
+from tempfile import mkdtemp
 
 import ogstools.meshlib as ml
 from ogstools.examples import test_shapefile
@@ -6,13 +7,17 @@ from ogstools.examples import test_shapefile
 
 def test_cli():
     subprocess.run(["shp2msh", "--help"], check=True)
+    subprocess.run(
+        ["shp2msh", "-i", str(test_shapefile), "-o", mkdtemp(".vtu")],
+        check=True,
+    )
 
 
 class TestShapeFileMeshing:
     def test_default(self):
         pyvista_mesh = ml.read_shape(
             test_shapefile
-        )  # simplify_false, triangle_true
+        )  # simplify_false, mesh_generator_triangle
         assert pyvista_mesh.n_points == 233465
         assert pyvista_mesh.n_cells == 344431
 
@@ -42,7 +47,7 @@ class TestShapeFileMeshing:
 
     def test_simpify_gmsh(self):
         mesh_simplify = ml.read_shape(
-            test_shapefile, simplify=True, triangle=False
+            test_shapefile, simplify=True, mesh_generator="gmsh"
         )
 
         mesh_complex = ml.read_shape(

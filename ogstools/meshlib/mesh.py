@@ -128,9 +128,11 @@ class Mesh(pv.UnstructuredGrid):
         cls,
         shapefile: str | Path,
         simplify: bool = False,
-        triangle: bool = True,
+        mesh_generator: str = "triangle",
         cellsize: int | None = None,
     ) -> "Mesh":
         return cls(
-            shape_meshing.read_shape(shapefile, simplify, triangle, cellsize)
+            shape_meshing.read_shape(
+                shapefile, simplify, mesh_generator, cellsize
+            )
         )
