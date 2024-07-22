@@ -101,22 +101,16 @@ def _mesh_from_points_cells(
     assert (
         len(np.unique([len(cell) for cell in cells])) == 1
     ), "All cells must be of the same type. Hence, have the same number of points. If not use pyvista.UnstructuredGrid directly."
-    # choose the celltype:
-    if cell_array[0] == 4:
-        celltype = pv.CellType.TETRA
-    elif cell_array[0] == 8:
-        celltype = pv.CellType.HEXAHEDRON
-    elif cell_array[0] == 6:
-        celltype = pv.CellType.WEDGE
-    elif cell_array[0] == 5:
-        celltype = pv.CellType.PYRAMID
-    elif cell_array[0] == 3:
-        celltype = pv.CellType.TRIANGLE
-    elif cell_array[0] == 2:
-        celltype = pv.CellType.LINE
-    else:
-        celltype = pv.CellType.CONVEX_POINT_SET
-    # Create the cell types array
+    celltype_mapping = {
+        4: pv.CellType.TETRA,
+        8: pv.CellType.HEXAHEDRON,
+        6: pv.CellType.WEDGE,
+        5: pv.CellType.PYRAMID,
+        3: pv.CellType.TRIANGLE,
+        2: pv.CellType.LINE,
+    }
+
+    celltype = celltype_mapping.get(cell_array[0], pv.CellType.CONVEX_POINT_SET)
     cell_types = np.full(len(cells), celltype)
     # Return the UnstructuredGrid
     return pv.UnstructuredGrid(np.asarray(cell_array), cell_types, points)
