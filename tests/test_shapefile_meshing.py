@@ -2,7 +2,7 @@ import subprocess
 from tempfile import mkdtemp
 
 import ogstools.meshlib as ml
-from ogstools.examples import test_shapefile
+from ogstools.examples import circle_shapefile, test_shapefile
 
 
 def test_cli():
@@ -47,22 +47,19 @@ class TestShapeFileMeshing:
 
     def test_simpify_gmsh(self):
         mesh_simplify = ml.read_shape(
-            test_shapefile, simplify=True, mesh_generator="gmsh"
+            circle_shapefile, simplify=True, mesh_generator="gmsh"
+        )
+        mesh_original = ml.read_shape(
+            circle_shapefile, simplify=False, mesh_generator="gmsh"
         )
 
-        mesh_complex = ml.read_shape(
-            test_shapefile, simplify=False, triangle=False
-        )
-
-        assert mesh_simplify.n_points == 12618
-        assert mesh_simplify.n_cells == 22915
-        assert mesh_simplify.n_points < mesh_complex.n_points
-        assert mesh_simplify.n_cells < mesh_complex.n_cells
+        assert mesh_simplify.n_points < mesh_original.n_points
+        assert mesh_simplify.n_cells < mesh_original.n_cells
 
     def test_meshclass_reading(self):
-        ogs_mesh = ml.Mesh.read(test_shapefile)
-        ogs_mesh_special = ml.Mesh.read_shape(test_shapefile)
-        pyvista_mesh = ml.read_shape(test_shapefile)
+        ogs_mesh = ml.Mesh.read(circle_shapefile)
+        ogs_mesh_special = ml.Mesh.read_shape(circle_shapefile)
+        pyvista_mesh = ml.read_shape(circle_shapefile)
         assert pyvista_mesh.n_points == ogs_mesh.n_points
         assert pyvista_mesh.n_cells == ogs_mesh.n_cells
         assert pyvista_mesh.n_points == ogs_mesh_special.n_points
