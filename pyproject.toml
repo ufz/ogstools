@@ -11,7 +11,7 @@ license = { text = "BSD-3-Clause" }
 readme = "README.md"
 requires-python = '>=3.10'
 dependencies = [
-  "gmsh>=4.11.1",
+  "gmsh>=4.12.0",
   "h5py>=3.8.0",
   "jupytext>=1.14.0",
   "meshio==5.3.5",
