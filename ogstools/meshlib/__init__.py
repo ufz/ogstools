@@ -26,6 +26,7 @@ from .region import (
     to_region_tetraeder,
     to_region_voxel,
 )
+from .shape_meshing import read_shape
 
 __all__ = [
     "Boundary",
@@ -52,4 +53,6 @@ __all__ = [
     "to_region_simplified",
     "to_region_tetraeder",
     "to_region_voxel",
+    "read_shape",
+    "",
 ]

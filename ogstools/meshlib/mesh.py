@@ -10,12 +10,13 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 
+import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
 from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
-from . import data_processing, geo, ip_mesh
+from . import data_processing, geo, ip_mesh, shape_meshing
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -104,15 +105,34 @@ class Mesh(pv.UnstructuredGrid):
         """
         Initialize a Mesh object
 
-            :param filepath:            Path to the vtu file.
+            :param filepath:            Path to the mesh or shapefile file.
             :param data_length_unit:    Spatial data unit of the mesh.
             :param output_length_unit:  Spatial output unit of the mesh.
 
             :returns:                   A Mesh object
         """
-        mesh = cls(pv.XMLUnstructuredGridReader(str(filepath)).read())
-        mesh.filepath = Path(filepath)
+        if Path(filepath).suffix == ".shp":
+            mesh = cls(ml.read_shape(filepath))
+        else:
+            mesh = cls(pv.read(filepath))
+
+        mesh.filepath = Path(filepath).with_suffix(".vtu")
         mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )
         return mesh
+
+    @classmethod
+    @copy_method_signature(shape_meshing.read_shape)
+    def read_shape(
+        cls,
+        shapefile: str | Path,
+        simplify: bool = False,
+        mesh_generator: str = "triangle",
+        cellsize: int | None = None,
+    ) -> "Mesh":
+        return cls(
+            shape_meshing.read_shape(
+                shapefile, simplify, mesh_generator, cellsize
+            )
+        )
