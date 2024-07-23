@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import pyvista as pv
 
+import ogstools.meshlib as ml
 from ogstools import examples
 from ogstools.ogs6py import Project
 
@@ -271,6 +272,12 @@ class TestConverter:
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = convert_properties_mesh(self.doc)
+
+    def test_mesh_class(self):
+        mesh = ml.Mesh.read_feflow(examples.feflow_model_box_Neumann)
+        assert mesh.n_points == 6768
+        assert mesh.n_cells == 11462
+        assert mesh.get_cell(0).type == pv.CellType.WEDGE
 
     def test_geometry(self):
         """

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 
@@ -146,3 +147,25 @@ class Mesh(pv.UnstructuredGrid):
             list(map(id_map.get, self["MaterialIDs"]))
         )
         return
+
+    if find_spec("ifm") is not None:
+
+        @classmethod
+        def read_feflow(
+            cls,
+            feflow_file: Path | str,
+        ) -> "Mesh":
+            """
+            Initialize a Mesh object read from a FEFLOW file. This mesh stores all model specific
+            information such as boundary conditions or material parameters.
+
+                :param feflow_file:         Path to the feflow file.
+
+                :returns:                   A Mesh object
+            """
+            import ifm_contrib as ifm
+
+            from ogstools.feflowlib import convert_properties_mesh
+
+            doc = ifm.loadDocument(str(feflow_file))
+            return cls(convert_properties_mesh(doc))
