@@ -20,10 +20,8 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
         type="STEADY_STATE_DIFFUSION",
         integration_order=2,
     )
-    model.processes.add_process_variable(
-        secondary_variable="darcy_velocity", output_name="v"
-    )
-    model.timeloop.add_process(
+    model.processes.add_secondary_variable("darcy_velocity", "v")
+    model.time_loop.add_process(
         process="SteadyStateDiffusion",
         nonlinear_solver_name="basic_picard",
         convergence_type="DeltaX",
@@ -31,7 +29,7 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
         abstol="1e-15",
         time_discretization="BackwardEuler",
     )
-    model.timeloop.set_stepping(
+    model.time_loop.set_stepping(
         process="SteadyStateDiffusion",
         type="SingleStep",
         t_initial="0",
@@ -39,20 +37,20 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
         repeat="1",
         delta_t="0.25",
     )
-    model.timeloop.add_output(
+    model.time_loop.add_output(
         type="VTK",
         prefix=str(saving_path),
         repeat="1",
         each_steps="1",
         variables=[],
     )
-    model.nonlinsolvers.add_non_lin_solver(
+    model.nonlinear_solvers.add_non_lin_solver(
         name="basic_picard",
         type="Picard",
         max_iter="10",
         linear_solver="general_linear_solver",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="lis",
         solver_type="cg",
@@ -60,7 +58,7 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
         max_iteration_step="100000",
         error_tolerance="1e-6",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="eigen",
         solver_type="CG",
@@ -68,7 +66,7 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
         max_iteration_step="100000",
         error_tolerance="1e-6",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="petsc",
         prefix="sd",
@@ -109,10 +107,8 @@ def liquid_flow(
         specific_body_force=gravity,
         linear="true",
     )
-    model.processes.add_process_variable(
-        secondary_variable="darcy_velocity", output_name="v"
-    )
-    model.timeloop.add_process(
+    model.processes.add_secondary_variable("darcy_velocity", "v")
+    model.time_loop.add_process(
         process="LiquidFlow",
         nonlinear_solver_name="basic_picard",
         convergence_type="DeltaX",
@@ -120,7 +116,7 @@ def liquid_flow(
         abstol="1e-10",
         time_discretization="BackwardEuler",
     )
-    model.timeloop.set_stepping(
+    model.time_loop.set_stepping(
         process="LiquidFlow",
         type="FixedTimeStepping",
         t_initial="0",
@@ -128,20 +124,20 @@ def liquid_flow(
         repeat="1",
         delta_t="1",
     )
-    model.timeloop.add_output(
+    model.time_loop.add_output(
         type="VTK",
         prefix=str(saving_path),
         repeat="1",
         each_steps="1",
         variables=[],
     )
-    model.nonlinsolvers.add_non_lin_solver(
+    model.nonlinear_solvers.add_non_lin_solver(
         name="basic_picard",
         type="Picard",
         max_iter="10",
         linear_solver="general_linear_solver",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="lis",
         solver_type="cg",
@@ -149,7 +145,7 @@ def liquid_flow(
         max_iteration_step="10000",
         error_tolerance="1e-20",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="eigen",
         solver_type="CG",
@@ -157,7 +153,7 @@ def liquid_flow(
         max_iteration_step="100000",
         error_tolerance="1e-20",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="petsc",
         prefix="lf",
@@ -175,6 +171,9 @@ def component_transport(
     model: ogs.OGS = None,
     dimension: int = 3,
     fixed_out_times: list | None = None,
+    time_stepping: list | None = None,
+    initial_time: int = 1,
+    end_time: int = 1,
 ) -> ogs.OGS:
     """
     A template for component transport process to be simulated in ogs.
@@ -183,6 +182,9 @@ def component_transport(
     :param species:
     :param model: ogs model, which shall be used with the template
     :param dimension: True, if the model is 2 dimensional.
+    :param time_stepping: List of how often a time step should be repeated and its time.
+    :param initial_time: Beginning of the simulation time.
+    :param end_time: End of the simulation time.
     """
     if dimension == 1:
         gravity = "0"
@@ -200,22 +202,22 @@ def component_transport(
         specific_body_force=gravity,
     )
     output_variables = species + ["HEAD_OGS"]
-    fixed_out_times = [1] if fixed_out_times is None else fixed_out_times
-    model.timeloop.add_output(
+    fixed_out_times = [end_time] if fixed_out_times is None else fixed_out_times
+    model.time_loop.add_output(
         type="VTK",
         prefix=str(saving_path),
-        repeat=1,
-        each_steps=48384000,
         variables=output_variables,
+        repeat=1,
+        each_steps=end_time,
         fixed_output_times=fixed_out_times,
     )
-    model.nonlinsolvers.add_non_lin_solver(
+    model.nonlinear_solvers.add_non_lin_solver(
         name="basic_picard",
         type="Picard",
         max_iter="10",
         linear_solver="general_linear_solver",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="lis",
         solver_type="bicgstab",
@@ -223,7 +225,7 @@ def component_transport(
         max_iteration_step="10000",
         error_tolerance="1e-10",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="eigen",
         solver_type="CG",
@@ -231,7 +233,7 @@ def component_transport(
         max_iteration_step="100000",
         error_tolerance="1e-20",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="petsc",
         prefix="ct",
@@ -240,6 +242,32 @@ def component_transport(
         max_iteration_step="10000",
         error_tolerance="1e-16",
     )
+
+    for _i in range(len(species) + 1):
+        model.time_loop.add_process(
+            process="CT",
+            nonlinear_solver_name="basic_picard",
+            convergence_type="DeltaX",
+            norm_type="NORM2",
+            reltol="1e-6",
+            time_discretization="BackwardEuler",
+        )
+        if time_stepping is None:
+            time_stepping = [(1, 1)]
+
+        model.time_loop.set_stepping(
+            process="CT",
+            type="FixedTimeStepping",
+            t_initial=initial_time,
+            t_end=end_time,
+            repeat=time_stepping[0][0],
+            delta_t=time_stepping[0][1],
+        )
+
+        for time_step in time_stepping[1:]:
+            model.time_loop.add_time_stepping_pair(
+                repeat=time_step[0], delta_t=time_step[1], process="CT"
+            )
     return model
 
 
@@ -267,10 +295,8 @@ def hydro_thermal(
         integration_order=3,
         specific_body_force=gravity,
     )
-    model.processes.add_process_variable(
-        secondary_variable="darcy_velocity", output_name="v"
-    )
-    model.timeloop.add_process(
+    model.processes.add_secondary_variable("darcy_velocity", "v")
+    model.time_loop.add_process(
         process="HydroThermal",
         nonlinear_solver_name="basic_picard",
         convergence_type="DeltaX",
@@ -278,7 +304,7 @@ def hydro_thermal(
         abstol="1e-16",
         time_discretization="BackwardEuler",
     )
-    model.timeloop.set_stepping(
+    model.time_loop.set_stepping(
         process="HydroThermal",
         type="FixedTimeStepping",
         t_initial="0",
@@ -286,25 +312,25 @@ def hydro_thermal(
         repeat="1",
         delta_t="1e10",
     )
-    model.timeloop.add_time_stepping_pair(
+    model.time_loop.add_time_stepping_pair(
         process="HydroThermal",
         repeat="1",
         delta_t="1e10",
     )
-    model.timeloop.add_output(
+    model.time_loop.add_output(
         type="VTK",
         prefix=str(saving_path),
         repeat="1",
         each_steps="1",
         variables=[],
     )
-    model.nonlinsolvers.add_non_lin_solver(
+    model.nonlinear_solvers.add_non_lin_solver(
         name="basic_picard",
         type="Picard",
         max_iter="100",
         linear_solver="general_linear_solver",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="lis",
         solver_type="bicgstab",
@@ -312,7 +338,7 @@ def hydro_thermal(
         max_iteration_step="10000",
         error_tolerance="1e-20",
     )
-    model.linsolvers.add_lin_solver(
+    model.linear_solvers.add_lin_solver(
         name="general_linear_solver",
         kind="eigen",
         solver_type="SparseLU",
