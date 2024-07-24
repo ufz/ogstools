@@ -189,7 +189,7 @@ def extract_cell_boundary_conditions(
             mesh.extract_surface(), lambda normals: normals[:, 2] > 0
         )
     else:
-        topsurf = mesh
+        topsurf = mesh.copy()
     # Only selected cell data is needed -> clear all point data instead of the bulk_node_ids
     for cd in [
         cell_data
@@ -200,8 +200,6 @@ def extract_cell_boundary_conditions(
     for pt_data in topsurf.point_data:
         if pt_data != "bulk_node_ids":
             topsurf.point_data.remove(pt_data)
-    # correct unit for P_IOFLOW, in FEFLOW m/d in ogs m/s
-    topsurf.cell_data["P_IOFLOW"] = topsurf.cell_data["P_IOFLOW"]
     # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
     remove_bulk_ids(mesh)
     return (
@@ -492,8 +490,6 @@ def write_mesh_of_combined_properties(
         zip(*[material_mesh[prop] for prop in property_list], strict=False)
     )
     material_mesh[new_property] = zipped
-    # correct the unit
-    material_mesh[new_property] = material_mesh[new_property]
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.point_data.remove("vtkOriginalPointIds")
     for pt_data in material_mesh.point_data:
