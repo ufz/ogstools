@@ -251,37 +251,22 @@ def get_material_properties_of_HT_model(
     :param mesh: mesh
     :returns: material_properties
     """
-    parameters_feflow = [
-        "P_ANGL",
-        "P_ANIS",
-        "P_CAPACF",
-        "P_CAPACS",
-        "P_COMP",
-        "P_COND",
-        "P_CONDUCF",
-        "P_CONDUCS",
-        "P_POROH",
-        "P_LDISH",
-        "P_TDISH",
-        "P_ANIS",
-    ]
-    parameters_ogs = [
-        "anisotropy_angle",
-        "anisotropy_factor",
-        "specific_heat_capacity_fluid",
-        "specific_heat_capacity_solid",
-        "storage",
-        "permeability",
-        "thermal_conductivity_fluid",
-        "thermal_conductivity_solid",
-        "porosity",
-        "thermal_longitudinal_dispersivity",
-        "thermal_transversal_dispersivity",
-    ]
+    parameter_mapping = {
+        "P_ANGL": "anisotropy_angle",
+        "P_ANIS": "anisotropy_factor",
+        "P_CAPACF": "specific_heat_capacity_fluid",
+        "P_CAPACS": "specific_heat_capacity_solid",
+        "P_COMP": "storage",
+        "P_COND": "permeability",
+        "P_CONDUCF": "thermal_conductivity_fluid",
+        "P_CONDUCS": "thermal_conductivity_solid",
+        "P_POROH": "porosity",
+        "P_LDISH": "thermal_longitudinal_dispersivity",
+        "P_TDISH": "thermal_transversal_dispersivity",
+    }
+
     material_properties: defaultdict = defaultdict(dict)
-    for parameter_feflow, parameter_ogs in zip(
-        parameters_feflow, parameters_ogs, strict=False
-    ):
+    for parameter_feflow, parameter_ogs in parameter_mapping.items():
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
         ).items():
