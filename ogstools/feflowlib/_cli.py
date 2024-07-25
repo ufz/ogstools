@@ -20,7 +20,6 @@ from ogstools.feflowlib import (
     combine_material_properties,
     component_transport,
     convert_geometry_mesh,
-    deactivate_cells,
     extract_cell_boundary_conditions,
     get_material_properties_of_CT_model,
     get_material_properties_of_HT_model,
@@ -150,12 +149,6 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
         "Boundary conditions have been written to separate mesh vtu-files."
     )
     if "OGS" in case:
-        # Deactivating cells: All the cells that are inactive in FEFLOW, will be assigned to a
-        # the same MaterialID multiplied by -1.
-        if deactivate_cells(mesh):
-            log.info(
-                "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
-            )
         if "hydro_thermal" not in case and "component_transport" not in case:
             property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
             material_properties = combine_material_properties(

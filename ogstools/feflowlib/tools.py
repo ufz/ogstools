@@ -1103,19 +1103,3 @@ def setup_prj_file(
         )
 
     return model
-
-
-def deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
-    """
-    Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
-    Therefore, the input mesh is modified.
-    :param mesh: mesh
-    :returns: 0 for no cells have been deactivated and 1 for cells have been deactivated
-    """
-    inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
-    if len(inactive_cells[0]) == 0:
-        return_int = 0
-    else:
-        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
-        return_int = 1
-    return return_int

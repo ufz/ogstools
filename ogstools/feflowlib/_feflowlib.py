@@ -330,6 +330,25 @@ def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
         )
 
 
+def _deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
+    """
+    Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
+    Therefore, the input mesh is modified.
+    :param mesh: mesh
+    :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
+    """
+    inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
+    if len(inactive_cells[0]) == 0:
+        return_int = 0
+    else:
+        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+        return_int = 1
+        log.info(
+            "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
+        )
+    return return_int
+
+
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     Get the geometric construction of the mesh.
@@ -399,4 +418,5 @@ def convert_properties_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)
+    _deactivate_cells(mesh)
     return mesh

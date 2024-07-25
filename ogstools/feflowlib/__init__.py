@@ -27,7 +27,6 @@ from .templates import (
 )
 from .tools import (
     combine_material_properties,
-    deactivate_cells,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
     get_material_properties_of_CT_model,
@@ -45,7 +44,6 @@ __all__ = [
     "component_transport",
     "convert_geometry_mesh",
     "convert_properties_mesh",
-    "deactivate_cells",
     "extract_cell_boundary_conditions",
     "extract_point_boundary_conditions",
     "feflowModel",
