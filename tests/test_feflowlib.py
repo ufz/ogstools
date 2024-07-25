@@ -20,6 +20,7 @@ from ogstools.feflowlib import (  # noqa: E402
     component_transport,
     convert_properties_mesh,
     extract_cell_boundary_conditions,
+    extract_point_boundary_conditions,
     get_material_properties_of_CT_model,
     get_material_properties_of_HT_model,
     get_species,
@@ -279,6 +280,15 @@ class TestConverter:
         assert mesh.n_cells == 11462
         assert mesh.get_cell(0).type == pv.CellType.WEDGE
 
+    def test_mesh_manipulation_3D(self):
+        testing_mesh = self.pv_mesh.copy()
+        extract_point_boundary_conditions(self.temp_dir, testing_mesh)
+        assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
+        extract_cell_boundary_conditions(
+            self.temp_dir / "boxNeumann.vtu", self.pv_mesh
+        )[1]
+        assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
+
     def test_geometry(self):
         """
         Test if geometry can be converted correctly.
@@ -412,6 +422,15 @@ class TestSimulation_HT:
         self.vtu_path = self.temp_dir / "HT_Dirichlet.vtu"
         self.pv_mesh.save(self.vtu_path)
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+
+    def test_mesh_manipulation_2D(self):
+        testing_mesh = self.pv_mesh.copy()
+        extract_point_boundary_conditions(self.temp_dir, testing_mesh)
+        assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
+        extract_cell_boundary_conditions(
+            self.temp_dir / "HT_Dirichlet_top.vtu", self.pv_mesh
+        )[1]
+        assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
 
     def test_dirichlet_toymodel_ogs_ht(self):
         """
