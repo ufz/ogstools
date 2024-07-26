@@ -72,7 +72,7 @@ class TestSimulation_Neumann:
             "steady state diffusion",
             model=ssd_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
@@ -103,7 +103,7 @@ class TestSimulation_Neumann:
             "liquid flow",
             model=lqf_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
@@ -148,7 +148,7 @@ class TestSimulation_Robin:
             "steady state diffusion",
             model=ssd_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
@@ -179,7 +179,7 @@ class TestSimulation_Robin:
             "liquid flow",
             model=lqf_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
@@ -224,7 +224,7 @@ class TestSimulation_Well:
             "steady state diffusion",
             model=ssd_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
@@ -254,7 +254,7 @@ class TestSimulation_Well:
             "liquid flow",
             model=lqf_model,
         )
-        model.write_input(prjfile)
+        model.write_input()
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation

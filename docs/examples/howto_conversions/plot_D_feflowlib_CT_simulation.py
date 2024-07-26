@@ -87,7 +87,7 @@ model = setup_prj_file(
     rel_tol=1e-14,
 )
 # The model must be written before it can be run.
-model.write_input(path_prjfile)
+model.write_input()
 # Print the prj-file as an example.
 ET.dump(ET.parse(path_prjfile))
 # %%

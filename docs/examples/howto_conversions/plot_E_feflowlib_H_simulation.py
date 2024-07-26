@@ -81,7 +81,7 @@ model = setup_prj_file(
     model=ssd_model,
 )
 # The model must be written before it can be run.
-model.write_input(path_prjfile)
+model.write_input()
 # Simply print the prj-file as an example.
 model_prjfile = ET.parse(path_prjfile)
 ET.dump(model_prjfile)
