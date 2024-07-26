@@ -8,32 +8,27 @@ In this example we show how a simple FEFLOW model consisting of two layers can b
 """
 
 # %%
-# 1. Let us convert only the points and cells at first.
-import ifm_contrib as ifm
+# 0. Necessary imports
+import tempfile
+from pathlib import Path
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2layers
-from ogstools.feflowlib import (
-    convert_geometry_mesh,
-    update_geometry,
-)
+from ogstools.feflowlib import feflowModel
 
-# Load a FEFLOW model (.fem) or FEFLOW results file (.dac) as a FEFLOW document.
-feflow_model = ifm.loadDocument(str(feflow_model_2layers))
-pv_mesh = convert_geometry_mesh(feflow_model)
-pv_mesh.plot(show_edges=True, off_screen=True)
-# %%
-# 2. To this mesh we add point and cell data.
-pv_mesh = update_geometry(pv_mesh, feflow_model)
-pv_mesh.plot(scalars="P_HEAD", show_edges=True, off_screen=True)
+# 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
+# During the initialisation, the FEFLOW file is converted.
+temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+feflow_model = feflowModel(feflow_model_2layers, temp_dir / "2layers.vtu")
+feflow_model.mesh.plot(scalars="P_HEAD", show_edges=True, off_screen=True)
 # Print information about the mesh.
-print(pv_mesh)
+print(feflow_model.mesh)
 # %%
-# 3. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
+# 2. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
 # Further information can be found at https://docs.pyvista.org/version/stable/user-guide/simple.html.
 # For example it can be saved as a VTK Unstructured Grid File (\*.vtu).
 # This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
-pv_mesh.save("2layers_model.vtu")
+feflow_model.mesh.save("2layers_model.vtu")
 # %%
 # 4. Use the ogstools plotting functionalities.
 fig = ot.plot.contourf(pv_mesh.slice("z"), "P_HEAD")
