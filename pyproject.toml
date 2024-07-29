@@ -8,27 +8,39 @@ dynamic = ["version"]
 description = "A collection of Python tools aimed at evolving into a modeling toolchain around OpenGeoSys."
 authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
+keywords = ["opengeosys", "geoscience", "subsurface modeling", "hydrogeology", "numerical simulation", "finite element method", "groundwater flow", "geochemistry", "geotechnical engineering", "porous media", "contaminant transport", "mesh generation", "data visualization", "scientific computing", "open-source software"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Finite Element Method (FEM)",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent"
+]
 readme = "README.md"
 requires-python = '>=3.10'
 dependencies = [
   "gmsh>=4.12.0",
   "h5py>=3.8.0",
   "jupytext>=1.14.0",
-  "meshio==5.3.5",
   "matplotlib>=3.7.1",
-  "nbconvert>=7.9.2",
-  "pyvista[all,trame]>=0.40.1",
-  "rich>=13.4.2",
+  "meshio>=5.3.0",
+  "pyvista[all]>=0.40.1",
+  "numpy>=1.20.0",
   "scipy>=1.10.1",
   "Pint>=0.22",
-  "Pillow>=9.2.0",
-  "pandas>=1.4.0",
-  "pandamesh>=0.1.6",
-  "tenacity<8.4.0", # fix for papermill https://github.com/nteract/papermill/issues/510
   "papermill>=2.4.0",
+  "pandamesh>=0.1.6",
   "ogs>=6.5.2",
   "ogs6py>=0.402",
-  "tqdm>=4.60",
   "typeguard>=4.0.0",
   "VTUinterface>=0.704",
 ]
