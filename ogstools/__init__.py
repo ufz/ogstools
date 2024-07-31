@@ -8,14 +8,17 @@
 
 from importlib import metadata
 
-from . import plot
-from .meshlib import Mesh, MeshSeries  # noqa: F401
-from .propertylib import properties
-
 __version__ = metadata.version(__package__)
 __authors__ = metadata.metadata(__package__)["Author-email"]
 
 del metadata  # optional, avoids polluting the results of dir(__package__)
+
+try:
+    from . import plot
+    from .meshlib import Mesh, MeshSeries  # noqa: F401
+    from .propertylib import properties
+except ImportError as e:
+    print(f"Warning: Failed to import the following libraries: {e.name}")
 
 
 __all__ = [

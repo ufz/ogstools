@@ -50,3 +50,30 @@ cleandocs:  ## Cleans up temporary documentation files
 preview:  ## Runs an auto-updating web server for the documentation
 	make docs
 	python docs/server.py
+
+
+.PHONY: requirement
+requirement:
+	## conda init zsh
+	## conda create --prefix /tmp/ogstools-test-env-py312  python=3.12
+	## conda activate /tmp/ogstools-test-env-py312
+	@version_output=$$(python --version 2>&1); \
+	version=$$(echo "$$version_output" | awk '{print $$2}' | awk -F'.' '{print $$1 "_" $$2}'); \
+	venv_dir=".venv_py$$version"; \
+	if [ -d "$$venv_dir" ]; then \
+		read -p "Virtual environment '$$venv_dir' already exists. Do you want to continue and recreate it? (y/N): " confirm; \
+		if [ "$$confirm" != "y" ] && [ "$$confirm" != "Y" ]; then \
+			echo "Aborting."; \
+			exit 1; \
+		fi; \
+		echo "Continuing to recreate virtual environment."; \
+		rm -r "$$venv_dir"; \
+	fi; \
+	echo "Creating virtual environment in $$venv_dir"; \
+	python -m venv $$venv_dir; \
+	echo "Activating virtual environment and installing packages"; \
+	. $$venv_dir/bin/activate && pip install . && pip freeze -l > requirements/requirements_py$$version.txt && \
+	echo "Activating virtual environment and installing packages"; \
+	. $$venv_dir/bin/activate && pip install .[dev,tests,doc] && pip freeze -l > requirements/requirements_allextras_py$$version.txt && \
+	echo "Deleting virtual environment"; \
+	rm -r $$venv_dir
