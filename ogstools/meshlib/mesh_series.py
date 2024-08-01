@@ -98,7 +98,10 @@ class MeshSeries:
         meshio_mesh = meshio.Mesh(
             points, cells, point_data, cell_data, field_data
         )
-        return pv.from_meshio(meshio_mesh)
+        # pv.from_meshio does not copy field_data (fix in pyvista?)
+        pv_mesh = pv.from_meshio(meshio_mesh)
+        pv_mesh.field_data.update(field_data)
+        return pv_mesh
 
     def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Lazy read function."""
@@ -128,7 +131,7 @@ class MeshSeries:
     def timesteps(self) -> range:
         """Return the timesteps of the timeseries data."""
         if self._data_type == "vtu":
-            return range(0)
+            return range(1)
         if self._data_type == "pvd":
             return range(self._pvd_reader.number_time_points)
         # elif self._data_type == "xdmf":
@@ -406,9 +409,10 @@ class MeshSeries:
             fig, ax = plt.subplots()
         else:
             fig = None
-        ax.set_prop_cycle(
-            plot.utils.get_style_cycler(len(points), colors, linestyles)
-        )
+        if points.shape[0] > 1:
+            ax.set_prop_cycle(
+                plot.utils.get_style_cycler(len(points), colors, linestyles)
+            )
         if fill_between:
             ax.fill_between(
                 x_values,
