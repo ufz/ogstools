@@ -13,7 +13,9 @@ represented by one subsection of a cell.
 # simulation to plotting in a parameterized function. The main function of
 # importance is :meth:`~ogstools.meshlib.mesh.Mesh.to_ip_mesh`. We will use this
 # function to show the tessellated visualization of the integration point data
-# for different element and integration point orders and element types.
+# for different element and integration point orders and element types. Note,
+# you can also tessellate an entire MeshSeries via
+# :meth:`~ogstools.meshlib.mesh_series.MeshSeries.ip_tesselated`
 
 from pathlib import Path
 from tempfile import mkdtemp

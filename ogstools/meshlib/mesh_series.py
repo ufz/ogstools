@@ -67,6 +67,7 @@ class MeshSeries:
                 str(Path(filepath).parent / dataset.path)
                 for dataset in self._pvd_reader.datasets
             ]
+            self.timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
             self._read_xdmf(0)  # necessary to initialize hdf5_files
@@ -74,11 +75,41 @@ class MeshSeries:
             self.hdf5_bulk_name = list(meshes.keys())[
                 np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
             ]
+            _time_values = []
+            for collection_i in self._xdmf_reader.collection:
+                for element in collection_i:
+                    if element.tag == "Time":
+                        _time_values += [float(element.attrib["Value"])]
+            self.timevalues = np.asarray(_time_values)
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
+            self.timevalues = np.zeros(1)
+        elif self._data_type == "synthetic":
+            return
         else:
             msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
+
+    def ip_tesselated(self) -> "MeshSeries":
+        "Create a new MeshSeries from integration point tessellation."
+        ip_ms = MeshSeries(
+            Path(self.filepath).parent / "ip_meshseries.synthetic",
+            self.time_unit,
+            self.spatial_unit,
+            self.spatial_output_unit,
+        )
+        ip_mesh = self.read(0).to_ip_mesh()
+        ip_pt_cloud = self.read(0).to_ip_point_cloud()
+        ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
+        for ts in self.timesteps:
+            ip_data = {
+                key: self.read(ts).field_data[key][np.argsort(ordering)]
+                for key in ip_mesh.cell_data
+            }
+            ip_mesh.cell_data.update(ip_data)
+            ip_ms._data[ts] = ip_mesh.copy()
+        ip_ms.timevalues = self.timevalues
+        return ip_ms
 
     @property
     def hdf5(self) -> File:
@@ -104,23 +135,23 @@ class MeshSeries:
 
     def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Lazy read function."""
+        timestep = self.timesteps[timestep]
         if timestep in self._data:
-            return Mesh(
-                self._data[timestep],
-                self.spatial_unit,
-                self.spatial_output_unit,
-            )
-        if self._data_type == "pvd":
-            pv_mesh = self._read_pvd(timestep)
-        elif self._data_type == "xdmf":
-            pv_mesh = self._read_xdmf(timestep)
-        elif self._data_type == "vtu":
-            pv_mesh = self._vtu_reader.read()
-        if lazy_eval:
-            self._data[timestep] = pv_mesh
+            pv_mesh = self._data[timestep]
+        else:
+            if self._data_type == "pvd":
+                pv_mesh = self._read_pvd(timestep)
+            elif self._data_type == "xdmf":
+                pv_mesh = self._read_xdmf(timestep)
+            elif self._data_type == "vtu":
+                pv_mesh = self._vtu_reader.read()
+            if lazy_eval:
+                self._data[timestep] = pv_mesh
         mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
         if self._data_type == "pvd":
             mesh.filepath = Path(self.timestep_files[timestep])
+        else:
+            mesh.filepath = Path(self.filepath)
         return mesh
 
     def clear(self) -> None:
@@ -135,21 +166,6 @@ class MeshSeries:
             return range(self._pvd_reader.number_time_points)
         # elif self._data_type == "xdmf":
         return range(len(self.timevalues))
-
-    @property
-    def timevalues(self) -> np.ndarray:
-        """Return the timevalues of the timeseries data."""
-        if self._data_type == "vtu":
-            return np.zeros(1)
-        if self._data_type == "pvd":
-            return np.asarray(self._pvd_reader.time_values)
-        # elif self._data_type == "xdmf":
-        time_values = []
-        for collection_i in self._xdmf_reader.collection:
-            for element in collection_i:
-                if element.tag == "Time":
-                    time_values += [float(element.attrib["Value"])]
-        return np.asarray(time_values)
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
@@ -197,6 +213,10 @@ class MeshSeries:
         if self._data_type == "pvd":
             return np.asarray(
                 [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+            )
+        if self._data_type == "synthetic":
+            return np.asarray(
+                [self._data[t][data_name] for t in self.timesteps]
             )
         return mesh[data_name]
 

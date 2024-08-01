@@ -275,9 +275,12 @@ class TestUtils:
             model.run_model(
                 write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
             )
-            mesh = ot.MeshSeries(tmp_path / "mesh.pvd").read(-1)
-            int_pts = mesh.to_ip_point_cloud()
-            ip_mesh = mesh.to_ip_mesh()
+            meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
+            int_pts = meshseries.read(-1).to_ip_point_cloud()
+            ip_ms = meshseries.ip_tesselated()
+            ip_mesh = ip_ms.read(-1)
+            vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
+            assert not np.any(np.isnan(vals))
             assert int_pts.number_of_points == ip_mesh.number_of_cells
             containing_cells = ip_mesh.find_containing_cell(int_pts.points)
             # check for integration points coinciding with the tessellated cells

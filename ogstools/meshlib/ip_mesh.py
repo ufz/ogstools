@@ -187,30 +187,34 @@ def tessellate(
     )
 
 
-def to_ip_point_cloud(mesh: Mesh) -> Mesh:
+def to_ip_point_cloud(mesh: Mesh) -> pv.UnstructuredGrid:
     "Convert integration point data to a pyvista point cloud."
     # ipDataToPointCloud can't handle this
-    bad_keys = [SPATIAL_UNITS_KEY, "material_state_variable_ElasticStrain_ip"]
+    bad_keys = [
+        SPATIAL_UNITS_KEY,
+        "material_state_variable_ElasticStrain_ip",
+        "free_energy_density_ip",
+    ]
     _mesh = mesh.copy()
     for key in bad_keys:
         if key in _mesh.field_data:
             _mesh.field_data.remove(key)
-    filepath = Path() if _mesh.filepath is None else _mesh.filepath.parent
-    input_file = filepath / "ipDataToPointCloud_input.vtu"
+    parentpath = Path() if mesh.filepath is None else mesh.filepath.parent
+    input_file = parentpath / "ipDataToPointCloud_input.vtu"
     _mesh.save(input_file)
-    output_file = filepath / "ip_mesh.vtu"
+    output_file = parentpath / "ip_mesh.vtu"
     ogs.cli.ipDataToPointCloud(i=str(input_file), o=str(output_file))
     return pv.XMLUnstructuredGridReader(output_file).read()
 
 
-def to_ip_mesh(mesh: Mesh) -> Mesh:
+def to_ip_mesh(mesh: Mesh) -> pv.UnstructuredGrid:
     "Create a mesh with cells centered around integration points."
     meta = mesh.field_data["IntegrationPointMetaData"]
     meta_str = "".join([chr(val) for val in meta])
     integration_order = int(
         meta_str.split('"integration_order":')[1].split(",")[0]
     )
-    ip_mesh = mesh.to_ip_point_cloud()
+    ip_mesh = to_ip_point_cloud(mesh)
 
     cell_types = list({cell.type for cell in mesh.cell})
     new_meshes: list[pv.PolyData] = []

@@ -61,13 +61,14 @@ class Mesh(pv.UnstructuredGrid):
     def plot_linesample_contourf(self, *args: Any, **kwargs: Any) -> Any:
         return lineplots.linesample_contourf(self, *args, **kwargs)
 
-    @copy_method_signature(ip_mesh.to_ip_mesh)
-    def to_ip_mesh(self, *args: Any, **kwargs: Any) -> Any:
-        return Mesh(ip_mesh.to_ip_mesh(self, *args, **kwargs))
+    def to_ip_mesh(self) -> "Mesh":
+        return Mesh(ip_mesh.to_ip_mesh(self))
 
-    @copy_method_signature(ip_mesh.to_ip_point_cloud)
-    def to_ip_point_cloud(self, *args: Any, **kwargs: Any) -> Any:
-        return Mesh(ip_mesh.to_ip_point_cloud(self, *args, **kwargs))
+    def to_ip_point_cloud(self) -> "Mesh":
+        return Mesh(ip_mesh.to_ip_point_cloud(self))
+
+    to_ip_mesh.__doc__ = ip_mesh.to_ip_mesh.__doc__
+    to_ip_point_cloud.__doc__ = ip_mesh.to_ip_point_cloud.__doc__
 
     # pylint: enable=C0116
 
