@@ -62,11 +62,11 @@ class TestUtils:
             time_logscale=True, cb_loc="left", dpi=50, fontsize=10
         )  # fmt: skip
 
-    def test_probe_pvd(self):
-        "Test point probing on pvd."
-        mesh_series = examples.load_meshseries_THM_2D_PVD()
+    def test_probe(self):
+        "Test point probing on meshseries."
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).cell_centers().points
-        for method in ["nearest", "probefilter"]:
+        for method in ["nearest", "linear"]:
             values = mesh_series.probe(points, "temperature", method)
             assert not np.any(np.isnan(values))
 
@@ -84,14 +84,6 @@ class TestUtils:
         points = mesh_series.read(0).center
         meshseries.plot_probe(points, ot.properties.temperature)
         meshseries.plot_probe(points, ot.properties.velocity)
-
-    def test_probe_xdmf(self):
-        "Test point probing on xdmf."
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.read(0).cell_centers().points
-        for method in ["nearest", "linear", None]:
-            values = mesh_series.probe(points, "temperature", method)
-            assert not np.any(np.isnan(values))
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()

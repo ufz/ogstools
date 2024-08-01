@@ -13,7 +13,6 @@ from typing import Any, Literal
 import meshio
 import numpy as np
 import pyvista as pv
-import vtuIO
 from h5py import File
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -263,77 +262,40 @@ class MeshSeries:
             np_func(vals, out=mesh[output_name], axis=0)
         return mesh
 
-    def _probe_pvd(
-        self,
-        points: np.ndarray,
-        data_name: str,
-        interp_method: Literal["nearest", "probefilter"] | None = None,
-        interp_backend: Literal["vtk", "scipy"] | None = None,
-    ) -> np.ndarray:
-        obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
-        dim = self.read(0).get_cell(0).dimension
-        pvd_path = self.filepath
-        pvdio = vtuIO.PVDIO(
-            pvd_path, dim=dim, interpolation_backend=interp_backend
-        )
-        values_dict = pvdio.read_time_series(
-            data_name, obs_pts_dict, interpolation_method=interp_method
-        )
-        return np.asarray(list(values_dict.values()))
-
-    def _probe_xdmf(
-        self,
-        points: np.ndarray,
-        data_name: str,
-        interp_method: Literal["nearest", "linear"] | None = None,
-    ) -> np.ndarray:
-        values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
-        geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
-        values = np.swapaxes(values, 0, 1)
-
-        # remove flat dimensions for interpolation
-        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
-        geom = np.delete(geom, flat_axis, 1)
-        points = np.delete(points, flat_axis, 1)
-
-        if interp_method is None:
-            interp_method = "linear"
-        interp = {
-            "nearest": NearestNDInterpolator(geom, values),
-            "linear": LinearNDInterpolator(geom, values, np.nan),
-        }[interp_method]
-
-        return np.swapaxes(interp(points), 0, 1)
-
     def probe(
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Literal["nearest", "linear", "probefilter"]
-        | None = None,
-        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray:
         """
         Probe the MeshSeries at observation points.
 
         :param points:          The points to sample at.
         :param data_name:       Name of the data to sample.
-        :param interp_method:   Choose the interpolation method, defaults to
-                                `linear` for xdmf MeshSeries and `probefilter`
-                                for pvd MeshSeries.
-        :param interp_backend:  Interpolation backend for PVD MeshSeries.
+        :param interp_method:   Interpolation method, defaults to `linear`
 
         :returns:   `numpy` array of interpolated data at observation points.
         """
         points = np.asarray(points).reshape((-1, 3))
-        if self._data_type == "xdmf":
-            assert interp_method != "probefilter"
-            return self._probe_xdmf(points, data_name, interp_method)
-        assert self._data_type == "pvd"
-        assert interp_method != "linear"
-        return self._probe_pvd(
-            points, data_name, interp_method, interp_backend_pvd
-        )
+        values = np.swapaxes(self.values(data_name), 0, 1)
+        geom = self.read(0).points
+
+        if values.shape[0] != geom.shape[0]:
+            # assume cell_data
+            geom = self.read(0).cell_centers().points
+
+        # remove flat dimensions for interpolation
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        geom = np.delete(geom, flat_axis, 1)
+        points = np.delete(points, flat_axis, 1)
+
+        interp = {
+            "nearest": NearestNDInterpolator(geom, values),
+            "linear": LinearNDInterpolator(geom, values, np.nan),
+        }[interp_method]
+
+        return np.swapaxes(interp(points), 0, 1)
 
     def plot_probe(
         self,
@@ -342,9 +304,7 @@ class MeshSeries:
         mesh_property_abscissa: Property | str | None = None,
         labels: list[str] | None = None,
         time_unit: str | None = "s",
-        interp_method: None
-        | (Literal["nearest", "linear", "probefilter"]) = None,
-        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
         colors: list | None = None,
         linestyles: list | None = None,
         ax: plt.Axes | None = None,
@@ -370,12 +330,7 @@ class MeshSeries:
         points = np.asarray(points).reshape((-1, 3))
         mesh_property = get_preset(mesh_property, self.read(0))
         values = mesh_property.magnitude.transform(
-            self.probe(
-                points,
-                mesh_property.data_name,
-                interp_method,
-                interp_backend_pvd,
-            )
+            self.probe(points, mesh_property.data_name, interp_method)
         )
         if values.shape[0] == 1:
             values = values.flatten()
@@ -390,10 +345,7 @@ class MeshSeries:
             )
             x_values = mesh_property_abscissa.magnitude.transform(
                 self.probe(
-                    points,
-                    mesh_property_abscissa.data_name,
-                    interp_method,
-                    interp_backend_pvd,
+                    points, mesh_property_abscissa.data_name, interp_method
                 )
             )
             x_unit_str = (
