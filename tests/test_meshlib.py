@@ -9,7 +9,6 @@ from ogs6py import ogs
 from pyvista import SolidSphere, UnstructuredGrid
 
 import ogstools as ot
-import ogstools.meshlib as ml
 from ogstools import examples
 from ogstools.msh2vtu import msh2vtu
 
@@ -256,7 +255,7 @@ class TestUtils:
         def run_and_check(
             elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
         ):
-            ml.rect(
+            ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=6,
                 n_layers=2,
                 structured_grid=quads,
@@ -301,11 +300,27 @@ class TestUtils:
         run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
 
     def test_reader(self):
-        h5_file = examples.elder_h5
-        assert type(ml.Mesh.read(h5_file)) == ml.Mesh
-        xdmf_file = examples.elder_xdmf
-        assert type(ml.Mesh.read(xdmf_file)) == ml.Mesh
-        vtu_file = examples.mechanics_vtu
-        assert type(ml.Mesh.read(vtu_file)) == ml.Mesh
-        shape_file = examples.test_shapefile
-        assert type(ml.Mesh.read(shape_file)) == ml.Mesh
+        assert isinstance(examples.load_meshseries_THM_2D_PVD(), ot.MeshSeries)
+        assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
+        assert isinstance(ot.Mesh.read(examples.mechanics_vtu), ot.Mesh)
+        assert isinstance(ot.Mesh.read(examples.test_shapefile), ot.Mesh)
+
+    def test_xdmf_quadratic(self):
+        "Test reading of quadratic elements in xdmf."
+
+        tmp_path = Path(mkdtemp())
+        mesh_path = Path(tmp_path) / "mesh.msh"
+        ot.meshlib.gmsh_meshing.rect(
+            n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
+        )
+        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        model = ogs.OGS(
+            PROJECT_FILE=tmp_path / "default.prj",
+            INPUT_FILE=examples.prj_mechanics,
+        )
+        model.replace_text("4", xpath=".//integration_order")
+        model.replace_text("XDMF", xpath="./time_loop/output/type")
+        model.write_input()
+        model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
+        mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").read(-1)
+        assert not np.any(np.isnan(ot.properties.stress.transform(mesh)))

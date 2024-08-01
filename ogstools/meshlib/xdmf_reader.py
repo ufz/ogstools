@@ -25,11 +25,77 @@ from xml.etree.ElementTree import Element
 
 import meshio
 import numpy as np
+from meshio._mesh import CellBlock
+from meshio.xdmf import common, time_series
 from meshio.xdmf.time_series import (
     ReadError,
     cell_data_from_raw,
     xdmf_to_numpy_type,
 )
+
+
+def _translate_mixed_cells_patched(data: list) -> list:
+    # Translate it into the cells dictionary.
+    # `data` is a one-dimensional vector with
+    # (cell_type1, p0, p1, ... ,pk, cell_type2, p10, p11, ..., p1k, ...
+
+    # https://xdmf.org/index.php/XDMF_Model_and_Format#Arbitrary
+    # https://gitlab.kitware.com/xdmf/xdmf/blob/master/XdmfTopologyType.hpp#L394
+    xdmf_idx_to_num_nodes = {
+        1: 1,  # POLYVERTEX
+        2: 2,  # POLYLINE
+        4: 3,  # TRIANGLE
+        5: 4,  # QUADRILATERAL
+        6: 4,  # TETRAHEDRON
+        7: 5,  # PYRAMID
+        8: 6,  # WEDGE
+        9: 8,  # HEXAHEDRON
+        35: 9,  # QUADRILATERAL_9
+        36: 6,  # TRIANGLE_6
+        37: 8,  # QUADRILATERAL_8
+        38: 10,  # TETRAHEDRON_10
+        39: 13,  # PYRAMID_13
+        40: 15,  # WEDGE_15
+        41: 18,  # WEDGE_18
+        48: 20,  # HEXAHEDRON_20
+        49: 24,  # HEXAHEDRON_24
+        50: 27,  # HEXAHEDRON_27
+    }
+
+    # collect types and offsets
+    types = []
+    _offsets = []
+    r = 0
+    while r < len(data):
+        xdmf_type = data[r]
+        types.append(xdmf_type)
+        _offsets.append(r)
+        if xdmf_type == 2:  # line
+            if data[r + 1] != 2:  # polyline
+                msg = "XDMF reader: Only supports 2-point lines for now"
+                raise ReadError(msg)
+            r += 1
+        r += 1
+        r += xdmf_idx_to_num_nodes[xdmf_type]
+
+    types = np.asarray(types)
+    offsets = np.asarray(_offsets)
+
+    b = np.concatenate(
+        [[0], np.where(types[:-1] != types[1:])[0] + 1, [len(types)]]
+    )
+    cells = []
+    for start, end in zip(b[:-1], b[1:], strict=False):  # noqa: RUF007
+        meshio_type = common.xdmf_idx_to_meshio_type[types[start]]
+        n = xdmf_idx_to_num_nodes[types[start]]
+        point_offsets = offsets[start:end] + (2 if types[start] == 2 else 1)
+        indices = np.asarray([np.arange(n) + o for o in point_offsets])
+        cells.append(CellBlock(meshio_type, data[indices]))
+
+    return cells
+
+
+time_series.translate_mixed_cells = _translate_mixed_cells_patched
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
