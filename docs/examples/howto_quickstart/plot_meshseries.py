@@ -28,13 +28,13 @@ ms = examples.load_meshseries_HT_2D_XDMF()
 # All time value (in seconds) are within a range (e.g. can be converted to list)
 # Python slicing is supported.
 
-print(f"First 3 time values are: {ms.timevalues[:3]}.")
+print(f"First 3 time values are: {ms.timevalues()[:3]}.")
 
 # Accessing a specific time step
 
 timestep = 10
 
-print(f"Time value at step {timestep} is {ms.timevalues[timestep]} s.")
+print(f"Time value at step {timestep} is {ms.timevalues()[timestep]} s.")
 
 # %%
 # Read data is cached. The function read is only slow for each new timestep requested.

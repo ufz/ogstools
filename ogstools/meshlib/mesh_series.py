@@ -67,7 +67,7 @@ class MeshSeries:
                 str(Path(filepath).parent / dataset.path)
                 for dataset in self._pvd_reader.datasets
             ]
-            self.timevalues = np.asarray(self._pvd_reader.time_values)
+            self._timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
             self._read_xdmf(0)  # necessary to initialize hdf5_files
@@ -75,20 +75,30 @@ class MeshSeries:
             self.hdf5_bulk_name = list(meshes.keys())[
                 np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
             ]
-            _time_values = []
-            for collection_i in self._xdmf_reader.collection:
-                for element in collection_i:
-                    if element.tag == "Time":
-                        _time_values += [float(element.attrib["Value"])]
-            self.timevalues = np.asarray(_time_values)
+            self._timevalues = np.asarray(
+                [
+                    float(element.attrib["Value"])
+                    for collection_i in self._xdmf_reader.collection
+                    for element in collection_i
+                    if element.tag == "Time"
+                ]
+            )
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
-            self.timevalues = np.zeros(1)
+            self._timevalues = np.zeros(1)
         elif self._data_type == "synthetic":
             return
         else:
             msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
+
+    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
+        "Return the timevalues, optionally converted to another time unit."
+        return (
+            u_reg.Quantity(self._timevalues, self.time_unit)
+            .to(self.time_unit if time_unit is None else time_unit)
+            .magnitude
+        )
 
     def ip_tesselated(self) -> "MeshSeries":
         "Create a new MeshSeries from integration point tessellation."
@@ -107,8 +117,8 @@ class MeshSeries:
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
-            ip_ms._data[ts] = ip_mesh.copy()
-        ip_ms.timevalues = self.timevalues
+            ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
+        ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
     @property
@@ -165,15 +175,15 @@ class MeshSeries:
         if self._data_type == "pvd":
             return range(self._pvd_reader.number_time_points)
         # elif self._data_type == "xdmf":
-        return range(len(self.timevalues))
+        return range(len(self._timevalues))
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(self.timevalues - timevalue)))
+        return int(np.argmin(np.abs(self._timevalues - timevalue)))
 
     def closest_timevalue(self, timevalue: float) -> float:
         """Return the closest timevalue to a timevalue."""
-        return self.timevalues[self.closest_timestep(timevalue)]
+        return self._timevalues[self.closest_timestep(timevalue)]
 
     def read_closest(self, timevalue: float) -> Mesh:
         """Return the closest timestep in the data for a given timevalue."""
@@ -181,7 +191,7 @@ class MeshSeries:
 
     def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
-        t_vals = self.timevalues
+        t_vals = self._timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
@@ -275,7 +285,7 @@ class MeshSeries:
         # TODO: put in separate function
         if func in ["min_time", "max_time"]:
             assert isinstance(np_func, type(np.argmax))
-            mesh[output_name] = self.timevalues[np_func(vals, axis=0)]
+            mesh[output_name] = self._timevalues[np_func(vals, axis=0)]
         else:
             mesh[output_name] = np.empty(vals.shape[1:])
             assert isinstance(np_func, type(np.max))
@@ -357,7 +367,7 @@ class MeshSeries:
         Q_ = u_reg.Quantity
         time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
         if mesh_property_abscissa is None:
-            x_values = time_unit_conversion * self.timevalues
+            x_values = time_unit_conversion * self._timevalues
             x_label = f"time / {time_unit}" if time_unit else "time"
         else:
             mesh_property_abscissa = get_preset(
@@ -511,7 +521,7 @@ class MeshSeries:
             raise ValueError(msg)
 
         time = Property("", self.time_unit, time_unit).transform(
-            self.timevalues
+            self._timevalues
         )
         if time_logscale:
             time = np.log10(time, where=time != 0)

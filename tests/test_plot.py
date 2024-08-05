@@ -199,7 +199,7 @@ class TestPlotting:
     def test_animation(self):
         """Test creation of animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
         titles = [str(tv) for tv in timevalues]
         anim = meshseries.animate(ot.properties.temperature, timevalues, titles)
         anim.to_jshtml()
@@ -208,7 +208,7 @@ class TestPlotting:
     def test_save_animation(self):
         """Test saving of an animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
         anim = meshseries.animate(ot.properties.temperature, timevalues)
         if not utils.save_animation(anim, mkstemp()[1], 5):
             pytest.skip("Saving animation failed.")

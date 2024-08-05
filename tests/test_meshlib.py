@@ -27,7 +27,7 @@ class TestUtils:
             assert not np.any(np.isnan(ms.timesteps))
             assert not np.any(np.isnan(ms.values("temperature")))
 
-            assert ms.timevalues[
+            assert ms.timevalues()[
                 ms.closest_timestep(1.0)
             ] == ms.closest_timevalue(1.0)
 
