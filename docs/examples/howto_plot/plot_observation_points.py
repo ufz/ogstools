@@ -70,6 +70,8 @@ fig = mesh_series.plot_probe(
 # matplotlibs plot function to further customize the curves.
 # In this case `marker` and `linewidth` are not part of the API of `plot_probe`
 # but get processed correctly anyway.
+# If you want to have more freedom with the data you can just do the probing,
+# adapt to your needs and then do the plotting yourself:
 
 # %%
 fig, axs = plt.subplots(nrows=2, figsize=[10, 5])
@@ -80,3 +82,10 @@ mesh_series.plot_probe(
     points[4:], si, time_unit="a", ax=axs[1], linestyles=["-"],
     labels=labels[4:], linewidth=1,
 )
+# add the mean of the observation point timeseries
+values = si.transform(mesh_series.probe(points, data_name=si.data_name))
+mean_values = np.mean(values.reshape((-1, 2, 4)), axis=-1)
+ts = mesh_series.timevalues("a")
+for index in range(2):
+    fig.axes[index].plot(ts, mean_values[:, index], "rk"[index], label="mean")
+    fig.axes[index].legend()

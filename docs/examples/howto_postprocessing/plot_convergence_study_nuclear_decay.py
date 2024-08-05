@@ -94,7 +94,7 @@ for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
     max_T = ot.properties.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
-    tv = np.asarray(mesh_series.timevalues) / sec_per_yr
+    tv = np.asarray(mesh_series.timevalues("a"))
     ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")
     edges = np.append(0, tv)
     mean_t = 0.5 * (edges[1:] + edges[:-1])

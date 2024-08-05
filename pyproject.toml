@@ -42,7 +42,6 @@ dependencies = [
   "ogs>=6.5.2",
   "ogs6py>=0.402",
   "typeguard>=4.0.0",
-  "VTUinterface>=0.704",
 ]
 
 [project.urls]

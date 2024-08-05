@@ -9,7 +9,6 @@ from ogs6py import ogs
 from pyvista import SolidSphere, UnstructuredGrid
 
 import ogstools as ot
-import ogstools.meshlib as ml
 from ogstools import examples
 from ogstools.msh2vtu import msh2vtu
 
@@ -28,7 +27,7 @@ class TestUtils:
             assert not np.any(np.isnan(ms.timesteps))
             assert not np.any(np.isnan(ms.values("temperature")))
 
-            assert ms.timevalues[
+            assert ms.timevalues()[
                 ms.closest_timestep(1.0)
             ] == ms.closest_timevalue(1.0)
 
@@ -62,11 +61,11 @@ class TestUtils:
             time_logscale=True, cb_loc="left", dpi=50, fontsize=10
         )  # fmt: skip
 
-    def test_probe_pvd(self):
-        "Test point probing on pvd."
-        mesh_series = examples.load_meshseries_THM_2D_PVD()
+    def test_probe(self):
+        "Test point probing on meshseries."
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).cell_centers().points
-        for method in ["nearest", "probefilter"]:
+        for method in ["nearest", "linear"]:
             values = mesh_series.probe(points, "temperature", method)
             assert not np.any(np.isnan(values))
 
@@ -84,14 +83,6 @@ class TestUtils:
         points = mesh_series.read(0).center
         meshseries.plot_probe(points, ot.properties.temperature)
         meshseries.plot_probe(points, ot.properties.velocity)
-
-    def test_probe_xdmf(self):
-        "Test point probing on xdmf."
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.read(0).cell_centers().points
-        for method in ["nearest", "linear", None]:
-            values = mesh_series.probe(points, "temperature", method)
-            assert not np.any(np.isnan(values))
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
@@ -264,7 +255,7 @@ class TestUtils:
         def run_and_check(
             elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
         ):
-            ml.rect(
+            ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=6,
                 n_layers=2,
                 structured_grid=quads,
@@ -283,9 +274,12 @@ class TestUtils:
             model.run_model(
                 write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
             )
-            mesh = ot.MeshSeries(tmp_path / "mesh.pvd").read(-1)
-            int_pts = mesh.to_ip_point_cloud()
-            ip_mesh = mesh.to_ip_mesh()
+            meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
+            int_pts = meshseries.read(-1).to_ip_point_cloud()
+            ip_ms = meshseries.ip_tesselated()
+            ip_mesh = ip_ms.read(-1)
+            vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
+            assert not np.any(np.isnan(vals))
             assert int_pts.number_of_points == ip_mesh.number_of_cells
             containing_cells = ip_mesh.find_containing_cell(int_pts.points)
             # check for integration points coinciding with the tessellated cells
@@ -306,11 +300,27 @@ class TestUtils:
         run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
 
     def test_reader(self):
-        h5_file = examples.elder_h5
-        assert type(ml.Mesh.read(h5_file)) == ml.Mesh
-        xdmf_file = examples.elder_xdmf
-        assert type(ml.Mesh.read(xdmf_file)) == ml.Mesh
-        vtu_file = examples.mechanics_vtu
-        assert type(ml.Mesh.read(vtu_file)) == ml.Mesh
-        shape_file = examples.test_shapefile
-        assert type(ml.Mesh.read(shape_file)) == ml.Mesh
+        assert isinstance(examples.load_meshseries_THM_2D_PVD(), ot.MeshSeries)
+        assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
+        assert isinstance(ot.Mesh.read(examples.mechanics_vtu), ot.Mesh)
+        assert isinstance(ot.Mesh.read(examples.test_shapefile), ot.Mesh)
+
+    def test_xdmf_quadratic(self):
+        "Test reading of quadratic elements in xdmf."
+
+        tmp_path = Path(mkdtemp())
+        mesh_path = Path(tmp_path) / "mesh.msh"
+        ot.meshlib.gmsh_meshing.rect(
+            n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
+        )
+        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        model = ogs.OGS(
+            PROJECT_FILE=tmp_path / "default.prj",
+            INPUT_FILE=examples.prj_mechanics,
+        )
+        model.replace_text("4", xpath=".//integration_order")
+        model.replace_text("XDMF", xpath="./time_loop/output/type")
+        model.write_input()
+        model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
+        mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").read(-1)
+        assert not np.any(np.isnan(ot.properties.stress.transform(mesh)))

@@ -286,14 +286,14 @@ def convergence_metrics_evolution(
 
     :returns:   A pandas Dataframe containing all metrics.
     """
-    all_timevalues = [ms.timevalues for ms in mesh_series]
+    all_timevalues = [ms.timevalues() for ms in mesh_series]
     common_timevalues = sorted(
         set(all_timevalues[0]).intersection(*all_timevalues[1:])
     )
 
     p_metrics_per_t = np.empty((0, 9))
 
-    timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
+    timestep_sizes = [np.mean(np.diff(ms.timevalues())) for ms in mesh_series]
     for timevalue in tqdm(common_timevalues):
         meshes = [ms.read_closest(timevalue) for ms in mesh_series]
         reference = richardson_extrapolation(

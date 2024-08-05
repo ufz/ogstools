@@ -13,7 +13,6 @@ from typing import Any, Literal
 import meshio
 import numpy as np
 import pyvista as pv
-import vtuIO
 from h5py import File
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -68,6 +67,7 @@ class MeshSeries:
                 str(Path(filepath).parent / dataset.path)
                 for dataset in self._pvd_reader.datasets
             ]
+            self._timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
             self._read_xdmf(0)  # necessary to initialize hdf5_files
@@ -75,11 +75,51 @@ class MeshSeries:
             self.hdf5_bulk_name = list(meshes.keys())[
                 np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
             ]
+            self._timevalues = np.asarray(
+                [
+                    float(element.attrib["Value"])
+                    for collection_i in self._xdmf_reader.collection
+                    for element in collection_i
+                    if element.tag == "Time"
+                ]
+            )
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
+            self._timevalues = np.zeros(1)
+        elif self._data_type == "synthetic":
+            return
         else:
             msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
             raise TypeError(msg)
+
+    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
+        "Return the timevalues, optionally converted to another time unit."
+        return (
+            u_reg.Quantity(self._timevalues, self.time_unit)
+            .to(self.time_unit if time_unit is None else time_unit)
+            .magnitude
+        )
+
+    def ip_tesselated(self) -> "MeshSeries":
+        "Create a new MeshSeries from integration point tessellation."
+        ip_ms = MeshSeries(
+            Path(self.filepath).parent / "ip_meshseries.synthetic",
+            self.time_unit,
+            self.spatial_unit,
+            self.spatial_output_unit,
+        )
+        ip_mesh = self.read(0).to_ip_mesh()
+        ip_pt_cloud = self.read(0).to_ip_point_cloud()
+        ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
+        for ts in self.timesteps:
+            ip_data = {
+                key: self.read(ts).field_data[key][np.argsort(ordering)]
+                for key in ip_mesh.cell_data
+            }
+            ip_mesh.cell_data.update(ip_data)
+            ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
+        ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
+        return ip_ms
 
     @property
     def hdf5(self) -> File:
@@ -98,27 +138,30 @@ class MeshSeries:
         meshio_mesh = meshio.Mesh(
             points, cells, point_data, cell_data, field_data
         )
-        return pv.from_meshio(meshio_mesh)
+        # pv.from_meshio does not copy field_data (fix in pyvista?)
+        pv_mesh = pv.from_meshio(meshio_mesh)
+        pv_mesh.field_data.update(field_data)
+        return pv_mesh
 
     def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Lazy read function."""
+        timestep = self.timesteps[timestep]
         if timestep in self._data:
-            return Mesh(
-                self._data[timestep],
-                self.spatial_unit,
-                self.spatial_output_unit,
-            )
-        if self._data_type == "pvd":
-            pv_mesh = self._read_pvd(timestep)
-        elif self._data_type == "xdmf":
-            pv_mesh = self._read_xdmf(timestep)
-        elif self._data_type == "vtu":
-            pv_mesh = self._vtu_reader.read()
-        if lazy_eval:
-            self._data[timestep] = pv_mesh
+            pv_mesh = self._data[timestep]
+        else:
+            if self._data_type == "pvd":
+                pv_mesh = self._read_pvd(timestep)
+            elif self._data_type == "xdmf":
+                pv_mesh = self._read_xdmf(timestep)
+            elif self._data_type == "vtu":
+                pv_mesh = self._vtu_reader.read()
+            if lazy_eval:
+                self._data[timestep] = pv_mesh
         mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
         if self._data_type == "pvd":
             mesh.filepath = Path(self.timestep_files[timestep])
+        else:
+            mesh.filepath = Path(self.filepath)
         return mesh
 
     def clear(self) -> None:
@@ -128,34 +171,19 @@ class MeshSeries:
     def timesteps(self) -> range:
         """Return the timesteps of the timeseries data."""
         if self._data_type == "vtu":
-            return range(0)
+            return range(1)
         if self._data_type == "pvd":
             return range(self._pvd_reader.number_time_points)
         # elif self._data_type == "xdmf":
-        return range(len(self.timevalues))
-
-    @property
-    def timevalues(self) -> np.ndarray:
-        """Return the timevalues of the timeseries data."""
-        if self._data_type == "vtu":
-            return np.zeros(1)
-        if self._data_type == "pvd":
-            return np.asarray(self._pvd_reader.time_values)
-        # elif self._data_type == "xdmf":
-        time_values = []
-        for collection_i in self._xdmf_reader.collection:
-            for element in collection_i:
-                if element.tag == "Time":
-                    time_values += [float(element.attrib["Value"])]
-        return np.asarray(time_values)
+        return range(len(self._timevalues))
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(self.timevalues - timevalue)))
+        return int(np.argmin(np.abs(self._timevalues - timevalue)))
 
     def closest_timevalue(self, timevalue: float) -> float:
         """Return the closest timevalue to a timevalue."""
-        return self.timevalues[self.closest_timestep(timevalue)]
+        return self._timevalues[self.closest_timestep(timevalue)]
 
     def read_closest(self, timevalue: float) -> Mesh:
         """Return the closest timestep in the data for a given timevalue."""
@@ -163,7 +191,7 @@ class MeshSeries:
 
     def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
-        t_vals = self.timevalues
+        t_vals = self._timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
@@ -195,6 +223,10 @@ class MeshSeries:
         if self._data_type == "pvd":
             return np.asarray(
                 [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+            )
+        if self._data_type == "synthetic":
+            return np.asarray(
+                [self._data[t][data_name] for t in self.timesteps]
             )
         return mesh[data_name]
 
@@ -253,84 +285,47 @@ class MeshSeries:
         # TODO: put in separate function
         if func in ["min_time", "max_time"]:
             assert isinstance(np_func, type(np.argmax))
-            mesh[output_name] = self.timevalues[np_func(vals, axis=0)]
+            mesh[output_name] = self._timevalues[np_func(vals, axis=0)]
         else:
             mesh[output_name] = np.empty(vals.shape[1:])
             assert isinstance(np_func, type(np.max))
             np_func(vals, out=mesh[output_name], axis=0)
         return mesh
 
-    def _probe_pvd(
-        self,
-        points: np.ndarray,
-        data_name: str,
-        interp_method: Literal["nearest", "probefilter"] | None = None,
-        interp_backend: Literal["vtk", "scipy"] | None = None,
-    ) -> np.ndarray:
-        obs_pts_dict = {f"pt{j}": point for j, point in enumerate(points)}
-        dim = self.read(0).get_cell(0).dimension
-        pvd_path = self.filepath
-        pvdio = vtuIO.PVDIO(
-            pvd_path, dim=dim, interpolation_backend=interp_backend
-        )
-        values_dict = pvdio.read_time_series(
-            data_name, obs_pts_dict, interpolation_method=interp_method
-        )
-        return np.asarray(list(values_dict.values()))
-
-    def _probe_xdmf(
-        self,
-        points: np.ndarray,
-        data_name: str,
-        interp_method: Literal["nearest", "linear"] | None = None,
-    ) -> np.ndarray:
-        values = self.hdf5["meshes"][self.hdf5_bulk_name][data_name][:]
-        geom = self.hdf5["meshes"][self.hdf5_bulk_name]["geometry"][0]
-        values = np.swapaxes(values, 0, 1)
-
-        # remove flat dimensions for interpolation
-        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
-        geom = np.delete(geom, flat_axis, 1)
-        points = np.delete(points, flat_axis, 1)
-
-        if interp_method is None:
-            interp_method = "linear"
-        interp = {
-            "nearest": NearestNDInterpolator(geom, values),
-            "linear": LinearNDInterpolator(geom, values, np.nan),
-        }[interp_method]
-
-        return np.swapaxes(interp(points), 0, 1)
-
     def probe(
         self,
         points: np.ndarray,
         data_name: str,
-        interp_method: Literal["nearest", "linear", "probefilter"]
-        | None = None,
-        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray:
         """
         Probe the MeshSeries at observation points.
 
         :param points:          The points to sample at.
         :param data_name:       Name of the data to sample.
-        :param interp_method:   Choose the interpolation method, defaults to
-                                `linear` for xdmf MeshSeries and `probefilter`
-                                for pvd MeshSeries.
-        :param interp_backend:  Interpolation backend for PVD MeshSeries.
+        :param interp_method:   Interpolation method, defaults to `linear`
 
         :returns:   `numpy` array of interpolated data at observation points.
         """
         points = np.asarray(points).reshape((-1, 3))
-        if self._data_type == "xdmf":
-            assert interp_method != "probefilter"
-            return self._probe_xdmf(points, data_name, interp_method)
-        assert self._data_type == "pvd"
-        assert interp_method != "linear"
-        return self._probe_pvd(
-            points, data_name, interp_method, interp_backend_pvd
-        )
+        values = np.swapaxes(self.values(data_name), 0, 1)
+        geom = self.read(0).points
+
+        if values.shape[0] != geom.shape[0]:
+            # assume cell_data
+            geom = self.read(0).cell_centers().points
+
+        # remove flat dimensions for interpolation
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        geom = np.delete(geom, flat_axis, 1)
+        points = np.delete(points, flat_axis, 1)
+
+        interp = {
+            "nearest": NearestNDInterpolator(geom, values),
+            "linear": LinearNDInterpolator(geom, values, np.nan),
+        }[interp_method]
+
+        return np.swapaxes(interp(points), 0, 1)
 
     def plot_probe(
         self,
@@ -339,9 +334,7 @@ class MeshSeries:
         mesh_property_abscissa: Property | str | None = None,
         labels: list[str] | None = None,
         time_unit: str | None = "s",
-        interp_method: None
-        | (Literal["nearest", "linear", "probefilter"]) = None,
-        interp_backend_pvd: Literal["vtk", "scipy"] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
         colors: list | None = None,
         linestyles: list | None = None,
         ax: plt.Axes | None = None,
@@ -367,19 +360,14 @@ class MeshSeries:
         points = np.asarray(points).reshape((-1, 3))
         mesh_property = get_preset(mesh_property, self.read(0))
         values = mesh_property.magnitude.transform(
-            self.probe(
-                points,
-                mesh_property.data_name,
-                interp_method,
-                interp_backend_pvd,
-            )
+            self.probe(points, mesh_property.data_name, interp_method)
         )
         if values.shape[0] == 1:
             values = values.flatten()
         Q_ = u_reg.Quantity
         time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
         if mesh_property_abscissa is None:
-            x_values = time_unit_conversion * self.timevalues
+            x_values = time_unit_conversion * self._timevalues
             x_label = f"time / {time_unit}" if time_unit else "time"
         else:
             mesh_property_abscissa = get_preset(
@@ -387,10 +375,7 @@ class MeshSeries:
             )
             x_values = mesh_property_abscissa.magnitude.transform(
                 self.probe(
-                    points,
-                    mesh_property_abscissa.data_name,
-                    interp_method,
-                    interp_backend_pvd,
+                    points, mesh_property_abscissa.data_name, interp_method
                 )
             )
             x_unit_str = (
@@ -406,9 +391,10 @@ class MeshSeries:
             fig, ax = plt.subplots()
         else:
             fig = None
-        ax.set_prop_cycle(
-            plot.utils.get_style_cycler(len(points), colors, linestyles)
-        )
+        if points.shape[0] > 1:
+            ax.set_prop_cycle(
+                plot.utils.get_style_cycler(len(points), colors, linestyles)
+            )
         if fill_between:
             ax.fill_between(
                 x_values,
@@ -535,7 +521,7 @@ class MeshSeries:
             raise ValueError(msg)
 
         time = Property("", self.time_unit, time_unit).transform(
-            self.timevalues
+            self._timevalues
         )
         if time_logscale:
             time = np.log10(time, where=time != 0)
