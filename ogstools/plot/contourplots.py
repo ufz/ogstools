@@ -275,7 +275,7 @@ def subplot(
 
 def _fig_init(
     rows: int, cols: int, aspect: float = 1.0, **kwargs: Any
-) -> tuple[plt.Figure, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes | np.ndarray]:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
     cb_width = 3
@@ -431,11 +431,11 @@ def contourf(
     if fig is None and ax is None:
         fig, ax = _fig_init(shape[0], shape[1], fig_aspect, **kwargs)
     fig = draw_plot(meshes, mesh_property, fig=fig, axes=ax, **kwargs)
-    if fig is not None:
+    if ax is not None and isinstance(ax, plt.Axes):
+        ax.set_aspect(1.0 / ax_aspects[0])
+    elif fig is not None:
         for _ax, aspect in zip(fig.axes[:n_axs], ax_aspects, strict=True):
             _ax.set_aspect(1.0 / aspect)
-    elif ax is not None:
-        ax.set_aspect(1.0 / ax_aspects[0])
     if fig is None:
         return None
     utils.update_font_sizes(
