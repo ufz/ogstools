@@ -21,8 +21,11 @@ to be read like::
 
 """
 
+
+from pathlib import Path
 from xml.etree.ElementTree import Element
 
+import h5py
 import meshio
 import numpy as np
 from meshio._mesh import CellBlock
@@ -98,9 +101,57 @@ def _translate_mixed_cells_patched(data: list) -> list:
 time_series.translate_mixed_cells = _translate_mixed_cells_patched
 
 
+class _h5DataItem:
+    def __init__(self, file_info: str, xdmf_path: Path):
+        file_h5path__selections = file_info.split("|")
+        file_h5path = file_h5path__selections[0]
+        selections = (
+            file_h5path__selections[1]
+            if len(file_h5path__selections) > 1
+            else None
+        )
+        filename, h5path = file_h5path.split(":")
+        if selections:
+            # offsets, slices, current_data_extends, global_data_extends by dimension
+            m = [
+                list(map(int, att.split(" "))) for att in selections.split(":")
+            ]
+            t = np.transpose(m)
+            selection = tuple(
+                slice(start, start + extend, step)
+                for start, step, extend, _ in t
+            )
+        else:
+            selection = ()
+
+        self.selection = selection
+        self.h5path = h5path
+
+        self.key = h5path[1:].split("/")[-1]
+
+        # The HDF5 file path is given with respect to the XDMF (XML) file.
+        dirpath = xdmf_path.resolve().parent
+        self.full_hdf5_path = dirpath / filename
+
+    def selected_values(self, selection: tuple | None = None) -> np.ndarray:
+        if selection is None:
+            selection = self.selection
+
+        with h5py.File(self.full_hdf5_path, "r") as file:
+            f = file
+            if self.h5path[0] != "/":
+                raise ReadError()
+
+            for key in self.h5path[1:].split("/"):
+                f = f[key]
+            # `[()]` gives a np.ndarray
+            return np.copy(f[selection].squeeze())
+
+
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
     def __init__(self, filename: str):
         super().__init__(filename)
+        self.data_items: dict[str, _h5DataItem] = {}
 
     def read_data(self, k: int) -> tuple[float, dict, dict, dict]:
         point_data = {}
@@ -183,44 +234,8 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             msg = f"Unknown XDMF Format '{data_format}'."
             raise ReadError(msg)
 
-        file_info = data_item.text.strip()
-        file_h5path__selections = file_info.split("|")
-        file_h5path = file_h5path__selections[0]
-        selections = (
-            file_h5path__selections[1]
-            if len(file_h5path__selections) > 1
-            else None
+        meta_data = _h5DataItem(
+            file_info=data_item.text.strip(), xdmf_path=self.filename
         )
-        filename, h5path = file_h5path.split(":")
-        if selections:
-            # offsets, slices, current_data_extends, global_data_extends by dimension
-            m = [
-                list(map(int, att.split(" "))) for att in selections.split(":")
-            ]
-            t = np.transpose(m)
-            selection = tuple(
-                slice(start, start + extend, step)
-                for start, step, extend, _ in t
-            )
-        else:
-            selection = ()
-
-        # The HDF5 file path is given with respect to the XDMF (XML) file.
-        dirpath = self.filename.resolve().parent
-        full_hdf5_path = dirpath / filename
-
-        if full_hdf5_path in self.hdf5_files:
-            f = self.hdf5_files[full_hdf5_path]
-        else:
-            import h5py
-
-            f = h5py.File(full_hdf5_path, "r")
-            self.hdf5_files[full_hdf5_path] = f
-
-        if h5path[0] != "/":
-            raise ReadError()
-
-        for key in h5path[1:].split("/"):
-            f = f[key]
-        # `[()]` gives a np.ndarray
-        return f[selection].squeeze()
+        self.data_items[meta_data.key] = meta_data
+        return meta_data.selected_values()

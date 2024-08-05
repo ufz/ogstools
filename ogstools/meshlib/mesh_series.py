@@ -70,19 +70,6 @@ class MeshSeries:
             self._timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
-            self._read_xdmf(0)  # necessary to initialize hdf5_files
-            meshes = self.hdf5["meshes"]
-            self.hdf5_bulk_name = list(meshes.keys())[
-                np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
-            ]
-            self._timevalues = np.asarray(
-                [
-                    float(element.attrib["Value"])
-                    for collection_i in self._xdmf_reader.collection
-                    for element in collection_i
-                    if element.tag == "Time"
-                ]
-            )
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
             self._timevalues = np.zeros(1)
@@ -120,11 +107,6 @@ class MeshSeries:
             ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
-
-    @property
-    def hdf5(self) -> File:
-        # We assume there is only one h5 file
-        return next(iter(self._xdmf_reader.hdf5_files.values()))
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
@@ -209,7 +191,7 @@ class MeshSeries:
             )
         return mesh
 
-    def values(self, data_name: str) -> np.ndarray:
+    def values(self, data_name: str, slice: slice = slice()) -> np.ndarray:
         """
         Get the data in the MeshSeries for all timesteps.
 
@@ -219,15 +201,17 @@ class MeshSeries:
         """
         mesh = self.read(0).copy()
         if self._data_type == "xdmf":
-            return self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
+            return self._xdmf_reader.data_items[data_name].selected_values(
+                selection=slice
+            )
         if self._data_type == "pvd":
             return np.asarray(
                 [self.read(t)[data_name] for t in tqdm(self.timesteps)]
-            )
+            )[slice]
         if self._data_type == "synthetic":
             return np.asarray(
                 [self._data[t][data_name] for t in self.timesteps]
-            )
+            )[slice]
         return mesh[data_name]
 
     def aggregate(
