@@ -37,6 +37,7 @@ def rect(
     structured_grid: bool = True,
     order: int = 1,
     mixed_elements: bool = False,
+    jiggle: float = 0.0,
     out_name: Path | str = Path("rect.msh"),
     msh_version: float | None = None,
 ) -> None:
@@ -84,9 +85,16 @@ def rect(
     gmsh.model.geo.synchronize()
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
     if not structured_grid:
-        gmsh.option.setNumber("Mesh.MeshSizeMin", dx / nx)
-        gmsh.option.setNumber("Mesh.MeshSizeMax", dx / nx)
+        gmsh.option.setNumber("Mesh.MeshSizeMin", dy / ny)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", dy / ny)
     gmsh.model.mesh.generate(dim=2)
+    if jiggle > 0.0:
+        node_ids = gmsh.model.mesh.getNodes(dim=2)[0]
+        for node_id in node_ids:
+            offset = np.append(np.random.default_rng().random(2), 0.0)
+            coord, parametric_coord, _, tag = gmsh.model.mesh.get_node(node_id)
+            coord = np.asarray(coord) + offset * jiggle
+            gmsh.model.mesh.set_node(node_id, coord, parametric_coord)
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
     gmsh.finalize()

@@ -284,6 +284,7 @@ class TestUtils:
                 order=elem_order,
                 out_name=mesh_path,
                 mixed_elements=mixed,
+                jiggle=0.01,
             )
             msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
 
