@@ -89,20 +89,20 @@ def add_colorbars(
         bounds = level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
-    cmap, norm = utils.get_cmap_norm(levels, mesh_property)
-    scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
-
-    cb = fig.colorbar(
-        scalar_mappable,
-        norm=norm,
-        ax=ax,
-        ticks=ticks,
-        drawedges=True,
-        location=kwargs.get("cb_loc", "right"),
-        spacing="uniform",
-        pad=kwargs.get("cb_pad", 0.05),
-        extendrect=True,
-    )
+    with np.errstate(over="ignore"):
+        cmap, norm = utils.get_cmap_norm(levels, mesh_property)
+        scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
+        cb = fig.colorbar(
+            scalar_mappable,
+            norm=norm,
+            ax=ax,
+            ticks=ticks,
+            drawedges=True,
+            location=kwargs.get("cb_loc", "right"),
+            spacing="uniform",
+            pad=kwargs.get("cb_pad", 0.05),
+            extendrect=True,
+        )
     # Formatting the colorbar label and ticks
 
     tick_labels, offset = get_ticklabels(ticks)
@@ -189,23 +189,25 @@ def subplot(
         levels = compute_levels(vmin, vmax, num_levels)
     cmap, norm = utils.get_cmap_norm(levels, mesh_property)
 
-    if mesh_property.data_name in mesh.point_data:
-        ax.tricontourf(  # type: ignore[call-overload]
-            x, y, tri, values, levels=kwargs.get("levels", levels),
-            cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
-        )  # fmt: skip
-        if mesh_property.bilinear_cmap:
-            ax.tricontour(  # type: ignore[call-overload]
-                x, y, tri, values, levels=[0], colors="w"
-            )
-    else:
-        cmap = kwargs.get("cmap", cmap)
-        ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
-        if mesh_property.is_mask():
-            ax.tripcolor(
-                x, y, tri, facecolors=values, mask=(values == 1),
-                cmap=cmap, norm=norm, hatch="/"
+    # norm.__call__ overflows if vals are all equal
+    with np.errstate(over="ignore"):
+        if mesh_property.data_name in mesh.point_data:
+            ax.tricontourf(  # type: ignore[call-overload]
+                x, y, tri, values, levels=kwargs.get("levels", levels),
+                cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
             )  # fmt: skip
+            if mesh_property.bilinear_cmap:
+                ax.tricontour(  # type: ignore[call-overload]
+                    x, y, tri, values, levels=[0], colors="w"
+                )
+        else:
+            cmap = kwargs.get("cmap", cmap)
+            ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
+            if mesh_property.is_mask():
+                ax.tripcolor(
+                    x, y, tri, facecolors=values, mask=(values == 1),
+                    cmap=cmap, norm=norm, hatch="/"
+                )  # fmt: skip
 
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
