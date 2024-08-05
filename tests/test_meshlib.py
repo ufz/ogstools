@@ -19,7 +19,10 @@ class TestUtils:
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
         xdmf = examples.load_meshseries_HT_2D_XDMF()
-        pytest.raises(TypeError, ot.MeshSeries, __file__)
+        with pytest.raises(TypeError):
+            ot.MeshSeries(
+                __file__, match="Can only read 'pvd', 'xdmf' or 'vtu' files."
+            )
 
         for ms in [pvd, xdmf]:
             assert ms.read(0) == ms.read_closest(1e-6)
