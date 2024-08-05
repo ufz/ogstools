@@ -5,10 +5,10 @@
 #
 
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import meshio
 import numpy as np
@@ -233,36 +233,17 @@ class MeshSeries:
     def aggregate(
         self,
         mesh_property: Property | str,
-        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-    ) -> Mesh:
-        """Aggregate data over all timesteps using a specified function.
+        np_func: Callable,
+        axis: int,
+        mask: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Aggregate data of all timesteps using a specified function.
 
-        :param mesh_property:
-            The mesh property to be aggregated. If given as type `Property`, the
-            :meth:`~ogstools.propertylib.property.Property.transform` function
-            will be applied on each timestep and aggregation afterwards.
-        :param func:
-            The aggregation function to apply. It must be one of "min", "max",
-            "mean", "median", "sum", "std", "var", where the equally named numpy
-            function will be used to aggregate over all timesteps or "min_time"
-            or "max_time", which return the timevalue when the limit occurs.
-        :returns:   A mesh with aggregated data according to the given function.
-
+        :param mesh_property:   The mesh property to be aggregated.
+        :param func:            The aggregation function to apply.
+        :returns:   A `numpy.ndarray` of the same length as the timesteps if
+                    axis=0 or of the same length as the data if axis=1.
         """
-        np_func = {
-            "min": np.min,
-            "max": np.max,
-            "mean": np.mean,
-            "median": np.median,
-            "sum": np.sum,
-            "std": np.std,
-            "var": np.var,
-            "min_time": np.argmin,
-            "max_time": np.argmax,
-        }[func]
-        mesh = self.read(0).copy(deep=True)
-        mesh.clear_point_data()
-        mesh.clear_cell_data()
         if isinstance(mesh_property, Property):
             if mesh_property.mesh_dependent:
                 vals = np.asarray(
@@ -277,20 +258,136 @@ class MeshSeries:
                 )
         else:
             vals = self.values(mesh_property)
-        output_name = (
-            f"{mesh_property.output_name}_{func}"
-            if isinstance(mesh_property, Property)
-            else f"{mesh_property}_{func}"
+        return (
+            np_func(vals, axis=axis)
+            if mask is None
+            else np_func(vals[:, mask], axis=axis)
         )
-        # TODO: put in separate function
-        if func in ["min_time", "max_time"]:
-            assert isinstance(np_func, type(np.argmax))
-            mesh[output_name] = self._timevalues[np_func(vals, axis=0)]
+
+    _np_str: ClassVar = {
+        "min": np.min, "max": np.max, "mean": np.mean, "median": np.median,
+        "sum": np.sum, "std": np.std, "var": np.var,
+    }  # fmt: skip
+
+    def aggregate_over_time(
+        self,
+        mesh_property: Property | str,
+        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+    ) -> Mesh:
+        """Aggregate data over all timesteps using a specified function.
+
+        :param mesh_property:   The mesh property to be aggregated.
+        :param func:            The aggregation function to apply.
+        :returns:   A mesh with aggregated data according to the given function.
+        """
+        np_func = self._np_str[func]
+        # TODO: add function to create an empty mesh from a given on
+        # custom field_data may need to be preserved
+        mesh = self.read(0).copy(deep=True)
+        mesh.clear_point_data()
+        mesh.clear_cell_data()
+        if isinstance(mesh_property, Property):
+            output_name = f"{mesh_property.output_name}_{func}"
         else:
-            mesh[output_name] = np.empty(vals.shape[1:])
-            assert isinstance(np_func, type(np.max))
-            np_func(vals, out=mesh[output_name], axis=0)
+            output_name = f"{mesh_property}_{func}"
+        mesh[output_name] = self.aggregate(mesh_property, np_func, axis=0)
         return mesh
+
+    def _time_of_extremum(
+        self,
+        mesh_property: Property | str,
+        np_func: Callable,
+        prefix: Literal["min", "max"],
+    ) -> Mesh:
+        """Returns a Mesh with the time of a given property extremum as data.
+
+        The data is named as `f'{prefix}_{mesh_property.output_name}_time'`."""
+        mesh = self.read(0).copy(deep=True)
+        mesh_property = get_preset(mesh_property, mesh)
+        mesh.clear_point_data()
+        mesh.clear_cell_data()
+        output_name = f"{prefix}_{mesh_property.output_name}_time"
+        mesh[output_name] = self._timevalues[
+            self.aggregate(mesh_property, np_func, axis=0)
+        ]
+        return mesh
+
+    def time_of_min(self, mesh_property: Property | str) -> Mesh:
+        "Returns a Mesh with the time of the property minimum as data."
+        return self._time_of_extremum(mesh_property, np.argmin, "min")
+
+    def time_of_max(self, mesh_property: Property | str) -> Mesh:
+        "Returns a Mesh with the time of the property maximum as data."
+        return self._time_of_extremum(mesh_property, np.argmax, "max")
+
+    def aggregate_over_domain(
+        self,
+        mesh_property: Property | str,
+        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+        mask: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Aggregate data over domain per timestep using a specified function.
+
+        :param mesh_property:   The mesh property to be aggregated.
+        :param func:            The aggregation function to apply.
+        :param mask:            A numpy array as a mask for the domain.
+
+        :returns:   A numpy array with aggregated data.
+        """
+        np_func = self._np_str[func]
+        return self.aggregate(mesh_property, np_func, axis=1, mask=mask)
+
+    def plot_domain_aggregate(
+        self,
+        mesh_property: Property | str,
+        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+        timesteps: slice | None = None,
+        time_unit: str | None = "s",
+        mask: np.ndarray | None = None,
+        ax: plt.Axes | None = None,
+        **kwargs: Any,
+    ) -> plt.Figure | None:
+        """
+        Plot the transient aggregated data over the domain per timestep.
+
+        :param mesh_property:   The mesh property to be aggregated.
+        :param func:            The aggregation function to apply.
+        :param timesteps:       A slice to select the timesteps. Default: all.
+        :param time_unit:       Output unit of the timevalues.
+        :param mask:            A numpy array as a mask for the domain.
+        :param ax:              matplotlib axis to use for plotting
+        :param kwargs:      Keyword args passed to matplotlib's plot function.
+
+        :returns:   A matplotlib Figure or None if plotting on existing axis.
+        """
+        mesh_property = get_preset(mesh_property, self.read(0))
+        timeslice = slice(None, None) if timesteps is None else timesteps
+        values = self.aggregate_over_domain(
+            mesh_property.magnitude, func, mask
+        )[timeslice]
+        time_unit = time_unit if time_unit is not None else self.time_unit
+        x_values = self.timevalues(time_unit)[timeslice]
+        x_label = f"time t / {time_unit}"
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
+        if "label" in kwargs:
+            label = kwargs.pop("label")
+            ylabel = mesh_property.get_label() + " " + func
+        else:
+            label = func
+            ylabel = mesh_property.get_label()
+        ax.plot(x_values, values, label=label, **kwargs)
+        ax.set_axisbelow(True)
+        ax.grid(which="major", color="lightgrey", linestyle="-")
+        ax.grid(which="minor", color="0.95", linestyle="--")
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(ylabel)
+        ax.legend()
+        ax.label_outer()
+        ax.minorticks_on()
+        return fig
 
     def probe(
         self,

@@ -11,6 +11,7 @@ from ogstools.plot.shared import spatial_quantity
 from ogstools.propertylib.properties import Property, get_preset
 
 
+# TODO: ability to swap x and y?
 def linesample(
     mesh: pv.UnstructuredGrid,
     x: str,

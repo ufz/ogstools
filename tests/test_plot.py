@@ -190,9 +190,11 @@ class TestPlotting:
         fig.suptitle("Test user defined fig")
         plt.close()
 
-    def test_limit_plots(self):
+    def test_aggregate_plots(self):
         """Test creation of limit plots."""
-        mesh = examples.load_meshseries_CT_2D_XDMF().aggregate("Si", "var")
+        mesh = examples.load_meshseries_CT_2D_XDMF().aggregate_over_time(
+            "Si", "var"
+        )
         mesh.plot_contourf("Si_var")
         plt.close()
 

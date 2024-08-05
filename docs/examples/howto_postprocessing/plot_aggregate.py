@@ -18,7 +18,7 @@ import ogstools as ot
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = ot.properties.saturation
+saturation = ot.properties.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -35,15 +35,15 @@ si = ot.properties.saturation
 # %% [markdown]
 # You aggregate the data in MeshSeries over all timesteps given some
 # aggregation function, e.g. "min", "max", "var"
-# (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate`).
+# (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate_over_time`).
 # The following code gets the maximum saturation for each point in the mesh over
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
 # equal to the aggregation functions name. The plot function will find the
 # correct data anyway if given the original mesh_property
 
 # %%
-mesh = mesh_series.aggregate(si, "max")
-fig = mesh.plot_contourf(si)
+mesh = mesh_series.aggregate_over_time(saturation, "max")
+fig = mesh.plot_contourf(saturation)
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
@@ -51,20 +51,27 @@ fig = mesh.plot_contourf(si)
 # units correctly:
 
 # %%
-mesh = mesh_series.aggregate(si, "max_time")
-fig = mesh.plot_contourf(ot.properties.Scalar("Saturation_max_time", "s", "a"))
+mesh = mesh_series.time_of_max(saturation)
+fig = mesh.plot_contourf(ot.properties.Scalar("max_Saturation_time", "s", "a"))
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
 
 
 # %%
-mesh = mesh_series.aggregate(si, "var")
-fig = mesh.plot_contourf(si)
+mesh = mesh_series.aggregate_over_time(saturation, "var")
+fig = mesh.plot_contourf(saturation)
 
 # %% [markdown]
 # Difference between the last and the first timestep:
 
 # %%
-mesh = mesh_series.read(-1).difference(mesh_series.read(0), si)
-fig = mesh.plot_contourf(si)
+mesh = mesh_series.read(-1).difference(mesh_series.read(0), saturation)
+fig = mesh.plot_contourf(saturation)
+
+# %% [markdown]
+# It's also possible to aggregate the data per timestep to return a timeseries
+# of e.g. the max or mean value of a property in the entire domain.
+
+# %%
+fig = mesh_series.plot_domain_aggregate(saturation, "mean", time_unit="a")
