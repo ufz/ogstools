@@ -174,7 +174,10 @@ def subplot(
     x, y = spatial.transform(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = mesh_property.magnitude.transform(surf_tri)
-    if kwargs.get("log_scaled", setup.log_scaled):
+    if (
+        kwargs.get("log_scaled", setup.log_scaled)
+        and not mesh_property.is_mask()
+    ):
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
     vmin, vmax = np.nanmin(values), np.nanmax(values)

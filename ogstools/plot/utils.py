@@ -230,7 +230,7 @@ def get_cmap_norm(
     extend = "both" if nextafter(levels[0], np.inf) == levels[-1] else "neither"
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries,
-        ncolors=len(boundaries) + 1,
+        ncolors=len(boundaries) - 1,
         clip=False,
         extend=extend,  # type: ignore[arg-type]
     )

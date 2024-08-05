@@ -106,7 +106,10 @@ def combined_levels(
             if mesh_property.mask_used(mesh)
             else mesh
         )
-        if kwargs.get("log_scaled", setup.log_scaled):
+        if (
+            kwargs.get("log_scaled", setup.log_scaled)
+            and not mesh_property.is_mask()
+        ):
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         vmin = min(vmin, np.nanmin(values)) if VMIN is None else vmin
         vmax = max(vmax, np.nanmax(values)) if VMAX is None else vmax
