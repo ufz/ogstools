@@ -89,20 +89,20 @@ def add_colorbars(
         bounds = level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
-    cmap, norm = utils.get_cmap_norm(levels, mesh_property)
-    scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
-
-    cb = fig.colorbar(
-        scalar_mappable,
-        norm=norm,
-        ax=ax,
-        ticks=ticks,
-        drawedges=True,
-        location=kwargs.get("cb_loc", "right"),
-        spacing="uniform",
-        pad=kwargs.get("cb_pad", 0.05),
-        extendrect=True,
-    )
+    with np.errstate(over="ignore"):
+        cmap, norm = utils.get_cmap_norm(levels, mesh_property)
+        scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
+        cb = fig.colorbar(
+            scalar_mappable,
+            norm=norm,
+            ax=ax,
+            ticks=ticks,
+            drawedges=True,
+            location=kwargs.get("cb_loc", "right"),
+            spacing="uniform",
+            pad=kwargs.get("cb_pad", 0.05),
+            extendrect=True,
+        )
     # Formatting the colorbar label and ticks
 
     tick_labels, offset = get_ticklabels(ticks)
@@ -174,7 +174,10 @@ def subplot(
     x, y = spatial.transform(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = mesh_property.magnitude.transform(surf_tri)
-    if kwargs.get("log_scaled", setup.log_scaled):
+    if (
+        kwargs.get("log_scaled", setup.log_scaled)
+        and not mesh_property.is_mask()
+    ):
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
     vmin, vmax = np.nanmin(values), np.nanmax(values)
@@ -186,23 +189,25 @@ def subplot(
         levels = compute_levels(vmin, vmax, num_levels)
     cmap, norm = utils.get_cmap_norm(levels, mesh_property)
 
-    if mesh_property.data_name in mesh.point_data:
-        ax.tricontourf(  # type: ignore[call-overload]
-            x, y, tri, values, levels=kwargs.get("levels", levels),
-            cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
-        )  # fmt: skip
-        if mesh_property.bilinear_cmap:
-            ax.tricontour(  # type: ignore[call-overload]
-                x, y, tri, values, levels=[0], colors="w"
-            )
-    else:
-        cmap = kwargs.get("cmap", cmap)
-        ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
-        if mesh_property.is_mask():
-            ax.tripcolor(
-                x, y, tri, facecolors=values, mask=(values == 1),
-                cmap=cmap, norm=norm, hatch="/"
+    # norm.__call__ overflows if vals are all equal
+    with np.errstate(over="ignore"):
+        if mesh_property.data_name in mesh.point_data:
+            ax.tricontourf(  # type: ignore[call-overload]
+                x, y, tri, values, levels=kwargs.get("levels", levels),
+                cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
             )  # fmt: skip
+            if mesh_property.bilinear_cmap:
+                ax.tricontour(  # type: ignore[call-overload]
+                    x, y, tri, values, levels=[0], colors="w"
+                )
+        else:
+            cmap = kwargs.get("cmap", cmap)
+            ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
+            if mesh_property.is_mask():
+                ax.tripcolor(
+                    x, y, tri, facecolors=values, mask=(values == 1),
+                    cmap=cmap, norm=norm, hatch="/"
+                )  # fmt: skip
 
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
@@ -270,7 +275,7 @@ def subplot(
 
 def _fig_init(
     rows: int, cols: int, aspect: float = 1.0, **kwargs: Any
-) -> tuple[plt.Figure, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes | np.ndarray]:
     nx_cb = 1 if setup.combined_colorbar else cols
     default_size = 8
     cb_width = 3
@@ -426,11 +431,11 @@ def contourf(
     if fig is None and ax is None:
         fig, ax = _fig_init(shape[0], shape[1], fig_aspect, **kwargs)
     fig = draw_plot(meshes, mesh_property, fig=fig, axes=ax, **kwargs)
-    if fig is not None:
+    if ax is not None and isinstance(ax, plt.Axes):
+        ax.set_aspect(1.0 / ax_aspects[0])
+    elif fig is not None:
         for _ax, aspect in zip(fig.axes[:n_axs], ax_aspects, strict=True):
             _ax.set_aspect(1.0 / aspect)
-    elif ax is not None:
-        ax.set_aspect(1.0 / ax_aspects[0])
     if fig is None:
         return None
     utils.update_font_sizes(

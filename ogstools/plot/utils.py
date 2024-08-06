@@ -227,12 +227,10 @@ def get_cmap_norm(
     boundaries = level_boundaries(levels) if mesh_property.categoric else levels
     if vmax == nextafter(vmin, np.inf):
         cmap = mcolors.ListedColormap(["grey", "grey"], name="custom")
-    extend = "both" if nextafter(levels[0], np.inf) == levels[-1] else "neither"
+    if nextafter(levels[0], np.inf) == levels[-1]:
+        return cmap, None
     norm = mcolors.BoundaryNorm(
-        boundaries=boundaries,
-        ncolors=len(boundaries) + 1,
-        clip=False,
-        extend=extend,  # type: ignore[arg-type]
+        boundaries=boundaries, ncolors=len(boundaries) - 1, clip=False
     )
     return cmap, norm
 

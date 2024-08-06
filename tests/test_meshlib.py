@@ -33,24 +33,46 @@ class TestUtils:
 
             ms.clear()
 
-    def test_aggregate(self):
+    def test_time_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         funcs = ["min", "max", "mean", "median", "sum", "std", "var"]
-        timefuncs = ["min_time", "max_time"]
-        for func in funcs + timefuncs:
-            agg_mesh = mesh_series.aggregate("temperature", func)
+        for func in funcs:
+            agg_mesh = mesh_series.aggregate_over_time("temperature", func)
             assert not np.any(np.isnan(agg_mesh["temperature_" + func]))
 
-    def test_aggregate_mesh_dependent(self):
+    def test_aggregate_time_of_limit(self):
+        "Test aggregation of meshseries."
+        mesh_series = examples.load_meshseries_HT_2D_XDMF()
+        min_mesh = mesh_series.time_of_min("temperature")
+        assert not np.any(np.isnan(min_mesh["min_temperature_time"]))
+        max_mesh = mesh_series.time_of_max("temperature")
+        assert not np.any(np.isnan(max_mesh["max_temperature_time"]))
+
+    def test_time_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent property on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        for func in ["max", "max_time"]:
-            agg_mesh = mesh_series.aggregate(
-                ot.properties.dilatancy_alkan, func
-            )
-            data_name = ot.properties.dilatancy_alkan.output_name + "_" + func
-            assert not np.any(np.isnan(agg_mesh[data_name]))
+        prop = ot.properties.dilatancy_alkan
+        agg_mesh = mesh_series.aggregate_over_time(prop, "max")
+        assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
+        agg_mesh = mesh_series.time_of_max(prop)
+        assert not np.any(np.isnan(agg_mesh[f"max_{prop.output_name}_time"]))
+
+    def test_domain_aggregate(self):
+        "Test aggregation of meshseries."
+        mesh_series = examples.load_meshseries_THM_2D_PVD()
+        mask = mesh_series.read(0).ctp()["MaterialIDs"] > 3
+        values = mesh_series.aggregate_over_domain(
+            "temperature", "max", mask=mask
+        )
+        assert not np.any(np.isnan(values))
+
+    def test_plot_domain_aggregate(self):
+        "Test aggregation of meshseries."
+        mesh_series = examples.load_meshseries_THM_2D_PVD()
+        mesh_series.plot_domain_aggregate(
+            "temperature", "mean", slice(1, -1), "a"
+        )
 
     def test_time_slice(self):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
@@ -262,6 +284,7 @@ class TestUtils:
                 order=elem_order,
                 out_name=mesh_path,
                 mixed_elements=mixed,
+                jiggle=0.01,
             )
             msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
 
