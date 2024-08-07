@@ -380,3 +380,11 @@ class TestUtils:
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
         mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").read(-1)
         assert not np.any(np.isnan(ot.properties.stress.transform(mesh)))
+
+    def test_remesh_with_tri(self):
+        mesh = examples.load_meshseries_THM_2D_PVD().read(1)
+        temp_dir = Path(mkdtemp())
+        msh_path = ot.meshlib.gmsh_meshing.remesh_with_tri(mesh, temp_dir)
+        assert (
+            msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
+        )

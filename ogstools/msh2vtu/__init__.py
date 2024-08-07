@@ -173,7 +173,7 @@ def msh2vtu(
     :param log_level:   Level of log output. Possible values:
                         <https://docs.python.org/3/library/logging.html#levels>
 
-    :returns:           A MeshSeries object
+    :returns: 0 if successful, otherwise error message.
     """
     logging.getLogger().setLevel(log_level)
     if isinstance(dim, list):

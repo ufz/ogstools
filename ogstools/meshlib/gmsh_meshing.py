@@ -12,6 +12,7 @@ from tempfile import mkdtemp
 
 import gmsh
 import numpy as np
+import pyvista as pv
 
 from ogstools.msh2vtu import msh2vtu
 
@@ -210,6 +211,100 @@ def cuboid(
     gmsh.finalize()
 
 
+def ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
+    "Return edge elements ordered to form a contiguous array."
+    edges = mesh.extract_feature_edges()
+    n_cells = edges.n_cells
+    # shape=(n_cells, 2, 3), the 2 is for pointA and pointB
+    cell_pts = np.asarray([cell.points for cell in edges.cell])
+
+    ordered_cell_ids = [0]
+    cell_id = 0
+    for _ in range(n_cells):
+        next_id = np.argmax(
+            np.equal(cell_pts[cell_id, 1], cell_pts[:, 0]).all(axis=1)
+        )
+        ordered_cell_ids += [next_id]
+        cell_id = next_id
+    return cell_pts[ordered_cell_ids[:-1], 0]
+
+
+def remesh_with_tri(
+    mesh: pv.UnstructuredGrid,
+    path: Path = Path(),
+    filename: str = "tri_mesh.msh",
+    size_factor: float = 1.0,
+    order: int = 1,
+) -> Path:
+    """Discretizes a given Mesh with triangles and saves as gmsh .msh.
+
+    :param mesh: The mesh which shall be discretized with triangles
+    :param path: The output path of the resulting file
+    :param filename: The name of the resulting file
+    :param size_factor: A factor to scale the element sizes.
+    :param order: The element order (1=linear, 2=quadratic, ...)
+
+    :returns: A filepath to the resulting msh-file.
+    """
+
+    gmsh.initialize()
+    gmsh.option.set_number("General.Verbosity", 0)
+    gmsh.clear()
+    gmsh.model.add("domain")
+    point_id = -1
+
+    for mat_id in (mat_ids := np.unique(mesh["MaterialIDs"])):
+        region = mesh.threshold([mat_id, mat_id], "MaterialIDs")
+        points = ordered_edges(region)
+        distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
+        DEFAULT_SIZE = 6  # pylint: disable=C0103
+        min_elem_size = size_factor * np.min(distances) * DEFAULT_SIZE
+        max_elem_size = size_factor * np.max(distances) * DEFAULT_SIZE
+        for point in points:
+            point_id += 1
+            gmsh.model.geo.addPoint(point[0], point[1], point[2], tag=point_id)
+        pt_list = list(range(point_id - len(points) + 1, point_id + 1))
+        for index in pt_list[:-1]:
+            gmsh.model.geo.addLine(index, index + 1, tag=index)
+        gmsh.model.geo.addLine(pt_list[-1], pt_list[0], tag=pt_list[-1])
+        line_tags = pt_list
+        gmsh.model.geo.addCurveLoop(line_tags, tag=mat_id)
+        gmsh.model.geo.addPlaneSurface([mat_id], tag=mat_id)
+        gmsh.model.addPhysicalGroup(
+            dim=2,
+            tags=[mat_id],
+            name=f"Layer {mat_id}",
+        )
+        f1, f2 = (2 * mat_id, 2 * mat_id + 1)
+        gmsh.model.mesh.field.add("Distance", f1)
+        gmsh.model.mesh.field.setNumbers(f1, "CurvesList", pt_list)
+        gmsh.model.mesh.field.add("Threshold", f2)
+        gmsh.model.mesh.field.setNumber(f2, "IField", f1)
+        gmsh.model.mesh.field.setNumber(f2, "SizeMin", min_elem_size)
+        gmsh.model.mesh.field.setNumber(f2, "SizeMax", max_elem_size)
+        gmsh.model.mesh.field.setNumber(f2, "DistMin", min_elem_size)
+        gmsh.model.mesh.field.setNumber(f2, "DistMax", 3 * max_elem_size)
+
+    gmsh.model.mesh.field.add("Min", tag=f2 + 1)
+    gmsh.model.mesh.field.setNumbers(
+        f2 + 1, "FieldsList", (mat_ids * 2 + 1).tolist()
+    )
+    gmsh.model.mesh.field.setAsBackgroundMesh(f2 + 1)
+
+    gmsh.model.geo.removeAllDuplicates()
+    gmsh.model.geo.synchronize()
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+    gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+
+    gmsh.model.mesh.generate(dim=2)
+    gmsh.model.mesh.setOrder(order)
+    gmsh.write(str(filepath := path / filename))
+    gmsh.finalize()
+    return filepath
+
+
 @dataclass(frozen=True)
 class Groundwater:
     begin: float = -30
@@ -241,7 +336,7 @@ def gen_bhe_mesh_gmsh(
     width: float,
     layer: float | list[float],
     groundwater: Groundwater | list[Groundwater],
-    BHE_Array: (BHE | list[BHE]),
+    BHE_Array: BHE | list[BHE],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
@@ -1680,9 +1775,9 @@ def gen_bhe_mesh_gmsh(
                         np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
                         < n_refinement_layers * target_z_size_fine
                     ):
-                        BHE_to_soil[
-                            j, 4
-                        ] = 1.2  # for layers, which are top and bottom critical
+                        BHE_to_soil[j, 4] = (
+                            1.2  # for layers, which are top and bottom critical
+                        )
                 elif (
                     np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
                     < n_refinement_layers * target_z_size_fine
@@ -1985,7 +2080,7 @@ def gen_bhe_mesh(
     width: float,  # e.g. 100
     layer: float | list[float],  # e.g. 100
     groundwater: Groundwater | list[Groundwater],
-    BHE_Array: (BHE | list[BHE]),
+    BHE_Array: BHE | list[BHE],
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
