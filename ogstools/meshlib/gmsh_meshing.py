@@ -4,9 +4,9 @@
 #            http://www.opengeosys.org/project/license
 #
 
-import math
 from collections.abc import Collection
 from dataclasses import dataclass
+from math import ceil
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -373,328 +373,178 @@ def gen_bhe_mesh_gmsh(
     """
 
     def _compute_layer_spacing(
-        z_min: float,
-        z_max: float,
-        z_min_id: int,
-        id_j: float,
-        id_j_max: float,
+        z_min: float, z_max: float, z_min_id: int, id_j: float, id_j_max: float
     ) -> None:
+        delta_z = np.abs(z_min - z_max)
+        size_fine = n_refinement_layers * target_z_size_fine
+        target_layer: list = number_of_layers[len(number_of_layers) - 1]
         if z_min_id == 3:  # and id_j==1 - not needed, but logically safer
             if id_j == id_j_max:
-                space = (
-                    np.abs(z_min - z_max)
-                    - n_refinement_layers * target_z_size_fine
-                    - space_next_layer_refined
-                )
+                space = delta_z - size_fine - space_next_layer_refined
+                space_fine_next = space + size_fine + space_next_layer_refined
                 if space_next_layer_refined == 0:
                     if space <= target_z_size_fine:
-                        absolute_height_of_layers.append(
-                            np.abs(z_min - z_max)
-                        )  # space
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(
-                                np.abs(z_min - z_max) / target_z_size_fine
-                            )  # space
-                        )
+                        absolute_height_of_layers.append(delta_z)
+                        target_layer.append(ceil(delta_z / target_z_size_fine))
                     else:
-                        absolute_height_of_layers.append(
-                            n_refinement_layers * target_z_size_fine
-                        )
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            n_refinement_layers
-                        )
-                        absolute_height_of_layers.append(space)
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil((space) / target_z_size_coarse)
-                        )
+                        absolute_height_of_layers.extend([size_fine, space])
+                        target_layer.append(n_refinement_layers)
+                        target_layer.append(ceil(space / target_z_size_coarse))
                 else:
                     if space <= target_z_size_fine:
-                        absolute_height_of_layers.append(
-                            space
-                            + n_refinement_layers * target_z_size_fine
-                            + space_next_layer_refined
-                        )
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(
-                                (
-                                    space
-                                    + n_refinement_layers * target_z_size_fine
-                                    + space_next_layer_refined
-                                )
-                                / target_z_size_fine
-                            )
+                        absolute_height_of_layers.append(space_fine_next)
+                        target_layer.append(
+                            ceil(space_fine_next / target_z_size_fine)
                         )
                     else:
-                        absolute_height_of_layers.append(
-                            n_refinement_layers * target_z_size_fine
-                        )
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            n_refinement_layers
-                        )
+                        absolute_height_of_layers.append(size_fine)
+                        target_layer.append(n_refinement_layers)
                         absolute_height_of_layers.append(space)
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(space / target_z_size_coarse)
-                        )
+                        target_layer.append(ceil(space / target_z_size_coarse))
                         absolute_height_of_layers.append(
                             space_next_layer_refined
                         )
-                        number_of_layers[len(number_of_layers) - 1].append(
-                            math.ceil(
-                                space_next_layer_refined / target_z_size_fine
-                            )
+                        target_layer.append(
+                            ceil(space_next_layer_refined / target_z_size_fine)
                         )
 
             else:
-                space = (
-                    np.abs(z_min - z_max)
-                    - n_refinement_layers * target_z_size_fine
-                )  # all negative values, because of the extrusion in negative z-direction -> z_min -- End Layer, z_max -- start layer
+                # all negative values, because of the extrusion in negative z-direction -> z_min -- End Layer, z_max -- start layer
+                space = delta_z - size_fine
                 if (
                     np.abs(space)
                     <= (n_refinement_layers + 1) * target_z_size_fine
                 ):
-                    absolute_height_of_layers.append(
-                        space + n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space + n_refinement_layers * target_z_size_fine)
-                            / target_z_size_fine
-                        )
+                    absolute_height_of_layers.append(space + size_fine)
+                    target_layer.append(
+                        ceil((space + size_fine) / target_z_size_fine)
                     )
                 else:
-                    absolute_height_of_layers.append(
-                        n_refinement_layers * target_z_size_fine
+                    absolute_height_of_layers.append(size_fine)
+                    target_layer.append(n_refinement_layers)
+                    absolute_height_of_layers.append(space - size_fine)
+                    target_layer.append(
+                        ceil((space - size_fine) / target_z_size_coarse)
                     )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
-                    absolute_height_of_layers.append(
-                        space - n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - n_refinement_layers * target_z_size_fine)
-                            / target_z_size_coarse
-                        )
-                    )
-                    absolute_height_of_layers.append(
-                        n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
+                    absolute_height_of_layers.append(size_fine)
+                    target_layer.append(n_refinement_layers)
 
-        elif (
-            id_j == 1 and id_j != id_j_max
-        ):  # erstes Mesh in jeweiligen Soil-Layer
-            space = np.abs(z_min - z_max) - space_last_layer_refined
+        # erstes Mesh in jeweiligen Soil-Layer
+        elif id_j == 1 and id_j != id_j_max:
+            space = delta_z - space_last_layer_refined
+            space_last = space + space_last_layer_refined
             if np.abs(space) <= (n_refinement_layers + 1) * target_z_size_fine:
-                absolute_height_of_layers.append(
-                    space + space_last_layer_refined
-                )
-                number_of_layers[len(number_of_layers) - 1].append(
-                    math.ceil(
-                        (space + space_last_layer_refined) / target_z_size_fine
-                    )
-                )
+                absolute_height_of_layers.append(space_last)
+                target_layer.append(ceil(space_last / target_z_size_fine))
             else:
                 if space_last_layer_refined == 0:
-                    absolute_height_of_layers.append(
-                        space - n_refinement_layers * target_z_size_fine
+                    absolute_height_of_layers.append(space - size_fine)
+                    target_layer.append(
+                        ceil((space - size_fine) / target_z_size_coarse)
                     )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - n_refinement_layers * target_z_size_fine)
-                            / target_z_size_coarse
-                        )
-                    )
-                    absolute_height_of_layers.append(
-                        n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
+                    absolute_height_of_layers.append(size_fine)
+                    target_layer.append(n_refinement_layers)
                 else:
                     absolute_height_of_layers.append(space_last_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_last_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_last_layer_refined / target_z_size_fine)
                     )
-                    absolute_height_of_layers.append(
-                        space - n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - n_refinement_layers * target_z_size_fine)
-                            / target_z_size_coarse
-                        )
+                    absolute_height_of_layers.append(space - size_fine)
+                    target_layer.append(
+                        ceil((space - size_fine) / target_z_size_coarse)
                     )
                     absolute_height_of_layers.append(2 * target_z_size_fine)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
+                    target_layer.append(n_refinement_layers)
 
         elif id_j == id_j_max and id_j != 1:
-            space = np.abs(z_min - z_max) - space_next_layer_refined
+            space = delta_z - space_next_layer_refined
+            space_next = space + space_next_layer_refined
             if space <= (n_refinement_layers + 1) * target_z_size_fine:
-                absolute_height_of_layers.append(
-                    space + space_next_layer_refined
-                )
-                number_of_layers[len(number_of_layers) - 1].append(
-                    math.ceil(
-                        (space + space_next_layer_refined) / target_z_size_fine
-                    )
-                )
+                absolute_height_of_layers.append(space_next)
+                target_layer.append(ceil(space_next / target_z_size_fine))
             else:
                 if space_next_layer_refined == 0:
-                    absolute_height_of_layers.append(
-                        n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
-                    absolute_height_of_layers.append(
-                        space - n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - n_refinement_layers * target_z_size_fine)
-                            / target_z_size_coarse
-                        )
+                    absolute_height_of_layers.append(size_fine)
+                    target_layer.append(n_refinement_layers)
+                    absolute_height_of_layers.append(space - size_fine)
+                    target_layer.append(
+                        ceil((space - size_fine) / target_z_size_coarse)
                     )
                 else:
-                    absolute_height_of_layers.append(
-                        n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        n_refinement_layers
-                    )
-                    absolute_height_of_layers.append(
-                        space - n_refinement_layers * target_z_size_fine
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - n_refinement_layers * target_z_size_fine)
-                            / target_z_size_coarse
-                        )
+                    absolute_height_of_layers.append(size_fine)
+                    target_layer.append(n_refinement_layers)
+                    absolute_height_of_layers.append(space - size_fine)
+                    target_layer.append(
+                        ceil((space - size_fine) / target_z_size_coarse)
                     )
                     absolute_height_of_layers.append(space_next_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_next_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_next_layer_refined / target_z_size_fine)
                     )
 
-        elif (
-            id_j == id_j_max and id_j == 1
-        ):  # Layer without a needed depth of BHE or Groundwater
-            space = np.abs(z_min - z_max)
+        # Layer without a needed depth of BHE or Groundwater
+        elif id_j == id_j_max and id_j == 1:
+            space = delta_z
+            space_next = space - space_next_layer_refined
+            space_last = space - space_last_layer_refined
+            space_nextlast = space_next - space_last_layer_refined
             if space_last_layer_refined == 0 and space_next_layer_refined == 0:
                 absolute_height_of_layers.append(space)
-                number_of_layers[len(number_of_layers) - 1].append(
-                    math.ceil(space / target_z_size_coarse)
-                )
+                target_layer.append(ceil(space / target_z_size_coarse))
             elif space_next_layer_refined == 0:
-                if space - space_last_layer_refined <= target_z_size_fine:
+                if space_last <= target_z_size_fine:
                     absolute_height_of_layers.append(space)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space / target_z_size_fine)
-                    )
+                    target_layer.append(ceil(space / target_z_size_fine))
                 else:
                     absolute_height_of_layers.append(space_last_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_last_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_last_layer_refined / target_z_size_fine)
                     )
-                    absolute_height_of_layers.append(
-                        space - space_last_layer_refined
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - space_last_layer_refined)
-                            / target_z_size_coarse
-                        )
-                    )
+                    absolute_height_of_layers.append(space_last)
+                    target_layer.append(ceil(space_last / target_z_size_coarse))
             elif space_last_layer_refined == 0:
-                if space - space_next_layer_refined <= target_z_size_fine:
+                if space_next <= target_z_size_fine:
                     absolute_height_of_layers.append(space)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space / target_z_size_fine)
-                    )
+                    target_layer.append(ceil(space / target_z_size_fine))
                 else:
-                    absolute_height_of_layers.append(
-                        space - space_next_layer_refined
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (space - space_next_layer_refined)
-                            / target_z_size_coarse
-                        )
-                    )
+                    absolute_height_of_layers.append(space_next)
+                    target_layer.append(ceil(space_next / target_z_size_coarse))
                     absolute_height_of_layers.append(space_next_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_next_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_next_layer_refined / target_z_size_fine)
                     )
             else:
-                if (
-                    space - space_next_layer_refined - space_last_layer_refined
-                    <= target_z_size_fine
-                ):
+                if space_nextlast <= target_z_size_fine:
                     absolute_height_of_layers.append(space)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space / target_z_size_fine)
-                    )
+                    target_layer.append(ceil(space / target_z_size_fine))
                 else:
                     absolute_height_of_layers.append(space_next_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_next_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_next_layer_refined / target_z_size_fine)
                     )
-                    absolute_height_of_layers.append(
-                        space
-                        - space_next_layer_refined
-                        - space_last_layer_refined
-                    )
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(
-                            (
-                                space
-                                - space_next_layer_refined
-                                - space_last_layer_refined
-                            )
-                            / target_z_size_coarse
-                        )
+                    absolute_height_of_layers.append(space_nextlast)
+                    target_layer.append(
+                        ceil(space_nextlast / target_z_size_coarse)
                     )
                     absolute_height_of_layers.append(space_last_layer_refined)
-                    number_of_layers[len(number_of_layers) - 1].append(
-                        math.ceil(space_last_layer_refined / target_z_size_fine)
+                    target_layer.append(
+                        ceil(space_last_layer_refined / target_z_size_fine)
                     )
 
         else:
-            space = np.abs(z_min - z_max)
+            space = delta_z
             if space <= (2 * n_refinement_layers + 1) * target_z_size_fine:
                 absolute_height_of_layers.append(space)
-                number_of_layers[len(number_of_layers) - 1].append(
-                    math.ceil(space / target_z_size_fine)
-                )
+                target_layer.append(ceil(space / target_z_size_fine))
             else:
-                absolute_height_of_layers.append(
-                    n_refinement_layers * target_z_size_fine
+                absolute_height_of_layers.append(size_fine)
+                target_layer.append(n_refinement_layers)
+                absolute_height_of_layers.append(space - 2 * size_fine)
+                target_layer.append(
+                    ceil((space - 2 * size_fine) / target_z_size_coarse)
                 )
-                number_of_layers[len(number_of_layers) - 1].append(
-                    n_refinement_layers
-                )
-                absolute_height_of_layers.append(
-                    space - 2 * n_refinement_layers * target_z_size_fine
-                )
-                number_of_layers[len(number_of_layers) - 1].append(
-                    math.ceil(
-                        (space - 2 * n_refinement_layers * target_z_size_fine)
-                        / target_z_size_coarse
-                    )
-                )
-                absolute_height_of_layers.append(
-                    n_refinement_layers * target_z_size_fine
-                )
-                number_of_layers[len(number_of_layers) - 1].append(
-                    n_refinement_layers
-                )
+                absolute_height_of_layers.append(size_fine)
+                target_layer.append(n_refinement_layers)
 
     # to flat a list, seems not so easy with a ready to use function --> this code is from https://realpython.com/python-flatten-list/
     def _flatten_concatenation(matrix: list[list[float]]) -> list:
@@ -704,290 +554,103 @@ def gen_bhe_mesh_gmsh(
         return flat_list
 
     def _mesh_structured() -> None:
-        point_id = 1
-        line_id = 1
-        curve_loop_id = 1
-        surface_id = 1
+        for y_value in [0.0, y_min, y_max, width]:
+            for x_value in [0.0, x_min, x_max, length]:
+                gmsh.model.geo.addPoint(x_value, y_value, 0.0)
 
-        # define all points
-        gmsh.model.geo.addPoint(0.0, 0.0, 0.0, tag=point_id)  # 1
-        point_id += 1
-        gmsh.model.geo.addPoint(x_min, 0.0, 0.0, tag=point_id)  # 2
-        point_id += 1
-        gmsh.model.geo.addPoint(x_max, 0.0, 0.0, tag=point_id)  # 3
-        point_id += 1
-        gmsh.model.geo.addPoint(length, 0.0, 0.0, tag=point_id)  # 4
-        point_id += 1
+        # x-direction
+        for i in range(14)[1::4]:
+            for j in range(3):
+                gmsh.model.geo.addLine(i + j, i + j + 1)
 
-        gmsh.model.geo.addPoint(0.0, y_min, 0.0, tag=point_id)  # 5
-        point_id += 1
-        gmsh.model.geo.addPoint(x_min, y_min, 0.0, tag=point_id)  # 6
-        point_id += 1
-        gmsh.model.geo.addPoint(x_max, y_min, 0.0, tag=point_id)  # 7
-        point_id += 1
-        gmsh.model.geo.addPoint(length, y_min, 0.0, tag=point_id)  # 8
-        point_id += 1
-
-        gmsh.model.geo.addPoint(0.0, y_max, 0.0, tag=point_id)  # 9
-        point_id += 1
-        gmsh.model.geo.addPoint(x_min, y_max, 0.0, tag=point_id)  # 10
-        point_id += 1
-        gmsh.model.geo.addPoint(x_max, y_max, 0.0, tag=point_id)  # 11
-        point_id += 1
-        gmsh.model.geo.addPoint(length, y_max, 0.0, tag=point_id)  # 12
-        point_id += 1
-
-        gmsh.model.geo.addPoint(0.0, width, 0.0, tag=point_id)  # 13
-        point_id += 1
-        gmsh.model.geo.addPoint(x_min, width, 0.0, tag=point_id)  # 14
-        point_id += 1
-        gmsh.model.geo.addPoint(x_max, width, 0.0, tag=point_id)  # 15
-        point_id += 1
-        gmsh.model.geo.addPoint(length, width, 0.0, tag=point_id)  # 16
-        point_id += 1
-
-        # define all lines in x-direction
-
-        gmsh.model.geo.addLine(1, 2, line_id)  # 1
-        line_id += 1
-        gmsh.model.geo.addLine(2, 3, line_id)  # 2
-        line_id += 1
-        gmsh.model.geo.addLine(3, 4, line_id)  # 3
-        line_id += 1
-
-        gmsh.model.geo.addLine(5, 6, line_id)  # 4
-        line_id += 1
-        gmsh.model.geo.addLine(6, 7, line_id)  # 5
-        line_id += 1
-        gmsh.model.geo.addLine(7, 8, line_id)  # 6
-        line_id += 1
-
-        gmsh.model.geo.addLine(9, 10, line_id)  # 7
-        line_id += 1
-        gmsh.model.geo.addLine(10, 11, line_id)  # 8
-        line_id += 1
-        gmsh.model.geo.addLine(11, 12, line_id)  # 9
-        line_id += 1
-
-        gmsh.model.geo.addLine(13, 14, line_id)  # 10
-        line_id += 1
-        gmsh.model.geo.addLine(14, 15, line_id)  # 11
-        line_id += 1
-        gmsh.model.geo.addLine(15, 16, line_id)  # 12
-        line_id += 1
-
-        # define all lines in y-direction
-
-        gmsh.model.geo.addLine(1, 5, line_id)  # 13
-        line_id += 1
-        gmsh.model.geo.addLine(2, 6, line_id)  # 14
-        line_id += 1
-        gmsh.model.geo.addLine(3, 7, line_id)  # 15
-        line_id += 1
-        gmsh.model.geo.addLine(4, 8, line_id)  # 16
-        line_id += 1
-
-        gmsh.model.geo.addLine(5, 9, line_id)  # 17
-        line_id += 1
-        gmsh.model.geo.addLine(6, 10, line_id)  # 18
-        line_id += 1
-        gmsh.model.geo.addLine(7, 11, line_id)  # 19
-        line_id += 1
-        gmsh.model.geo.addLine(8, 12, line_id)  # 20
-        line_id += 1
-
-        gmsh.model.geo.addLine(9, 13, line_id)  # 21
-        line_id += 1
-        gmsh.model.geo.addLine(10, 14, line_id)  # 22
-        line_id += 1
-        gmsh.model.geo.addLine(11, 15, line_id)  # 23
-        line_id += 1
-        gmsh.model.geo.addLine(12, 16, line_id)  # 24
-        line_id += 1
+        # y-direction
+        for i in range(1, 13):
+            gmsh.model.geo.addLine(i, i + 4)
 
         # add surfaces
+        for i in range(1, 10):
+            i2 = i + 13 + (i - 1) // 3
+            gmsh.model.geo.addCurveLoop([i, i2, -i - 3, -i2 + 1])
+            gmsh.model.geo.addPlaneSurface([i])
+            gmsh.model.geo.synchronize()
 
-        # first column
-        gmsh.model.geo.addCurveLoop([1, 14, -4, -13], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 1
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([2, 15, -5, -14], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 2
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([3, 16, -6, -15], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 3
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        # second column
-        gmsh.model.geo.addCurveLoop([4, 18, -7, -17], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 4
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([5, 19, -8, -18], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 5
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([6, 20, -9, -19], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 6
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        # third column
-        gmsh.model.geo.addCurveLoop([7, 22, -10, -21], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 7
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([8, 23, -11, -22], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 8
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        gmsh.model.geo.addCurveLoop([9, 24, -12, -23], curve_loop_id)
-        gmsh.model.geo.addPlaneSurface([curve_loop_id], surface_id)  # 9
-        gmsh.model.geo.synchronize()
-        curve_loop_id += 1
-        surface_id += 1
-
-        d = point_id  # first tag number of a bhe
+        d = gmsh.model.geo.get_max_tag(0) + 1  # first tag number of a bhe
         bhe_top_nodes = []
 
         # insert BHE's in the model
-        for i in range(len(BHE_array)):
-            X = BHE_array[i].x
-            Y = BHE_array[i].y
-            Z = 0
-            delta = (
-                alpha * BHE_array[i].borehole_radius
-            )  # meshsize at BHE and distance of the surrounding optimal mesh points
+        BHE_i: BHE
+        for BHE_i in BHE_array:
+            x, y, z = (BHE_i.x, BHE_i.y, 0)
+            # meshsize at BHE and distance of the surrounding optimal mesh points
+            delta = alpha * BHE_i.borehole_radius
 
-            gmsh.model.geo.addPoint(
-                X, Y, Z, delta, d
-            )  # Diersch et al. 2011 Part 2
+            # Diersch et al. 2011 Part 2
+            gmsh.model.geo.addPoint(x, y, z, delta, d)
 
-            gmsh.model.geo.addPoint(X, Y - delta, Z, delta, d + 1)
-            gmsh.model.geo.addPoint(X, Y + delta, Z, delta, d + 2)
+            gmsh.model.geo.addPoint(x, y - delta, z, delta, d + 1)
+            gmsh.model.geo.addPoint(x, y + delta, z, delta, d + 2)
+            dx, dy = (0.866 * delta, 0.5 * delta)
+            gmsh.model.geo.addPoint(x + dx, y + dy, z, delta, d + 3)
+            gmsh.model.geo.addPoint(x - dx, y + dy, z, delta, d + 4)
+            gmsh.model.geo.addPoint(x + dx, y - dy, z, delta, d + 5)
+            gmsh.model.geo.addPoint(x - dx, y - dy, z, delta, d + 6)
 
-            gmsh.model.geo.addPoint(
-                X + 0.866 * delta, Y + 0.5 * delta, Z, delta, d + 3
-            )
-            gmsh.model.geo.addPoint(
-                X - 0.866 * delta, Y + 0.5 * delta, Z, delta, d + 4
-            )
-
-            gmsh.model.geo.addPoint(
-                X + 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 5
-            )
-            gmsh.model.geo.addPoint(
-                X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
-            )
-
-            if BHE_array[i].z_begin != 0:
-                gmsh.model.geo.addPoint(
-                    X, Y, BHE_array[i].z_begin, delta, d + 7
-                )
+            if BHE_i.z_begin != 0:
+                gmsh.model.geo.addPoint(x, y, BHE_i.z_begin, delta, d + 7)
                 bhe_top_nodes.append(d + 7)
             else:
                 bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
-            gmsh.model.mesh.embed(
-                0, [d, d + 1, d + 2, d + 3, d + 4, d + 5, d + 6], 2, 5
-            )
-
+            gmsh.model.mesh.embed(0, list(range(d, d + 7)), 2, 5)
             d = d + 8
 
         # Extrude the surface mesh according to the previously evaluated structure
         volumes_list_for_layers = []
-        boundary_groundwater_list_plusx = []
-        boundary_groundwater_list_minusx = []
-        boundary_groundwater_list_plusy = []
-        boundary_groundwater_list_minusy = []
-        top_surface = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
+        boundaries_surfaces = {
+            "+x": [23, 41, 5],
+            "-x": [33, 15, 51],
+            "+y": [2, 8, 14],
+            "-y": [40, 46, 52],
+        }
+        top_surface = list(range(1, 10))
+        surface_list = [(2, tag) for tag in top_surface]
 
-        surface_list = [
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (2, 5),
-            (2, 6),
-            (2, 7),
-            (2, 8),
-            (2, 9),
-        ]
-        for j in range(len(number_of_layers)):
+        for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
-            R = gmsh.model.geo.extrude(
+            extrusion_tags = gmsh.model.geo.extrude(
                 surface_list,
                 0,
                 0,
                 -depth_of_extrusion[j],
-                number_of_layers[j],
+                num_elements,
                 cummulative_height_of_layers[j],
                 True,
             )  # soil 1
             # list of volume numbers and new bottom surfaces, which were extruded by the five surfaces
-            volume_list = []
-            surface_list = []
+            volume_list = [extrusion_tags[1 + i * 6][1] for i in range(9)]
+            surface_list = [extrusion_tags[i * 6] for i in range(9)]
 
-            # i=1
-            for i in range(9):
-                volume_list.append(R[1 + i * 6][1])
-                surface_list.append(R[i * 6])
-
-            # export of the outer surfaces according their orientation
-
-            boundary_groundwater_list_plusx.append(
-                R[5 + 3 * 6][1]
-            )  # R[5+3*6][1]
-            boundary_groundwater_list_plusx.append(R[5 + 6 * 6][1])
-            boundary_groundwater_list_plusx.append(R[5][1])
-
-            boundary_groundwater_list_minusx.append(R[33][1])  # -x 33, 15, 51
-            boundary_groundwater_list_minusx.append(
-                R[15][1]
-            )  # -y 40, 46, 52 #+y 2, 8, 14
-            boundary_groundwater_list_minusx.append(R[51][1])
-
-            boundary_groundwater_list_plusy.append(R[2][1])
-            boundary_groundwater_list_plusy.append(R[8][1])
-            boundary_groundwater_list_plusy.append(R[14][1])
-
-            boundary_groundwater_list_minusy.append(R[40][1])
-            boundary_groundwater_list_minusy.append(R[46][1])
-            boundary_groundwater_list_minusy.append(R[52][1])
+            for direction, boundary_tags in bounds_gw.items():
+                for surf in boundaries_surfaces[direction]:
+                    boundary_tags.append(extrusion_tags[surf][1])
 
             volumes_list_for_layers.append(volume_list)
 
         k = 0
-        BHE = []
-        for i in range(len(BHE_array)):
-            G = gmsh.model.geo.extrude(
+        BHE_group = []
+        for i, BHE_i in enumerate(BHE_array):
+            extrusion_tags = gmsh.model.geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
-                BHE_array[i].z_end - BHE_array[i].z_begin,
+                BHE_i.z_end - BHE_i.z_begin,
                 BHE_extrusion_layers[i],
                 BHE_extrusion_depths[i],
                 True,
             )
-            BHE.append(G[1][1])
+            BHE_group.append(extrusion_tags[1][1])
 
         gmsh.model.geo.synchronize()
 
@@ -996,7 +659,7 @@ def gen_bhe_mesh_gmsh(
             k = i
 
         for i in range(len(BHE_array)):
-            gmsh.model.addPhysicalGroup(1, [BHE[i]], k + 1)
+            gmsh.model.addPhysicalGroup(1, [BHE_group[i]], k + 1)
             k += 1
 
         gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
@@ -1007,360 +670,89 @@ def gen_bhe_mesh_gmsh(
             name="Bottom_Surface",
         )
 
-        counter_for_gw_start_at_soil_layer = 0
-        for i in range(len(groundwater_list)):
+        gw_counter = 0  # counter_for_gw_start_at_soil_layer
+        for i, groundwater in enumerate(groundwater_list):
             # add loop for different groundwater flow directions
-            if groundwater_list[i][4] == "+x":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusx[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusx[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "-x":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list_minusx,k+3,f'Groundwater_Inflow_{i}')
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusx[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusx[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + 1
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + 1
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "+y":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusy[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusy[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "+x":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusy[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusy[
-                            3
-                            * (
-                                groundwater_list[i][0]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            ) : 3
-                            * (
-                                groundwater_list[i][3]
-                                + i
-                                + 1
-                                - counter_for_gw_start_at_soil_layer
-                            )
-                        ],
-                        tag=k + 3,
-                        name=f"Groundwater_Inflow_{i}",
-                    )
+            offset = np.abs(groundwater[2]) in np.cumsum(layer)
+            start_id = 3 * (groundwater[0] + i + int(not offset) - gw_counter)
+            end_id = 3 * (groundwater[3] + i + int(not offset) - gw_counter)
+            if offset:
+                gw_counter += 1
+            gmsh.model.addPhysicalGroup(
+                2,
+                bounds_gw[groundwater[4]][start_id:end_id],
+                tag=k + 3,
+                name=f"Groundwater_Inflow_{i}",
+            )
             k += 1
 
+        mesh = gmsh.model.mesh
         # Sizing Functions and Transfinite Algorithm for Hexahedron meshing in wanted zones
+        # inner square
+        delta_x, delta_y = (x_max - x_min, y_max - y_min)
+        mesh.setTransfiniteCurve(5, ceil(delta_x / inner_mesh_size) + 1)
+        mesh.setTransfiniteCurve(8, ceil(delta_x / inner_mesh_size) + 1)
 
-        # inner square 5
-        gmsh.model.mesh.setTransfiniteCurve(
-            5, math.ceil((x_max - x_min) / minus_y_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            8, math.ceil((x_max - x_min) / minus_y_mesh_size) + 1
-        )
+        mesh.setTransfiniteCurve(17, ceil(delta_y / inner_mesh_size) + 1)
+        mesh.setTransfiniteCurve(18, ceil(delta_y / inner_mesh_size) + 1)
+        mesh.setTransfiniteCurve(19, ceil(delta_y / inner_mesh_size) + 1)
+        mesh.setTransfiniteCurve(20, ceil(delta_y / inner_mesh_size) + 1)
 
-        gmsh.model.mesh.setTransfiniteCurve(
-            17, math.ceil((y_max - y_min) / minus_x_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            18, math.ceil((y_max - y_min) / minus_x_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            19, math.ceil((y_max - y_min) / plus_x_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            20, math.ceil((y_max - y_min) / plus_x_mesh_size) + 1
-        )
+        mesh.setTransfiniteCurve(13, ceil(y_min / outer_mesh_size_inner) + 1)
+        mesh.setTransfiniteCurve(14, ceil(y_min / outer_mesh_size_inner) + 1)
+        mesh.setTransfiniteCurve(15, ceil(y_min / outer_mesh_size_inner) + 1)
+        mesh.setTransfiniteCurve(16, ceil(y_min / outer_mesh_size_inner) + 1)
 
-        # outer squares 1,2,3,7,8,9
-        gmsh.model.mesh.setTransfiniteCurve(
-            13, math.ceil((y_min) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            14, math.ceil((y_min) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            15, math.ceil((y_min) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            16, math.ceil((y_min) / outer_mesh_size_inner) + 1
-        )
+        ny = ceil((width - y_max) / outer_mesh_size_inner) + 1
+        mesh.setTransfiniteCurve(21, ny)
+        mesh.setTransfiniteCurve(22, ny)
+        mesh.setTransfiniteCurve(23, ny)
+        mesh.setTransfiniteCurve(24, ny)
 
-        gmsh.model.mesh.setTransfiniteCurve(
-            21, math.ceil((width - y_max) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            22, math.ceil((width - y_max) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            23, math.ceil((width - y_max) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            24, math.ceil((width - y_max) / outer_mesh_size_inner) + 1
-        )
-
-        gmsh.model.mesh.setTransfiniteCurve(
-            2, math.ceil((x_max - x_min) / outer_mesh_size_inner) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            11, math.ceil((x_max - x_min) / outer_mesh_size_inner) + 1
-        )
+        mesh.setTransfiniteCurve(2, ceil(delta_x / outer_mesh_size_inner) + 1)
+        mesh.setTransfiniteCurve(11, ceil(delta_x / outer_mesh_size_inner) + 1)
 
         # rectangular squares bgw
-        gmsh.model.mesh.setTransfiniteCurve(
-            1, math.ceil((x_min) / outer_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            4, math.ceil((x_min) / outer_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            7, math.ceil((x_min) / outer_mesh_size) + 1
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            10, math.ceil((x_min) / outer_mesh_size) + 1
-        )
+        mesh.setTransfiniteCurve(1, ceil(x_min / outer_mesh_size) + 1)
+        mesh.setTransfiniteCurve(4, ceil(x_min / outer_mesh_size) + 1)
+        mesh.setTransfiniteCurve(7, ceil(x_min / outer_mesh_size) + 1)
+        mesh.setTransfiniteCurve(10, ceil(x_min / outer_mesh_size) + 1)
 
-        gmsh.model.mesh.setTransfiniteCurve(
-            3,
-            math.ceil((length - x_max) / outer_mesh_size) + 1,
-            "Progression",
-            propagation,
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            6,
-            math.ceil((length - x_max) / outer_mesh_size) + 1,
-            "Progression",
-            propagation,
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            9,
-            math.ceil((length - x_max) / outer_mesh_size) + 1,
-            "Progression",
-            propagation,
-        )
-        gmsh.model.mesh.setTransfiniteCurve(
-            12,
-            math.ceil((length - x_max) / outer_mesh_size) + 1,
-            "Progression",
-            propagation,
-        )
+        num_nodes = ceil((length - x_max) / outer_mesh_size) + 1
+        mesh.setTransfiniteCurve(3, num_nodes, "Progression", propagation)
+        mesh.setTransfiniteCurve(6, num_nodes, "Progression", propagation)
+        mesh.setTransfiniteCurve(9, num_nodes, "Progression", propagation)
+        mesh.setTransfiniteCurve(12, num_nodes, "Progression", propagation)
 
-        gmsh.model.mesh.setTransfiniteSurface(
-            1, arrangement="Left", cornerTags=[1, 2, 5, 6]
-        )
-        gmsh.model.mesh.setTransfiniteSurface(
-            3, arrangement="Left", cornerTags=[3, 4, 7, 8]
-        )
-        gmsh.model.mesh.setTransfiniteSurface(
-            4, arrangement="Left", cornerTags=[5, 6, 9, 10]
-        )
-        gmsh.model.mesh.setTransfiniteSurface(
-            6, arrangement="Left", cornerTags=[7, 8, 11, 12]
-        )
-        gmsh.model.mesh.setTransfiniteSurface(
-            7, arrangement="Left", cornerTags=[9, 10, 13, 14]
-        )
-        gmsh.model.mesh.setTransfiniteSurface(
-            9, arrangement="Left", cornerTags=[11, 12, 15, 16]
-        )
-
-        gmsh.model.mesh.setRecombine(2, 1)
-        gmsh.model.mesh.setRecombine(2, 3)
-        gmsh.model.mesh.setRecombine(2, 4)
-        gmsh.model.mesh.setRecombine(2, 6)
-        gmsh.model.mesh.setRecombine(2, 7)
-        gmsh.model.mesh.setRecombine(2, 9)
-        gmsh.model.mesh.recombine()
+        for i, surface_tag in enumerate([1, 3, 4, 6, 7, 9]):
+            j = 2 * i
+            corner_tags = [1 + j, 2 + j, 5 + j, 6 + j]
+            mesh.setTransfiniteSurface(surface_tag, cornerTags=corner_tags)
+            mesh.setRecombine(2, surface_tag)
+        mesh.recombine()
 
     def _mesh_prism() -> None:
-        point_id = 1
-        line_id = 1
-
         # define the outer boundaries square
-        gmsh.model.geo.addPoint(
-            0.0, 0.0, 0.0, outer_mesh_size, tag=point_id
-        )  # 1
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            length, 0.0, 0.0, outer_mesh_size, tag=point_id
-        )  # 2
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            length, width, 0.0, outer_mesh_size, tag=point_id
-        )  # 3
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            0.0, width, 0.0, outer_mesh_size, tag=point_id
-        )  # 4
-        point_id += 1
+        gmsh.model.geo.addPoint(0.0, 0.0, 0.0, outer_mesh_size)
+        gmsh.model.geo.addPoint(length, 0.0, 0.0, outer_mesh_size)
+        gmsh.model.geo.addPoint(length, width, 0.0, outer_mesh_size)
+        gmsh.model.geo.addPoint(0.0, width, 0.0, outer_mesh_size)
 
-        gmsh.model.geo.addLine(1, 2, line_id)  # 1
-        line_id += 1
-        gmsh.model.geo.addLine(2, 3, line_id)  # 2
-        line_id += 1
-        gmsh.model.geo.addLine(3, 4, line_id)  # 3
-        line_id += 1
-        gmsh.model.geo.addLine(4, 1, line_id)  # 4
-        line_id += 1
+        gmsh.model.geo.addLine(1, 2)
+        gmsh.model.geo.addLine(2, 3)
+        gmsh.model.geo.addLine(3, 4)
+        gmsh.model.geo.addLine(4, 1)
 
         # inner points
-        gmsh.model.geo.addPoint(
-            x_min, y_min, 0.0, minus_x_mesh_size, tag=point_id
-        )  # 5
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            x_max, y_min, 0.0, plus_x_mesh_size, tag=point_id
-        )  # 6
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            x_max, y_max, 0.0, plus_x_mesh_size, tag=point_id
-        )  # 7
-        point_id += 1
-        gmsh.model.geo.addPoint(
-            x_min, y_max, 0.0, minus_x_mesh_size, tag=point_id
-        )  # 8
-        point_id += 1
+        gmsh.model.geo.addPoint(x_min, y_min, 0.0, inner_mesh_size)
+        gmsh.model.geo.addPoint(x_max, y_min, 0.0, inner_mesh_size)
+        gmsh.model.geo.addPoint(x_max, y_max, 0.0, inner_mesh_size)
+        gmsh.model.geo.addPoint(x_min, y_max, 0.0, inner_mesh_size)
 
-        gmsh.model.geo.addLine(5, 6, line_id)  # 5
-        line_id += 1
-        gmsh.model.geo.addLine(6, 7, line_id)  # 6
-        line_id += 1
-        gmsh.model.geo.addLine(7, 8, line_id)  # 7
-        line_id += 1
-        gmsh.model.geo.addLine(8, 5, line_id)  # 8
-        line_id += 1
+        gmsh.model.geo.addLine(5, 6)
+        gmsh.model.geo.addLine(6, 7)
+        gmsh.model.geo.addLine(7, 8)
+        gmsh.model.geo.addLine(8, 5)
 
         gmsh.model.geo.addCurveLoop([1, 2, 3, 4], 1)
         gmsh.model.geo.addPlaneSurface([1], 1)
@@ -1370,72 +762,51 @@ def gen_bhe_mesh_gmsh(
             1, [5, 6, 7, 8], 2, 1
         )  # embed the four lines of the inner sizing box
 
-        d = point_id  # first tag number of a bhe
+        d = 9  # first tag number of a bhe
 
         bhe_top_nodes: list = []
 
         # insert BHE's in the model
-        for i in range(len(BHE_array)):
-            X = BHE_array[i].x
-            Y = BHE_array[i].y
-            Z = 0
-            delta = (
-                alpha * BHE_array[i].borehole_radius
-            )  # meshsize at BHE and distance of the surrounding optimal mesh points
+        for BHE_i in BHE_array:
+            x, y, z = (BHE_i.x, BHE_i.y, 0)
+            # meshsize at BHE and distance of the surrounding optimal mesh points
+            delta = alpha * BHE_i.borehole_radius
 
-            gmsh.model.geo.addPoint(
-                X, Y, Z, delta, d
-            )  # Diersch et al. 2011 Part 2
+            # Diersch et al. 2011 Part 2
+            gmsh.model.geo.addPoint(x, y, z, delta, d)
+            gmsh.model.geo.addPoint(x, y - delta, z, delta, d + 1)
+            gmsh.model.geo.addPoint(x, y + delta, z, delta, d + 2)
+            dx, dy = (0.866 * delta, 0.5 * delta)
+            gmsh.model.geo.addPoint(x + dx, y + dy, z, delta, d + 3)
+            gmsh.model.geo.addPoint(x - dx, y + dy, z, delta, d + 4)
+            gmsh.model.geo.addPoint(x + dx, y - dy, z, delta, d + 5)
+            gmsh.model.geo.addPoint(x - dx, y - dy, z, delta, d + 6)
 
-            gmsh.model.geo.addPoint(X, Y - delta, Z, delta, d + 1)
-            gmsh.model.geo.addPoint(X, Y + delta, Z, delta, d + 2)
-
-            gmsh.model.geo.addPoint(
-                X + 0.866 * delta, Y + 0.5 * delta, Z, delta, d + 3
-            )
-            gmsh.model.geo.addPoint(
-                X - 0.866 * delta, Y + 0.5 * delta, Z, delta, d + 4
-            )
-
-            gmsh.model.geo.addPoint(
-                X + 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 5
-            )
-            gmsh.model.geo.addPoint(
-                X - 0.866 * delta, Y - 0.5 * delta, Z, delta, d + 6
-            )
-
-            if BHE_array[i].z_begin != 0:
-                gmsh.model.geo.addPoint(X, Y, BHE_array[i].z_begin, tag=d + 7)
+            if BHE_i.z_begin != 0:
+                gmsh.model.geo.addPoint(x, y, BHE_i.z_begin, tag=d + 7)
                 bhe_top_nodes.append(d + 7)
             else:
                 bhe_top_nodes.append(d)
 
             gmsh.model.geo.synchronize()
-            gmsh.model.mesh.embed(
-                0, [d, d + 1, d + 2, d + 3, d + 4, d + 5, d + 6], 2, 1
-            )
-
+            gmsh.model.mesh.embed(0, list(range(d, d + 7)), 2, 1)
             d = d + 8
 
-        point_id = d
         # Extrude the surface mesh according to the previously evaluated structure
         volumes_list_for_layers = []
         top_surface = [1]
 
-        boundary_groundwater_list_plusx = []
-        boundary_groundwater_list_minusx = []
-        boundary_groundwater_list_plusy = []
-        boundary_groundwater_list_minusy = []
-
         surface_list = [(2, 1)]
-        for j in range(len(number_of_layers)):
+        bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
+        boundaries_surfaces = {"+x": 5, "-x": 3, "+y": 2, "-y": 4}
+        for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
-            R = gmsh.model.geo.extrude(
+            extrusion_tags = gmsh.model.geo.extrude(
                 surface_list,
                 0,
                 0,
                 -depth_of_extrusion[j],
-                number_of_layers[j],
+                num_elements,
                 cummulative_height_of_layers[j],
                 True,
             )  # soil 1
@@ -1444,40 +815,39 @@ def gen_bhe_mesh_gmsh(
             volume_list = []
             surface_list = []
 
-            volume_list.append(R[1][1])
-            surface_list.append(R[0])
+            volume_list.append(extrusion_tags[1][1])
+            surface_list.append(extrusion_tags[0])
 
-            boundary_groundwater_list_plusx.append(R[5][1])
-            boundary_groundwater_list_minusx.append(R[3][1])
-            boundary_groundwater_list_plusy.append(R[2][1])
-            boundary_groundwater_list_minusy.append(R[4][1])
+            for direction, boundary_tags in bounds_gw.items():
+                boundary_tags.append(
+                    extrusion_tags[boundaries_surfaces[direction]][1]
+                )
 
             volumes_list_for_layers.append(volume_list)
 
-        BHE = []
+        BHE_group = []
 
-        for i in range(len(BHE_array)):
-            G = gmsh.model.geo.extrude(
+        for i, BHE_i in enumerate(BHE_array):
+            extrusion_tags = gmsh.model.geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
-                BHE_array[i].z_end - BHE_array[i].z_begin,
+                BHE_i.z_end - BHE_i.z_begin,
                 BHE_extrusion_layers[i],
                 BHE_extrusion_depths[i],
             )
-            BHE.append(G[1][1])
+            BHE_group.append(extrusion_tags[1][1])
 
         gmsh.model.geo.synchronize()
         k = 0
 
-        for i in range(
-            len(number_of_layers)
-        ):  # len(layer) is right, but len(number_of_layers) for testing only
+        # len(layer) is right, but len(number_of_layers) for testing only
+        for i in range(len(number_of_layers)):
             gmsh.model.addPhysicalGroup(3, volumes_list_for_layers[i], i)
             k = i
 
         for i in range(len(BHE_array)):
-            gmsh.model.addPhysicalGroup(1, [BHE[i]], k + 1)
+            gmsh.model.addPhysicalGroup(1, [BHE_group[i]], k + 1)
             k += 1
 
         gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
@@ -1488,164 +858,21 @@ def gen_bhe_mesh_gmsh(
             name="Bottom_Surface",
         )
 
-        counter_for_gw_start_at_soil_layer = 0
-        for i in range(len(groundwater_list)):
+        gw_counter = 0  # counter_for_gw_start_at_soil_layer
+        for i, groundwater in enumerate(groundwater_list):
             # add loop for different groundwater flow directions
-            if groundwater_list[i][4] == "+x":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusx[
-                            groundwater_list[i][0]
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusx[
-                            groundwater_list[i][0]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "-x":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusx[
-                            groundwater_list[i][0]
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusx[
-                            groundwater_list[i][0]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "+y":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusy[
-                            groundwater_list[i][0]
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_plusy[
-                            groundwater_list[i][0]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-            elif groundwater_list[i][4] == "-y":
-                if np.abs(groundwater_list[i][2]) in np.cumsum(layer):
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusy[
-                            groundwater_list[i][0]
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
-                    counter_for_gw_start_at_soil_layer += 1
-                else:
-                    gmsh.model.addPhysicalGroup(
-                        2,
-                        boundary_groundwater_list_minusy[
-                            groundwater_list[i][0]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer : groundwater_list[
-                                i
-                            ][
-                                3
-                            ]
-                            + 1
-                            + i
-                            - counter_for_gw_start_at_soil_layer
-                        ],
-                        k + 3,
-                        f"Groundwater_Inflow_{i}",
-                    )
+            offset = np.abs(groundwater[2]) in np.cumsum(layer)
+            start_id = 3 * (groundwater[0] + i + int(not offset) - gw_counter)
+            end_id = 3 * (groundwater[3] + i + int(not offset) - gw_counter)
+            if offset:
+                gw_counter += 1
+            gmsh.model.addPhysicalGroup(
+                2,
+                bounds_gw[groundwater[4]][start_id:end_id],
+                tag=k + 3,
+                name=f"Groundwater_Inflow_{i}",
+            )
             k += 1
-
-        # gmsh.model.addPhysicalGroup(2,boundary_groundwater_list[start_groundwater+1:groundwater[1]+1],k+3,'Groundwater_Inflow')
 
     layer = layer if isinstance(layer, list) else [layer]
 
@@ -1657,42 +884,43 @@ def gen_bhe_mesh_gmsh(
 
     # detect the soil layer, in which the groundwater flow starts
     groundwater_list: list = []
-    for g in range(len(groundwaters)):
+    for groundwater in groundwaters:
         start_groundwater = -1000
-        icl: float = (
-            -1
-        )  # Index for critical layer structure, 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - groundwater at layer transition
+        # Index for critical layer structure, 0: not critical, 1: top critical,
+        # 2: bottom critical, 3: groundwater at layer transition
+        icl: float = -1
         # needed_medias_in_ogs=len(layer)+1
         for i in range(len(layer)):
             if (
-                np.abs(groundwaters[g].begin) < np.sum(layer[: i + 1])
+                np.abs(groundwater.begin) < np.sum(layer[: i + 1])
                 and start_groundwater == -1000
             ):
                 start_groundwater = i
 
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
-                    np.abs(groundwaters[g].begin)
+                    np.abs(groundwater.begin)
                     - np.sum(layer[:start_groundwater])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - GW')
                     icl = 1
-                    if np.abs(groundwaters[g].begin) == np.sum(
+                    # beginning of groundwater at a transition of two soil layers - special case
+                    if np.abs(groundwater.begin) == np.sum(
                         layer[:start_groundwater]
-                    ):  # beginning of groundwater at a transition of two soil layers - special case
+                    ):
                         icl = 3
-                        # needed_medias_in_ogs=len(layer) #needed_extrusions=len(layer)
+                        # needed_medias_in_ogs=len(layer)
+                        # needed_extrusions=len(layer)
                     elif (
                         np.sum(layer[: start_groundwater + 1])
-                        - np.abs(groundwaters[g].begin)
+                        - np.abs(groundwater.begin)
                         < n_refinement_layers * target_z_size_fine
                     ):
-                        icl = (
-                            1.2  # for layers, which are top and bottom critical
-                        )
+                        # for layers, which are top and bottom critical
+                        icl = 1.2
                 elif (
                     np.sum(layer[: start_groundwater + 1])
-                    - np.abs(groundwaters[g].begin)
+                    - np.abs(groundwater.begin)
                     < n_refinement_layers * target_z_size_fine
                     and icl != 1.2
                 ):
@@ -1704,48 +932,45 @@ def gen_bhe_mesh_gmsh(
             [
                 start_groundwater,
                 icl,
-                groundwaters[g].begin,
-                groundwaters[g].isolation_layer_id,
-                groundwaters[g].flow_direction,
+                groundwater.begin,
+                groundwater.isolation_layer_id,
+                groundwater.flow_direction,
             ]
         )
 
     ### Start of the algorithm ###
-    BHE_array = np.array(BHE_Array)
+    BHE_array = np.asarray(BHE_Array)
 
     # detect the soil layer, in which the BHE starts - for the moment only for detection
     i = 0
-    BHE_to_soil = np.zeros(
-        shape=(len(BHE_array), 5), dtype=np.int8
-    )  # [:,0] - index of BHE; Array, in welcher Schicht die jeweilige BHE anfängt [:,1] endet [:,3] und wo ein kritischer Übergang folgt [:,2] für BHE_Begin und [:,4] für BHE_End mit 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
+    # [:,0] - index of BHE; Array, in welcher Schicht die jeweilige BHE anfängt [:,1] endet [:,3] und wo ein kritischer Übergang folgt [:,2] für BHE_Begin und [:,4] für BHE_End mit 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
+    BHE_to_soil = np.zeros(shape=(len(BHE_array), 5), dtype=np.int8)
 
-    for j in range(len(BHE_array)):
+    for j, BHE_j in enumerate(BHE_array):
         for i in range(len(layer)):
-            if np.abs(BHE_array[j].z_begin) < np.sum(layer[: i + 1]) and np.abs(
-                BHE_array[j].z_begin
-            ) >= np.sum(
-                layer[:i]
-            ):  # Auswertung für BHE_Beginn
+            # Auswertung für BHE_Beginn
+            if np.abs(BHE_j.z_begin) < np.sum(layer[: i + 1]) and np.abs(
+                BHE_j.z_begin
+            ) >= np.sum(layer[:i]):
                 BHE_to_soil[j, 0] = j
                 BHE_to_soil[j, 1] = i
                 if (
-                    np.abs(BHE_array[j].z_end) - np.abs(BHE_array[j].z_begin)
+                    np.abs(BHE_j.z_end) - np.abs(BHE_j.z_begin)
                     <= n_refinement_layers * target_z_size_fine
                 ):  # pragma: no cover
                     msg = "BHE to short, must be longer than n_refinement_layers * target_z_size_fine!"
-                    raise Exception(msg)
+                    raise ValueError(msg)
                 if (  # previous elif, one semantic block of different cases -> switch to if, because of ruff error
-                    np.abs(BHE_array[j].z_begin) - np.sum(layer[:i])
+                    np.abs(BHE_j.z_begin) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
+                    # beginning a transition of two soil layers - special case
                     BHE_to_soil[j, 2] = 1
-                    if np.abs(BHE_array[j].z_begin) == np.sum(
-                        layer[:i]
-                    ):  # beginning a transition of two soil layers - special case
+                    if np.abs(BHE_j.z_begin) == np.sum(layer[:i]):
                         BHE_to_soil[j, 2] = 3
                 elif (
-                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_begin)
+                    np.sum(layer[: i + 1]) - np.abs(BHE_j.z_begin)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
@@ -1754,51 +979,45 @@ def gen_bhe_mesh_gmsh(
                     BHE_to_soil[j, 2] = 0
 
     # detect the soil layer, in which the BHE ends
-    for j in range(len(BHE_array)):
+    for j, BHE_j in enumerate(BHE_array):
         for i in range(len(layer)):
-            if np.abs(BHE_array[j].z_end) < np.sum(layer[: i + 1]) and np.abs(
-                BHE_array[j].z_end
+            if np.abs(BHE_j.z_end) < np.sum(layer[: i + 1]) and np.abs(
+                BHE_j.z_end
             ) >= np.sum(layer[:i]):
                 BHE_to_soil[j, 3] = i
                 if (
-                    np.abs(BHE_array[j].z_end) - np.sum(layer[:i])
+                    np.abs(BHE_j.z_end) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
                     BHE_to_soil[j, 4] = 1
-                    if np.abs(BHE_array[j].z_end) == np.sum(
-                        layer[:i]
-                    ):  # beginning at a transition of two soil layers - special case
+                    # beginning at a transition of two soil layers - special case
+                    if np.abs(BHE_j.z_end) == np.sum(layer[:i]):
                         BHE_to_soil[j, 4] = 3
 
                     elif (
-                        np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
+                        np.sum(layer[: i + 1]) - np.abs(BHE_j.z_end)
                         < n_refinement_layers * target_z_size_fine
                     ):
-                        BHE_to_soil[j, 4] = (
-                            1.2  # for layers, which are top and bottom critical
-                        )
+                        # for layers, which are top and bottom critical
+                        BHE_to_soil[j, 4] = 1.2
                 elif (
-                    np.sum(layer[: i + 1]) - np.abs(BHE_array[j].z_end)
+                    np.sum(layer[: i + 1]) - np.abs(BHE_j.z_end)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
                     BHE_to_soil[j, 4] = 2
                 else:
                     BHE_to_soil[j, 4] = 0
-            elif np.abs(BHE_array[j].z_end) >= np.sum(
-                layer
-            ):  # pragma: no cover
-                raise Exception(
-                    "BHE %d ends at bottom boundary or outside of the model area"
-                    % j
-                )
+            elif np.abs(BHE_j.z_end) >= np.sum(layer):  # pragma: no cover
+                msg = f"BHE {j} ends at bottom boundary or outside of the model"
+                raise ValueError(msg)
 
     needed_depths: list = []  # interesting depths
     for i in range(len(layer)):
-        BHE_end_depths = (
-            []
-        )  # only the interesting depths in the i-th layer ToDo: Rename the variable
+        # only the interesting depths in the i-th layer
+        # TODO: Rename the variable
+        BHE_end_depths = []
 
         # filter, which BHE's ends in this layer
         BHE_end_in_Layer = BHE_to_soil[BHE_to_soil[:, 3] == i]
@@ -1976,11 +1195,7 @@ def gen_bhe_mesh_gmsh(
     All_extrusion_layers: list = []
 
     last_height = 0
-    for i in range(len(number_of_layers)):
-        (
-            depth_of_extrusion[i] * np.array(cummulative_height_of_layers[i])
-            + last_height
-        )
+    for i, num_layer in enumerate(number_of_layers):
         All_extrusion_depths.append(
             (
                 depth_of_extrusion[i]
@@ -1989,7 +1204,7 @@ def gen_bhe_mesh_gmsh(
             ).tolist()
         )
         last_height = All_extrusion_depths[-1][-1]
-        All_extrusion_layers.append(number_of_layers[i])
+        All_extrusion_layers.append(num_layer)
 
     all_extrusion = np.array(
         [
@@ -2001,37 +1216,30 @@ def gen_bhe_mesh_gmsh(
     BHE_extrusion_layers: list = []
     BHE_extrusion_depths: list = []
     # evaluate the extrusion for the BHE's
-    for i in range(len(BHE_array)):
+    for BHE_i in BHE_array:
+        # add little relax tolerance 0.001
         needed_extrusion = all_extrusion[
             (
-                (all_extrusion[:, 0] >= np.abs(BHE_array[i].z_begin))
-                & (
-                    all_extrusion[:, 0] <= np.abs(BHE_array[i].z_end) + 0.001
-                )  # add little relax tolerance 0.001
+                (all_extrusion[:, 0] >= np.abs(BHE_i.z_begin))
+                & (all_extrusion[:, 0] <= np.abs(BHE_i.z_end) + 0.001)
             )
         ]
 
         BHE_extrusion_layers.append(needed_extrusion[:, 1])
         BHE_extrusion_depths.append(
-            (needed_extrusion[:, 0] - np.abs(BHE_array[i].z_begin))
-            / (needed_extrusion[-1, 0] - np.abs(BHE_array[i].z_begin))
+            (needed_extrusion[:, 0] - np.abs(BHE_i.z_begin))
+            / (needed_extrusion[-1, 0] - np.abs(BHE_i.z_begin))
         )
 
     # define the inner square with BHE inside
     # compute the box size from the BHE-Coordinates
-    x_BHE = [BHE_array[i].x for i in range(len(BHE_array))]
-    y_BHE = [BHE_array[i].y for i in range(len(BHE_array))]
+    x_BHE = [BHE_i.x for BHE_i in BHE_array]
+    y_BHE = [BHE_i.y for BHE_i in BHE_array]
 
     x_min = np.min(x_BHE) - dist_box_x
     x_max = np.max(x_BHE) + dist_box_x
     y_min = np.min(y_BHE) - dist_box_y
     y_max = np.max(y_BHE) + dist_box_y
-
-    # Index for the right export of the groundwater inflow surface and adapt mesh sizes according to GW-flow
-    plus_x_mesh_size = inner_mesh_size
-    minus_x_mesh_size = inner_mesh_size
-    # plus_y_mesh_size = inner_mesh_size
-    minus_y_mesh_size = inner_mesh_size
 
     alpha = 6.134  # see Diersch et al. 2011 Part 2 for 6 surrounding nodes, not to be defined by user
 
@@ -2055,13 +1263,11 @@ def gen_bhe_mesh_gmsh(
     gmsh.model.mesh.removeDuplicateNodes()
 
     # delete zero-volume elements
-    elem_tags, node_tags = gmsh.model.mesh.getElementsByType(
-        1
-    )  # 1 for line elements --> BHE's are the reason
+    # 1 for line elements --> BHE's are the reason
+    elem_tags, node_tags = gmsh.model.mesh.getElementsByType(1)
     elem_qualities = gmsh.model.mesh.getElementQualities(
         elementTags=elem_tags, qualityName="volume"
     )
-
     zero_volume_elements_id = np.argwhere(elem_qualities == 0)
 
     # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
