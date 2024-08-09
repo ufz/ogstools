@@ -7,6 +7,7 @@ variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
   DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10
   DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10
+  ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
 
 workflow:
   rules:
@@ -65,6 +66,9 @@ tests:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+  environment:
+    name: code coverage $CI_MERGE_REQUEST_IID
+    url: ${ARTIFACTS_PAGES_URL}/htmlcov/index.html
 
 tests win:
   tags: [windows]
@@ -94,7 +98,7 @@ docs preview:
       - public
   environment:
     name: docs preview $CI_MERGE_REQUEST_IID $CI_PROJECT_ROOT_NAMESPACE
-    url: "https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
+    url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
 pages:
   stage: deploy
