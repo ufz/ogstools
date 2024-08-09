@@ -224,8 +224,8 @@ def ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
         next_id = np.argmax(
             np.equal(cell_pts[cell_id, 1], cell_pts[:, 0]).all(axis=1)
         )
-        ordered_cell_ids += [next_id]
-        cell_id = next_id
+        ordered_cell_ids += [int(next_id)]
+        cell_id = int(next_id)
     return cell_pts[ordered_cell_ids[:-1], 0]
 
 
@@ -553,6 +553,37 @@ def gen_bhe_mesh_gmsh(
             flat_list += row
         return flat_list
 
+    def _insert_BHE(inTag: int) -> list:
+        bhe_top_nodes = []
+        BHE_i: BHE
+        for BHE_i in BHE_array:
+            x, y, z = (BHE_i.x, BHE_i.y, 0)
+            # meshsize at BHE and distance of the surrounding optimal mesh points
+            # see Diersch et al. 2011 Part 2 for 6 surrounding nodes, not to be defined by user
+            delta = 6.134 * BHE_i.borehole_radius
+
+            bhe_center = gmsh.model.geo.addPoint(x, y, z, delta)
+            gmsh.model.geo.addPoint(x, y - delta, z, delta)
+            gmsh.model.geo.addPoint(x, y + delta, z, delta)
+            dx, dy = (0.866 * delta, 0.5 * delta)
+            gmsh.model.geo.addPoint(x + dx, y + dy, z, delta)
+            gmsh.model.geo.addPoint(x - dx, y + dy, z, delta)
+            gmsh.model.geo.addPoint(x + dx, y - dy, z, delta)
+            gmsh.model.geo.addPoint(x - dx, y - dy, z, delta)
+
+            if BHE_i.z_begin != 0:
+                bhe_top_nodes.append(
+                    gmsh.model.geo.addPoint(x, y, BHE_i.z_begin, delta)
+                )
+            else:
+                bhe_top_nodes.append(bhe_center)
+
+            gmsh.model.geo.synchronize()
+            gmsh.model.mesh.embed(
+                0, list(range(bhe_center, bhe_center + 7)), 2, inTag
+            )
+        return bhe_top_nodes
+
     def _mesh_structured() -> None:
         for y_value in [0.0, y_min, y_max, width]:
             for x_value in [0.0, x_min, x_max, length]:
@@ -574,36 +605,7 @@ def gen_bhe_mesh_gmsh(
             gmsh.model.geo.addPlaneSurface([i])
             gmsh.model.geo.synchronize()
 
-        d = gmsh.model.geo.get_max_tag(0) + 1  # first tag number of a bhe
-        bhe_top_nodes = []
-
-        # insert BHE's in the model
-        BHE_i: BHE
-        for BHE_i in BHE_array:
-            x, y, z = (BHE_i.x, BHE_i.y, 0)
-            # meshsize at BHE and distance of the surrounding optimal mesh points
-            delta = alpha * BHE_i.borehole_radius
-
-            # Diersch et al. 2011 Part 2
-            gmsh.model.geo.addPoint(x, y, z, delta, d)
-
-            gmsh.model.geo.addPoint(x, y - delta, z, delta, d + 1)
-            gmsh.model.geo.addPoint(x, y + delta, z, delta, d + 2)
-            dx, dy = (0.866 * delta, 0.5 * delta)
-            gmsh.model.geo.addPoint(x + dx, y + dy, z, delta, d + 3)
-            gmsh.model.geo.addPoint(x - dx, y + dy, z, delta, d + 4)
-            gmsh.model.geo.addPoint(x + dx, y - dy, z, delta, d + 5)
-            gmsh.model.geo.addPoint(x - dx, y - dy, z, delta, d + 6)
-
-            if BHE_i.z_begin != 0:
-                gmsh.model.geo.addPoint(x, y, BHE_i.z_begin, delta, d + 7)
-                bhe_top_nodes.append(d + 7)
-            else:
-                bhe_top_nodes.append(d)
-
-            gmsh.model.geo.synchronize()
-            gmsh.model.mesh.embed(0, list(range(d, d + 7)), 2, 5)
-            d = d + 8
+        bhe_top_nodes = _insert_BHE(inTag=5)
 
         # Extrude the surface mesh according to the previously evaluated structure
         volumes_list_for_layers = []
@@ -758,39 +760,9 @@ def gen_bhe_mesh_gmsh(
         gmsh.model.geo.addPlaneSurface([1], 1)
         gmsh.model.geo.synchronize()
 
-        gmsh.model.mesh.embed(
-            1, [5, 6, 7, 8], 2, 1
-        )  # embed the four lines of the inner sizing box
-
-        d = 9  # first tag number of a bhe
-
-        bhe_top_nodes: list = []
-
-        # insert BHE's in the model
-        for BHE_i in BHE_array:
-            x, y, z = (BHE_i.x, BHE_i.y, 0)
-            # meshsize at BHE and distance of the surrounding optimal mesh points
-            delta = alpha * BHE_i.borehole_radius
-
-            # Diersch et al. 2011 Part 2
-            gmsh.model.geo.addPoint(x, y, z, delta, d)
-            gmsh.model.geo.addPoint(x, y - delta, z, delta, d + 1)
-            gmsh.model.geo.addPoint(x, y + delta, z, delta, d + 2)
-            dx, dy = (0.866 * delta, 0.5 * delta)
-            gmsh.model.geo.addPoint(x + dx, y + dy, z, delta, d + 3)
-            gmsh.model.geo.addPoint(x - dx, y + dy, z, delta, d + 4)
-            gmsh.model.geo.addPoint(x + dx, y - dy, z, delta, d + 5)
-            gmsh.model.geo.addPoint(x - dx, y - dy, z, delta, d + 6)
-
-            if BHE_i.z_begin != 0:
-                gmsh.model.geo.addPoint(x, y, BHE_i.z_begin, tag=d + 7)
-                bhe_top_nodes.append(d + 7)
-            else:
-                bhe_top_nodes.append(d)
-
-            gmsh.model.geo.synchronize()
-            gmsh.model.mesh.embed(0, list(range(d, d + 7)), 2, 1)
-            d = d + 8
+        # embed the four lines of the inner sizing box
+        gmsh.model.mesh.embed(1, [5, 6, 7, 8], 2, 1)
+        bhe_top_nodes = _insert_BHE(inTag=1)
 
         # Extrude the surface mesh according to the previously evaluated structure
         volumes_list_for_layers = []
@@ -798,7 +770,7 @@ def gen_bhe_mesh_gmsh(
 
         surface_list = [(2, 1)]
         bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
-        boundaries_surfaces = {"+x": 5, "-x": 3, "+y": 2, "-y": 4}
+        boundaries_surfaces = {"+x": [5], "-x": [3], "+y": [2], "-y": [4]}
         for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
             extrusion_tags = gmsh.model.geo.extrude(
@@ -811,19 +783,14 @@ def gen_bhe_mesh_gmsh(
                 True,
             )  # soil 1
 
-            # list of volume numbers and new bottom surfaces, which were extruded by the five surfaces
-            volume_list = []
-            surface_list = []
-
-            volume_list.append(extrusion_tags[1][1])
-            surface_list.append(extrusion_tags[0])
+            # list of new bottom surfaces, extruded by the five surfaces
+            surface_list = [extrusion_tags[0]]
 
             for direction, boundary_tags in bounds_gw.items():
-                boundary_tags.append(
-                    extrusion_tags[boundaries_surfaces[direction]][1]
-                )
+                for surf in boundaries_surfaces[direction]:
+                    boundary_tags.append(extrusion_tags[surf][1])
 
-            volumes_list_for_layers.append(volume_list)
+            volumes_list_for_layers.append([extrusion_tags[1][1]])
 
         BHE_group = []
 
@@ -862,8 +829,8 @@ def gen_bhe_mesh_gmsh(
         for i, groundwater in enumerate(groundwater_list):
             # add loop for different groundwater flow directions
             offset = np.abs(groundwater[2]) in np.cumsum(layer)
-            start_id = 3 * (groundwater[0] + i + int(not offset) - gw_counter)
-            end_id = 3 * (groundwater[3] + i + int(not offset) - gw_counter)
+            start_id = groundwater[0] + i + int(not offset) - gw_counter
+            end_id = groundwater[3] + i + int(not offset) - gw_counter
             if offset:
                 gw_counter += 1
             gmsh.model.addPhysicalGroup(
@@ -1240,8 +1207,6 @@ def gen_bhe_mesh_gmsh(
     x_max = np.max(x_BHE) + dist_box_x
     y_min = np.min(y_BHE) - dist_box_y
     y_max = np.max(y_BHE) + dist_box_y
-
-    alpha = 6.134  # see Diersch et al. 2011 Part 2 for 6 surrounding nodes, not to be defined by user
 
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
