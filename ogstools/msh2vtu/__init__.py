@@ -99,23 +99,18 @@ def find_cells_at_nodes(
     return node_connectivity
 
 
-# function to find out to which domain elements a boundary element belongs
 def find_connected_domain_cells(
     boundary_cells_values: Any, domain_cells_at_node: list[set[int]]
 ) -> tuple[np.ndarray, np.ndarray]:
-    warned_gt1 = False  # to avoid flood of warnings
-    warned_lt1 = False  # to avoid flood of warnings
-    number_of_boundary_cells = len(boundary_cells_values)
+    "find out to which domain elements a boundary element belongs"
     # to return unique common connected domain cell to be stored as cell_data
     # ("bulk_element_id"), if there are more than one do not store anything
-    domain_cells_array = np.zeros(number_of_boundary_cells)
-    domain_cells_number = np.zeros(
-        number_of_boundary_cells
-    )  # number of connected domain_cells
+    domain_cells_array = np.zeros(len(boundary_cells_values))
+    # number of connected domain_cells
+    domain_cells_number = np.zeros(len(boundary_cells_values))
 
-    for cell_index, cell_values in enumerate(
-        boundary_cells_values
-    ):  # cell lists node of which it is comprised
+    # cell lists node of which it is comprised
+    for cell_index, cell_values in enumerate(boundary_cells_values):
         connected_domain_cells = []
         for node in cell_values:
             connected_domain_cells.append(domain_cells_at_node[node])
@@ -125,31 +120,16 @@ def find_connected_domain_cells(
         # there should be one domain cell for each boundary cell, however cells
         # of boundary dimension may be in the domain (e.g. as sources)
         if number_of_connected_domain_cells == 1:
-            # assign only one (unique) connected dmain cell
+            # assign only one (unique) connected main cell
             domain_cells_array[cell_index] = common_domain_cells.pop()
-        elif number_of_connected_domain_cells < 1 and not warned_lt1:
-            logging.warning(
-                "find_connected_domain_cells: cell %s"
-                " of boundary dimension does not belong to any domain cell!",
-                str(cell_index),
-            )
-            # domain_cell in domain_cells_array remains zero, as there is no
-            # cell to assign
-            warned_lt1 = True
-            logging.warning(
-                "Possibly more cells may not belong to any domain cell."
-            )
-        elif not warned_gt1:
-            logging.warning(
-                "find_connected_domain_cells: cell %s"
-                " of boundary dimension belongs to more than one domain cell!"
-            )
-            # domain_cell in domain_cells_array remains zero, because structure
-            # is 1D and only the boundary case is relevant for further use
-            warned_gt1 = True
-            logging.warning(
-                "Possibly more cells may belong to more than one domain cell."
-            )
+    if (n_orphans := np.count_nonzero(domain_cells_number == 0)) > 0:
+        logging.warning(
+            "%s boundary_cells don't belong to any domain cell!", n_orphans
+        )
+    if (n_shared := np.count_nonzero(domain_cells_number > 1)) > 0:
+        logging.info(
+            "%s boundary_cells belong to more then one domain cell!", n_shared
+        )
 
     return domain_cells_array, domain_cells_number
 
@@ -227,28 +207,24 @@ def msh2vtu(
             *["prism", "prism15", "prism18"],
         },
     }
-    GMSH_PHYSICAL_CELL_DATA_KEY = "gmsh:physical"
-    OGS_DOMAIN_CELL_DATA_KEY = "MaterialIDs"
-    OGS_BOUNDARY_CELL_DATA_KEY = "bulk_elem_ids"
+    # the following are cell data
+    GMSH_PHYSICAL_KEY = "gmsh:physical"
+    OGS_DOMAIN_KEY = "MaterialIDs"
+    OGS_BOUNDARY_KEY = "bulk_elem_ids"
     # pylint: enable=invalid-name
     ogs = not keep_ids
 
-    # check if input file exists and is in gmsh-format
     if not filename.is_file():
         logging.warning("No input file (mesh) found.")
-        # raise FileNotFoundError
-        return 1
+        raise FileNotFoundError
 
     if filename.suffix != ".msh":
-        logging.warning(
-            "Warning, input file seems not to be in gmsh-format (*.msh)"
-        )
+        logging.warning("Input file seems not to be in gmsh-format (*.msh)")
 
     # if no parameter given, use same basename as input file
     output_basename = filename.stem if output_prefix == "" else output_prefix
     logging.info("Output: %s", output_basename)
 
-    # read in mesh (be aware of shallow copies, i.e. by reference)
     mesh: meshio.Mesh = meshio.read(str(filename))
     points, point_data = mesh.points, mesh.point_data
     cells_dict, cell_data, cell_data_dict = (
@@ -258,7 +234,7 @@ def msh2vtu(
     )
     field_data = mesh.field_data
     number_of_original_points = len(points)
-    existing_cell_types = set(mesh.cells_dict.keys())  # elements found in mesh
+    existing_cell_types = set(mesh.cells_dict.keys())
 
     logging.info("Original mesh (read)")
     logging.info(mesh)
@@ -275,10 +251,10 @@ def msh2vtu(
     if dim == 0:
         assert isinstance(dim, int)
         # automatically detect spatial dimension of mesh
-        _dim = DIM0  # initial value
+        _dim = DIM0
         for test_dim, test_cell_types in AVAILABLE_CELL_TYPES.items():
             if (
-                len(test_cell_types.intersection(existing_cell_types))
+                len(test_cell_types.intersection(existing_cell_types)) > 0
                 and test_dim > dim
             ):
                 _dim = test_dim
@@ -322,7 +298,7 @@ def msh2vtu(
         return 1  # sys.exit()
 
     # Check for existence of physical groups
-    if GMSH_PHYSICAL_CELL_DATA_KEY in cell_data:
+    if GMSH_PHYSICAL_KEY in cell_data:
         physical_groups_found = True
 
         # reconstruct field data, when empty (physical groups may have a number,
@@ -331,7 +307,7 @@ def msh2vtu(
         if field_data == {}:
             # detect dimension by cell type
             for pg_cell_type, pg_cell_data in cell_data_dict[
-                GMSH_PHYSICAL_CELL_DATA_KEY
+                GMSH_PHYSICAL_KEY
             ].items():
                 if pg_cell_type in AVAILABLE_CELL_TYPES[DIM0]:
                     pg_dim = DIM0
@@ -376,15 +352,11 @@ def msh2vtu(
             original_point_numbers
         )
     else:
-        all_point_data = {
-            key: value[:] for key, value in point_data.items()
-        }  # deep copy
+        # deep copy
+        all_point_data = {key: value[:] for key, value in point_data.items()}
 
     domain_cells = []
-    if ogs:
-        domain_cell_data_key = OGS_DOMAIN_CELL_DATA_KEY
-    else:
-        domain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
+    domain_cell_data_key = OGS_DOMAIN_KEY if ogs else GMSH_PHYSICAL_KEY
     domain_cell_data: dict[str, list[int]] = {}
     domain_cell_data[domain_cell_data_key] = []
 
@@ -396,28 +368,21 @@ def msh2vtu(
         domain_cells.append(domain_cells_block)
 
         # cell_data
-        if physical_groups_found:
-            if domain_cell_type in cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY]:
-                domain_in_physical_group = True
-            else:
-                domain_in_physical_group = False
-        else:
-            domain_in_physical_group = False
+        domain_in_physical_group = physical_groups_found and (
+            domain_cell_type in cell_data_dict[GMSH_PHYSICAL_KEY]
+        )
 
         if domain_in_physical_group:
+            domain_cell_data_values = cell_data_dict[GMSH_PHYSICAL_KEY][
+                domain_cell_type
+            ]
             if ogs:
-                domain_cell_data_values = cell_data_dict[
-                    GMSH_PHYSICAL_CELL_DATA_KEY
-                ][domain_cell_type]
                 # ogs needs MaterialIDs as int32, possibly beginning with zero
                 # (by id_offset)
                 domain_cell_data_values = np.int32(
                     domain_cell_data_values - id_offset
                 )
-            else:
-                domain_cell_data_values = cell_data_dict[
-                    GMSH_PHYSICAL_CELL_DATA_KEY
-                ][domain_cell_type]
+
         else:
             domain_cell_data_values = np.zeros(
                 (number_of_domain_cells), dtype=int
@@ -508,16 +473,12 @@ def msh2vtu(
             original2domain_point_table
         )
     else:
-        all_point_data = {
-            key: value[:] for key, value in point_data.items()
-        }  # deep copy
+        # deep copy
+        all_point_data = {key: value[:] for key, value in point_data.items()}
 
     boundary_cells = []
     boundary_cell_data: dict[str, list] = {}
-    if ogs:
-        boundary_cell_data_key = OGS_BOUNDARY_CELL_DATA_KEY
-    else:
-        boundary_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
+    boundary_cell_data_key = OGS_BOUNDARY_KEY if ogs else GMSH_PHYSICAL_KEY
     boundary_cell_data[boundary_cell_data_key] = []
 
     for boundary_cell_type in boundary_cell_types:
@@ -532,42 +493,23 @@ def msh2vtu(
         )
         # a boundary cell is connected with exactly one domain cell
         boundary_index = connected_cells_count == 1
-        if not boundary_index.all():
-            logging.info(
-                "For information, there are cells of boundary dimension not on"
-                " the boundary (e.g. inside domain)."
-            )
-            multi_connection_index = connected_cells_count > 1
-            logging.info(
-                "Cells of type %s connected to more than one domain cell:",
-                boundary_cell_type,
-            )
-            logging.info(boundary_cells_values[multi_connection_index])
-            zero_connection_index = connected_cells_count < 1
-            logging.info(
-                "Cells of type %s not connected to any domain cell:",
-                boundary_cell_type,
-            )
-            logging.info(boundary_cells_values[zero_connection_index])
-
-        boundary_cells_values = boundary_cells_values[
-            boundary_index
-        ]  # final boundary cells
+        # final boundary cells
+        boundary_cells_values = boundary_cells_values[boundary_index]
         boundary_cells_block = (boundary_cell_type, boundary_cells_values)
         boundary_cells.append(boundary_cells_block)
 
         # cell_data
         boundary_in_physical_group = physical_groups_found and (
-            boundary_cell_type in cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY]
+            boundary_cell_type in cell_data_dict[GMSH_PHYSICAL_KEY]
         )
 
         if ogs:
             boundary_cell_data_values = connected_cells[boundary_index]
         else:
             if boundary_in_physical_group:
-                boundary_cell_data_values = cell_data_dict[
-                    GMSH_PHYSICAL_CELL_DATA_KEY
-                ][boundary_cell_type]
+                boundary_cell_data_values = cell_data_dict[GMSH_PHYSICAL_KEY][
+                    boundary_cell_type
+                ]
             else:
                 # cells of specific type
                 number_of_boundary_cells = len(boundary_cells_values)
@@ -637,15 +579,15 @@ def msh2vtu(
         subdomain_cell_data: dict[str, list] = {}  # dict
         if ogs:
             if subdomain_dim == domain_dim:
-                subdomain_cell_data_key = OGS_DOMAIN_CELL_DATA_KEY
+                subdomain_cell_data_key = OGS_DOMAIN_KEY
             elif subdomain_dim == boundary_dim:
-                subdomain_cell_data_key = OGS_BOUNDARY_CELL_DATA_KEY
+                subdomain_cell_data_key = OGS_BOUNDARY_KEY
             else:
                 # use gmsh, as the requirements from OGS
-                subdomain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
+                subdomain_cell_data_key = GMSH_PHYSICAL_KEY
         else:
             # same for all dimensions
-            subdomain_cell_data_key = GMSH_PHYSICAL_CELL_DATA_KEY
+            subdomain_cell_data_key = GMSH_PHYSICAL_KEY
         subdomain_cell_data[subdomain_cell_data_key] = []  # list
         # flag to indicate invalid bulk_element_ids, then no cell data will be
         # written
@@ -654,7 +596,7 @@ def msh2vtu(
         for cell_type in subdomain_cell_types:
             # cells
             all_false = np.full(
-                cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][cell_type].shape,
+                cell_data_dict[GMSH_PHYSICAL_KEY][cell_type].shape,
                 False,
             )
             if mesh.cell_sets_dict != {}:
@@ -663,8 +605,7 @@ def msh2vtu(
                 )
             else:
                 selection_index = (
-                    cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][cell_type]
-                    == ph_id
+                    cell_data_dict[GMSH_PHYSICAL_KEY][cell_type] == ph_id
                 )
             selection_cells_values = cells_dict[cell_type][selection_index]
             if len(selection_cells_values):  # if there are some data
@@ -700,22 +641,22 @@ def msh2vtu(
                             subdomain_cell_data_trouble = True
                     elif subdomain_dim == domain_dim:
                         selection_cell_data_values = np.int32(
-                            cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][
-                                cell_type
-                            ][selection_index]
+                            cell_data_dict[GMSH_PHYSICAL_KEY][cell_type][
+                                selection_index
+                            ]
                             - id_offset
                         )
 
                     else:  # any cells of lower dimension than boundary
                         selection_cell_data_values = np.int32(
-                            cell_data_dict[GMSH_PHYSICAL_CELL_DATA_KEY][
-                                cell_type
-                            ][selection_index]
+                            cell_data_dict[GMSH_PHYSICAL_KEY][cell_type][
+                                selection_index
+                            ]
                         )
 
                 else:
                     selection_cell_data_values = cell_data_dict[
-                        GMSH_PHYSICAL_CELL_DATA_KEY
+                        GMSH_PHYSICAL_KEY
                     ][cell_type][selection_index]
 
                 subdomain_cell_data[subdomain_cell_data_key].append(
@@ -737,7 +678,7 @@ def msh2vtu(
                 cell_data=subdomain_cell_data,
             )
 
-        if len(subdomain_cells):
+        if len(subdomain_cells) > 0:
             my_remove_orphaned_nodes(submesh)
 
             outputfilename = (
