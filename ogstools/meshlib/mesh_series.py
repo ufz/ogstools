@@ -13,7 +13,6 @@ from typing import Any, ClassVar, Literal
 import meshio
 import numpy as np
 import pyvista as pv
-from h5py import File
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.interpolate import (
@@ -28,7 +27,7 @@ from ogstools.propertylib.properties import Property, get_preset
 from ogstools.propertylib.unit_registry import u_reg
 
 from .mesh import Mesh
-from .xdmf_reader import XDMFReader
+from .xdmf_reader import DataItem, DataItems, XDMFReader
 
 
 class MeshSeries:
@@ -203,27 +202,86 @@ class MeshSeries:
             )
         return mesh
 
-    def values(self, data_name: str, slice: slice = slice()) -> np.ndarray:
+    def attribute(self, key: str) -> DataItem:
+        """
+        :param key: Name the data item. Attribute(e.g."temperature") or "geometry" or "topology"
+        :returns:   Returns an objects that allows array indexing. Selection example:
+            ms = MeshSeries()
+            temp = ms.attribute("temperature")
+            time_step1_temps = temp[1,:]
+            temps_at_some_points = temp[:,1:3]
+        """
+        # ToDo add support for pvd
+        if self._data_type != "xdmf":
+            msg = "Indexing is only possible for xdmf. Use values() function instead."
+            ValueError(msg)
+        return self._xdmf_reader._data_items[key]
+
+    def select(self, data_name: str) -> DataItems:
+        """
+        Returns an attribute object, that allows array indexing.
+
+
+        :param data_name: Name the data item. Attribute(e.g."temperature")
+                To get "geometry"/"points" or "topology"/"cells" read the first time step and use
+                pyvista functionality
+
+        :returns:   Returns an objects that allows array indexing. Selection example:
+            ms = MeshSeries()
+            temp = ms.select("temperature")
+            time_step1_temps = temp[1,:]
+            temps_at_some_points = temp[:,1:3]
+        """
+        if self._data_type != "xdmf":
+            msg = "Indexing is only possible for xdmf. Use values() function instead."
+            ValueError(msg)
+        return self._xdmf_reader.data_items[data_name]
+
+    def values(
+        self, data_name: str, selection: slice | np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Get the data in the MeshSeries for all timesteps.
 
-        :param data_name:   Name of the data in the MeshSeries.
+        :param str data_name: Name of the data in the MeshSeries.
+        :param selection: Can limit the data to be read.
+            - **Time** is always the first dimension.
+            - If `None`, it takes the selection that is defined in the xdmf file.
+            - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
+            - If a slice: see Python slice reference.
+            - If a string: see example:
+            Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
 
-        :returns:   A numpy array of the requested data for all timesteps
+            This represents the selection
+            ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
+
+        :returns: A numpy array of the requested data for all timesteps.
+        :rtype: numpy.ndarray
         """
-        mesh = self.read(0).copy()
+
+        if isinstance(selection, np.ndarray | tuple):
+            time_selection = selection[0]
+        else:
+            time_selection = slice(None)
+
         if self._data_type == "xdmf":
-            return self._xdmf_reader.data_items[data_name].selected_values(
-                selection=slice
-            )
+            # return self._xdmf_reader._data_items[data_name][time_selection]
+            return self._xdmf_reader.data_items[data_name][time_selection]
         if self._data_type == "pvd":
             return np.asarray(
-                [self.read(t)[data_name] for t in tqdm(self.timesteps)]
-            )[slice]
+                [
+                    self.read(t)[data_name]
+                    for t in tqdm(self.timesteps[time_selection])
+                ]
+            )
         if self._data_type == "synthetic":
             return np.asarray(
-                [self._data[t][data_name] for t in self.timesteps]
-            )[slice]
+                [
+                    self._data[t][data_name]
+                    for t in self.timesteps[time_selection]
+                ]
+            )
+        mesh = self.read(0).copy()
         return mesh[data_name]
 
     def aggregate(
