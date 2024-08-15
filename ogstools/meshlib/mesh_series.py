@@ -61,6 +61,9 @@ class MeshSeries:
         self.spatial_output_unit = spatial_output_unit
         self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
+        if self._data_type == "xmf":
+            self._data_type = "xdmf"
+
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
             self.timestep_files = [
@@ -70,13 +73,22 @@ class MeshSeries:
             self._timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
+
+            self._timevalues = np.asarray(
+                [
+                    float(element.attrib["Value"])
+                    for collection_i in self._xdmf_reader.collection
+                    for element in collection_i
+                    if element.tag == "Time"
+                ]
+            )
         elif self._data_type == "vtu":
             self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
             self._timevalues = np.zeros(1)
         elif self._data_type == "synthetic":
             return
         else:
-            msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
+            msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
     def timevalues(self, time_unit: str | None = None) -> np.ndarray:
