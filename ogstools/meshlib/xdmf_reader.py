@@ -158,7 +158,7 @@ class H5DataItem(DataItem):
 
     def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
         """
-        Reads value from HDF5 file based on given selection. You selected
+        Reads value from HDF5 file based on given selection.
 
         param args: See numpy array indexing https://numpy.org/doc/stable/user/basics.indexing.html#
         :returns:   A numpy array (sliced) of the requested data for all timesteps
@@ -190,9 +190,8 @@ class H5DataItem(DataItem):
 
         :returns:   A numpy array (sliced) of the requested data for all timesteps
         """
-        return self[
-            self.selection
-        ].squeeze()  # should always be just one timestep
+        # should always be just one timestep
+        return self[self.selection].squeeze()
 
 
 class XMLDataItem(DataItem):

@@ -243,7 +243,7 @@ class MeshSeries:
         """
         Get the data in the MeshSeries for all timesteps.
 
-        :param str data_name: Name of the data in the MeshSeries.
+        :param data_name: Name of the data in the MeshSeries.
         :param selection: Can limit the data to be read.
             - **Time** is always the first dimension.
             - If `None`, it takes the selection that is defined in the xdmf file.
