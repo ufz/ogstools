@@ -185,8 +185,6 @@ class H5DataItem(DataItem):
         0 0 0:1 1 1:1 190 3:97 190 3
         The meaning is: [(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]
 
-        The meaning is: [(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]
-
 
         :returns:   A numpy array (sliced) of the requested data for all timesteps
         """
@@ -247,9 +245,6 @@ class DataItems:
             self.fast_access = False
             return
 
-        # all_with_subsections = np.all([item.selection for item in self.items])
-
-        # item.selection
         self.fast_access = all_in_h5 and all_in_same_file
 
     def __getitem__(self, args: tuple | slice | int) -> np.ndarray:

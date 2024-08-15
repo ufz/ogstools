@@ -17,9 +17,9 @@ class TestUtils:
     """Test case for ogstools utilities."""
 
     def test_meshseries_xdmf(self):
-        # all data is in one group in h5 file
+        # all data is in one group in one h5 file
         xdmf = examples.load_meshseries_HT_2D_XDMF()
-        # all data is separated groups in 1 h5 file
+        # all data is in separated groups of one h5 file
         xmf = examples.load_meshseries_HT_2D_paraview_XMF()
 
         for ht in [xdmf, xmf]:

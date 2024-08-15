@@ -27,7 +27,7 @@ from ogstools.propertylib.properties import Property, get_preset
 from ogstools.propertylib.unit_registry import u_reg
 
 from .mesh import Mesh
-from .xdmf_reader import DataItem, DataItems, XDMFReader
+from .xdmf_reader import DataItems, XDMFReader
 
 
 class MeshSeries:
@@ -202,36 +202,20 @@ class MeshSeries:
             )
         return mesh
 
-    def attribute(self, key: str) -> DataItem:
-        """
-        :param key: Name the data item. Attribute(e.g."temperature") or "geometry" or "topology"
-        :returns:   Returns an objects that allows array indexing. Selection example:
-            ms = MeshSeries()
-            temp = ms.attribute("temperature")
-            time_step1_temps = temp[1,:]
-            temps_at_some_points = temp[:,1:3]
-        """
-        # ToDo add support for pvd
-        if self._data_type != "xdmf":
-            msg = "Indexing is only possible for xdmf. Use values() function instead."
-            ValueError(msg)
-        return self._xdmf_reader._data_items[key]
-
     def select(self, data_name: str) -> DataItems:
         """
         Returns an attribute object, that allows array indexing.
-
-
+        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
+        pyvista functionality
+        Selection example:
+        ms = MeshSeries()
+        temp = ms.select("temperature")
+        time_step1_temps = temp[1,:]
+        temps_at_some_points = temp[:,1:3]
         :param data_name: Name the data item. Attribute(e.g."temperature")
-                To get "geometry"/"points" or "topology"/"cells" read the first time step and use
-                pyvista functionality
-
-        :returns:   Returns an objects that allows array indexing. Selection example:
-            ms = MeshSeries()
-            temp = ms.select("temperature")
-            time_step1_temps = temp[1,:]
-            temps_at_some_points = temp[:,1:3]
+        :returns:   Returns an objects that allows array indexing. S
         """
+
         if self._data_type != "xdmf":
             msg = "Indexing is only possible for xdmf. Use values() function instead."
             ValueError(msg)
@@ -250,13 +234,13 @@ class MeshSeries:
             - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
             - If a slice: see Python slice reference.
             - If a string: see example:
+
             Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
 
             This represents the selection
             ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
 
         :returns: A numpy array of the requested data for all timesteps.
-        :rtype: numpy.ndarray
         """
 
         if isinstance(selection, np.ndarray | tuple):
@@ -265,7 +249,6 @@ class MeshSeries:
             time_selection = slice(None)
 
         if self._data_type == "xdmf":
-            # return self._xdmf_reader._data_items[data_name][time_selection]
             return self._xdmf_reader.data_items[data_name][time_selection]
         if self._data_type == "pvd":
             return np.asarray(
@@ -281,7 +264,7 @@ class MeshSeries:
                     for t in self.timesteps[time_selection]
                 ]
             )
-        mesh = self.read(0).copy()
+        mesh = self.read(0)
         return mesh[data_name]
 
     def aggregate(

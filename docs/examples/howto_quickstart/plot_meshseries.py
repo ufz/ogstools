@@ -56,20 +56,21 @@ ms.read(0).plot()
 
 
 # %%
-# Accessing attributes
+# Accessing Attributes
 # ====================
 # A MeshSeries provides access to all values of attributes at all time steps.
 #
 # 1. read
-#   - Get a pyvista mesh at a specific time step and the usage of pyvista functions (e.g.
-#     `cell_data <https://docs.pyvista.org/api/core/_autosummary/pyvista.dataset.cell_data>`_)
-#   - Efficient for small set of timesteps, but all data needed.
-#   - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.read`
+#    - Get a PyVista mesh at a specific time step and use PyVista functions (e.g., `cell_data <https://docs.pyvista.org/api/core/_autosummary/pyvista.dataset.cell_data>`_).
+#    - Efficient for a small set of timesteps, but all data is needed.
+#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.read`
 #
 # 2. select
-#   - Get a specific attribute over a specific time range.
-#   - Efficient for large set of timesteps (currently only xdmf), but limited data needed.
-#   - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.select`
+#    - Get a specific attribute over a specific time range.
+#    - Efficient for a large set of timesteps (currently only XDMF), but limited data is needed.
+#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.select`
+
+
 #
 # Indexing with the select function
 # ---------------------------------
