@@ -50,8 +50,13 @@ class TestUtils:
             )
 
         for ms in [pvd, xdmf]:
-            assert ms.read(0) == ms.read_closest(1e-6)
+            try:
+                mesh1 = ms.read(0)
+                mesh1_closest = ms.read_closest(1e-6)
+            except Exception:
+                pytest.fail("Read functions of MeshSeries failed")
 
+            assert mesh1 == mesh1_closest
             assert not np.any(np.isnan(ms.timesteps))
             assert not np.any(np.isnan(ms.values("temperature")))
 
