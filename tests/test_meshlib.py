@@ -16,6 +16,31 @@ from ogstools.msh2vtu import msh2vtu
 class TestUtils:
     """Test case for ogstools utilities."""
 
+    def test_meshseries_xdmf(self):
+        # all data is in one group in h5 file
+        xdmf = examples.load_meshseries_HT_2D_XDMF()
+        # all data is separated groups in 1 h5 file
+        xmf = examples.load_meshseries_HT_2D_paraview_XMF()
+
+        for ht in [xdmf, xmf]:
+            # temperature is scalar last dimension = 1 omitted
+            assert np.shape(ht.values("temperature")) == (97, 190)
+            # non-scalar attribute
+            assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
+
+            assert np.shape(ht.select("temperature")[1:3, :]) == (2, 190)
+            # no range for a dimension -> this dimension gets omitted
+            assert np.shape(ht.select("temperature")[1, :]) == (190,)
+            # select range with length for a dimension to keep dimension
+            assert np.shape(ht.select("temperature")[1:2, :]) == (1, 190)
+            # all values
+            assert np.shape(ht.select("temperature")[:]) == np.shape(
+                ht.values("temperature")
+            )
+            # last 2 steps
+            last_2_steps = ht.select("darcy_velocity")[-2:, 1:4, :]
+            assert np.shape(last_2_steps) == (2, 3, 2)
+
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
         xdmf = examples.load_meshseries_HT_2D_XDMF()
