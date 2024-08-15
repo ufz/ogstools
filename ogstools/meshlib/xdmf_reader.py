@@ -182,8 +182,11 @@ class H5DataItem(DataItem):
         the 1.h5filename, 2. name of h5 group, 3. selection
         e.g. 2D_single_fracture_HT.h5:/meshes/2D_single_fracture/geometry|0 0 0:1 1 1:1 190 3:97 190 3
         The selection here is:
-        |0 0 0:1 1 1:1 190 3:97 190 3
+        0 0 0:1 1 1:1 190 3:97 190 3
         The meaning is: [(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]
+
+        The meaning is: [(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]
+
 
         :returns:   A numpy array (sliced) of the requested data for all timesteps
         """
