@@ -38,7 +38,7 @@ plot.setup.combined_colorbar = False
 
 mesh_series = [meshlib.MeshSeries(mesh_path) for mesh_path in mesh_paths]
 timestep_sizes = [np.mean(np.diff(ms.timevalues())) for ms in mesh_series]
-meshes = [ms.read_closest(timevalue) for ms in mesh_series]
+meshes = [ms.read(ms.closest_timestep(timevalue)) for ms in mesh_series]
 topology: pv.UnstructuredGrid = meshes[-3]
 variable = variables.get_preset(variable_name, meshes[0])
 richardson = studies.convergence.richardson_extrapolation(
@@ -80,9 +80,9 @@ if reference_solution_path is None:
     )
     fig = plot.contourf(diff_mesh, variable)
 else:
-    reference_solution = topology.sample(
-        meshlib.MeshSeries(reference_solution_path).read_closest(timevalue)
-    )
+    ms = meshlib.MeshSeries(reference_solution_path)
+    timestep = ms.closest_timestep(timevalue)
+    reference_solution = topology.sample(ms.read(timestep))
     diff_mesh = meshlib.difference(reference_solution, richardson, variable)
     fig = plot.contourf(diff_mesh, variable)
 

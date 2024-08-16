@@ -177,10 +177,6 @@ class MeshSeries:
         """Return the closest timevalue to a timevalue."""
         return self._timevalues[self.closest_timestep(timevalue)]
 
-    def read_closest(self, timevalue: float) -> Mesh:
-        """Return the closest timestep in the data for a given timevalue."""
-        return self.read(self.closest_timestep(timevalue))
-
     def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
         t_vals = self._timevalues

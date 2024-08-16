@@ -52,7 +52,7 @@ class TestUtils:
         for ms in [pvd, xdmf]:
             try:
                 mesh1 = ms.read(0)
-                mesh1_closest = ms.read_closest(1e-6)
+                mesh1_closest = ms.read(ms.closest_timestep(1e-6))
             except Exception:
                 pytest.fail("Read functions of MeshSeries failed")
 

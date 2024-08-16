@@ -291,7 +291,7 @@ def convergence_metrics_evolution(
 
     timestep_sizes = [np.mean(np.diff(ms.timevalues())) for ms in mesh_series]
     for timevalue in tqdm(common_timevalues):
-        meshes = [ms.read_closest(timevalue) for ms in mesh_series]
+        meshes = [ms.read(ms.closest_timestep(timevalue)) for ms in mesh_series]
         reference = richardson_extrapolation(
             meshes, variable, meshes[-3], refinement_ratio
         )
