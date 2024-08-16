@@ -13,7 +13,6 @@ from typing import Any, ClassVar, Literal
 import meshio
 import numpy as np
 import pyvista as pv
-from h5py import File
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.interpolate import (
@@ -28,7 +27,7 @@ from ogstools.propertylib.properties import Property, get_preset
 from ogstools.propertylib.unit_registry import u_reg
 
 from .mesh import Mesh
-from .xdmf_reader import XDMFReader
+from .xdmf_reader import DataItems, XDMFReader
 
 
 class MeshSeries:
@@ -61,6 +60,9 @@ class MeshSeries:
         self.spatial_output_unit = spatial_output_unit
         self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
+        if self._data_type == "xmf":
+            self._data_type = "xdmf"
+
         if self._data_type == "pvd":
             self._pvd_reader = pv.PVDReader(filepath)
             self.timestep_files = [
@@ -70,11 +72,7 @@ class MeshSeries:
             self._timevalues = np.asarray(self._pvd_reader.time_values)
         elif self._data_type == "xdmf":
             self._xdmf_reader = XDMFReader(filepath)
-            self._read_xdmf(0)  # necessary to initialize hdf5_files
-            meshes = self.hdf5["meshes"]
-            self.hdf5_bulk_name = list(meshes.keys())[
-                np.argmax([meshes[m]["geometry"].shape[1] for m in meshes])
-            ]
+
             self._timevalues = np.asarray(
                 [
                     float(element.attrib["Value"])
@@ -89,7 +87,7 @@ class MeshSeries:
         elif self._data_type == "synthetic":
             return
         else:
-            msg = "Can only read 'pvd', 'xdmf' or 'vtu' files."
+            msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
     def timevalues(self, time_unit: str | None = None) -> np.ndarray:
@@ -120,11 +118,6 @@ class MeshSeries:
             ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
-
-    @property
-    def hdf5(self) -> File:
-        # We assume there is only one h5 file
-        return next(iter(self._xdmf_reader.hdf5_files.values()))
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
@@ -209,25 +202,69 @@ class MeshSeries:
             )
         return mesh
 
-    def values(self, data_name: str) -> np.ndarray:
+    def select(self, data_name: str) -> DataItems:
+        """
+        Returns an attribute object, that allows array indexing.
+        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
+        pyvista functionality
+        Selection example:
+        ms = MeshSeries()
+        temp = ms.select("temperature")
+        time_step1_temps = temp[1,:]
+        temps_at_some_points = temp[:,1:3]
+        :param data_name: Name the data item. Attribute(e.g."temperature")
+        :returns:   Returns an objects that allows array indexing. S
+        """
+
+        if self._data_type != "xdmf":
+            msg = "Indexing is only possible for xdmf. Use values() function instead."
+            ValueError(msg)
+        return self._xdmf_reader.data_items[data_name]
+
+    def values(
+        self, data_name: str, selection: slice | np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Get the data in the MeshSeries for all timesteps.
 
-        :param data_name:   Name of the data in the MeshSeries.
+        :param data_name: Name of the data in the MeshSeries.
+        :param selection: Can limit the data to be read.
+            - **Time** is always the first dimension.
+            - If `None`, it takes the selection that is defined in the xdmf file.
+            - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
+            - If a slice: see Python slice reference.
+            - If a string: see example:
 
-        :returns:   A numpy array of the requested data for all timesteps
+            Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
+
+            This represents the selection
+            ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
+
+        :returns: A numpy array of the requested data for all timesteps.
         """
-        mesh = self.read(0).copy()
+
+        if isinstance(selection, np.ndarray | tuple):
+            time_selection = selection[0]
+        else:
+            time_selection = slice(None)
+
         if self._data_type == "xdmf":
-            return self.hdf5["meshes"][self.hdf5_bulk_name][data_name]
+            return self._xdmf_reader.data_items[data_name][time_selection]
         if self._data_type == "pvd":
             return np.asarray(
-                [self.read(t)[data_name] for t in tqdm(self.timesteps)]
+                [
+                    self.read(t)[data_name]
+                    for t in tqdm(self.timesteps[time_selection])
+                ]
             )
         if self._data_type == "synthetic":
             return np.asarray(
-                [self._data[t][data_name] for t in self.timesteps]
+                [
+                    self._data[t][data_name]
+                    for t in self.timesteps[time_selection]
+                ]
             )
+        mesh = self.read(0)
         return mesh[data_name]
 
     def aggregate(

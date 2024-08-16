@@ -36,6 +36,13 @@ def load_meshseries_HT_2D_XDMF():
     )
 
 
+def load_meshseries_HT_2D_paraview_XMF():
+    return MeshSeries(
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf"),
+        time_unit="s",
+    )
+
+
 def load_mesh_mechanics_2D():
     return Mesh.read(
         _meshseries_dir / "mechanics_example.vtu", spatial_output_unit="km"

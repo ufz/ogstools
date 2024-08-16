@@ -21,8 +21,12 @@ to be read like::
 
 """
 
+
+from abc import ABC, abstractmethod
+from pathlib import Path
 from xml.etree.ElementTree import Element
 
+import h5py
 import meshio
 import numpy as np
 from meshio._mesh import CellBlock
@@ -98,16 +102,200 @@ def _translate_mixed_cells_patched(data: list) -> list:
 time_series.translate_mixed_cells = _translate_mixed_cells_patched
 
 
+class DataItem(ABC):
+    """
+    Abstract base class for all classes that end with DataItem.
+    """
+
+    @abstractmethod
+    def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
+        pass
+
+
+class H5DataItem(DataItem):
+    """
+    A class to handle the data item in the xdmf file that references to a h5 file.
+    With init only the xdmf meta data is read. (light computation)
+    With selected_values the requested values are read from h5 file (heavy computation)
+    """
+
+    def __init__(self, file_info: str, xdmf_path: Path):
+        """
+        :param file_info: The file_info string from the XDMF file
+            example: 2D_single_fracture_HT.h5:/meshes/2D_single_fracture/geometry|0 0 0:1 1 1:1 190 3:97 190 3
+        :param xdmf_path: Path to the xdmf file that references to the h5 file
+        """
+
+        file_h5path__selections = file_info.split("|")
+        file_h5path = file_h5path__selections[0]
+        selections = (
+            file_h5path__selections[1]
+            if len(file_h5path__selections) > 1
+            else None
+        )
+        filename, h5path = file_h5path.split(":")
+        if selections:
+            # offsets, slices, current_data_extends, global_data_extends by dimension
+            m = [
+                list(map(int, att.split(" "))) for att in selections.split(":")
+            ]
+            t = np.transpose(m)
+            selection = tuple(
+                slice(start, start + extend, step)
+                for start, step, extend, _ in t
+            )
+        else:
+            selection = ()
+
+        self.selection = selection
+        self.h5path = h5path
+
+        self.key = h5path[1:].split("/")[-1]
+
+        # The HDF5 file path is given with respect to the XDMF (XML) file.
+        dirpath = xdmf_path.resolve().parent
+        self.full_hdf5_path = dirpath / filename
+
+    def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
+        """
+        Reads value from HDF5 file based on given selection.
+
+        param args: See numpy array indexing https://numpy.org/doc/stable/user/basics.indexing.html#
+        :returns:   A numpy array (sliced) of the requested data for all timesteps
+
+        """
+        with h5py.File(self.full_hdf5_path, "r") as file:
+            f = file
+            if self.h5path[0] != "/":
+                raise ReadError()
+
+            for key in self.h5path[1:].split("/"):
+                f = f[key]
+            return f[args]
+
+    def selected_values(self) -> np.ndarray:
+        """
+        Returns all values of the DataItem that are selected in the xdmf file.
+        An empty selection means all values are read.
+
+        In the xdmf file with <DataItem> tag you optionally find a string containing
+        the 1.h5filename, 2. name of h5 group, 3. selection
+        e.g. 2D_single_fracture_HT.h5:/meshes/2D_single_fracture/geometry|0 0 0:1 1 1:1 190 3:97 190 3
+        The selection here is:
+        0 0 0:1 1 1:1 190 3:97 190 3
+        The meaning is: [(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]
+
+
+        :returns:   A numpy array (sliced) of the requested data for all timesteps
+        """
+        # should always be just one timestep
+        return self[self.selection].squeeze()
+
+
+class XMLDataItem(DataItem):
+    def __init__(
+        self, name: str, dims: list[int], data_type: str | None, precision: str
+    ):
+        self.key = name
+        self._data_type = data_type
+        self._precision = precision
+        self._dims = dims
+
+    def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
+        return np.fromstring(
+            self.key,
+            dtype=xdmf_to_numpy_type[(self._data_type, self._precision)],
+            sep=" ",
+        ).reshape(self._dims)
+
+
+class BinaryDataItem(DataItem):
+    # BinaryDataItem(                data_item.text.strip(), dims, data_type, precision            )
+    def __init__(
+        self, name: str, dims: list[int], data_type: str | None, precision: str
+    ):
+        self.key = name
+        self._data_type = data_type
+        self._precision = precision
+        self._dims = dims
+
+    def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
+        return np.fromfile(
+            self.key,
+            dtype=xdmf_to_numpy_type[(self._data_type, self._precision)],
+        ).reshape(self._dims)
+
+
+class DataItems:
+    def __init__(self, items: list[DataItem]):
+        self.items = items
+        all_in_h5 = np.all(
+            [isinstance(item, H5DataItem) for item in self.items]
+        )
+        if not all_in_h5:
+            self.fast_access = False
+            return
+
+        all_in_same_file = (
+            # can ignore lint because isinstance is checked
+            len(np.unique([item.h5path for item in self.items]))  # type: ignore[attr-defined]
+            == 1
+        )
+        if not all_in_same_file:
+            self.fast_access = False
+            return
+
+        self.fast_access = all_in_h5 and all_in_same_file
+
+    def __getitem__(self, args: tuple | slice | int) -> np.ndarray:
+        key = args if isinstance(args, tuple) else (args,)
+
+        if not self.fast_access:
+            all_time_steps = self.items[key[0]]
+            if not isinstance(all_time_steps, list):
+                return self.items[key[0]][key[1:]]
+            arrays = [item[key[1:]] for item in all_time_steps]
+            return np.stack(arrays)
+        # If all items are stored within same h5 file, take info from 1st time step
+        return self.items[0][key]
+
+
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
     def __init__(self, filename: str):
         super().__init__(filename)
 
+        ### extension for indexing
+        self.filename: Path = Path(self.filename)
+        data_items: dict[str, list[DataItem]] = {}
+
+        self.data_items: dict[str, DataItems] = {}
+
+        self.t = None
+        for grid in self.collection:
+            for item in grid:
+                if item.tag == "Time":
+                    self.t = float(item.attrib["Value"])
+                elif item.tag == "Attribute":
+                    name = item.get("Name")
+                    if len(list(item)) != 1:
+                        raise ReadError()
+                    data_item = next(iter(item))
+                    data = self.select_item(data_item)
+                    if name in data_items:
+                        data_items[name].append(data)
+                    else:
+                        data_items[name] = [data]
+
+        for key, value in data_items.items():
+            self.data_items[key] = DataItems(value)
+
     def read_data(self, k: int) -> tuple[float, dict, dict, dict]:
         point_data = {}
-        cell_data_raw = {}
+        cell_data_raw: dict = {}
         other_data = {}
-
+        cell_data = {}
         t = None
+        cell_data = cell_data_from_raw(self.cells, cell_data_raw)
 
         for c in list(self.collection[k]):
             if c.tag == "Time":
@@ -141,6 +329,47 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
 
         return t, point_data, cell_data, other_data
 
+    def select_item(self, data_item: Element) -> np.ndarray:
+        dims = [int(d) for d in data_item.get("Dimensions", "").split()]
+
+        # Actually, `NumberType` is XDMF2 and `DataType` XDMF3, but many files out there
+        # use both keys interchangeably.
+        if data_item.get("DataType"):
+            if data_item.get("NumberType"):
+                raise ReadError()
+            data_type = data_item.get("DataType")
+        elif data_item.get("NumberType"):
+            if data_item.get("DataType"):
+                raise ReadError()
+            data_type = data_item.get("NumberType")
+        else:
+            # Default, see
+            # <https://xdmf.org/index.php/XDMF_Model_and_Format#XML_Element_.28Xdmf_ClassName.29_and_Default_XML_Attributes>
+            data_type = "Float"
+
+        try:
+            precision = data_item.attrib["Precision"]
+        except KeyError:
+            precision = "4"
+
+        data_format = data_item.attrib["Format"]
+
+        assert isinstance(data_item.text, str)
+        if data_format == "XML":
+            return XMLDataItem(data_item.text, dims, data_type, precision)
+        if data_format == "Binary":
+            return BinaryDataItem(
+                data_item.text.strip(), dims, data_type, precision
+            )
+        if data_format == "HDF":
+            return H5DataItem(
+                file_info=data_item.text.strip(), xdmf_path=self.filename
+            )
+
+        msg = f"Unknown XDMF Format '{data_format}'."
+        raise ReadError(msg)
+
+    # Copy of _read_data_item of meshio with fix for slices
     def _read_data_item(self, data_item: Element) -> np.ndarray:
         dims = [int(d) for d in data_item.get("Dimensions", "").split()]
 
