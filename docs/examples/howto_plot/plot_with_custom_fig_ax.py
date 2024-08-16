@@ -42,10 +42,10 @@ fig.tight_layout()
 # both Figure and Axes objects:
 
 fig, ax = plt.subplots(3, 1, figsize=(20, 30))
-meshseries.read(0).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[0])
-meshseries.read(1).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[1])
-diff_mesh = meshseries.read(1).difference(
-    meshseries.read(0), ot.variables.temperature
+meshseries.mesh(0).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[0])
+meshseries.mesh(1).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[1])
+diff_mesh = meshseries.mesh(1).difference(
+    meshseries.mesh(0), ot.variables.temperature
 )
 diff_mesh.plot_contourf(ot.variables.temperature, fig=fig, ax=ax[2])
 ax[0].set_title(r"$T(\mathrm{t}_{0})$")

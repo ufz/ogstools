@@ -197,14 +197,14 @@ class MeshSeries:
             )
         return mesh
 
-    def select(self, data_name: str) -> DataItems:
+    def __getitem__(self, data_name: str) -> DataItems:
         """
         Returns an attribute object, that allows array indexing.
         To get "geometry"/"points" or "topology"/"cells" read the first time step and use
         pyvista functionality
         Selection example:
         ms = MeshSeries()
-        temp = ms.select("temperature")
+        temp = ms["temperature"]
         time_step1_temps = temp[1,:]
         temps_at_some_points = temp[:,1:3]
         :param data_name: Name the data item. Attribute(e.g."temperature")

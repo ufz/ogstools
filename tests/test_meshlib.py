@@ -28,17 +28,17 @@ class TestUtils:
             # non-scalar attribute
             assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
 
-            assert np.shape(ht.select("temperature")[1:3, :]) == (2, 190)
+            assert np.shape(ht["temperature"][1:3, :]) == (2, 190)
             # no range for a dimension -> this dimension gets omitted
-            assert np.shape(ht.select("temperature")[1, :]) == (190,)
+            assert np.shape(ht["temperature"][1, :]) == (190,)
             # select range with length for a dimension to keep dimension
-            assert np.shape(ht.select("temperature")[1:2, :]) == (1, 190)
+            assert np.shape(ht["temperature"][1:2, :]) == (1, 190)
             # all values
-            assert np.shape(ht.select("temperature")[:]) == np.shape(
+            assert np.shape(ht["temperature"][:]) == np.shape(
                 ht.values("temperature")
             )
             # last 2 steps
-            last_2_steps = ht.select("darcy_velocity")[-2:, 1:4, :]
+            last_2_steps = ht["darcy_velocity"][-2:, 1:4, :]
             assert np.shape(last_2_steps) == (2, 3, 2)
 
     def test_all_types(self):

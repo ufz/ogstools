@@ -65,16 +65,16 @@ ms.read(0).plot()
 #    - Efficient for a small set of timesteps, but all data is needed.
 #    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.read`
 #
-# 2. select
+# 2. point_data[] and cell_data[] and []
 #    - Get a specific attribute over a specific time range.
 #    - Efficient for a large set of timesteps (currently only XDMF), but limited data is needed.
-#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.select`
+#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.__getitem__`
 
 
 #
 # Indexing with the select function
 # ---------------------------------
-# 1. The select function return an object that allows
+# 1. All 3 functions return an object that allows
 # `Python slicing <https://www.geeksforgeeks.org/python-list-slicing/>`_.
 # The objects index works like `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
 #
@@ -84,20 +84,20 @@ ms.read(0).plot()
 # and the last dimension is the number of components of the attribute.
 #
 # Be aware that dimensions of length 1 are omitted, obeying to the rules of `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
-# Select is only working on dynamic attributes (not geometry/points or topology/cells).
+# All 3 functions are only working on dynamic attributes (not geometry/points or topology/cells).
 
 ms = examples.load_meshseries_HT_2D_XDMF()
 
 # 1. No range for a dimension (just single time step) -> this dimension gets omitted
-ms.select("temperature")[1, :]  # shape is (190,)
+ms["temperature"][1, :]  # shape is (190,)
 # 2. Select range with length for a dimension to keep dimension
-ms.select("temperature")[1:2, :]  # shape is (1, 190)
+ms["temperature"][1:2, :]  # shape is (1, 190)
 # 3. Select all values for all dimensions
-ms.select("temperature")[:]  # shape is (97,190)
+ms["temperature"][:]  # shape is (97,190)
 # 4. Negative indices are allow - here we select last 2 steps
-ms.select("darcy_velocity")[-2:, 1:4, :]  # shape is(2, 3, 2)
+ms["darcy_velocity"][-2:, 1:4, :]  # shape is(2, 3, 2)
 # 5. Use select to get a specific range of time steps
-temp_on_some_point = ms.select("temperature")[1:3, 2:5]  # shape is (2,3)
+temp_on_some_point = ms["temperature"][1:3, 2:5]  # shape is (2,3)
 print(
     f"Temperature at time steps 1 and 2 for points 2, 3 and 4: {temp_on_some_point}"
 )
