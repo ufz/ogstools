@@ -117,7 +117,7 @@ class TestPlotting:
             i + 1: f"Layer {i+1}" for i in range(26)
         }
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        mesh = meshseries.read(1)
+        mesh = meshseries.mesh(1)
         mesh.plot_contourf(ot.variables.material_id)
         mesh.plot_contourf(ot.variables.temperature)
         mesh.plot_contourf(ot.variables.Scalar("pressure_active"))
@@ -133,8 +133,8 @@ class TestPlotting:
     def test_diff_plots(self):
         """Test creation of difference plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        mesh0 = meshseries.read(0)
-        mesh1 = meshseries.read(1)
+        mesh0 = meshseries.mesh(0)
+        mesh1 = meshseries.mesh(1)
         mesh1.difference(mesh0, "temperature").plot_contourf(
             "temperature_difference"
         )
@@ -151,14 +151,14 @@ class TestPlotting:
         """Test creating plot with subfigures and user provided ax"""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         fig, ax = plt.subplots(3, 1, figsize=(40, 30))
-        meshseries.read(0).plot_contourf(
+        meshseries.mesh(0).plot_contourf(
             ot.variables.temperature, fig=fig, ax=ax[0]
         )
-        meshseries.read(1).plot_contourf(
+        meshseries.mesh(1).plot_contourf(
             ot.variables.temperature, fig=fig, ax=ax[1]
         )
-        diff_mesh = meshseries.read(0).difference(
-            meshseries.read(1), ot.variables.temperature
+        diff_mesh = meshseries.mesh(0).difference(
+            meshseries.mesh(1), ot.variables.temperature
         )
         diff_mesh.plot_contourf(ot.variables.temperature, fig=fig, ax=ax[2])
         plt.close()
@@ -168,10 +168,10 @@ class TestPlotting:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         ot.plot.setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
-        meshseries.read(0).plot_contourf(
+        meshseries.mesh(0).plot_contourf(
             ot.variables.temperature, fig=fig, ax=ax[0]
         )
-        meshseries.read(1).plot_contourf(
+        meshseries.mesh(1).plot_contourf(
             ot.variables.displacement, fig=fig, ax=ax[1]
         )
         fig.suptitle("Test user defined ax")
@@ -183,7 +183,7 @@ class TestPlotting:
         ot.plot.setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
         ot.plot.contourf(
-            [meshseries.read(0), meshseries.read(1)],
+            [meshseries.mesh(0), meshseries.mesh(1)],
             ot.variables.temperature,
             fig=fig,
         )
@@ -250,19 +250,19 @@ class TestPlotting:
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = examples.load_meshseries_CT_2D_XDMF().read(0)
+        mesh = examples.load_meshseries_CT_2D_XDMF().mesh(0)
         mesh.plot_contourf(ot.variables.saturation)
         plt.close()
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
-        mesh = examples.load_meshseries_HT_2D_XDMF().read(0)
+        mesh = examples.load_meshseries_HT_2D_XDMF().mesh(0)
         mesh.plot_contourf(ot.variables.pressure)
         plt.close()
 
     def test_lineplot(self):
         """Test creation of a linesplot from sampled profile data"""
-        mesh = examples.load_meshseries_HT_2D_XDMF().read(-1)
+        mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
         profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
         ax = mesh.plot_linesample(
@@ -286,7 +286,7 @@ class TestPlotting:
         """Test creation of a profile plot from sampled profile data"""
         ms_CT = examples.load_meshseries_CT_2D_XDMF()
         profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
-        fig, ax = ms_CT.read(11).plot_linesample_contourf(
+        fig, ax = ms_CT.mesh(11).plot_linesample_contourf(
             ot.variables.saturation,
             profile_CT,
             resolution=100,

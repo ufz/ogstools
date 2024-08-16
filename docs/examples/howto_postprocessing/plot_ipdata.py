@@ -56,7 +56,7 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     model.replace_text(intpt_order, xpath=".//integration_order")
     model.write_input()
     model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
-    mesh = ot.MeshSeries(tmp_dir / "mesh.pvd").read(-1)
+    mesh = ot.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
     int_pts = mesh.to_ip_point_cloud()
     ip_mesh = mesh.to_ip_mesh()
 

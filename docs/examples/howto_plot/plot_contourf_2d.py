@@ -17,7 +17,7 @@ import ogstools as ot
 from ogstools import examples
 
 ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-mesh = examples.load_meshseries_THM_2D_PVD().read(1)
+mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:

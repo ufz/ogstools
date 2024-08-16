@@ -105,12 +105,12 @@ class MeshSeries:
             self.spatial_unit,
             self.spatial_output_unit,
         )
-        ip_mesh = self.read(0).to_ip_mesh()
-        ip_pt_cloud = self.read(0).to_ip_point_cloud()
+        ip_mesh = self.mesh(0).to_ip_mesh()
+        ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
         for ts in self.timesteps:
             ip_data = {
-                key: self.read(ts).field_data[key][np.argsort(ordering)]
+                key: self.mesh(ts).field_data[key][np.argsort(ordering)]
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
@@ -135,8 +135,8 @@ class MeshSeries:
         pv_mesh.field_data.update(field_data)
         return pv_mesh
 
-    def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
-        """Lazy read function."""
+    def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
+        """Selects mesh at given timestep all data function."""
         timestep = self.timesteps[timestep]
         if timestep in self._data:
             pv_mesh = self._data[timestep]
@@ -183,9 +183,9 @@ class MeshSeries:
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
-            return self.read(ts1, lazy_eval)
-        mesh1 = self.read(ts1, lazy_eval)
-        mesh2 = self.read(ts2, lazy_eval)
+            return self.mesh(ts1, lazy_eval)
+        mesh1 = self.mesh(ts1, lazy_eval)
+        mesh2 = self.mesh(ts2, lazy_eval)
         mesh = mesh1.copy(deep=True)
         for key in mesh1.point_data:
             if np.all(mesh1.point_data[key] == mesh2.point_data[key]):
@@ -248,7 +248,7 @@ class MeshSeries:
         if self._data_type == "pvd":
             return np.asarray(
                 [
-                    self.read(t)[data_name]
+                    self.mesh(t)[data_name]
                     for t in tqdm(self.timesteps[time_selection])
                 ]
             )
@@ -259,7 +259,7 @@ class MeshSeries:
                     for t in self.timesteps[time_selection]
                 ]
             )
-        mesh = self.read(0)
+        mesh = self.mesh(0)
         return mesh[data_name]
 
     def aggregate(
@@ -280,7 +280,7 @@ class MeshSeries:
             if variable.mesh_dependent:
                 vals = np.asarray(
                     [
-                        variable.transform(self.read(t))
+                        variable.transform(self.mesh(t))
                         for t in tqdm(self.timesteps)
                     ]
                 )
@@ -313,7 +313,7 @@ class MeshSeries:
         np_func = self._np_str[func]
         # TODO: add function to create an empty mesh from a given on
         # custom field_data may need to be preserved
-        mesh = self.read(0).copy(deep=True)
+        mesh = self.mesh(0).copy(deep=True)
         mesh.clear_point_data()
         mesh.clear_cell_data()
         if isinstance(variable, Variable):
@@ -332,7 +332,7 @@ class MeshSeries:
         """Returns a Mesh with the time of a given variable extremum as data.
 
         The data is named as `f'{prefix}_{variable.output_name}_time'`."""
-        mesh = self.read(0).copy(deep=True)
+        mesh = self.mesh(0).copy(deep=True)
         variable = get_preset(variable, mesh)
         mesh.clear_point_data()
         mesh.clear_cell_data()
@@ -390,7 +390,7 @@ class MeshSeries:
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
         """
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         timeslice = slice(None, None) if timesteps is None else timesteps
         values = self.aggregate_over_domain(variable.magnitude, func, mask)[
             timeslice
@@ -436,11 +436,11 @@ class MeshSeries:
         """
         points = np.asarray(points).reshape((-1, 3))
         values = np.swapaxes(self.values(data_name), 0, 1)
-        geom = self.read(0).points
+        geom = self.mesh(0).points
 
         if values.shape[0] != geom.shape[0]:
             # assume cell_data
-            geom = self.read(0).cell_centers().points
+            geom = self.mesh(0).cell_centers().points
 
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
@@ -485,7 +485,7 @@ class MeshSeries:
             :returns:   A matplotlib Figure
         """
         points = np.asarray(points).reshape((-1, 3))
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         values = variable.magnitude.transform(
             self.probe(points, variable.data_name, interp_method)
         )
@@ -497,7 +497,7 @@ class MeshSeries:
             x_values = time_unit_conversion * self._timevalues
             x_label = f"time / {time_unit}" if time_unit else "time"
         else:
-            variable_abscissa = get_preset(variable_abscissa, self.read(0))
+            variable_abscissa = get_preset(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
                 self.probe(points, variable_abscissa.data_name, interp_method)
             )
@@ -568,7 +568,7 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = plot.contourf(mesh_func(self.read(0, False)), variable)
+        fig = plot.contourf(mesh_func(self.mesh(0, False)), variable)
         assert isinstance(fig, plt.Figure)
         plot_func(fig.axes[0], 0.0)
 
@@ -580,7 +580,7 @@ class MeshSeries:
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
             if isinstance(i, int):
-                mesh = mesh_func(self.read(i))
+                mesh = mesh_func(self.mesh(i))
             else:
                 mesh = mesh_func(self.read_interp(i, True))
             with warnings.catch_warnings():
@@ -657,8 +657,15 @@ class MeshSeries:
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
 
+<<<<<<< HEAD
         variable = get_preset(variable, self.read(0))
         values = variable.transform(self.probe(points, variable.data_name))
+=======
+        mesh_property = get_preset(mesh_property, self.mesh(0))
+        values = mesh_property.transform(
+            self.probe(points, mesh_property.data_name)
+        )
+>>>>>>> e6501a7 (Replace MeshSeries.read with MeshSeries.mesh)
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
         else:
@@ -705,7 +712,7 @@ class MeshSeries:
         else:
             ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
 
-        spatial = plot.shared.spatial_quantity(self.read(0))
+        spatial = plot.shared.spatial_quantity(self.mesh(0))
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
         ax.set_ylabel(ylabel + " / " + spatial.output_unit, fontsize=fontsize)
         xlabel = "time / " + time_unit

@@ -37,10 +37,9 @@ timestep = 10
 print(f"Time value at step {timestep} is {ms.timevalues()[timestep]} s.")
 
 # %%
-# Read data is cached. The function read is only slow for each new timestep requested.
+# To get a single mesh at a specified timestep. Read data is cached.
 
-
-mesh_ts10 = ms.read(timestep)
+mesh_ts10 = ms.mesh(timestep)
 
 # The mesh taken from a specific time step of the mesh series is a pyvista mesh
 # Here we use pyvista functionality plot.
@@ -52,7 +51,7 @@ mesh_ts10.plot(show_edges=True)
 # MeshSeries from PVD file
 # =========================
 ms = examples.load_meshseries_THM_2D_PVD()
-ms.read(0).plot()
+ms.mesh(0).plot()
 
 
 # %%
@@ -60,10 +59,10 @@ ms.read(0).plot()
 # ====================
 # A MeshSeries provides access to all values of attributes at all time steps.
 #
-# 1. read
+# 1. mesh
 #    - Get a PyVista mesh at a specific time step and use PyVista functions (e.g., `cell_data <https://docs.pyvista.org/api/core/_autosummary/pyvista.dataset.cell_data>`_).
 #    - Efficient for a small set of timesteps, but all data is needed.
-#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.read`
+#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.mesh`
 #
 # 2. point_data[] and cell_data[] and []
 #    - Get a specific attribute over a specific time range.

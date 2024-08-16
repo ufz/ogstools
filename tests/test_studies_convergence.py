@@ -39,7 +39,7 @@ class TestConvergence:
             ogs_args = f"-m {temp_dir} -o {temp_dir}"
             model.run_model(write_logs=False, args=ogs_args)
             sim_results += [
-                MeshSeries(str(temp_dir / (prefix + ".pvd"))).read(-1)
+                MeshSeries(str(temp_dir / (prefix + ".pvd"))).mesh(-1)
             ]
 
         topology = sim_results[-3]

@@ -16,8 +16,8 @@ import ogstools as ot
 from ogstools import examples
 
 meshseries = examples.load_meshseries_THM_2D_PVD()
-mesh_0 = meshseries.read(0)
-mesh_1 = meshseries.read(1)
+mesh_0 = meshseries.mesh(0)
+mesh_1 = meshseries.mesh(1)
 variable = ot.variables.temperature
 
 # %%
