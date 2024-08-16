@@ -432,7 +432,7 @@ class MeshSeries:
         """
         Probe the MeshSeries at observation points.
 
-        :param points:          The points to sample at.
+        :param points:          The observation points to sample at.
         :param data_name:       Name of the data to sample.
         :param interp_method:   Interpolation method, defaults to `linear`
 
