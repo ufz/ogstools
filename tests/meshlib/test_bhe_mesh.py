@@ -3,20 +3,18 @@ from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
+from parameterized import parameterized
 
 from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
 
 
+# confinded aquifer: top level of groundwater ends at soil layer transition
 def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     return gen_bhe_mesh(
         length=50,
         width=50,
         layer=[50, 50, 20],
-        groundwater=Groundwater(
-            -48,
-            2,
-            "-y",
-        ),  # case for confinded aquifer, the top level of groundwater ends at soil layer transition
+        groundwater=Groundwater(-48, 2, "-y"),
         BHE_Array=BHE(25, 30, -5, -50, 0.076),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
@@ -75,179 +73,32 @@ def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
 class TestBHE:
     tmp_dir = Path(mkdtemp())
 
-    def test_bhe_mesh_structured_case1(self):
-        mesh_type = "structured"
-
-        ##### Testcase 1 #####
-        vtu_file = self.tmp_dir / "bhe_structured_1.vtu"
-
-        meshes = case_1(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
+    @parameterized.expand(((0, 4), (1, 5), (2, 7), (3, 7)))
+    def test_bhe_mesh_structured(self, index: int, max_id: int):
+        vtu_file = self.tmp_dir / f"bhe_structured_{index}.vtu"
+        model = [case_1, case_2, case_3, case_4][index]
+        meshes = model(vtu_out_file_path=vtu_file, mesh_type="structured")
         for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
-        mesh = pv.read(
-            self.tmp_dir / meshes[0]
-        )  # f"bhe_gw_{mesh_type}_domain.vtu")
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 4
-
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_structured_case2(self):
-        ##### Testcase 2 #####
-        vtu_file = self.tmp_dir / "bhe_structured_2.vtu"
-        mesh_type = "structured"
-
-        meshes = case_2(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
-        for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
+            assert Path(self.tmp_dir / mesh).is_file()
         mesh = pv.read(self.tmp_dir / meshes[0])
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 5
-
+        assert max(mesh.cell_data["MaterialIDs"]) == max_id
         bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
         soil = mesh.extract_cells_by_type(
             [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
         )
+        assert np.isin(bhe_line.points, soil.points).all()
 
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_structured_case3(self):
-        ##### Testcase 3 #####
-        vtu_file = self.tmp_dir / "bhe_structured_3.vtu"
-        mesh_type = "structured"
-        meshes = case_3(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
+    @parameterized.expand(((0, 4), (1, 5), (2, 7)))
+    def test_bhe_mesh_prism(self, index: int, max_id: int):
+        vtu_file = self.tmp_dir / f"bhe_prism_{index}.vtu"
+        model = [case_1, case_2, case_3][index]
+        meshes = model(vtu_out_file_path=vtu_file, mesh_type="prism")
         for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
+            assert Path(self.tmp_dir / mesh).is_file()
         mesh = pv.read(self.tmp_dir / meshes[0])
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 7
-
+        assert max(mesh.cell_data["MaterialIDs"]) == max_id
         bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
         soil = mesh.extract_cells_by_type(
             [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
         )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_structured_case4(self):
-        ##### Testcase 4 #####
-        vtu_file = self.tmp_dir / "bhe_structured_4.vtu"
-        mesh_type = "structured"
-        meshes = case_4(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
-        for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
-        mesh = pv.read(self.tmp_dir / meshes[0])
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 7
-
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_prism_case1(self):
-        tmp_dir = Path(mkdtemp())
-
-        mesh_type = "prism"
-
-        ##### Testcase 1 #####
-        vtu_file = tmp_dir / "bhe_prism_1.vtu"
-
-        meshes = case_1(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
-        for mesh in meshes:
-            assert Path(tmp_dir / mesh)
-
-        mesh = pv.read(tmp_dir / meshes[0])  # f"bhe_gw_{mesh_type}_domain.vtu")
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 4
-
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_prism_case2(self):
-        ##### Testcase 2 #####
-        vtu_file = self.tmp_dir / "bhe_prism_2.vtu"
-        mesh_type = "prism"
-        meshes = case_2(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
-        for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
-        mesh = pv.read(self.tmp_dir / meshes[0])
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 5
-
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
-
-    def test_bhe_mesh_prism_case3(self):
-        ##### Testcase 3 #####
-        mesh_type = "prism"
-        vtu_file = self.tmp_dir / "bhe_prism_3.vtu"
-        meshes = case_3(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-
-        # check if all meshes are present in the directory
-        for mesh in meshes:
-            assert Path(self.tmp_dir / mesh)
-
-        mesh = pv.read(self.tmp_dir / meshes[0])
-
-        # check mat ID for Layers and BHE's
-        assert max(mesh.cell_data["MaterialIDs"]) == 7
-
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-
-        assert np.isin(
-            bhe_line.points, soil.points
-        ).all()  # check if all BHE Line Nodes are also in the 3D Soil Domain
+        assert np.isin(bhe_line.points, soil.points).all()
