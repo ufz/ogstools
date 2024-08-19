@@ -20,6 +20,7 @@ from ogstools import examples
 # MeshSeries takes as mandatory argument a str OR pathlib.Path that represents
 # the location of the pvd or xdmf file. Here, we load example data:
 ms = examples.load_meshseries_HT_2D_XDMF()
+ms
 
 
 # %%

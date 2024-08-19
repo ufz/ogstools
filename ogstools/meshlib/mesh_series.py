@@ -89,6 +89,20 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
+    def __repr__(self) -> str:
+        if self._data_type == "vtu":
+            reader = self._vtu_reader
+        else:
+            reader = self._xdmf_reader
+        return f"""MeshSeries:
+    filepath:       {self.filepath}
+    spatial_unit:   {self.spatial_unit}
+    data_type:      {self._data_type}
+    timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps
+    reader:         {reader}
+    rawdata_file:   {self.rawdata_file()}
+"""
+
     def timevalues(self, time_unit: str | None = None) -> np.ndarray:
         "Return the timevalues, optionally converted to another time unit."
         return (
