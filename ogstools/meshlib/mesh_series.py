@@ -159,6 +159,12 @@ class MeshSeries:
     def clear(self) -> None:
         self._data.clear()
 
+    def fast_access_datafile(self) -> Path | None:
+        # If it returns a path h5py can be used for further processing
+        if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
+            return self._xdmf_reader.rawdata_path()  # single h5 file
+        return None
+
     @property
     def timesteps(self) -> range:
         """Return the timesteps of the timeseries data."""

@@ -41,6 +41,24 @@ class TestUtils:
             last_2_steps = ht["darcy_velocity"][-2:, 1:4, :]
             assert np.shape(last_2_steps) == (2, 3, 2)
 
+        # check if the data is read correctly
+        h5file = xdmf.fast_access_datafile()
+        assert h5file is not None
+        assert h5file.suffix == ".h5"
+
+        # This XDMF file is not generate via OGS/OGSTools, therefore the
+        # underlying file structure is not known and no optimization is possible.
+        assert xmf.fast_access_datafile() is None
+
+    #        assert xdmf._xdmf_reader.has_fast_access() == True
+    #        assert xdmf._xdmf_reader.has_fast_access("temperature") == True
+    #        assert xmf._xdmf_reader.has_fast_access() == False
+    #        assert xmf._xdmf_reader.has_fast_access("temperature") == False
+    #        assert xdmf._xdmf_reader.h5path("temperature").suffix == ".h5"
+    #        assert xdmf._xdmf_reader.h5path().suffix == ".h5"
+    #        assert xmf._xdmf_reader.h5path("temperature").suffix in [".xdmf",".xmf"]
+    #        assert xmf._xdmf_reader.h5path().suffix  in [".xdmf",".xmf"]
+
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
         xdmf = examples.load_meshseries_HT_2D_XDMF()

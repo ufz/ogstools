@@ -107,6 +107,8 @@ class DataItem(ABC):
     Abstract base class for all classes that end with DataItem.
     """
 
+    rawdata_path: Path
+
     @abstractmethod
     def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
         pass
@@ -154,7 +156,7 @@ class H5DataItem(DataItem):
 
         # The HDF5 file path is given with respect to the XDMF (XML) file.
         dirpath = xdmf_path.resolve().parent
-        self.full_hdf5_path = dirpath / filename
+        self.rawdata_path = dirpath / filename
 
     def __getitem__(self, args: tuple | int | slice | np.ndarray) -> np.ndarray:
         """
@@ -164,7 +166,7 @@ class H5DataItem(DataItem):
         :returns:   A numpy array (sliced) of the requested data for all timesteps
 
         """
-        with h5py.File(self.full_hdf5_path, "r") as file:
+        with h5py.File(self.rawdata_path, "r") as file:
             f = file
             if self.h5path[0] != "/":
                 raise ReadError()
