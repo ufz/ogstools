@@ -6,6 +6,7 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
+from itertools import pairwise
 from math import ceil
 from pathlib import Path
 from tempfile import mkdtemp
@@ -211,7 +212,7 @@ def cuboid(
     gmsh.finalize()
 
 
-def ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
+def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
     "Return edge elements ordered to form a contiguous array."
     edges = mesh.extract_feature_edges()
     n_cells = edges.n_cells
@@ -229,67 +230,66 @@ def ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
     return cell_pts[ordered_cell_ids[:-1], 0]
 
 
-def remesh_with_tri(
+def remesh_with_triangle(
     mesh: pv.UnstructuredGrid,
-    path: Path = Path(),
-    filename: str = "tri_mesh.msh",
+    output_file: Path | str = Path() / "tri_mesh.msh",
     size_factor: float = 1.0,
     order: int = 1,
-) -> Path:
+) -> None:
     """Discretizes a given Mesh with triangles and saves as gmsh .msh.
 
-    :param mesh: The mesh which shall be discretized with triangles
-    :param path: The output path of the resulting file
-    :param filename: The name of the resulting file
-    :param size_factor: A factor to scale the element sizes.
-    :param order: The element order (1=linear, 2=quadratic, ...)
+    Requires the mesh to be 2D and to contain 'MaterialIDs in the cell data.
 
-    :returns: A filepath to the resulting msh-file.
+    :param mesh:        The mesh which shall be discretized with triangles
+    :param output_file: The full filepath to the resulting file
+    :param size_factor: A factor to scale the element sizes.
+    :param order:       The element order (1=linear, 2=quadratic, ...)
     """
 
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
     gmsh.clear()
     gmsh.model.add("domain")
-    point_id = -1
 
-    for mat_id in (mat_ids := np.unique(mesh["MaterialIDs"])):
-        region = mesh.threshold([mat_id, mat_id], "MaterialIDs")
-        points = ordered_edges(region)
+    mat_ids = np.unique(mesh["MaterialIDs"])
+    region_edge_points = [
+        _ordered_edges(mesh.threshold([m, m], "MaterialIDs")) for m in (mat_ids)
+    ]
+    for point in np.vstack(region_edge_points):
+        gmsh.model.geo.addPoint(point[0], point[1], point[2])
+    region_lengths = [len(pts) for pts in region_edge_points]
+    region_start_tag = np.cumsum([0] + region_lengths) + 1
+    for tag_0, tag_1 in pairwise(region_start_tag):
+        for index in range(tag_0, tag_1 - 1):
+            gmsh.model.geo.addLine(index, index + 1)
+        gmsh.model.geo.addLine(tag_1 - 1, tag_0)
+
+    field = gmsh.model.mesh.field
+    for index, points in enumerate(region_edge_points):
+        mat_id = mat_ids[index]
+        line_tags = range(region_start_tag[index], region_start_tag[index + 1])
+        gmsh.model.geo.addCurveLoop(line_tags, tag=mat_id)
+        gmsh.model.geo.addPlaneSurface([mat_id], tag=mat_id)
+        gmsh.model.addPhysicalGroup(
+            dim=2, tags=[mat_id], name=f"Layer {mat_id}"
+        )
+        f1, f2 = (2 * mat_id, 2 * mat_id + 1)
         distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
         DEFAULT_SIZE = 6  # pylint: disable=C0103
         min_elem_size = size_factor * np.min(distances) * DEFAULT_SIZE
         max_elem_size = size_factor * np.max(distances) * DEFAULT_SIZE
-        for point in points:
-            point_id += 1
-            gmsh.model.geo.addPoint(point[0], point[1], point[2], tag=point_id)
-        pt_list = list(range(point_id - len(points) + 1, point_id + 1))
-        for index in pt_list[:-1]:
-            gmsh.model.geo.addLine(index, index + 1, tag=index)
-        gmsh.model.geo.addLine(pt_list[-1], pt_list[0], tag=pt_list[-1])
-        line_tags = pt_list
-        gmsh.model.geo.addCurveLoop(line_tags, tag=mat_id)
-        gmsh.model.geo.addPlaneSurface([mat_id], tag=mat_id)
-        gmsh.model.addPhysicalGroup(
-            dim=2,
-            tags=[mat_id],
-            name=f"Layer {mat_id}",
-        )
-        f1, f2 = (2 * mat_id, 2 * mat_id + 1)
-        gmsh.model.mesh.field.add("Distance", f1)
-        gmsh.model.mesh.field.setNumbers(f1, "CurvesList", pt_list)
-        gmsh.model.mesh.field.add("Threshold", f2)
-        gmsh.model.mesh.field.setNumber(f2, "IField", f1)
-        gmsh.model.mesh.field.setNumber(f2, "SizeMin", min_elem_size)
-        gmsh.model.mesh.field.setNumber(f2, "SizeMax", max_elem_size)
-        gmsh.model.mesh.field.setNumber(f2, "DistMin", min_elem_size)
-        gmsh.model.mesh.field.setNumber(f2, "DistMax", 3 * max_elem_size)
+        field.add("Distance", f1)
+        field.setNumbers(f1, "CurvesList", line_tags)
+        field.add("Threshold", f2)
+        field.setNumber(f2, "IField", f1)
+        field.setNumber(f2, "SizeMin", min_elem_size)
+        field.setNumber(f2, "SizeMax", max_elem_size)
+        field.setNumber(f2, "DistMin", min_elem_size)
+        field.setNumber(f2, "DistMax", 3 * max_elem_size)
 
-    gmsh.model.mesh.field.add("Min", tag=f2 + 1)
-    gmsh.model.mesh.field.setNumbers(
-        f2 + 1, "FieldsList", (mat_ids * 2 + 1).tolist()
-    )
-    gmsh.model.mesh.field.setAsBackgroundMesh(f2 + 1)
+    field.add("Min", tag=f2 + 1)
+    field.setNumbers(f2 + 1, "FieldsList", (mat_ids * 2 + 1).tolist())
+    field.setAsBackgroundMesh(f2 + 1)
 
     gmsh.model.geo.removeAllDuplicates()
     gmsh.model.geo.synchronize()
@@ -300,9 +300,9 @@ def remesh_with_tri(
 
     gmsh.model.mesh.generate(dim=2)
     gmsh.model.mesh.setOrder(order)
-    gmsh.write(str(filepath := path / filename))
+    gmsh.write(str(output_file))
     gmsh.finalize()
-    return filepath
+    return
 
 
 @dataclass(frozen=True)

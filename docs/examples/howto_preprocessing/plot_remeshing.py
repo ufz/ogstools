@@ -38,7 +38,8 @@ fig = mesh.plot_contourf(ot.properties.material_id)
 # %%
 mesh = examples.load_meshseries_THM_2D_PVD().read(1)
 temp_dir = Path(mkdtemp())
-msh_path = ot.meshlib.gmsh_meshing.remesh_with_tri(mesh, temp_dir)
+msh_path = temp_dir / "tri_mesh.msh"
+ot.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)
 msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR")
 mesh = ot.Mesh(temp_dir / "tri_mesh_domain.vtu")
 fig = mesh.plot_contourf(ot.properties.material_id)
