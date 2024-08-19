@@ -55,9 +55,9 @@ ms.mesh(0).plot()
 
 
 # %%
-# Accessing Attributes
+# Accessing Variables
 # ====================
-# A MeshSeries provides access to all values of attributes at all time steps.
+# A MeshSeries provides access to all values of variable at all time steps.
 #
 # 1. mesh
 #    - Get a PyVista mesh at a specific time step and use PyVista functions (e.g., `cell_data <https://docs.pyvista.org/api/core/_autosummary/pyvista.dataset.cell_data>`_).

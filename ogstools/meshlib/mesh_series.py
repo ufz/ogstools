@@ -159,8 +159,15 @@ class MeshSeries:
     def clear(self) -> None:
         self._data.clear()
 
-    def fast_access_datafile(self) -> Path | None:
-        # If it returns a path h5py can be used for further processing
+    def rawdata_file(self) -> Path | None:
+        """
+        Checks, if working with the raw data is possible. For example,
+        OGS Simulation results with XDMF support efficient raw data access via
+        `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
+
+        :return: The location of the file containing the raw data. If it does not
+                 support efficient read (e.g., no efficient slicing), it returns None.
+        """
         if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
             return self._xdmf_reader.rawdata_path()  # single h5 file
         return None

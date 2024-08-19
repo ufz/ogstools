@@ -25,7 +25,7 @@ class TestUtils:
         for ht in [xdmf, xmf]:
             # temperature is scalar last dimension = 1 omitted
             assert np.shape(ht.values("temperature")) == (97, 190)
-            # non-scalar attribute
+            # non-scalar values
             assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
 
             assert np.shape(ht["temperature"][1:3, :]) == (2, 190)
@@ -42,13 +42,13 @@ class TestUtils:
             assert np.shape(last_2_steps) == (2, 3, 2)
 
         # check if the data is read correctly
-        h5file = xdmf.fast_access_datafile()
+        h5file = xdmf.rawdata_file()
         assert h5file is not None
         assert h5file.suffix == ".h5"
 
         # This XDMF file is not generate via OGS/OGSTools, therefore the
         # underlying file structure is not known and no optimization is possible.
-        assert xmf.fast_access_datafile() is None
+        assert xmf.rawdata_file() is None
 
     #        assert xdmf._xdmf_reader.has_fast_access() == True
     #        assert xdmf._xdmf_reader.has_fast_access("temperature") == True
