@@ -227,8 +227,13 @@ class BinaryDataItem(DataItem):
 
 
 class DataItems:
-    def __init__(self, items: list[DataItem]):
+    def __init__(self, items: list[DataItem], center: str):
         self.items = items
+        self.center = center
+
+        # Actually, `NumberType` is XDMF2 and `DataType` XDMF3, but many files out there
+        # use both keys interchangeably.
+
         all_in_h5 = np.all(
             [isinstance(item, H5DataItem) for item in self.items]
         )
@@ -269,6 +274,7 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
         data_items: dict[str, list[DataItem]] = {}
 
         self.data_items: dict[str, DataItems] = {}
+        data_attribute: dict[str, str] = {}
 
         self.t = None
         for grid in self.collection:
@@ -280,20 +286,52 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
                     if len(list(item)) != 1:
                         raise ReadError()
                     data_item = next(iter(item))
+                    if item.get("Center") not in [
+                        "Node",
+                        "Cell",
+                        "Other",
+                    ]:
+                        raise ReadError()
+                    center = item.get("Center")
                     data = self.select_item(data_item)
                     if name in data_items:
                         data_items[name].append(data)
                     else:
                         data_items[name] = [data]
+                        data_attribute[name] = center
 
         for key, value in data_items.items():
-            self.data_items[key] = DataItems(value)
+            self.data_items[key] = DataItems(value, data_attribute[key])
+
+    def has_fast_access(self, key: str | None = None) -> bool:
+        if len(self.data_items) == 0:
+            return False  # if there is no data, there is no fast access
+
+        if key is None:
+            all_fast = {
+                key: item.fast_access for key, item in self.data_items.items()
+            }
+            return all(all_fast.values())
+
+        key = next(iter(self.data_items))  # checked for len > 0
+        return self.data_items[key].fast_access
+
+    def rawdata_path(self, key: str | None = None) -> Path:
+        # This function should usually work for OGS Simulation result in XDMF [single hdf5 file]
+        # To be used in combination with h5py to read/save/manipulate of the hdf5file
+
+        if self.has_fast_access(key):
+            if key is None:
+                key = next(
+                    iter(self.data_items)
+                )  # checked for len > 0 in has_fast_access
+            return self.data_items[key].items[0].rawdata_path
+        return self.filename
 
     def read_data(self, k: int) -> tuple[float, dict, dict, dict]:
         point_data = {}
         cell_data_raw: dict = {}
         other_data = {}
-        cell_data = {}
         t = None
         cell_data = cell_data_from_raw(self.cells, cell_data_raw)
 
