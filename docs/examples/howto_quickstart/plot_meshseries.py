@@ -64,11 +64,12 @@ ms.mesh(0).plot()
 #    - Get a PyVista mesh at a specific time step and use PyVista functions (e.g., `cell_data <https://docs.pyvista.org/api/core/_autosummary/pyvista.dataset.cell_data>`_).
 #    - Efficient for a small set of timesteps, but all data is needed.
 #    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.mesh`
-#
-# 2. point_data[] and cell_data[] and []
-#    - Get a specific attribute over a specific time range.
-#    - Efficient for a large set of timesteps (currently only XDMF), but limited data is needed.
 #    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.__getitem__`
+#
+# 2. data[]
+#    - Get a specific variable over a specific time range.
+#    - Efficient for a large set of timesteps (currently only XDMF), but limited data is needed.
+#    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.data`
 
 
 #
@@ -78,26 +79,26 @@ ms.mesh(0).plot()
 # `Python slicing <https://www.geeksforgeeks.org/python-list-slicing/>`_.
 # The objects index works like `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
 #
-# The result of a call using `[]` syntax is always a
+# The result of a call using `.data("<variable_name>")[]` syntax is always a
 # `Numpy ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ ,
 # Typically, the first dimension is the time step, second dimension is the number of points/cells,
-# and the last dimension is the number of components of the attribute.
+# and the last dimension is the number of components of the variable.
 #
 # Be aware that dimensions of length 1 are omitted, obeying to the rules of `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
-# All 3 functions are only working on dynamic attributes (not geometry/points or topology/cells).
+# All 3 functions work not for geometry/points or topology/cells).
 
 ms = examples.load_meshseries_HT_2D_XDMF()
 
 # 1. No range for a dimension (just single time step) -> this dimension gets omitted
-ms["temperature"][1, :]  # shape is (190,)
+ms.data("temperature")[1, :]  # shape is (190,)
 # 2. Select range with length for a dimension to keep dimension
-ms["temperature"][1:2, :]  # shape is (1, 190)
+ms.data("temperature")[1:2, :]  # shape is (1, 190)
 # 3. Select all values for all dimensions
-ms["temperature"][:]  # shape is (97,190)
+ms.data("temperature")[:]  # shape is (97,190)
 # 4. Negative indices are allow - here we select last 2 steps
-ms["darcy_velocity"][-2:, 1:4, :]  # shape is(2, 3, 2)
+ms.data("darcy_velocity")[-2:, 1:4, :]  # shape is(2, 3, 2)
 # 5. Use select to get a specific range of time steps
-temp_on_some_point = ms["temperature"][1:3, 2:5]  # shape is (2,3)
+temp_on_some_point = ms.data("temperature")[1:3, 2:5]  # shape is (2,3)
 print(
     f"Temperature at time steps 1 and 2 for points 2, 3 and 4: {temp_on_some_point}"
 )
@@ -106,7 +107,7 @@ print(
 # Values function
 # ---------------
 #
-# Convenience function to get all values of an attribute.
+# Convenience function to get all values of a variable.
 # See :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.values`.
 dv_all = ms.values("darcy_velocity")
 print(
