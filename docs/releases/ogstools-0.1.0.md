@@ -16,7 +16,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-[`propertylib`](../user-guide/propertylib.md) is a new package which provides a base class to handle {ref}`common mesh properties systematically <sphx_glr_auto_examples_howto_postprocessing_plot_propertylib.py>` (e.g. temperature, pressure, displacement, ...).
+[`propertylib`](../user-guide/variables.md) is a new package which provides a base class to handle {ref}`common mesh properties systematically <sphx_glr_auto_examples_howto_postprocessing_plot_variables.py>` (e.g. temperature, pressure, displacement, ...).
 
 ______________________________________________________________________
 

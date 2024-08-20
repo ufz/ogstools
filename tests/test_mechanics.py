@@ -3,8 +3,7 @@
 import numpy as np
 from parameterized import parameterized
 
-from ogstools.propertylib import tensor_math
-from ogstools.propertylib.tensor_math import sym_tensor_to_mat
+from ogstools.variables import tensor_math
 
 
 def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
@@ -13,7 +12,7 @@ def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
 
 
 class TestMechanics:
-    """Test case for physical properties."""
+    """Test case for mechanical variables."""
 
     rng = np.random.default_rng()
     TEST_ARGS = ((4,), (6,))
@@ -26,7 +25,7 @@ class TestMechanics:
     def test_frobenius_norm(self, symten_len: int):
         """Test Frobenius norm."""
         sig = self.generate_random_sig(symten_len)
-        sig_mat = sym_tensor_to_mat(sig)
+        sig_mat = tensor_math.sym_tensor_to_mat(sig)
         frob2 = np.sqrt(
             tensor_math.trace(
                 np.diagonal(np.transpose(sig_mat, (0, 2, 1)) @ sig_mat, 0, 2)

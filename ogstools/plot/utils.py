@@ -19,7 +19,7 @@ from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
 from typeguard import typechecked
 
 from ogstools.plot.levels import level_boundaries
-from ogstools.propertylib.properties import Property
+from ogstools.variables import Variable
 
 from .shared import setup
 
@@ -189,20 +189,20 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
 
 
 def get_cmap_norm(
-    levels: np.ndarray, mesh_property: Property
+    levels: np.ndarray, variable: Variable
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
-    """Construct a discrete colormap and norm for the property field."""
+    """Construct a discrete colormap and norm for the variable field."""
     vmin, vmax = (levels[0], levels[-1])
-    if mesh_property.categoric:
+    if variable.categoric:
         vmin += 0.5
         vmax += 0.5
 
-    if isinstance(mesh_property.cmap, str):
-        continuous_cmap = colormaps[mesh_property.cmap]
+    if isinstance(variable.cmap, str):
+        continuous_cmap = colormaps[variable.cmap]
     else:
-        continuous_cmap = mesh_property.cmap
+        continuous_cmap = variable.cmap
     conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
-    if mesh_property.bilinear_cmap:
+    if variable.bilinear_cmap:
         if vmin < 0.0 < vmax:
             vcenter = 0.0
             vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
@@ -224,7 +224,7 @@ def get_cmap_norm(
         cmap = mcolors.ListedColormap(colors, name="custom")
     else:
         cmap = setup.custom_cmap
-    boundaries = level_boundaries(levels) if mesh_property.categoric else levels
+    boundaries = level_boundaries(levels) if variable.categoric else levels
     if vmax == nextafter(vmin, np.inf):
         cmap = mcolors.ListedColormap(["grey", "grey"], name="custom")
     if nextafter(levels[0], np.inf) == levels[-1]:

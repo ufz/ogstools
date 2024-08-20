@@ -42,7 +42,7 @@ mesh_sp.head(10)
 # current segment ("dist_in_segment"). Note, that since we defined our profile
 # on only two points, there is only one segment, hence in this special case
 # columns dist and dist_in_segment are identical. At the end of the DataFrame
-# we can can find two columns with the properties that we are interested in:
+# we can can find two columns with the variables that we are interested in:
 # "temperature" and "pressure". Each occupies one column, as those are scalar
 # values. Using columns "dist", "pressure" and "temperature" we can easily
 # plot the data:
@@ -51,7 +51,7 @@ mesh_sp.head(10)
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ax = mesh.plot_linesample(
     x="dist",
-    y_property="pressure",
+    variable="pressure",
     profile_points=profile_HT,
     ax=ax,
     fontsize=15,
@@ -59,21 +59,21 @@ ax = mesh.plot_linesample(
 ax_twinx = ax.twinx()
 ax_twinx = mesh.plot_linesample(
     x="dist",
-    y_property="temperature",
+    variable="temperature",
     profile_points=profile_HT,
     ax=ax_twinx,
     fontsize=15,
 )
 ot.plot.utils.color_twin_axes(
     [ax, ax_twinx],
-    [ot.properties.pressure.color, ot.properties.temperature.color],
+    [ot.variables.pressure.color, ot.variables.temperature.color],
 )
 fig.tight_layout()
 
 
 # %% [markdown]
-# What happens when we are interested in a vector property?
-# We can see it in thefollowing example using the Darcy velocity:
+# What happens when we are interested in a vector variable?
+# We can see it in the following example using the Darcy velocity:
 
 # %%
 mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
@@ -84,9 +84,9 @@ mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
 mesh_sp.head(5)
 
 # %% [markdown]
-# Now we have two columns for the property. The Darcy velocity is a vector,
+# Now we have two columns for the variable. The Darcy velocity is a vector,
 # therefore "sample_over_polyline" has split it into two columns and appended
-# the property name with increasing integer. Note, that this suffix has no
+# the variable name with increasing integer. Note, that this suffix has no
 # physical meaning and only indicates order. It is up to user to interpret it
 # in a meaningful way. By the
 # `OpenGeoSys conventions <https://www.opengeosys.org/docs/userguide/basics/conventions/#a-namesymmetric-tensorsa--symmetric-tensors-and-kelvin-mapping>`_,
@@ -97,7 +97,7 @@ mesh_sp.head(5)
 # %% [markdown]
 # Elder benchmark
 # ------------------
-# In this example we will use a Property object from the ogstools to
+# In this example we will use a Variable object from the ogstools to
 # sample the data. This allows "sample_over_polyline" to automatically
 # convert from the "data_unit" to the "output_unit":
 
@@ -107,7 +107,7 @@ mesh = examples.load_meshseries_CT_2D_XDMF().read(11)
 
 # %%
 mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
-    mesh, ot.properties.saturation, profile_CT
+    mesh, ot.variables.saturation, profile_CT
 )
 
 # %% [markdown]
@@ -124,13 +124,13 @@ mesh_sp.head(5)
 
 # %%
 fig, ax = mesh.plot_linesample_contourf(
-    ot.properties.saturation, profile_CT, resolution=100
+    ot.variables.saturation, profile_CT, resolution=100
 )
 
 # %% [markdown]
 # THM
 # ------
-# It is also possible to obtain more than one property at the same time using
+# It is also possible to obtain more than one variable at the same time using
 # more complex profiles. They can be constructed by providing more than
 # 2 points. With those points:
 
@@ -161,7 +161,7 @@ mesh = examples.load_meshseries_THM_2D_PVD().read(-1)
 # %%
 ms_THM_sp, dist_at_knot = ot.meshlib.sample_polyline(
     mesh,
-    [ot.properties.pressure, ot.properties.temperature],
+    [ot.variables.pressure, ot.variables.temperature],
     profile_THM,
     resolution=100,
 )
@@ -202,7 +202,7 @@ fig.tight_layout()
 # %%
 # plt.rcdefaults()
 fig, ax = mesh.plot_linesample_contourf(
-    [ot.properties.pressure, ot.properties.temperature],
+    [ot.variables.pressure, ot.variables.temperature],
     profile_THM,
     resolution=100,
 )

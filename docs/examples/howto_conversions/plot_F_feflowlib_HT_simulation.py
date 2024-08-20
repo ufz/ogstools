@@ -34,7 +34,7 @@ from ogstools.feflowlib.tools import (
 # how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
 feflow_model = ifm.loadDocument(str(feflow_model_2D_HT_model))
 feflow_pv_mesh = convert_properties_mesh(feflow_model)
-feflow_temperature = ot.properties.temperature.replace(data_name="P_TEMP")
+feflow_temperature = ot.variables.temperature.replace(data_name="P_TEMP")
 ot.plot.contourf(feflow_pv_mesh, feflow_temperature)
 
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
@@ -86,13 +86,13 @@ ogs_sim_res = pv.read(
 )
 """
 # Plot the hydraulic head/height, which was simulated in OGS.
-hydraulic_head = ot.properties.Scalar(
+hydraulic_head = ot.variables.Scalar(
     data_name="HEAD_OGS", data_unit="m", output_unit="m"
 )
 ot.plot.contourf(ogs_sim_res, hydraulic_head)
 # %%
 # Plot the temperature, which was simulated in OGS.
-ot.plot.contourf(ogs_sim_res, ot.properties.temperature)
+ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 
 # %%
 # 6. Plot the difference between the FEFLOW and OGS simulation.
@@ -100,7 +100,7 @@ feflow_pv_mesh["HEAD"] = feflow_pv_mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
 # Plot differences in hydraulic head/height.
 diff_mesh = ot.meshlib.difference(feflow_pv_mesh, ogs_sim_res, "HEAD")
-hydraulic_head_diff = ot.properties.Scalar(
+hydraulic_head_diff = ot.variables.Scalar(
     data_name="HEAD_difference", data_unit="m", output_unit="m"
 )
 ot.plot.contourf(diff_mesh, hydraulic_head_diff)
@@ -108,6 +108,6 @@ ot.plot.contourf(diff_mesh, hydraulic_head_diff)
 feflow_pv_mesh["temperature"] = feflow_pv_mesh["P_TEMP"]
 # Plot differences in temperature.
 diff_mesh = ot.meshlib.difference(
-    feflow_pv_mesh, ogs_sim_res, ot.properties.temperature
+    feflow_pv_mesh, ogs_sim_res, ot.variables.temperature
 )
-ot.plot.contourf(diff_mesh, ot.properties.temperature.difference)
+ot.plot.contourf(diff_mesh, ot.variables.temperature.difference)

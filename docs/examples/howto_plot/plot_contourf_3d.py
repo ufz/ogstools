@@ -19,7 +19,7 @@ from pyvista import examples
 import ogstools as ot
 
 mesh = examples.load_channels()
-data = ot.properties.Scalar("facies", categoric=True)
+data = ot.variables.Scalar("facies", categoric=True)
 mesh.plot(cmap="bwr")
 
 

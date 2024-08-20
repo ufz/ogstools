@@ -28,7 +28,7 @@ import ogstools as ot
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = ot.properties.saturation
+si = ot.variables.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -38,9 +38,9 @@ si = ot.properties.saturation
 #   from ogstools.meshlib import MeshSeries
 #   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
 #
-# You can also use a property from the available presets instead of needing to
+# You can also use a variable from the available presets instead of needing to
 # create your own:
-# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_propertylib.py`
+# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_variables.py`
 
 # %% [markdown]
 # Let's define 4 observation points and plot them on the mesh.
@@ -62,7 +62,7 @@ plt.rcdefaults()  # TODO
 # %%,
 labels = [f"{i}: {label}" for i, label in enumerate(ot.plot.utils.justified_labels(points))]
 fig = mesh_series.plot_probe(
-    points=points[:4], mesh_property=si, time_unit="a", labels=labels[:4]
+    points=points[:4], variable=si, time_unit="a", labels=labels[:4]
 )
 # %% [markdown]
 # You can also pass create your own matplotlib figure and pass the axes object.

@@ -23,8 +23,7 @@ from scipy.interpolate import (
 from tqdm.auto import tqdm
 
 from ogstools import plot
-from ogstools.propertylib.properties import Property, get_preset
-from ogstools.propertylib.unit_registry import u_reg
+from ogstools.variables import Variable, get_preset, u_reg
 
 from .mesh import Mesh
 from .xdmf_reader import DataItems, XDMFReader
@@ -269,32 +268,30 @@ class MeshSeries:
 
     def aggregate(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         np_func: Callable,
         axis: int,
         mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """Aggregate data of all timesteps using a specified function.
 
-        :param mesh_property:   The mesh property to be aggregated.
+        :param variable:   The mesh variable to be aggregated.
         :param func:            The aggregation function to apply.
         :returns:   A `numpy.ndarray` of the same length as the timesteps if
                     axis=0 or of the same length as the data if axis=1.
         """
-        if isinstance(mesh_property, Property):
-            if mesh_property.mesh_dependent:
+        if isinstance(variable, Variable):
+            if variable.mesh_dependent:
                 vals = np.asarray(
                     [
-                        mesh_property.transform(self.read(t))
+                        variable.transform(self.read(t))
                         for t in tqdm(self.timesteps)
                     ]
                 )
             else:
-                vals = mesh_property.transform(
-                    self.values(mesh_property.data_name)
-                )
+                vals = variable.transform(self.values(variable.data_name))
         else:
-            vals = self.values(mesh_property)
+            vals = self.values(variable)
         return (
             np_func(vals, axis=axis)
             if mask is None
@@ -308,12 +305,12 @@ class MeshSeries:
 
     def aggregate_over_time(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
     ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
 
-        :param mesh_property:   The mesh property to be aggregated.
+        :param variable:   The mesh variable to be aggregated.
         :param func:            The aggregation function to apply.
         :returns:   A mesh with aggregated data according to the given function.
         """
@@ -323,60 +320,60 @@ class MeshSeries:
         mesh = self.read(0).copy(deep=True)
         mesh.clear_point_data()
         mesh.clear_cell_data()
-        if isinstance(mesh_property, Property):
-            output_name = f"{mesh_property.output_name}_{func}"
+        if isinstance(variable, Variable):
+            output_name = f"{variable.output_name}_{func}"
         else:
-            output_name = f"{mesh_property}_{func}"
-        mesh[output_name] = self.aggregate(mesh_property, np_func, axis=0)
+            output_name = f"{variable}_{func}"
+        mesh[output_name] = self.aggregate(variable, np_func, axis=0)
         return mesh
 
     def _time_of_extremum(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         np_func: Callable,
         prefix: Literal["min", "max"],
     ) -> Mesh:
-        """Returns a Mesh with the time of a given property extremum as data.
+        """Returns a Mesh with the time of a given variable extremum as data.
 
-        The data is named as `f'{prefix}_{mesh_property.output_name}_time'`."""
+        The data is named as `f'{prefix}_{variable.output_name}_time'`."""
         mesh = self.read(0).copy(deep=True)
-        mesh_property = get_preset(mesh_property, mesh)
+        variable = get_preset(variable, mesh)
         mesh.clear_point_data()
         mesh.clear_cell_data()
-        output_name = f"{prefix}_{mesh_property.output_name}_time"
+        output_name = f"{prefix}_{variable.output_name}_time"
         mesh[output_name] = self._timevalues[
-            self.aggregate(mesh_property, np_func, axis=0)
+            self.aggregate(variable, np_func, axis=0)
         ]
         return mesh
 
-    def time_of_min(self, mesh_property: Property | str) -> Mesh:
-        "Returns a Mesh with the time of the property minimum as data."
-        return self._time_of_extremum(mesh_property, np.argmin, "min")
+    def time_of_min(self, variable: Variable | str) -> Mesh:
+        "Returns a Mesh with the time of the variable minimum as data."
+        return self._time_of_extremum(variable, np.argmin, "min")
 
-    def time_of_max(self, mesh_property: Property | str) -> Mesh:
-        "Returns a Mesh with the time of the property maximum as data."
-        return self._time_of_extremum(mesh_property, np.argmax, "max")
+    def time_of_max(self, variable: Variable | str) -> Mesh:
+        "Returns a Mesh with the time of the variable maximum as data."
+        return self._time_of_extremum(variable, np.argmax, "max")
 
     def aggregate_over_domain(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
         mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """Aggregate data over domain per timestep using a specified function.
 
-        :param mesh_property:   The mesh property to be aggregated.
+        :param variable:   The mesh variable to be aggregated.
         :param func:            The aggregation function to apply.
         :param mask:            A numpy array as a mask for the domain.
 
         :returns:   A numpy array with aggregated data.
         """
         np_func = self._np_str[func]
-        return self.aggregate(mesh_property, np_func, axis=1, mask=mask)
+        return self.aggregate(variable, np_func, axis=1, mask=mask)
 
     def plot_domain_aggregate(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
         timesteps: slice | None = None,
         time_unit: str | None = "s",
@@ -387,7 +384,7 @@ class MeshSeries:
         """
         Plot the transient aggregated data over the domain per timestep.
 
-        :param mesh_property:   The mesh property to be aggregated.
+        :param variable:   The mesh variable to be aggregated.
         :param func:            The aggregation function to apply.
         :param timesteps:       A slice to select the timesteps. Default: all.
         :param time_unit:       Output unit of the timevalues.
@@ -397,11 +394,11 @@ class MeshSeries:
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
         """
-        mesh_property = get_preset(mesh_property, self.read(0))
+        variable = get_preset(variable, self.read(0))
         timeslice = slice(None, None) if timesteps is None else timesteps
-        values = self.aggregate_over_domain(
-            mesh_property.magnitude, func, mask
-        )[timeslice]
+        values = self.aggregate_over_domain(variable.magnitude, func, mask)[
+            timeslice
+        ]
         time_unit = time_unit if time_unit is not None else self.time_unit
         x_values = self.timevalues(time_unit)[timeslice]
         x_label = f"time t / {time_unit}"
@@ -411,10 +408,10 @@ class MeshSeries:
             fig = None
         if "label" in kwargs:
             label = kwargs.pop("label")
-            ylabel = mesh_property.get_label() + " " + func
+            ylabel = variable.get_label() + " " + func
         else:
             label = func
-            ylabel = mesh_property.get_label()
+            ylabel = variable.get_label()
         ax.plot(x_values, values, label=label, **kwargs)
         ax.set_axisbelow(True)
         ax.grid(which="major", color="lightgrey", linestyle="-")
@@ -464,8 +461,8 @@ class MeshSeries:
     def plot_probe(
         self,
         points: np.ndarray,
-        mesh_property: Property | str,
-        mesh_property_abscissa: Property | str | None = None,
+        variable: Variable | str,
+        variable_abscissa: Variable | str | None = None,
         labels: list[str] | None = None,
         time_unit: str | None = "s",
         interp_method: Literal["nearest", "linear"] = "linear",
@@ -476,10 +473,10 @@ class MeshSeries:
         **kwargs: Any,
     ) -> plt.Figure | None:
         """
-        Plot the transient property on the observation points in the MeshSeries.
+        Plot the transient variable on the observation points in the MeshSeries.
 
             :param points:          The points to sample at.
-            :param mesh_property:   The property to be sampled.
+            :param variable:   The variable to be sampled.
             :param labels:          The labels for each observation point.
             :param time_unit:       Output unit of the timevalues.
             :param interp_method:   Choose the interpolation method, defaults to
@@ -492,34 +489,29 @@ class MeshSeries:
             :returns:   A matplotlib Figure
         """
         points = np.asarray(points).reshape((-1, 3))
-        mesh_property = get_preset(mesh_property, self.read(0))
-        values = mesh_property.magnitude.transform(
-            self.probe(points, mesh_property.data_name, interp_method)
+        variable = get_preset(variable, self.read(0))
+        values = variable.magnitude.transform(
+            self.probe(points, variable.data_name, interp_method)
         )
         if values.shape[0] == 1:
             values = values.flatten()
         Q_ = u_reg.Quantity
         time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
-        if mesh_property_abscissa is None:
+        if variable_abscissa is None:
             x_values = time_unit_conversion * self._timevalues
             x_label = f"time / {time_unit}" if time_unit else "time"
         else:
-            mesh_property_abscissa = get_preset(
-                mesh_property_abscissa, self.read(0)
-            )
-            x_values = mesh_property_abscissa.magnitude.transform(
-                self.probe(
-                    points, mesh_property_abscissa.data_name, interp_method
-                )
+            variable_abscissa = get_preset(variable_abscissa, self.read(0))
+            x_values = variable_abscissa.magnitude.transform(
+                self.probe(points, variable_abscissa.data_name, interp_method)
             )
             x_unit_str = (
-                f" / {mesh_property_abscissa.get_output_unit()}"
-                if mesh_property_abscissa.get_output_unit()
+                f" / {variable_abscissa.get_output_unit()}"
+                if variable_abscissa.get_output_unit()
                 else ""
             )
             x_label = (
-                mesh_property_abscissa.output_name.replace("_", " ")
-                + x_unit_str
+                variable_abscissa.output_name.replace("_", " ") + x_unit_str
             )
         if ax is None:
             fig, ax = plt.subplots()
@@ -547,21 +539,21 @@ class MeshSeries:
         ax.grid(which="major", color="lightgrey", linestyle="-")
         ax.grid(which="minor", color="0.95", linestyle="--")
         ax.set_xlabel(x_label)
-        ax.set_ylabel(mesh_property.get_label(plot.setup.label_split))
+        ax.set_ylabel(variable.get_label(plot.setup.label_split))
         ax.label_outer()
         ax.minorticks_on()
         return fig
 
     def animate(
         self,
-        mesh_property: Property,
+        variable: Variable,
         timesteps: Sequence | None = None,
         titles: list[str] | None = None,
     ) -> FuncAnimation:
         """
-        Create an animation for a property with given timesteps.
+        Create an animation for a variable with given timesteps.
 
-        :param property: the property field to be visualized on all timesteps
+        :param variable: the field to be visualized on all timesteps
         :param timesteps: if sequence of int: the timesteps to animate
                         if sequence of float: the timevalues to animate
         :param titles: the title on top of the animation for each frame
@@ -571,7 +563,7 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = self.read(0, False).plot_contourf(mesh_property)
+        fig = self.read(0, False).plot_contourf(variable)
 
         def init() -> None:
             pass
@@ -591,7 +583,7 @@ class MeshSeries:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 fig = plot.contourplots.draw_plot(
-                    mesh, mesh_property, fig=fig, axes=fig.axes[0]
+                    mesh, variable, fig=fig, axes=fig.axes[0]
                 )  # type: ignore[assignment]
                 plot.utils.update_font_sizes(fig.axes)
 
@@ -609,7 +601,7 @@ class MeshSeries:
 
     def plot_time_slice(
         self,
-        mesh_property: Property | str,
+        variable: Variable | str,
         points: np.ndarray,
         y_axis: Literal["x", "y", "z", "dist", "auto"] = "auto",
         interpolate: bool = True,
@@ -621,7 +613,7 @@ class MeshSeries:
         **kwargs: Any,
     ) -> plt.Figure:
         """
-        :param mesh_property:   The property to be visualized.
+        :param variable:    The variable to be visualized.
         :param points:  The points along which the data is sampled over time.
         :param y_axis:  The component of the sampling points which labels the
                         y-axis. By default, if only one coordinate of the points
@@ -654,17 +646,15 @@ class MeshSeries:
             msg = "Please provide fig and ax together or not at all."
             raise ValueError(msg)
 
-        time = Property("", self.time_unit, time_unit).transform(
+        time = Variable("", self.time_unit, time_unit).transform(
             self._timevalues
         )
         if time_logscale:
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
 
-        mesh_property = get_preset(mesh_property, self.read(0))
-        values = mesh_property.transform(
-            self.probe(points, mesh_property.data_name)
-        )
+        variable = get_preset(variable, self.read(0))
+        values = variable.transform(self.probe(points, variable.data_name))
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
         else:
@@ -673,7 +663,7 @@ class MeshSeries:
                 kwargs.get("vmax", plot.setup.vmax) or np.nanmax(values),
                 kwargs.get("num_levels", plot.setup.num_levels),
             )
-        cmap, norm = plot.utils.get_cmap_norm(levels, mesh_property)
+        cmap, norm = plot.utils.get_cmap_norm(levels, variable)
         cmap = kwargs.get("cmap", cmap)
 
         non_flat_axis = np.argwhere(
@@ -706,7 +696,7 @@ class MeshSeries:
                 aspect=(tmax - tmin) / (ymax - ymin),
                 interpolation="bicubic",
             )
-            if mesh_property.bilinear_cmap and levels[0] < 0.0 < levels[-1]:
+            if variable.bilinear_cmap and levels[0] < 0.0 < levels[-1]:
                 ax.contour(time, y, values, [0], colors="white")
         else:
             ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
@@ -720,9 +710,7 @@ class MeshSeries:
         ax.set_xlabel(xlabel, fontsize=fontsize)
         ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
         if cbar:
-            plot.contourplots.add_colorbars(
-                fig, ax, mesh_property, levels, **kwargs
-            )
+            plot.contourplots.add_colorbars(fig, ax, variable, levels, **kwargs)
         plot.utils.update_font_sizes(fig.axes, fontsize)
         return fig
 

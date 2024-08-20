@@ -83,9 +83,9 @@ class TestUtils:
         assert not np.any(np.isnan(max_mesh["max_temperature_time"]))
 
     def test_time_aggregate_mesh_dependent(self):
-        "Test aggregation of mesh_dependent property on meshseries."
+        "Test aggregation of mesh_dependent variable on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        prop = ot.properties.dilatancy_alkan
+        prop = ot.variables.dilatancy_alkan
         agg_mesh = mesh_series.aggregate_over_time(prop, "max")
         assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
         agg_mesh = mesh_series.time_of_max(prop)
@@ -128,16 +128,16 @@ class TestUtils:
         """Test creation of probe plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         points = meshseries.read(0).center
-        meshseries.plot_probe(points, ot.properties.temperature)
+        meshseries.plot_probe(points, ot.variables.temperature)
         points = meshseries.read(0).points[[0, -1]]
-        meshseries.plot_probe(points, ot.properties.temperature)
-        meshseries.plot_probe(points, ot.properties.velocity)
-        meshseries.plot_probe(points, ot.properties.stress)
-        meshseries.plot_probe(points, ot.properties.stress.von_Mises)
+        meshseries.plot_probe(points, ot.variables.temperature)
+        meshseries.plot_probe(points, ot.variables.velocity)
+        meshseries.plot_probe(points, ot.variables.stress)
+        meshseries.plot_probe(points, ot.variables.stress.von_Mises)
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.read(0).center
-        meshseries.plot_probe(points, ot.properties.temperature)
-        meshseries.plot_probe(points, ot.properties.velocity)
+        meshseries.plot_probe(points, ot.variables.temperature)
+        meshseries.plot_probe(points, ot.variables.velocity)
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
@@ -145,7 +145,7 @@ class TestUtils:
         mesh2 = meshseries.read(-1)
         mesh_diff = ot.meshlib.difference(mesh1, mesh2, "temperature")
         mesh_diff = ot.meshlib.difference(
-            mesh1, mesh2, ot.properties.temperature
+            mesh1, mesh2, ot.variables.temperature
         )
         assert isinstance(mesh_diff, UnstructuredGrid)
         mesh_diff = ot.meshlib.difference(mesh1, mesh2)
@@ -156,7 +156,7 @@ class TestUtils:
         meshes1 = [meshseries.read(0)] * n
         meshes2 = [meshseries.read(-1)] * n
         meshes_diff = ot.meshlib.difference_pairwise(
-            meshes1, meshes2, ot.properties.temperature
+            meshes1, meshes2, ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
         assert len(meshes_diff) == n
@@ -167,7 +167,7 @@ class TestUtils:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes_diff = ot.meshlib.difference_matrix(
-            meshes1, mesh_property=ot.properties.temperature
+            meshes1, variable=ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
 
@@ -183,7 +183,7 @@ class TestUtils:
         meshes1 = [meshseries.read(0), meshseries.read(-1)]
         meshes2 = [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
         meshes_diff = ot.meshlib.difference_matrix(
-            meshes1, meshes2, ot.properties.temperature
+            meshes1, meshes2, ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
         assert meshes_diff.shape == (
@@ -270,11 +270,11 @@ class TestUtils:
         )
         ms_sp, _ = ot.meshlib.sample_polyline(
             ms.read(1),
-            ot.properties.temperature,
+            ot.variables.temperature,
             profile,
             resolution=10,
         )
-        data = ms_sp[ot.properties.temperature.data_name].to_numpy()
+        data = ms_sp[ot.variables.temperature.data_name].to_numpy()
         assert not np.any(np.isnan(data))
         assert (np.abs(data) > np.zeros_like(data)).all()
         # output should be in Celsius
@@ -305,7 +305,7 @@ class TestUtils:
 
         tmp_path = Path(mkdtemp())
         mesh_path = Path(tmp_path) / "mesh.msh"
-        sigma_ip = ot.properties.stress.replace(data_name="sigma_ip")
+        sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
 
         def run_and_check(
             elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
@@ -379,7 +379,7 @@ class TestUtils:
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
         mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").read(-1)
-        assert not np.any(np.isnan(ot.properties.stress.transform(mesh)))
+        assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
 
     def test_remesh_with_tri(self):
         mesh = examples.load_meshseries_THM_2D_PVD().read(1)

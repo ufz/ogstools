@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
-from ogstools.propertylib.unit_registry import u_reg
+from ogstools.variables import u_reg
 
 
 def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:

@@ -13,8 +13,7 @@ import numpy as np
 from pyvista import UnstructuredGrid
 
 from ogstools.plot.shared import setup
-from ogstools.propertylib import Property
-from ogstools.propertylib.properties import get_preset
+from ogstools.variables import Variable, get_preset
 
 
 def nice_num(val: float) -> float:
@@ -89,26 +88,26 @@ def median_exponent(vals: np.ndarray) -> int:
 
 
 def combined_levels(
-    meshes: np.ndarray, mesh_property: Property | str, **kwargs: Any
+    meshes: np.ndarray, variable: Variable | str, **kwargs: Any
 ) -> np.ndarray:
     """
-    Calculate well spaced levels for the encompassing property range in meshes.
+    Calculate well spaced levels for the encompassing variable range in meshes.
     """
-    mesh_property = get_preset(mesh_property, meshes.ravel()[0])
+    variable = get_preset(variable, meshes.ravel()[0])
     vmin, vmax = np.inf, -np.inf
     VMIN = kwargs.get("vmin", setup.vmin)
     VMAX = kwargs.get("vmax", setup.vmax)
     unique_vals = np.array([])
     mesh: UnstructuredGrid
     for mesh in np.ravel(meshes):
-        values = mesh_property.magnitude.transform(
-            mesh.ctp(True).threshold(value=[1, 1], scalars=mesh_property.mask)
-            if mesh_property.mask_used(mesh)
+        values = variable.magnitude.transform(
+            mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
+            if variable.mask_used(mesh)
             else mesh
         )
         if (
             kwargs.get("log_scaled", setup.log_scaled)
-            and not mesh_property.is_mask()
+            and not variable.is_mask()
         ):
             values = np.log10(np.where(values > 1e-14, values, 1e-14))
         vmin = min(vmin, np.nanmin(values)) if VMIN is None else vmin
