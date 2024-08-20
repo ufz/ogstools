@@ -100,25 +100,25 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
-    def __getitem__(self, data_name: str) -> DataItems:
+    def data(self, variable_name: str) -> DataItems:
         """
-        Returns an attribute object, that allows array indexing.
+        Returns an DataItems object, that allows array indexing.
         To get "geometry"/"points" or "topology"/"cells" read the first time step and use
         pyvista functionality
         Selection example:
         ms = MeshSeries()
-        temp = ms["temperature"]
+        temp = ms.data("temperature")
         time_step1_temps = temp[1,:]
         temps_at_some_points = temp[:,1:3]
-        :param data_name: Name the data item. Attribute(e.g."temperature")
+        :param variable_name: Name the variable (e.g."temperature")
         :returns:   Returns an objects that allows array indexing. S
         """
 
         if self._data_type == "xdmf":
-            return self._xdmf_reader.data_items[data_name]
+            return self._xdmf_reader.data_items[variable_name]
         # for pvd and vtu check if data is already read or construct it
-        if self._dataitems and self._dataitems[data_name]:
-            return self._dataitems[data_name]
+        if self._dataitems and self._dataitems[variable_name]:
+            return self._dataitems[variable_name]
 
         all_meshes = [self.mesh(i) for i in self.timesteps]
 
@@ -128,7 +128,7 @@ class MeshSeries:
             key: PVDDataItems(np.asarray(value))
             for key, value in dataitems.items()
         }
-        return self._dataitems[data_name]
+        return self._dataitems[variable_name]
 
     def _structure_dataitems(
         self, all_meshes: list[pv.UnstructuredGrid]
