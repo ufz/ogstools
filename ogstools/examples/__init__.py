@@ -42,9 +42,14 @@ def load_meshseries_HT_2D_PVD():
         time_unit="s",
     )
 
+
 def load_meshseries_HT_2D_VTU():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture" / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"),
+        str(
+            _meshseries_dir
+            / "2D_single_fracture_HT_2D_single_fracture"
+            / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"
+        ),
         time_unit="s",
     )
 

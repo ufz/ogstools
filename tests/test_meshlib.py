@@ -24,6 +24,8 @@ class TestUtils:
 
         pvd = examples.load_meshseries_HT_2D_PVD()
 
+        vtu = examples.load_meshseries_HT_2D_VTU()
+
         for ht in [xdmf, xmf, pvd]:
             # temperature is scalar last dimension = 1 omitted
             assert np.shape(ht.values("temperature")) == (97, 190)
@@ -42,6 +44,14 @@ class TestUtils:
             # last 2 steps
             last_2_steps = ht["darcy_velocity"][-2:, 1:4, :]
             assert np.shape(last_2_steps) == (2, 3, 2)
+
+        # check vtu, only timestep=0 is allowed
+
+        assert np.shape(vtu.values("temperature")) == (190,)
+        assert np.shape(vtu.values("darcy_velocity")) == (190, 2)
+        assert np.shape(vtu["temperature"][0, :]) == (190,)
+        assert np.shape(vtu["temperature"][:, 0:5]) == (1, 5)
+        assert np.shape(vtu["darcy_velocity"][0, 1:4, :]) == (3, 2)
 
         # check if the data is read correctly
         h5file = xdmf.rawdata_file()

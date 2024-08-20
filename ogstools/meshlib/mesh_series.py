@@ -130,7 +130,9 @@ class MeshSeries:
         }
         return self._dataitems[data_name]
 
-    def _structure_dataitems(self, all_meshes):
+    def _structure_dataitems(
+        self, all_meshes: list[pv.UnstructuredGrid]
+    ) -> dict[str, list]:
         # Reads all meshes and returns a dict with variables as key
         # (e.g. "temperature")
         dataitems: dict[str, list] = {}
