@@ -89,141 +89,6 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
-    def __repr__(self) -> str:
-        if self._data_type == "vtu":
-            reader = self._vtu_reader
-        else:
-            reader = self._xdmf_reader
-        return f"""MeshSeries:
-    filepath:       {self.filepath}
-    spatial_unit:   {self.spatial_unit}
-    data_type:      {self._data_type}
-    timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps
-    reader:         {reader}
-    rawdata_file:   {self.rawdata_file()}
-"""
-
-    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
-        "Return the timevalues, optionally converted to another time unit."
-        return (
-            u_reg.Quantity(self._timevalues, self.time_unit)
-            .to(self.time_unit if time_unit is None else time_unit)
-            .magnitude
-        )
-
-    def ip_tesselated(self) -> "MeshSeries":
-        "Create a new MeshSeries from integration point tessellation."
-        ip_ms = MeshSeries(
-            Path(self.filepath).parent / "ip_meshseries.synthetic",
-            self.time_unit,
-            self.spatial_unit,
-            self.spatial_output_unit,
-        )
-        ip_mesh = self.mesh(0).to_ip_mesh()
-        ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
-        ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
-        for ts in self.timesteps:
-            ip_data = {
-                key: self.mesh(ts).field_data[key][np.argsort(ordering)]
-                for key in ip_mesh.cell_data
-            }
-            ip_mesh.cell_data.update(ip_data)
-            ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
-        ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
-        return ip_ms
-
-    def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
-        self._pvd_reader.set_active_time_point(timestep)
-        return self._pvd_reader.read()[0]
-
-    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
-        points, cells = self._xdmf_reader.read_points_cells()
-        _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
-            timestep
-        )
-        meshio_mesh = meshio.Mesh(
-            points, cells, point_data, cell_data, field_data
-        )
-        # pv.from_meshio does not copy field_data (fix in pyvista?)
-        pv_mesh = pv.from_meshio(meshio_mesh)
-        pv_mesh.field_data.update(field_data)
-        return pv_mesh
-
-    def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
-        """Selects mesh at given timestep all data function."""
-        timestep = self.timesteps[timestep]
-        if timestep in self._data:
-            pv_mesh = self._data[timestep]
-        else:
-            if self._data_type == "pvd":
-                pv_mesh = self._read_pvd(timestep)
-            elif self._data_type == "xdmf":
-                pv_mesh = self._read_xdmf(timestep)
-            elif self._data_type == "vtu":
-                pv_mesh = self._vtu_reader.read()
-            if lazy_eval:
-                self._data[timestep] = pv_mesh
-        mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
-        if self._data_type == "pvd":
-            mesh.filepath = Path(self.timestep_files[timestep])
-        else:
-            mesh.filepath = Path(self.filepath)
-        return mesh
-
-    def clear(self) -> None:
-        self._data.clear()
-
-    def rawdata_file(self) -> Path | None:
-        """
-        Checks, if working with the raw data is possible. For example,
-        OGS Simulation results with XDMF support efficient raw data access via
-        `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
-
-        :return: The location of the file containing the raw data. If it does not
-                 support efficient read (e.g., no efficient slicing), it returns None.
-        """
-        if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
-            return self._xdmf_reader.rawdata_path()  # single h5 file
-        return None
-
-    @property
-    def timesteps(self) -> range:
-        """Return the timesteps of the timeseries data."""
-        if self._data_type == "vtu":
-            return range(1)
-        if self._data_type == "pvd":
-            return range(self._pvd_reader.number_time_points)
-        # elif self._data_type == "xdmf":
-        return range(len(self._timevalues))
-
-    def closest_timestep(self, timevalue: float) -> int:
-        """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(self._timevalues - timevalue)))
-
-    def closest_timevalue(self, timevalue: float) -> float:
-        """Return the closest timevalue to a timevalue."""
-        return self._timevalues[self.closest_timestep(timevalue)]
-
-    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
-        """Return the temporal interpolated mesh for a given timevalue."""
-        t_vals = self._timevalues
-        ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
-        ts2 = min(ts1 + 1, len(t_vals) - 1)
-        if np.isclose(timevalue, t_vals[ts1]):
-            return self.mesh(ts1, lazy_eval)
-        mesh1 = self.mesh(ts1, lazy_eval)
-        mesh2 = self.mesh(ts2, lazy_eval)
-        mesh = mesh1.copy(deep=True)
-        for key in mesh1.point_data:
-            if np.all(mesh1.point_data[key] == mesh2.point_data[key]):
-                continue
-            dt = t_vals[ts2] - t_vals[ts1]
-            slope = (mesh2.point_data[key] - mesh1.point_data[key]) / dt
-            mesh.point_data[key] = mesh1.point_data[key] + slope * (
-                timevalue - t_vals[ts1]
-            )
-        return mesh
-
     def __getitem__(self, data_name: str) -> DataItems:
         """
         Returns an attribute object, that allows array indexing.
@@ -243,51 +108,19 @@ class MeshSeries:
             ValueError(msg)
         return self._xdmf_reader.data_items[data_name]
 
-    def values(
-        self, data_name: str, selection: slice | np.ndarray | None = None
-    ) -> np.ndarray:
-        """
-        Get the data in the MeshSeries for all timesteps.
-
-        :param data_name: Name of the data in the MeshSeries.
-        :param selection: Can limit the data to be read.
-            - **Time** is always the first dimension.
-            - If `None`, it takes the selection that is defined in the xdmf file.
-            - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
-            - If a slice: see Python slice reference.
-            - If a string: see example:
-
-            Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
-
-            This represents the selection
-            ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
-
-        :returns: A numpy array of the requested data for all timesteps.
-        """
-
-        if isinstance(selection, np.ndarray | tuple):
-            time_selection = selection[0]
+    def __repr__(self) -> str:
+        if self._data_type == "vtu":
+            reader = self._vtu_reader
         else:
-            time_selection = slice(None)
-
-        if self._data_type == "xdmf":
-            return self._xdmf_reader.data_items[data_name][time_selection]
-        if self._data_type == "pvd":
-            return np.asarray(
-                [
-                    self.mesh(t)[data_name]
-                    for t in tqdm(self.timesteps[time_selection])
-                ]
-            )
-        if self._data_type == "synthetic":
-            return np.asarray(
-                [
-                    self._data[t][data_name]
-                    for t in self.timesteps[time_selection]
-                ]
-            )
-        mesh = self.mesh(0)
-        return mesh[data_name]
+            reader = self._xdmf_reader
+        return f"""MeshSeries:
+    filepath:       {self.filepath}
+    spatial_unit:   {self.spatial_unit}
+    data_type:      {self._data_type}
+    timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps
+    reader:         {reader}
+    rawdata_file:   {self.rawdata_file()}
+"""
 
     def aggregate(
         self,
@@ -349,6 +182,173 @@ class MeshSeries:
             output_name = f"{variable}_{func}"
         mesh[output_name] = self.aggregate(variable, np_func, axis=0)
         return mesh
+
+    def clear(self) -> None:
+        self._data.clear()
+
+    def closest_timestep(self, timevalue: float) -> int:
+        """Return the corresponding timestep from a timevalue."""
+        return int(np.argmin(np.abs(self._timevalues - timevalue)))
+
+    def closest_timevalue(self, timevalue: float) -> float:
+        """Return the closest timevalue to a timevalue."""
+        return self._timevalues[self.closest_timestep(timevalue)]
+
+    def ip_tesselated(self) -> "MeshSeries":
+        "Create a new MeshSeries from integration point tessellation."
+        ip_ms = MeshSeries(
+            Path(self.filepath).parent / "ip_meshseries.synthetic",
+            self.time_unit,
+            self.spatial_unit,
+            self.spatial_output_unit,
+        )
+        ip_mesh = self.mesh(0).to_ip_mesh()
+        ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
+        ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
+        for ts in self.timesteps:
+            ip_data = {
+                key: self.mesh(ts).field_data[key][np.argsort(ordering)]
+                for key in ip_mesh.cell_data
+            }
+            ip_mesh.cell_data.update(ip_data)
+            ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
+        ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
+        return ip_ms
+
+    def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
+        """Selects mesh at given timestep all data function."""
+        timestep = self.timesteps[timestep]
+        if timestep in self._data:
+            pv_mesh = self._data[timestep]
+        else:
+            if self._data_type == "pvd":
+                pv_mesh = self._read_pvd(timestep)
+            elif self._data_type == "xdmf":
+                pv_mesh = self._read_xdmf(timestep)
+            elif self._data_type == "vtu":
+                pv_mesh = self._vtu_reader.read()
+            if lazy_eval:
+                self._data[timestep] = pv_mesh
+        mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
+        if self._data_type == "pvd":
+            mesh.filepath = Path(self.timestep_files[timestep])
+        else:
+            mesh.filepath = Path(self.filepath)
+        return mesh
+
+    def rawdata_file(self) -> Path | None:
+        """
+        Checks, if working with the raw data is possible. For example,
+        OGS Simulation results with XDMF support efficient raw data access via
+        `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
+
+        :return: The location of the file containing the raw data. If it does not
+                 support efficient read (e.g., no efficient slicing), it returns None.
+        """
+        if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
+            return self._xdmf_reader.rawdata_path()  # single h5 file
+        return None
+
+    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
+        """Return the temporal interpolated mesh for a given timevalue."""
+        t_vals = self._timevalues
+        ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
+        ts2 = min(ts1 + 1, len(t_vals) - 1)
+        if np.isclose(timevalue, t_vals[ts1]):
+            return self.mesh(ts1, lazy_eval)
+        mesh1 = self.mesh(ts1, lazy_eval)
+        mesh2 = self.mesh(ts2, lazy_eval)
+        mesh = mesh1.copy(deep=True)
+        for key in mesh1.point_data:
+            if np.all(mesh1.point_data[key] == mesh2.point_data[key]):
+                continue
+            dt = t_vals[ts2] - t_vals[ts1]
+            slope = (mesh2.point_data[key] - mesh1.point_data[key]) / dt
+            mesh.point_data[key] = mesh1.point_data[key] + slope * (
+                timevalue - t_vals[ts1]
+            )
+        return mesh
+
+    @property
+    def timesteps(self) -> range:
+        """Return the timesteps of the timeseries data."""
+        if self._data_type == "vtu":
+            return range(1)
+        if self._data_type == "pvd":
+            return range(self._pvd_reader.number_time_points)
+        # elif self._data_type == "xdmf":
+        return range(len(self._timevalues))
+
+    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
+        "Return the timevalues, optionally converted to another time unit."
+        return (
+            u_reg.Quantity(self._timevalues, self.time_unit)
+            .to(self.time_unit if time_unit is None else time_unit)
+            .magnitude
+        )
+
+    def values(
+        self, data_name: str, selection: slice | np.ndarray | None = None
+    ) -> np.ndarray:
+        """
+        Get the data in the MeshSeries for all timesteps.
+
+        :param data_name: Name of the data in the MeshSeries.
+        :param selection: Can limit the data to be read.
+            - **Time** is always the first dimension.
+            - If `None`, it takes the selection that is defined in the xdmf file.
+            - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
+            - If a slice: see Python slice reference.
+            - If a string: see example:
+
+            Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
+
+            This represents the selection
+            ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
+
+        :returns: A numpy array of the requested data for all timesteps.
+        """
+
+        if isinstance(selection, np.ndarray | tuple):
+            time_selection = selection[0]
+        else:
+            time_selection = slice(None)
+
+        if self._data_type == "xdmf":
+            return self._xdmf_reader.data_items[data_name][time_selection]
+        if self._data_type == "pvd":
+            return np.asarray(
+                [
+                    self.mesh(t)[data_name]
+                    for t in tqdm(self.timesteps[time_selection])
+                ]
+            )
+        if self._data_type == "synthetic":
+            return np.asarray(
+                [
+                    self._data[t][data_name]
+                    for t in self.timesteps[time_selection]
+                ]
+            )
+        mesh = self.mesh(0)
+        return mesh[data_name]
+
+    def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
+        self._pvd_reader.set_active_time_point(timestep)
+        return self._pvd_reader.read()[0]
+
+    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
+        points, cells = self._xdmf_reader.read_points_cells()
+        _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
+            timestep
+        )
+        meshio_mesh = meshio.Mesh(
+            points, cells, point_data, cell_data, field_data
+        )
+        # pv.from_meshio does not copy field_data (fix in pyvista?)
+        pv_mesh = pv.from_meshio(meshio_mesh)
+        pv_mesh.field_data.update(field_data)
+        return pv_mesh
 
     def _time_of_extremum(
         self,
@@ -684,15 +684,8 @@ class MeshSeries:
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
 
-<<<<<<< HEAD
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         values = variable.transform(self.probe(points, variable.data_name))
-=======
-        mesh_property = get_preset(mesh_property, self.mesh(0))
-        values = mesh_property.transform(
-            self.probe(points, mesh_property.data_name)
-        )
->>>>>>> e6501a7 (Replace MeshSeries.read with MeshSeries.mesh)
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
         else:
