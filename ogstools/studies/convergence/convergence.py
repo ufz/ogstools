@@ -14,7 +14,7 @@ import pyvista as pv
 from pint import UnitRegistry
 from tqdm.auto import tqdm
 
-from ogstools import meshlib, propertylib
+from ogstools import meshlib, variables
 
 u_reg: UnitRegistry = UnitRegistry()
 u_reg.default_format = "~.3g"
@@ -43,7 +43,7 @@ def add_grid_spacing(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
 
 def grid_convergence(
     meshes: list[pv.UnstructuredGrid],
-    mesh_property: propertylib.Property,
+    variable: variables.Variable,
     topology: pv.UnstructuredGrid,
     refinement_ratio: float,
 ) -> pv.UnstructuredGrid:
@@ -55,22 +55,22 @@ def grid_convergence(
     <https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html> or
     <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
-    :param meshes:              At least three meshes with constant refinement.
-    :param mesh_property:       The property to be extrapolated.
-    :param topology:            The topology to evaluate.
+    :param meshes:      At least three meshes with constant refinement.
+    :param variable:    The variable to be extrapolated.
+    :param topology:    The topology to evaluate.
     :param refinement_ratio:    If not given, it is calculated automatically
 
-    returns:                    Grid convergence field of the given property.
+    returns:                    Grid convergence field of the given variable.
     """
     assert len(meshes) >= 3
-    cast = mesh_property.magnitude.transform
+    cast = variable.magnitude.transform
     result = deepcopy(topology)
     result.clear_point_data()
     result.clear_cell_data()
     _meshes = resample(topology=topology, meshes=meshes)
-    f3 = cast(_meshes[-3].point_data[mesh_property.data_name])
-    f2 = cast(_meshes[-2].point_data[mesh_property.data_name])
-    f1 = cast(_meshes[-1].point_data[mesh_property.data_name])
+    f3 = cast(_meshes[-3].point_data[variable.data_name])
+    f2 = cast(_meshes[-2].point_data[variable.data_name])
+    f1 = cast(_meshes[-1].point_data[variable.data_name])
     r = np.ones(f1.shape) * refinement_ratio
     a = f3 - f2
     b = f2 - f1
@@ -99,12 +99,12 @@ def grid_convergence(
 
 def richardson_extrapolation(
     meshes: list[pv.UnstructuredGrid],
-    mesh_property: propertylib.Property,
+    variable: variables.Variable,
     topology: pv.UnstructuredGrid,
     refinement_ratio: float,
 ) -> pv.UnstructuredGrid:
     """
-    Estimate a better approximation of a property on a mesh.
+    Estimate a better approximation of a variable on a mesh.
 
     This function calculates the Richardson Extrapolation based on the change
     in results in the last three of the given meshes.
@@ -113,20 +113,18 @@ def richardson_extrapolation(
     <https://curiosityfluids.com/2016/09/09/establishing-grid-convergence/>.
 
     :param meshes:              At least three meshes with constant refinement.
-    :param mesh_property:       The property to be extrapolated.
+    :param variable:            The variable to be extrapolated.
     :param topology:            The topology on which the extrapolation is done.
     :param refinement_ratio:    Refinement ratio (spatial or temporal).
 
-    :returns:                   Richardson extrapolation of the given property.
+    :returns:                   Richardson extrapolation of the given variable.
     """
     _meshes = resample(topology, meshes[-2:])
     m1 = _meshes[-1]
     m2 = _meshes[-2]
-    f1 = m1.point_data[mesh_property.data_name]
-    f2 = m2.point_data[mesh_property.data_name]
-    results = grid_convergence(
-        meshes, mesh_property, topology, refinement_ratio
-    )
+    f1 = m1.point_data[variable.data_name]
+    f2 = m2.point_data[variable.data_name]
+    results = grid_convergence(meshes, variable, topology, refinement_ratio)
     r = results["r"].astype(np.float64)
     p = results["p"]
     rpm1 = r**p - 1
@@ -134,30 +132,28 @@ def richardson_extrapolation(
     delta = np.divide(
         diff.T, rpm1, out=np.zeros_like(f1.T), where=(rpm1 != 0)
     ).T
-    results.point_data[mesh_property.data_name] = f1 + delta
+    results.point_data[variable.data_name] = f1 + delta
     return results
 
 
 def convergence_metrics(
     meshes: list[pv.UnstructuredGrid],
     reference: pv.UnstructuredGrid,
-    mesh_property: propertylib.Property,
+    variable: variables.Variable,
     timestep_sizes: list[float],
 ) -> pd.DataFrame:
     """
-    Calculate convergence metrics for a given reference and property.
+    Calculate convergence metrics for a given reference and variable.
 
-    :param meshes:          The List of meshes to be analyzed for convergence.
-    :param reference:       The reference mesh to compare against.
-    :param mesh_property:   The property of interest.
+    :param meshes:      The List of meshes to be analyzed for convergence.
+    :param reference:   The reference mesh to compare against.
+    :param variable:    The variable of interest.
 
     :returns:           A pandas Dataframe containing all metrics.
     """
 
     def _data(m: pv.UnstructuredGrid) -> np.ndarray:
-        return mesh_property.magnitude.transform(
-            m.point_data[mesh_property.data_name]
-        )
+        return variable.magnitude.transform(m.point_data[variable.data_name])
 
     grid_spacings = [
         np.mean(add_grid_spacing(mesh)["grid_spacing"]) for mesh in meshes
@@ -232,7 +228,7 @@ def convergence_order(metrics: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_convergence(
-    metrics: pd.DataFrame, mesh_property: propertylib.Property
+    metrics: pd.DataFrame, variable: variables.Variable
 ) -> plt.Figure:
     "Plot the absolute values of the convergence metrics."
     fig, axes = plt.subplots(2, 1, sharex=True)
@@ -242,7 +238,7 @@ def plot_convergence(
     metrics.iloc[:-1].plot(ax=axes[1], x=0, y=2, c="b", style="-o", grid=True)
     axes[1].plot(metrics.iloc[-1, 0], metrics.iloc[-1, 2], "b^")
     axes[1].legend(["minimum", "Richardson\nextrapolation"])
-    y_label = mesh_property.output_name + " / " + mesh_property.output_unit
+    y_label = variable.output_name + " / " + variable.output_unit
     fig.supylabel(y_label, fontsize="medium")
     fig.tight_layout()
     return fig
@@ -269,7 +265,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
 
 def convergence_metrics_evolution(
     mesh_series: list[meshlib.MeshSeries],
-    mesh_property: propertylib.Property,
+    variable: variables.Variable,
     refinement_ratio: float = 2.0,
     units: tuple[str, str] = ("s", "s"),
 ) -> pd.DataFrame:
@@ -278,10 +274,10 @@ def convergence_metrics_evolution(
 
     Contains convergence order and the relative error to the Richardson
     extrapolation for each timestep of the coarsest mesh series.
-    and a property
+    and a variable
 
     :param meshes_series:       The List of mesh series to be analyzed.
-    :param mesh_property:       The property of interest.
+    :param variable:            The variable of interest.
     :param refinement_ratio:    Refinement ratio between the discretizations.
 
     :returns:   A pandas Dataframe containing all metrics.
@@ -297,10 +293,10 @@ def convergence_metrics_evolution(
     for timevalue in tqdm(common_timevalues):
         meshes = [ms.read_closest(timevalue) for ms in mesh_series]
         reference = richardson_extrapolation(
-            meshes, mesh_property, meshes[-3], refinement_ratio
+            meshes, variable, meshes[-3], refinement_ratio
         )
         metrics = convergence_metrics(
-            meshes, reference, mesh_property, timestep_sizes
+            meshes, reference, variable, timestep_sizes
         )
         p_metrics = convergence_order(metrics)
         p_metrics_per_t = np.vstack((p_metrics_per_t, p_metrics))

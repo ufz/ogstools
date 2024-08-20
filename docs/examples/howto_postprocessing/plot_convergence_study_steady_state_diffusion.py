@@ -38,7 +38,7 @@ from IPython.display import HTML
 from ogs6py import ogs
 
 import ogstools as ot
-from ogstools import examples, msh2vtu, propertylib, workflow
+from ogstools import examples, msh2vtu, variables, workflow
 from ogstools.studies import convergence
 
 temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
@@ -81,7 +81,7 @@ solution = examples.analytical_diffusion(
     ot.MeshSeries(result_paths[-1]).read(0)
 )
 ot.plot.setup.show_element_edges = True
-fig = ot.plot.contourf(solution, propertylib.properties.hydraulic_head)
+fig = ot.plot.contourf(solution, variables.hydraulic_head)
 solution.save(analytical_solution_path)
 
 # %% [markdown]
@@ -96,7 +96,7 @@ solution.save(analytical_solution_path)
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
-    property_name="hydraulic_head",
+    variable_name="hydraulic_head",
     timevalue=1,
     refinement_ratio=2.0,
     reference_solution_path=str(analytical_solution_path),
@@ -124,7 +124,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
-    property_name="velocity",
+    variable_name="velocity",
     timevalue=1,
     refinement_ratio=2.0,
 )

@@ -4,11 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# flake8: noqa: E501
-"""Predefined properties.
-
-".. seealso:: :py:mod:`ogstools.propertylib.tensor_math`"
-"""
+# Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
+"""Predefined variables for data and unit transformation."""
 
 from functools import partial
 
@@ -18,9 +15,12 @@ import pyvista as pv
 from . import mesh_dependent, tensor_math
 from .custom_colormaps import integrity_cmap, temperature_cmap
 from .matrix import Matrix
-from .property import Property, Scalar
 from .tensor_math import identity
+from .unit_registry import u_reg
+from .variable import Scalar, Variable
 from .vector import Vector
+
+__all__ = ["u_reg"]
 
 T_MASK = "temperature_active"
 H_MASK = "pressure_active"
@@ -198,68 +198,64 @@ saturation = Scalar(
     symbol="s",
 )
 
-all_properties = [v for v in locals().values() if isinstance(v, Property)]
+all_variables = [v for v in locals().values() if isinstance(v, Variable)]
 
 
-def get_preset(
-    mesh_property: Property | str, mesh: pv.UnstructuredGrid
-) -> Property:
+def get_preset(variable: Variable | str, mesh: pv.UnstructuredGrid) -> Variable:
     """
-    Returns a Property preset or creates one with correct type.
+    Returns a Variable preset or creates one with correct type.
 
     Searches for presets by data_name and output_name and returns if found.
-    If 'mesh_property' is given as type Property this will also look for
-    derived properties (difference, aggregate).
-    Otherwise create Scalar, Vector, or Matrix Property depending on the shape
+    If 'variable' is given as type Variable this will also look for
+    derived variables (difference, aggregate).
+    Otherwise create Scalar, Vector, or Matrix Variable depending on the shape
     of data in mesh.
 
-    :param mesh_property:   The property to retrieve or its name if a string.
-    :param mesh:            The mesh containing the property data.
-    :returns: A corresponding Property preset or a new Property of correct type.
+    :param variable:    The variable to retrieve or its name if a string.
+    :param mesh:        The mesh containing the variable data.
+    :returns: A corresponding Variable preset or a new Variable of correct type.
     """
     data_keys: list[str] = list(set().union(mesh.point_data, mesh.cell_data))
     error_msg = (
         f"Data not found in mesh. Available data names are {data_keys}. "
     )
 
-    if isinstance(mesh_property, Property):
-        if mesh_property.data_name in data_keys:
-            return mesh_property
-        matches = [
-            mesh_property.output_name in data_key for data_key in data_keys
-        ]
+    if isinstance(variable, Variable):
+        if variable.data_name in data_keys:
+            return variable
+        matches = [variable.output_name in data_key for data_key in data_keys]
         if not any(matches):
             raise KeyError(error_msg)
         data_key = data_keys[matches.index(True)]
-        if data_key == f"{mesh_property.output_name}_difference":
-            return mesh_property.difference
-        return mesh_property.replace(
+        if data_key == f"{variable.output_name}_difference":
+            return variable.difference
+        return variable.replace(
             data_name=data_key,
-            data_unit=mesh_property.output_unit,
-            output_unit=mesh_property.output_unit,
+            data_unit=variable.output_unit,
+            output_unit=variable.output_unit,
             output_name=data_key,
-            symbol=mesh_property.symbol,
+            symbol=variable.symbol,
             func=identity,
             mesh_dependent=False,
         )
 
-    for prop in all_properties:
-        if prop.output_name == mesh_property:
+    for prop in all_variables:
+        if prop.output_name == variable:
             return prop
-    for prop in all_properties:
-        if prop.data_name == mesh_property:
+    for prop in all_variables:
+        if prop.data_name == variable:
             return prop
 
-    matches = [mesh_property in data_key for data_key in data_keys]
+    matches = [variable in data_key for data_key in data_keys]
     if not any(matches):
         raise KeyError(error_msg)
 
-    data_shape = mesh[mesh_property].shape
+    data_shape = mesh[variable].shape
     if len(data_shape) == 1:
-        return Scalar(mesh_property)
+        return Scalar(variable)
     if data_shape[1] in [2, 3]:
-        return Vector(mesh_property)
-    return Matrix(mesh_property)
+        return Vector(variable)
+    return Matrix(variable)
 
 
 def get_dataframe() -> pd.DataFrame:
@@ -267,7 +263,7 @@ def get_dataframe() -> pd.DataFrame:
         "preset,data_name,data_unit,output_unit,output_name,type".split(",")
     ]
     for preset_name, preset_value in globals().items():
-        if isinstance(preset := preset_value, Property):
+        if isinstance(preset := preset_value, Variable):
             data += [
                 [
                     preset_name,

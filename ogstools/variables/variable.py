@@ -4,9 +4,9 @@
 #            http://www.opengeosys.org/project/license
 #
 
-"""Defines the Scalar, Vector and Matrix Property classes.
+"""Defines the Scalar, Vector and Matrix Variable classes.
 
-They serve as classes to handle common physical properties in a systematic
+They serve as classes to handle common physical variables in a systematic
 way (e.g. temperature, pressure, displacement, …). Unit conversion is handled
 via pint.
 """
@@ -26,24 +26,24 @@ from .unit_registry import u_reg
 
 
 @dataclass
-class Property:
-    """Represent a generic mesh property."""
+class Variable:
+    """Represent a generic mesh variable."""
 
     data_name: str
-    """The name of the property data in the mesh."""
+    """The name of the variable data in the mesh."""
     data_unit: str = ""
-    """The unit of the property data in the mesh."""
+    """The unit of the variable data in the mesh."""
     output_unit: str = ""
-    """The output unit of the property."""
+    """The output unit of the variable."""
     output_name: str = ""
-    """The output name of the property."""
+    """The output name of the variable."""
     symbol: str = ""
-    """The symbol representing this property."""
+    """The symbol representing this variable."""
     mask: str = ""
     """The name of the mask data in the mesh."""
     func: Callable = identity
     """The function to be applied on the data.
-       .. seealso:: :meth:`~ogstools.propertylib.Property.transform`"""
+       .. seealso:: :meth:`~ogstools.variables.variable.Variable.transform`"""
     mesh_dependent: bool = False
     """If the function to be applied is dependent on the mesh itself"""
     process_with_units: bool = False
@@ -51,9 +51,9 @@ class Property:
     cmap: Colormap | str = "coolwarm"
     """Colormap to use for plotting."""
     bilinear_cmap: bool = False
-    """Should this property be displayed with a bilinear cmap?"""
+    """Should this variable be displayed with a bilinear cmap?"""
     categoric: bool = False
-    """Does this property only have categoric values?"""
+    """Does this variable only have categoric values?"""
     color: str | None = None
     """Default color for plotting"""
     linestyle: tuple | None = None
@@ -67,36 +67,36 @@ class Property:
     def type_name(self) -> str:
         return type(self).__name__
 
-    def replace(self: "Property", **changes: Any) -> "Property":
+    def replace(self: "Variable", **changes: Any) -> "Variable":
         """
-        Create a new Property object with modified attributes.
+        Create a new Variable object with modified attributes.
 
         Be aware that there is no type check safety here. So make sure, the new
         attributes and values are correct.
 
         :param changes: Attributes to be changed.
 
-        :returns: A copy of the Property with changed attributes.
+        :returns: A copy of the Variable with changed attributes.
         """
         return replace(self, **changes)
 
     @classmethod
-    def from_property(  # type: ignore[no-untyped-def]
-        cls, new_property: "Property", **changes: Any
+    def from_variable(  # type: ignore[no-untyped-def]
+        cls, new_variable: "Variable", **changes: Any
     ):
-        "Create a new Property object with modified attributes."
+        "Create a new Variable object with modified attributes."
         return cls(
-            data_name=new_property.data_name,
-            data_unit=new_property.data_unit,
-            output_unit=new_property.output_unit,
-            output_name=new_property.output_name,
-            symbol=new_property.symbol,
-            mask=new_property.mask,
-            func=new_property.func,
-            mesh_dependent=new_property.mesh_dependent,
-            process_with_units=new_property.process_with_units,
-            cmap=new_property.cmap,
-            categoric=new_property.categoric,
+            data_name=new_variable.data_name,
+            data_unit=new_variable.data_unit,
+            output_unit=new_variable.output_unit,
+            output_name=new_variable.output_name,
+            symbol=new_variable.symbol,
+            mask=new_variable.mask,
+            func=new_variable.func,
+            mesh_dependent=new_variable.mesh_dependent,
+            process_with_units=new_variable.process_with_units,
+            cmap=new_variable.cmap,
+            categoric=new_variable.categoric,
         ).replace(**changes)
 
     def transform(
@@ -108,7 +108,7 @@ class Property:
         Return the transformed data values.
 
         Converts the data from data_unit to output_unit and applies the
-        transformation function of this property. The result is returned by
+        transformation function of this variable. The result is returned by
         default without units. if `strip_unit` is False, a quantity is returned.
 
         Note:
@@ -122,7 +122,7 @@ class Property:
             if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
                 result = Qty(self.func(data, self), o_u)
             else:
-                msg = "This property can only be evaluated on a mesh."
+                msg = "This variable can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
             if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
@@ -142,8 +142,8 @@ class Property:
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
-    def difference(self) -> "Property":
-        "returns: A property relating to differences in this quantity."
+    def difference(self) -> "Variable":
+        "returns: A variable relating to differences in this quantity."
         quantity = u_reg.Quantity(1, self.output_unit)
         diff_quantity: PlainQuantity = quantity - quantity
         diff_unit = str(diff_quantity.units)
@@ -164,26 +164,26 @@ class Property:
 
     def is_mask(self) -> bool:
         """
-        Check if the property is a mask.
+        Check if the variable is a mask.
 
-        :returns: True if the property is a mask, False otherwise.
+        :returns: True if the variable is a mask, False otherwise.
         """
         return self.data_name == self.mask
 
-    def get_mask(self) -> "Property":
+    def get_mask(self) -> "Variable":
         """
-        :returns: A property representing this properties mask.
+        :returns: A variable representing this variables mask.
         """
-        return Property(
+        return Variable(
             data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
         )
 
     @property
-    def magnitude(self) -> "Property":
+    def magnitude(self) -> "Variable":
         return self
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
-        "Check whether the mesh contains the mask of this property."
+        "Check whether the mesh contains the mask of this variable."
         return (
             not self.is_mask()
             and self.mask in mesh.cell_data
@@ -193,7 +193,7 @@ class Property:
     def _get_data(
         self, mesh: pv.UnstructuredGrid, masked: bool = True
     ) -> np.ndarray:
-        "Get the data associated with a scalar or vector property from a mesh."
+        "Get the data associated with a scalar or vector variable from a mesh."
         if self.data_name not in (
             data_keys := ",".join(set().union(mesh.point_data, mesh.cell_data))
         ):
@@ -209,7 +209,7 @@ class Property:
         return mesh[self.data_name]
 
     def get_label(self, split_at: int | None = None) -> str:
-        "Creates property label in format 'property_name / property_unit'"
+        "Creates variable label in format 'variable_name / variable_unit'"
         unit_str = (
             f" / {self.get_output_unit()}" if self.get_output_unit() else ""
         )
@@ -251,5 +251,5 @@ class Property:
 
 
 @dataclass
-class Scalar(Property):
-    "Represent a scalar property."
+class Scalar(Variable):
+    "Represent a scalar variable."

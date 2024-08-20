@@ -41,7 +41,7 @@ temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
 feflow_pv_mesh.save(feflow_mesh_file)
 
-feflow_concentration = ot.properties.Scalar(
+feflow_concentration = ot.variables.Scalar(
     data_name="single_species_P_CONC",
     output_name="concentration",
     data_unit="mg/l",
@@ -109,7 +109,7 @@ profile = np.array([[0.038 + 1.0e-8, 0.005, 0], [0.045, 0.005, 0]])
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ogs_sim_res.plot_linesample(
     "dist",
-    ot.properties.Scalar(
+    ot.variables.Scalar(
         data_name="single_species",
         output_name="concentration",
         data_unit="mg/l",
@@ -145,7 +145,7 @@ fig.tight_layout()
 ogs_sim_res["concentration_difference"] = (
     feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
 )
-concentration_difference = ot.properties.Scalar(
+concentration_difference = ot.variables.Scalar(
     data_name="concentration_difference",
     output_name="concentration",
     data_unit="mg/l",

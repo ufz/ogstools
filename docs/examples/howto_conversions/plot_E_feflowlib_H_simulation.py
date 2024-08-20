@@ -110,9 +110,7 @@ ogs_sim_res.plot(
 )
 # %%
 # 5.1 Plot the hydraulic head simulated in OGS with :py:mod:`ogstools.plot.contourf`.
-head = ot.properties.Scalar(
-    data_name="HEAD_OGS", data_unit="m", output_unit="m"
-)
+head = ot.variables.Scalar(data_name="HEAD_OGS", data_unit="m", output_unit="m")
 fig = ot.plot.contourf(ogs_sim_res.slice(normal="z", origin=[50, 50, 0]), head)
 
 
@@ -130,7 +128,7 @@ pyvista_mesh.plot(
 # %%
 # 6.1 Plot the differences in the hydraulic head with :py:mod:`ogstools.plot.contourf`.
 # Slices are taken along the z-axis.
-diff_head = ot.properties.Scalar(
+diff_head = ot.variables.Scalar(
     data_name="diff_HEAD", data_unit="m", output_unit="m"
 )
 slices = np.reshape(list(pyvista_mesh.slice_along_axis(n=4, axis="z")), (2, 2))

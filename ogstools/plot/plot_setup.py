@@ -49,7 +49,7 @@ class PlotSetup:
     show_element_edges: bool | str
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
-    property data name."""
+    variable data name."""
     title_center: str
     "The center part of the plot's title."
     title_left: str
@@ -69,7 +69,7 @@ class PlotSetup:
     linewidth: float
     "Thickness of lines."
     label_split: int | None
-    "Split Property labels if they exceed this value."
+    "Split Variable labels if they exceed this value."
 
     @classmethod
     def from_dict(cls: type["PlotSetup"], obj: dict) -> "PlotSetup":

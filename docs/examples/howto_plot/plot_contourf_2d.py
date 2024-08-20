@@ -29,43 +29,43 @@ mesh = examples.load_meshseries_THM_2D_PVD().read(1)
 
 # %% First, let's plot the material ids (cell_data). Per default in
 # the setup, this will automatically show the element edges.
-fig = mesh.plot_contourf(ot.properties.material_id)
+fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
 # Now, let's plot the temperature field (point_data) at the first timestep.
-# The default temperature property from the `propertylib` reads the temperature
+# The default temperature variable from the `variables` reads the temperature
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%
-fig = mesh.plot_contourf(ot.properties.temperature, show_max=True)
+fig = mesh.plot_contourf(ot.variables.temperature, show_max=True)
 
 # %% [markdown]
-# We can also plot components of vector properties:
+# We can also plot components of vector variables:
 
 # %%
 fig = mesh.plot_contourf(
-    ot.properties.displacement[0], show_min=True, show_max=True
+    ot.variables.displacement[0], show_min=True, show_max=True
 )
 
 # %%
 fig = mesh.plot_contourf(
-    ot.properties.displacement[1], show_max=True, show_edges=True
+    ot.variables.displacement[1], show_max=True, show_edges=True
 )
 
 # %% [markdown]
 # This example has hydraulically deactivated subdomains:
 
 # %%
-fig = mesh.plot_contourf(ot.properties.pressure.get_mask(), fontsize=40)
+fig = mesh.plot_contourf(ot.variables.pressure.get_mask(), fontsize=40)
 
 # %% [markdown]
 # Let's plot the fluid velocity field.
 
 # %%
-fig = mesh.plot_contourf(ot.properties.velocity, show_region_bounds=False)
+fig = mesh.plot_contourf(ot.variables.velocity, show_region_bounds=False)
 
 # %% [markdown]
 # Let's plot it again, this time log-scaled.
 
 # %%
-fig = mesh.plot_contourf(ot.properties.velocity, log_scaled=True, vmin=-8)
+fig = mesh.plot_contourf(ot.variables.velocity, log_scaled=True, vmin=-8)

@@ -30,7 +30,7 @@ from ogstools.msh2vtu import msh2vtu
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
 
-sigma_ip = ot.properties.stress.replace(
+sigma_ip = ot.variables.stress.replace(
     data_name="sigma_ip", output_name="IP_stress"
 )
 
@@ -60,7 +60,7 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     int_pts = mesh.to_ip_point_cloud()
     ip_mesh = mesh.to_ip_mesh()
 
-    fig = mesh.plot_contourf(ot.properties.stress)
+    fig = mesh.plot_contourf(ot.variables.stress)
     fig.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )

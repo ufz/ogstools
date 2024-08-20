@@ -7,7 +7,7 @@
 """Common tensor transformation operations.
 
 They can be used as they are, but are also part of
-:py:obj:`ogstools.propertylib.matrix.Matrix` properties.
+:py:obj:`ogstools.variables.matrix.Matrix` variables.
 All input arrays are expected to be in vector notation of symmetric tensors in
 the form of:
 

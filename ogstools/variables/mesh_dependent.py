@@ -11,13 +11,13 @@ import numpy as np
 import pyvista as pv
 from pint.facets.plain import PlainQuantity
 
-from .property import Property
 from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
+from .variable import Variable
 
 
 def fluid_pressure_criterion(
-    mesh: pv.UnstructuredGrid, mesh_property: Property
+    mesh: pv.UnstructuredGrid, variable: Variable
 ) -> PlainQuantity:
     """Return the fluid pressure criterion.
 
@@ -31,15 +31,15 @@ def fluid_pressure_criterion(
     """
 
     Qty = u_reg.Quantity
-    sigma = mesh[mesh_property.data_name]
+    sigma = mesh[variable.data_name]
     pressure = mesh["pressure"]
     sig_min = _split_quantity(eigenvalues(-sigma))[0][..., 0]
-    return Qty(pressure, "Pa") - Qty(sig_min, mesh_property.data_unit)
+    return Qty(pressure, "Pa") - Qty(sig_min, variable.data_unit)
 
 
 def dilatancy_critescu(
     mesh: pv.UnstructuredGrid,
-    mesh_property: Property,
+    variable: Variable,
     a: float = -0.01697,
     b: float = 0.8996,
     effective: bool = False,
@@ -63,7 +63,7 @@ def dilatancy_critescu(
     """
 
     Qty = u_reg.Quantity
-    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
+    sigma = -Qty(mesh[variable.data_name], variable.data_unit)
     sigma_0 = Qty(1, "MPa")
     sigma_m = mean(sigma)
     pressure = mesh["pressure"]
@@ -77,7 +77,7 @@ def dilatancy_critescu(
 
 def dilatancy_alkan(
     mesh: pv.UnstructuredGrid,
-    mesh_property: Property,
+    variable: Variable,
     b: float = 0.04,
     effective: bool = False,
 ) -> PlainQuantity | np.ndarray:
@@ -100,7 +100,7 @@ def dilatancy_alkan(
     """
 
     Qty = u_reg.Quantity
-    sigma = -Qty(mesh[mesh_property.data_name], mesh_property.data_unit)
+    sigma = -Qty(mesh[variable.data_name], variable.data_unit)
     tau_max = Qty(33, "MPa")
     sigma_m = mean(sigma)
     pressure = mesh["pressure"]

@@ -8,14 +8,14 @@ import pyvista as pv
 from ogstools.meshlib.data_processing import sample_polyline
 from ogstools.plot import contourf, setup, utils
 from ogstools.plot.shared import spatial_quantity
-from ogstools.propertylib.properties import Property, get_preset
+from ogstools.variables import Variable, get_preset
 
 
 # TODO: ability to swap x and y?
 def linesample(
     mesh: pv.UnstructuredGrid,
-    x: str,
-    y_property: str | Property,
+    x: str,  # TODO renamed it to "along" maybe
+    variable: str | Variable,
     profile_points: np.ndarray,
     ax: plt.Axes,
     resolution: int | None = 100,
@@ -23,13 +23,13 @@ def linesample(
     **kwargs: Any,
 ) -> plt.Axes:
     """
-    Plot selected properties obtained from sample_over_polyline function,
+    Plot selected variables obtained from sample_over_polyline function,
     this function calls to it internally. Values provided in param x and y
     refer to columns of the DataFrame returned by it.
 
     :param mesh: mesh to sample from.
     :param x: Value to be used on x-axis of the plot
-    :param y_property: Values to be used on y-axis of the plot
+    :param variable: Values to be used on y-axis of the plot
     :param profile_points: Points defining the profile (and its segments)
     :param ax: User-created array of Matplotlib axis object
     :param resolution: Resolution of the sampled profile. Total number of
@@ -44,28 +44,26 @@ def linesample(
     :return: Matplotlib Axes object
     """
 
-    mesh_property = get_preset(y_property, mesh)
-    mesh_sp, _ = sample_polyline(
-        mesh, mesh_property, profile_points, resolution
-    )
+    variable = get_preset(variable, mesh)
+    mesh_sp, _ = sample_polyline(mesh, variable, profile_points, resolution)
 
     assert isinstance(ax, plt.Axes)
 
     spatial_qty = spatial_quantity(mesh)
-    kwargs.setdefault("label", mesh_property.data_name)
-    kwargs.setdefault("color", mesh_property.color)
-    kwargs.setdefault("linestyle", mesh_property.linestyle)
+    kwargs.setdefault("label", variable.data_name)
+    kwargs.setdefault("color", variable.color)
+    kwargs.setdefault("linestyle", variable.linestyle)
     if "ls" in kwargs:
         kwargs.pop("linestyle")
 
     utils.update_font_sizes(axes=ax, fontsize=kwargs.pop("fontsize", 20))
     ax.plot(
         spatial_qty.transform(mesh_sp[x]),
-        mesh_sp[mesh_property.data_name],
+        mesh_sp[variable.data_name],
         **kwargs,
     )
     ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
-    ax.set_ylabel(mesh_property.get_label(setup.label_split))
+    ax.set_ylabel(variable.get_label(setup.label_split))
 
     if grid in ["both", "major"]:
         ax.grid(which="major", color="lightgrey", linestyle="-")
@@ -80,7 +78,7 @@ def linesample(
 
 def linesample_contourf(
     mesh: pv.UnstructuredGrid,
-    properties: str | list | Property,
+    variables: str | list | Variable,
     profile_points: np.ndarray,
     resolution: int | None = None,
     plot_nodal_pts: bool | None = True,
@@ -89,37 +87,37 @@ def linesample_contourf(
     """
     Default plot for the data obtained from sampling along a profile on a mesh.
 
-    :param mesh: mesh to plot and sample from.
-    :param properties: Properties to be read from the mesh
-    :param profile_points: Points defining the profile (and its segments)
-    :param resolution: Resolution of the sampled profile. Total number of \
-        points within all profile segments.
-    :param plot_nodal_pts: Plot and annotate all nodal points in profile
-    :param nodal_pts_labels: Labels for nodal points (only use if \
-        plot_nodal_points is set to True)
+    :param mesh:            mesh to plot and sample from.
+    :param variables:       Variables to be read from the mesh
+    :param profile_points:  Points defining the profile (and its segments)
+    :param resolution:  Resolution of the sampled profile. Total number of
+                        points within all profile segments.
+    :param plot_nodal_pts:      Plot and annotate all nodal points in profile
+    :param nodal_pts_labels:    Labels for nodal points (only use if
+                                plot_nodal_points is set to True)
 
     :return: Tuple containing Matplotlib Figure and Axis objects
     """
     # TODO: Add support for plotting only geometry at top subplot and
     # lineplot with twinx in the bottom one
-    if not isinstance(properties, list):
-        properties = [properties]
+    if not isinstance(variables, list):
+        variables = [variables]
 
     _, dist_at_knot = sample_polyline(
-        mesh, properties, profile_points, resolution=resolution
+        mesh, variables, profile_points, resolution=resolution
     )
 
     fig, ax = plt.subplots(
-        2, len(properties), figsize=(len(properties) * 13, 12), squeeze=False
+        2, len(variables), figsize=(len(variables) * 13, 12), squeeze=False
     )
     spatial_qty = spatial_quantity(mesh)
     x_id, y_id, _, _ = utils.get_projection(mesh)
-    for index, mesh_property in enumerate(properties):
-        contourf(mesh, mesh_property, fig=fig, ax=ax[0, index])
+    for index, variable in enumerate(variables):
+        contourf(mesh, variable, fig=fig, ax=ax[0, index])
         linesample(
             mesh,
             x="dist",
-            y_property=mesh_property,
+            variable=variable,
             profile_points=profile_points,
             ax=ax[1, index],
             resolution=resolution,

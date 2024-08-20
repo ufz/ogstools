@@ -19,7 +19,7 @@ between meshes.
 import ogstools as ot
 from ogstools import examples
 
-mesh_property = ot.properties.temperature
+variable = ot.variables.temperature
 
 # %%
 # Introduction
@@ -35,7 +35,7 @@ mesh_property = ot.properties.temperature
 # The simplest case is calculating the difference between two meshes. For this
 # example, we read two different timesteps from a MeshSeries. It is not required
 # that they belong to the same MeshSeries object. As long, as the meshes share
-# the same topology and contain the mesh_property of interest, the difference
+# the same topology and contain the variable of interest, the difference
 # will work fine.
 mesh_series = examples.load_meshseries_THM_2D_PVD()
 mesh1 = mesh_series.read(0)
@@ -43,14 +43,14 @@ mesh2 = mesh_series.read(-1)
 
 # %% [markdown]
 # The following call will return a mesh containing the difference of the
-# mesh_property between the two provided meshes:
+# variable between the two provided meshes:
 #
 # .. math::
 #
 #   \text{Mesh}_1 - \text{Mesh}_2
 #
 
-mesh_diff = mesh1.difference(mesh2, mesh_property)
+mesh_diff = mesh1.difference(mesh2, variable)
 
 # %% [markdown]
 # This returned object will be a PyVista UnstructuredGrid object:
@@ -89,7 +89,7 @@ meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
 mesh_diff_pair_wise = ot.meshlib.difference_pairwise(
-    meshes_1, meshes_2, mesh_property
+    meshes_1, meshes_2, variable
 )
 
 # %%
@@ -124,9 +124,7 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = ot.meshlib.difference_matrix(
-    mesh_list, mesh_property=mesh_property
-)
+mesh_diff_matrix = ot.meshlib.difference_matrix(mesh_list, variable=variable)
 
 # %%
 print(f"Length of mesh_list1: {len(mesh_list)}")
@@ -164,7 +162,7 @@ mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
 mesh_diff_matrix = ot.meshlib.difference_matrix(
-    mesh_list_matrix_1, mesh_list_matrix_2, mesh_property
+    mesh_list_matrix_1, mesh_list_matrix_2, variable
 )
 
 # %%

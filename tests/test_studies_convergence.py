@@ -10,8 +10,8 @@ from ogs6py import ogs
 from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
 from ogstools.meshlib import MeshSeries, gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
-from ogstools.propertylib import Scalar
 from ogstools.studies import convergence
+from ogstools.variables import Scalar
 
 
 class TestConvergence:
@@ -45,23 +45,23 @@ class TestConvergence:
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
         np.testing.assert_array_less(0.0, spacing)
-        mesh_property = Scalar("pressure", "m", "m")
+        variable = Scalar("pressure", "m", "m")
         conv = convergence.grid_convergence(
-            sim_results, mesh_property, topology, refinement_ratio=2.0
+            sim_results, variable, topology, refinement_ratio=2.0
         )
         richardson = convergence.richardson_extrapolation(
-            sim_results, mesh_property, topology, refinement_ratio=2.0
+            sim_results, variable, topology, refinement_ratio=2.0
         )
         np.testing.assert_allclose(conv["r"], richardson["r"], rtol=1e-10)
         analytical = analytical_diffusion(topology)
         np.testing.assert_allclose(
-            richardson[mesh_property.data_name],
-            analytical[mesh_property.data_name],
+            richardson[variable.data_name],
+            analytical[variable.data_name],
             rtol=2e-3,
             verbose=True,
         )
         metrics = convergence.convergence_metrics(
-            sim_results, richardson, mesh_property, []
+            sim_results, richardson, variable, []
         )
         el_len = metrics["mean element length"].to_numpy()[:-1]
         re_max = metrics["rel. error (max)"].to_numpy()[:-1]
@@ -71,7 +71,7 @@ class TestConvergence:
         order, _ = convergence.log_fit(el_len, re_max)
         assert order > 2.0
 
-        _ = convergence.plot_convergence(metrics, mesh_property)
+        _ = convergence.plot_convergence(metrics, variable)
         _ = convergence.plot_convergence_errors(metrics)
 
         rmtree(temp_dir)

@@ -25,9 +25,9 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 #   from ogstools.meshlib import MeshSeries
 #   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
 #
-# You can also use a property from the available presets instead of needing to
+# You can also use a variable from the available presets instead of needing to
 # create your own:
-# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_propertylib.py`
+# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_variables.py`
 
 # %% [markdown]
 # Let's use fixed scale limits to prevent rescaling during the animation.
@@ -56,7 +56,7 @@ timevalues = np.linspace(
 
 # %%
 titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-anim = mesh_series.animate(ot.properties.saturation, timevalues, titles)
+anim = mesh_series.animate(ot.variables.saturation, timevalues, titles)
 
 # %% [markdown]
 # The animation can be saved (as mp4) like so:

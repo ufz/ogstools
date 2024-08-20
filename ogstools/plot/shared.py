@@ -3,7 +3,7 @@ from typing import cast
 import pyvista as pv
 
 from ogstools.definitions import SPATIAL_UNITS_KEY
-from ogstools.propertylib import Scalar
+from ogstools.variables import Scalar
 
 from .plot_setup import PlotSetup
 from .plot_setup_defaults import setup_dict
