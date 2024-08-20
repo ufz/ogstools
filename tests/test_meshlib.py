@@ -22,7 +22,9 @@ class TestUtils:
         # all data is in separated groups of one h5 file
         xmf = examples.load_meshseries_HT_2D_paraview_XMF()
 
-        for ht in [xdmf, xmf]:
+        pvd = examples.load_meshseries_HT_2D_PVD()
+
+        for ht in [xdmf, xmf, pvd]:
             # temperature is scalar last dimension = 1 omitted
             assert np.shape(ht.values("temperature")) == (97, 190)
             # non-scalar values

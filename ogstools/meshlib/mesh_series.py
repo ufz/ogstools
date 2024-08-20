@@ -29,6 +29,16 @@ from .mesh import Mesh
 from .xdmf_reader import DataItems, XDMFReader
 
 
+class PVDDataItems:
+    def __init__(self, values: np.ndarray) -> None:
+        self.values = values
+
+    def __getitem__(
+        self, index: tuple | int | slice | np.ndarray
+    ) -> np.ndarray:
+        return self.values[index]
+
+
 class MeshSeries:
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
@@ -59,6 +69,7 @@ class MeshSeries:
         self.spatial_output_unit = spatial_output_unit
         self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
+        self._dataitems: dict[str, Any] = {}
         if self._data_type == "xmf":
             self._data_type = "xdmf"
 
@@ -103,14 +114,44 @@ class MeshSeries:
         :returns:   Returns an objects that allows array indexing. S
         """
 
-        if self._data_type != "xdmf":
-            msg = "Indexing is only possible for xdmf. Use values() function instead."
-            ValueError(msg)
-        return self._xdmf_reader.data_items[data_name]
+        if self._data_type == "xdmf":
+            return self._xdmf_reader.data_items[data_name]
+        # for pvd and vtu check if data is already read or construct it
+        if self._dataitems and self._dataitems[data_name]:
+            return self._dataitems[data_name]
+
+        all_meshes = [self.mesh(i) for i in self.timesteps]
+
+        dataitems = self._structure_dataitems(all_meshes)
+        # Lazy dataitems
+        self._dataitems = {
+            key: PVDDataItems(np.asarray(value))
+            for key, value in dataitems.items()
+        }
+        return self._dataitems[data_name]
+
+    def _structure_dataitems(self, all_meshes):
+        # Reads all meshes and returns a dict with variables as key
+        # (e.g. "temperature")
+        dataitems: dict[str, list] = {}
+        for mesh in all_meshes:
+            for name in mesh.cell_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.cell_data[name])
+                else:
+                    dataitems[name] = [mesh.cell_data[name]]
+            for name in mesh.point_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.point_data[name])
+                else:
+                    dataitems[name] = [mesh.point_data[name]]
+        return dataitems
 
     def __repr__(self) -> str:
         if self._data_type == "vtu":
             reader = self._vtu_reader
+        elif self._data_type == "pvd":
+            reader = self._pvd_reader
         else:
             reader = self._xdmf_reader
         return f"""MeshSeries:
@@ -330,6 +371,7 @@ class MeshSeries:
                     for t in self.timesteps[time_selection]
                 ]
             )
+        # vtu
         mesh = self.mesh(0)
         return mesh[data_name]
 
