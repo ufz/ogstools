@@ -170,7 +170,7 @@ def component_transport(
     dimension: int = 3,
     fixed_out_times: list | None = None,
     time_stepping: list | None = None,
-    initial_time: int = 1,
+    initial_time: int = 0,
     end_time: int = 1,
 ) -> Project:
     """
@@ -251,7 +251,7 @@ def component_transport(
             time_discretization="BackwardEuler",
         )
         if time_stepping is None:
-            time_stepping = [(1, 1)]
+            time_stepping = [(1, end_time)]
 
         prj.time_loop.set_stepping(
             process="CT",

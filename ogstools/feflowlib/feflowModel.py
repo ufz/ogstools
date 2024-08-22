@@ -125,8 +125,10 @@ class feflowModel:
 
         return material_properties
 
-    @property
-    def prj(self) -> ogs.OGS:
+    # @property
+    def prj(
+        self, end_time: int = 1, time_stepping: list | None = None
+    ) -> ogs.OGS:
         """
         A proposition for a prj-file to run a OGS simulation.
         It may be not complete and manual adjustments for time
@@ -153,6 +155,8 @@ class feflowModel:
                 species,
                 ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
+                end_time=end_time,
+                time_stepping=time_stepping,
             )
 
         return tools.setup_prj_file(

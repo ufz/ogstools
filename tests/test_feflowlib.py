@@ -598,7 +598,7 @@ class TestFeflowModel:
             examples.feflow_model_box_Neumann,
             temp_dir + "/boxNeumann_feflow_model.vtu",
         )
-        model_prj = model.prj
+        model_prj = model.prj()
         model_prj.write_input()
         prjfile_root = ET.parse(
             temp_dir + "/boxNeumann_feflow_model.prj"
