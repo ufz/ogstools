@@ -118,7 +118,7 @@ class MeshSeries:
         time_step1_temps = temp[1,:]
         temps_at_some_points = temp[:,1:3]
         :param variable_name: Name the variable (e.g."temperature")
-        :returns:   Returns an objects that allows array indexing. S
+        :returns:   Returns an objects that allows array indexing.
         """
 
         if self._data_type == "xdmf":
@@ -163,14 +163,15 @@ class MeshSeries:
             reader = self._pvd_reader
         else:
             reader = self._xdmf_reader
-        return f"""MeshSeries:
-    filepath:       {self.filepath}
-    spatial_unit:   {self.spatial_unit}
-    data_type:      {self._data_type}
-    timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps
-    reader:         {reader}
-    rawdata_file:   {self.rawdata_file()}
-"""
+        return (
+            f"MeshSeries:\n"
+            f"filepath:       {self.filepath}\n"
+            f"spatial_unit:   {self.spatial_unit}\n"
+            f"data_type:      {self._data_type}\n"
+            f"timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps\n"
+            f"reader:         {reader}\n"
+            f"rawdata_file:   {self.rawdata_file()}\n"
+        )
 
     def aggregate(
         self,

@@ -68,26 +68,28 @@ ms.mesh(0).plot()
 #
 # 2. data[]
 #    - Get a specific variable over a specific time range.
-#    - Efficient for a large set of timesteps (currently only XDMF), but limited data is needed.
+#    - Efficient (only XDMF) for a large set of timesteps , but limited data is needed.
 #    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.data`
 
 
 #
-# Indexing with the select function
-# ---------------------------------
-# 1. All 3 functions return an object that allows
-# `Python slicing <https://www.geeksforgeeks.org/python-list-slicing/>`_.
-# The objects index works like `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
-#
-# The result of a call using `.data("<variable_name>")[]` syntax is always a
-# `Numpy ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ ,
+# Indexing with data()
+# --------------------
+# `MeshSeries.data("<variable_name>")`` returns an object, that behaves like a
+# `Numpy ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
+# It allows `multidimensional indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_
+# beyond `Python slicing <https://www.geeksforgeeks.org/python-list-slicing/>`_.
+
 # Typically, the first dimension is the time step, second dimension is the number of points/cells,
 # and the last dimension is the number of components of the variable.
 #
-# Be aware that dimensions of length 1 are omitted, obeying to the rules of `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
-# All 3 functions work not for geometry/points or topology/cells).
+# Be aware that dimensions of length 1 are omitted, obeying to the rules of
+# `Indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
+# Data does not work for geometry/points or topology/cells).
 
 ms = examples.load_meshseries_HT_2D_XDMF()
+# This mesh series has 97 time steps and 190 points.
+# Temperature is a scalar, Darcy velocity is a vector with 2 components. Both are defined at points.
 
 # 1. No range for a dimension (just single time step) -> this dimension gets omitted
 ms.data("temperature")[1, :]  # shape is (190,)
