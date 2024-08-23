@@ -100,6 +100,13 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
+    def __getitem__(self, index: int) -> list[pv.UnstructuredGrid]:
+        # ToDo performance optimization for XDMF / HDF5 files
+        return self.mesh(index)
+
+    def __len__(self) -> int:
+        return len(self.timesteps)
+
     def data(self, variable_name: str) -> DataItems:
         """
         Returns an DataItems object, that allows array indexing.
@@ -381,18 +388,23 @@ class MeshSeries:
         self._pvd_reader.set_active_time_point(timestep)
         return self._pvd_reader.read()[0]
 
-    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
-        points, cells = self._xdmf_reader.read_points_cells()
-        _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
-            timestep
-        )
-        meshio_mesh = meshio.Mesh(
-            points, cells, point_data, cell_data, field_data
-        )
-        # pv.from_meshio does not copy field_data (fix in pyvista?)
-        pv_mesh = pv.from_meshio(meshio_mesh)
-        pv_mesh.field_data.update(field_data)
-        return pv_mesh
+    def _read_xdmf(self, timestep: int | tuple | slice) -> pv.UnstructuredGrid:
+        if isinstance(timestep, int):
+            points, cells = self._xdmf_reader.read_points_cells()
+            _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
+                timestep
+            )
+            meshio_mesh = meshio.Mesh(
+                points, cells, point_data, cell_data, field_data
+            )
+            # pv.from_meshio does not copy field_data (fix in pyvista?)
+            pv_mesh = pv.from_meshio(meshio_mesh)
+            pv_mesh.field_data.update(field_data)
+            return pv_mesh
+
+        # ToDo support effective read of multiple meshes
+        msg = "Only single timestep reading is supported for XDMF files."
+        raise NotImplementedError(msg)
 
     def _time_of_extremum(
         self,
