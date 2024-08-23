@@ -104,6 +104,7 @@ testpaths = ["tests"]
 
 [tool.black]
 line-length = 80
+exclude = ['.*/examples/.*']
 
 [tool.mypy]
 files = "ogstools/**/*.py"
