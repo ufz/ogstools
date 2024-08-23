@@ -16,24 +16,7 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 
-from ogstools.feflowlib import (
-    combine_material_properties,
-    component_transport,
-    convert_geometry_mesh,
-    extract_cell_boundary_conditions,
-    get_material_properties_of_CT_model,
-    get_material_properties_of_HT_model,
-    get_species,
-    helpFormat,
-    hydro_thermal,
-    liquid_flow,
-    setup_prj_file,
-    steady_state_diffusion,
-    update_geometry,
-    write_mesh_of_combined_properties,
-    write_point_boundary_conditions,
-)
-from ogstools.ogs6py import Project
+from ogstools.feflowlib import feflowModel, helpFormat
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",
@@ -44,27 +27,12 @@ parser.add_argument("-i", "--input", help="The path to the input FEFLOW file.")
 parser.add_argument("-o", "--output", help="The path to the output VTK file.")
 parser.add_argument(
     "case",
-    choices=[
-        "geo_surface",
-        "geometry",
-        "properties",
-        "properties_surface",
-        "OGS_steady_state_diffusion",
-        "OGS_liquid_flow",
-        "OGS_hydro_thermal",
-        "OGS_component_transport",
-    ],
-    default="OGS_steady_state_diffusion",
+    choices=["bulk_mesh", "OGS"],
+    default="bulk_mesh",
     type=str,
     help="Different cases can be chosen for the conversion: \n"
-    '1. "geometry" to convert only the geometries of the mesh.\n'
-    '2. "properties" to convert all the mesh properties to nodes and cells.\n'
-    '3. "surface" to convert only the surface of the mesh.\n'
-    '4. "properties_surface" to convert the surface with properties.\n'
-    '5. "OGS_steady_state_diffusion" to prepare an OGS-project according to a steady state diffusion process.\n'
-    '6. "OGS_liquid_flow" to prepare an OGS-project according to a liquid flow process.\n'
-    '7. "OGS_hydro_thermal" to prepare an OGS-project according to a hydro_thermal process.\n'
-    '8. "OGS_component_transport" to prepare an OGS-project according to a component transport process.\n',
+    '1. "bulk_mesh" to convert only the bulk mesh and the boundary meshes.\n'
+    '2. "OGS" to prepare an OGS-model either for a steady state diffusion, liquid flow, hydro thermal or component transport process.',
     nargs="?",
     const=1,
 )
@@ -74,8 +42,7 @@ parser.add_argument(
     choices=["BC", "no_BC"],
     default="BC",
     type=str,
-    help="This argument specifies whether the boundary conditions is written. It\n"
-    "should only be used if the input data is 3D.\n"
+    help="This argument specifies whether the boundary conditions are written. \n"
     "The boundary condition need to be extracted, when an OGS simulation wants to be setup.",
     nargs="?",
     const=1,
@@ -103,122 +70,49 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
         ifm.getKernelVersion() / 1000,
         ifm.getKernelRevision(),
     )
-    text_msg = "mesh with its properties and boundary condition(s)"
 
-    msg = {
-        "geo_surface": "surface",
-        "geometry": "geometry",
-        "properties_surface": "surface with properties",
-        "properties": "mesh with its properties",
-        "OGS_steady_state_diffusion": text_msg,
-        "OGS_liquid_flow": text_msg,
-        "OGS_hydro_thermal": text_msg,
-        "OGS_component_transport": text_msg,
-    }
-
-    args = parser.parse_args()
-
-    if not Path(args.input).exists():
+    if not Path(input).exists():
         print("The input file does not exist.")
         return 1
-
-    doc = ifm.loadDocument(input)
-
-    mesh = convert_geometry_mesh(doc)
-
-    if "properties" in case or "OGS" in case:
-        update_geometry(mesh, doc)
-    mesh = mesh.extract_surface() if "surface" in case else mesh
-    if ("properties" not in case and "OGS" not in case) or BC != "BC":
-        mesh.save(output)
+    if BC == "no_BC" and case == "OGS":
+        logger.error(
+            "An OGS model can only be complete if the existing boundary conditions have been converted."
+        )
+        return 1
+    feflow_model = feflowModel(Path(input), Path(output))
+    # Create separate meshes for the boundary condition.
+    if BC == "no_BC":
+        feflow_model.mesh.save(output)
         logger.info(
-            "The conversion of the %s was successful.",
-            msg[case],
+            "The conversion of the bulk mesh was successful.",
         )
         return 0
-    # Create separate meshes for the boundary condition.
-    write_point_boundary_conditions(Path(output).parent, mesh)
-    # Only if the dimension of the mesh is 3D, there can be a topsurface.
-    if doc.getNumberOfDimensions == 3:
-        path_topsurface, topsurface = extract_cell_boundary_conditions(
-            Path(output), mesh
-        )
-        topsurface.save(path_topsurface)
+    for path, boundary_mesh in feflow_model.boundary_meshes.items():
+        boundary_mesh.save(path)
 
     log.info(
         "Boundary conditions have been written to separate mesh vtu-files."
     )
+
     if "OGS" in case:
-        if "hydro_thermal" not in case and "component_transport" not in case:
-            property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
-            material_properties = combine_material_properties(
-                mesh, property_list
-            )
-        elif "hydro_thermal" in case:
-            material_properties = get_material_properties_of_HT_model(mesh)
-
-        else:
-            material_properties = get_material_properties_of_CT_model(mesh)
-            species = get_species(mesh)
-        for material_id, property_value in material_properties.items():
-            if any(prop == "inhomogeneous" for prop in property_value):
-                write_mesh_of_combined_properties(
-                    mesh,
-                    property_list,
-                    "KF",
-                    material_id,
-                    Path(output),
-                )
-        if "steady_state_diffusion" in case:
-            template_model = steady_state_diffusion(
-                Path(Path(output).stem),
-                Project(output_file=Path(output).with_suffix(".prj")),
-            )
-            process = "steady state diffusion"
-        elif "liquid_flow" in case:
-            template_model = liquid_flow(
-                Path(Path(output).stem),
-                Project(output_file=Path(output).with_suffix(".prj")),
-                dimension=doc.getNumberOfDimensions(),
-            )
-            process = "liquid flow"
-        elif "hydro_thermal" in case:
-            template_model = hydro_thermal(
-                Path(Path(output).stem),
-                Project(output_file=Path(output).with_suffix(".prj")),
-                dimension=doc.getNumberOfDimensions(),
-            )
-            process = "hydro thermal"
-        elif "component_transport" in case:
-            template_model = component_transport(
-                Path(Path(output).stem),
-                species,
-                Project(output_file=Path(output).with_suffix(".prj")),
-                dimension=doc.getNumberOfDimensions(),
-            )
-            process = "component transport"
-        else:
-            error_msg = """Either you select 'OGS_steady_state_diffusion' to prepare an OGS project file for a steady state diffusion process,\n
-            'OGS_liquid_flow' for a liquid flow process, 'OGS_hydro_thermal' for a hydro thermal process or 'OGS_component_transport' for a component transport process."""
-            raise ValueError(error_msg)
-
-        ogs_model = setup_prj_file(
-            Path(output),
-            mesh,
-            material_properties,
-            process,
-            species_list=species if "component_transport" in case else None,
-            model=template_model,
+        ogs_prj = feflow_model.prj()
+        ogs_prj.write_input()
+        log.info(
+            """
+            A prj file has been created for the %s process.\n
+            Depending on the purpose and process to be modeled, manual adjustments are needed!
+            """,
+            feflow_model.process,
         )
-
-        ogs_model.write_input()
-        log.info("A prj file has been created for the %s process.", process)
-    mesh.save(output)
+    feflow_model.mesh.save(output)
     logger.info(
-        "The conversion of the %s was successful.",
-        msg[case],
+        """The conversion of the bulk mesh, boundary conditions was successful.\n
+        """,
     )
     return 0
+
+    # Correct final message! OGS and no_BC should not be valid input. Remove -i -o
+    # Rework logger.info messages during conversion process, introduce -v for verbose?
 
 
 def cli() -> None:
