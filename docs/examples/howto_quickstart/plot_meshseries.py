@@ -20,7 +20,7 @@ from ogstools import examples
 # MeshSeries takes as mandatory argument a str OR pathlib.Path that represents
 # the location of the pvd or xdmf file. Here, we load example data:
 ms = examples.load_meshseries_HT_2D_XDMF()
-ms
+ms  # print MeshSeries meta information
 
 
 # %%
@@ -46,6 +46,13 @@ mesh_ts10 = ms.mesh(timestep)
 # Here we use pyvista functionality plot.
 
 mesh_ts10.plot(show_edges=True)
+
+
+# %%
+# You can select a time steps with the `[] operator`
+# This example take the last time step (result) and show meta information about the mesh
+
+print(ms[-1])
 
 
 # %%
