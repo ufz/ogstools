@@ -72,10 +72,35 @@ serial_info = _logs_dir / "serial_info.txt"
 serial_time_step_rejected = _logs_dir / "serial_time_step_rejected.txt"
 serial_warning_only = _logs_dir / "serial_warning_only.txt"
 
+##
+
+prj_deactivate_replace = _prj_dir / "deactivate_replace.prj"
 prj_mechanics = _prj_dir / "mechanics.prj"
 prj_steady_state_diffusion = _prj_dir / "steady_state_diffusion.prj"
 prj_nuclear_decay = _prj_dir / "nuclear_decay.prj"
+prj_tunnel_trm = _prj_dir / "tunnel_trm.prj"
+prj_tunnel_trm_withincludes = _prj_dir / "tunnel_trm_withincludes.prj"
+prj_trm_from_scratch = _prj_dir / "trm_from_scratch.prj"
+prj_include_solid = _prj_dir / "solid_inc.xml"
+prj_include_solid_ref = _prj_dir / "solid.xml"
+prj_heat_transport = _prj_dir / "HeatTransportBHE_ogs6py.prj"
+prj_staggered = _prj_dir / "hm1_3Dcube.prj"
+prj_staggered_ref = _prj_dir / "hm1_3Dcube_ref.prj"
+prj_pid_timestepping = _prj_dir / "PID_timestepping.prj"
+prj_pid_timestepping_ref = _prj_dir / "PID_timestepping_ref.prj"
+prj_solid_inc_ref = _prj_dir / "tunnel_ogs6py_solid_inc_ref.prj"
+prj_time_dep_het_param = (
+    _prj_dir / "TimeDependentHeterogeneousBoundaryConditions.prj"
+)
+prj_time_dep_het_param_ref = (
+    _prj_dir / "TimeDependentHeterogeneousBoundaryConditions_ref.prj"
+)
+prj_beier_sandbox = _prj_dir / "beier_sandbox.prj"
+prj_beier_sandbox_ref = _prj_dir / "beier_sandbox_ref.prj"
+prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
+prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
+
 
 surface_paths = [
     _surface_dir / (file + ".vtu")
