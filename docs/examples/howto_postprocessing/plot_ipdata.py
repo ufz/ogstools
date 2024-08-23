@@ -20,12 +20,11 @@ represented by one subsection of a cell.
 from pathlib import Path
 from tempfile import mkdtemp
 
-from ogs6py import ogs
-
 import ogstools as ot
 from ogstools import examples
 from ogstools.meshlib.gmsh_meshing import rect
 from ogstools.msh2vtu import msh2vtu
+from ogstools.ogs6py import ogs
 
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True

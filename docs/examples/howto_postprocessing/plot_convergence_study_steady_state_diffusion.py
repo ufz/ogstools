@@ -35,10 +35,10 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 from IPython.display import HTML
-from ogs6py import ogs
 
 import ogstools as ot
 from ogstools import examples, msh2vtu, variables, workflow
+from ogstools.ogs6py import ogs
 from ogstools.studies import convergence
 
 temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))

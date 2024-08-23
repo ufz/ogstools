@@ -15,7 +15,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import ifm_contrib as ifm
-from ogs6py import ogs
 
 from ogstools.feflowlib import (
     combine_material_properties,
@@ -35,6 +34,7 @@ from ogstools.feflowlib import (
     write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
+from ogstools.ogs6py import ogs
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",

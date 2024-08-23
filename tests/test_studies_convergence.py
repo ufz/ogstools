@@ -5,11 +5,11 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
-from ogs6py import ogs
 
 from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
 from ogstools.meshlib import MeshSeries, gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
+from ogstools.ogs6py import ogs
 from ogstools.studies import convergence
 from ogstools.variables import Scalar
 

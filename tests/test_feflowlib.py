@@ -6,9 +6,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 import pyvista as pv
-from ogs6py import ogs
 
 from ogstools import examples
+from ogstools.ogs6py import ogs
 
 pytest.importorskip("ifm")
 

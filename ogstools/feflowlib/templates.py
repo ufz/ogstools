@@ -5,10 +5,10 @@
 #
 from pathlib import Path
 
-from ogs6py import ogs
+from ogstools.ogs6py import ogs
 
 
-def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
+def steady_state_diffusion(saving_path: Path, model: ogs.OGS) -> ogs.OGS:
     """
     A template for a steady state diffusion process to be simulated in ogs.
 
@@ -79,7 +79,7 @@ def steady_state_diffusion(saving_path: Path, model: ogs.OGS = None) -> ogs.OGS:
 
 
 def liquid_flow(
-    saving_path: Path, model: ogs.OGS = None, dimension: int = 3
+    saving_path: Path, model: ogs.OGS, dimension: int = 3
 ) -> ogs.OGS:
     """
     A template for a steady liquid flow process to be simulated in ogs.
@@ -168,7 +168,7 @@ def liquid_flow(
 def component_transport(
     saving_path: Path,
     species: list,
-    model: ogs.OGS = None,
+    model: ogs.OGS,
     dimension: int = 3,
     fixed_out_times: list | None = None,
     time_stepping: list | None = None,
@@ -272,7 +272,7 @@ def component_transport(
 
 
 def hydro_thermal(
-    saving_path: Path, model: ogs.OGS = None, dimension: int = 3
+    saving_path: Path, model: ogs.OGS, dimension: int = 3
 ) -> ogs.OGS:
     """
     A template for a hydro-thermal process to be simulated in ogs.
