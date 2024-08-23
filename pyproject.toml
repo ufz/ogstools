@@ -41,6 +41,7 @@ dependencies = [
   "pandamesh>=0.1.6",
   "ogs>=6.5.2",
   "typeguard>=4.0.0",
+  "lxml>=4.6.0"
 ]
 
 [project.urls]
