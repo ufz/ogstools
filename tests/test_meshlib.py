@@ -17,6 +17,19 @@ class TestUtils:
     """Test case for ogstools utilities."""
 
     def test_meshseries_xdmf(self):
+        xdmf_ms = examples.load_meshseries_HT_2D_XDMF()._xdmf_reader
+        assert xdmf_ms.has_fast_access()
+        assert xdmf_ms.has_fast_access("temperature")
+        assert xdmf_ms.rawdata_path("temperature").suffix == ".h5"
+        assert xdmf_ms.rawdata_path().suffix == ".h5"
+
+        xmf_ms = examples.load_meshseries_HT_2D_paraview_XMF()._xdmf_reader
+        assert not xmf_ms.has_fast_access()
+        assert not xmf_ms.has_fast_access("temperature")
+        assert xmf_ms.rawdata_path("temperature").suffix in [".xdmf", ".xmf"]
+        assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
+
+    def test_meshseries_fileformats_indexing(self):
         # all data is in one group in one h5 file
         xdmf = examples.load_meshseries_HT_2D_XDMF()
         # all data is in separated groups of one h5 file
@@ -61,15 +74,6 @@ class TestUtils:
         # This XDMF file is not generate via OGS/OGSTools, therefore the
         # underlying file structure is not known and no optimization is possible.
         assert xmf.rawdata_file() is None
-
-    #        assert xdmf._xdmf_reader.has_fast_access() == True
-    #        assert xdmf._xdmf_reader.has_fast_access("temperature") == True
-    #        assert xmf._xdmf_reader.has_fast_access() == False
-    #        assert xmf._xdmf_reader.has_fast_access("temperature") == False
-    #        assert xdmf._xdmf_reader.h5path("temperature").suffix == ".h5"
-    #        assert xdmf._xdmf_reader.h5path().suffix == ".h5"
-    #        assert xmf._xdmf_reader.h5path("temperature").suffix in [".xdmf",".xmf"]
-    #        assert xmf._xdmf_reader.h5path().suffix  in [".xdmf",".xmf"]
 
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
