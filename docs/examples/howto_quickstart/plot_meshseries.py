@@ -50,7 +50,7 @@ mesh_ts10.plot(show_edges=True)
 
 # %%
 # You can select a time steps with the `[] operator`
-# This example take the last time step (result) and show meta information about the mesh
+# This example shows the last time step (result) and shows meta information about the mesh.
 
 print(ms[-1])
 
@@ -75,7 +75,7 @@ ms.mesh(0).plot()
 #
 # 2. data[]
 #    - Get a specific variable over a specific time range.
-#    - Efficient (only XDMF) for a large set of timesteps , but limited data is needed.
+#    - Efficient (only XDMF) for a large set of timesteps , but a small amount of cells / points is needed.
 #    - :py:mod:`ogstools.meshlib.mesh_series.MeshSeries.data`
 
 
