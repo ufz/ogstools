@@ -81,7 +81,7 @@ anim = mesh_series.animate(
 #
 # ..  code-block:: python
 #
-ot.plot.utils.save_animation(anim, "Saturation", fps=5)
+#   ot.plot.utils.save_animation(anim, "Saturation", fps=5)
 #
 
 # sphinx_gallery_start_ignore
