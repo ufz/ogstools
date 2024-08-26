@@ -10,6 +10,7 @@ example from the ogs benchmark gallery
 """
 
 # %%
+import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -52,18 +53,35 @@ timevalues = np.linspace(
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
 # Note that rendering many frames in conjunction with large meshes might take
-# a really long time.
+# a really long time. We can pass two functions to `animate`:
+# `mesh_func` which transforms the mesh and
+# `plot_func` which can apply custom formatting and / or plotting.
+
+
+def mesh_func(mesh: ot.Mesh) -> ot.Mesh:
+    "Clip the left half of the mesh."
+    return mesh.clip("-x", [0, 0, 0])
+
+
+def plot_func(ax: plt.Axes, timevalue: float) -> None:
+    "Add the time to the title."
+    ax.set_title(f"{timevalue/(365.25*86400):.1f} yrs", loc="center")
+
 
 # %%
-titles = [f"{tv/(365.25*86400):.1f} yrs" for tv in timevalues]
-anim = mesh_series.animate(ot.variables.saturation, timevalues, titles)
+anim = mesh_series.animate(
+    ot.variables.saturation,
+    timevalues,
+    mesh_func=mesh_func,
+    plot_func=plot_func,
+)
 
 # %% [markdown]
 # The animation can be saved (as mp4) like so:
 #
 # ..  code-block:: python
 #
-#   ot.plot.utils.save_animation(anim, "Saturation", fps=5)
+ot.plot.utils.save_animation(anim, "Saturation", fps=5)
 #
 
 # sphinx_gallery_start_ignore

@@ -202,8 +202,12 @@ class TestPlotting:
         """Test creation of animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
-        titles = [str(tv) for tv in timevalues]
-        anim = meshseries.animate(ot.variables.temperature, timevalues, titles)
+        anim = meshseries.animate(
+            ot.variables.temperature,
+            timevalues,
+            mesh_func=lambda mesh: mesh.clip("x"),
+            plot_func=lambda ax, t: ax.set_title(str(t)),
+        )
         anim.to_jshtml()
         plt.close()
 

@@ -548,7 +548,9 @@ class MeshSeries:
         self,
         variable: Variable,
         timesteps: Sequence | None = None,
-        titles: list[str] | None = None,
+        mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh,
+        plot_func: Callable[[plt.Axes, float], None] = lambda *_: None,
+        **kwargs: Any,
     ) -> FuncAnimation:
         """
         Create an animation for a variable with given timesteps.
@@ -556,34 +558,40 @@ class MeshSeries:
         :param variable: the field to be visualized on all timesteps
         :param timesteps: if sequence of int: the timesteps to animate
                         if sequence of float: the timevalues to animate
-        :param titles: the title on top of the animation for each frame
+        :param mesh_func:   A function which expects to read a mesh and return a
+                            mesh. Useful, for slicing / clipping / thresholding
+                            the meshseries for animation.
+        :param plot_func:   A function which expects to read a matplotlib Axes
+                            and the time value of the current frame. Useful to
+                            customize the plot in the animation.
+
+        :Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
         """
         plot.setup.layout = "tight"
         plot.setup.combined_colorbar = True
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = self.read(0, False).plot_contourf(variable)
+        fig = plot.contourf(mesh_func(self.read(0, False)), variable)
+        assert isinstance(fig, plt.Figure)
+        plot_func(fig.axes[0], 0.0)
 
         def init() -> None:
             pass
 
         def animate_func(i: int | float, fig: plt.Figure) -> None:
-            index = np.argmin(np.abs(np.asarray(ts) - i))
-
             fig.axes[-1].remove()  # remove colorbar
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
-            if titles is not None:
-                plot.setup.title_center = titles[index]
             if isinstance(i, int):
-                mesh = self.read(i)
+                mesh = mesh_func(self.read(i))
             else:
-                mesh = self.read_interp(i, True)
+                mesh = mesh_func(self.read_interp(i, True))
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                fig = plot.contourplots.draw_plot(
-                    mesh, variable, fig=fig, axes=fig.axes[0]
+                plot_func(fig.axes[0], i)
+                plot.contourplots.draw_plot(
+                    mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
                 )  # type: ignore[assignment]
                 plot.utils.update_font_sizes(fig.axes)
 
