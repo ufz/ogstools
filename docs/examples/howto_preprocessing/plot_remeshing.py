@@ -25,7 +25,7 @@ import ogstools as ot
 from ogstools import examples
 from ogstools.msh2vtu import msh2vtu
 
-mesh = examples.load_meshseries_THM_2D_PVD().read(1)
+mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 
 # %% This is our example mesh which we want to discretize with triangle
 # elements.
@@ -36,7 +36,7 @@ fig = mesh.plot_contourf(ot.variables.material_id)
 # an OGS-compatible vtu file.
 
 # %%
-mesh = examples.load_meshseries_THM_2D_PVD().read(1)
+mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
 ot.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)

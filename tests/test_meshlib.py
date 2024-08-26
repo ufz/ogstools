@@ -17,29 +17,63 @@ class TestUtils:
     """Test case for ogstools utilities."""
 
     def test_meshseries_xdmf(self):
+        xdmf_ms = examples.load_meshseries_HT_2D_XDMF()._xdmf_reader
+        assert xdmf_ms.has_fast_access()
+        assert xdmf_ms.has_fast_access("temperature")
+        assert xdmf_ms.rawdata_path("temperature").suffix == ".h5"
+        assert xdmf_ms.rawdata_path().suffix == ".h5"
+
+        xmf_ms = examples.load_meshseries_HT_2D_paraview_XMF()._xdmf_reader
+        assert not xmf_ms.has_fast_access()
+        assert not xmf_ms.has_fast_access("temperature")
+        assert xmf_ms.rawdata_path("temperature").suffix in [".xdmf", ".xmf"]
+        assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
+
+    def test_meshseries_fileformats_indexing(self):
         # all data is in one group in one h5 file
         xdmf = examples.load_meshseries_HT_2D_XDMF()
         # all data is in separated groups of one h5 file
         xmf = examples.load_meshseries_HT_2D_paraview_XMF()
 
-        for ht in [xdmf, xmf]:
+        pvd = examples.load_meshseries_HT_2D_PVD()
+
+        vtu = examples.load_meshseries_HT_2D_VTU()
+
+        for ht in [xdmf, xmf, pvd]:
             # temperature is scalar last dimension = 1 omitted
             assert np.shape(ht.values("temperature")) == (97, 190)
-            # non-scalar attribute
+            # non-scalar values
             assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
 
-            assert np.shape(ht.select("temperature")[1:3, :]) == (2, 190)
+            assert np.shape(ht.data("temperature")[1:3, :]) == (2, 190)
             # no range for a dimension -> this dimension gets omitted
-            assert np.shape(ht.select("temperature")[1, :]) == (190,)
+            assert np.shape(ht.data("temperature")[1, :]) == (190,)
             # select range with length for a dimension to keep dimension
-            assert np.shape(ht.select("temperature")[1:2, :]) == (1, 190)
+            assert np.shape(ht.data("temperature")[1:2, :]) == (1, 190)
             # all values
-            assert np.shape(ht.select("temperature")[:]) == np.shape(
+            assert np.shape(ht.data("temperature")[:]) == np.shape(
                 ht.values("temperature")
             )
             # last 2 steps
-            last_2_steps = ht.select("darcy_velocity")[-2:, 1:4, :]
+            last_2_steps = ht.data("darcy_velocity")[-2:, 1:4, :]
             assert np.shape(last_2_steps) == (2, 3, 2)
+
+        # check vtu, only timestep=0 is allowed
+
+        assert np.shape(vtu.values("temperature")) == (190,)
+        assert np.shape(vtu.values("darcy_velocity")) == (190, 2)
+        assert np.shape(vtu.data("temperature")[0, :]) == (190,)
+        assert np.shape(vtu.data("temperature")[:, 0:5]) == (1, 5)
+        assert np.shape(vtu.data("darcy_velocity")[0, 1:4, :]) == (3, 2)
+
+        # check if the data is read correctly
+        h5file = xdmf.rawdata_file()
+        assert h5file is not None
+        assert h5file.suffix == ".h5"
+
+        # This XDMF file is not generate via OGS/OGSTools, therefore the
+        # underlying file structure is not known and no optimization is possible.
+        assert xmf.rawdata_file() is None
 
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
@@ -51,8 +85,8 @@ class TestUtils:
 
         for ms in [pvd, xdmf]:
             try:
-                mesh1 = ms.read(0)
-                mesh1_closest = ms.read_closest(1e-6)
+                mesh1 = ms.mesh(0)
+                mesh1_closest = ms.mesh(ms.closest_timestep(1e-6))
             except Exception:
                 pytest.fail("Read functions of MeshSeries failed")
 
@@ -94,7 +128,7 @@ class TestUtils:
     def test_domain_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mask = mesh_series.read(0).ctp()["MaterialIDs"] > 3
+        mask = mesh_series.mesh(0).ctp()["MaterialIDs"] > 3
         values = mesh_series.aggregate_over_domain(
             "temperature", "max", mask=mask
         )
@@ -119,7 +153,7 @@ class TestUtils:
     def test_probe(self):
         "Test point probing on meshseries."
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.read(0).cell_centers().points
+        points = mesh_series.mesh(0).cell_centers().points
         for method in ["nearest", "linear"]:
             values = mesh_series.probe(points, "temperature", method)
             assert not np.any(np.isnan(values))
@@ -127,22 +161,22 @@ class TestUtils:
     def test_plot_probe(self):
         """Test creation of probe plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        points = meshseries.read(0).center
+        points = meshseries.mesh(0).center
         meshseries.plot_probe(points, ot.variables.temperature)
-        points = meshseries.read(0).points[[0, -1]]
+        points = meshseries.mesh(0).points[[0, -1]]
         meshseries.plot_probe(points, ot.variables.temperature)
         meshseries.plot_probe(points, ot.variables.velocity)
         meshseries.plot_probe(points, ot.variables.stress)
         meshseries.plot_probe(points, ot.variables.stress.von_Mises)
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.read(0).center
+        points = mesh_series.mesh(0).center
         meshseries.plot_probe(points, ot.variables.temperature)
         meshseries.plot_probe(points, ot.variables.velocity)
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        mesh1 = meshseries.read(0)
-        mesh2 = meshseries.read(-1)
+        mesh1 = meshseries.mesh(0)
+        mesh2 = meshseries.mesh(-1)
         mesh_diff = ot.meshlib.difference(mesh1, mesh2, "temperature")
         mesh_diff = ot.meshlib.difference(
             mesh1, mesh2, ot.variables.temperature
@@ -153,8 +187,8 @@ class TestUtils:
     def test_diff_pairwise(self):
         n = 5
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        meshes1 = [meshseries.read(0)] * n
-        meshes2 = [meshseries.read(-1)] * n
+        meshes1 = [meshseries.mesh(0)] * n
+        meshes2 = [meshseries.mesh(-1)] * n
         meshes_diff = ot.meshlib.difference_pairwise(
             meshes1, meshes2, ot.variables.temperature
         )
@@ -165,7 +199,7 @@ class TestUtils:
 
     def test_diff_matrix_single(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        meshes1 = [meshseries.read(0), meshseries.read(-1)]
+        meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
         meshes_diff = ot.meshlib.difference_matrix(
             meshes1, variable=ot.variables.temperature
         )
@@ -180,8 +214,8 @@ class TestUtils:
 
     def test_diff_matrix_unequal(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        meshes1 = [meshseries.read(0), meshseries.read(-1)]
-        meshes2 = [meshseries.read(0), meshseries.read(-1), meshseries.read(-1)]
+        meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
+        meshes2 = [meshseries.mesh(0), meshseries.mesh(-1), meshseries.mesh(-1)]
         meshes_diff = ot.meshlib.difference_matrix(
             meshes1, meshes2, ot.variables.temperature
         )
@@ -245,7 +279,7 @@ class TestUtils:
         ms = examples.load_meshseries_HT_2D_XDMF()
         profile = np.array([[4, 2, 0], [4, 18, 0]])
         ms_sp, _ = ot.meshlib.sample_polyline(
-            ms.read(-1),
+            ms.mesh(-1),
             ["pressure", "temperature"],
             profile,
         )
@@ -269,7 +303,7 @@ class TestUtils:
             ]
         )
         ms_sp, _ = ot.meshlib.sample_polyline(
-            ms.read(1),
+            ms.mesh(1),
             ot.variables.temperature,
             profile,
             resolution=10,
@@ -285,7 +319,7 @@ class TestUtils:
         ms = examples.load_meshseries_HT_2D_XDMF()
         profile = np.array([[4, 2, 0], [4, 18, 0]])
         ms_sp, _ = ot.meshlib.sample_polyline(
-            ms.read(-1),
+            ms.mesh(-1),
             "darcy_velocity",
             profile,
         )
@@ -331,9 +365,9 @@ class TestUtils:
                 write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
             )
             meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
-            int_pts = meshseries.read(-1).to_ip_point_cloud()
+            int_pts = meshseries.mesh(-1).to_ip_point_cloud()
             ip_ms = meshseries.ip_tesselated()
-            ip_mesh = ip_ms.read(-1)
+            ip_mesh = ip_ms.mesh(-1)
             vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
             assert not np.any(np.isnan(vals))
             assert int_pts.number_of_points == ip_mesh.number_of_cells
@@ -378,11 +412,11 @@ class TestUtils:
         model.replace_text("XDMF", xpath="./time_loop/output/type")
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-        mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").read(-1)
+        mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").mesh(-1)
         assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
 
     def test_remesh_with_tri(self):
-        mesh = examples.load_meshseries_THM_2D_PVD().read(1)
+        mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
         temp_dir = Path(mkdtemp())
         msh_path = temp_dir / "tri_mesh.msh"
         ot.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)

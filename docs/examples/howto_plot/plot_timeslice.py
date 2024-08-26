@@ -26,7 +26,7 @@ si = ot.variables.saturation
 points_vert = np.linspace([25, 0, -75], [25, 0, 75], num=100)
 points_hori = np.linspace([0, 0, 60], [150, 0, 60], num=100)
 points_diag = np.linspace([25, 0, 75], [100, 0, 0], num=100)
-fig = mesh_series.read(-1).plot_contourf(si, vmin=0)
+fig = mesh_series.mesh(-1).plot_contourf(si, vmin=0)
 fig.axes[0].plot(points_vert[[0, -1], 0], points_vert[[0, -1], 2], "-k2")
 fig.axes[0].plot(points_hori[[0, -1], 0], points_hori[[0, -1], 2], "--k2")
 fig.axes[0].plot(points_diag[[0, -1], 0], points_diag[[0, -1], 2], "-.k2")

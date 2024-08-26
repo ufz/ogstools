@@ -19,7 +19,7 @@ from ogstools import examples
 # and load an example data set:
 
 # %%
-mesh = examples.load_meshseries_HT_2D_XDMF().read(-1)
+mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
 
 profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
 
@@ -103,7 +103,7 @@ mesh_sp.head(5)
 
 # %%
 profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
-mesh = examples.load_meshseries_CT_2D_XDMF().read(11)
+mesh = examples.load_meshseries_CT_2D_XDMF().mesh(11)
 
 # %%
 mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
@@ -156,7 +156,7 @@ profile_THM = np.array(
 # For this example we will use a different dataset:
 
 # %%
-mesh = examples.load_meshseries_THM_2D_PVD().read(-1)
+mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
 
 # %%
 ms_THM_sp, dist_at_knot = ot.meshlib.sample_polyline(

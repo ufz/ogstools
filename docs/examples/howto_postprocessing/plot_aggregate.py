@@ -66,7 +66,7 @@ fig = mesh.plot_contourf(saturation)
 # Difference between the last and the first timestep:
 
 # %%
-mesh = mesh_series.read(-1).difference(mesh_series.read(0), saturation)
+mesh = mesh_series.mesh(-1).difference(mesh_series.mesh(0), saturation)
 fig = mesh.plot_contourf(saturation)
 
 # %% [markdown]

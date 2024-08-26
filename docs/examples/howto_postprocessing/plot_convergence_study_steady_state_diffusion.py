@@ -78,7 +78,7 @@ for n_edge_cells in edge_cells:
 # %%
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
 solution = examples.analytical_diffusion(
-    ot.MeshSeries(result_paths[-1]).read(0)
+    ot.MeshSeries(result_paths[-1]).mesh(0)
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, variables.hydraulic_head)

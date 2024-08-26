@@ -29,6 +29,16 @@ from .mesh import Mesh
 from .xdmf_reader import DataItems, XDMFReader
 
 
+class PVDDataItems:
+    def __init__(self, values: np.ndarray) -> None:
+        self.values = values
+
+    def __getitem__(
+        self, index: tuple | int | slice | np.ndarray
+    ) -> np.ndarray:
+        return self.values[index]
+
+
 class MeshSeries:
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
@@ -59,6 +69,7 @@ class MeshSeries:
         self.spatial_output_unit = spatial_output_unit
         self._data: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
+        self._dataitems: dict[str, Any] = {}
         if self._data_type == "xmf":
             self._data_type = "xdmf"
 
@@ -89,13 +100,150 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
-    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
-        "Return the timevalues, optionally converted to another time unit."
+    def __getitem__(self, index: int) -> list[pv.UnstructuredGrid]:
+        # ToDo performance optimization for XDMF / HDF5 files
+        return self.mesh(index)
+
+    def __len__(self) -> int:
+        return len(self.timesteps)
+
+    def data(self, variable_name: str) -> DataItems:
+        """
+        Returns an DataItems object, that allows array indexing.
+        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
+        pyvista functionality
+        Selection example:
+        ms = MeshSeries()
+        temp = ms.data("temperature")
+        time_step1_temps = temp[1,:]
+        temps_at_some_points = temp[:,1:3]
+        :param variable_name: Name the variable (e.g."temperature")
+        :returns:   Returns an objects that allows array indexing.
+        """
+
+        if self._data_type == "xdmf":
+            return self._xdmf_reader.data_items[variable_name]
+        # for pvd and vtu check if data is already read or construct it
+        if self._dataitems and self._dataitems[variable_name]:
+            return self._dataitems[variable_name]
+
+        all_meshes = [self.mesh(i) for i in self.timesteps]
+
+        dataitems = self._structure_dataitems(all_meshes)
+        # Lazy dataitems
+        self._dataitems = {
+            key: PVDDataItems(np.asarray(value))
+            for key, value in dataitems.items()
+        }
+        return self._dataitems[variable_name]
+
+    def _structure_dataitems(
+        self, all_meshes: list[pv.UnstructuredGrid]
+    ) -> dict[str, list]:
+        # Reads all meshes and returns a dict with variables as key
+        # (e.g. "temperature")
+        dataitems: dict[str, list] = {}
+        for mesh in all_meshes:
+            for name in mesh.cell_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.cell_data[name])
+                else:
+                    dataitems[name] = [mesh.cell_data[name]]
+            for name in mesh.point_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.point_data[name])
+                else:
+                    dataitems[name] = [mesh.point_data[name]]
+        return dataitems
+
+    def __repr__(self) -> str:
+        if self._data_type == "vtu":
+            reader = self._vtu_reader
+        elif self._data_type == "pvd":
+            reader = self._pvd_reader
+        else:
+            reader = self._xdmf_reader
         return (
-            u_reg.Quantity(self._timevalues, self.time_unit)
-            .to(self.time_unit if time_unit is None else time_unit)
-            .magnitude
+            f"MeshSeries:\n"
+            f"filepath:       {self.filepath}\n"
+            f"spatial_unit:   {self.spatial_unit}\n"
+            f"data_type:      {self._data_type}\n"
+            f"timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps\n"
+            f"reader:         {reader}\n"
+            f"rawdata_file:   {self.rawdata_file()}\n"
         )
+
+    def aggregate(
+        self,
+        variable: Variable | str,
+        np_func: Callable,
+        axis: int,
+        mask: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Aggregate data of all timesteps using a specified function.
+
+        :param variable:   The mesh variable to be aggregated.
+        :param func:            The aggregation function to apply.
+        :returns:   A `numpy.ndarray` of the same length as the timesteps if
+                    axis=0 or of the same length as the data if axis=1.
+        """
+        if isinstance(variable, Variable):
+            if variable.mesh_dependent:
+                vals = np.asarray(
+                    [
+                        variable.transform(self.mesh(t))
+                        for t in tqdm(self.timesteps)
+                    ]
+                )
+            else:
+                vals = variable.transform(self.values(variable.data_name))
+        else:
+            vals = self.values(variable)
+        return (
+            np_func(vals, axis=axis)
+            if mask is None
+            else np_func(vals[:, mask], axis=axis)
+        )
+
+    _np_str: ClassVar = {
+        "min": np.min, "max": np.max, "mean": np.mean, "median": np.median,
+        "sum": np.sum, "std": np.std, "var": np.var,
+    }  # fmt: skip
+
+    def aggregate_over_time(
+        self,
+        variable: Variable | str,
+        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+    ) -> Mesh:
+        """Aggregate data over all timesteps using a specified function.
+
+        :param variable:   The mesh variable to be aggregated.
+        :param func:            The aggregation function to apply.
+        :returns:   A mesh with aggregated data according to the given function.
+        """
+        np_func = self._np_str[func]
+        # TODO: add function to create an empty mesh from a given on
+        # custom field_data may need to be preserved
+        mesh = self.mesh(0).copy(deep=True)
+        mesh.clear_point_data()
+        mesh.clear_cell_data()
+        if isinstance(variable, Variable):
+            output_name = f"{variable.output_name}_{func}"
+        else:
+            output_name = f"{variable}_{func}"
+        mesh[output_name] = self.aggregate(variable, np_func, axis=0)
+        return mesh
+
+    def clear(self) -> None:
+        self._data.clear()
+
+    def closest_timestep(self, timevalue: float) -> int:
+        """Return the corresponding timestep from a timevalue."""
+        return int(np.argmin(np.abs(self._timevalues - timevalue)))
+
+    def closest_timevalue(self, timevalue: float) -> float:
+        """Return the closest timevalue to a timevalue."""
+        return self._timevalues[self.closest_timestep(timevalue)]
 
     def ip_tesselated(self) -> "MeshSeries":
         "Create a new MeshSeries from integration point tessellation."
@@ -105,12 +253,12 @@ class MeshSeries:
             self.spatial_unit,
             self.spatial_output_unit,
         )
-        ip_mesh = self.read(0).to_ip_mesh()
-        ip_pt_cloud = self.read(0).to_ip_point_cloud()
+        ip_mesh = self.mesh(0).to_ip_mesh()
+        ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
         for ts in self.timesteps:
             ip_data = {
-                key: self.read(ts).field_data[key][np.argsort(ordering)]
+                key: self.mesh(ts).field_data[key][np.argsort(ordering)]
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
@@ -118,25 +266,8 @@ class MeshSeries:
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
-    def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
-        self._pvd_reader.set_active_time_point(timestep)
-        return self._pvd_reader.read()[0]
-
-    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
-        points, cells = self._xdmf_reader.read_points_cells()
-        _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
-            timestep
-        )
-        meshio_mesh = meshio.Mesh(
-            points, cells, point_data, cell_data, field_data
-        )
-        # pv.from_meshio does not copy field_data (fix in pyvista?)
-        pv_mesh = pv.from_meshio(meshio_mesh)
-        pv_mesh.field_data.update(field_data)
-        return pv_mesh
-
-    def read(self, timestep: int, lazy_eval: bool = True) -> Mesh:
-        """Lazy read function."""
+    def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
+        """Selects mesh at given timestep all data function."""
         timestep = self.timesteps[timestep]
         if timestep in self._data:
             pv_mesh = self._data[timestep]
@@ -156,30 +287,18 @@ class MeshSeries:
             mesh.filepath = Path(self.filepath)
         return mesh
 
-    def clear(self) -> None:
-        self._data.clear()
+    def rawdata_file(self) -> Path | None:
+        """
+        Checks, if working with the raw data is possible. For example,
+        OGS Simulation results with XDMF support efficient raw data access via
+        `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
 
-    @property
-    def timesteps(self) -> range:
-        """Return the timesteps of the timeseries data."""
-        if self._data_type == "vtu":
-            return range(1)
-        if self._data_type == "pvd":
-            return range(self._pvd_reader.number_time_points)
-        # elif self._data_type == "xdmf":
-        return range(len(self._timevalues))
-
-    def closest_timestep(self, timevalue: float) -> int:
-        """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(self._timevalues - timevalue)))
-
-    def closest_timevalue(self, timevalue: float) -> float:
-        """Return the closest timevalue to a timevalue."""
-        return self._timevalues[self.closest_timestep(timevalue)]
-
-    def read_closest(self, timevalue: float) -> Mesh:
-        """Return the closest timestep in the data for a given timevalue."""
-        return self.read(self.closest_timestep(timevalue))
+        :return: The location of the file containing the raw data. If it does not
+                 support efficient read (e.g., no efficient slicing), it returns None.
+        """
+        if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
+            return self._xdmf_reader.rawdata_path()  # single h5 file
+        return None
 
     def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
@@ -187,9 +306,9 @@ class MeshSeries:
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
-            return self.read(ts1, lazy_eval)
-        mesh1 = self.read(ts1, lazy_eval)
-        mesh2 = self.read(ts2, lazy_eval)
+            return self.mesh(ts1, lazy_eval)
+        mesh1 = self.mesh(ts1, lazy_eval)
+        mesh2 = self.mesh(ts2, lazy_eval)
         mesh = mesh1.copy(deep=True)
         for key in mesh1.point_data:
             if np.all(mesh1.point_data[key] == mesh2.point_data[key]):
@@ -201,24 +320,23 @@ class MeshSeries:
             )
         return mesh
 
-    def select(self, data_name: str) -> DataItems:
-        """
-        Returns an attribute object, that allows array indexing.
-        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
-        pyvista functionality
-        Selection example:
-        ms = MeshSeries()
-        temp = ms.select("temperature")
-        time_step1_temps = temp[1,:]
-        temps_at_some_points = temp[:,1:3]
-        :param data_name: Name the data item. Attribute(e.g."temperature")
-        :returns:   Returns an objects that allows array indexing. S
-        """
+    @property
+    def timesteps(self) -> range:
+        """Return the timesteps of the timeseries data."""
+        if self._data_type == "vtu":
+            return range(1)
+        if self._data_type == "pvd":
+            return range(self._pvd_reader.number_time_points)
+        # elif self._data_type == "xdmf":
+        return range(len(self._timevalues))
 
-        if self._data_type != "xdmf":
-            msg = "Indexing is only possible for xdmf. Use values() function instead."
-            ValueError(msg)
-        return self._xdmf_reader.data_items[data_name]
+    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
+        "Return the timevalues, optionally converted to another time unit."
+        return (
+            u_reg.Quantity(self._timevalues, self.time_unit)
+            .to(self.time_unit if time_unit is None else time_unit)
+            .magnitude
+        )
 
     def values(
         self, data_name: str, selection: slice | np.ndarray | None = None
@@ -252,7 +370,7 @@ class MeshSeries:
         if self._data_type == "pvd":
             return np.asarray(
                 [
-                    self.read(t)[data_name]
+                    self.mesh(t)[data_name]
                     for t in tqdm(self.timesteps[time_selection])
                 ]
             )
@@ -263,69 +381,31 @@ class MeshSeries:
                     for t in self.timesteps[time_selection]
                 ]
             )
-        mesh = self.read(0)
+        # vtu
+        mesh = self.mesh(0)
         return mesh[data_name]
 
-    def aggregate(
-        self,
-        variable: Variable | str,
-        np_func: Callable,
-        axis: int,
-        mask: np.ndarray | None = None,
-    ) -> np.ndarray:
-        """Aggregate data of all timesteps using a specified function.
+    def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
+        self._pvd_reader.set_active_time_point(timestep)
+        return self._pvd_reader.read()[0]
 
-        :param variable:   The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
-        :returns:   A `numpy.ndarray` of the same length as the timesteps if
-                    axis=0 or of the same length as the data if axis=1.
-        """
-        if isinstance(variable, Variable):
-            if variable.mesh_dependent:
-                vals = np.asarray(
-                    [
-                        variable.transform(self.read(t))
-                        for t in tqdm(self.timesteps)
-                    ]
-                )
-            else:
-                vals = variable.transform(self.values(variable.data_name))
-        else:
-            vals = self.values(variable)
-        return (
-            np_func(vals, axis=axis)
-            if mask is None
-            else np_func(vals[:, mask], axis=axis)
-        )
+    def _read_xdmf(self, timestep: int | tuple | slice) -> pv.UnstructuredGrid:
+        if isinstance(timestep, int):
+            points, cells = self._xdmf_reader.read_points_cells()
+            _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
+                timestep
+            )
+            meshio_mesh = meshio.Mesh(
+                points, cells, point_data, cell_data, field_data
+            )
+            # pv.from_meshio does not copy field_data (fix in pyvista?)
+            pv_mesh = pv.from_meshio(meshio_mesh)
+            pv_mesh.field_data.update(field_data)
+            return pv_mesh
 
-    _np_str: ClassVar = {
-        "min": np.min, "max": np.max, "mean": np.mean, "median": np.median,
-        "sum": np.sum, "std": np.std, "var": np.var,
-    }  # fmt: skip
-
-    def aggregate_over_time(
-        self,
-        variable: Variable | str,
-        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-    ) -> Mesh:
-        """Aggregate data over all timesteps using a specified function.
-
-        :param variable:   The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
-        :returns:   A mesh with aggregated data according to the given function.
-        """
-        np_func = self._np_str[func]
-        # TODO: add function to create an empty mesh from a given on
-        # custom field_data may need to be preserved
-        mesh = self.read(0).copy(deep=True)
-        mesh.clear_point_data()
-        mesh.clear_cell_data()
-        if isinstance(variable, Variable):
-            output_name = f"{variable.output_name}_{func}"
-        else:
-            output_name = f"{variable}_{func}"
-        mesh[output_name] = self.aggregate(variable, np_func, axis=0)
-        return mesh
+        # ToDo support effective read of multiple meshes
+        msg = "Only single timestep reading is supported for XDMF files."
+        raise NotImplementedError(msg)
 
     def _time_of_extremum(
         self,
@@ -336,7 +416,7 @@ class MeshSeries:
         """Returns a Mesh with the time of a given variable extremum as data.
 
         The data is named as `f'{prefix}_{variable.output_name}_time'`."""
-        mesh = self.read(0).copy(deep=True)
+        mesh = self.mesh(0).copy(deep=True)
         variable = get_preset(variable, mesh)
         mesh.clear_point_data()
         mesh.clear_cell_data()
@@ -394,7 +474,7 @@ class MeshSeries:
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
         """
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         timeslice = slice(None, None) if timesteps is None else timesteps
         values = self.aggregate_over_domain(variable.magnitude, func, mask)[
             timeslice
@@ -432,7 +512,7 @@ class MeshSeries:
         """
         Probe the MeshSeries at observation points.
 
-        :param points:          The points to sample at.
+        :param points:          The observation points to sample at.
         :param data_name:       Name of the data to sample.
         :param interp_method:   Interpolation method, defaults to `linear`
 
@@ -440,11 +520,11 @@ class MeshSeries:
         """
         points = np.asarray(points).reshape((-1, 3))
         values = np.swapaxes(self.values(data_name), 0, 1)
-        geom = self.read(0).points
+        geom = self.mesh(0).points
 
         if values.shape[0] != geom.shape[0]:
             # assume cell_data
-            geom = self.read(0).cell_centers().points
+            geom = self.mesh(0).cell_centers().points
 
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
@@ -489,7 +569,7 @@ class MeshSeries:
             :returns:   A matplotlib Figure
         """
         points = np.asarray(points).reshape((-1, 3))
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         values = variable.magnitude.transform(
             self.probe(points, variable.data_name, interp_method)
         )
@@ -501,7 +581,7 @@ class MeshSeries:
             x_values = time_unit_conversion * self._timevalues
             x_label = f"time / {time_unit}" if time_unit else "time"
         else:
-            variable_abscissa = get_preset(variable_abscissa, self.read(0))
+            variable_abscissa = get_preset(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
                 self.probe(points, variable_abscissa.data_name, interp_method)
             )
@@ -572,7 +652,7 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = plot.contourf(mesh_func(self.read(0, False)), variable)
+        fig = plot.contourf(mesh_func(self.mesh(0, False)), variable)
         assert isinstance(fig, plt.Figure)
         plot_func(fig.axes[0], 0.0)
 
@@ -584,7 +664,7 @@ class MeshSeries:
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
             if isinstance(i, int):
-                mesh = mesh_func(self.read(i))
+                mesh = mesh_func(self.mesh(i))
             else:
                 mesh = mesh_func(self.read_interp(i, True))
             with warnings.catch_warnings():
@@ -661,7 +741,7 @@ class MeshSeries:
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
 
-        variable = get_preset(variable, self.read(0))
+        variable = get_preset(variable, self.mesh(0))
         values = variable.transform(self.probe(points, variable.data_name))
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
@@ -709,7 +789,7 @@ class MeshSeries:
         else:
             ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
 
-        spatial = plot.shared.spatial_quantity(self.read(0))
+        spatial = plot.shared.spatial_quantity(self.mesh(0))
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
         ax.set_ylabel(ylabel + " / " + spatial.output_unit, fontsize=fontsize)
         xlabel = "time / " + time_unit

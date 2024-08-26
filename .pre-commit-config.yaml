@@ -11,10 +11,12 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
+        exclude: ^ogstools/examples/
       - id: name-tests-test
         args: ["--pytest-test-first"]
       - id: requirements-txt-fixer
       - id: trailing-whitespace
+        exclude: ^ogstools/examples/
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:

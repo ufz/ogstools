@@ -78,7 +78,7 @@ model.run_model(logfile=temp_dir / "out.log")
 # 5. Read the results and plot them.
 ms = ot.MeshSeries(temp_dir / "sim_2D_HT_model.pvd")
 # Read the last timestep:
-ogs_sim_res = ms.read(ms.timesteps[-1])
+ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """
 It is also possible to read the file directly with pyvista:
 ogs_sim_res = pv.read(

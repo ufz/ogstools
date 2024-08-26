@@ -89,7 +89,7 @@ for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
     mesh_series = ot.MeshSeries(sim_result)
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
-        mesh = mesh_series.read(ts)
+        mesh = mesh_series.mesh(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
     max_T = ot.variables.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW

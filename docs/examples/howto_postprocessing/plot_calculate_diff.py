@@ -38,8 +38,8 @@ variable = ot.variables.temperature
 # the same topology and contain the variable of interest, the difference
 # will work fine.
 mesh_series = examples.load_meshseries_THM_2D_PVD()
-mesh1 = mesh_series.read(0)
-mesh2 = mesh_series.read(-1)
+mesh1 = mesh_series.mesh(0)
+mesh2 = mesh_series.mesh(-1)
 
 # %% [markdown]
 # The following call will return a mesh containing the difference of the
