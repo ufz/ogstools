@@ -360,12 +360,9 @@ def draw_plot(
     utils.label_spatial_axes(
         np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=spatial_unit
     )
-    np_axs[0, 0].set_title(setup.title_center, loc="center", y=1.02)
-    np_axs[0, 0].set_title(setup.title_left, loc="left", y=1.02)
-    np_axs[0, 0].set_title(setup.title_right, loc="right", y=1.02)
     # make extra space for the upper limit of the colorbar
-    if setup.layout == "tight":
-        plt.tight_layout(pad=1.4)
+    if setup.layout == "tight" and fig is not None:
+        fig.tight_layout(pad=1.4)
     if fig is not None and setup.combined_colorbar:
         cb_axs = np.ravel(np.asarray(fig.axes)).tolist()
         add_colorbars(fig, cb_axs, variable, _levels, **kwargs)

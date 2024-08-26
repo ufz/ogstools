@@ -50,12 +50,6 @@ class PlotSetup:
     """Controls the display of element edges, can be a boolean or 'str'. In the
     latter case element edges are always shown for if the name matches the
     variable data name."""
-    title_center: str
-    "The center part of the plot's title."
-    title_left: str
-    "The left part of the plot's title."
-    title_right: str
-    "The right part of the plot's title."
     log_scaled: bool
     "A boolean indicating whether the scaling should be logarithmic."
     show_region_bounds: bool
@@ -85,9 +79,6 @@ class PlotSetup:
             vmax=obj["vmax"],
             show_region_bounds=obj["show_region_bounds"],
             show_element_edges=obj["show_element_edges"],
-            title_center=obj["title_center"],
-            title_left=obj["title_left"],
-            title_right=obj["title_right"],
             log_scaled=obj["log_scaled"],
             layout=obj["layout"],
             material_names=obj["material_names"],
