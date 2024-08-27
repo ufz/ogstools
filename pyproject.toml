@@ -82,8 +82,7 @@ docs = [
   "trame-vtk>=2.6.0",
 ]
 feflow = [
-  "ifm_contrib>=0.2.2",
-  "matplotlib<3.8",     # TODO: remove when ifm_contrib supports matplotlib 3.8
+  "ifm_contrib>=0.2.3",
 ]
 
 [tool.pytest.ini_options]
