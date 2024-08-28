@@ -46,20 +46,20 @@ class BuildTree:
         """
         method to create dictionary from an xml entity
         """
-        q = None
+        element = None
         if tag is not None:
             if overwrite is True:
                 for child in parent:
                     if child.tag == tag:
-                        q = child
-            if q is None:
-                q = ET.SubElement(parent, tag)
+                        element = child
+            if element is None:
+                element = ET.SubElement(parent, tag)
             if text is not None:
-                q.text = str(text)
+                element.text = str(text)
             if attr is not None:
                 for key, val in attr.items():
-                    q.set(key, str(val))
-        return q
+                    element.set(key, str(val))
+        return element
 
     @classmethod
     def get_child_tag(
@@ -72,15 +72,15 @@ class BuildTree:
         """
         search for child tag based on tag and possible attributes
         """
-        q = None
+        element = None
         for child in parent:
             if child.tag == tag:
                 if not ((attr is None) and (attr_val is None)):
                     if child.get(attr) == attr_val:
-                        q = child
+                        element = child
                 else:
-                    q = child
-        return q
+                    element = child
+        return element
 
     @classmethod
     def get_child_tag_for_type(
@@ -89,12 +89,12 @@ class BuildTree:
         """
         search for child tag based on subtag type
         """
-        q = None
+        element = None
         for child in parent:
             if child.tag == tag:
                 for subchild in child:
                     if (subchild.tag == subtag) and (
                         subchild.text == subtagval
                     ):
-                        q = child
-        return q
+                        element = child
+        return element
