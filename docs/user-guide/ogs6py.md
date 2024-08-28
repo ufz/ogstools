@@ -2,11 +2,10 @@
 
 ## Overview
 
-ogs6py is a python-API for the OpenGeoSys finite element software.
-Its main functionalities include creating and altering OGS6 input files as well as executing OGS.
-The package allows to streamline OGS-workflows with python or Julia entirely in jupyter or pluto notebooks as demonstrated in the following video:
-
-[![video presentation of ogs6py and vtu interface](https://img.youtube.com/vi/eihNKjK-I-s/0.jpg)](https://www.youtube.com/watch?v=eihNKjK-I-s)
+ogs6py is a Python-API for the OpenGeoSys finite element software.
+Its main functionalities include creating and altering OGS6 input files, as well as executing OGS.
+The package allows you to automate OGS-workflows in Python via Jupyter or just plain Python scripts.
+This enables the user to create parameter plans and to execute them in parallel.
 
 # Features
 
@@ -18,14 +17,28 @@ The package allows to streamline OGS-workflows with python or Julia entirely in 
 
 ## Creating a new input file
 
-The following example consists of a simple mechanics problem. The source file can be found in the examples directory The names of the method calls are based on the corresponding XML tags.
+The following example consists of a simple mechanics problem.
+The source file can be found in the [OGS benchmark folder](https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/Mechanics/Linear/square_1e2.prj?ref_type=heads).
+The names of the method calls are based on the corresponding XML tags.
+
+First, initialize the ogs6py object:
 
 ```python
 from ogs6py import ogs
 
 model = ogs.OGS(PROJECT_FILE="simple_mechanics.prj")
+```
+
+Second, define geometry and/or meshes:
+
+```python
 model.geometry.add_geometry(filename="square_1x1.gml")
 model.mesh.add_mesh(filename="square_1x1_quad_1e2.vtu")
+```
+
+Set process and provide process related data:
+
+```python
 model.processes.set_process(
     name="SD",
     type="SMALL_DEFORMATION",
@@ -40,6 +53,11 @@ model.processes.add_process_variable(
     process_variable="process_variable", process_variable_name="displacement"
 )
 model.processes.add_secondary_variable(internal_name="sigma", output_name="sigma")
+```
+
+Define time steppening and output cycles:
+
+```python
 model.timeloop.add_process(
     process="SD",
     nonlinear_solver_name="basic_newton",
@@ -63,12 +81,22 @@ model.timeloop.add_output(
     each_steps="10",
     variables=["displacement", "sigma"],
 )
+```
+
+Define parameters needed for material properties and BC:
+
+```python
 model.parameters.add_parameter(name="E", type="Constant", value="1")
 model.parameters.add_parameter(name="nu", type="Constant", value="0.3")
 model.parameters.add_parameter(name="rho_sr", type="Constant", value="1")
 model.parameters.add_parameter(name="displacement0", type="Constant", values="0 0")
 model.parameters.add_parameter(name="dirichlet0", type="Constant", value="0")
 model.parameters.add_parameter(name="dirichlet1", type="Constant", value="0.05")
+```
+
+Set initial and boundary conditions:
+
+```python
 model.process_variables.set_ic(
     process_variable_name="displacement",
     components="2",
@@ -99,6 +127,11 @@ model.process_variables.add_bc(
     component="1",
     parameter="dirichlet1",
 )
+```
+
+Set linear and nonlinear solver(s):
+
+```python
 model.nonlinear_solvers.add_non_lin_solver(
     name="basic_newton",
     type="Newton",
@@ -130,9 +163,22 @@ model.linear_solvers.add_lin_solver(
     max_iteration_step="10000",
     error_tolerance="1e-16",
 )
+```
+
+Write project file to disc:
+
+```python
 model.write_input()
+```
+
+Execute file and pipe output to logfile out.log:
+
+```python
 model.run_model(logfile="out.log")
 ```
+
+If the desired OGS version is not in PATH, a separate path containing the
+OGS binary can be specified.
 
 ```python
 model.runModel(path="~/github/ogs/build_mkl/bin")
@@ -140,7 +186,7 @@ model.runModel(path="~/github/ogs/build_mkl/bin")
 
 An example using the MPL can be find in example_THM.py.
 
-## Alternatively it is possible to alter existing files using the available replace methods:
+## Modification of existing project files
 
 E.g., to iterate over three Young's moduli one can use the replace parameter method:
 
@@ -167,7 +213,7 @@ The Young's modulus in this file can also be accessed through 0'th occurrence of
 model.replace_text(E, xpath="./parameters/parameter/value", occurrence=0)
 ```
 
-For MPL based processes, there exist specific functions to set phase and medium properties: e.g.,
+For MPL (Material Property Library) based processes, like TH2M or Thermo-Richards-Mechanics, there exist specific functions to set phase and medium properties: e.g.,
 
 ```python
 model.replace_phase_property(
