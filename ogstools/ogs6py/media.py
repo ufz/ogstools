@@ -20,7 +20,7 @@ class Media(build_tree.BuildTree):
 
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
-        self.root = self._get_root()
+        self.root = self.tree.getroot()
         self.media = self.populate_tree(self.root, "media", overwrite=True)
 
         self.properties: dict[str, list[str]] = {

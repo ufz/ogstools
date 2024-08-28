@@ -20,7 +20,7 @@ class LinSolvers(build_tree.BuildTree):
 
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
-        self.root = self._get_root()
+        self.root = self.tree.getroot()
         self.lss = self.populate_tree(
             self.root, "linear_solvers", overwrite=True
         )

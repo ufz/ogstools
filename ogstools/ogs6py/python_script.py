@@ -18,7 +18,7 @@ class PythonScript(build_tree.BuildTree):
 
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
-        self.root = self._get_root()
+        self.root = self.tree.getroot()
         self.populate_tree(self.root, "python_script", overwrite=True)
 
     def set_pyscript(self, filename: str) -> None:

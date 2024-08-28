@@ -20,7 +20,7 @@ class Mesh(build_tree.BuildTree):
 
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
-        self.root = self._get_root()
+        self.root = self.tree.getroot()
         self.geometry = self.root.find("./geometry")
         self.meshes = self.root.find("./meshes")
         self.mesh = None

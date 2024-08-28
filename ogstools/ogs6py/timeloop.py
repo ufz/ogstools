@@ -20,7 +20,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
-        self.root = self._get_root()
+        self.root = self.tree.getroot()
         self.time_loop = self.populate_tree(
             self.root, "time_loop", overwrite=True
         )

@@ -25,9 +25,6 @@ class BuildTree:
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
 
-    def _get_root(self) -> ET.Element:
-        return self.tree.getroot()
-
     @classmethod
     def _convertargs(cls, args: dict[str, str]) -> None:
         """
