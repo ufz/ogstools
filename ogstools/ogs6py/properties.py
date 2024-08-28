@@ -194,11 +194,11 @@ def expand_tensors(
                 taglist = ["name", "type", "value"]
                 for i in range(multidim_prop[medium_id][name]):
                     textlist = [f"{name}{i}", "Constant", f"{proplist[i]}"]
-                    q = ET.SubElement(properties_level, "property")
+                    elmnt = ET.SubElement(properties_level, "property")
                     for j, tag in enumerate(taglist):
-                        r = ET.SubElement(q, tag)
+                        subelmnt = ET.SubElement(elmnt, tag)
                         if textlist[j] is not None:
-                            r.text = str(textlist[j])
+                            subelmnt.text = str(textlist[j])
     for element in tobedeleted:
         element.getparent().remove(element)
 
@@ -233,11 +233,11 @@ def expand_van_genuchten(
                             "Constant",
                             subprop.text,
                         ]
-                        q = ET.SubElement(prop.getparent(), "property")
+                        elmnt = ET.SubElement(prop.getparent(), "property")
                         for i, tag in enumerate(const_taglist):
-                            r = ET.SubElement(q, tag)
+                            subelmnt = ET.SubElement(elmnt, tag)
                             if const_textlist[i] is not None:
-                                r.text = str(const_textlist[i])
+                                subelmnt.text = str(const_textlist[i])
                 tobedeleted.append(prop)
     for element in tobedeleted:
         element.getparent().remove(element)
