@@ -6,8 +6,6 @@ Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
 
 """
 # pylint: disable=C0103, R0902, R0914, R0913
-from typing import Any
-
 from lxml import etree as ET
 
 from ogstools.ogs6py import build_tree
@@ -23,7 +21,7 @@ class Curves(build_tree.BuildTree):
         self.root = self.tree.getroot()
         self.curves = self.populate_tree(self.root, "curves", overwrite=True)
 
-    def add_curve(self, **args: Any) -> None:
+    def add_curve(self, name: str, coords: list, values: list) -> None:
         """
         Adds a new curve.
 
@@ -33,29 +31,20 @@ class Curves(build_tree.BuildTree):
         coords : `list`
         values : `list`
         """
-        if "name" not in args:
-            msg = "No curve name given."
-            raise KeyError(msg)
-        if "coords" not in args:
-            msg = "No coordinates given."
-            raise KeyError(msg)
-        if "values" not in args:
-            msg = "No values given."
-            raise KeyError(msg)
-        if len(args["coords"]) != len(args["values"]):
+        if len(coords) != len(values):
             msg = """Number of time coordinate points differs \
                      from number of values"""
             raise ValueError(msg)
         curve = self.populate_tree(self.curves, "curve")
-        self.populate_tree(curve, "name", args["name"])
+        self.populate_tree(curve, "name", name)
         coord_str = ""
         value_str = ""
-        for i, coord in enumerate(args["coords"]):
-            if i < (len(args["coords"]) - 1):
+        for i, coord in enumerate(coords):
+            if i < (len(coords) - 1):
                 coord_str = coord_str + str(coord) + " "
-                value_str = value_str + str(args["values"][i]) + " "
-            if i == (len(args["coords"]) - 1):
+                value_str = value_str + str(values[i]) + " "
+            if i == (len(coords) - 1):
                 coord_str = coord_str + str(coord)
-                value_str = value_str + str(args["values"][i])
+                value_str = value_str + str(values[i])
         self.populate_tree(curve, "coords", text=coord_str)
         self.populate_tree(curve, "values", text=value_str)
