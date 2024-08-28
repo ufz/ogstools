@@ -254,6 +254,63 @@ class Media(build_tree.BuildTree):
                 exponent, attrib, text=str(args["exponent"][attrib])
             )
 
+    def _build_mpl_tree(self, args: dict) -> ET.Element:
+        if "medium_id" not in args:
+            args["medium_id"] = "0"
+        medium = None
+        for entry in self.media.findall("./medium"):
+            if entry.get("id") == args["medium_id"]:
+                medium = entry
+        if medium is None:
+            medium = self.populate_tree(
+                self.media, "medium", attr={"id": args["medium_id"]}
+            )
+        if "phase_type" in args:
+            phases = self.get_child_tag(medium, "phases")
+            if phases is None:
+                phases = self.populate_tree(medium, "phases")
+            phase = self.get_child_tag_for_type(
+                phases, "phase", args["phase_type"]
+            )
+            if phase is None:
+                phase = self.populate_tree(phases, "phase")
+                self.populate_tree(phase, "type", text=args["phase_type"])
+                if "component_name" in args:
+                    components = self.populate_tree(phase, "components")
+                    component = self.populate_tree(components, "component")
+                    self.populate_tree(
+                        component, "name", text=args["component_name"]
+                    )
+                    properties = self.populate_tree(component, "properties")
+                else:
+                    properties = self.populate_tree(phase, "properties")
+            else:
+                if "component_name" in args:
+                    components = self.get_child_tag(phase, "components")
+                    if components is None:
+                        components = self.populate_tree(phase, "components")
+                    component = self.get_child_tag_for_type(
+                        components,
+                        "component",
+                        args["component_name"],
+                        subtag="name",
+                    )
+                    if component is None:
+                        component = self.populate_tree(components, "component")
+                        self.populate_tree(
+                            component, "name", text=args["component_name"]
+                        )
+                    properties = self.populate_tree(
+                        component, "properties", overwrite=True
+                    )
+                else:
+                    properties = self.get_child_tag(phase, "properties")
+        else:
+            properties = self.get_child_tag(medium, "properties")
+            if properties is None:
+                properties = self.populate_tree(medium, "properties")
+        return properties
+
     def add_property(self, **args: Any) -> None:
         """
         Adds a property to medium/phase
@@ -275,82 +332,27 @@ class Media(build_tree.BuildTree):
         parameter_name : `str`
         """
         self._convertargs(args)
-        if "medium_id" in args:
-            medium = None
-            for entry in self.media.findall("./medium"):
-                if entry.get("id") == args["medium_id"]:
-                    medium = entry
-            if medium is None:
-                medium = self.populate_tree(
-                    self.media, "medium", attr={"id": args["medium_id"]}
-                )
-            if "phase_type" in args:
-                phases = self.get_child_tag(medium, "phases")
-                if phases is None:
-                    phases = self.populate_tree(medium, "phases")
-                phase = self.get_child_tag_for_type(
-                    phases, "phase", args["phase_type"]
-                )
-                if phase is None:
-                    phase = self.populate_tree(phases, "phase")
-                    self.populate_tree(phase, "type", text=args["phase_type"])
-                    if "component_name" in args:
-                        components = self.populate_tree(phase, "components")
-                        component = self.populate_tree(components, "component")
-                        self.populate_tree(
-                            component, "name", text=args["component_name"]
-                        )
-                        properties = self.populate_tree(component, "properties")
-                    else:
-                        properties = self.populate_tree(phase, "properties")
-                else:
-                    if "component_name" in args:
-                        components = self.get_child_tag(phase, "components")
-                        if components is None:
-                            components = self.populate_tree(phase, "components")
-                        component = self.get_child_tag_for_type(
-                            components,
-                            "component",
-                            args["component_name"],
-                            subtag="name",
-                        )
-                        if component is None:
-                            component = self.populate_tree(
-                                components, "component"
-                            )
-                            self.populate_tree(
-                                component, "name", text=args["component_name"]
-                            )
-                        properties = self.populate_tree(
-                            component, "properties", overwrite=True
-                        )
-                    else:
-                        properties = self.get_child_tag(phase, "properties")
+        properties = self._build_mpl_tree(args)
+        property_ = self.populate_tree(properties, "property")
+        base_property_param = ["name", "type"]
+        for param in base_property_param:
+            self.populate_tree(property_, param, text=args[param])
+        try:
+            if args["type"] == "Linear":
+                self._generate_linear_property(property_, args)
+            elif args["type"] == "Exponential":
+                self._generate_exponential_property(property_, args)
+            elif args["type"] == "Function":
+                self._generate_function_property(property_, args)
             else:
-                properties = self.get_child_tag(medium, "properties")
-                if properties is None:
-                    properties = self.populate_tree(medium, "properties")
-                phase = medium
-            property_ = self.populate_tree(properties, "property")
-            base_property_param = ["name", "type"]
-            for param in base_property_param:
-                self.populate_tree(property_, param, text=args[param])
-            try:
-                if args["type"] == "Linear":
-                    self._generate_linear_property(property_, args)
-                elif args["type"] == "Exponential":
-                    self._generate_exponential_property(property_, args)
-                elif args["type"] == "Function":
-                    self._generate_function_property(property_, args)
-                else:
-                    self._generate_generic_property(property_, args)
-            except KeyError:
-                print("Material property parameters incomplete for")
-                if "phase_type" in args:
-                    print(
-                        f"Medium {args['medium_id']}->{args['phase_type']}->{args['name']}[{args['type']}]"
-                    )
-                else:
-                    print(
-                        f"Medium {args['medium_id']}->{args['name']}[{args['type']}]"
-                    )
+                self._generate_generic_property(property_, args)
+        except KeyError:
+            print("Material property parameters incomplete for")
+            if "phase_type" in args:
+                print(
+                    f"Medium {args['medium_id']}->{args['phase_type']}->{args['name']}[{args['type']}]"
+                )
+            else:
+                print(
+                    f"Medium {args['medium_id']}->{args['name']}[{args['type']}]"
+                )
