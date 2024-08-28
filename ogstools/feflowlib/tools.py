@@ -882,8 +882,6 @@ def setup_prj_file(
         "2ND": "Neumann",
         "3RD": "Robin",
         "4TH": "NodalSourceTerm",
-        "P_IOFLOW": "Neumann",
-        "P_SOUF": "Volumetric",
     }
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
@@ -1012,33 +1010,27 @@ def setup_prj_file(
         if the mesh is 3D and their value is non-zero. If it is 0,
         they do not matter, since they will not have an effect.
         """
-        if (
-            cell_data in ["P_IOFLOW", "P_SOUF"]
-            and np.any(mesh.cell_data[cell_data])
-            and get_dimension(mesh) == 3
+        if cell_data in ["P_IOFLOW", "P_SOUF"] and np.any(
+            mesh.cell_data[cell_data]
         ):
+            if get_dimension(mesh) == 3:
+                IOFLOW_SOUF_mesh_name = "topsurface_" + bulk_mesh_path.stem
+            else:
+                IOFLOW_SOUF_mesh_name = bulk_mesh_path.stem
             if cell_data in ["P_IOFLOW"]:
                 # Add boundary conditions
                 model.process_variables.add_bc(
                     process_variable_name="HEAD_OGS",
-                    type=next(
-                        val
-                        for key, val in BC_type_dict.items()
-                        if key in cell_data
-                    ),
+                    type="Neumann",
                     parameter=cell_data,
-                    mesh="topsurface_" + bulk_mesh_path.stem,
+                    mesh=IOFLOW_SOUF_mesh_name,
                 )
             elif cell_data in ["P_SOUF"]:
                 model.process_variables.add_st(
                     process_variable_name="HEAD_OGS",
-                    type=next(
-                        val
-                        for key, val in BC_type_dict.items()
-                        if key in cell_data
-                    ),
+                    type="Volumetric",
                     parameter=cell_data,
-                    mesh="topsurface_" + bulk_mesh_path.stem,
+                    mesh=IOFLOW_SOUF_mesh_name,
                 )
             # Every point boundary condition refers to a parameter with the same name
             model.parameters.add_parameter(
