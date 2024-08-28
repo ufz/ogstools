@@ -17,7 +17,6 @@ except ImportError:
     verbose = False
 
 
-# pylint: disable=C0103, R0902, R0914, R0913
 class Display:
     """helper class to create a nested dictionary
     representing the xml structure

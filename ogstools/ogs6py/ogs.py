@@ -8,9 +8,6 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
-
-# pylint: disable=C0103, R0902, R0914, R0913
-
 import copy
 import os
 import shutil
