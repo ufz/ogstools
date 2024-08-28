@@ -119,7 +119,7 @@ class ProcessVars(build_tree.BuildTree):
         elif "mesh" in args:
             self.populate_tree(boundary_condition, "mesh", text=args["mesh"])
         else:
-            msg = """ou should provide either a geometrical set \
+            msg = """You should provide either a geometrical set \
                                 or a mesh to define BC for."""
             raise KeyError(msg)
         if "parameter" in args:
