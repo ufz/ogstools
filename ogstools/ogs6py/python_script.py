@@ -12,7 +12,7 @@ from ogstools.ogs6py import build_tree
 
 class PythonScript(build_tree.BuildTree):
     """
-    Class managing python script in the project file
+    Class managing python script in the project file.
     """
 
     def __init__(self, tree: ET.ElementTree) -> None:

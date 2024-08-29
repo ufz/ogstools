@@ -17,8 +17,8 @@ OptionalETElement: TypeAlias = (
 
 
 class BuildTree:
-    """helper class to create a nested dictionary
-    representing the xml structure
+    """Helper class to create a nested dictionary
+    representing the xml structure.
     """
 
     def __init__(self, tree: ET.ElementTree) -> None:
@@ -26,9 +26,6 @@ class BuildTree:
 
     @classmethod
     def _convertargs(cls, args: dict[str, str]) -> None:
-        """
-        convert arguments that are not lists or dictionaries to strings
-        """
         for item, value in args.items():
             if not isinstance(value, list | dict):
                 args[item] = str(value)
@@ -43,7 +40,7 @@ class BuildTree:
         overwrite: bool = False,
     ) -> ET.Element:
         """
-        method to create dictionary from an xml entity
+        Method to create dictionary from an xml entity.
         """
         element = None
         if tag is not None:
@@ -69,7 +66,7 @@ class BuildTree:
         attr_val: str | None = None,
     ) -> OptionalETElement:
         """
-        search for child tag based on tag and possible attributes
+        Search for child tag based on tag and possible attributes-
         """
         element = None
         for child in parent:
@@ -86,7 +83,7 @@ class BuildTree:
         cls, parent: ET.Element, tag: str, subtagval: str, subtag: str = "type"
     ) -> OptionalETElement:
         """
-        search for child tag based on subtag type
+        Search for child tag based on subtag type.
         """
         element = None
         for child in parent:

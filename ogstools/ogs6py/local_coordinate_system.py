@@ -14,7 +14,7 @@ from ogstools.ogs6py import build_tree
 
 class LocalCoordinateSystem(build_tree.BuildTree):
     """
-    Class for defining a local coordinate system in the project file"
+    Class for defining a local coordinate system in the project file.
     """
 
     def __init__(self, tree: ET.ElementTree) -> None:
@@ -26,7 +26,7 @@ class LocalCoordinateSystem(build_tree.BuildTree):
 
     def add_basis_vec(self, **args: Any) -> None:
         """
-        Adds a basis
+        Adds basis vectors.
 
         Parameters
         ----------

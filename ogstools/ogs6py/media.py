@@ -312,7 +312,7 @@ class Media(build_tree.BuildTree):
 
     def add_property(self, **args: Any) -> None:
         """
-        Adds a property to medium/phase
+        Adds a property to medium/phase.
 
         Parameters
         ----------

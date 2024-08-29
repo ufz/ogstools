@@ -26,7 +26,7 @@ class NonLinSolvers(build_tree.BuildTree):
 
     def add_non_lin_solver(self, **args: Any) -> None:
         """
-        add a nonlinear solver.
+        Add a nonlinear solver.
 
         Parameters
         ----------

@@ -14,7 +14,7 @@ from ogstools.ogs6py import build_tree
 
 class TimeLoop(build_tree.BuildTree):
     """
-    Class managing the time loop in the project file
+    Class managing the time loop in the project file.
     """
 
     def __init__(self, tree: ET.ElementTree) -> None:
@@ -35,7 +35,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def add_process(self, **args: Any) -> None:
         """
-        Add a process section to timeloop
+        Add a process section to timeloop.
 
         Parameters
         ----------
@@ -107,7 +107,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def set_stepping(self, **args: Any) -> None:
         """
-        Sets the time stepping
+        Sets the time stepping.
 
         Parameters
         ----------
@@ -349,7 +349,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def add_time_stepping_pair(self, **args: Any) -> None:
         """
-        add a time stepping pair
+        Add a time stepping pair.
 
         Parameters
         ----------
@@ -407,7 +407,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def add_output_pair(self, **args: Any) -> None:
         """
-        add an output pair
+        Add an output pair.
 
         Parameters
         ----------
@@ -437,7 +437,7 @@ class TimeLoop(build_tree.BuildTree):
 
     def add_global_process_coupling(self, **args: Any) -> None:
         """
-        Add a process section to timeloop
+        Add a process section to the timeloop.
 
         Parameters
         ----------

@@ -150,7 +150,7 @@ class ProcessVars(build_tree.BuildTree):
 
     def add_st(self, **args: Any) -> None:
         """
-        add a source term
+        Add a source term.
 
         Parameters
         ----------
@@ -218,5 +218,5 @@ class ProcessVars(build_tree.BuildTree):
             self.populate_tree(source_term, "u_0", text=args["u_0"])
         else:
             msg = """Please provide the parameter for Dirichlet \
-                                        or Neumann ST/source_term_object for Python STs"""
+                                        or Neumann ST/source_term_object for Python STs."""
             raise KeyError(msg)

@@ -75,8 +75,8 @@ class Processes(build_tree.BuildTree):
     def set_process(self, **args: Any) -> None:
         """
         Set basic process properties.
-        any pair tag="value" translates to
-        <tag>value</tag> in process section
+        Any pair tag="value" translates to
+        <tag>value</tag> in process section.
 
         Parameters
         ----------
@@ -151,14 +151,14 @@ class Processes(build_tree.BuildTree):
 
     def set_constitutive_relation(self, **args: Any) -> None:
         """
-        Sets constituitive relation
+        Sets constituitive relation.
 
         Parameters
         ----------
 
-        any pair property="parameter_name" translates to
+        Any pair property="parameter_name" translates to
         <property>parameter_name</property> in constitutive_relation section
-        if more constitutuitive relations are given use id key word
+        if more constitutuitive relations are given use id key word.
         """
         self._convertargs(args)
         if "id" in args:
@@ -175,7 +175,7 @@ class Processes(build_tree.BuildTree):
 
     def add_bhe_type(self, bhe_type: str) -> None:
         """
-        Adds a BHE type
+        Adds a BHE type-
         """
         self.borehole_heat_exchangers = self.populate_tree(
             self.process, "borehole_heat_exchangers", overwrite=True
@@ -191,7 +191,7 @@ class Processes(build_tree.BuildTree):
 
     def add_bhe_component(self, index: int = 0, **args: Any) -> None:
         """
-        adds a BHE component
+        Adds a BHE component.
         """
         self._convertargs(args)
         bhe_type = ""
@@ -332,7 +332,7 @@ class Processes(build_tree.BuildTree):
 
     def add_surfaceflux(self, **args: Any) -> None:
         """
-        Add SurfaceFlux
+        Add a SurfaceFlux.
 
         Parameters
         ----------

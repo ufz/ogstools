@@ -14,7 +14,7 @@ from ogstools.ogs6py import build_tree
 
 class LinSolvers(build_tree.BuildTree):
     """
-    Class for defining a linear solvers in the project file"
+    Class for defining a linear solvers in the project file."
     """
 
     def __init__(self, tree: ET.ElementTree) -> None:
@@ -26,7 +26,7 @@ class LinSolvers(build_tree.BuildTree):
 
     def add_lin_solver(self, **args: Any) -> None:
         """
-        Adds a linear solver
+        Adds a linear solver.
 
         Parameters
         ----------

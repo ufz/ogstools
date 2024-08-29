@@ -29,7 +29,7 @@ class Mesh(build_tree.BuildTree):
         self, filename: str, axially_symmetric: bool | str | None = None
     ) -> None:
         """
-        adds a mesh to the project file
+        Adds a mesh to the project file.
 
         Parameters
         ----------
@@ -82,5 +82,5 @@ class Mesh(build_tree.BuildTree):
                 self.geometry.getparent().remove(self.geometry)
                 self.geometry = self.root.find("./geometry")
         else:
-            msg = "This should not happen"
+            msg = "Mesh reference in the project file missing."
             raise RuntimeError(msg)

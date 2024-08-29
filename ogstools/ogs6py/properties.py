@@ -21,12 +21,16 @@ from lxml import etree as ET
 
 @dataclass
 class Value:
+    """Class to hold property values."""
+
     medium: str
     value: float | None
 
 
 @dataclass
 class Property:
+    """Class to hold properties."""
+
     title: str
     symbol: str
     unit: str
@@ -45,6 +49,8 @@ class Property:
 
 @dataclass
 class PropertySet:
+    """Class to hold a set of properties."""
+
     property: list[Property] = field(default_factory=list)
 
     def __len__(self) -> int:

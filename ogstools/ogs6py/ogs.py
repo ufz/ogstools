@@ -155,7 +155,7 @@ class OGS:
             if self.inputfile is not None:
                 self.tree = ET.parse(str(self.inputfile), parser)
             else:
-                msg = "This should not happen."
+                msg = "No inputfile given. Can't build XML tree."
                 raise RuntimeError(msg)
         root = self.tree.getroot()
         all_occurrences = root.findall(".//include")
@@ -280,10 +280,10 @@ class OGS:
         attrib_list: Any | None = None,
         attrib_value_list: Any | None = None,
     ) -> None:
-        """General method to add an Entry
+        """General method to add an Entry.
 
         An element is a single tag containing 'text',
-        attributes and anttribute values
+        attributes and anttribute values.
 
         Parameters
         ----------
@@ -319,7 +319,7 @@ class OGS:
                         q.set(attrib, attrib_value)
 
     def add_include(self, parent_xpath: str = "./", file: str = "") -> None:
-        """add include element
+        """Add include element.
 
         Parameters
         ----------
@@ -346,10 +346,10 @@ class OGS:
         taglist: list[str] | None = None,
         textlist: list[str] | None = None,
     ) -> None:
-        """General method to add a Block
+        """General method to add a Block.
 
         A block consists of an enclosing tag containing a number of
-        subtags retaining a key-value structure
+        subtags retaining a key-value structure.
 
         Parameters
         ----------
@@ -381,7 +381,7 @@ class OGS:
     def deactivate_property(
         self, name: str, mediumid: int = 0, phase: str | None = None
     ) -> None:
-        """Replaces MPL properties by a comment
+        """Replaces MPL properties by a comment.
 
         Parameters
         ----------
@@ -409,7 +409,7 @@ class OGS:
         )
 
     def deactivate_parameter(self, name: str) -> None:
-        """Replaces parameters by a comment
+        """Replaces parameters by a comment.
 
         Parameters
         ----------
@@ -428,11 +428,13 @@ class OGS:
     def remove_element(
         self, xpath: str, tag: str | None = None, text: str | None = None
     ) -> None:
-        """Removes an element
+        """Removes an element.
 
         Parameters
         ----------
         xpath : `str`
+        tag : `str`
+        text : `str`
         """
         root = self._get_root()
         elements = root.findall(xpath)
@@ -449,7 +451,7 @@ class OGS:
     def replace_text(
         self, value: str | int, xpath: str = ".", occurrence: int = -1
     ) -> None:
-        """General method for replacing text between opening and closing tags
+        """General method for replacing text between opening and closing tags.
 
 
         Parameters
@@ -475,7 +477,7 @@ class OGS:
         filename: str = "include.xml",
         occurrence: int = 0,
     ) -> None:
-        """General method for replacing a block by an include
+        """General method for replacing a block by an include.
 
 
         Parameters
@@ -498,7 +500,7 @@ class OGS:
                 self.include_files.append(self.prjfile.parent / filename)
 
     def replace_mesh(self, oldmesh: str, newmesh: str) -> None:
-        """Method to replace meshes
+        """Method to replace meshes.
 
         Parameters
         ----------
@@ -532,7 +534,7 @@ class OGS:
         taglist: list[str] | None = None,
         textlist: list[str] | None = None,
     ) -> None:
-        """Replacing parametertypes and values
+        """Replacing parametertypes and values.
 
         Parameters
         ----------
@@ -564,7 +566,7 @@ class OGS:
     def replace_parameter_value(
         self, name: str = "", value: int = 0, valuetag: str = "value"
     ) -> None:
-        """Replacing parameter values
+        """Replacing parameter values.
 
         Parameters
         ----------
@@ -595,7 +597,7 @@ class OGS:
         propertytype: str = "Constant",
         valuetag: str = "value",
     ) -> None:
-        """Replaces properties in medium phases
+        """Replaces properties in medium phases.
 
         Parameters
         ----------
@@ -636,7 +638,7 @@ class OGS:
         propertytype: str = "Constant",
         valuetag: str = "value",
     ) -> None:
-        """Replaces properties in medium (not belonging to any phase)
+        """Replaces properties in medium (not belonging to any phase).
 
         Parameters
         ----------
@@ -664,8 +666,8 @@ class OGS:
 
     def set(self, **args: str | int) -> None:
         """
-        Sets directly a uniquely defined property
-        List of properties is given in the dictory below
+        Sets directly a uniquely defined property.
+        List of properties is given in the dictory below.
         """
         property_db = {
             "t_initial": "./time_loop/processes/process/time_stepping/t_initial",
@@ -793,7 +795,7 @@ class OGS:
     ) -> None:
         """Command to run OGS.
 
-        Runs OGS with the project file specified as PROJECT_FILE
+        Runs OGS with the project file specified as PROJECT_FILE.
 
         Parameters
         ----------
@@ -803,7 +805,7 @@ class OGS:
         path : `str`, optional
             Path of the directory in which the ogs executable can be found.
             If ``container_path`` is given: Path to the directory in which the
-            Singularity executable can be found
+            Singularity executable can be found.
         args : `str`, optional
             additional arguments for the ogs executable
         container_path : `str`, optional
@@ -989,7 +991,7 @@ class OGS:
             raise RuntimeError(msg)
 
     def write_input(self, keep_includes: bool = False) -> None:
-        """Writes the projectfile to disk
+        """Writes the projectfile to disk.
 
         Parameters
         ----------
@@ -1021,6 +1023,14 @@ class OGS:
     def property_dataframe(
         self, mediamapping: dict[int, str] | None = None
     ) -> pd.DataFrame:
+        """Returns a dataframe containing most properties
+        defined in the Material Property (MPL) section of
+        the input file.
+
+        Parameters
+        ----------
+        mediamapping : `dict`, optional
+        """
         newtree = copy.deepcopy(self.tree)
         if (newtree is None) or (self.tree is None):
             msg = "No tree existing."
@@ -1155,6 +1165,15 @@ class OGS:
         mediamapping: dict[int, str] | None = None,
         float_format: str = "{:.2e}",
     ) -> None:
+        """Write material properties to disc
+        as latex table.
+
+        Parameters
+        ----------
+        latexfile : `str`
+        mediamapping : `dict`, optional
+        float_format : `str`
+        """
         with latexfile.open("w") as tf:
             tf.write(
                 self.property_dataframe(mediamapping).to_latex(

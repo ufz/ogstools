@@ -18,8 +18,8 @@ except ImportError:
 
 
 class Display:
-    """helper class to create a nested dictionary
-    representing the xml structure
+    """Helper class to create a nested dictionary
+    representing the xml structure.
     """
 
     def __init__(self, tree: ET.ElementTree):

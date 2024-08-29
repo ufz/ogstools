@@ -26,7 +26,7 @@ class Parameters(build_tree.BuildTree):
 
     def add_parameter(self, **args: Any) -> None:
         """
-        Adds a parameter
+        Adds a parameter.
 
         Parameters
         ----------
