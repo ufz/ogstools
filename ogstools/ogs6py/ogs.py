@@ -102,8 +102,7 @@ class OGS:
             self.root = ET.Element("OpenGeoSysProject")
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
-            tree_ = ET.fromstring(tree_string, parser=parse)
-            self.tree = ET.ElementTree(tree_)
+            self.tree = ET.ElementTree(ET.fromstring(tree_string, parser=parse))
         if "XMLSTRING" in args:
             root = ET.fromstring(args["XMLSTRING"])
             self.tree = ET.ElementTree(root)
@@ -997,8 +996,9 @@ class OGS:
             self._add_includes(root)
             parse = ET.XMLParser(remove_blank_text=True)
             self.tree_string = ET.tostring(root, pretty_print=True)
-            self.tree_ = ET.fromstring(self.tree_string, parser=parse)
-            self.tree = ET.ElementTree(self.tree_)
+            self.tree = ET.ElementTree(
+                ET.fromstring(self.tree_string, parser=parse)
+            )
             ET.indent(self.tree, space="    ")
             if self.verbose is True:
                 display.Display(self.tree)
