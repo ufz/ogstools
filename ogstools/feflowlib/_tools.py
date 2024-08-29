@@ -9,7 +9,7 @@ import logging as log
 from collections import defaultdict
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 import pyvista as pv
@@ -434,13 +434,17 @@ def combine_material_properties(
     """
     # Use a default dict because it allows to extend the values in the list.
     # Also it initializes the value if there is an empty list.
-    material_properties: defaultdict[str, list[float]] = defaultdict(list)
+    material_properties: defaultdict[str, Any] = defaultdict(list)
 
     for property in properties_list:
         for material_id, property_value in get_material_properties(
             mesh, property
         ).items():
             material_properties[material_id].extend(property_value)
+    # keep only combined values, if they are not equal. Otherwise just keep one value.
+    for material_id, values in material_properties.items():
+        if np.all(values == values[0]):
+            material_properties[material_id] = values[0]
 
     return material_properties
 
@@ -542,7 +546,14 @@ def materials_in_liquid_flow(
     :returns: model
     """
     for material_id, property_value in material_properties.items():
-        if any(prop == "inhomogeneous" for prop in property_value):
+        if isinstance(property_value, float):
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=str(property_value),
+            )
+        elif any(prop == "inhomogeneous" for prop in property_value):
             model.media.add_property(
                 medium_id=material_id,
                 name="permeability",
@@ -563,6 +574,7 @@ def materials_in_liquid_flow(
                 type="Constant",
                 value=" ".join(str(element) for element in property_value),
             )
+
         model.media.add_property(
             medium_id=material_id,
             name="reference_temperature",
