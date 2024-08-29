@@ -24,15 +24,14 @@ class BuildTree:
     def __init__(self, tree: ET.ElementTree) -> None:
         self.tree = tree
 
-    @classmethod
-    def _convertargs(cls, args: dict[str, str]) -> None:
+    @staticmethod
+    def _convertargs(args: dict[str, str]) -> None:
         for item, value in args.items():
             if not isinstance(value, list | dict):
                 args[item] = str(value)
 
-    @classmethod
+    @staticmethod
     def populate_tree(
-        cls,
         parent: ET.Element,
         tag: str,
         text: str | None = None,
@@ -57,9 +56,8 @@ class BuildTree:
                     element.set(key, str(val))
         return element
 
-    @classmethod
+    @staticmethod
     def get_child_tag(
-        cls,
         parent: ET.Element,
         tag: str,
         attr: dict[str, str] | None = None,
@@ -78,9 +76,9 @@ class BuildTree:
                     element = child
         return element
 
-    @classmethod
+    @staticmethod
     def get_child_tag_for_type(
-        cls, parent: ET.Element, tag: str, subtagval: str, subtag: str = "type"
+        parent: ET.Element, tag: str, subtagval: str, subtag: str = "type"
     ) -> OptionalETElement:
         """
         Search for child tag based on subtag type.

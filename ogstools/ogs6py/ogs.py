@@ -39,8 +39,8 @@ from ogstools.ogs6py.properties import (
     Property,
     PropertySet,
     Value,
-    expand_tensors,
-    expand_van_genuchten,
+    _expand_tensors,
+    _expand_van_genuchten,
     location_pointer,
     property_dict,
 )
@@ -122,7 +122,7 @@ class OGS:
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
 
-    def __replace_blocks_by_includes(self) -> None:
+    def _replace_blocks_by_includes(self) -> None:
         for i, file in enumerate(self.include_files):
             parent_element = self.include_elements[i].getparent()
             include_element = ET.SubElement(parent_element, "include")
@@ -194,9 +194,9 @@ class OGS:
             if (entry is not None) and (len(entry.getchildren()) == 0):
                 entry.getparent().remove(entry)
 
-    @classmethod
+    @staticmethod
     def _get_parameter_pointer(
-        cls, root: ET.Element, name: str, xpath: str
+        root: ET.Element, name: str, xpath: str
     ) -> ET.Element:
         params = root.findall(xpath)
         parameterpointer = None
@@ -211,8 +211,8 @@ class OGS:
             raise RuntimeError(msg)
         return parameterpointer
 
-    @classmethod
-    def _get_medium_pointer(cls, root: ET.Element, mediumid: int) -> ET.Element:
+    @staticmethod
+    def _get_medium_pointer(root: ET.Element, mediumid: int) -> ET.Element:
         xpathmedia = "./media/medium"
         mediae = root.findall(xpathmedia)
         mediumpointer = None
@@ -228,8 +228,8 @@ class OGS:
             raise RuntimeError(msg)
         return mediumpointer
 
-    @classmethod
-    def _get_phase_pointer(cls, root: ET.Element, phase: str) -> ET.Element:
+    @staticmethod
+    def _get_phase_pointer(root: ET.Element, phase: str) -> ET.Element:
         phases = root.findall("./phases/phase")
         phasetypes = root.findall("./phases/phase/type")
         phasecounter = None
@@ -242,10 +242,8 @@ class OGS:
             raise RuntimeError(msg)
         return phasepointer
 
-    @classmethod
-    def _get_component_pointer(
-        cls, root: ET.Element, component: str
-    ) -> ET.Element:
+    @staticmethod
+    def _get_component_pointer(root: ET.Element, component: str) -> ET.Element:
         components = root.findall("./components/component")
         componentnames = root.findall("./components/component/name")
         componentcounter = None
@@ -258,9 +256,8 @@ class OGS:
             raise RuntimeError(msg)
         return componentpointer
 
-    @classmethod
+    @staticmethod
     def _set_type_value(
-        cls,
         parameterpointer: ET.Element,
         value: int,
         parametertype: Any | None,
@@ -1000,7 +997,7 @@ class OGS:
         if self.tree is not None:
             self._remove_empty_elements()
             if keep_includes is True:
-                self.__replace_blocks_by_includes()
+                self._replace_blocks_by_includes()
             root = self.tree.getroot()
             self._add_includes(root)
             parse = ET.XMLParser(remove_blank_text=True)
@@ -1095,8 +1092,8 @@ class OGS:
                     for entry in property_value:
                         entry.tag = "value"
                         entry.text = param_value[0].text
-            expand_tensors(self, numofmedia, multidim_prop, root, location)
-            expand_van_genuchten(self, numofmedia, root, location)
+            _expand_tensors(self, numofmedia, multidim_prop, root, location)
+            _expand_van_genuchten(self, numofmedia, root, location)
             property_names = [
                 name.text
                 for name in newtree.findall(

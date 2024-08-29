@@ -173,7 +173,7 @@ location_pointer = {
 }
 
 
-def expand_tensors(
+def _expand_tensors(
     obj: OGS,
     numofmedia: int,
     multidim_prop: dict[Any, Any],
@@ -208,7 +208,7 @@ def expand_tensors(
         element.getparent().remove(element)
 
 
-def expand_van_genuchten(
+def _expand_van_genuchten(
     obj: OGS, numofmedia: int, root: ET.Element, location: str
 ) -> None:
     for medium_id in range(numofmedia):
