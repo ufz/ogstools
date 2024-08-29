@@ -5,7 +5,6 @@ Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
-from typing import Any
 
 from lxml import etree as ET
 
@@ -27,7 +26,7 @@ class Mesh(build_tree.BuildTree):
             self.mesh = self.populate_tree(self.root, "mesh", overwrite=True)
 
     def add_mesh(
-        self, filename: str, axially_symmetric: Any | None = None
+        self, filename: str, axially_symmetric: bool | str | None = None
     ) -> None:
         """
         adds a mesh to the project file
