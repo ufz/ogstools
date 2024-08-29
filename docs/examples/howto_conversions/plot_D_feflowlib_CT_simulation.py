@@ -48,7 +48,7 @@ ot.plot.contourf(
 
 # %%
 # 2. Save the boundary conditions.
-for path, mesh in feflow_model.boundary_meshes.items():
+for path, mesh in feflow_model.boundary_conditions.items():
     mesh.save(path)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.

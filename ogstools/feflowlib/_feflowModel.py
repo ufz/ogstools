@@ -58,14 +58,14 @@ class FeflowModel:
         return bulk_mesh
 
     @property
-    def boundary_meshes(self) -> dict:
+    def boundary_conditions(self) -> dict:
         """
         The boundary meshes for a ogs model.
 
         :return: Dictionary (dict) of boundary meshes, with name as key and mesh as value.
         """
         # ToDo: Introduce this behaviour to feflowlib.tools with a type. And return type of name for cell and pt BC should be the same not possix Path...
-        boundary_meshes = _tools.extract_point_boundary_conditions(
+        boundary_conditions = _tools.extract_point_boundary_conditions(
             self.mesh_path.parent, self.mesh
         )
         if self.dimension == 3:
@@ -75,8 +75,8 @@ class FeflowModel:
             ) = _tools.extract_cell_boundary_conditions(
                 self.mesh_path, self.mesh
             )
-            boundary_meshes[cell_bc_path] = cell_bc_mesh
-        return boundary_meshes
+            boundary_conditions[cell_bc_path] = cell_bc_mesh
+        return boundary_conditions
 
     @property
     def process(self) -> str:

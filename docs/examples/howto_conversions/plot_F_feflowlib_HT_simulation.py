@@ -36,7 +36,7 @@ feflow_model.mesh.save(feflow_model.mesh_path)
 print(feflow_model.mesh)
 # %%
 # 2. Extract the boundary conditions.
-BC_dict = feflow_model.boundary_meshes
+BC_dict = feflow_model.boundary_conditions
 # Since there can be multiple point based boundary conditions on the bulk mesh, they are plotted iteratively.
 plotter = pv.Plotter(shape=(len(BC_dict), 1))
 for i, (path, boundary_condition) in enumerate(BC_dict.items()):

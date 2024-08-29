@@ -87,7 +87,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             "The conversion of the bulk mesh was successful.",
         )
         return 0
-    for path, boundary_mesh in feflow_model.boundary_meshes.items():
+    for path, boundary_mesh in feflow_model.boundary_conditions.items():
         boundary_mesh.save(path)
 
     log.info(

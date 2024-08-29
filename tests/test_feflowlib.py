@@ -575,7 +575,7 @@ class TestFeflowModel:
 
     def test_boundary_conditions(self):
         # rename method to boundary conditions
-        boundary_conditions = self.feflow_model.boundary_meshes
+        boundary_conditions = self.feflow_model.boundary_conditions
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
         assert first_bc.n_cells == 23
         assert first_bc.n_points == 23
