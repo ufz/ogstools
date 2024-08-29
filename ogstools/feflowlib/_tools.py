@@ -227,9 +227,6 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
             property_of_material == property_of_material[0]
         )
         if all_properties_equal:
-            # Here it is divided by 86400 because in FEFLOW the unit is in m/d and not m/s
-            # WARNING: This is not a generic method at the moment. A dictionary with all the
-            # FEFLOW units is needed to know the conversion to SI-units as they are used in OGS
             material_properties[int(material_id)] = [property_of_material[0]]
         else:
             material_properties[material_id] = ["inhomogeneous"]

@@ -135,7 +135,7 @@ class FeflowModel:
         """
         A proposition for a prj-file to run a OGS simulation.
         It may be not complete and manual adjustments for time
-        lopp or solver configurations must be made.
+        loop or solver configurations must be made.
 
         :return: The ogs6py model created from the FEFLOW model.
         """
