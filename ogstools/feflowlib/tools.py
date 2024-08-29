@@ -908,7 +908,7 @@ def setup_prj_file(
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
-    elif "component" in process:
+    elif "Component" in process:
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
@@ -1049,13 +1049,13 @@ def setup_prj_file(
             )
 
     # include material properties in the prj-file
-    if process == "steady state diffusion":
+    if process == "Steady state diffusion":
         materials_in_steady_state_diffusion(material_properties, model)
-    elif process == "liquid flow":
+    elif process == "Liquid flow":
         materials_in_liquid_flow(material_properties, model)
-    elif process == "hydro thermal":
+    elif process == "Hydro thermal":
         materials_in_HT(material_properties, model)
-    elif process == "component transport":
+    elif process == "Component transport":
         assert species_list is not None
         materials_in_CT(material_properties, species_list, model)
         _add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)

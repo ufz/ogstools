@@ -68,7 +68,7 @@ class feflowModel:
         boundary_meshes = tools.extract_point_boundary_conditions(
             self.mesh_path.parent, self.mesh
         )
-        if "P_SOUF" in self.mesh.cell_data or "P_IOFLOW" in self.mesh.cell_data:
+        if self.dimension == 3:
             cell_bc_path, cell_bc_mesh = tools.extract_cell_boundary_conditions(
                 self.mesh_path, self.mesh
             )
@@ -84,12 +84,12 @@ class feflowModel:
         :return: Process name.
         """
         problem_classes = {
-            -1: "illegal problem class",
-            0: "liquid flow",
-            1: "component transport",
-            2: "hydro thermal",
-            3: "combined flow, mass and heat transport [not supported yet]",
-            4: "combined flow and age transport [not supported yet]",
+            -1: "Illegal problem class",
+            0: "Liquid flow",
+            1: "Component transport",
+            2: "Hydro thermal",
+            3: "Combined flow, mass and heat transport [not supported yet]",
+            4: "Combined flow and age transport [not supported yet]",
             5: "Combined flow, mass, and age transport [not supported yet]",
             6: "Combined flow, heat, and age transport [not supported yet]",
             7: "Combined flow, mass, age, and heat transport [not supported yet]",
@@ -105,7 +105,7 @@ class feflowModel:
         :return: Dictionary with properties and the corresponding value for each material.
         """
         process = self.process
-        if "liquid flow" in process:
+        if "Liquid flow" in process:
             if "P_COND" in self.mesh.cell_data:
                 property_list = ["P_COND"]
             else:
@@ -113,12 +113,12 @@ class feflowModel:
             material_properties = tools.combine_material_properties(
                 self.mesh, property_list
             )
-        elif "hydro thermal" in process:
+        elif "Hydro thermal" in process:
             material_properties = tools.get_material_properties_of_HT_model(
                 self.mesh
             )
 
-        elif "component transport" in process:
+        elif "Component transport" in process:
             material_properties = tools.get_material_properties_of_CT_model(
                 self.mesh
             )
@@ -136,19 +136,19 @@ class feflowModel:
 
         :return: The ogs6py model created from the FEFLOW model.
         """
-        if "liquid flow" in self.process:
+        if "Liquid flow" in self.process:
             template_model = liquid_flow(
                 Path(self.mesh_path.with_suffix("")),
                 ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
             )
-        elif "hydro thermal" in self.process:
+        elif "Hydro thermal" in self.process:
             template_model = hydro_thermal(
                 Path(self.mesh_path.with_suffix("")),
                 ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
             )
-        elif "component transport" in self.process:
+        elif "Component transport" in self.process:
             species = tools.get_species(self.mesh)
             template_model = component_transport(
                 Path(self.mesh_path.with_suffix("")),
@@ -165,7 +165,7 @@ class feflowModel:
             self.material_properties,
             self.process,
             species_list=(
-                species if "component transport" in self.process else None
+                species if "Component transport" in self.process else None
             ),
             model=template_model,
         )

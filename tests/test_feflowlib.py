@@ -69,7 +69,7 @@ class TestSimulation_Neumann:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "steady state diffusion",
+            "Steady state diffusion",
             model=ssd_model,
         )
         model.write_input()
@@ -100,7 +100,7 @@ class TestSimulation_Neumann:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "liquid flow",
+            "Liquid flow",
             model=lqf_model,
         )
         model.write_input()
@@ -145,7 +145,7 @@ class TestSimulation_Robin:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "steady state diffusion",
+            "Steady state diffusion",
             model=ssd_model,
         )
         model.write_input()
@@ -176,7 +176,7 @@ class TestSimulation_Robin:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "liquid flow",
+            "Liquid flow",
             model=lqf_model,
         )
         model.write_input()
@@ -221,7 +221,7 @@ class TestSimulation_Well:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "steady state diffusion",
+            "Steady state diffusion",
             model=ssd_model,
         )
         model.write_input()
@@ -251,7 +251,7 @@ class TestSimulation_Well:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "liquid flow",
+            "Liquid flow",
             model=lqf_model,
         )
         model.write_input()
@@ -350,7 +350,7 @@ class TestConverter:
             self.temp_dir / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties(self.pv_mesh, "P_CONDX"),
-            "steady state diffusion",
+            "Steady state diffusion",
         )
         model.write_input(self.temp_dir / "boxNeumann_.prj")
         prjfile_root = ET.parse(
@@ -516,7 +516,7 @@ class TestSimulation_CT:
             self.temp_dir / "CT_2D_line.vtu",
             self.pv_mesh_560,
             get_material_properties_of_CT_model(self.pv_mesh_560),
-            "component transport",
+            "Component transport",
             species_list=species,
             model=prj,
             max_iter=6,
@@ -582,14 +582,14 @@ class TestFeflowModel:
         assert first_bc.n_arrays == 2
 
     def test_process(self):
-        assert self.feflow_model.process == "hydro thermal"
+        assert self.feflow_model.process == "Hydro thermal"
         assert (
             feflowModel(examples.feflow_model_2D_CT_t_28).process
-            == "component transport"
+            == "Component transport"
         )
         assert (
             feflowModel(examples.feflow_model_box_Robin).process
-            == "liquid flow"
+            == "Liquid flow"
         )
 
     def test_prj_file(self):
