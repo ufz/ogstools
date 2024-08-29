@@ -26,9 +26,7 @@ ot.plot.setup.show_element_edges = True
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_model = FeflowModel(
-    feflow_model_2D_CT_t_560, temp_dir / "2D_CT_model.vtu"
-)
+feflow_model = FeflowModel(feflow_model_2D_CT_t_560, temp_dir / "2D_CT_model")
 feflow_model.mesh.save(feflow_model.mesh_path)
 
 feflow_concentration = ot.variables.Scalar(

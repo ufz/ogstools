@@ -596,7 +596,7 @@ class TestFeflowModel:
         temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
         model = FeflowModel(
             examples.feflow_model_box_Neumann,
-            temp_dir + "/boxNeumann_feflow_model.vtu",
+            temp_dir + "/boxNeumann_feflow_model",
         )
         model_prj = model.prj()
         model_prj.write_input()

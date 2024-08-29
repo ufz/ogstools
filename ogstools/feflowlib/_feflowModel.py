@@ -38,7 +38,7 @@ class FeflowModel:
         if out_path is None:
             self.mesh_path = Path(feflow_file.with_suffix(".vtu"))
         else:
-            self.mesh_path = Path(out_path)
+            self.mesh_path = Path(out_path).with_suffix(".vtu")
         ifm.forceLicense("Viewer")
         self._doc = ifm.loadDocument(str(feflow_file))
         self.mesh = convert_properties_mesh(self._doc)

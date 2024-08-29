@@ -82,7 +82,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     feflow_model = FeflowModel(Path(input), Path(output))
     # Create separate meshes for the boundary condition.
     if BC == "no_BC":
-        feflow_model.mesh.save(output)
+        feflow_model.mesh.save(feflow_model.mesh_path)
         logger.info(
             "The conversion of the bulk mesh was successful.",
         )
@@ -104,7 +104,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             """,
             feflow_model.process,
         )
-    feflow_model.mesh.save(output)
+    feflow_model.mesh.save(feflow_model.mesh_path)
     logger.info(
         """The conversion of the bulk mesh, boundary conditions was successful.\n
         """,

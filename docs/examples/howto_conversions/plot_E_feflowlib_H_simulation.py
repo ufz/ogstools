@@ -27,9 +27,7 @@ from ogstools.feflowlib import (
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_model = FeflowModel(
-    feflow_model_box_Neumann, temp_dir / "boxNeumann.vtu"
-)
+feflow_model = FeflowModel(feflow_model_box_Neumann, temp_dir / "boxNeumann")
 
 pv.global_theme.colorbar_orientation = "vertical"
 feflow_model.mesh.plot(
