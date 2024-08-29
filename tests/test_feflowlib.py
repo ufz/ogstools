@@ -32,7 +32,7 @@ from ogstools.feflowlib import (  # noqa: E402
     steady_state_diffusion,
     write_point_boundary_conditions,
 )
-from ogstools.feflowlib.tools import get_material_properties  # noqa: E402
+from ogstools.feflowlib._tools import get_material_properties  # noqa: E402
 
 
 def test_cli():

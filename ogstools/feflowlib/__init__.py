@@ -18,14 +18,14 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from .feflowModel import feflowModel
-from .templates import (
+from ._feflowModel import feflowModel
+from ._templates import (
     component_transport,
     hydro_thermal,
     liquid_flow,
     steady_state_diffusion,
 )
-from .tools import (
+from ._tools import (
     combine_material_properties,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,

@@ -11,9 +11,9 @@ import ifm_contrib as ifm
 import pyvista as pv
 from ogs6py import ogs
 
-from . import tools
+from . import _tools
 from ._feflowlib import convert_properties_mesh
-from .templates import component_transport, hydro_thermal, liquid_flow
+from ._templates import component_transport, hydro_thermal, liquid_flow
 
 
 class feflowModel:
@@ -65,11 +65,14 @@ class feflowModel:
         :return: Dictionary (dict) of boundary meshes, with name as key and mesh as value.
         """
         # ToDo: Introduce this behaviour to feflowlib.tools with a type. And return type of name for cell and pt BC should be the same not possix Path...
-        boundary_meshes = tools.extract_point_boundary_conditions(
+        boundary_meshes = _tools.extract_point_boundary_conditions(
             self.mesh_path.parent, self.mesh
         )
         if self.dimension == 3:
-            cell_bc_path, cell_bc_mesh = tools.extract_cell_boundary_conditions(
+            (
+                cell_bc_path,
+                cell_bc_mesh,
+            ) = _tools.extract_cell_boundary_conditions(
                 self.mesh_path, self.mesh
             )
             boundary_meshes[cell_bc_path] = cell_bc_mesh
@@ -110,16 +113,16 @@ class feflowModel:
                 property_list = ["P_COND"]
             else:
                 property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
-            material_properties = tools.combine_material_properties(
+            material_properties = _tools.combine_material_properties(
                 self.mesh, property_list
             )
         elif "Hydro thermal" in process:
-            material_properties = tools.get_material_properties_of_HT_model(
+            material_properties = _tools.get_material_properties_of_HT_model(
                 self.mesh
             )
 
         elif "Component transport" in process:
-            material_properties = tools.get_material_properties_of_CT_model(
+            material_properties = _tools.get_material_properties_of_CT_model(
                 self.mesh
             )
 
@@ -149,7 +152,7 @@ class feflowModel:
                 dimension=self.dimension,
             )
         elif "Component transport" in self.process:
-            species = tools.get_species(self.mesh)
+            species = _tools.get_species(self.mesh)
             template_model = component_transport(
                 Path(self.mesh_path.with_suffix("")),
                 species,
@@ -159,7 +162,7 @@ class feflowModel:
                 time_stepping=time_stepping,
             )
 
-        return tools.setup_prj_file(
+        return _tools.setup_prj_file(
             self.mesh_path,
             self.mesh,
             self.material_properties,
