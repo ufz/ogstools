@@ -53,16 +53,6 @@ class Parameters(build_tree.BuildTree):
         parameter = self.populate_tree(self.parameters, "parameter")
         self.populate_tree(parameter, "name", text=args["name"])
         self.populate_tree(parameter, "type", text=args["type"])
-        # entries = len(self.tree['parameters']['children'])
-        # self.tree['parameters']['children'][
-        #        'param' + str(entries)] = self.populate_tree('parameter',
-        #                                                        children={})
-        # parameter = self.tree['parameters']['children']['param' +
-        #                                                        str(entries)]
-        # parameter['children']['name'] = self.populate_tree(
-        #            'name', text=args['name'], children={})
-        # parameter['children']['type'] = self.populate_tree(
-        #            'type', text=args['type'], children={})
         if args["type"] == "Constant":
             if "value" in args:
                 self.populate_tree(parameter, "value", text=args["value"])

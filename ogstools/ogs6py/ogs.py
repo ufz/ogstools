@@ -100,7 +100,6 @@ class OGS:
         else:
             self.inputfile = None
             self.root = ET.Element("OpenGeoSysProject")
-            # Reparsing for pretty_print to work properly
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
             tree_ = ET.fromstring(tree_string, parser=parse)
@@ -158,7 +157,6 @@ class OGS:
             else:
                 msg = "This should not happen."
                 raise RuntimeError(msg)
-                # self.build_tree()
         root = self.tree.getroot()
         all_occurrences = root.findall(".//include")
         for occurrence in all_occurrences:
@@ -927,7 +925,6 @@ class OGS:
             print(f"Execution took {self.exec_time} s")
             if write_prj_to_pvd is True:
                 self.inputfile = self.prjfile
-                # self.tree = None # TODO: check whether this line can be safely removed
                 root = self._get_root(
                     remove_blank_text=True, remove_comments=True
                 )
@@ -1038,8 +1035,6 @@ class OGS:
                 mediamapping[i] = f"medium {i}"
         for i in range(numofmedia):
             multidim_prop[i] = {}
-        ## preprocessing
-        # write elastic properties to MPL
         for entry in newtree.findall(
             "./processes/process/constitutive_relation"
         ):
@@ -1062,7 +1057,6 @@ class OGS:
                             r.text = str(textlist[i])
 
         for location in location_pointer:
-            # resolve parameters
             parameter_names_add = newtree.findall(
                 f"./media/medium/{location_pointer[location]}properties/property[type='Parameter']/parameter_name"
             )
@@ -1091,7 +1085,6 @@ class OGS:
                     for entry in property_value:
                         entry.tag = "value"
                         entry.text = param_value[0].text
-            # expand tensors
             expand_tensors(self, numofmedia, multidim_prop, root, location)
             expand_van_genuchten(self, numofmedia, root, location)
             property_names = [

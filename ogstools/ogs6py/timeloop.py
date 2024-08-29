@@ -307,7 +307,6 @@ class TimeLoop(build_tree.BuildTree):
             else:
                 for mesh in args["meshes"]:
                     self.populate_tree(meshes, "mesh", text=mesh)
-                    # material_id attribute missing
         if "repeat" in args:
             timesteps = self.populate_tree(self.output, "timesteps")
             if "each_steps" not in args:
