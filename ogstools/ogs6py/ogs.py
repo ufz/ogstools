@@ -780,6 +780,60 @@ class OGS:
                 )
         self.remove_element("./processes/process/initial_stress")
 
+    def _post_run_0(self) -> None:
+        self.inputfile = self.prjfile
+        root = self._get_root(remove_blank_text=True, remove_comments=True)
+        prjstring = ET.tostring(root, pretty_print=True)
+        prjstring = (
+            str(prjstring)
+            .replace("\r", " ")
+            .replace("\n", " ")
+            .replace("--", "")
+        )
+        if self.tree is None:
+            msg = "self.tree is empty."
+            raise AttributeError(msg)
+        fn_type = self.tree.find("./time_loop/output/type").text
+        fn = None
+        if fn_type == "VTK":
+            fn = self.tree.find("./time_loop/output/prefix").text + ".pvd"
+            fn = self.output_dir / fn
+        elif fn_type == "XDMF":
+            prefix = self.tree.find("./time_loop/output/prefix").text
+            mesh = self.tree.find("./mesh")
+            if mesh is None:
+                mesh = self.tree.find("./meshes/mesh")
+            prefix = self.output_dir / prefix
+            if mesh is not None:
+                fn = str(prefix) + "_" + mesh.text.split(".vtu")[0] + ".xdmf"
+            else:
+                msg = "No mesh found"
+                raise AttributeError(msg)
+        if fn is not None:
+            tree_pvd = ET.parse(fn)
+            root_pvd = tree_pvd.getroot()
+            root_pvd.append(ET.Comment(prjstring))
+            tree_pvd.write(
+                fn,
+                encoding="ISO-8859-1",
+                xml_declaration=True,
+                pretty_print=True,
+            )
+            print("Project file written to output.")
+
+    def _post_run_1(self, write_logs: bool) -> None:
+        if write_logs is False:
+            msg = "OGS execution was not successful. Please set write_logs to True to obtain more information."
+            raise RuntimeError(msg)
+        with self.logfile.open() as lf:
+            num_lines = len(lf.readlines())
+        with self.logfile.open() as file:
+            for i, line in enumerate(file):
+                if i > num_lines - 10:
+                    print(line)
+        msg = "OGS execution was not successful."
+        raise RuntimeError(msg)
+
     def run_model(
         self,
         logfile: Path = Path("out.log"),
@@ -923,69 +977,10 @@ class OGS:
             print(f"OGS finished with project file {self.prjfile}.")
             print(f"Execution took {self.exec_time} s")
             if write_prj_to_pvd is True:
-                self.inputfile = self.prjfile
-                root = self._get_root(
-                    remove_blank_text=True, remove_comments=True
-                )
-                prjstring = ET.tostring(root, pretty_print=True)
-                prjstring = (
-                    str(prjstring)
-                    .replace("\r", " ")
-                    .replace("\n", " ")
-                    .replace("--", "")
-                )
-                if self.tree is None:
-                    msg = "self.tree is empty."
-                    raise AttributeError(msg)
-                fn_type = self.tree.find("./time_loop/output/type").text
-                fn = None
-                if fn_type == "VTK":
-                    fn = (
-                        self.tree.find("./time_loop/output/prefix").text
-                        + ".pvd"
-                    )
-                    fn = self.output_dir / fn
-                elif fn_type == "XDMF":
-                    prefix = self.tree.find("./time_loop/output/prefix").text
-                    mesh = self.tree.find("./mesh")
-                    if mesh is None:
-                        mesh = self.tree.find("./meshes/mesh")
-                    prefix = self.output_dir / prefix
-                    if mesh is not None:
-                        fn = (
-                            str(prefix)
-                            + "_"
-                            + mesh.text.split(".vtu")[0]
-                            + ".xdmf"
-                        )
-                    else:
-                        msg = "No mesh found"
-                        raise AttributeError(msg)
-                if fn is not None:
-                    tree_pvd = ET.parse(fn)
-                    root_pvd = tree_pvd.getroot()
-                    root_pvd.append(ET.Comment(prjstring))
-                    tree_pvd.write(
-                        fn,
-                        encoding="ISO-8859-1",
-                        xml_declaration=True,
-                        pretty_print=True,
-                    )
-                    print("Project file written to output.")
+                self._post_run_0()
         else:
             print(f"Error code: {returncode.returncode}")
-            if write_logs is False:
-                msg = """OGS execution was not successful.\
-                        Please set write_logs to True to obtain more information."""
-                raise RuntimeError(msg)
-            with self.logfile.open() as lf:
-                num_lines = len(lf.readlines())
-            with self.logfile.open() as file:
-                for i, line in enumerate(file):
-                    if i > num_lines - 10:
-                        print(line)
-            msg = "OGS execution was not successful."
-            raise RuntimeError(msg)
+            self._post_run_1(write_logs)
 
     def write_input(self, keep_includes: bool = False) -> None:
         """Writes the projectfile to disk.
@@ -1017,6 +1012,123 @@ class OGS:
             msg = "No tree has been build."
             raise RuntimeError(msg)
 
+    def _property_df_move_elastic_properties_to_mpl(
+        self, newtree: ET.ElementTree, root: ET.Element
+    ) -> None:
+        for entry in newtree.findall(
+            "./processes/process/constitutive_relation"
+        ):
+            medium = self._get_medium_pointer(root, entry.attrib.get("id", "0"))
+            parent = medium.find("./phases/phase[type='Solid']/properties")
+            taglist = ["name", "type", "parameter_name"]
+            for subentry in entry:
+                if subentry.tag in [
+                    "youngs_modulus",
+                    "poissons_ratio",
+                    "youngs_moduli",
+                    "poissons_ratios",
+                    "shear_moduli",
+                ]:
+                    textlist = [subentry.tag, "Parameter", subentry.text]
+                    q = ET.SubElement(parent, "property")
+                    for i, tag in enumerate(taglist):
+                        r = ET.SubElement(q, tag)
+                        if textlist[i] is not None:
+                            r.text = str(textlist[i])
+
+    def _resolve_parameters(
+        self, location: str, newtree: ET.ElementTree
+    ) -> None:
+        parameter_names_add = newtree.findall(
+            f"./media/medium/{location_pointer[location]}properties/property[type='Parameter']/parameter_name"
+        )
+        parameter_names = [name.text for name in parameter_names_add]
+        for parameter_name in parameter_names:
+            param_type = newtree.find(
+                f"./parameters/parameter[name='{parameter_name}']/type"
+            ).text
+            if param_type == "Constant":
+                param_value = newtree.findall(
+                    f"./parameters/parameter[name='{parameter_name}']/value"
+                )
+                param_value.append(
+                    newtree.find(
+                        f"./parameters/parameter[name='{parameter_name}']/values"
+                    )
+                )
+                property_type = newtree.findall(
+                    f"./media/medium/{location_pointer[location]}properties/property[parameter_name='{parameter_name}']/type"
+                )
+                for entry in property_type:
+                    entry.text = "Constant"
+                property_value = newtree.findall(
+                    f"./media/medium/{location_pointer[location]}properties/property[parameter_name='{parameter_name}']/parameter_name"
+                )
+                for entry in property_value:
+                    entry.tag = "value"
+                    entry.text = param_value[0].text
+
+    def _generate_property_list(
+        self,
+        mediamapping: dict[int, str],
+        numofmedia: int,
+        root: ET.Element,
+        property_names: list,
+        values: dict[str, list],
+        location: str,
+        property_list: list,
+    ) -> list:
+        for name in property_names:
+            values[name] = []
+            orig_name = "".join(c for c in name if not c.isnumeric())
+            number_suffix = "".join(c for c in name if c.isnumeric())
+            if orig_name in property_dict[location]:
+                for medium_id in range(numofmedia):
+                    if medium_id in mediamapping:
+                        medium = self._get_medium_pointer(root, medium_id)
+                        proptytype = medium.find(
+                            f"./{location_pointer[location]}properties/property[name='{name}']/type"
+                        )
+                        if proptytype is None:
+                            values[name].append(
+                                Value(mediamapping[medium_id], None)
+                            )
+                        else:
+                            if proptytype.text == "Constant":
+                                value_entry = medium.find(
+                                    f"./{location_pointer[location]}properties/property[name='{name}']/value"
+                                ).text
+                                value_entry_list = value_entry.split(" ")
+                                if len(value_entry_list) == 1:
+                                    values[name].append(
+                                        Value(
+                                            mediamapping[medium_id],
+                                            float(value_entry),
+                                        )
+                                    )
+                            else:
+                                values[name].append(
+                                    Value(mediamapping[medium_id], None)
+                                )
+                if number_suffix != "":
+                    new_symbol = (
+                        property_dict[location][orig_name]["symbol"][:-1]
+                        + "_"
+                        + number_suffix
+                        + "$"
+                    )
+                else:
+                    new_symbol = property_dict[location][orig_name]["symbol"]
+                property_list.append(
+                    Property(
+                        property_dict[location][orig_name]["title"],
+                        new_symbol,
+                        property_dict[location][orig_name]["unit"],
+                        values[name],
+                    )
+                )
+        return property_list
+
     def property_dataframe(
         self, mediamapping: dict[int, str] | None = None
     ) -> pd.DataFrame:
@@ -1042,56 +1154,9 @@ class OGS:
                 mediamapping[i] = f"medium {i}"
         for i in range(numofmedia):
             multidim_prop[i] = {}
-        for entry in newtree.findall(
-            "./processes/process/constitutive_relation"
-        ):
-            medium = self._get_medium_pointer(root, entry.attrib.get("id", "0"))
-            parent = medium.find("./phases/phase[type='Solid']/properties")
-            taglist = ["name", "type", "parameter_name"]
-            for subentry in entry:
-                if subentry.tag in [
-                    "youngs_modulus",
-                    "poissons_ratio",
-                    "youngs_moduli",
-                    "poissons_ratios",
-                    "shear_moduli",
-                ]:
-                    textlist = [subentry.tag, "Parameter", subentry.text]
-                    q = ET.SubElement(parent, "property")
-                    for i, tag in enumerate(taglist):
-                        r = ET.SubElement(q, tag)
-                        if textlist[i] is not None:
-                            r.text = str(textlist[i])
-
+        self._property_df_move_elastic_properties_to_mpl(newtree, root)
         for location in location_pointer:
-            parameter_names_add = newtree.findall(
-                f"./media/medium/{location_pointer[location]}properties/property[type='Parameter']/parameter_name"
-            )
-            parameter_names = [name.text for name in parameter_names_add]
-            for parameter_name in parameter_names:
-                param_type = newtree.find(
-                    f"./parameters/parameter[name='{parameter_name}']/type"
-                ).text
-                if param_type == "Constant":
-                    param_value = newtree.findall(
-                        f"./parameters/parameter[name='{parameter_name}']/value"
-                    )
-                    param_value.append(
-                        newtree.find(
-                            f"./parameters/parameter[name='{parameter_name}']/values"
-                        )
-                    )
-                    property_type = newtree.findall(
-                        f"./media/medium/{location_pointer[location]}properties/property[parameter_name='{parameter_name}']/type"
-                    )
-                    for entry in property_type:
-                        entry.text = "Constant"
-                    property_value = newtree.findall(
-                        f"./media/medium/{location_pointer[location]}properties/property[parameter_name='{parameter_name}']/parameter_name"
-                    )
-                    for entry in property_value:
-                        entry.tag = "value"
-                        entry.text = param_value[0].text
+            self._resolve_parameters(location, newtree)
             _expand_tensors(self, numofmedia, multidim_prop, root, location)
             _expand_van_genuchten(self, numofmedia, root, location)
             property_names = [
@@ -1102,57 +1167,15 @@ class OGS:
             ]
             property_names = list(dict.fromkeys(property_names))
             values: dict[str, list] = {}
-            for name in property_names:
-                values[name] = []
-                orig_name = "".join(c for c in name if not c.isnumeric())
-                number_suffix = "".join(c for c in name if c.isnumeric())
-                if orig_name in property_dict[location]:
-                    for medium_id in range(numofmedia):
-                        if medium_id in mediamapping:
-                            medium = self._get_medium_pointer(root, medium_id)
-                            proptytype = medium.find(
-                                f"./{location_pointer[location]}properties/property[name='{name}']/type"
-                            )
-                            if proptytype is None:
-                                values[name].append(
-                                    Value(mediamapping[medium_id], None)
-                                )
-                            else:
-                                if proptytype.text == "Constant":
-                                    value_entry = medium.find(
-                                        f"./{location_pointer[location]}properties/property[name='{name}']/value"
-                                    ).text
-                                    value_entry_list = value_entry.split(" ")
-                                    if len(value_entry_list) == 1:
-                                        values[name].append(
-                                            Value(
-                                                mediamapping[medium_id],
-                                                float(value_entry),
-                                            )
-                                        )
-                                else:
-                                    values[name].append(
-                                        Value(mediamapping[medium_id], None)
-                                    )
-                    if number_suffix != "":
-                        new_symbol = (
-                            property_dict[location][orig_name]["symbol"][:-1]
-                            + "_"
-                            + number_suffix
-                            + "$"
-                        )
-                    else:
-                        new_symbol = property_dict[location][orig_name][
-                            "symbol"
-                        ]
-                    property_list.append(
-                        Property(
-                            property_dict[location][orig_name]["title"],
-                            new_symbol,
-                            property_dict[location][orig_name]["unit"],
-                            values[name],
-                        )
-                    )
+            property_list = self._generate_property_list(
+                mediamapping,
+                numofmedia,
+                root,
+                property_names,
+                values,
+                location,
+                property_list,
+            )
         properties = PropertySet(property=property_list)
         return pd.DataFrame(properties)
 
