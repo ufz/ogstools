@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import ifm_contrib as ifm
+import numpy as np
 import pyvista as pv
 from ogs6py import ogs
 
@@ -64,11 +65,22 @@ class FeflowModel:
 
         :return: Dictionary (dict) of boundary meshes, with name as key and mesh as value.
         """
-        # ToDo: Introduce this behaviour to feflowlib.tools with a type. And return type of name for cell and pt BC should be the same not possix Path...
+        # ToDo: Introduce this behaviour to feflowlib.tools with a type.
+        # And return type of name for cell and pt BC should be the same not possix Path...
         boundary_conditions = _tools.extract_point_boundary_conditions(
             self.mesh_path.parent, self.mesh
         )
-        if self.dimension == 3:
+
+        if self.dimension == 3 and (
+            (
+                "P_SOUF" in self.mesh.cell_data
+                and not np.all(self.mesh.cell_data["P_SOUF"] == 0)
+            )
+            or (
+                "P_IOFLOW" in self.mesh.cell_data
+                and not np.all(self.mesh.cell_data["P_IOFLOW"] == 0)
+            )
+        ):
             (
                 cell_bc_path,
                 cell_bc_mesh,

@@ -895,7 +895,16 @@ def setup_prj_file(
 
     model.mesh.add_mesh(filename=bulk_mesh_path.name)
     # this if condition checks if the mesh is 3D. If so the topsurface will be considered.
-    if get_dimension(mesh) == 3:
+    if get_dimension(mesh) == 3 and (
+        (
+            "P_SOUF" in mesh.cell_data
+            and not np.all(mesh.cell_data["P_IOFLOW"] == 0)
+        )
+        or (
+            "P_IOFLOW" in mesh.cell_data
+            and not np.all(mesh.cell_data["P_IOFLOW"] == 0)
+        )
+    ):
         model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
     if "thermal" in process:
         model.processes.add_process_variable(

@@ -363,14 +363,11 @@ class TestConverter:
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
         meshes_list_expected = [
             "boxNeumann_.vtu",
-            "topsurface_boxNeumann_.vtu",
             "P_BC_FLOW.vtu",
             "P_BCFLOW_2ND.vtu",
         ]
-        for mesh, mesh_expected in zip(
-            meshes_list, meshes_list_expected, strict=False
-        ):
-            assert mesh == mesh_expected
+
+        assert meshes_list == meshes_list_expected
         # Test if the parameters are correct
         parameters = prjfile_root.find("parameters")
         parameters_list = [
@@ -401,7 +398,7 @@ class TestConverter:
             )
         ]
         for bc, bc_expected in zip(
-            boundary_condtitions_list, meshes_list_expected[2:], strict=False
+            boundary_condtitions_list, meshes_list_expected[1:], strict=False
         ):
             assert bc == bc_expected.replace(".vtu", "")
 
@@ -611,14 +608,10 @@ class TestFeflowModel:
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
         meshes_list_expected = [
             "boxNeumann_feflow_model.vtu",
-            "topsurface_boxNeumann_feflow_model.vtu",
             "P_BC_FLOW.vtu",
             "P_BCFLOW_2ND.vtu",
         ]
-        for mesh, mesh_expected in zip(
-            meshes_list, meshes_list_expected, strict=False
-        ):
-            assert mesh == mesh_expected
+        assert meshes_list == meshes_list_expected
         # Test if the parameters are correct
         parameters = prjfile_root.find("parameters")
         parameters_list = [
@@ -649,7 +642,7 @@ class TestFeflowModel:
             )
         ]
         for bc, bc_expected in zip(
-            boundary_condtitions_list, meshes_list_expected[2:], strict=False
+            boundary_condtitions_list, meshes_list_expected[1:], strict=False
         ):
             assert bc == bc_expected.replace(".vtu", "")
 
