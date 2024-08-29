@@ -18,7 +18,7 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from ._feflowModel import feflowModel
+from ._feflowModel import FeflowModel
 from ._templates import (
     component_transport,
     hydro_thermal,
@@ -46,7 +46,7 @@ __all__ = [
     "convert_properties_mesh",
     "extract_cell_boundary_conditions",
     "extract_point_boundary_conditions",
-    "feflowModel",
+    "FeflowModel",
     "get_material_properties_of_CT_model",
     "get_material_properties_of_HT_model",
     "get_species",

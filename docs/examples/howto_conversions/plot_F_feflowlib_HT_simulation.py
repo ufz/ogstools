@@ -18,14 +18,14 @@ import pyvista as pv
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_HT_model
 from ogstools.feflowlib import (
-    feflowModel,
+    FeflowModel,
 )
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_model = feflowModel(
+feflow_model = FeflowModel(
     feflow_model_2D_HT_model, temp_dir / "2D_HT_model.vtu"
 )
 feflow_temperature = ot.variables.temperature.replace(data_name="P_TEMP")

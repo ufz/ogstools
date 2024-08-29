@@ -18,7 +18,7 @@ import numpy as np
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
-from ogstools.feflowlib import feflowModel
+from ogstools.feflowlib import FeflowModel
 from ogstools.meshlib import Mesh
 
 ot.plot.setup.show_element_edges = True
@@ -26,7 +26,7 @@ ot.plot.setup.show_element_edges = True
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_model = feflowModel(
+feflow_model = FeflowModel(
     feflow_model_2D_CT_t_560, temp_dir / "2D_CT_model.vtu"
 )
 feflow_model.mesh.save(feflow_model.mesh_path)

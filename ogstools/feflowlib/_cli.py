@@ -16,7 +16,7 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 
-from ogstools.feflowlib import feflowModel, helpFormat
+from ogstools.feflowlib import FeflowModel, helpFormat
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",
@@ -79,7 +79,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             "An OGS model can only be complete if the existing boundary conditions have been converted."
         )
         return 1
-    feflow_model = feflowModel(Path(input), Path(output))
+    feflow_model = FeflowModel(Path(input), Path(output))
     # Create separate meshes for the boundary condition.
     if BC == "no_BC":
         feflow_model.mesh.save(output)

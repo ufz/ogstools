@@ -17,11 +17,11 @@ import ifm_contrib as ifm  # noqa: E402
 
 # pylint: disable=C0413,C0412
 from ogstools.feflowlib import (  # noqa: E402
+    FeflowModel,
     component_transport,
     convert_properties_mesh,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
-    feflowModel,
     get_material_properties_of_CT_model,
     get_material_properties_of_HT_model,
     get_species,
@@ -562,7 +562,7 @@ class TestSimulation_CT:
 
 class TestFeflowModel:
     def setup_method(self):
-        self.feflow_model = feflowModel(examples.feflow_model_2D_HT_model)
+        self.feflow_model = FeflowModel(examples.feflow_model_2D_HT_model)
 
     def test_bulk_mesh(self):
         bulk_mesh = self.feflow_model.ogs_bulk_mesh
@@ -584,17 +584,17 @@ class TestFeflowModel:
     def test_process(self):
         assert self.feflow_model.process == "Hydro thermal"
         assert (
-            feflowModel(examples.feflow_model_2D_CT_t_28).process
+            FeflowModel(examples.feflow_model_2D_CT_t_28).process
             == "Component transport"
         )
         assert (
-            feflowModel(examples.feflow_model_box_Robin).process
+            FeflowModel(examples.feflow_model_box_Robin).process
             == "Liquid flow"
         )
 
     def test_prj_file(self):
         temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
-        model = feflowModel(
+        model = FeflowModel(
             examples.feflow_model_box_Neumann,
             temp_dir + "/boxNeumann_feflow_model.vtu",
         )

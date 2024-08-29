@@ -16,7 +16,7 @@ from ._feflowlib import convert_properties_mesh
 from ._templates import component_transport, hydro_thermal, liquid_flow
 
 
-class feflowModel:
+class FeflowModel:
     """
     The FEFLOW model class to access the FEFLOW model.
 
