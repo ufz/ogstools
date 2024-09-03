@@ -6,12 +6,12 @@
 
 ## Introduction
 
-`feflowlib` can be used as a Python-library to easily access FEFLOW data and prepare it for `OGS`.
-`feflow2ogs` is the corresponding *command line interface* that combines the most important `feflowlib`-functions into a tool.
-Together they are referred as FEFLOW-converter, as they allow the conversion of data stored in FEFLOW binary format to VTK format (`.vtu`) and the preparation of `OGS`-models.
-This converter was developed in the Python language and interacts with the Python API of FEFLOW.
-`pyvista` is used especially for the creation of unstructured grids.
-With the usage of [`ogs6py`](https://joergbuchwald.github.io/ogs6py-doc/index.html) it is possible to create a `prj-file` from the converted model to enable simulations with `OGS`.
+`feflowlib` is a Python module to access FEFLOW data and prepare it for `OGS`.
+`feflow2ogs` is the associated *command line interface* that combines the most important `feflowlib` functions in a user-friendly workflow.
+Together they are referred to as FEFLOW-converter, as they enable the conversion of data stored in FEFLOW binary format to VTK format (`.vtu`) and the preparation of `OGS`-models.
+The converter interacts with the Python API of the proprietary software FEFLOW.
+`pyvista` is used especially for the creation of unstructured grids/meshes.
+With the usage of [`ogs6py`](./ogs6py.md) it is possible to create a proposal of a `prj-file` from the converted model to enable simulations with `OGS`.
 At the moment `steady state diffusion`, `liquid flow`, `hydro thermal` and `component/mass transport` processes are supported to set up the `prj-file`.
 
 ## Features
@@ -19,9 +19,8 @@ At the moment `steady state diffusion`, `liquid flow`, `hydro thermal` and `comp
 All in all, the converter can be used to convert `steady state diffusion`, `liquid flow`, `hydro thermal` and `component/mass transport` models from FEFLOW.
 This includes the conversion of the bulk mesh together with the boundary conditions, as well as the creation of the corresponding mesh `vtk-files`.
 In addition, (in)complete `prj-files` can be created automatically.
-The `prj-file` is set up of a model-specific part and a part that is read from a template and defines the solver and process configuration.
-This means that the converter supplies a suggestion for a `prj-file`, which is not guaranteed
-to be working.
+The `prj-file` is set up of a model-specific part and a part that is read from a template and defines the solver and time configuration.
+This means that the converter supplies a suggestion for a `prj-file`, which is not guaranteed to be working.
 The current status enables:
 
 ### Main features
