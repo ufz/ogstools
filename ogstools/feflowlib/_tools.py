@@ -502,7 +502,14 @@ def materials_in_steady_state_diffusion(
     :returns: model
     """
     for material_id, property_value in material_properties.items():
-        if any(prop == "inhomogeneous" for prop in property_value):
+        if isinstance(property_value, float):
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Constant",
+                value=str(property_value),
+            )
+        elif any(prop == "inhomogeneous" for prop in property_value):
             model.media.add_property(
                 medium_id=material_id,
                 name="diffusion",
@@ -511,7 +518,7 @@ def materials_in_steady_state_diffusion(
             )
             model.mesh.add_mesh(filename=str(material_id) + ".vtu")
             model.parameters.add_parameter(
-                name="diffusion_" + str(material_id),
+                name="permeability_" + str(material_id),
                 type="MeshElement",
                 field_name="KF",
                 mesh=str(material_id),

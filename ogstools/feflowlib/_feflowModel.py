@@ -14,7 +14,12 @@ from ogs6py import ogs
 
 from . import _tools
 from ._feflowlib import convert_properties_mesh
-from ._templates import component_transport, hydro_thermal, liquid_flow
+from ._templates import (
+    component_transport,
+    hydro_thermal,
+    liquid_flow,
+    steady_state_diffusion,
+)
 
 
 class FeflowModel:
@@ -100,7 +105,7 @@ class FeflowModel:
         """
         problem_classes = {
             -1: "Illegal problem class",
-            0: "Liquid flow",
+            0: "Steady state diffusion",
             1: "Component transport",
             2: "Hydro thermal",
             3: "Combined flow, mass and heat transport [not supported yet]",
@@ -120,7 +125,7 @@ class FeflowModel:
         :return: Dictionary with properties and the corresponding value for each material.
         """
         process = self.process
-        if "Liquid flow" in process:
+        if "Steady state diffusion" in process:
             if "P_COND" in self.mesh.cell_data:
                 property_list = ["P_COND"]
             else:
@@ -128,6 +133,18 @@ class FeflowModel:
             material_properties = _tools.combine_material_properties(
                 self.mesh, property_list
             )
+
+        elif "Liquid flow" in process:
+            # ToDo refactor to get rid off code dublications!
+            if "P_COND" in self.mesh.cell_data:
+                property_list = ["P_COND"]
+            else:
+                property_list = ["P_CONDX", "P_CONDY", "P_CONDZ"]
+            material_properties = _tools.combine_material_properties(
+                self.mesh, property_list
+            )
+            # storage = _tools.get_material_properties(self.mesh, "P_COMP")
+
         elif "Hydro thermal" in process:
             material_properties = _tools.get_material_properties_of_HT_model(
                 self.mesh
@@ -156,6 +173,11 @@ class FeflowModel:
                 Path(self.mesh_path.with_suffix("")),
                 ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
+            )
+        elif "Steady state diffusion" in self.process:
+            template_model = steady_state_diffusion(
+                Path(self.mesh_path.with_suffix("")),
+                ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
             )
         elif "Hydro thermal" in self.process:
             template_model = hydro_thermal(
