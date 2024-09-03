@@ -40,8 +40,8 @@ dependencies = [
   "papermill>=2.4.0",
   "pandamesh>=0.1.6",
   "ogs>=6.5.2",
-  "ogs6py>=0.402",
   "typeguard>=4.0.0",
+  "lxml>=4.6.0"
 ]
 
 [project.urls]
@@ -78,7 +78,6 @@ docs = [
   "myst_nb",
   "sphinx-design",
   "sphinx_gallery",
-  "ogs6py",
   "trame-vtk>=2.6.0",
 ]
 feflow = [

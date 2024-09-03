@@ -13,8 +13,9 @@ from typing import TypedDict
 
 import numpy as np
 import pyvista as pv
-from ogs6py import ogs
 from typing_extensions import NotRequired, Unpack
+
+from ogstools.ogs6py import ogs
 
 # log configuration
 logger = log.getLogger(__name__)

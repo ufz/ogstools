@@ -16,7 +16,6 @@ from pathlib import Path
 import ifm_contrib as ifm
 import matplotlib.pyplot as plt
 import numpy as np
-from ogs6py import ogs
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
@@ -29,6 +28,7 @@ from ogstools.feflowlib import (
     write_point_boundary_conditions,
 )
 from ogstools.meshlib import Mesh
+from ogstools.ogs6py import ogs
 
 ot.plot.setup.show_element_edges = True
 # %%

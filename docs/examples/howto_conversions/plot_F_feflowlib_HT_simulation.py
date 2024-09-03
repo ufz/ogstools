@@ -15,7 +15,6 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 import pyvista as pv
-from ogs6py import ogs
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_HT_model
@@ -28,6 +27,7 @@ from ogstools.feflowlib.tools import (
     extract_point_boundary_conditions,
     get_material_properties_of_HT_model,
 )
+from ogstools.ogs6py import ogs
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on

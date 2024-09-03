@@ -5,12 +5,12 @@ from tempfile import mkdtemp
 
 import numpy as np
 import pytest
-from ogs6py import ogs
 from pyvista import SolidSphere, UnstructuredGrid
 
 import ogstools as ot
 from ogstools import examples
 from ogstools.msh2vtu import msh2vtu
+from ogstools.ogs6py import ogs
 
 
 class TestUtils:

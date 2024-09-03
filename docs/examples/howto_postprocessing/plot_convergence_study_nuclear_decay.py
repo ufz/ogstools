@@ -35,11 +35,11 @@ from tempfile import mkdtemp
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import HTML
-from ogs6py import ogs
 from scipy.constants import Julian_year as sec_per_yr
 
 import ogstools as ot
 from ogstools import examples, meshlib, msh2vtu, physics, studies, workflow
+from ogstools.ogs6py import ogs
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
