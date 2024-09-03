@@ -32,7 +32,9 @@ from ogstools.feflowlib import (  # noqa: E402
     steady_state_diffusion,
     write_point_boundary_conditions,
 )
-from ogstools.feflowlib._tools import get_material_properties  # noqa: E402
+from ogstools.feflowlib._tools import (  # noqa: E402
+    get_material_properties_of_H_model,
+)
 
 
 def test_cli():
@@ -68,7 +70,7 @@ class TestSimulation_Neumann:
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -99,7 +101,7 @@ class TestSimulation_Neumann:
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -144,7 +146,7 @@ class TestSimulation_Robin:
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -171,11 +173,13 @@ class TestSimulation_Robin:
         lqf_model = liquid_flow(
             str(self.temp_dir / "sim_boxRobin"),
             Project(output_file=prjfile),
+            end_time=int(1e8),
+            time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -183,9 +187,9 @@ class TestSimulation_Robin:
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read(
-            str(self.temp_dir / "sim_boxRobin_ts_1_t_1.000000.vtu")
-        )
+        ms = ml.MeshSeries(self.temp_dir / "sim_boxRobin.pvd")
+        # Read the last timestep:
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
             self.pv_mesh.point_data["P_HEAD"],
@@ -220,7 +224,7 @@ class TestSimulation_Well:
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -250,7 +254,7 @@ class TestSimulation_Well:
         model = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -349,7 +353,7 @@ class TestConverter:
         model = setup_prj_file(
             self.temp_dir / "boxNeumann_.vtu",
             self.pv_mesh,
-            get_material_properties(self.pv_mesh, "P_CONDX"),
+            get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
         )
         model.write_input(self.temp_dir / "boxNeumann_.prj")
@@ -404,7 +408,7 @@ class TestConverter:
 
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
-        ).text
+        ).text[0:23]
         # The index [0] is because one needs to compare one value from the list. And all
         # values are the same.
         assert float(diffusion_value) == float(

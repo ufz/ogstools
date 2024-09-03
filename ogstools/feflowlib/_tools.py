@@ -239,6 +239,38 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     return material_properties
 
 
+def get_material_properties_of_H_model(
+    mesh: pv.UnstructuredGrid,
+) -> defaultdict:
+    """
+    Get a dictionary of all necessaray parameter values for a flow model for each material in the mesh.
+
+    :param mesh: mesh
+    :return: material_properties
+    """
+    possible_parameter_mapping = {
+        "P_COND": "permeability",
+        "P_CONDX": "permeability_X",
+        "P_CONDY": "permeability_Y",
+        "P_CONDZ": "permeability_Z",
+        "P_COMP": "storage",
+    }
+
+    parameter_mapping = {}
+    for parameter in possible_parameter_mapping:
+        if parameter in mesh.cell_data:
+            parameter_mapping[parameter] = possible_parameter_mapping[parameter]
+
+    material_properties: defaultdict = defaultdict(dict)
+    for parameter_feflow, parameter_ogs in parameter_mapping.items():
+        for material_id, property_value in get_material_properties(
+            mesh, parameter_feflow
+        ).items():
+            material_properties[material_id][parameter_ogs] = property_value[0]
+
+    return material_properties
+
+
 def get_material_properties_of_HT_model(
     mesh: pv.UnstructuredGrid,
 ) -> defaultdict:
@@ -501,15 +533,31 @@ def materials_in_steady_state_diffusion(
     :param model: model to setup prj-file
     :returns: model
     """
-    for material_id, property_value in material_properties.items():
-        if isinstance(property_value, float):
+    for material_id in material_properties:
+        if "permeability_X" in material_properties[material_id]:
             model.media.add_property(
                 medium_id=material_id,
                 name="diffusion",
                 type="Constant",
-                value=str(property_value),
+                value=str(material_properties[material_id]["permeability_X"])
+                + " "
+                + str(material_properties[material_id]["permeability_Y"])
+                + " "
+                + str(material_properties[material_id]["permeability_Z"]),
             )
-        elif any(prop == "inhomogeneous" for prop in property_value):
+        elif "permeability" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Constant",
+                value=str(material_properties[material_id]["permeability"]),
+            )
+        elif any(
+            prop == "inhomogeneous"
+            for prop in material_properties[material_id][
+                "permeability_X"
+            ].values()
+        ):
             model.media.add_property(
                 medium_id=material_id,
                 name="diffusion",
@@ -518,17 +566,10 @@ def materials_in_steady_state_diffusion(
             )
             model.mesh.add_mesh(filename=str(material_id) + ".vtu")
             model.parameters.add_parameter(
-                name="permeability_" + str(material_id),
+                name="diffusion_" + str(material_id),
                 type="MeshElement",
                 field_name="KF",
                 mesh=str(material_id),
-            )
-        else:
-            model.media.add_property(
-                medium_id=material_id,
-                name="diffusion",
-                type="Constant",
-                value=" ".join(str(element) for element in property_value),
             )
         model.media.add_property(
             medium_id=material_id,
@@ -552,15 +593,31 @@ def materials_in_liquid_flow(
     :param model: model to setup prj-file
     :returns: model
     """
-    for material_id, property_value in material_properties.items():
-        if isinstance(property_value, float):
+    for material_id in material_properties:
+        if "permeability_X" in material_properties[material_id]:
             model.media.add_property(
                 medium_id=material_id,
                 name="permeability",
                 type="Constant",
-                value=str(property_value),
+                value=str(material_properties[material_id]["permeability_X"])
+                + " "
+                + str(material_properties[material_id]["permeability_Y"])
+                + " "
+                + str(material_properties[material_id]["permeability_Z"]),
             )
-        elif any(prop == "inhomogeneous" for prop in property_value):
+        elif "permeability" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=str(material_properties[material_id]["permeability"]),
+            )
+        elif any(
+            prop == "inhomogeneous"
+            for prop in material_properties[material_id][
+                "permeability_X"
+            ].values()
+        ):
             model.media.add_property(
                 medium_id=material_id,
                 name="permeability",
@@ -573,13 +630,6 @@ def materials_in_liquid_flow(
                 type="MeshElement",
                 field_name="KF",
                 mesh=str(material_id),
-            )
-        else:
-            model.media.add_property(
-                medium_id=material_id,
-                name="permeability",
-                type="Constant",
-                value=" ".join(str(element) for element in property_value),
             )
 
         model.media.add_property(
@@ -606,7 +656,7 @@ def materials_in_liquid_flow(
             medium_id=material_id,
             name="storage",
             type="Constant",
-            value=0,
+            value=material_properties[material_id]["storage"],
         )
         model.media.add_property(
             medium_id=material_id,
