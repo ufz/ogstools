@@ -9,7 +9,7 @@ This enables the user to create parameter plans and to execute them in parallel.
 
 # Features
 
-- alternate existing files
+- alternate existing files (e.g., for parameter sweeps)
 - create new input files from scratch
 - execute project files
 - tailored alteration of input files e.g. for mesh replacements or restarts
