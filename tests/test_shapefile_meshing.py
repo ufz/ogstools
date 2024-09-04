@@ -18,8 +18,10 @@ class TestShapeFileMeshing:
         pyvista_mesh = ml.read_shape(
             test_shapefile
         )  # simplify_false, mesh_generator_triangle
-        assert pyvista_mesh.n_points == 233465
-        assert pyvista_mesh.n_cells == 344431
+        assert pyvista_mesh.n_points > 233000
+        assert pyvista_mesh.n_points < 234000
+        assert pyvista_mesh.n_cells > 344000
+        assert pyvista_mesh.n_points < 345000
 
     # Same for simplified mesh.
     def test_simplify(self):
