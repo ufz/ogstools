@@ -158,6 +158,8 @@ class FeflowModel:
                 Path(self.mesh_path.with_suffix("")),
                 ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
+                end_time=end_time,
+                time_stepping=time_stepping,
             )
         elif "Steady state diffusion" in self.process:
             template_model = steady_state_diffusion(

@@ -57,7 +57,10 @@ path_topsurface, topsurface = list(BC_dict.items())[-1]
 topsurface.save(path_topsurface)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-model = feflow_model.prj()
+model = feflow_model.prj(
+    end_time=int(1e8),
+    time_stepping=[(1, 10), (5, 100), (10, 1000), (10, 1e6), (1, 1e7)],
+)
 # The model must be written before it can be run.
 model.write_input()
 # Print the prj-file as an example.

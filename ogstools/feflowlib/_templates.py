@@ -78,26 +78,37 @@ def steady_state_diffusion(saving_path: Path, prj: Project) -> Project:
     return prj
 
 
-def liquid_flow(saving_path: Path, prj: Project, dimension: int = 3) -> Project:
+def liquid_flow(
+    saving_path: Path,
+    prj: Project = None,
+    dimension: int = 3,
+    fixed_out_times: list | None = None,
+    time_stepping: list | None = None,
+    initial_time: int = 0,
+    end_time: int = 1,
+) -> Project:
     """
     A template for a steady liquid flow process to be simulated in ogs.
 
     :param saving_path: path of ogs simulation results
     :param prj: ogs project, which shall be used with the template
     :param dimension: True, if the model is 2 dimensional.
+    :param fixed_out_times: Time steps output will be generated for.
+    :param time_stepping: List of how often a time step should be repeated and its time.
+    :param initial_time: Beginning of the simulation time.
+    :param end_time: End of the simulation time.
     """
     # FEFLOW uses hydraulic HEAD instead of pressure as primary variable,
     # which is why the gravity is calculated in the hydraulic conductivity.
     # That is why, in this case we can set the gravity to 0 in all needed spatial
     # directions.
-    if dimension == 1:
-        gravity = "0"
-    elif dimension == 2:
-        gravity = "0 0"
-    elif dimension == 3:
-        gravity = "0 0 0"
-    else:
-        ValueError("Dimension can be either 1,2 or 3.")
+    if dimension not in [1, 2, 3]:
+        error_msg = "Dimension can be either 1, 2, or 3."
+        raise ValueError(error_msg)
+
+    gravity = " ".join(["0"] * dimension)
+    fixed_out_times = [end_time] if fixed_out_times is None else fixed_out_times
+
     prj.processes.set_process(
         name="LiquidFlow",
         type="LIQUID_FLOW",
@@ -114,20 +125,30 @@ def liquid_flow(saving_path: Path, prj: Project, dimension: int = 3) -> Project:
         abstol="1e-10",
         time_discretization="BackwardEuler",
     )
+
+    if time_stepping is None:
+        time_stepping = [(1, end_time)]
+
     prj.time_loop.set_stepping(
         process="LiquidFlow",
         type="FixedTimeStepping",
-        t_initial="0",
-        t_end="1",
-        repeat="1",
-        delta_t="1",
+        t_initial=initial_time,
+        t_end=end_time,
+        repeat=time_stepping[0][0],
+        delta_t=time_stepping[0][1],
     )
+
+    for time_step in time_stepping[1:]:
+        prj.time_loop.add_time_stepping_pair(
+            repeat=time_step[0], delta_t=time_step[1], process="LiquidFlow"
+        )
     prj.time_loop.add_output(
         type="VTK",
         prefix=str(saving_path),
         repeat="1",
         each_steps="1",
         variables=[],
+        fixed_output_times=fixed_out_times,
     )
     prj.nonlinear_solvers.add_non_lin_solver(
         name="basic_picard",
@@ -180,18 +201,16 @@ def component_transport(
     :param species:
     :param prj: ogs project, which shall be used with the template
     :param dimension: True, if the model is 2 dimensional.
+    :param fixed_out_times: Time steps output will be generated for.
     :param time_stepping: List of how often a time step should be repeated and its time.
     :param initial_time: Beginning of the simulation time.
     :param end_time: End of the simulation time.
     """
-    if dimension == 1:
-        gravity = "0"
-    elif dimension == 2:
-        gravity = "0 0"
-    elif dimension == 3:
-        gravity = "0 0 0"
-    else:
-        ValueError("Dimension can be either 1,2 or 3.")
+    if dimension not in [1, 2, 3]:
+        error_msg = "Dimension can be either 1, 2, or 3."
+        raise ValueError(error_msg)
+
+    gravity = " ".join(["0"] * dimension)
     prj.processes.set_process(
         name="CT",
         type="ComponentTransport",
@@ -279,15 +298,11 @@ def hydro_thermal(
     :param prj: ogs project, which shall be used with the template
     :param dimension: to known if the model is 2D or not
     """
-    if dimension == 1:
-        gravity = "0"
-    elif dimension == 2:
-        gravity = "0 0"
-    elif dimension == 3:
-        gravity = "0 0 0"
-    else:
-        msg = "Dimension can be either 1,2 or 3."
-        raise ValueError(msg)
+    if dimension not in [1, 2, 3]:
+        error_msg = "Dimension can be either 1, 2, or 3."
+        raise ValueError(error_msg)
+
+    gravity = " ".join(["0"] * dimension)
     prj.processes.set_process(
         name="HydroThermal",
         type="HT",

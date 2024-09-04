@@ -97,6 +97,8 @@ class TestSimulation_Neumann:
         lqf_model = liquid_flow(
             self.temp_dir / "sim_boxNeumann",
             Project(output_file=prjfile),
+            end_time=int(1e8),
+            time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -109,9 +111,9 @@ class TestSimulation_Neumann:
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read(
-            str(self.temp_dir / "sim_boxNeumann_ts_1_t_1.000000.vtu")
-        )
+        ms = ml.MeshSeries(self.temp_dir / "sim_boxNeumann.pvd")
+        # Read the last timestep:
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
             self.pv_mesh.point_data["P_HEAD"],
@@ -250,6 +252,8 @@ class TestSimulation_Well:
         lqf_model = liquid_flow(
             str(self.temp_dir / "sim_boxWell"),
             Project(output_file=prjfile),
+            end_time=int(1e8),
+            time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -262,9 +266,9 @@ class TestSimulation_Well:
         model.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ogs_sim_res = pv.read(
-            str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
-        )
+        ms = ml.MeshSeries(self.temp_dir / "sim_boxWell.pvd")
+        # Read the last timestep:
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
             self.pv_mesh.point_data["P_HEAD"],
