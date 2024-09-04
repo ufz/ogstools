@@ -80,7 +80,7 @@ def steady_state_diffusion(saving_path: Path, prj: Project) -> Project:
 
 def liquid_flow(
     saving_path: Path,
-    prj: Project = None,
+    prj: Project,
     dimension: int = 3,
     fixed_out_times: list | None = None,
     time_stepping: list | None = None,
