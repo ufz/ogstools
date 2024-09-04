@@ -280,13 +280,16 @@ def get_material_properties_of_HT_model(
     :param mesh: mesh
     :returns: material_properties
     """
-    parameter_mapping = {
+    possible_parameter_mapping = {
         "P_ANGL": "anisotropy_angle",
         "P_ANIS": "anisotropy_factor",
         "P_CAPACF": "specific_heat_capacity_fluid",
         "P_CAPACS": "specific_heat_capacity_solid",
         "P_COMP": "storage",
         "P_COND": "permeability",
+        "P_CONDX": "permeability_X",
+        "P_CONDY": "permeability_Y",
+        "P_CONDZ": "permeability_Z",
         "P_CONDUCF": "thermal_conductivity_fluid",
         "P_CONDUCS": "thermal_conductivity_solid",
         "P_POROH": "porosity",
@@ -294,6 +297,10 @@ def get_material_properties_of_HT_model(
         "P_TDISH": "thermal_transversal_dispersivity",
     }
 
+    parameter_mapping = {}
+    for parameter in possible_parameter_mapping:
+        if parameter in mesh.cell_data:
+            parameter_mapping[parameter] = possible_parameter_mapping[parameter]
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in parameter_mapping.items():
         for material_id, property_value in get_material_properties(
@@ -743,19 +750,31 @@ def materials_in_HT(
                 "thermal_conductivity_solid"
             ],
         )
-        model.media.add_property(
-            medium_id=material_id,
-            name="permeability",
-            type="Constant",
-            # Theoretically an anisotropy angle can be applied, but it is not implemented
-            # in this case.
-            value=str(material_properties[material_id]["permeability"])
-            + " "
-            + str(
-                material_properties[material_id]["permeability"]
-                * material_properties[material_id]["anisotropy_factor"]
-            ),
-        )
+        if "permeability_X" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                value=str(material_properties[material_id]["permeability_X"])
+                + " "
+                + str(material_properties[material_id]["permeability_Y"])
+                + " "
+                + str(material_properties[material_id]["permeability_Z"]),
+            )
+        elif "permeability" in material_properties[material_id]:
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Constant",
+                # Theoretically an anisotropy angle can be applied, but it is not implemented
+                # in this case.
+                value=str(material_properties[material_id]["permeability"])
+                + " "
+                + str(
+                    material_properties[material_id]["permeability"]
+                    * material_properties[material_id]["anisotropy_factor"]
+                ),
+            )
         model.media.add_property(
             medium_id=material_id,
             name="porosity",
