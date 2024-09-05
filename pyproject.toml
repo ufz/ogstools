@@ -39,7 +39,7 @@ dependencies = [
   "Pint>=0.22",
   "papermill>=2.4.0",
   "pandamesh>=0.2.1", # meshing algorithm changed with this version
-  "ogs>=6.5.2",
+  "ogs>=6.5.3",
   "typeguard>=4.0.0",
   "lxml>=4.6.0"
 ]
