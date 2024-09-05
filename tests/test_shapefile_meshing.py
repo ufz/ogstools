@@ -35,7 +35,7 @@ class TestShapeFileMeshing:
         assert mesh_simplify.n_cells < mesh_orignal.n_cells
 
         mesh_simplify_finer = ml.read_shape(
-            test_shapefile, simplify=True, cellsize=20000
+            test_shapefile, simplify=True, cellsize=2000
         )
         mesh_simplify_coarser = ml.read_shape(
             test_shapefile, simplify=True, cellsize=10000
