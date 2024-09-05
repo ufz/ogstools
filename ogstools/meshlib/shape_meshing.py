@@ -70,9 +70,13 @@ def _points_cells_from_shapefile(
 
     if mesh_generator == "triangle":
         mesher = pm.TriangleMesher(geodataframe)
+        points_cells = mesher.generate()
     elif mesh_generator == "gmsh":
         mesher = pm.GmshMesher(geodataframe)
-    return mesher.generate()
+        points_cells = mesher.generate()
+        pm.GmshMesher.finalize()
+
+    return points_cells
 
 
 def _mesh_from_points_cells(
