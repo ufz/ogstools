@@ -24,7 +24,7 @@ The names of the method calls are based on the corresponding XML tags.
 First, initialize the ogs6py object:
 
 ```python
-from ogs6py import ogs
+from ogstools.ogs6py import ogs
 
 model = ogs.OGS(PROJECT_FILE="simple_mechanics.prj")
 ```
