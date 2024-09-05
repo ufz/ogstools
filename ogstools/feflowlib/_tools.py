@@ -301,6 +301,7 @@ def get_material_properties_of_HT_model(
     for parameter in possible_parameter_mapping:
         if parameter in mesh.cell_data:
             parameter_mapping[parameter] = possible_parameter_mapping[parameter]
+
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in parameter_mapping.items():
         for material_id, property_value in get_material_properties(
@@ -490,11 +491,11 @@ def combine_material_properties(
 
 def write_mesh_of_combined_properties(
     mesh: pv.UnstructuredGrid,
-    property_list: list,
-    new_property: str,
+    feflow_properties: list,
+    ogs_properties: list,
     material_id: int,
     saving_path: Path,
-) -> str:
+) -> None:
     """
     Writes a separate mesh-file with a specific material that has inhomogeneous property values
     within the material group. It can also be used to write multiple properties
@@ -511,20 +512,63 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    zipped = list(
-        zip(*[material_mesh[prop] for prop in property_list], strict=False)
-    )
-    material_mesh[new_property] = zipped
+    print(material_mesh.cell_data)
+    for feflow_property, ogs_property in zip(
+        feflow_properties, ogs_properties, strict=False
+    ):
+        zipped = list(
+            zip(
+                *[material_mesh[prop] for prop in feflow_property], strict=False
+            )
+        )
+        material_mesh[ogs_property] = zipped
     filename = str(saving_path.with_name(str(material_id) + ".vtu"))
     material_mesh.point_data.remove("vtkOriginalPointIds")
     for pt_data in material_mesh.point_data:
         if pt_data != "bulk_node_ids":
             material_mesh.point_data.remove(pt_data)
     for cell_data in material_mesh.cell_data:
-        if cell_data not in ["bulk_element_ids", new_property]:
+        if cell_data not in ["bulk_element_ids"] + ogs_properties:
             material_mesh.cell_data.remove(cell_data)
     material_mesh.save(filename)
-    return filename
+
+
+def write_mesh_for_heterogeneous_material_properties(
+    mesh: pv.UnstructuredGrid,
+    material_properties: defaultdict,
+    saving_path: Path,
+) -> None:
+    """
+    Documentation
+
+    ToDo, check if there are multiple material Ids otherwise take bulk mesh and no need to write separate mesh.
+    :param: ...
+    """
+    for mat_id in material_properties:
+        in_homo_prop = [
+            prop
+            for prop, val in material_properties[mat_id].items()
+            if val == "inhomogeneous"
+        ]
+        if in_homo_prop == []:
+            return
+        print(in_homo_prop)
+        permeabilities = ["permeability_X", "permeability_Y", "permeability_Z"]
+        if np.all([prop in in_homo_prop for prop in permeabilities]):
+            feflow_properties = [["P_CONDX", "P_CONDY", "P_CONDZ"]]
+            ogs_properties = ["KF"]
+
+        scalar_properties = [
+            [prop] for prop in in_homo_prop if prop not in permeabilities
+        ]
+        feflow_properties += scalar_properties
+        for prop in in_homo_prop:
+            if prop not in permeabilities:
+                ogs_properties.append(prop)
+
+        write_mesh_of_combined_properties(
+            mesh, feflow_properties, ogs_properties, mat_id, saving_path
+        )
 
 
 def materials_in_steady_state_diffusion(
@@ -541,7 +585,25 @@ def materials_in_steady_state_diffusion(
     :returns: model
     """
     for material_id in material_properties:
-        if "permeability_X" in material_properties[material_id]:
+        # Here it is assumed inhomogeneous material properties refer to the permeability not the storage.
+        if any(
+            prop == "inhomogeneous"
+            for prop in material_properties[material_id].values()
+        ):
+            model.media.add_property(
+                medium_id=material_id,
+                name="diffusion",
+                type="Parameter",
+                parameter_name="diffusion_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="diffusion_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        elif "permeability_X" in material_properties[material_id]:
             model.media.add_property(
                 medium_id=material_id,
                 name="diffusion",
@@ -559,25 +621,7 @@ def materials_in_steady_state_diffusion(
                 type="Constant",
                 value=str(material_properties[material_id]["permeability"]),
             )
-        elif any(
-            prop == "inhomogeneous"
-            for prop in material_properties[material_id][
-                "permeability_X"
-            ].values()
-        ):
-            model.media.add_property(
-                medium_id=material_id,
-                name="diffusion",
-                type="Parameter",
-                parameter_name="diffusion_" + str(material_id),
-            )
-            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
-            model.parameters.add_parameter(
-                name="diffusion_" + str(material_id),
-                type="MeshElement",
-                field_name="KF",
-                mesh=str(material_id),
-            )
+
         model.media.add_property(
             medium_id=material_id,
             name="reference_temperature",
@@ -601,7 +645,25 @@ def materials_in_liquid_flow(
     :returns: model
     """
     for material_id in material_properties:
-        if "permeability_X" in material_properties[material_id]:
+        # Here it is assumed inhomogeneous material properties refer to the permeability not the storage.
+        if any(
+            prop == "inhomogeneous"
+            for prop in material_properties[material_id].values()
+        ):
+            model.media.add_property(
+                medium_id=material_id,
+                name="permeability",
+                type="Parameter",
+                parameter_name="permeability_" + str(material_id),
+            )
+            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
+            model.parameters.add_parameter(
+                name="permeability_" + str(material_id),
+                type="MeshElement",
+                field_name="KF",
+                mesh=str(material_id),
+            )
+        elif "permeability_X" in material_properties[material_id]:
             model.media.add_property(
                 medium_id=material_id,
                 name="permeability",
@@ -618,25 +680,6 @@ def materials_in_liquid_flow(
                 name="permeability",
                 type="Constant",
                 value=str(material_properties[material_id]["permeability"]),
-            )
-        elif any(
-            prop == "inhomogeneous"
-            for prop in material_properties[material_id][
-                "permeability_X"
-            ].values()
-        ):
-            model.media.add_property(
-                medium_id=material_id,
-                name="permeability",
-                type="Parameter",
-                parameter_name="permeability_" + str(material_id),
-            )
-            model.mesh.add_mesh(filename=str(material_id) + ".vtu")
-            model.parameters.add_parameter(
-                name="permeability_" + str(material_id),
-                type="MeshElement",
-                field_name="KF",
-                mesh=str(material_id),
             )
 
         model.media.add_property(

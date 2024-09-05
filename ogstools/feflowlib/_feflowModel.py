@@ -194,3 +194,12 @@ class FeflowModel:
             ),
             model=template_model,
         )
+
+    def prepare_OGS(
+        self, end_time: int = 1, time_stepping: list | None = None
+    ) -> None:
+        self.mesh.save(self.mesh_path)
+        for path, boundary_mesh in self.boundary_conditions.items():
+            boundary_mesh.save(path)
+        prj = self.prj(end_time, time_stepping)
+        prj.write_input()
