@@ -18,7 +18,7 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from ._feflowModel import FeflowModel
+from ._FeflowModel import FeflowModel
 from ._templates import (
     component_transport,
     hydro_thermal,
