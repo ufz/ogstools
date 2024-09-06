@@ -11,7 +11,6 @@ from typing import NoReturn
 import pytest
 from lxml import etree as ET
 
-from ogstools import ogs6py
 from ogstools.examples import (
     prj_beier_sandbox,
     prj_beier_sandbox_ref,
@@ -32,6 +31,7 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
+from ogstools.ogs6py import Project
 
 
 def log_types(records):
@@ -46,8 +46,8 @@ mapping = dict.fromkeys(range(32))
 
 class TestiOGS:
     def test_buildfromscratch(self) -> NoReturn:
-        model = ogs6py.OGS(
-            PROJECT_FILE="tunnel_ogs6py.prj", MKL=True, OMP_NUM_THREADS=4
+        model = Project(
+            output_file="tunnel_ogs6py.prj", MKL=True, OMP_NUM_THREADS=4
         )
         model.mesh.add_mesh(
             filename="Decovalex-0-simplified-plain-with-p0-plain.vtu"
@@ -811,9 +811,7 @@ class TestiOGS:
                 assert line == lines_ref[i]
 
     def test_buildfromscratch_bhe(self) -> NoReturn:
-        model = ogs6py.OGS(
-            PROJECT_FILE="HeatTransportBHE_ogs6py.prj", MKL=False
-        )
+        model = Project(output_file="HeatTransportBHE_ogs6py.prj", MKL=False)
         model.mesh.add_mesh(filename="bhe_mesh.vtu")
         model.mesh.add_mesh(filename="bhe_mesh_inflowsf.vtu")
         model.mesh.add_mesh(filename="bhe_mesh_bottomsf.vtu")
@@ -1116,7 +1114,7 @@ class TestiOGS:
 
     def test_replace_text(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_replace.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_text("tunnel_replace", xpath="./time_loop/output/prefix")
         model.write_input()
         root = ET.parse(prjfile)
@@ -1125,10 +1123,10 @@ class TestiOGS:
 
     def test_timedependenthet_param(self) -> NoReturn:
         prjfile = "timedephetparam.prj"
-        model = ogs6py.OGS(
-            INPUT_FILE=prj_time_dep_het_param,
-            PROJECT_FILE=prjfile,
-            VERBOSE=True,
+        model = Project(
+            input_file=prj_time_dep_het_param,
+            output_file=prjfile,
+            verbose=True,
         )
         model.parameters.add_parameter(
             name="kappa1", type="Function", expression="1.e-12"
@@ -1173,7 +1171,7 @@ class TestiOGS:
 
     def test_python_st(self) -> NoReturn:
         prjfile = "python_st.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_beier_sandbox, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.geometry.add_geometry("beier_sandbox.gml")
         model.python_script.set_pyscript("simulationX_test.py")
         model.write_input()
@@ -1192,9 +1190,7 @@ class TestiOGS:
 
     def test_robin_bc(self) -> NoReturn:
         prjfile = "robin_bc.prj"
-        model = ogs6py.OGS(
-            INPUT_FILE=prj_square_1e4_robin, PROJECT_FILE=prjfile
-        )
+        model = Project(input_file=prj_square_1e4_robin, output_file=prjfile)
         model.process_variables.add_bc(
             process_variable_name="temperature",
             geometrical_set="square_1x1_geometry",
@@ -1219,7 +1215,7 @@ class TestiOGS:
 
     def test_staggered(self) -> NoReturn:
         prjfile = "staggered.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_staggered, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_staggered, output_file=prjfile)
         model.processes.set_process(
             name="HM",
             type="HYDRO_MECHANICS",
@@ -1286,9 +1282,7 @@ class TestiOGS:
 
     def test_PID_controller(self) -> NoReturn:
         prjfile = "pid_timestepping.prj"
-        model = ogs6py.OGS(
-            INPUT_FILE=prj_pid_timestepping, PROJECT_FILE=prjfile
-        )
+        model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.media.add_property(
             medium_id="0",
             name="relative_permeability",
@@ -1324,9 +1318,7 @@ class TestiOGS:
 
     def test_deactivate_replace(self) -> NoReturn:
         prjfile = "deactivate_replace.prj"
-        model = ogs6py.OGS(
-            INPUT_FILE=prj_pid_timestepping, PROJECT_FILE=prjfile
-        )
+        model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.deactivate_property("viscosity", phase="AqueousLiquid")
         model.deactivate_parameter("p0")
         model.replace_parameter(
@@ -1352,7 +1344,7 @@ class TestiOGS:
     def test_empty_replace(self) -> NoReturn:
         inputfile = Path(prj_tunnel_trm)
         prjfile = Path("tunnel_ogs6py_empty_replace.prj")
-        model = ogs6py.OGS(INPUT_FILE=inputfile, PROJECT_FILE=prjfile)
+        model = Project(input_file=inputfile, output_file=prjfile)
         model.write_input()
         with inputfile.open("rb") as f:
             lines = f.readlines()
@@ -1369,7 +1361,7 @@ class TestiOGS:
 
     def test_replace_phase_property(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_replace.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_phase_property_value(
             mediumid=0, phase="Solid", name="thermal_expansivity", value=5
         )
@@ -1382,7 +1374,7 @@ class TestiOGS:
 
     def test_replace_medium_property(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_replace.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_medium_property_value(
             mediumid=0, name="porosity", value=42
         )
@@ -1395,7 +1387,7 @@ class TestiOGS:
 
     def test_replace_parameter(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_replace.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_parameter_value(name="E", value=32)
         model.write_input()
         root = ET.parse(prjfile)
@@ -1404,7 +1396,7 @@ class TestiOGS:
 
     def test_replace_mesh(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_replacemesh.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_mesh(
             oldmesh="tunnel_inner.vtu", newmesh="tunnel_inner_new.vtu"
         )
@@ -1432,7 +1424,7 @@ class TestiOGS:
 
     def test_add_entry(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_add_entry.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.add_element(tag="geometry", parent_xpath=".", text="geometry.gml")
         model.write_input()
         root = ET.parse(prjfile)
@@ -1441,7 +1433,7 @@ class TestiOGS:
 
     def test_add_block(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_add_block.prj"
-        model = ogs6py.OGS(INPUT_FILE="tunnel_ogs6py.prj", PROJECT_FILE=prjfile)
+        model = Project(input_file="tunnel_ogs6py.prj", output_file=prjfile)
         model.add_block(
             "parameter",
             parent_xpath="./parameters",
@@ -1455,7 +1447,7 @@ class TestiOGS:
 
     def test_remove_element(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_remove_element.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.remove_element(xpath="./parameters/parameter[name='E']")
         model.write_input()
         root = ET.parse(prjfile)
@@ -1464,7 +1456,7 @@ class TestiOGS:
 
     def test_replace_block_by_include(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_solid_inc.prj"
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm, PROJECT_FILE=prjfile)
+        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_block_by_include(
             xpath="./media/medium/phases/phase[type='Solid']",
             filename="solid.xml",
@@ -1496,7 +1488,7 @@ class TestiOGS:
                 assert line == lines_ref[i]
 
     def test_property_dataframe(self) -> NoReturn:
-        model = ogs6py.OGS(INPUT_FILE=prj_tunnel_trm)
+        model = Project(input_file=prj_tunnel_trm)
         p_df = model.property_dataframe()
         assert p_df.shape[0] == 12
         assert p_df.shape[1] == 5
@@ -1515,8 +1507,8 @@ class TestiOGS:
 
     def test_replace_property_in_include(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_includetest.prj"
-        model = ogs6py.OGS(
-            INPUT_FILE=prj_tunnel_trm_withincludes, PROJECT_FILE=prjfile
+        model = Project(
+            input_file=prj_tunnel_trm_withincludes, output_file=prjfile
         )
         model.replace_phase_property_value(
             mediumid=0, phase="Solid", name="thermal_expansivity", value=1e-3
@@ -1557,7 +1549,7 @@ class TestiOGS:
         sing_dir = tempfile.TemporaryDirectory()
 
         # case: path is not a dir
-        model = ogs6py.OGS(INPUT_FILE=prjfile, PROJECT_FILE=prjfile)
+        model = Project(input_file=prjfile, output_file=prjfile)
         with pytest.raises(
             RuntimeError, match=r"The specified path is not a directory.*"
         ):

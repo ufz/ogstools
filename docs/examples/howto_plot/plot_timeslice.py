@@ -18,11 +18,11 @@ To see this benchmark results over all timesteps have a look at
 # vertical, horizontal and diagonal.
 import numpy as np
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = ot.variables.saturation
+si = ogs.variables.saturation
 points_vert = np.linspace([25, 0, -75], [25, 0, 75], num=100)
 points_hori = np.linspace([0, 0, 60], [150, 0, 60], num=100)
 points_diag = np.linspace([25, 0, 75], [100, 0, 0], num=100)

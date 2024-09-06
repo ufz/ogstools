@@ -6,6 +6,6 @@
 
 # Author: Joerg Buchwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-from .ogs import OGS
+from .project import Project
 
-__all__ = ["OGS"]
+__all__ = ["Project"]

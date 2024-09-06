@@ -13,7 +13,7 @@ example from the ogs benchmark gallery
 import matplotlib.pyplot as plt
 import numpy as np
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
@@ -34,9 +34,9 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 # Let's use fixed scale limits to prevent rescaling during the animation.
 
 # %%
-ot.plot.setup.vmin = 0
-ot.plot.setup.vmax = 100
-ot.plot.setup.dpi = 50
+ogs.plot.setup.vmin = 0
+ogs.plot.setup.vmax = 100
+ogs.plot.setup.dpi = 50
 
 # %% [markdown]
 # You can choose which timesteps to render by passing either an int array
@@ -58,7 +58,7 @@ timevalues = np.linspace(
 # `plot_func` which can apply custom formatting and / or plotting.
 
 
-def mesh_func(mesh: ot.Mesh) -> ot.Mesh:
+def mesh_func(mesh: ogs.Mesh) -> ogs.Mesh:
     "Clip the left half of the mesh."
     return mesh.clip("-x", [0, 0, 0])
 
@@ -70,7 +70,7 @@ def plot_func(ax: plt.Axes, timevalue: float) -> None:
 
 # %%
 anim = mesh_series.animate(
-    ot.variables.saturation,
+    ogs.variables.saturation,
     timevalues,
     mesh_func=mesh_func,
     plot_func=plot_func,
@@ -81,7 +81,7 @@ anim = mesh_series.animate(
 #
 # ..  code-block:: python
 #
-#   ot.plot.utils.save_animation(anim, "Saturation", fps=5)
+#   ogs.plot.utils.save_animation(anim, "Saturation", fps=5)
 #
 
 # sphinx_gallery_start_ignore

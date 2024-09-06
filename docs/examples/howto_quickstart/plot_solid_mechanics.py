@@ -21,11 +21,11 @@ stress analysis:
 # sphinx_gallery_end_ignore
 
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 mesh = examples.load_mesh_mechanics_2D()
-fig = mesh.plot_contourf(ot.variables.displacement)
+fig = mesh.plot_contourf(ogs.variables.displacement)
 
 # %% [markdown]
 # Tensor components
@@ -33,8 +33,8 @@ fig = mesh.plot_contourf(ot.variables.displacement)
 # We can inspect the stress (or strain) tensor components by indexing.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress["xx"])
-fig = mesh.plot_contourf(ot.variables.stress["xy"])
+fig = mesh.plot_contourf(ogs.variables.stress["xx"])
+fig = mesh.plot_contourf(ogs.variables.stress["xy"])
 
 # %% [markdown]
 # Principal stresses
@@ -45,16 +45,16 @@ fig = mesh.plot_contourf(ot.variables.stress["xy"])
 # compressive principal stress.
 
 # %%
-eigvecs = ot.variables.stress.eigenvectors
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[0])
+eigvecs = ogs.variables.stress.eigenvectors
+fig = mesh.plot_contourf(variable=ogs.variables.stress.eigenvalues[0])
 mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[0], glyph_type="line")
 
 # %%
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[1])
+fig = mesh.plot_contourf(variable=ogs.variables.stress.eigenvalues[1])
 mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[1], glyph_type="line")
 
 # %%
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[2])
+fig = mesh.plot_contourf(variable=ogs.variables.stress.eigenvalues[2])
 mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 
 # %% [markdown]
@@ -63,7 +63,7 @@ mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 # see: :py:func:`ogstools.variables.tensor_math.mean`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.mean)
+fig = mesh.plot_contourf(ogs.variables.stress.mean)
 
 # %% [markdown]
 # Von Mises stress
@@ -71,7 +71,7 @@ fig = mesh.plot_contourf(ot.variables.stress.mean)
 # see: :py:func:`ogstools.variables.tensor_math.von_mises`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.von_Mises)
+fig = mesh.plot_contourf(ogs.variables.stress.von_Mises)
 
 # %% [markdown]
 # octahedral shear stress
@@ -79,7 +79,7 @@ fig = mesh.plot_contourf(ot.variables.stress.von_Mises)
 # see: :py:func:`ogstools.variables.tensor_math.octahedral_shear`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.octahedral_shear)
+fig = mesh.plot_contourf(ogs.variables.stress.octahedral_shear)
 
 # %% [markdown]
 # Integrity criteria
@@ -96,7 +96,7 @@ fig = mesh.plot_contourf(ot.variables.stress.octahedral_shear)
 
 # %%
 mesh["pressure"] = mesh.p_fluid()
-fig = mesh.plot_contourf(ot.variables.pressure)
+fig = mesh.plot_contourf(ogs.variables.pressure)
 
 # %% [markdown]
 # But since this assumes that the top of the model is equal to the ground
@@ -107,7 +107,7 @@ fig = mesh.plot_contourf(ot.variables.pressure)
 mesh["depth"] = mesh.depth(use_coords=True)
 fig = mesh.plot_contourf("depth")
 mesh["pressure"] = mesh.p_fluid()
-fig = mesh.plot_contourf(ot.variables.pressure)
+fig = mesh.plot_contourf(ogs.variables.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
@@ -115,8 +115,8 @@ fig = mesh.plot_contourf(ot.variables.pressure)
 # see: :py:func:`ogstools.variables.mesh_dependent.dilatancy_critescu`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_tot)
-fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_eff)
+fig = mesh.plot_contourf(ogs.variables.dilatancy_critescu_tot)
+fig = mesh.plot_contourf(ogs.variables.dilatancy_critescu_eff)
 
 # %% [markdown]
 # Fluid pressure criterion
@@ -124,4 +124,4 @@ fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_eff)
 # see: :py:func:`ogstools.variables.mesh_dependent.fluid_pressure_criterion`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.fluid_pressure_crit)
+fig = mesh.plot_contourf(ogs.variables.fluid_pressure_crit)

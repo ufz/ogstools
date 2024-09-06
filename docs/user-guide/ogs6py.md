@@ -6,6 +6,7 @@ ogs6py is a Python-API for the OpenGeoSys finite element software.
 Its main functionalities include creating and altering OGS6 input files, as well as executing OGS.
 The package allows you to automate OGS-workflows in Python via Jupyter or just plain Python scripts.
 This enables the user to create parameter plans and to execute them in parallel.
+API: [](../reference/ogstools.ogs6py.rst).
 
 # Features
 

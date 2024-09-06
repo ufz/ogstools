@@ -9,7 +9,7 @@ import numpy as np
 from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
 from ogstools.meshlib import MeshSeries, gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
-from ogstools.ogs6py import ogs
+from ogstools.ogs6py import Project
 from ogstools.studies import convergence
 from ogstools.variables import Scalar
 
@@ -29,9 +29,9 @@ class TestConvergence:
                 out_name=msh_path,
             )
             msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
-            model = ogs.OGS(
-                PROJECT_FILE=temp_dir / "default.prj",
-                INPUT_FILE=prj_steady_state_diffusion,
+            model = Project(
+                output_file=temp_dir / "default.prj",
+                input_file=prj_steady_state_diffusion,
             )
             prefix = "steady_state_diffusion_" + str(n_edge_cells)
             model.replace_text(prefix, ".//prefix")

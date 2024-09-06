@@ -34,7 +34,7 @@ from ogstools.feflowlib import (
     write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
-from ogstools.ogs6py import ogs
+from ogstools.ogs6py import Project
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",
@@ -179,20 +179,20 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
         if "steady_state_diffusion" in case:
             template_model = steady_state_diffusion(
                 Path(Path(output).stem),
-                ogs.OGS(PROJECT_FILE=Path(output).with_suffix(".prj")),
+                Project(output_file=Path(output).with_suffix(".prj")),
             )
             process = "steady state diffusion"
         elif "liquid_flow" in case:
             template_model = liquid_flow(
                 Path(Path(output).stem),
-                ogs.OGS(PROJECT_FILE=Path(output).with_suffix(".prj")),
+                Project(output_file=Path(output).with_suffix(".prj")),
                 dimension=doc.getNumberOfDimensions(),
             )
             process = "liquid flow"
         elif "hydro_thermal" in case:
             template_model = hydro_thermal(
                 Path(Path(output).stem),
-                ogs.OGS(PROJECT_FILE=Path(output).with_suffix(".prj")),
+                Project(output_file=Path(output).with_suffix(".prj")),
                 dimension=doc.getNumberOfDimensions(),
             )
             process = "hydro thermal"
@@ -200,7 +200,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             template_model = component_transport(
                 Path(Path(output).stem),
                 species,
-                ogs.OGS(PROJECT_FILE=Path(output).with_suffix(".prj")),
+                Project(output_file=Path(output).with_suffix(".prj")),
                 dimension=doc.getNumberOfDimensions(),
             )
             process = "component transport"

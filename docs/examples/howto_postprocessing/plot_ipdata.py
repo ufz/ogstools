@@ -20,16 +20,15 @@ represented by one subsection of a cell.
 from pathlib import Path
 from tempfile import mkdtemp
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 from ogstools.meshlib.gmsh_meshing import rect
 from ogstools.msh2vtu import msh2vtu
-from ogstools.ogs6py import ogs
 
-ot.plot.setup.dpi = 75
-ot.plot.setup.show_element_edges = True
+ogs.plot.setup.dpi = 75
+ogs.plot.setup.show_element_edges = True
 
-sigma_ip = ot.variables.stress.replace(
+sigma_ip = ogs.variables.stress.replace(
     data_name="sigma_ip", output_name="IP_stress"
 )
 
@@ -48,18 +47,18 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     )
     msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
 
-    model = ogs.OGS(
-        PROJECT_FILE=tmp_dir / "default.prj",
-        INPUT_FILE=examples.prj_mechanics,
+    model = ogs.Project(
+        output_file=tmp_dir / "default.prj",
+        input_file=examples.prj_mechanics,
     )
     model.replace_text(intpt_order, xpath=".//integration_order")
     model.write_input()
     model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
-    mesh = ot.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
+    mesh = ogs.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
     int_pts = mesh.to_ip_point_cloud()
     ip_mesh = mesh.to_ip_mesh()
 
-    fig = mesh.plot_contourf(ot.variables.stress)
+    fig = mesh.plot_contourf(ogs.variables.stress)
     fig.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )

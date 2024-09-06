@@ -8,7 +8,7 @@ import pytest
 import pyvista as pv
 
 from ogstools import examples
-from ogstools.ogs6py import ogs
+from ogstools.ogs6py import Project
 
 pytest.importorskip("ifm")
 
@@ -60,7 +60,7 @@ class TestSimulation_Neumann:
         prjfile = self.temp_dir / "boxNeumann_test.prj"
         ssd_model = steady_state_diffusion(
             self.temp_dir / "sim_boxNeumann",
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -91,7 +91,7 @@ class TestSimulation_Neumann:
         prjfile = self.temp_dir / "boxNeumann_test.prj"
         lqf_model = liquid_flow(
             self.temp_dir / "sim_boxNeumann",
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -136,7 +136,7 @@ class TestSimulation_Robin:
         prjfile = self.temp_dir / "boxRobin_test.prj"
         ssd_model = steady_state_diffusion(
             str(self.temp_dir / "sim_boxRobin"),
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -167,7 +167,7 @@ class TestSimulation_Robin:
         prjfile = self.temp_dir / "boxRobin_test.prj"
         lqf_model = liquid_flow(
             str(self.temp_dir / "sim_boxRobin"),
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -212,7 +212,7 @@ class TestSimulation_Well:
         prjfile = self.temp_dir / "boxWell_test.prj"
         ssd_model = steady_state_diffusion(
             str(self.temp_dir / "sim_boxWell"),
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -242,7 +242,7 @@ class TestSimulation_Well:
         prjfile = self.temp_dir / "boxWell_test.prj"
         lqf_model = liquid_flow(
             str(self.temp_dir / "sim_boxWell"),
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
         )
         model = setup_prj_file(
             self.vtu_path,
@@ -415,20 +415,20 @@ class TestSimulation_HT:
         if self.pv_mesh.celltypes[0] in [5, 9]:
             dimension = 2
         prjfile = self.temp_dir / "HT_Dirichlet.prj"
-        model = hydro_thermal(
+        prj = hydro_thermal(
             str(self.temp_dir / "sim_HT_Dirichlet"),
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
             dimension,
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_HT_model(self.pv_mesh),
             "hydro thermal",
-            model=model,
+            model=prj,
         )
-        model.write_input(prjfile)
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input(prjfile)
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
             str(
@@ -469,10 +469,10 @@ class TestSimulation_CT:
 
         prjfile = self.temp_dir / "CT_2D_line.prj"
         species = get_species(self.pv_mesh_560)
-        model = component_transport(
+        prj = component_transport(
             self.temp_dir / "CT_2D_line",
             species,
-            ogs.OGS(PROJECT_FILE=prjfile),
+            Project(output_file=prjfile),
             dimension,
             fixed_out_times=[
                 2419200,
@@ -485,18 +485,18 @@ class TestSimulation_CT:
                 zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
             ),
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.temp_dir / "CT_2D_line.vtu",
             self.pv_mesh_560,
             get_material_properties_of_CT_model(self.pv_mesh_560),
             "component transport",
             species_list=species,
-            model=model,
+            model=prj,
             max_iter=6,
             rel_tol=1e-14,
         )
-        model.write_input(prjfile)
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input(prjfile)
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res_560 = pv.read(
             str(self.temp_dir / "CT_2D_line_ts_67_t_48384000.000000.vtu")

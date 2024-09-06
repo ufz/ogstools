@@ -15,10 +15,10 @@ behaviour.
 import numpy as np
 import pyvista as pv
 
-import ogstools as ot
+import ogstools as ogs
 
-print(f"{ot.plot.setup.min_ax_aspect=}")
-print(f"{ot.plot.setup.max_ax_aspect=}")
+print(f"{ogs.plot.setup.min_ax_aspect=}")
+print(f"{ogs.plot.setup.max_ax_aspect=}")
 
 
 # sphinx_gallery_start_ignore
@@ -44,19 +44,19 @@ def custom_mesh(dx: float, dy: float):
 # proportions.
 
 # %%
-fig = ot.plot.contourf(custom_mesh(np.pi * 2, np.pi), "example")
+fig = ogs.plot.contourf(custom_mesh(np.pi * 2, np.pi), "example")
 # %% [markdown]
 # This one would be too wide and thus and gets compressed to fit the maximum
 # aspect ratio.
 
 # %%
-fig = ot.plot.contourf(custom_mesh(np.pi * 4, np.pi), "example")
+fig = ogs.plot.contourf(custom_mesh(np.pi * 4, np.pi), "example")
 # %% [markdown]
 # When plotting multiple meshes together, this applies to each subplot.
 # So here each subplot has true proportions again since each one fits the limits.
 
 # %%
-fig = ot.plot.contourf(
+fig = ogs.plot.contourf(
     [custom_mesh(np.pi * 2, np.pi), custom_mesh(np.pi * 2, np.pi)], "example"
 )
 # %% [markdown]
@@ -64,12 +64,12 @@ fig = ot.plot.contourf(
 # ratio.
 
 # %%
-fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
+fig = ogs.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
 # %% [markdown]
 # The same is true here:
 
 # %%
-fig = ot.plot.contourf(
+fig = ogs.plot.contourf(
     [custom_mesh(np.pi, np.pi * 3), custom_mesh(np.pi, np.pi * 3)], "example"
 )
 
@@ -79,12 +79,12 @@ fig = ot.plot.contourf(
 # very wide figure.
 
 # %%
-ot.plot.setup.min_ax_aspect = None
-ot.plot.setup.max_ax_aspect = None
-fig = ot.plot.contourf(custom_mesh(np.pi * 3, np.pi), "example")
+ogs.plot.setup.min_ax_aspect = None
+ogs.plot.setup.max_ax_aspect = None
+fig = ogs.plot.contourf(custom_mesh(np.pi * 3, np.pi), "example")
 
 # %% [markdown]
 # And in this case we get a very tall figure.
 
 # %%
-fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
+fig = ogs.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
