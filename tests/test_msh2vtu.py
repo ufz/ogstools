@@ -7,12 +7,14 @@ import runpy
 import sys
 from itertools import product
 from pathlib import Path
+from tempfile import mkdtemp
 from unittest.mock import patch
 
 import gmsh
 import meshio
 import numpy as np
 import pyvista as pv
+from parameterized import parameterized
 
 from ogstools.meshlib import gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
@@ -57,8 +59,10 @@ def test_multiple_groups_per_element(tmp_path: Path):
 
     assert msh2vtu(msh_file, tmp_path, output_prefix=model_name) == 0
 
+    prefix = f"{model_name}_physical_group"
+
     def number_of_elements(boundary_name: str) -> int:
-        file = f"{model_name}_physical_group_{boundary_name}.vtu"
+        file = f"{prefix}_{boundary_name}.vtu"
         return pv.read(str(Path(tmp_path, file))).number_of_cells
 
     assert number_of_elements("boundaries") == sum(
@@ -67,17 +71,13 @@ def test_multiple_groups_per_element(tmp_path: Path):
             for name in ["left", "right", "top", "bottom"]
         ]
     )
-    bottom = pv.read(
-        str(Path(tmp_path, f"{model_name}_physical_group_bottom.vtu"))
-    )
-    bottom_center = pv.read(
-        str(Path(tmp_path, f"{model_name}_physical_group_bottom_center.vtu"))
+    bottom = pv.read(str(Path(tmp_path, f"{prefix}_bottom.vtu")))
+    bottom_center = pv.read(str(Path(tmp_path, f"{prefix}_bottom_center.vtu")))
+    assert np.all(
+        np.isin(bottom_center["bulk_node_ids"], bottom["bulk_node_ids"])
     )
     assert np.all(
-        np.in1d(bottom_center["bulk_node_ids"], bottom["bulk_node_ids"])
-    )
-    assert np.all(
-        np.in1d(bottom_center["bulk_elem_ids"], bottom["bulk_elem_ids"])
+        np.isin(bottom_center["bulk_elem_ids"], bottom["bulk_elem_ids"])
     )
 
 
@@ -113,6 +113,35 @@ def test_rect(tmp_path: Path):
             msh_version=version,
         )
         assert msh2vtu(msh_file, tmp_path, output_prefix="rect") == 0
+
+
+class TestPhysGroups:
+    tmp_path = Path(mkdtemp())
+
+    # By default, the gmsh physical group tags translate directly to MaterialIDs
+    # With reindex=True, we want to map these tags to incrementing integers
+    # starting at 0
+    PHYS_GROUPS_TEST_ARGS = (
+        (False, [0], [0]),          (False, [999], [999]),
+        (False, [0, 2], [0, 2]),    (False, [4, 8], [4, 8]),
+        (True, [0], [0]),           (True, [999], [0]),
+        (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1])  # fmt:skip
+    )
+
+    @parameterized.expand(PHYS_GROUPS_TEST_ARGS)
+    def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
+        """Create rectangular gmsh meshes and convert with msh2vtu."""
+        msh_file = Path(self.tmp_path, "rect.msh")
+        # one physical group with tag 0 (default, layer_ids could be omitted)
+        gmsh_meshing.rect(
+            n_layers=len(layer_ids),
+            out_name=msh_file,
+            layer_ids=layer_ids,
+            mixed_elements=True,
+        )
+        assert msh2vtu(msh_file, self.tmp_path, "rect", reindex=reindex) == 0
+        mesh = pv.read(str(Path(self.tmp_path, "rect_domain.vtu")))
+        assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
 def test_cuboid(tmp_path: Path):
