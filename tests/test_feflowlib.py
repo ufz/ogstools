@@ -67,15 +67,15 @@ class TestSimulation_Neumann:
             self.temp_dir / "sim_boxNeumann",
             Project(output_file=prjfile),
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
@@ -100,15 +100,15 @@ class TestSimulation_Neumann:
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ms = ml.MeshSeries(self.temp_dir / "sim_boxNeumann.pvd")
@@ -145,15 +145,15 @@ class TestSimulation_Robin:
             str(self.temp_dir / "sim_boxRobin"),
             Project(output_file=prjfile),
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
@@ -178,15 +178,15 @@ class TestSimulation_Robin:
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ms = ml.MeshSeries(self.temp_dir / "sim_boxRobin.pvd")
@@ -223,15 +223,15 @@ class TestSimulation_Well:
             str(self.temp_dir / "sim_boxWell"),
             Project(output_file=prjfile),
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
         # Compare ogs simulation with FEFLOW simulation
         ogs_sim_res = pv.read(
             str(self.temp_dir / "sim_boxWell_ts_1_t_1.000000.vtu")
@@ -255,15 +255,15 @@ class TestSimulation_Well:
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
-        model.write_input()
-        model.run_model(logfile=str(self.temp_dir / "out.log"))
+        prj.write_input()
+        prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
         ms = ml.MeshSeries(self.temp_dir / "sim_boxWell.pvd")
@@ -354,13 +354,13 @@ class TestConverter:
         """
         Test the prj_file that can be written
         """
-        model = setup_prj_file(
+        prj = setup_prj_file(
             self.temp_dir / "boxNeumann_.vtu",
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
         )
-        model.write_input(self.temp_dir / "boxNeumann_.prj")
+        prj.write_input(self.temp_dir / "boxNeumann_.prj")
         prjfile_root = ET.parse(
             str(self.temp_dir / "boxNeumann_.prj")
         ).getroot()
@@ -456,7 +456,7 @@ class TestSimulation_HT:
             self.vtu_path,
             self.pv_mesh,
             get_material_properties_of_HT_model(self.pv_mesh),
-            "hydro thermal",
+            "Hydro thermal",
             model=prj,
         )
         prj.write_input(prjfile)

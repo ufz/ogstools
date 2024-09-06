@@ -50,15 +50,15 @@ plotter.show()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
 # Get the ogs6py model to create a prj-file and run the simulation.
-model = feflow_model.prj()
+prj = feflow_model.prj()
 # The model must be written before it can be run.
-model.write_input()
+prj.write_input()
 # Print the prj-file as an example.
 model_prjfile = ET.parse(feflow_model.mesh_path.with_suffix(".prj"))
 ET.dump(model_prjfile)
 # %%
 # 4. Run the model.
-model.run_model(logfile=temp_dir / "out.log")
+prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
 ms = ot.MeshSeries(temp_dir / "sim_2D_HT_model.pvd")

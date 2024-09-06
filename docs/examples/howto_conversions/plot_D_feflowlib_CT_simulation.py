@@ -50,19 +50,19 @@ for path, mesh in feflow_model.boundary_conditions.items():
     mesh.save(path)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-model = feflow_model.prj(
+prj = feflow_model.prj(
     end_time=int(4.8384e07),
     time_stepping=list(
         zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
     ),
 )
 # The model must be written before it can be run.
-model.write_input()
+prj.write_input()
 # Print the prj-file as an example.
 ET.dump(ET.parse(feflow_model.mesh_path.with_suffix(".prj")))
 # %%
 # 4. Run the model.
-model.run_model(logfile=temp_dir / "out.log")
+prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
 ms = ot.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")

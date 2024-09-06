@@ -57,18 +57,18 @@ path_topsurface, topsurface = list(BC_dict.items())[-1]
 topsurface.save(path_topsurface)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-model = feflow_model.prj(
+prj = feflow_model.prj(
     end_time=int(1e8),
     time_stepping=[(1, 10), (5, 100), (10, 1000), (10, 1e6), (1, 1e7)],
 )
 # The model must be written before it can be run.
-model.write_input()
+prj.write_input()
 # Print the prj-file as an example.
 model_prjfile = ET.parse(feflow_model.mesh_path.with_suffix(".prj"))
 ET.dump(model_prjfile)
 # %%
 # 4. Run the model
-model.run_model(logfile=temp_dir / "out.log")
+prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
 ms = ot.MeshSeries(temp_dir / "sim_boxNeumann.pvd")

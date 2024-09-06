@@ -11,7 +11,7 @@ import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
 
-from ogstools.ogs6py import ogs
+from ogstools.ogs6py import Project
 
 from . import _tools
 from ._feflowlib import convert_properties_mesh
@@ -146,7 +146,7 @@ class FeflowModel:
     # @property
     def prj(
         self, end_time: int = 1, time_stepping: list | None = None
-    ) -> ogs.OGS:
+    ) -> Project:
         """
         A proposition for a prj-file to run a OGS simulation.
         It may be not complete and manual adjustments for time
@@ -157,7 +157,7 @@ class FeflowModel:
         if "Liquid flow" in self.process:
             template_model = liquid_flow(
                 Path(self.mesh_path.with_suffix("")),
-                ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
+                Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
@@ -165,12 +165,12 @@ class FeflowModel:
         elif "Steady state diffusion" in self.process:
             template_model = steady_state_diffusion(
                 Path(self.mesh_path.with_suffix("")),
-                ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
+                Project(output_file=self.mesh_path.with_suffix(".prj")),
             )
         elif "Hydro thermal" in self.process:
             template_model = hydro_thermal(
                 Path(self.mesh_path.with_suffix("")),
-                ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
+                Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
             )
         elif "Component transport" in self.process:
@@ -178,7 +178,7 @@ class FeflowModel:
             template_model = component_transport(
                 Path(self.mesh_path.with_suffix("")),
                 species,
-                ogs.OGS(PROJECT_FILE=self.mesh_path.with_suffix(".prj")),
+                Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
