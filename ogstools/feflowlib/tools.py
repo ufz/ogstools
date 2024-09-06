@@ -15,7 +15,7 @@ import numpy as np
 import pyvista as pv
 from typing_extensions import NotRequired, Unpack
 
-from ogstools.ogs6py import ogs
+from ogstools.ogs6py import Project
 
 # log configuration
 logger = log.getLogger(__name__)
@@ -376,7 +376,7 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
 
 
 def _add_species_to_prj_file(
-    xpath: str, parameter_dict: dict, species_list: list, model: ogs.OGS
+    xpath: str, parameter_dict: dict, species_list: list, model: Project
 ) -> None:
     """
     Adds the entries needed in the prj-file for components/species. Since in ogs6py no
@@ -421,7 +421,7 @@ def _add_species_to_prj_file(
 
 
 def _add_global_process_coupling_CT(
-    model: ogs.OGS, species: list, max_iter: int = 1, rel_tol: float = 1e-10
+    model: Project, species: list, max_iter: int = 1, rel_tol: float = 1e-10
 ) -> None:
     """
     Add the section of the prj-file that defines the global process coupling
@@ -514,8 +514,8 @@ def write_mesh_of_combined_properties(
 
 def materials_in_steady_state_diffusion(
     material_properties: dict,
-    model: ogs.OGS,
-) -> ogs.OGS:
+    model: Project,
+) -> Project:
     """
     Create the section for material properties for steady state diffusion processes in the prj-file.
 
@@ -558,8 +558,8 @@ def materials_in_steady_state_diffusion(
 
 def materials_in_liquid_flow(
     material_properties: dict,
-    model: ogs.OGS,
-) -> ogs.OGS:
+    model: Project,
+) -> Project:
     """
     Create the section for material properties in liquid flow processes in the prj-file.
 
@@ -628,8 +628,8 @@ def materials_in_liquid_flow(
 
 def materials_in_HT(
     material_properties: dict,
-    model: ogs.OGS,
-) -> ogs.OGS:
+    model: Project,
+) -> Project:
     """
     Create the section for material properties for HT processes in the prj-file.
 
@@ -749,8 +749,8 @@ def materials_in_HT(
 def materials_in_CT(
     material_properties: dict,
     species_list: list,
-    model: ogs.OGS,
-) -> ogs.OGS:
+    model: Project,
+) -> Project:
     """
     Create the section for material properties for CT (component transport)
     processes in the prj-file.
@@ -859,7 +859,7 @@ def materials_in_CT(
 
 
 class RequestParams(TypedDict):
-    model: NotRequired[ogs.OGS]
+    model: NotRequired[Project]
     species_list: NotRequired[list | None]
     max_iter: NotRequired[int]
     rel_tol: NotRequired[float]
@@ -871,7 +871,7 @@ def setup_prj_file(
     material_properties: dict,
     process: str,
     **kwargs: Unpack[RequestParams],
-) -> ogs.OGS:
+) -> Project:
     """
     Sets up a prj-file for ogs simulations using ogs6py.
 
@@ -900,7 +900,7 @@ def setup_prj_file(
     rel_tol = kwargs.get("rel_tol", 1e-10)
     prjfile = bulk_mesh_path.with_suffix(".prj")
     if model is None:
-        model = ogs.OGS(PROJECT_FILE=prjfile)
+        model = Project(output_file=prjfile)
 
     BC_type_dict = {
         "_BC_": "Dirichlet",

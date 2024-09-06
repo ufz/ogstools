@@ -17,7 +17,7 @@ import ifm_contrib as ifm
 import matplotlib.pyplot as plt
 import numpy as np
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools.examples import feflow_model_2D_CT_t_560
 from ogstools.feflowlib import (
     component_transport,
@@ -28,9 +28,8 @@ from ogstools.feflowlib import (
     write_point_boundary_conditions,
 )
 from ogstools.meshlib import Mesh
-from ogstools.ogs6py import ogs
 
-ot.plot.setup.show_element_edges = True
+ogs.plot.setup.show_element_edges = True
 # %%
 # 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
 # how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
@@ -41,7 +40,7 @@ temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
 feflow_pv_mesh.save(feflow_mesh_file)
 
-feflow_concentration = ot.variables.Scalar(
+feflow_concentration = ogs.variables.Scalar(
     data_name="single_species_P_CONC",
     output_name="concentration",
     data_unit="mg/l",
@@ -49,7 +48,7 @@ feflow_concentration = ot.variables.Scalar(
 )
 # The original mesh is clipped to focus on the relevant part of it, where concentration is larger
 # than 1e-9 mg/l. The rest of the mesh has concentration values of 0.
-ot.plot.contourf(
+ogs.plot.contourf(
     feflow_pv_mesh.clip_scalar(
         scalars="single_species_P_CONC", invert=False, value=1.0e-9
     ),
@@ -62,12 +61,12 @@ write_point_boundary_conditions(temp_dir, feflow_pv_mesh)
 # %%
 # 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
 path_prjfile = feflow_mesh_file.with_suffix(".prj")
-prjfile = ogs.OGS(PROJECT_FILE=path_prjfile)
+prj = ogs.Project(output_file=path_prjfile)
 species = get_species(feflow_pv_mesh)
 CT_model = component_transport(
     saving_path=temp_dir / "sim_2D_CT_model",
     species=species,
-    model=prjfile,
+    prj=prj,
     dimension=2,
     fixed_out_times=[48384000],
     initial_time=0,
@@ -96,7 +95,7 @@ ET.dump(ET.parse(path_prjfile))
 model.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ms = ot.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
+ms = ogs.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """
@@ -109,7 +108,7 @@ profile = np.array([[0.038 + 1.0e-8, 0.005, 0], [0.045, 0.005, 0]])
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ogs_sim_res.plot_linesample(
     "dist",
-    ot.variables.Scalar(
+    ogs.variables.Scalar(
         data_name="single_species",
         output_name="concentration",
         data_unit="mg/l",
@@ -145,7 +144,7 @@ fig.tight_layout()
 ogs_sim_res["concentration_difference"] = (
     feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
 )
-concentration_difference = ot.variables.Scalar(
+concentration_difference = ogs.variables.Scalar(
     data_name="concentration_difference",
     output_name="concentration",
     data_unit="mg/l",
@@ -154,7 +153,7 @@ concentration_difference = ot.variables.Scalar(
 
 bounds = [0.038, 0.045, 0, 0.01, 0, 0]
 
-ot.plot.contourf(
+ogs.plot.contourf(
     ogs_sim_res.clip_box(bounds, invert=False),
     concentration_difference,
 )

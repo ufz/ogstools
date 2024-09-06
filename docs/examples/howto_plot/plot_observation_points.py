@@ -24,11 +24,11 @@ Here we use a component transport example from the ogs benchmark gallery
 import matplotlib.pyplot as plt
 import numpy as np
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-si = ot.variables.saturation
+si = ogs.variables.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -60,7 +60,7 @@ plt.rcdefaults()  # TODO
 # And now probe the points and the values over time:
 
 # %%,
-labels = [f"{i}: {label}" for i, label in enumerate(ot.plot.utils.justified_labels(points))]
+labels = [f"{i}: {label}" for i, label in enumerate(ogs.plot.utils.justified_labels(points))]
 fig = mesh_series.plot_probe(
     points=points[:4], variable=si, time_unit="a", labels=labels[:4]
 )

@@ -12,20 +12,20 @@ subplots having shared axes.
 # Import packages, load example data set and define often used variables.
 import matplotlib.pyplot as plt
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 meshseries = examples.load_meshseries_THM_2D_PVD()
 mesh_0 = meshseries.mesh(0)
 mesh_1 = meshseries.mesh(1)
-variable = ot.variables.temperature
+variable = ogs.variables.temperature
 
 # %%
 # If you pass multiple meshes to :py:func:`ogstools.plot.contourf`
 # by default both x and y axes will shared. Thus, only the outer axes get
 # axes labels and tick label.
 
-fig = ot.plot.contourf([mesh_0, mesh_1], variable)
+fig = ogs.plot.contourf([mesh_0, mesh_1], variable)
 
 # %%
 # On user defined figure and axis the axis belonging to specific subplot has to
@@ -34,10 +34,10 @@ fig = ot.plot.contourf([mesh_0, mesh_1], variable)
 fig, axs = plt.subplots(2, 2, figsize=(40, 17), sharex=True, sharey=True)
 diff_a = mesh_0.difference(mesh_1, variable)
 diff_b = mesh_1.difference(mesh_0, variable)
-ot.plot.contourf(mesh_0, variable, fig=fig, ax=axs[0][0])
-ot.plot.contourf(mesh_1, variable, fig=fig, ax=axs[1][0])
-ot.plot.contourf(diff_a, variable, fig=fig, ax=axs[0][1])
-ot.plot.contourf(diff_b, variable, fig=fig, ax=axs[1][1])
+ogs.plot.contourf(mesh_0, variable, fig=fig, ax=axs[0][0])
+ogs.plot.contourf(mesh_1, variable, fig=fig, ax=axs[1][0])
+ogs.plot.contourf(diff_a, variable, fig=fig, ax=axs[0][1])
+ogs.plot.contourf(diff_b, variable, fig=fig, ax=axs[1][1])
 fig.tight_layout()
 plt.show()
 

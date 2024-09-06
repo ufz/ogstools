@@ -9,7 +9,7 @@ Extract a 1D profile from 2D and plot it
 import matplotlib.pyplot as plt
 import numpy as np
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
 # %% [markdown]
@@ -24,7 +24,7 @@ mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
 profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
 
 # %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
+mesh_sp, mesh_kp = ogs.meshlib.sample_polyline(
     mesh, ["pressure", "temperature"], profile_HT
 )
 
@@ -64,9 +64,9 @@ ax_twinx = mesh.plot_linesample(
     ax=ax_twinx,
     fontsize=15,
 )
-ot.plot.utils.color_twin_axes(
+ogs.plot.utils.color_twin_axes(
     [ax, ax_twinx],
-    [ot.variables.pressure.color, ot.variables.temperature.color],
+    [ogs.variables.pressure.color, ogs.variables.temperature.color],
 )
 fig.tight_layout()
 
@@ -76,7 +76,7 @@ fig.tight_layout()
 # We can see it in the following example using the Darcy velocity:
 
 # %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
+mesh_sp, mesh_kp = ogs.meshlib.sample_polyline(
     mesh, "darcy_velocity", profile_HT
 )
 
@@ -106,8 +106,8 @@ profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
 mesh = examples.load_meshseries_CT_2D_XDMF().mesh(11)
 
 # %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
-    mesh, ot.variables.saturation, profile_CT
+mesh_sp, mesh_kp = ogs.meshlib.sample_polyline(
+    mesh, ogs.variables.saturation, profile_CT
 )
 
 # %% [markdown]
@@ -124,7 +124,7 @@ mesh_sp.head(5)
 
 # %%
 fig, ax = mesh.plot_linesample_contourf(
-    ot.variables.saturation, profile_CT, resolution=100
+    ogs.variables.saturation, profile_CT, resolution=100
 )
 
 # %% [markdown]
@@ -159,9 +159,9 @@ profile_THM = np.array(
 mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
 
 # %%
-ms_THM_sp, dist_at_knot = ot.meshlib.sample_polyline(
+ms_THM_sp, dist_at_knot = ogs.meshlib.sample_polyline(
     mesh,
-    [ot.variables.pressure, ot.variables.temperature],
+    [ogs.variables.pressure, ogs.variables.temperature],
     profile_THM,
     resolution=100,
 )
@@ -202,7 +202,7 @@ fig.tight_layout()
 # %%
 # plt.rcdefaults()
 fig, ax = mesh.plot_linesample_contourf(
-    [ot.variables.pressure, ot.variables.temperature],
+    [ogs.variables.pressure, ogs.variables.temperature],
     profile_THM,
     resolution=100,
 )

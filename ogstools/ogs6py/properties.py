@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ogstools.ogs6py.ogs import OGS
+    from ogstools.ogs6py import Project
 
 from collections.abc import Generator
 from dataclasses import dataclass, field
@@ -174,7 +174,7 @@ location_pointer = {
 
 
 def _expand_tensors(
-    obj: OGS,
+    obj: Project,
     numofmedia: int,
     multidim_prop: dict[Any, Any],
     root: ET.Element,
@@ -209,7 +209,7 @@ def _expand_tensors(
 
 
 def _expand_van_genuchten(
-    obj: OGS, numofmedia: int, root: ET.Element, location: str
+    obj: Project, numofmedia: int, root: ET.Element, location: str
 ) -> None:
     for medium_id in range(numofmedia):
         medium = obj._get_medium_pointer(root, medium_id)

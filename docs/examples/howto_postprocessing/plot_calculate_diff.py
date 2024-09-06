@@ -16,10 +16,10 @@ between meshes.
 
 # sphinx_gallery_end_ignore
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 
-variable = ot.variables.temperature
+variable = ogs.variables.temperature
 
 # %%
 # Introduction
@@ -88,7 +88,7 @@ print(f"Type of mesh_diff: {type(mesh_diff)}")
 meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
-mesh_diff_pair_wise = ot.meshlib.difference_pairwise(
+mesh_diff_pair_wise = ogs.meshlib.difference_pairwise(
     meshes_1, meshes_2, variable
 )
 
@@ -124,7 +124,7 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = ot.meshlib.difference_matrix(mesh_list, variable=variable)
+mesh_diff_matrix = ogs.meshlib.difference_matrix(mesh_list, variable=variable)
 
 # %%
 print(f"Length of mesh_list1: {len(mesh_list)}")
@@ -161,7 +161,7 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
-mesh_diff_matrix = ot.meshlib.difference_matrix(
+mesh_diff_matrix = ogs.meshlib.difference_matrix(
     mesh_list_matrix_1, mesh_list_matrix_2, variable
 )
 

@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from pyvista import examples as pv_examples
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 from ogstools.plot import utils
 
@@ -33,30 +33,30 @@ class TestPlotting:
     def test_levels(self):
         """Test levels calculation."""
         assert_allclose(
-            ot.plot.compute_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1]
+            ogs.plot.compute_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1]
         )
         assert_allclose(
-            ot.plot.compute_levels(293, 350, 10), [293, *range(295, 355, 5)]
+            ogs.plot.compute_levels(293, 350, 10), [293, *range(295, 355, 5)]
         )
         assert_allclose(
-            ot.plot.compute_levels(1e-3, 1.2, 5),
+            ogs.plot.compute_levels(1e-3, 1.2, 5),
             [1e-3, *np.arange(0.2, 1.4, 0.2)],
         )
         assert_allclose(
-            ot.plot.compute_levels(1e5, 9e6, 20),
+            ogs.plot.compute_levels(1e5, 9e6, 20),
             [1e5, *np.arange(5e5, 9.5e6, 5e5)],
         )
         assert_allclose(
-            ot.plot.compute_levels(1, 40, 20), [1, *range(2, 42, 2)]
+            ogs.plot.compute_levels(1, 40, 20), [1, *range(2, 42, 2)]
         )
-        assert_allclose(ot.plot.compute_levels(0.0, 0.0, 10), [0.0, 0.0])
-        assert_allclose(ot.plot.compute_levels(1e9, 1e9, 10), [1e9, 1e9])
+        assert_allclose(ogs.plot.compute_levels(0.0, 0.0, 10), [0.0, 0.0])
+        assert_allclose(ogs.plot.compute_levels(1e9, 1e9, 10), [1e9, 1e9])
 
     def test_ticklabels(self):
         def compare(lower, upper, precision, ref_labels, ref_offset=None):
-            labels, offset = ot.plot.contourplots.get_ticklabels(
+            labels, offset = ogs.plot.contourplots.get_ticklabels(
                 np.asarray(
-                    ot.plot.compute_levels(lower, upper, n_ticks=precision)
+                    ogs.plot.compute_levels(lower, upper, n_ticks=precision)
                 )
             )
             assert np.all(labels == ref_labels)
@@ -108,24 +108,24 @@ class TestPlotting:
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        pytest.raises(KeyError, ot.plot.contourf, mesh, "missing_data")
+        pytest.raises(KeyError, ogs.plot.contourf, mesh, "missing_data")
 
     def test_plot_2_d(self):
         """Test creation of 2D plots."""
-        ot.plot.setup.reset()
-        ot.plot.setup.material_names = {
+        ogs.plot.setup.reset()
+        ogs.plot.setup.material_names = {
             i + 1: f"Layer {i+1}" for i in range(26)
         }
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh = meshseries.mesh(1)
-        mesh.plot_contourf(ot.variables.material_id)
-        mesh.plot_contourf(ot.variables.temperature)
-        mesh.plot_contourf(ot.variables.Scalar("pressure_active"))
-        ot.plot.contourf(
-            mesh.threshold((1, 3), "MaterialIDs"), ot.variables.velocity
+        mesh.plot_contourf(ogs.variables.material_id)
+        mesh.plot_contourf(ogs.variables.temperature)
+        mesh.plot_contourf(ogs.variables.Scalar("pressure_active"))
+        ogs.plot.contourf(
+            mesh.threshold((1, 3), "MaterialIDs"), ogs.variables.velocity
         )
-        fig = mesh.plot_contourf(ot.variables.displacement[0])
-        ot.plot.shape_on_top(
+        fig = mesh.plot_contourf(ogs.variables.displacement[0])
+        ogs.plot.shape_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
         )
         plt.close()
@@ -139,10 +139,10 @@ class TestPlotting:
             "temperature_difference"
         )
         for prop in [
-            ot.variables.temperature,
-            ot.variables.displacement,
-            ot.variables.stress,
-            ot.variables.stress.von_Mises,
+            ogs.variables.temperature,
+            ogs.variables.displacement,
+            ogs.variables.stress,
+            ogs.variables.stress.von_Mises,
         ]:
             mesh1.difference(mesh0, prop).plot_contourf(prop)
         plt.close()
@@ -152,27 +152,27 @@ class TestPlotting:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         fig, ax = plt.subplots(3, 1, figsize=(40, 30))
         meshseries.mesh(0).plot_contourf(
-            ot.variables.temperature, fig=fig, ax=ax[0]
+            ogs.variables.temperature, fig=fig, ax=ax[0]
         )
         meshseries.mesh(1).plot_contourf(
-            ot.variables.temperature, fig=fig, ax=ax[1]
+            ogs.variables.temperature, fig=fig, ax=ax[1]
         )
         diff_mesh = meshseries.mesh(0).difference(
-            meshseries.mesh(1), ot.variables.temperature
+            meshseries.mesh(1), ogs.variables.temperature
         )
-        diff_mesh.plot_contourf(ot.variables.temperature, fig=fig, ax=ax[2])
+        diff_mesh.plot_contourf(ogs.variables.temperature, fig=fig, ax=ax[2])
         plt.close()
 
     def test_user_defined_ax_two_variables(self):
         """Test creating plot with subfigures and user provided ax with different values plotted"""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        ot.plot.setup.combined_colorbar = False
+        ogs.plot.setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
         meshseries.mesh(0).plot_contourf(
-            ot.variables.temperature, fig=fig, ax=ax[0]
+            ogs.variables.temperature, fig=fig, ax=ax[0]
         )
         meshseries.mesh(1).plot_contourf(
-            ot.variables.displacement, fig=fig, ax=ax[1]
+            ogs.variables.displacement, fig=fig, ax=ax[1]
         )
         fig.suptitle("Test user defined ax")
         plt.close()
@@ -180,11 +180,11 @@ class TestPlotting:
     def test_user_defined_fig(self):
         """Test creating plot with subfigures and user provided fig"""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        ot.plot.setup.combined_colorbar = False
+        ogs.plot.setup.combined_colorbar = False
         fig, ax = plt.subplots(2, 1, figsize=(40, 20))
-        ot.plot.contourf(
+        ogs.plot.contourf(
             [meshseries.mesh(0), meshseries.mesh(1)],
-            ot.variables.temperature,
+            ogs.variables.temperature,
             fig=fig,
         )
         fig.suptitle("Test user defined fig")
@@ -203,7 +203,7 @@ class TestPlotting:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
         anim = meshseries.animate(
-            ot.variables.temperature,
+            ogs.variables.temperature,
             timevalues,
             mesh_func=lambda mesh: mesh.clip("x"),
             plot_func=lambda ax, t: ax.set_title(str(t)),
@@ -215,7 +215,7 @@ class TestPlotting:
         """Test saving of an animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
+        anim = meshseries.animate(ogs.variables.temperature, timevalues)
         if not utils.save_animation(anim, mkstemp()[1], 5):
             pytest.skip("Saving animation failed.")
         plt.close()
@@ -223,10 +223,10 @@ class TestPlotting:
     def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""
         mesh = pv_examples.load_uniform()
-        ot.plot.contourf(mesh.slice((1, 1, 0)), "Spatial Point Data")
+        ogs.plot.contourf(mesh.slice((1, 1, 0)), "Spatial Point Data")
         meshes = np.reshape(mesh.slice_along_axis(4, "x"), (2, 2))
-        ot.plot.contourf(meshes, "Spatial Point Data")
-        ot.plot.contourf(mesh.slice([1, -2, 0]), "Spatial Point Data")
+        ogs.plot.contourf(meshes, "Spatial Point Data")
+        ogs.plot.contourf(mesh.slice([1, -2, 0]), "Spatial Point Data")
         plt.close()
 
     def test_streamlines(self):
@@ -238,8 +238,8 @@ class TestPlotting:
         for axis in ["x", "y", "z", [1, 1, 0]]:
             ax: plt.Axes
             fig, ax = plt.subplots()
-            i_grid, j_grid, u, v, lw = ot.plot.vectorplots._vectorfield(
-                mesh.slice(axis), ot.variables.velocity
+            i_grid, j_grid, u, v, lw = ogs.plot.vectorplots._vectorfield(
+                mesh.slice(axis), ogs.variables.velocity
             )
             for vals in [i_grid, j_grid, u, v, lw]:
                 assert not np.all(np.isnan(vals))
@@ -251,13 +251,13 @@ class TestPlotting:
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = examples.load_meshseries_CT_2D_XDMF().mesh(0)
-        mesh.plot_contourf(ot.variables.saturation)
+        mesh.plot_contourf(ogs.variables.saturation)
         plt.close()
 
     def test_xdmf_with_slices(self):
         """Test creation of 2D plots from xdmf data."""
         mesh = examples.load_meshseries_HT_2D_XDMF().mesh(0)
-        mesh.plot_contourf(ot.variables.pressure)
+        mesh.plot_contourf(ogs.variables.pressure)
         plt.close()
 
     def test_lineplot(self):
@@ -287,7 +287,7 @@ class TestPlotting:
         ms_CT = examples.load_meshseries_CT_2D_XDMF()
         profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
         fig, ax = ms_CT.mesh(11).plot_linesample_contourf(
-            ot.variables.saturation,
+            ogs.variables.saturation,
             profile_CT,
             resolution=100,
             plot_nodal_pts=True,

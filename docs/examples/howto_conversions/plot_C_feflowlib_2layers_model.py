@@ -11,7 +11,7 @@ In this example we show how a simple FEFLOW model consisting of two layers can b
 # 1. Let us convert only the points and cells at first.
 import ifm_contrib as ifm
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools.examples import feflow_model_2layers
 from ogstools.feflowlib import (
     convert_geometry_mesh,
@@ -36,4 +36,4 @@ print(pv_mesh)
 pv_mesh.save("2layers_model.vtu")
 # %%
 # 4. Use the ogstools plotting functionalities.
-fig = ot.plot.contourf(pv_mesh.slice("z"), "P_HEAD")
+fig = ogs.plot.contourf(pv_mesh.slice("z"), "P_HEAD")

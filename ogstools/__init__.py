@@ -16,6 +16,7 @@ del metadata  # optional, avoids polluting the results of dir(__package__)
 try:
     from . import plot, variables
     from .meshlib import Mesh, MeshSeries  # noqa: F401
+    from .ogs6py import Project  # noqa: F401
 except ImportError as e:
     print(f"Warning: Failed to import the following libraries: {e.name}")
 

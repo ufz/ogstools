@@ -7,10 +7,9 @@ import numpy as np
 import pytest
 from pyvista import SolidSphere, UnstructuredGrid
 
-import ogstools as ot
+import ogstools as ogs
 from ogstools import examples
 from ogstools.msh2vtu import msh2vtu
-from ogstools.ogs6py import ogs
 
 
 class TestUtils:
@@ -79,7 +78,7 @@ class TestUtils:
         pvd = examples.load_meshseries_THM_2D_PVD()
         xdmf = examples.load_meshseries_HT_2D_XDMF()
         with pytest.raises(TypeError):
-            ot.MeshSeries(
+            ogs.MeshSeries(
                 __file__, match="Can only read 'pvd', 'xdmf' or 'vtu' files."
             )
 
@@ -119,7 +118,7 @@ class TestUtils:
     def test_time_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent variable on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        prop = ot.variables.dilatancy_alkan
+        prop = ogs.variables.dilatancy_alkan
         agg_mesh = mesh_series.aggregate_over_time(prop, "max")
         assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
         agg_mesh = mesh_series.time_of_max(prop)
@@ -162,46 +161,46 @@ class TestUtils:
         """Test creation of probe plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         points = meshseries.mesh(0).center
-        meshseries.plot_probe(points, ot.variables.temperature)
+        meshseries.plot_probe(points, ogs.variables.temperature)
         points = meshseries.mesh(0).points[[0, -1]]
-        meshseries.plot_probe(points, ot.variables.temperature)
-        meshseries.plot_probe(points, ot.variables.velocity)
-        meshseries.plot_probe(points, ot.variables.stress)
-        meshseries.plot_probe(points, ot.variables.stress.von_Mises)
+        meshseries.plot_probe(points, ogs.variables.temperature)
+        meshseries.plot_probe(points, ogs.variables.velocity)
+        meshseries.plot_probe(points, ogs.variables.stress)
+        meshseries.plot_probe(points, ogs.variables.stress.von_Mises)
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.mesh(0).center
-        meshseries.plot_probe(points, ot.variables.temperature)
-        meshseries.plot_probe(points, ot.variables.velocity)
+        meshseries.plot_probe(points, ogs.variables.temperature)
+        meshseries.plot_probe(points, ogs.variables.velocity)
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh1 = meshseries.mesh(0)
         mesh2 = meshseries.mesh(-1)
-        mesh_diff = ot.meshlib.difference(mesh1, mesh2, "temperature")
-        mesh_diff = ot.meshlib.difference(
-            mesh1, mesh2, ot.variables.temperature
+        mesh_diff = ogs.meshlib.difference(mesh1, mesh2, "temperature")
+        mesh_diff = ogs.meshlib.difference(
+            mesh1, mesh2, ogs.variables.temperature
         )
         assert isinstance(mesh_diff, UnstructuredGrid)
-        mesh_diff = ot.meshlib.difference(mesh1, mesh2)
+        mesh_diff = ogs.meshlib.difference(mesh1, mesh2)
 
     def test_diff_pairwise(self):
         n = 5
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0)] * n
         meshes2 = [meshseries.mesh(-1)] * n
-        meshes_diff = ot.meshlib.difference_pairwise(
-            meshes1, meshes2, ot.variables.temperature
+        meshes_diff = ogs.meshlib.difference_pairwise(
+            meshes1, meshes2, ogs.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
         assert len(meshes_diff) == n
 
-        meshes_diff = ot.meshlib.difference_pairwise(meshes1, meshes2)
+        meshes_diff = ogs.meshlib.difference_pairwise(meshes1, meshes2)
 
     def test_diff_matrix_single(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
-        meshes_diff = ot.meshlib.difference_matrix(
-            meshes1, variable=ot.variables.temperature
+        meshes_diff = ogs.meshlib.difference_matrix(
+            meshes1, variable=ogs.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
 
@@ -210,21 +209,21 @@ class TestUtils:
             len(meshes1),
         )
 
-        meshes_diff = ot.meshlib.difference_matrix(meshes1)
+        meshes_diff = ogs.meshlib.difference_matrix(meshes1)
 
     def test_diff_matrix_unequal(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
         meshes2 = [meshseries.mesh(0), meshseries.mesh(-1), meshseries.mesh(-1)]
-        meshes_diff = ot.meshlib.difference_matrix(
-            meshes1, meshes2, ot.variables.temperature
+        meshes_diff = ogs.meshlib.difference_matrix(
+            meshes1, meshes2, ogs.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
         assert meshes_diff.shape == (
             len(meshes1),
             len(meshes2),
         )
-        meshes_diff = ot.meshlib.difference_matrix(meshes1, meshes2)
+        meshes_diff = ogs.meshlib.difference_matrix(meshes1, meshes2)
 
     def test_depth_2D(self):
         mesh = examples.load_mesh_mechanics_2D()
@@ -235,7 +234,7 @@ class TestUtils:
         assert np.all(mesh["depth"] < -mesh.points[..., 1])
 
     def test_depth_3D(self):
-        mesh = ot.Mesh(SolidSphere(100, center=(0, 0, -101)))
+        mesh = ogs.Mesh(SolidSphere(100, center=(0, 0, -101)))
         mesh["depth"] = mesh.depth(use_coords=True)
         assert np.all(mesh["depth"] == -mesh.points[..., -1])
         mesh["depth"] = mesh.depth()
@@ -249,7 +248,7 @@ class TestUtils:
                 [100, -300, 6700],
             ]
         )
-        profile_points = ot.meshlib.interp_points(profile, resolution=100)
+        profile_points = ogs.meshlib.interp_points(profile, resolution=100)
         assert isinstance(profile_points, np.ndarray)
         # Check first point
         assert (profile_points[0, :] == profile[0, :]).all()
@@ -260,15 +259,15 @@ class TestUtils:
 
     def test_distance_in_segments(self):
         profile = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
-        profile_points = ot.meshlib.interp_points(profile, resolution=9)
-        dist_in_seg = ot.meshlib.distance_in_segments(profile, profile_points)
+        profile_points = ogs.meshlib.interp_points(profile, resolution=9)
+        dist_in_seg = ogs.meshlib.distance_in_segments(profile, profile_points)
         assert len(np.where(dist_in_seg == 0)[0]) == 2
         assert len(np.where(dist_in_seg == 1)[0]) == 1
 
     def test_distance_in_profile(self):
         profile = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
-        profile_points = ot.meshlib.interp_points(profile, resolution=9)
-        dist_in_seg = ot.meshlib.distance_in_profile(profile_points)
+        profile_points = ogs.meshlib.interp_points(profile, resolution=9)
+        dist_in_seg = ogs.meshlib.distance_in_profile(profile_points)
         # Check if distance is increasing
         assert np.all(np.diff(dist_in_seg) > 0)
         # Check if distances at the beginning and end of profile are correct
@@ -278,7 +277,7 @@ class TestUtils:
     def test_sample_over_polyline_single_segment(self):
         ms = examples.load_meshseries_HT_2D_XDMF()
         profile = np.array([[4, 2, 0], [4, 18, 0]])
-        ms_sp, _ = ot.meshlib.sample_polyline(
+        ms_sp, _ = ogs.meshlib.sample_polyline(
             ms.mesh(-1),
             ["pressure", "temperature"],
             profile,
@@ -302,13 +301,13 @@ class TestUtils:
                 [910, -590, 6700],
             ]
         )
-        ms_sp, _ = ot.meshlib.sample_polyline(
+        ms_sp, _ = ogs.meshlib.sample_polyline(
             ms.mesh(1),
-            ot.variables.temperature,
+            ogs.variables.temperature,
             profile,
             resolution=10,
         )
-        data = ms_sp[ot.variables.temperature.data_name].to_numpy()
+        data = ms_sp[ogs.variables.temperature.data_name].to_numpy()
         assert not np.any(np.isnan(data))
         assert (np.abs(data) > np.zeros_like(data)).all()
         # output should be in Celsius
@@ -318,7 +317,7 @@ class TestUtils:
     def test_sample_over_polyline_single_segment_vec_prop(self):
         ms = examples.load_meshseries_HT_2D_XDMF()
         profile = np.array([[4, 2, 0], [4, 18, 0]])
-        ms_sp, _ = ot.meshlib.sample_polyline(
+        ms_sp, _ = ogs.meshlib.sample_polyline(
             ms.mesh(-1),
             "darcy_velocity",
             profile,
@@ -339,12 +338,12 @@ class TestUtils:
 
         tmp_path = Path(mkdtemp())
         mesh_path = Path(tmp_path) / "mesh.msh"
-        sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
+        sigma_ip = ogs.variables.stress.replace(data_name="sigma_ip")
 
         def run_and_check(
             elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
         ):
-            ot.meshlib.gmsh_meshing.rect(
+            ogs.meshlib.gmsh_meshing.rect(
                 n_edge_cells=6,
                 n_layers=2,
                 structured_grid=quads,
@@ -355,16 +354,16 @@ class TestUtils:
             )
             msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
 
-            model = ogs.OGS(
-                PROJECT_FILE=tmp_path / "default.prj",
-                INPUT_FILE=examples.prj_mechanics,
+            model = ogs.Project(
+                output_file=tmp_path / "default.prj",
+                input_file=examples.prj_mechanics,
             )
             model.replace_text(intpt_order, xpath=".//integration_order")
             model.write_input()
             model.run_model(
                 write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
             )
-            meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
+            meshseries = ogs.MeshSeries(tmp_path / "mesh.pvd")
             int_pts = meshseries.mesh(-1).to_ip_point_cloud()
             ip_ms = meshseries.ip_tesselated()
             ip_mesh = ip_ms.mesh(-1)
@@ -390,36 +389,36 @@ class TestUtils:
         run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
 
     def test_reader(self):
-        assert isinstance(examples.load_meshseries_THM_2D_PVD(), ot.MeshSeries)
-        assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
-        assert isinstance(ot.Mesh.read(examples.mechanics_vtu), ot.Mesh)
-        assert isinstance(ot.Mesh.read(examples.test_shapefile), ot.Mesh)
+        assert isinstance(examples.load_meshseries_THM_2D_PVD(), ogs.MeshSeries)
+        assert isinstance(ogs.MeshSeries(examples.elder_xdmf), ogs.MeshSeries)
+        assert isinstance(ogs.Mesh.read(examples.mechanics_vtu), ogs.Mesh)
+        assert isinstance(ogs.Mesh.read(examples.test_shapefile), ogs.Mesh)
 
     def test_xdmf_quadratic(self):
         "Test reading of quadratic elements in xdmf."
 
         tmp_path = Path(mkdtemp())
         mesh_path = Path(tmp_path) / "mesh.msh"
-        ot.meshlib.gmsh_meshing.rect(
+        ogs.meshlib.gmsh_meshing.rect(
             n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
         )
         msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
-        model = ogs.OGS(
-            PROJECT_FILE=tmp_path / "default.prj",
-            INPUT_FILE=examples.prj_mechanics,
+        model = ogs.Project(
+            output_file=tmp_path / "default.prj",
+            input_file=examples.prj_mechanics,
         )
         model.replace_text("4", xpath=".//integration_order")
         model.replace_text("XDMF", xpath="./time_loop/output/type")
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-        mesh = ot.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").mesh(-1)
-        assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
+        mesh = ogs.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").mesh(-1)
+        assert not np.any(np.isnan(ogs.variables.stress.transform(mesh)))
 
     def test_remesh_with_tri(self):
         mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
         temp_dir = Path(mkdtemp())
         msh_path = temp_dir / "tri_mesh.msh"
-        ot.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)
+        ogs.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)
         assert (
             msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
         )

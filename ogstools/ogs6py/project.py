@@ -46,23 +46,23 @@ from ogstools.ogs6py.properties import (
 )
 
 
-class OGS:
-    """Class for an OGS6 model.
+class Project:
+    """Class for handling an OGS6 project.
 
-    In this class everything for an OGS6 model can be specified.
+    In this class everything for an OGS6 project can be specified.
 
     Parameters
     ----------
-    PROJECT_FILE : `str`, optional
+    output_file : `str`, optional
         Filename of the output project file
         Default: default.prj
-    INPUT_FILE : `str`, optional
+    input_file : `str`, optional
         Filename of the input project file
-    XMLSTRING : `str`,optional
+    xml_string : `str`,optional
         String containing the XML tree
     OMP_NUM_THREADS : `int`, optional
         Sets the environmentvariable before OGS execution to restrict number of OMP Threads
-    VERBOSE : `bool`, optional
+    verbose : `bool`, optional
         Default: False
 
     """
@@ -75,19 +75,19 @@ class OGS:
         self.include_files: list[Path] = []
         self.add_includes: list[dict[str, str]] = []
         self.output_dir: Path = Path()  # default -> current dir
-        self.verbose: bool = args.get("VERBOSE", False)
+        self.verbose: bool = args.get("verbose", False)
         self.threads: int = args.get("OMP_NUM_THREADS", None)
         self.asm_threads: int = args.get("OGS_ASM_THREADS", self.threads)
         self.inputfile: Path | None = None
         self.folder: Path = Path()
 
-        if "PROJECT_FILE" in args:
-            self.prjfile = Path(args["PROJECT_FILE"])
+        if "output_file" in args:
+            self.prjfile = Path(args["output_file"])
         else:
-            print("PROJECT_FILE for output not given. Calling it default.prj.")
+            print("output_file not given. Calling it default.prj.")
             self.prjfile = Path("default.prj")
-        if "INPUT_FILE" in args:
-            input_file = Path(args["INPUT_FILE"])
+        if "input_file" in args:
+            input_file = Path(args["input_file"])
             if input_file.is_file():
                 self.inputfile = input_file
                 self.folder = input_file.parent
@@ -95,7 +95,7 @@ class OGS:
                 if self.verbose is True:
                     display.Display(self.tree)
             else:
-                msg = f"Input project file {args['INPUT_FILE']} not found."
+                msg = f"Input project file {args['input_file']} not found."
                 raise FileNotFoundError(msg)
         else:
             self.inputfile = None
@@ -103,8 +103,8 @@ class OGS:
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
             self.tree = ET.ElementTree(ET.fromstring(tree_string, parser=parse))
-        if "XMLSTRING" in args:
-            root = ET.fromstring(args["XMLSTRING"])
+        if "xml_string" in args:
+            root = ET.fromstring(args["xml_string"])
             self.tree = ET.ElementTree(root)
         self.geometry = geo.Geo(self.tree)
         self.mesh = mesh.Mesh(self.tree)
@@ -845,7 +845,7 @@ class OGS:
     ) -> None:
         """Command to run OGS.
 
-        Runs OGS with the project file specified as PROJECT_FILE.
+        Runs OGS with the project file specified as output_file.
 
         Parameters
         ----------
