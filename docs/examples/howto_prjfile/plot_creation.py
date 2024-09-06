@@ -12,14 +12,11 @@ The names of the method calls are based on the corresponding XML tags.
 
 # %%
 # Initialize the ogs6py object:
-import tempfile
-from pathlib import Path
 
 import ogstools as ogs
+from ogstools.definitions import EXAMPLES_DIR
 
-prj = ogs.Project(
-    output_file=Path(tempfile.mkdtemp) / "prj/simple_mechanics.prj"
-)
+prj = ogs.Project(output_file=EXAMPLES_DIR / "prj" / "mechanics_new.prj")
 
 # %%
 # Define geometry and/or meshes:
