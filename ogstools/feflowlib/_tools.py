@@ -512,7 +512,6 @@ def write_mesh_of_combined_properties(
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
-    print(material_mesh.cell_data)
     for feflow_property, ogs_property in zip(
         feflow_properties, ogs_properties, strict=False
     ):
@@ -552,7 +551,6 @@ def write_mesh_for_heterogeneous_material_properties(
         ]
         if in_homo_prop == []:
             return
-        print(in_homo_prop)
         permeabilities = ["permeability_X", "permeability_Y", "permeability_Z"]
         if np.all([prop in in_homo_prop for prop in permeabilities]):
             feflow_properties = [["P_CONDX", "P_CONDY", "P_CONDZ"]]

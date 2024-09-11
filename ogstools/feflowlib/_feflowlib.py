@@ -192,14 +192,22 @@ def _point_and_cell_data(
 
     # 5. change format of cell data to a dictionary of lists
     cell_data = {key: [cell_data[key]] for key in cell_data}
-
     # 6. add MaterialIDs to cell data
-    cell_data["MaterialIDs"] = MaterialIDs
-
+    if "MaterialIDs" not in cell_data:
+        cell_data["MaterialIDs"] = MaterialIDs
+    else:
+        # This special treatmant is only to be consistent with the data type MaterialIDs usually have
+        # if not coming from user-data.
+        cell_data["MaterialIDs"] = np.array(cell_data["MaterialIDs"][0]).astype(
+            np.int32
+        )
     # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
     # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
-    if "P_LOOKUP_REGION" in cell_data and len(np.unique(MaterialIDs)) < len(
-        np.unique(cell_data["P_LOOKUP_REGION"])
+    if (
+        "P_LOOKUP_REGION" in cell_data
+        and len(np.unique(MaterialIDs))
+        < len(np.unique(cell_data["P_LOOKUP_REGION"]))
+        and "MaterialIDs" not in user_data
     ):
         cell_data["MaterialIDs"] = np.array(
             cell_data.pop("P_LOOKUP_REGION")
