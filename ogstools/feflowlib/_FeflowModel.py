@@ -195,11 +195,16 @@ class FeflowModel:
             model=template_model,
         )
 
-    def prepare_OGS(
+    def run_OGS(
         self, end_time: int = 1, time_stepping: list | None = None
     ) -> None:
         self.mesh.save(self.mesh_path)
         for path, boundary_mesh in self.boundary_conditions.items():
             boundary_mesh.save(path)
+        # write mesh for heterogeneous material properties
+        # fix prj-file for heterogeneous material properties
+        # write tests for it
+        # check prj file for opalinuston with correct parameter for inhomogeneous parameter...
         prj = self.prj(end_time, time_stepping)
         prj.write_input()
+        prj.run_model()
