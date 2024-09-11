@@ -14,7 +14,7 @@ A unique aspect of `meshlib` is its seamless integration with both pyvista and o
 ## Shapefile meshing
 
 One feature of the `meshlib` is to create 2D triangular meshes within an area that is defined by a shapefile.
-`shp2mesh_cli` is the corresponding commandline tool that summarizes meshing functionalities to create a mesh from a shapefile.
+`shp2msh` is the corresponding commandline tool that summarizes meshing functionalities to create a mesh from a shapefile.
 
 ### Features
 
@@ -28,7 +28,7 @@ One feature of the `meshlib` is to create 2D triangular meshes within an area th
 ---
 module: ogstools.meshlib.shp2msh_cli
 func: parser
-prog: shp2mesh
+prog: shp2msh
 ---
 ```
 
