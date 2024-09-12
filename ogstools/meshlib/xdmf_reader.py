@@ -478,18 +478,16 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
         dirpath = self.filename.resolve().parent
         full_hdf5_path = dirpath / filename
 
-        if full_hdf5_path in self.hdf5_files:
-            f = self.hdf5_files[full_hdf5_path]
-        else:
-            import h5py
+        import h5py
 
-            f = h5py.File(full_hdf5_path, "r")
-            self.hdf5_files[full_hdf5_path] = f
+        with h5py.File(full_hdf5_path, "r") as file:
+            if h5path[0] != "/":
+                raise ReadError()
 
-        if h5path[0] != "/":
-            raise ReadError()
-
-        for key in h5path[1:].split("/"):
-            f = f[key]
-        # `[()]` gives a np.ndarray
-        return f[selection].squeeze()
+            f = file
+            for key in h5path[1:].split("/"):
+                f = f[key]
+            # `[()]` gives a np.ndarray
+            data = np.copy(f[selection].squeeze())
+            file.close()
+        return data
