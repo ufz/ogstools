@@ -780,9 +780,15 @@ class Project:
         ogs_path: Path = Path()
         env_export = ""
         if self.threads is not None:
-            env_export += f"export OMP_NUM_THREADS={self.threads} && "
+            if sys.platform == "win32":
+                env_export += f'set OMP_NUM_THREADS="{self.threads}" && '
+            else:
+                env_export += f"export OMP_NUM_THREADS={self.threads} && "
         if self.asm_threads is not None:
-            env_export += f"export OGS_ASM_THREADS={self.asm_threads} && "
+            if sys.platform == "win32":
+                env_export += f'set OGS_ASM_THREADS="{self.asm_threads}" && '
+            else:
+                env_export += f"export OGS_ASM_THREADS={self.asm_threads} && "
         if container_path is not None:
             container_path = Path(container_path)
             container_path = container_path.expanduser()
@@ -869,6 +875,7 @@ class Project:
             returncode = subprocess.run(
                 cmd,
                 shell=True,
+                executable="C:\\Windows\\System32\\cmd.exe",
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
                 check=False,
