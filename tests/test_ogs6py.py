@@ -1593,3 +1593,101 @@ class TestiOGS:
 
         # clean up the temporary dir
         sing_dir.cleanup()
+
+    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
+    def test_OMP_NUM_THREADS(self, num_threads) -> NoReturn:
+        temp = Path(tempfile.mkdtemp())
+
+        log_OMP_NUM_THREADS = temp / "log_OMP_NUM_THREADS.txt"
+        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
+
+        model = Project(
+            input_file=prj_beier_sandbox,
+            OMP_NUM_THREADS=num_threads,
+        )
+
+        wrapper = (
+            f"echo %OMP_NUM_THREADS% > {log_OMP_NUM_THREADS.resolve()} && echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
+            if sys.platform == "win32"
+            else f"echo $OMP_NUM_THREADS > {log_OMP_NUM_THREADS.resolve()} && echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
+        )
+
+        ogs_path = str(Path(sys.executable).parent) + (
+            "\\" if sys.platform == "win32" else "/"
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match=r"OGS execution was not successful. Please set write_logs to True to obtain more information.",
+        ):
+            model.run_model(
+                path=ogs_path,
+                write_logs=False,
+                wrapper=wrapper,
+                write_prj_to_pvd=False,
+            )
+
+        assert (
+            log_OMP_NUM_THREADS.exists()
+        ), f"Log file {log_OMP_NUM_THREADS} was not created."
+        assert (
+            log_OGS_ASM_THREADS.exists()
+        ), f"Log file {log_OGS_ASM_THREADS} was not created."
+
+        with log_OMP_NUM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OMP_NUM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OMP_NUM_THREADS={num_threads}"
+
+        with log_OGS_ASM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OGS_ASM_THREADS={num_threads}"
+
+    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
+    def test_OGS_ASM_THREADS(self, num_threads) -> NoReturn:
+        temp = Path(tempfile.mkdtemp())
+
+        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
+
+        model = Project(
+            input_file=prj_beier_sandbox,
+            OGS_ASM_THREADS=num_threads,
+        )
+
+        wrapper = (
+            f"echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
+            if sys.platform == "win32"
+            else f"echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match=r"OGS execution was not successful. Please set write_logs to True to obtain more information.",
+        ):
+            model.run_model(
+                write_logs=False,
+                wrapper=wrapper,
+                write_prj_to_pvd=False,
+            )
+
+        assert (
+            log_OGS_ASM_THREADS.exists()
+        ), f"Log file {log_OGS_ASM_THREADS} was not created."
+
+        with log_OGS_ASM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OGS_ASM_THREADS={num_threads}"
