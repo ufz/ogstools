@@ -77,7 +77,7 @@ colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 for ax, model, color in zip(axs, models, colors, strict=False):
     q = model.heat(time, baseline=True, **units)
     ax.loglog(time, q, label=model.name, lw=2.5, c=color)
-    for i in range(len(model.nuclide_powers)):
+    for i, _ in enumerate(model.nuclide_powers):
         q = model.heat(time, baseline=True, ncl_id=i, **units)
         ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c=color, ls=ls[i])
     format_ax(ax)
@@ -111,7 +111,7 @@ plt.show()
 fig, ax = plt.subplots(figsize=(8, 2))
 
 ax.loglog(time, repo_heat[0], label="DWR-Mix", lw=2, c="k")
-for i in range(len(nuclear.repo_2020_conservative.waste[0].nuclide_powers)):
+for i, _ in enumerate(nuclear.repo_2020_conservative.waste[0].nuclide_powers):
     q = nuclear.repo_2020_conservative.heat(time, ncl_id=i, **units)
     ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c="k", ls=ls[i])
 format_ax(ax)

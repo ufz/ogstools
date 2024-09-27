@@ -321,14 +321,14 @@ class MeshSeries:
         return mesh
 
     @property
-    def timesteps(self) -> range:
+    def timesteps(self) -> list:
         """Return the timesteps of the timeseries data."""
         if self._data_type == "vtu":
-            return range(1)
+            return [0]
         if self._data_type == "pvd":
-            return range(self._pvd_reader.number_time_points)
+            return list(range(self._pvd_reader.number_time_points))
         # elif self._data_type == "xdmf":
-        return range(len(self._timevalues))
+        return [i for i, _ in enumerate(self._timevalues)]
 
     def timevalues(self, time_unit: str | None = None) -> np.ndarray:
         "Return the timevalues, optionally converted to another time unit."

@@ -656,13 +656,11 @@ def gen_bhe_mesh_gmsh(
 
         gmsh.model.geo.synchronize()
 
-        for i in range(len(number_of_layers)):
-            gmsh.model.addPhysicalGroup(3, volumes_list_for_layers[i], i)
-            k = i
+        for i, volume_i in enumerate(volumes_list_for_layers):
+            gmsh.model.addPhysicalGroup(3, volume_i, i)
 
-        for i in range(len(BHE_array)):
-            gmsh.model.addPhysicalGroup(1, [BHE_group[i]], k + 1)
-            k += 1
+        for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
+            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
 
         gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
         gmsh.model.addPhysicalGroup(
@@ -806,16 +804,11 @@ def gen_bhe_mesh_gmsh(
             BHE_group.append(extrusion_tags[1][1])
 
         gmsh.model.geo.synchronize()
-        k = 0
+        for i, volume_i in enumerate(volumes_list_for_layers):
+            gmsh.model.addPhysicalGroup(3, volume_i, i)
 
-        # len(layer) is right, but len(number_of_layers) for testing only
-        for i in range(len(number_of_layers)):
-            gmsh.model.addPhysicalGroup(3, volumes_list_for_layers[i], i)
-            k = i
-
-        for i in range(len(BHE_array)):
-            gmsh.model.addPhysicalGroup(1, [BHE_group[i]], k + 1)
-            k += 1
+        for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
+            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
 
         gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
         gmsh.model.addPhysicalGroup(
@@ -857,7 +850,7 @@ def gen_bhe_mesh_gmsh(
         # 2: bottom critical, 3: groundwater at layer transition
         icl: float = -1
         # needed_medias_in_ogs=len(layer)+1
-        for i in range(len(layer)):
+        for i, _ in enumerate(layer):
             if (
                 np.abs(groundwater.begin) < np.sum(layer[: i + 1])
                 and start_groundwater == -1000
@@ -914,7 +907,7 @@ def gen_bhe_mesh_gmsh(
     BHE_to_soil = np.zeros(shape=(len(BHE_array), 5), dtype=np.int8)
 
     for j, BHE_j in enumerate(BHE_array):
-        for i in range(len(layer)):
+        for i, _ in enumerate(layer):
             # Auswertung für BHE_Beginn
             if np.abs(BHE_j.z_begin) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_begin
@@ -947,7 +940,7 @@ def gen_bhe_mesh_gmsh(
 
     # detect the soil layer, in which the BHE ends
     for j, BHE_j in enumerate(BHE_array):
-        for i in range(len(layer)):
+        for i, _ in enumerate(layer):
             if np.abs(BHE_j.z_end) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_end
             ) >= np.sum(layer[:i]):
@@ -981,7 +974,7 @@ def gen_bhe_mesh_gmsh(
                 raise ValueError(msg)
 
     needed_depths: list = []  # interesting depths
-    for i in range(len(layer)):
+    for i, _ in enumerate(layer):
         # only the interesting depths in the i-th layer
         # TODO: Rename the variable
         BHE_end_depths = []
@@ -1052,10 +1045,9 @@ def gen_bhe_mesh_gmsh(
     number_of_layers: list = []
     cummulative_height_of_layers: list = []
     depth_of_extrusion: list = []
-    for i in range(len(layer)):  # Schleife zum Berechnen der Layer-Struktur
-        list_of_needed_depths = needed_depths[
-            i
-        ]  # all depths, which needs a node in the mesh
+    for i, _ in enumerate(layer):  # Schleife zum Berechnen der Layer-Struktur
+        # all depths, which needs a node in the mesh
+        list_of_needed_depths = needed_depths[i]
 
         # vorheriger_layer - Abstand für top-critical etc.
         if i > 0:
@@ -1338,7 +1330,7 @@ def gen_bhe_mesh(
         [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
-    for i in range(len(groundwater)):
+    for i, _ in enumerate(groundwater):
         mesh_names.append(
             f"{mesh_name}_physical_group_Groundwater_Inflow_{i}.vtu"
         )

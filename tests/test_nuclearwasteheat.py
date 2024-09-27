@@ -12,7 +12,7 @@ class TestNuclearWasteHeat:
     def test_waste_heat(self):
         """Test heat evaluation for different argument combinations."""
         for model in nuclear.waste_types:
-            for i in range(len(model.nuclide_powers)):
+            for i, _ in enumerate(model.nuclide_powers):
                 assert model.heat(0.0, baseline=True, ncl_id=i) > 0
             assert model.heat(0.0, baseline=True) > 0
             assert model.heat(0.0) > 0
