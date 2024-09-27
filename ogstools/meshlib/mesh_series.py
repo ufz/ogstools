@@ -574,7 +574,7 @@ class MeshSeries:
             self.probe(points, variable.data_name, interp_method)
         )
         if values.shape[0] == 1:
-            values = values.flatten()
+            values = values.ravel()
         Q_ = u_reg.Quantity
         time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
         if variable_abscissa is None:

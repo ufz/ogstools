@@ -1237,7 +1237,7 @@ def gen_bhe_mesh_gmsh(
 
     # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
     gmsh.model.mesh.setVisibility(
-        elem_tags[zero_volume_elements_id].flatten().tolist(), 0
+        elem_tags[zero_volume_elements_id].ravel().tolist(), 0
     )
     gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
     gmsh.plugin.run("Invisible")

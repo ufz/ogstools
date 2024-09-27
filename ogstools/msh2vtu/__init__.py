@@ -32,7 +32,7 @@ def my_remove_orphaned_nodes(my_mesh: meshio.Mesh) -> None:
     for cell_block in my_mesh.cells:
         cell_block_values = cell_block.data
         connected_point_index = np.concatenate(
-            [connected_point_index, cell_block_values.flatten()]
+            [connected_point_index, cell_block_values.ravel()]
         ).astype(int)
 
     unique_point_index = np.unique(connected_point_index)

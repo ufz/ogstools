@@ -83,8 +83,8 @@ def difference_pairwise(
     :returns:   An array of meshes containing the differences of `variable`
                 or all datasets between meshes_1 and meshes_2.
     """
-    meshes_1 = np.asarray(meshes_1).flatten()
-    meshes_2 = np.asarray(meshes_2).flatten()
+    meshes_1 = np.asarray(meshes_1).ravel()
+    meshes_2 = np.asarray(meshes_2).ravel()
     if len(meshes_1) != len(meshes_2):
         msg = "Mismatch in length of provided lists/arrays. \
               Their length has to be identical to calculate pairwise \
@@ -117,10 +117,10 @@ def difference_matrix(
                 or all datasets between meshes_1 and meshes_2 for all possible
                 combinations.
     """
-    meshes_1 = np.asarray(meshes_1).flatten()
+    meshes_1 = np.asarray(meshes_1).ravel()
     if meshes_2 is None:
         meshes_2 = meshes_1.copy()
-    meshes_2 = np.asarray(meshes_2).flatten()
+    meshes_2 = np.asarray(meshes_2).ravel()
     diff_meshes = [
         difference(m1, m2, variable) for m1, m2 in product(meshes_1, meshes_2)
     ]
