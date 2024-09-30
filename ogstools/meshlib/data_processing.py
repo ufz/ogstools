@@ -4,7 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from itertools import product
+from itertools import pairwise, product
 from typing import TypeVar
 
 import numpy as np
@@ -83,8 +83,8 @@ def difference_pairwise(
     :returns:   An array of meshes containing the differences of `variable`
                 or all datasets between meshes_1 and meshes_2.
     """
-    meshes_1 = np.asarray(meshes_1).flatten()
-    meshes_2 = np.asarray(meshes_2).flatten()
+    meshes_1 = np.asarray(meshes_1).ravel()
+    meshes_2 = np.asarray(meshes_2).ravel()
     if len(meshes_1) != len(meshes_2):
         msg = "Mismatch in length of provided lists/arrays. \
               Their length has to be identical to calculate pairwise \
@@ -117,10 +117,10 @@ def difference_matrix(
                 or all datasets between meshes_1 and meshes_2 for all possible
                 combinations.
     """
-    meshes_1 = np.asarray(meshes_1).flatten()
+    meshes_1 = np.asarray(meshes_1).ravel()
     if meshes_2 is None:
         meshes_2 = meshes_1.copy()
-    meshes_2 = np.asarray(meshes_2).flatten()
+    meshes_2 = np.asarray(meshes_2).ravel()
     diff_meshes = [
         difference(m1, m2, variable) for m1, m2 in product(meshes_1, meshes_2)
     ]
@@ -148,10 +148,10 @@ def interp_points(points: np.ndarray, resolution: int = 100) -> np.ndarray:
         distances / np.sum(distances) * resolution
     ).astype(int)
 
-    for index in range(len(points) - 1):
-        new_seg_points = np.linspace(
-            points[index], points[index + 1], npoints_per_segment[index], False
-        )
+    for pt1, pt2, n_points in zip(
+        points[:-1], points[1:], npoints_per_segment, strict=True
+    ):
+        new_seg_points = np.linspace(pt1, pt2, n_points, False)
         profile = np.vstack([profile, new_seg_points])
 
     return np.vstack([profile, points[-1]])
@@ -178,15 +178,10 @@ def distance_in_segments(
         err_msg = "Something went wrong with generating profile_points!"
         raise ValueError(err_msg)
     dist_in_segment = np.zeros([profile.shape[0]])
-    for pt_id in range(len(point_index) - 1):
-        dist_current_segment = (
-            profile[point_index[pt_id] : point_index[pt_id + 1]]
-            - profile[point_index[pt_id]]
-        )
+    for pt_id1, pt_id2 in pairwise(point_index):
+        dist_current_segment = profile[pt_id1:pt_id2] - profile[pt_id1]
         dist_current_segment = np.linalg.norm(dist_current_segment, axis=1)
-        dist_in_segment[
-            point_index[pt_id] : point_index[pt_id + 1],
-        ] = dist_current_segment
+        dist_in_segment[pt_id1:pt_id2] = dist_current_segment
 
     # Handle last point
     dist_in_segment[-1] = np.linalg.norm(profile[-1] - profile_nodes[-2])

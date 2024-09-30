@@ -66,10 +66,10 @@ class TestPhysicalVariable:
         """Test strain components."""
         eps = np.array([0, 1, 2, 3, 4, 5]) * 1e-2
         u = np.array([0, 1, 2]) * 1e-3
-        for i in range(len(eps)):
+        for i, _ in enumerate(eps):
             self.equality(ov.strain[i], eps, Qty(i, "%"))
             self.equality(ov.strain[i], [eps, eps], Qty([i, i], "%"))
-        for i in range(len(u)):
+        for i, _ in enumerate(u):
             self.equality(ov.displacement[i], u, Qty(i, "mm"))
             self.equality(ov.displacement[i], [u, u], Qty([i, i], "mm"))
         assert ov.strain[0].bilinear_cmap is True

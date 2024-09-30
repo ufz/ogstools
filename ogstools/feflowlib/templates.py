@@ -241,7 +241,7 @@ def component_transport(
         error_tolerance="1e-16",
     )
 
-    for _i in range(len(species) + 1):
+    for _i in range(1 + len(species)):  # pressure + n species
         prj.time_loop.add_process(
             process="CT",
             nonlinear_solver_name="basic_picard",
@@ -286,7 +286,8 @@ def hydro_thermal(
     elif dimension == 3:
         gravity = "0 0 0"
     else:
-        ValueError("Dimension can be either 1,2 or 3.")
+        msg = "Dimension can be either 1,2 or 3."
+        raise ValueError(msg)
     prj.processes.set_process(
         name="HydroThermal",
         type="HT",

@@ -438,7 +438,7 @@ def _add_global_process_coupling_CT(
         taglist=["max_iter", "convergence_criteria"],
         textlist=[str(max_iter), ""],
     )
-    for _i in range(len(species) + 1):
+    for _i in range(1 + len(species)):  # pressure + n species
         model.add_block(
             blocktag="convergence_criterion",
             parent_xpath="./time_loop/global_process_coupling/convergence_criteria",
