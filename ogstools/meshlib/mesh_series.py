@@ -6,6 +6,7 @@
 
 import warnings
 from collections.abc import Callable, Sequence
+from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
 from typing import Any, ClassVar, Literal
@@ -67,7 +68,7 @@ class MeshSeries:
         self.time_unit = time_unit
         self.spatial_unit = spatial_unit
         self.spatial_output_unit = spatial_output_unit
-        self._data: dict[int, Mesh] = {}
+        self._mesh_cache: dict[int, Mesh] = {}
         self._data_type = filepath.split(".")[-1]
         self._dataitems: dict[str, Any] = {}
         if self._data_type == "xmf":
@@ -99,6 +100,40 @@ class MeshSeries:
         else:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
+
+    def __deepcopy__(self, memo: dict) -> "MeshSeries":
+        # Deep copy is the default when using self.copy()
+        # For shallow copy: self.copy(deep=False)
+        cls = self.__class__
+        self_copy = cls.__new__(cls)
+        memo[id(self)] = self_copy
+        for key, value in self.__dict__.items():
+            if key != "_pvd_reader" and key != "_xdmf_reader":
+                if isinstance(value, pv.UnstructuredGrid):
+                    # For PyVista objects use their own copy method
+                    setattr(self_copy, key, value.copy(deep=True))
+                else:
+                    # For everything that is neither reader nor PyVista object
+                    # use the deepcopy
+                    setattr(self_copy, key, deepcopy(value, memo))
+            else:
+                # Shallow copy of reader is needed, because timesteps are
+                # stored in reader, deep copy doesn't work for _pvd_reader
+                # and _xdmf_reader
+                setattr(self_copy, key, copy(value))
+        return self_copy
+
+    def copy(self, deep: bool = True) -> "MeshSeries":
+        """
+        Create a copy of MeshSeries object.
+        Deep copy is the default.
+
+        :param deep: switch to choose between deep (default) and shallow
+                     (self.copy(deep=False)) copy.
+
+        :returns: Copy of self.
+        """
+        return deepcopy(self) if deep else self
 
     def __getitem__(self, index: int) -> list[pv.UnstructuredGrid]:
         # ToDo performance optimization for XDMF / HDF5 files
@@ -235,7 +270,7 @@ class MeshSeries:
         return mesh
 
     def clear(self) -> None:
-        self._data.clear()
+        self._mesh_cache.clear()
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
@@ -262,15 +297,17 @@ class MeshSeries:
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
-            ip_ms._data[ts] = ip_mesh.copy()  # pylint: disable=protected-access
+            ip_ms._mesh_cache[
+                ts
+            ] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
     def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Selects mesh at given timestep all data function."""
         timestep = self.timesteps[timestep]
-        if timestep in self._data:
-            pv_mesh = self._data[timestep]
+        if timestep in self._mesh_cache:
+            pv_mesh = self._mesh_cache[timestep]
         else:
             if self._data_type == "pvd":
                 pv_mesh = self._read_pvd(timestep)
@@ -279,7 +316,7 @@ class MeshSeries:
             elif self._data_type == "vtu":
                 pv_mesh = self._vtu_reader.read()
             if lazy_eval:
-                self._data[timestep] = pv_mesh
+                self._mesh_cache[timestep] = pv_mesh
         mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
         if self._data_type == "pvd":
             mesh.filepath = Path(self.timestep_files[timestep])
@@ -377,7 +414,7 @@ class MeshSeries:
         if self._data_type == "synthetic":
             return np.asarray(
                 [
-                    self._data[t][data_name]
+                    self._mesh_cache[t][data_name]
                     for t in self.timesteps[time_selection]
                 ]
             )
@@ -801,5 +838,28 @@ class MeshSeries:
             plot.contourplots.add_colorbars(fig, ax, variable, levels, **kwargs)
         plot.utils.update_font_sizes(fig.axes, fontsize)
         return fig
+
+    def transform(
+        self, mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh
+    ) -> "MeshSeries":
+        """
+        Apply an arbitrary transformation function to all time steps
+        in MeshSeries.
+
+        :param mesh_func: A function which expects to read a mesh and return a
+                          mesh. Useful, for slicing / clipping / thresholding
+                          of the data in MeshSeries object.
+
+        :returns: A deep copy of the original MeshSeries object with the data
+                  modified by mesh_func.
+        """
+        for t in self.timesteps:
+            _ = self.mesh(t)
+        ms_copy = self.copy(deep=True)
+        ms_copy._mesh_cache = {
+            timestep: mesh_func(self._mesh_cache[timestep])
+            for timestep in self._mesh_cache
+        }
+        return ms_copy
 
     # TODO: add member function to MeshSeries to get a difference for to timesteps

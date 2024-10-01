@@ -422,3 +422,25 @@ class TestUtils:
         assert (
             msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
         )
+
+    def test_transform(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ms_mod = ms.transform(lambda mesh: mesh.slice("x"))
+        assert max(ms[0].cells) == 3779  # Check if example mesh has changed
+        assert max(ms_mod[0].cells) == 44
+        assert len(ms[0].points) == 3780  # Check if example mesh has changed
+        assert len(ms_mod[0].points) == 45
+
+    def test_copy_deep(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ms.test_var = False
+        ms_deepcopy = ms.copy(deep=True)
+        ms_deepcopy.test_var = True
+        assert ms.test_var != ms_deepcopy.test_var
+
+    def test_copy_shallow(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ms.test_var = True
+        ms_shallowcopy = ms.copy(deep=False)
+        ms.test_var = False
+        assert not ms_shallowcopy.test_var
