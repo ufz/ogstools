@@ -24,9 +24,9 @@ def _line(
     geo.addPoint(0, 0, 0, tag=1)
     geo.addPoint(length, 0, 0, tag=2)
     line_tag = geo.addLine(1, 2, tag=1)
-    geo.mesh.setTransfiniteCurve(1, n_edge_cells + 1)
 
     if structured:
+        geo.mesh.setTransfiniteCurve(1, n_edge_cells + 1)
         geo.mesh.setTransfiniteSurface(1)
         geo.mesh.setRecombine(dim=1, tag=1)
     return line_tag
@@ -230,7 +230,7 @@ def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
     return cell_pts[ordered_cell_ids[:-1], 0]
 
 
-def remesh_with_triangle(
+def remesh_with_triangles(
     mesh: pv.UnstructuredGrid,
     output_file: Path | str = Path() / "tri_mesh.msh",
     size_factor: float = 1.0,
@@ -252,6 +252,8 @@ def remesh_with_triangle(
     gmsh.model.add("domain")
 
     mat_ids = np.unique(mesh["MaterialIDs"])
+    # gmsh requires the domain ids to start at 1
+    id_offset = 1 if 0 in mat_ids else 0
     region_edge_points = [
         _ordered_edges(mesh.threshold([m, m], "MaterialIDs")) for m in (mat_ids)
     ]
@@ -266,7 +268,7 @@ def remesh_with_triangle(
 
     field = gmsh.model.mesh.field
     for index, points in enumerate(region_edge_points):
-        mat_id = mat_ids[index]
+        mat_id = mat_ids[index] + id_offset
         line_tags = range(region_start_tag[index], region_start_tag[index + 1])
         gmsh.model.geo.addCurveLoop(line_tags, tag=mat_id)
         gmsh.model.geo.addPlaneSurface([mat_id], tag=mat_id)

@@ -25,18 +25,6 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 #
 #   from ogstools.meshlib import MeshSeries
 #   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
-#
-# You can also use a variable from the available presets instead of needing to
-# create your own:
-# :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_variables.py`
-
-# %% [markdown]
-# Let's use fixed scale limits to prevent rescaling during the animation.
-
-# %%
-ogs.plot.setup.vmin = 0
-ogs.plot.setup.vmax = 100
-ogs.plot.setup.dpi = 50
 
 # %% [markdown]
 # You can choose which timesteps to render by passing either an int array
@@ -53,9 +41,9 @@ timevalues = np.linspace(
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
 # Note that rendering many frames in conjunction with large meshes might take
-# a really long time. We can pass two functions to `animate`:
-# `mesh_func` which transforms the mesh and
-# `plot_func` which can apply custom formatting and / or plotting.
+# a really long time. We can pass a `plot_func` which can apply custom
+# formatting and / or plotting. To modify the domain, we can use the transform
+# method of MeshSeries.
 
 
 def mesh_func(mesh: ogs.Mesh) -> ogs.Mesh:
@@ -65,15 +53,12 @@ def mesh_func(mesh: ogs.Mesh) -> ogs.Mesh:
 
 def plot_func(ax: plt.Axes, timevalue: float) -> None:
     "Add the time to the title."
-    ax.set_title(f"{timevalue/(365.25*86400):.1f} yrs", loc="center")
+    ax.set_title(f"{timevalue/(365.25*86400):.1f} yrs")
 
 
 # %%
-anim = mesh_series.animate(
-    ogs.variables.saturation,
-    timevalues,
-    mesh_func=mesh_func,
-    plot_func=plot_func,
+anim = mesh_series.transform(mesh_func).animate(
+    ogs.variables.saturation, timevalues, plot_func, vmin=0, vmax=100, dpi=50
 )
 
 # %% [markdown]

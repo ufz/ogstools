@@ -39,7 +39,7 @@ fig = mesh.plot_contourf(ogs.variables.material_id)
 mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
-ogs.meshlib.gmsh_meshing.remesh_with_triangle(mesh, msh_path)
+ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
 msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR")
 mesh = ogs.Mesh(temp_dir / "tri_mesh_domain.vtu")
 fig = mesh.plot_contourf(ogs.variables.material_id)

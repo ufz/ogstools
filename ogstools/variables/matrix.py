@@ -191,7 +191,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name="von_Mises_" + self.output_name,
-            symbol=rf"{{{self.symbol}}}_\mathrm{{Mises}}",
+            symbol=rf"{{{self.symbol}}}_\mathrm{{v}}",
             func=lambda x: tensor_math.von_mises(self.func(x)),
         )
 

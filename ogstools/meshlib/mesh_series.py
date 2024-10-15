@@ -607,7 +607,7 @@ class MeshSeries:
         ax.grid(which="major", color="lightgrey", linestyle="-")
         ax.grid(which="minor", color="0.95", linestyle="--")
         ax.set_xlabel(x_label)
-        ax.set_ylabel(variable.get_label(plot.setup.label_split))
+        ax.set_ylabel(variable.magnitude.get_label(plot.setup.label_split))
         ax.label_outer()
         ax.minorticks_on()
         return fig
@@ -749,6 +749,8 @@ class MeshSeries:
         else:
             y = np.linalg.norm(points - points[0], axis=1)
             ylabel = "distance"
+        spatial = plot.shared.spatial_quantity(self.mesh(0))
+        y = spatial.transform(y)
 
         if interpolate:
             grid_interp = RegularGridInterpolator(
@@ -764,15 +766,14 @@ class MeshSeries:
                 cmap=cmap,
                 norm=norm,
                 extent=(tmin, tmax, ymin, ymax),
-                aspect=(tmax - tmin) / (ymax - ymin),
+                aspect=(tmax - tmin) / (ymax - ymin) / kwargs.get("aspect", 1),
                 interpolation="bicubic",
             )
             if variable.bilinear_cmap and levels[0] < 0.0 < levels[-1]:
-                ax.contour(time, y, values, [0], colors="white")
+                ax.contour(time, y, values.T, [0], colors="white")
         else:
             ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
 
-        spatial = plot.shared.spatial_quantity(self.mesh(0))
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
         ax.set_ylabel(ylabel + " / " + spatial.output_unit, fontsize=fontsize)
         xlabel = "time / " + time_unit
