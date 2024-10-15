@@ -4,6 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
 
@@ -61,10 +63,10 @@ class Mesh(pv.UnstructuredGrid):
     def plot_linesample_contourf(self, *args: Any, **kwargs: Any) -> Any:
         return lineplots.linesample_contourf(self, *args, **kwargs)
 
-    def to_ip_mesh(self) -> "Mesh":
+    def to_ip_mesh(self) -> Mesh:
         return Mesh(ip_mesh.to_ip_mesh(self))
 
-    def to_ip_point_cloud(self) -> "Mesh":
+    def to_ip_point_cloud(self) -> Mesh:
         return Mesh(ip_mesh.to_ip_point_cloud(self))
 
     to_ip_mesh.__doc__ = ip_mesh.to_ip_mesh.__doc__
@@ -102,7 +104,7 @@ class Mesh(pv.UnstructuredGrid):
         filepath: str | Path,
         spatial_unit: str = "m",
         spatial_output_unit: str = "m",
-    ) -> "Mesh":
+    ) -> Mesh:
         """
         Initialize a Mesh object
 
@@ -131,7 +133,7 @@ class Mesh(pv.UnstructuredGrid):
         simplify: bool = False,
         mesh_generator: str = "triangle",
         cellsize: int | None = None,
-    ) -> "Mesh":
+    ) -> Mesh:
         return cls(
             shape_meshing.read_shape(
                 shapefile, simplify, mesh_generator, cellsize

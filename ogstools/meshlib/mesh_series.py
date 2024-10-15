@@ -4,12 +4,15 @@
 #            http://www.opengeosys.org/project/license
 #
 
+
+from __future__ import annotations
+
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, overload
 
 import meshio
 import numpy as np
@@ -22,22 +25,13 @@ from scipy.interpolate import (
     RegularGridInterpolator,
 )
 from tqdm.auto import tqdm
+from typeguard import typechecked
 
 from ogstools import plot
 from ogstools.variables import Variable, get_preset, u_reg
 
 from .mesh import Mesh
-from .xdmf_reader import DataItems, XDMFReader
-
-
-class PVDDataItems:
-    def __init__(self, values: np.ndarray) -> None:
-        self.values = values
-
-    def __getitem__(
-        self, index: tuple | int | slice | np.ndarray
-    ) -> np.ndarray:
-        return self.values[index]
+from .xdmf_reader import XDMFReader
 
 
 class MeshSeries:
@@ -68,9 +62,14 @@ class MeshSeries:
         self.time_unit = time_unit
         self.spatial_unit = spatial_unit
         self.spatial_output_unit = spatial_output_unit
-        self._mesh_cache: dict[int, Mesh] = {}
+        self._mesh_cache: dict[float, Mesh] = {}
+        self._mesh_func_opt: Callable[[Mesh], Mesh] | None = None
         self._data_type = filepath.split(".")[-1]
-        self._dataitems: dict[str, Any] = {}
+        # list of slices to be able to have nested slices with xdmf
+        # (but only the first slice will be efficient)
+        self._time_indices: list[slice | Any] = [slice(None)]
+        self._timevalues: np.ndarray
+        "original data timevalues - do not change except in synthetic data."
         if self._data_type == "xmf":
             self._data_type = "xdmf"
 
@@ -101,7 +100,7 @@ class MeshSeries:
             msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
             raise TypeError(msg)
 
-    def __deepcopy__(self, memo: dict) -> "MeshSeries":
+    def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
         # For shallow copy: self.copy(deep=False)
         cls = self.__class__
@@ -123,7 +122,7 @@ class MeshSeries:
                 setattr(self_copy, key, copy(value))
         return self_copy
 
-    def copy(self, deep: bool = True) -> "MeshSeries":
+    def copy(self, deep: bool = True) -> MeshSeries:
         """
         Create a copy of MeshSeries object.
         Deep copy is the default.
@@ -135,63 +134,34 @@ class MeshSeries:
         """
         return deepcopy(self) if deep else self
 
-    def __getitem__(self, index: int) -> list[pv.UnstructuredGrid]:
-        # ToDo performance optimization for XDMF / HDF5 files
-        return self.mesh(index)
+    @overload
+    def __getitem__(self, index: int) -> Mesh:
+        ...
+
+    @overload
+    def __getitem__(self, index: slice | Sequence) -> MeshSeries:
+        ...
+
+    def __getitem__(self, index: Any) -> Any:
+        if isinstance(index, int):
+            return self.mesh(index)
+        if isinstance(index, slice | Sequence):
+            ms_copy = self.copy(deep=True)
+            if ms_copy._time_indices == [slice(None)]:
+                ms_copy._time_indices = [index]
+            else:
+                ms_copy._time_indices += [index]
+            return ms_copy
+        raise ValueError
 
     def __len__(self) -> int:
         return len(self.timesteps)
 
-    def data(self, variable_name: str) -> DataItems:
-        """
-        Returns an DataItems object, that allows array indexing.
-        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
-        pyvista functionality
-        Selection example:
-        ms = MeshSeries()
-        temp = ms.data("temperature")
-        time_step1_temps = temp[1,:]
-        temps_at_some_points = temp[:,1:3]
-        :param variable_name: Name the variable (e.g."temperature")
-        :returns:   Returns an objects that allows array indexing.
-        """
+    def __iter__(self) -> Iterator[Mesh]:
+        for t in self.timesteps:
+            yield self.mesh(t)
 
-        if self._data_type == "xdmf":
-            return self._xdmf_reader.data_items[variable_name]
-        # for pvd and vtu check if data is already read or construct it
-        if self._dataitems and self._dataitems[variable_name]:
-            return self._dataitems[variable_name]
-
-        all_meshes = [self.mesh(i) for i in self.timesteps]
-
-        dataitems = self._structure_dataitems(all_meshes)
-        # Lazy dataitems
-        self._dataitems = {
-            key: PVDDataItems(np.asarray(value))
-            for key, value in dataitems.items()
-        }
-        return self._dataitems[variable_name]
-
-    def _structure_dataitems(
-        self, all_meshes: list[pv.UnstructuredGrid]
-    ) -> dict[str, list]:
-        # Reads all meshes and returns a dict with variables as key
-        # (e.g. "temperature")
-        dataitems: dict[str, list] = {}
-        for mesh in all_meshes:
-            for name in mesh.cell_data:
-                if name in dataitems:
-                    dataitems[name].append(mesh.cell_data[name])
-                else:
-                    dataitems[name] = [mesh.cell_data[name]]
-            for name in mesh.point_data:
-                if name in dataitems:
-                    dataitems[name].append(mesh.point_data[name])
-                else:
-                    dataitems[name] = [mesh.point_data[name]]
-        return dataitems
-
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if self._data_type == "vtu":
             reader = self._vtu_reader
         elif self._data_type == "pvd":
@@ -200,44 +170,12 @@ class MeshSeries:
             reader = self._xdmf_reader
         return (
             f"MeshSeries:\n"
-            f"filepath:       {self.filepath}\n"
-            f"spatial_unit:   {self.spatial_unit}\n"
-            f"data_type:      {self._data_type}\n"
-            f"timevalues:     {self._timevalues[0]}{self.time_unit} to {self._timevalues[0]}{self.time_unit} in {len(self._timevalues)} steps\n"
-            f"reader:         {reader}\n"
-            f"rawdata_file:   {self.rawdata_file()}\n"
-        )
-
-    def aggregate(
-        self,
-        variable: Variable | str,
-        np_func: Callable,
-        axis: int,
-        mask: np.ndarray | None = None,
-    ) -> np.ndarray:
-        """Aggregate data of all timesteps using a specified function.
-
-        :param variable:   The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
-        :returns:   A `numpy.ndarray` of the same length as the timesteps if
-                    axis=0 or of the same length as the data if axis=1.
-        """
-        if isinstance(variable, Variable):
-            if variable.mesh_dependent:
-                vals = np.asarray(
-                    [
-                        variable.transform(self.mesh(t))
-                        for t in tqdm(self.timesteps)
-                    ]
-                )
-            else:
-                vals = variable.transform(self.values(variable.data_name))
-        else:
-            vals = self.values(variable)
-        return (
-            np_func(vals, axis=axis)
-            if mask is None
-            else np_func(vals[:, mask], axis=axis)
+            f"filepath:         {self.filepath}\n"
+            f"spatial_unit:     {self.spatial_unit}\n"
+            f"data_type:        {self._data_type}\n"
+            f"timevalues:       {self._timevalues[0]}{self.time_unit} to {self._timevalues[-1]}{self.time_unit} in {len(self._timevalues)} steps\n"
+            f"reader:           {reader}\n"
+            f"rawdata_file:     {self.rawdata_file()}\n"
         )
 
     _np_str: ClassVar = {
@@ -252,11 +190,10 @@ class MeshSeries:
     ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
 
-        :param variable:   The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
+        :param variable:    The mesh variable to be aggregated.
+        :param func:        The aggregation function to apply.
         :returns:   A mesh with aggregated data according to the given function.
         """
-        np_func = self._np_str[func]
         # TODO: add function to create an empty mesh from a given on
         # custom field_data may need to be preserved
         mesh = self.mesh(0).copy(deep=True)
@@ -266,10 +203,10 @@ class MeshSeries:
             output_name = f"{variable.output_name}_{func}"
         else:
             output_name = f"{variable}_{func}"
-        mesh[output_name] = self.aggregate(variable, np_func, axis=0)
+        mesh[output_name] = self._np_str[func](self.values(variable), axis=0)
         return mesh
 
-    def clear(self) -> None:
+    def clear_cache(self) -> None:
         self._mesh_cache.clear()
 
     def closest_timestep(self, timevalue: float) -> int:
@@ -280,7 +217,7 @@ class MeshSeries:
         """Return the closest timevalue to a timevalue."""
         return self._timevalues[self.closest_timestep(timevalue)]
 
-    def ip_tesselated(self) -> "MeshSeries":
+    def ip_tesselated(self) -> MeshSeries:
         "Create a new MeshSeries from integration point tessellation."
         ip_ms = MeshSeries(
             Path(self.filepath).parent / "ip_meshseries.synthetic",
@@ -298,28 +235,40 @@ class MeshSeries:
             }
             ip_mesh.cell_data.update(ip_data)
             ip_ms._mesh_cache[
-                ts
+                self.timevalues()[ts]
             ] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
     def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
-        """Selects mesh at given timestep all data function."""
-        timestep = self.timesteps[timestep]
-        if timestep in self._mesh_cache:
-            pv_mesh = self._mesh_cache[timestep]
+        """Returns the mesh at the given timestep."""
+        timevalue = self.timevalues()[timestep]
+        if not np.any(timevalue_match := (self._timevalues == timevalue)):
+            msg = f"Value {timevalue} not found in the array."
+            raise ValueError(msg)
+        data_timestep = np.argmax(timevalue_match)
+        if timevalue in self._mesh_cache:
+            mesh = self._mesh_cache[timevalue]
         else:
-            if self._data_type == "pvd":
-                pv_mesh = self._read_pvd(timestep)
-            elif self._data_type == "xdmf":
-                pv_mesh = self._read_xdmf(timestep)
-            elif self._data_type == "vtu":
-                pv_mesh = self._vtu_reader.read()
+            match self._data_type:
+                case "pvd":
+                    pv_mesh = self._read_pvd(data_timestep)
+                case "xdmf":
+                    pv_mesh = self._read_xdmf(data_timestep)
+                case "vtu":
+                    pv_mesh = self._vtu_reader.read()
+                case _:
+                    msg = f"Unexpected datatype {self._data_type}."
+                    raise TypeError(msg)
+            mesh = Mesh(
+                self.mesh_func(pv_mesh),
+                self.spatial_unit,
+                self.spatial_output_unit,
+            )
             if lazy_eval:
-                self._mesh_cache[timestep] = pv_mesh
-        mesh = Mesh(pv_mesh, self.spatial_unit, self.spatial_output_unit)
+                self._mesh_cache[timevalue] = mesh
         if self._data_type == "pvd":
-            mesh.filepath = Path(self.timestep_files[timestep])
+            mesh.filepath = Path(self.timestep_files[data_timestep])
         else:
             mesh.filepath = Path(self.filepath)
         return mesh
@@ -357,92 +306,104 @@ class MeshSeries:
             )
         return mesh
 
-    @property
-    def timesteps(self) -> list:
-        """Return the timesteps of the timeseries data."""
-        if self._data_type == "vtu":
-            return [0]
-        if self._data_type == "pvd":
-            return list(range(self._pvd_reader.number_time_points))
-        # elif self._data_type == "xdmf":
-        return [i for i, _ in enumerate(self._timevalues)]
-
     def timevalues(self, time_unit: str | None = None) -> np.ndarray:
         "Return the timevalues, optionally converted to another time unit."
+        vals = self._timevalues
+        for index in self._time_indices:
+            vals = vals[index]
         return (
-            u_reg.Quantity(self._timevalues, self.time_unit)
+            u_reg.Quantity(vals, self.time_unit)
             .to(self.time_unit if time_unit is None else time_unit)
             .magnitude
         )
 
-    def values(
-        self, data_name: str, selection: slice | np.ndarray | None = None
-    ) -> np.ndarray:
+    @property
+    def timesteps(self) -> list:
+        """Return the timesteps of the timeseries data."""
+        return np.arange(len(self.timevalues()), dtype=int)
+
+    def _xdmf_values(self, variable_name: str) -> np.ndarray:
+        dataitems = self._xdmf_reader.data_items[variable_name]
+        # pv filters produces these arrays, which we can use for slicing
+        # to also reflect the previous use of self.transform here
+        mask_map = {
+            "vtkOriginalPointIds": self.mesh(0).point_data,
+            "vtkOriginalCellIds": self.mesh(0).cell_data,
+        }
+        for mask, data in mask_map.items():
+            if variable_name in data and mask in data:
+                result = dataitems[self._time_indices[0], self.mesh(0)[mask]]
+                break
+        else:
+            result = dataitems[self._time_indices[0]]
+        for index in self._time_indices[1:]:
+            result = result[index]
+        if self._mesh_func_opt is not None and not any(
+            mask in data for mask, data in mask_map.items()
+        ):
+            # if transform function doesn't produce the mask arrays we have to
+            # map data xdmf data to the entire list of meshes and apply the
+            # function on each mesh individually.
+            ms_copy = self.copy(deep=True)
+            ms_copy._mesh_func_opt = None  # pylint: disable=protected-access
+            ms_copy.clear_cache()
+            raw_meshes = [ms_copy.mesh(0)] * len(result)
+            for mesh, data in zip(raw_meshes, result, strict=True):
+                mesh[variable_name] = data
+            meshes = list(map(self.mesh_func, raw_meshes))
+            result = np.asarray([mesh[variable_name] for mesh in meshes])
+        return result
+
+    def values(self, variable: str | Variable) -> np.ndarray:
         """
         Get the data in the MeshSeries for all timesteps.
 
-        :param data_name: Name of the data in the MeshSeries.
-        :param selection: Can limit the data to be read.
-            - **Time** is always the first dimension.
-            - If `None`, it takes the selection that is defined in the xdmf file.
-            - If a tuple or `np.ndarray`: see how `h5py` uses Numpy array indexing.
-            - If a slice: see Python slice reference.
-            - If a string: see example:
+        Adheres to time slicing via `__get_item__` and an applied pyvista filter
+        via `transform` if the applied filter produced 'vtkOriginalPointIds' or
+        'vtkOriginalCellIds' (e.g. `clip(..., crinkle=True)`,
+        `extract_cells(...)`, `threshold(...)`.)
 
-            Example: ``"|0 0 0:1 1 1:1 190 3:97 190 3"``
+        :param variable: Variable to read/process from the MeshSeries.
 
-            This represents the selection
-            ``[(offset(0,0,0): step(1,1,1) : end(1,190,3) : of_data_with_size(97,190,30))]``.
-
-        :returns: A numpy array of the requested data for all timesteps.
+        :returns:   A numpy array of shape (n_timesteps, n_points/c_cells).
+                    If given an argument of type Variable is given, its
+                    transform function is applied on the data.
         """
-
-        if isinstance(selection, np.ndarray | tuple):
-            time_selection = selection[0]
+        if isinstance(variable, Variable):
+            if variable.mesh_dependent:
+                return np.asarray([variable.transform(mesh) for mesh in self])
+            variable_name = variable.data_name
         else:
-            time_selection = slice(None)
+            variable_name = variable
 
-        if self._data_type == "xdmf":
-            return self._xdmf_reader.data_items[data_name][time_selection]
-        if self._data_type == "pvd":
-            return np.asarray(
-                [
-                    self.mesh(t)[data_name]
-                    for t in tqdm(self.timesteps[time_selection])
-                ]
-            )
-        if self._data_type == "synthetic":
-            return np.asarray(
-                [
-                    self._mesh_cache[t][data_name]
-                    for t in self.timesteps[time_selection]
-                ]
-            )
-        # vtu
-        mesh = self.mesh(0)
-        return mesh[data_name]
+        if (
+            self._data_type == "xdmf"
+            and variable_name in self._xdmf_reader.data_items
+            and not all(tv in self._mesh_cache for tv in self.timevalues())
+        ):
+            result = self._xdmf_values(variable_name)
+        else:
+            result = np.asarray([mesh[variable_name] for mesh in self])
+        if isinstance(variable, Variable):
+            return variable.transform(result)
+        return result
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
         return self._pvd_reader.read()[0]
 
-    def _read_xdmf(self, timestep: int | tuple | slice) -> pv.UnstructuredGrid:
-        if isinstance(timestep, int):
-            points, cells = self._xdmf_reader.read_points_cells()
-            _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
-                timestep
-            )
-            meshio_mesh = meshio.Mesh(
-                points, cells, point_data, cell_data, field_data
-            )
-            # pv.from_meshio does not copy field_data (fix in pyvista?)
-            pv_mesh = pv.from_meshio(meshio_mesh)
-            pv_mesh.field_data.update(field_data)
-            return pv_mesh
-
-        # ToDo support effective read of multiple meshes
-        msg = "Only single timestep reading is supported for XDMF files."
-        raise NotImplementedError(msg)
+    def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
+        points, cells = self._xdmf_reader.read_points_cells()
+        _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
+            timestep
+        )
+        meshio_mesh = meshio.Mesh(
+            points, cells, point_data, cell_data, field_data
+        )
+        # pv.from_meshio does not copy field_data (fix in pyvista?)
+        pv_mesh = pv.from_meshio(meshio_mesh)
+        pv_mesh.field_data.update(field_data)
+        return pv_mesh
 
     def _time_of_extremum(
         self,
@@ -459,7 +420,7 @@ class MeshSeries:
         mesh.clear_cell_data()
         output_name = f"{prefix}_{variable.output_name}_time"
         mesh[output_name] = self._timevalues[
-            self.aggregate(variable, np_func, axis=0)
+            np_func(self.values(variable), axis=0)
         ]
         return mesh
 
@@ -475,49 +436,39 @@ class MeshSeries:
         self,
         variable: Variable | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-        mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """Aggregate data over domain per timestep using a specified function.
 
-        :param variable:   The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
-        :param mask:            A numpy array as a mask for the domain.
+        :param variable:    The mesh variable to be aggregated.
+        :param func:        The aggregation function to apply.
 
         :returns:   A numpy array with aggregated data.
         """
-        np_func = self._np_str[func]
-        return self.aggregate(variable, np_func, axis=1, mask=mask)
+        return self._np_str[func](self.values(variable), axis=1)
 
     def plot_domain_aggregate(
         self,
         variable: Variable | str,
         func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
-        timesteps: slice | None = None,
         time_unit: str | None = "s",
-        mask: np.ndarray | None = None,
         ax: plt.Axes | None = None,
         **kwargs: Any,
     ) -> plt.Figure | None:
         """
         Plot the transient aggregated data over the domain per timestep.
 
-        :param variable:   The mesh variable to be aggregated.
+        :param variable:        The mesh variable to be aggregated.
         :param func:            The aggregation function to apply.
-        :param timesteps:       A slice to select the timesteps. Default: all.
         :param time_unit:       Output unit of the timevalues.
-        :param mask:            A numpy array as a mask for the domain.
         :param ax:              matplotlib axis to use for plotting
         :param kwargs:      Keyword args passed to matplotlib's plot function.
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
         """
         variable = get_preset(variable, self.mesh(0))
-        timeslice = slice(None, None) if timesteps is None else timesteps
-        values = self.aggregate_over_domain(variable.magnitude, func, mask)[
-            timeslice
-        ]
+        values = self.aggregate_over_domain(variable.magnitude, func)
         time_unit = time_unit if time_unit is not None else self.time_unit
-        x_values = self.timevalues(time_unit)[timeslice]
+        x_values = self.timevalues(time_unit)
         x_label = f"time t / {time_unit}"
         if ax is None:
             fig, ax = plt.subplots()
@@ -665,7 +616,6 @@ class MeshSeries:
         self,
         variable: Variable,
         timesteps: Sequence | None = None,
-        mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh,
         plot_func: Callable[[plt.Axes, float], None] = lambda *_: None,
         **kwargs: Any,
     ) -> FuncAnimation:
@@ -675,9 +625,6 @@ class MeshSeries:
         :param variable: the field to be visualized on all timesteps
         :param timesteps: if sequence of int: the timesteps to animate
                         if sequence of float: the timevalues to animate
-        :param mesh_func:   A function which expects to read a mesh and return a
-                            mesh. Useful, for slicing / clipping / thresholding
-                            the meshseries for animation.
         :param plot_func:   A function which expects to read a matplotlib Axes
                             and the time value of the current frame. Useful to
                             customize the plot in the animation.
@@ -689,9 +636,11 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = plot.contourf(mesh_func(self.mesh(0, False)), variable)
+        fig = plot.contourf(self.mesh(0, False), variable)
         assert isinstance(fig, plt.Figure)
         plot_func(fig.axes[0], 0.0)
+        fontsize = kwargs.get("fontsize", plot.setup.fontsize)
+        plot.utils.update_font_sizes(fig.axes, fontsize)
 
         def init() -> None:
             pass
@@ -700,17 +649,14 @@ class MeshSeries:
             fig.axes[-1].remove()  # remove colorbar
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
-            if isinstance(i, int):
-                mesh = mesh_func(self.mesh(i))
-            else:
-                mesh = mesh_func(self.read_interp(i, True))
+            mesh = self[i] if isinstance(i, int) else self.read_interp(i, True)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 plot_func(fig.axes[0], i)
                 plot.contourplots.draw_plot(
                     mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
                 )  # type: ignore[assignment]
-                plot.utils.update_font_sizes(fig.axes)
+                plot.utils.update_font_sizes(fig.axes, fontsize)
 
         _func = partial(animate_func, fig=fig)
 
@@ -839,27 +785,55 @@ class MeshSeries:
         plot.utils.update_font_sizes(fig.axes, fontsize)
         return fig
 
+    @property
+    def mesh_func(self) -> Callable[[Mesh], Mesh]:
+        """Returns stored transformation function or identity if not given."""
+        if self._mesh_func_opt is None:
+            return lambda mesh: mesh
+        return self._mesh_func_opt
+
     def transform(
         self, mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh
-    ) -> "MeshSeries":
+    ) -> MeshSeries:
         """
-        Apply an arbitrary transformation function to all time steps
-        in MeshSeries.
+        Apply a transformation function to the underlying mesh.
 
         :param mesh_func: A function which expects to read a mesh and return a
-                          mesh. Useful, for slicing / clipping / thresholding
-                          of the data in MeshSeries object.
+                          mesh. Useful for slicing / clipping / thresholding.
 
-        :returns: A deep copy of the original MeshSeries object with the data
-                  modified by mesh_func.
+        :returns: A deep copy of this MeshSeries with transformed meshes.
         """
-        for t in self.timesteps:
-            _ = self.mesh(t)
         ms_copy = self.copy(deep=True)
-        ms_copy._mesh_cache = {
-            timestep: mesh_func(self._mesh_cache[timestep])
-            for timestep in self._mesh_cache
-        }
+        # pylint: disable=protected-access
+        for cache_timevalue, cache_mesh in self._mesh_cache.items():
+            ms_copy._mesh_cache[cache_timevalue] = Mesh(
+                mesh_func(cache_mesh),
+                ms_copy.spatial_unit,
+                ms_copy.spatial_output_unit,
+            )
+        ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
         return ms_copy
 
-    # TODO: add member function to MeshSeries to get a difference for to timesteps
+    @typechecked
+    def extract(
+        self,
+        index: slice | int | np.ndarray | list,
+        preference: Literal["points", "cells"] = "points",
+    ) -> MeshSeries:
+        """
+        Extract a subset of the domain by point or cell indices.
+
+        :param index:       Indices of points or cells to extract.
+        :param preference:  Selected entities.
+
+        :returns: A MeshSeries with the selected domain subset.
+        """
+        func: dict[str, Callable[[Mesh], Mesh]] = {
+            "points": lambda mesh: mesh.extract_points(
+                np.arange(mesh.n_points)[index], include_cells=False
+            ),
+            "cells": lambda mesh: mesh.extract_cells(
+                np.arange(mesh.n_points)[index]
+            ),
+        }
+        return self.transform(func[preference])

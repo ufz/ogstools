@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 
 import numpy as np
 import pytest
-from pyvista import SolidSphere, UnstructuredGrid
+import pyvista as pv
 
 import ogstools as ogs
 from ogstools import examples
@@ -33,39 +33,53 @@ class TestUtils:
         xdmf = examples.load_meshseries_HT_2D_XDMF()
         # all data is in separated groups of one h5 file
         xmf = examples.load_meshseries_HT_2D_paraview_XMF()
-
         pvd = examples.load_meshseries_HT_2D_PVD()
-
         vtu = examples.load_meshseries_HT_2D_VTU()
 
         for ht in [xdmf, xmf, pvd]:
-            # temperature is scalar last dimension = 1 omitted
             assert np.shape(ht.values("temperature")) == (97, 190)
-            # non-scalar values
             assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
-
-            assert np.shape(ht.data("temperature")[1:3, :]) == (2, 190)
-            # no range for a dimension -> this dimension gets omitted
-            assert np.shape(ht.data("temperature")[1, :]) == (190,)
-            # select range with length for a dimension to keep dimension
-            assert np.shape(ht.data("temperature")[1:2, :]) == (1, 190)
-            # all values
-            assert np.shape(ht.data("temperature")[:]) == np.shape(
-                ht.values("temperature")
+            assert np.shape(ht[7:].values("temperature")) == (90, 190)
+            assert np.shape(ht[7:][::2].values("temperature")) == (45, 190)
+            assert np.shape(ht[7:][::2][5:].values("temperature")) == (40, 190)
+            # extra check here where mesh_cache is still empty
+            ht_half = ht.transform(
+                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
             )
-            # last 2 steps
-            last_2_steps = ht.data("darcy_velocity")[-2:, 1:4, :]
+            assert np.shape(ht_half.values("temperature")) == (97, 100)
+            # artificial cell data
+            for mesh in ht:
+                mesh.cell_data["test"] = np.arange(mesh.n_cells)
+            ht_half = ht.transform(
+                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=True)
+            )
+            # indexing time and domain simultaneously
+            assert ht_half[0].n_points == 100
+            assert np.shape(ht_half[1:-1].values("temperature")) == (95, 100)
+            assert ht_half[-1].n_cells == 81
+            assert np.shape(ht_half[1:-1].values("test")) == (95, 81)
+            # nested transform
+            ht_quarter = ht_half.transform(
+                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
+            )
+            assert ht_quarter[0].n_cells == 45
+            assert np.shape(ht_quarter.values("test")) == (97, 45)
+
+            assert np.shape(ht[1:3].values("temperature")) == (2, 190)
+            assert np.shape(ht[1]["temperature"]) == (190,)
+            assert np.shape(ht[1:2].values("temperature")) == (1, 190)
+            assert ht.extract(slice(1, 4))[0].n_points == 3
+            last_2_steps = ht[-2:].extract(slice(1, 4)).values("darcy_velocity")
             assert np.shape(last_2_steps) == (2, 3, 2)
+            assert ht.extract(slice(1, 4), "cells")[0].n_cells == 3
+            last_2_steps = ht[-2:].extract(slice(1, 4), "cells").values("test")
+            assert np.shape(last_2_steps) == (2, 3)
 
-        # check vtu, only timestep=0 is allowed
+        assert np.shape(vtu.values("temperature")) == (1, 190)
+        assert np.shape(vtu.values("darcy_velocity")) == (1, 190, 2)
+        assert np.shape(vtu.values("temperature")[:, 0:5]) == (1, 5)
+        assert np.shape(vtu.values("darcy_velocity")[:, 1:4, :]) == (1, 3, 2)
 
-        assert np.shape(vtu.values("temperature")) == (190,)
-        assert np.shape(vtu.values("darcy_velocity")) == (190, 2)
-        assert np.shape(vtu.data("temperature")[0, :]) == (190,)
-        assert np.shape(vtu.data("temperature")[:, 0:5]) == (1, 5)
-        assert np.shape(vtu.data("darcy_velocity")[0, 1:4, :]) == (3, 2)
-
-        # check if the data is read correctly
         h5file = xdmf.rawdata_file()
         assert h5file is not None
         assert h5file.suffix == ".h5"
@@ -77,10 +91,8 @@ class TestUtils:
     def test_all_types(self):
         pvd = examples.load_meshseries_THM_2D_PVD()
         xdmf = examples.load_meshseries_HT_2D_XDMF()
-        with pytest.raises(TypeError):
-            ogs.MeshSeries(
-                __file__, match="Can only read 'pvd', 'xdmf' or 'vtu' files."
-            )
+        with pytest.raises(TypeError, match="Can only read"):
+            ogs.MeshSeries(__file__)
 
         for ms in [pvd, xdmf]:
             try:
@@ -97,7 +109,26 @@ class TestUtils:
                 ms.closest_timestep(1.0)
             ] == ms.closest_timevalue(1.0)
 
-            ms.clear()
+            ms.clear_cache()
+
+    def test_cache_copy(self):
+        "Test that the cache of a MeshSeries is a deep copy as well."
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        _ = ms[0]
+        ms_subset = ms.copy().extract(0, "cells")
+        assert ms[0].number_of_cells > ms_subset[0].number_of_cells
+
+    def test_reindexing(self):
+        "Test that indexing returns the correct meshes"
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        ms_skip_first = ms[1:]
+        for index_1, index_2 in [[0, 1], [-1, -1]]:
+            for a, b in zip(
+                ms_skip_first[index_1].point_data.values(),
+                ms[index_2].point_data.values(),
+                strict=True,
+            ):
+                np.testing.assert_array_equal(a, b)
 
     def test_time_aggregate(self):
         "Test aggregation of meshseries."
@@ -126,19 +157,17 @@ class TestUtils:
 
     def test_domain_aggregate(self):
         "Test aggregation of meshseries."
-        mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mask = mesh_series.mesh(0).ctp()["MaterialIDs"] > 3
-        values = mesh_series.aggregate_over_domain(
-            "temperature", "max", mask=mask
-        )
-        assert not np.any(np.isnan(values))
+        ms = examples.load_meshseries_HT_2D_XDMF()[1:]
+        temp_min = ms.aggregate_over_domain("temperature", "min")
+        temp_mean = ms.aggregate_over_domain("temperature", "mean")
+        temp_max = ms.aggregate_over_domain("temperature", "max")
+        assert np.all(temp_max > temp_mean)
+        assert np.all(temp_mean > temp_min)
 
     def test_plot_domain_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mesh_series.plot_domain_aggregate(
-            "temperature", "mean", slice(1, -1), "a"
-        )
+        mesh_series.plot_domain_aggregate("temperature", "mean", "a")
 
     def test_time_slice(self):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
@@ -180,7 +209,7 @@ class TestUtils:
         mesh_diff = ogs.meshlib.difference(
             mesh1, mesh2, ogs.variables.temperature
         )
-        assert isinstance(mesh_diff, UnstructuredGrid)
+        assert isinstance(mesh_diff, pv.UnstructuredGrid)
         mesh_diff = ogs.meshlib.difference(mesh1, mesh2)
 
     def test_diff_pairwise(self):
@@ -234,7 +263,7 @@ class TestUtils:
         assert np.all(mesh["depth"] < -mesh.points[..., 1])
 
     def test_depth_3D(self):
-        mesh = ogs.Mesh(SolidSphere(100, center=(0, 0, -101)))
+        mesh = ogs.Mesh(pv.SolidSphere(100, center=(0, 0, -101)))
         mesh["depth"] = mesh.depth(use_coords=True)
         assert np.all(mesh["depth"] == -mesh.points[..., -1])
         mesh["depth"] = mesh.depth()
@@ -422,6 +451,15 @@ class TestUtils:
         assert (
             msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
         )
+
+    def test_indexing(self):
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        assert isinstance(ms[1], ogs.Mesh)
+
+    def test_slice(self):
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        ms_sliced = ms[1::2]
+        assert len(ms.timevalues()) >= 2 * len(ms_sliced.timevalues())
 
     def test_transform(self):
         ms = examples.load_meshseries_THM_2D_PVD()
