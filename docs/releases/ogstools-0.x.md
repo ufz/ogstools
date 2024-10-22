@@ -2,6 +2,12 @@
 
 This is not released yet!
 
+## API breaking changes
+
+- MeshSeries.data --> MeshSeries.values
+- MeshSeries.clear --> MeshSeries.clear_cache
+- meshlib.gmsh_meshing.remesh_with_triangle --> meshlib.gmsh_meshing.remesh_with_triangles
+
 ## Features
 
 - MeshSeries gets copy() method.
