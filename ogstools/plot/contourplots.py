@@ -161,6 +161,8 @@ def subplot(
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
 
     surf_tri = mesh.triangulate().extract_surface()
+    # Get rid of 1D elements in the mesh
+    surf_tri = surf_tri.extract_cells_by_type(pv.CellType.TRIANGLE)
     x_id, y_id, projection, mean_normal = utils.get_projection(mesh)
 
     # faces contains a padding indicating number of points per face which gets
@@ -169,6 +171,13 @@ def subplot(
     x, y = spatial.transform(surf_tri.points.T[[x_id, y_id]])
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = variable.magnitude.transform(surf_tri)
+    # Passing the data and not the mesh here purposely to ensure correct shape
+    # of mask. Otherwise transform() might remove additional triangulated cells
+    # due to those being part of the usual mask e.g. "pressure_active".
+    nan_mask = np.isnan(surf_tri.ptc()[variable.data_name])
+    # Getting rid of extra dimension for vectors and matrices
+    if len(nan_mask.shape) == 2:
+        nan_mask = np.sum(nan_mask, axis=-1)
     if kwargs.get("log_scaled", setup.log_scaled) and not variable.is_mask():
         values_temp = np.where(values > 1e-14, values, 1e-14)
         values = np.log10(values_temp)
@@ -182,19 +191,24 @@ def subplot(
     cmap, norm = utils.get_cmap_norm(levels, variable)
 
     # norm.__call__ overflows if vals are all equal
-    with np.errstate(over="ignore"):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         if variable.data_name in mesh.point_data:
-            ax.tricontourf(  # type: ignore[call-overload]
+            ax.tricontourf(
                 x, y, tri, values, levels=kwargs.get("levels", levels),
-                cmap=kwargs.get("cmap", cmap), norm=norm, extend="both"
+                cmap=kwargs.get("cmap", cmap), norm=norm, extend="both",
+                mask=nan_mask
             )  # fmt: skip
             if variable.bilinear_cmap:
-                ax.tricontour(  # type: ignore[call-overload]
-                    x, y, tri, values, levels=[0], colors="w"
+                ax.tricontour(
+                    x, y, tri, values, levels=[0], mask=nan_mask, colors="w"
                 )
         else:
             cmap = kwargs.get("cmap", cmap)
-            ax.tripcolor(x, y, tri, facecolors=values, cmap=cmap, norm=norm)
+            ax.tripcolor(
+                x, y, tri, facecolors=values, mask=nan_mask,
+                cmap=cmap, norm=norm  # fmt: skip
+            )
             if variable.is_mask():
                 ax.tripcolor(
                     x, y, tri, facecolors=values, mask=(values == 1),

@@ -19,14 +19,17 @@ Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
 def _raw_differences_all_data(base_mesh: Mesh, subtract_mesh: Mesh) -> Mesh:
     diff = base_mesh.copy(deep=True)
+    sampled_subtract_mesh = base_mesh.sample(subtract_mesh)
     for point_data_key in base_mesh.point_data:
-        diff.point_data[point_data_key] -= subtract_mesh.point_data[
+        diff.point_data[point_data_key] -= sampled_subtract_mesh.point_data[
             point_data_key
         ]
     for cell_data_key in base_mesh.cell_data:
         if cell_data_key == "MaterialIDs":
             continue
-        diff.cell_data[cell_data_key] -= subtract_mesh.cell_data[cell_data_key]
+        diff.cell_data[cell_data_key] -= sampled_subtract_mesh.cell_data[
+            cell_data_key
+        ]
     return diff
 
 
@@ -40,29 +43,40 @@ def difference(
 
     :param base_mesh:       The mesh to subtract from.
     :param subtract_mesh:   The mesh whose data is to be subtracted.
-    :param variable:   The variable of interest. If not given, all
+    :param variable:        The variable of interest. If not given, all
                             point and cell_data will be processed raw.
     :returns:   A new mesh containing the difference of `variable` or
                 of all datasets between both meshes.
     """
     if variable is None:
         return _raw_differences_all_data(base_mesh, subtract_mesh)
-    if isinstance(variable, Variable):
-        vals = np.asarray(
-            [variable.transform(mesh) for mesh in [base_mesh, subtract_mesh]]
-        )
-        outname = variable.output_name + "_difference"
-    else:
-        vals = np.asarray(
-            [mesh[variable] for mesh in [base_mesh, subtract_mesh]]
-        )
-        outname = variable + "_difference"
+    if isinstance(variable, str):
+        variable = Variable(data_name=variable, output_name=variable)
 
+    var_key = variable.data_name if isinstance(variable, Variable) else variable
+    is_same_topology = (
+        base_mesh.points.shape == subtract_mesh.points.shape
+        and base_mesh.cells.shape == subtract_mesh.cells.shape
+        and np.all(np.equal(base_mesh.points, subtract_mesh.points))
+        and np.all(np.equal(base_mesh.cells, subtract_mesh.cells))
+    )
+    if is_same_topology:
+        sub_mesh = subtract_mesh
+        mask = None
+    else:
+        sub_mesh = base_mesh.sample(subtract_mesh)
+        mask = sub_mesh[var_key] == 0.0
     diff_mesh = base_mesh.copy(deep=True)
     diff_mesh.clear_point_data()
     diff_mesh.clear_cell_data()
+    outname = variable.difference.output_name
+    vals = np.asarray(
+        [variable.transform(mesh) for mesh in [base_mesh, sub_mesh]]
+    )
     diff_mesh[outname] = np.empty(vals.shape[1:])
     diff_mesh[outname] = vals[0] - vals[1]
+    if mask is not None:
+        diff_mesh[outname][mask] = np.nan
     return diff_mesh
 
 
