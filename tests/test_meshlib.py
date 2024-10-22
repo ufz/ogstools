@@ -206,6 +206,25 @@ class TestUtils:
         mesh1 = meshseries.mesh(0)
         mesh2 = meshseries.mesh(-1)
         mesh_diff = ogs.meshlib.difference(mesh1, mesh2, "temperature")
+        # test, that no sampling occurs for equal topology
+        np.testing.assert_array_equal(
+            mesh_diff["temperature_difference"],
+            mesh1["temperature"] - mesh2["temperature"],
+        )
+        # test same/different topology and scalar / vector variable
+        for scaling in [1.0, 2.0]:
+            for variable in ["temperature", "velocity"]:
+                mesh_diff = ogs.meshlib.difference(
+                    mesh1.scale(scaling), mesh2, variable
+                )
+
+        quad_tri_diff = ogs.meshlib.difference(
+            mesh1.triangulate(), mesh1, "temperature"
+        )
+        quad_tri_diff_vals = ogs.variables.temperature.difference.transform(
+            quad_tri_diff
+        )
+        np.testing.assert_allclose(quad_tri_diff_vals, 0.0, atol=1e-12)
         mesh_diff = ogs.meshlib.difference(
             mesh1, mesh2, ogs.variables.temperature
         )
