@@ -636,7 +636,7 @@ class MeshSeries:
 
         ts = self.timesteps if timesteps is None else timesteps
 
-        fig = plot.contourf(self.mesh(0, False), variable)
+        fig = plot.contourf(self.mesh(0, lazy_eval=False), variable)
         assert isinstance(fig, plt.Figure)
         plot_func(fig.axes[0], 0.0)
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
