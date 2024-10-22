@@ -219,6 +219,7 @@ def subplot(
     ax.margins(0, 0)  # otherwise it shrinks the plot content
     show_max = kwargs.get("show_max", False) and not variable.is_mask()
     show_min = kwargs.get("show_min", False) and not variable.is_mask()
+    fontsize = kwargs.get("fontsize", setup.fontsize)
 
     for show, func, level_index in zip(
         [show_min, show_max], [np.argmin, np.argmax], [0, -1], strict=True
@@ -229,12 +230,12 @@ def subplot(
         x_pos, y_pos = spatial.transform(mesh.points[index, [x_id, y_id]])
         value = values[mesh.find_closest_point(mesh.points[index])]
         color = utils.contrast_color(cmap(norm(value)))
-        fontsize = kwargs.get("fontsize", setup.fontsize)
         ax.plot(
             x_pos, y_pos, color=color, marker="x", clip_on=False,
             markersize=fontsize*0.625, markeredgewidth=3
         )  # fmt: skip
-        text_xy = utils.padded(ax, x_pos, y_pos)
+        pad_x = not (show_min and show_max)  # prevent overlap
+        text_xy = utils.padded(ax, x_pos, y_pos, pad_x)
         text = f"{levels[level_index]:.3g}"
         ha, va = ("center", "center")
         ax.text(*text_xy, s=text, ha=ha, va=va, fontsize=fontsize, color=color)
@@ -253,13 +254,15 @@ def subplot(
                 sec_labels += [f"{sec_mesh.bounds[2 * projection]:.1f}"]
             else:
                 sec_labels += [""]
-        # TODO: use a function to make this short
-        secax = ax.secondary_xaxis("top")
-        secax.xaxis.set_major_locator(
-            mticker.FixedLocator(list(ax.get_xticks()))
-        )
-        secax.set_xticklabels(sec_labels)
-        secax.set_xlabel(f'{"xyz"[projection]} / {spatial.output_unit}')
+        if not all(label == sec_labels[0] for label in sec_labels):
+            # TODO: use a function to make this short
+            secax = ax.secondary_xaxis("top")
+            secax.xaxis.set_major_locator(
+                mticker.FixedLocator(list(ax.get_xticks()))
+            )
+            secax.set_xticklabels(sec_labels)
+            secax.set_xlabel(f'{"xyz"[projection]} / {spatial.output_unit}')
+            utils.update_font_sizes(secax, fontsize)
 
 
 # TODO: fixed_figure_size -> ax aspect automatic

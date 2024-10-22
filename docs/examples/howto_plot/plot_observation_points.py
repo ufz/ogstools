@@ -54,7 +54,6 @@ fig = mesh_series.mesh(0).plot_contourf(si)
 fig.axes[0].scatter(points[:, 0], points[:, 2], s=50, fc="none", ec="r", lw=3)
 for i, point in enumerate(points):
     fig.axes[0].annotate(str(i), (point[0], point[2] - 5), va="top")
-plt.rcdefaults()  # TODO
 
 # %% [markdown]
 # And now probe the points and the values over time:

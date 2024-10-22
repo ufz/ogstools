@@ -247,10 +247,13 @@ def contrast_color(color: Any) -> Any:
     return "k" if (r * 0.299 + g * 0.587 + b * 0.114) > 0.2 else "w"
 
 
-def padded(ax: plt.Axes, x: float, y: float) -> tuple[float, float]:
+def padded(
+    ax: plt.Axes, x: float, y: float, pad_x: bool = True
+) -> tuple[float, float]:
     "Add a padding to x and y towards the axes center."
     x, y = ax.transLimits.transform((x, y))
-    # x += (2 * (x <= 0.5) - 1) * 0.075
+    if pad_x and (x <= 0.25 or x >= 0.75):
+        x += (2 * (x <= 0.5) - 1) * 0.075
     y += (2 * (y <= 0.5) - 1) * 0.075
     # Unpacking this here helps type hinting. Direct return doesn't work.
     x, y = ax.transLimits.inverted().transform((x, y))

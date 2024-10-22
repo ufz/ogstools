@@ -134,12 +134,13 @@ def find_connected_domain_cells(
     return domain_cells_array, domain_cells_number
 
 
-# TODO: rename
+# TODO: move to Mesh read or similar
 def msh2vtu(
     filename: Path,
     output_path: Path = Path(),
     output_prefix: str = "",
     dim: int | list[int] = 0,
+    # TODO: below args can be moved to Mesh / write
     delz: bool = False,
     swapxy: bool = False,
     reindex: bool = False,

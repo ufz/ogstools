@@ -229,15 +229,19 @@ def get_preset(variable: Variable | str, mesh: pv.UnstructuredGrid) -> Variable:
         data_key = data_keys[matches.index(True)]
         if data_key == f"{variable.output_name}_difference":
             return variable.difference
-        return variable.replace(
-            data_name=data_key,
-            data_unit=variable.output_unit,
-            output_unit=variable.output_unit,
-            output_name=data_key,
-            symbol=variable.symbol,
-            func=identity,
-            mesh_dependent=False,
-        )
+        if data_key.rsplit("_")[0] in [
+            "min", "max", "mean", "median", "sum", "std", "var"  # fmt:skip
+        ]:
+            return variable.replace(
+                data_name=data_key,
+                data_unit=variable.output_unit,
+                output_unit=variable.output_unit,
+                output_name=data_key,
+                symbol=variable.symbol,
+                func=identity,
+                mesh_dependent=False,
+            )
+        return variable.replace(data_name=data_key, output_name=data_key)
 
     for prop in all_variables:
         if prop.output_name == variable:
