@@ -21,7 +21,7 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     Get points and cells in a pyvista compatible format.
 
     :param doc: The FEFLOW data.
-    :return: pts, cells, celltypes (points, cells, celltypes)
+    :returns: pts, cells, celltypes (points, cells, celltypes)
     """
     # 0. define variables
     cell_type_dict = {
@@ -89,7 +89,7 @@ def _material_ids_from_selections(
     saved in doc.c.sel.selections().
 
     :param doc: The FEFLOW data.
-    :return: MaterialIDs
+    :returns: MaterialIDs
     """
     # Note: an error occurs if there are no elements defined to the selection
 
@@ -152,7 +152,7 @@ def _point_and_cell_data(
 
     :param doc: The FEFLOW data.
     :param MaterialIDs:
-    :return: pt_data, cell_data (point and cell data)
+    :returns: pt_data, cell_data (point and cell data)
     """
 
     # 1. create a dictionary to filter all nodal and elemental values
@@ -262,7 +262,7 @@ def get_species_parameter(
 
     :param doc: The FEFLOW data.
     :param mesh: mesh
-    :return: Dictionaries of point and cell species-specific data.
+    :returns: Dictionaries of point and cell species-specific data.
     """
 
     # Define common species parameters in FEFLOW.
@@ -339,7 +339,7 @@ def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     Get the geometric construction of the mesh.
 
     :param doc: The FEFLOW data.
-    :return: mesh
+    :returns: mesh
     """
     points, cells, celltypes = points_and_cells(doc)
     return pv.UnstructuredGrid(cells, celltypes, points)
@@ -353,7 +353,7 @@ def update_geometry(
 
     :param mesh: The mesh to be updated.
     :param doc: The FEFLOW data.
-    :return: mesh
+    :returns: mesh
     """
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
@@ -399,7 +399,7 @@ def convert_properties_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     Get the mesh with point and cell properties.
 
     :param doc: The FEFLOW data.
-    :return: mesh
+    :returns: mesh
     """
     mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)

@@ -41,7 +41,7 @@ def get_specific_surface(
 
     :param surface_mesh: The surface mesh.
     :param filter_condition: A condition to set up the filter for the normals.
-    :return: specific_cells
+    :returns: specific_cells
     """
     # Compute the normals of the surface mesh
     surface_mesh = surface_mesh.compute_normals(
@@ -103,7 +103,7 @@ def extract_point_boundary_conditions(
 
     :param out_mesh_path: path of the output mesh
     :param mesh: mesh
-    :return: dict_of_point_boundary_conditions
+    :returns: dict_of_point_boundary_conditions
     """
     dict_of_point_boundary_conditions = {}
     # Assigning bulk node ids because format needs to be unsigned integer for OGS.
@@ -186,7 +186,7 @@ def extract_cell_boundary_conditions(
 
     :param bulk_mesh_path: name of the mesh
     :param mesh: mesh
-    :return: path with name of mesh, topsurface mesh with cell boundary conditions
+    :returns: path with name of mesh, topsurface mesh with cell boundary conditions
     """
     assign_bulk_ids(mesh)
     if mesh.volume != 0:
@@ -224,7 +224,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
 
     :param mesh: mesh
     :param property: property
-    :return: material_properties
+    :returns: material_properties
     """
     material_ids = mesh.cell_data["MaterialIDs"]
     material_properties = {}
@@ -257,7 +257,7 @@ def get_material_properties_of_HT_model(
     Get a dictionary of all necessaray parameter values for a HT problem for each material in the mesh.
 
     :param mesh: mesh
-    :return: material_properties
+    :returns: material_properties
     """
     parameters_feflow = [
         "P_ANGL",
@@ -360,7 +360,7 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
     porosity values are assigned and named '\*_P_PORO'.
 
     :param mesh: mesh
-    :return: list of species
+    :returns: list of species
     """
     species = [
         cell_data.replace("_P_PORO", "")
@@ -456,7 +456,7 @@ def combine_material_properties(
 
     :param mesh: mesh
     :param properties_list: list of properties to be combined
-    :return: material_properties
+    :returns: material_properties
     """
     # Use a default dict because it allows to extend the values in the list.
     # Also it initializes the value if there is an empty list.
@@ -490,7 +490,7 @@ def write_mesh_of_combined_properties(
     :param new_property: name of the combined properties
     :param material: material with inhomogeneous properties
     :param saving_path: path to save the mesh
-    :return: filename
+    :returns: filename
     """
     mask = mesh.cell_data["MaterialIDs"] == material_id
     material_mesh = mesh.extract_cells(mask)
@@ -523,7 +523,7 @@ def materials_in_steady_state_diffusion(
     :param mesh: mesh
     :param material_properties: material properties
     :param model: model to setup prj-file
-    :return: model
+    :returns: model
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -567,7 +567,7 @@ def materials_in_liquid_flow(
     :param mesh: mesh
     :param material_properties: material properties
     :param model: model to setup prj-file
-    :return: model
+    :returns: model
     """
     for material_id, property_value in material_properties.items():
         if any(prop == "inhomogeneous" for prop in property_value):
@@ -635,7 +635,7 @@ def materials_in_HT(
 
     :param material_properties: material properties
     :param model: model to setup prj-file
-    :return: model
+    :returns: model
     """
     for material_id in material_properties:
         model.media.add_property(
@@ -757,7 +757,7 @@ def materials_in_CT(
 
     :param material_properties: material properties
     :param model: model to setup prj-file
-    :return: model
+    :returns: model
     """
     for material_id in material_properties:
         model.media.add_property(
@@ -889,7 +889,7 @@ def setup_prj_file(
          Maximal iterations of process coupling in a CT process.
        * *relative_tolerance* (``float``) --
          Relative tolerance of process coupling in a CT process.
-    :return: model
+    :returns: model
 
 
     """
@@ -1120,7 +1120,7 @@ def deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
     Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
     Therefore, the input mesh is modified.
     :param mesh: mesh
-    :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
+    :returns: 0 for no cells have been deactivated and 1 for cells have been deactivated
     """
     inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
     if len(inactive_cells[0]) == 0:

@@ -57,7 +57,7 @@ def pre_post_check(interest: list[str], context: list[str]) -> Callable:
     :param interest: indicates the columns of interest in the DataFrame.
     :param context: indicates the context columns in the DataFrame that should be checked.
 
-    :return: A decorator function that takes a function accepting a pandas DataFrame and
+    :returns: A decorator function that takes a function accepting a pandas DataFrame and
       returns a modified DataFrame, wrapping it with pre-check and post-check logic
       based on the specified 'interest' and 'context'.
     """
@@ -211,7 +211,7 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
 
     :param df_raw_log: DataFrame containing the raw OGS log data. Usually, the result of pd.DataFrame(parse_file(file))
 
-    :return: pd.DataFrame with missing values filled by context.
+    :returns: pd.DataFrame with missing values filled by context.
 
     References:
     Pandas documentation : https://pandas.pydata.org/pandas-docs/stable/user_guide/

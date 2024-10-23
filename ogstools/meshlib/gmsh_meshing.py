@@ -1287,7 +1287,7 @@ def gen_bhe_mesh(
         'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .vtu
-    :return: list of filenames of the created vtu mesh files
+    :returns: list of filenames of the created vtu mesh files
     """
 
     tmp_dir = Path(mkdtemp())

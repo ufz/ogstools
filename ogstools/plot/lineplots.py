@@ -41,7 +41,7 @@ def linesample(
         to customize plot options like a line label (for auto legends), linewidth,
         antialiasing, marker face color.
 
-    :return: Matplotlib Axes object
+    :returns: Matplotlib Axes object
     """
 
     variable = get_preset(variable, mesh)
@@ -96,7 +96,7 @@ def linesample_contourf(
     :param nodal_pts_labels:    Labels for nodal points (only use if
                                 plot_nodal_points is set to True)
 
-    :return: Tuple containing Matplotlib Figure and Axis objects
+    :returns: Tuple containing Matplotlib Figure and Axis objects
     """
     # TODO: Add support for plotting only geometry at top subplot and
     # lineplot with twinx in the bottom one

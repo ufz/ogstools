@@ -85,22 +85,21 @@ def Gaussian2D(
 
     This method computes a 2D Gaussian-like surface by sampling the given bound and parameters.
 
-    Args:
-        bound2D (tuple): Tuple of boundary coordinates (x_min, x_max, y_min, y_max).
-        amplitude (float): Amplitude or peak value of the Gaussian curve.
-        spread (float): Scaling factor that controls the spread or width of the Gaussian curve.
-        height_offset (float): Constant offset added to elevate the entire surface.
-        n (int): Number of points in each dimension for sampling.
+    :param bound2D: Tuple of boundary coordinates (x_min, x_max, y_min, y_max).
+    :param amplitude: Amplitude or peak value of the Gaussian curve.
+    :param spread: Scaling factor that controls the spread or width of the Gaussian curve.
+    :param height_offset: Constant offset added to elevate the entire surface.
+    :param n: Number of points in each dimension for sampling.
 
-    Returns:
+    :returns:
         pyvista.PolyData: A PyVista PolyData object representing the generated surface.
 
-    Note:
+    note:
         - The larger `amplitude`, the taller the peak of the surface.
         - The larger `spread`, the wider and flatter the surface.
         - `height_offset` shifts the entire surface vertically.
 
-    Example:
+    example:
         Generating a 2D Gaussian-like surface:
         ```
         bound = (-1.0, 1.0, -1.0, 1.0)

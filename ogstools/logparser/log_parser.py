@@ -69,7 +69,7 @@ def mpi_processes(file_name: str | Path) -> int:
     divides the count by two to estimate the number of MPI processes.
 
     :param file_name: The path to the log file, as either a string or a Path object.
-    :return: An integer representing the estimated number of MPI processes
+    :returns: An integer representing the estimated number of MPI processes
              based on the log file's content.
 
     """
@@ -104,7 +104,7 @@ def parse_file(
     :param maximum_lines: Optional maximum number of lines to read from the file.
                           If not provided, the whole file is read.
     :param force_parallel: Should only be set to True if OGS run with MPI with a single core
-    :return: A list of extracted records based on the applied regex patterns.
+    :returns: A list of extracted records based on the applied regex patterns.
              The exact type and structure of these records depend on the regex
              patterns and their associated processing functions.
     """

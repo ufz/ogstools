@@ -279,7 +279,7 @@ class MeshSeries:
         OGS Simulation results with XDMF support efficient raw data access via
         `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
 
-        :return: The location of the file containing the raw data. If it does not
+        :returns: The location of the file containing the raw data. If it does not
                  support efficient read (e.g., no efficient slicing), it returns None.
         """
         if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():

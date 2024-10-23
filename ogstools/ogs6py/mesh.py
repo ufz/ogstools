@@ -31,10 +31,8 @@ class Mesh(build_tree.BuildTree):
         """
         Adds a mesh to the project file.
 
-        Parameters
-        ----------
-        filename : `str`
-        axially_symmetric : `bool` or `str`
+        :param filename:
+        :param axially_symmetric:
         """
         attr_dict = {}
         if isinstance(axially_symmetric, bool):
