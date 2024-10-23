@@ -189,7 +189,7 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
 
 
 def get_cmap_norm(
-    levels: np.ndarray, variable: Variable
+    levels: np.ndarray, variable: Variable, **kwargs: Any
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the variable field."""
     vmin, vmax = (levels[0], levels[-1])
@@ -197,7 +197,9 @@ def get_cmap_norm(
         vmin += 0.5
         vmax += 0.5
 
-    if isinstance(variable.cmap, str):
+    if "cmap" in kwargs:
+        continuous_cmap = colormaps[kwargs.get("cmap")]
+    elif isinstance(variable.cmap, str):
         continuous_cmap = colormaps[variable.cmap]
     else:
         continuous_cmap = variable.cmap

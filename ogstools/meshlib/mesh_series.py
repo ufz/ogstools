@@ -734,8 +734,7 @@ class MeshSeries:
                 kwargs.get("vmax", plot.setup.vmax) or np.nanmax(values),
                 kwargs.get("num_levels", plot.setup.num_levels),
             )
-        cmap, norm = plot.utils.get_cmap_norm(levels, variable)
-        cmap = kwargs.get("cmap", cmap)
+        cmap, norm = plot.utils.get_cmap_norm(levels, variable, **kwargs)
 
         non_flat_axis = np.argwhere(
             np.invert(np.all(np.isclose(points, points[0]), axis=0))

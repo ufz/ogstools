@@ -90,7 +90,7 @@ def add_colorbars(
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
     with np.errstate(over="ignore"):
-        cmap, norm = utils.get_cmap_norm(levels, variable)
+        cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
         scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         cb = fig.colorbar(
             scalar_mappable,
@@ -188,7 +188,7 @@ def subplot(
             kwargs.get("num_levels", setup.num_levels), len(np.unique(values))
         )
         levels = compute_levels(vmin, vmax, num_levels)
-    cmap, norm = utils.get_cmap_norm(levels, variable)
+    cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
 
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
@@ -196,15 +196,13 @@ def subplot(
         if variable.data_name in mesh.point_data:
             ax.tricontourf(
                 x, y, tri, values, levels=kwargs.get("levels", levels),
-                cmap=kwargs.get("cmap", cmap), norm=norm, extend="both",
-                mask=nan_mask
+                cmap=cmap, norm=norm, extend="both", mask=nan_mask
             )  # fmt: skip
             if variable.bilinear_cmap:
                 ax.tricontour(
                     x, y, tri, values, levels=[0], mask=nan_mask, colors="w"
                 )
         else:
-            cmap = kwargs.get("cmap", cmap)
             ax.tripcolor(
                 x, y, tri, facecolors=values, mask=nan_mask,
                 cmap=cmap, norm=norm  # fmt: skip
