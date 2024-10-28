@@ -13,7 +13,7 @@ workflow:
   rules:
     - if: $CI_MERGE_REQUEST_IID
       changes:
-        - Dockerfile
+        - .devcontainer/*
       variables:
         DOCKER_IMAGE: $CI_REGISTRY_IMAGE/devcontainer-3.10:$CI_COMMIT_REF_SLUG
     - if: $CI_MERGE_REQUEST_IID
