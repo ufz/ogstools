@@ -52,6 +52,25 @@ tests (arch):
     - *setup-headless
     - make test
 
+tests (arch - ogs custom stable):
+  tags: [shell, envinf]
+  needs: []
+  script:
+    - make setup_with_ogs_custom_stable
+    - *setup-headless
+    - make test
+
+tests (arch - ogs customch latest):
+  tags: [shell, envinf]
+  when: manual
+  needs: []
+  script:
+    - make setup_with_ogs_custom_latest
+    - *setup-headless
+    - make test
+
+
+
 tests:
   script:
     - make setup_devcontainer

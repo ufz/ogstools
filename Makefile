@@ -11,6 +11,41 @@ setup:  ## Setup a virtual environment and install all development dependencies
 	@echo ATTENTION: You need to activate the virtual environment in every shell with:
 	@echo source .venv/bin/activate
 
+# Variables
+REPO_URL := https://gitlab.opengeosys.org/ogs/ogs.git
+TARGET_DIR := .ogs
+COMMIT_HASH ?= master
+
+# Clone the repository and checkout the specific commit
+clone:
+	@if [ ! -d "$(TARGET_DIR)" ]; then \
+		echo "Cloning repository..."; \
+		git clone "$(REPO_URL)" "$(TARGET_DIR)"; \
+	else \
+		echo "Repository already cloned."; \
+	fi; \
+	if [ -n "$(COMMIT_HASH)" ]; then \
+		echo "Checking out specific commit: $(COMMIT_HASH)"; \
+		cd "$(TARGET_DIR)" && git fetch origin && git checkout "$(COMMIT_HASH)"; \
+	else \
+		echo "Pulling latest changes from master..."; \
+		cd "$(TARGET_DIR)" && git pull origin master; \
+	fi
+
+setup_with_ogs_custom_latest:
+	$(MAKE) setup_with_ogs_compile COMMIT_HASH=master
+
+setup_with_ogs_custom_stable:
+	$(MAKE) setup_with_ogs_compile COMMIT_HASH=3f359feee4
+
+# Install OGS and dependencies in a virtual environment
+setup_with_ogs_compile: clone  ## Setup a virtual environment and install all development dependencies
+	python -m venv .venv --upgrade-deps
+	.venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
+	@echo
+	@echo "ATTENTION: You need to activate the virtual environment in every shell with:"
+	@echo "source .venv/bin/activate"
+
 setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh vtk -y
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
