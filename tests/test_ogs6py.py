@@ -45,6 +45,7 @@ mapping = dict.fromkeys(range(32))
 
 
 class TestiOGS:
+    @pytest.mark.dependency(name="tunnel_ogs6py_prj_file")
     def test_buildfromscratch(self) -> NoReturn:
         model = Project(
             output_file="tunnel_ogs6py.prj", MKL=True, OMP_NUM_THREADS=4

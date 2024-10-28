@@ -28,64 +28,98 @@ class TestUtils:
         assert xmf_ms.rawdata_path("temperature").suffix in [".xdmf", ".xmf"]
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
-    def test_meshseries_fileformats_indexing(self):
+    @pytest.mark.parametrize(
+        "ht",
+        [
+            examples.load_meshseries_HT_2D_XDMF(),
+            examples.load_meshseries_HT_2D_paraview_XMF(),
+            examples.load_meshseries_HT_2D_PVD(),
+            # examples.load_meshseries_HT_2D_VTU()
+        ],
+        ids=["XDMF", "XMF", "PVD"],
+    )
+    def test_meshseries_fileformats_indexing(self, ht):
         # all data is in one group in one h5 file
+        num_timesteps = 97
+        num_points = 190
+
+        assert np.shape(ht.values("temperature")) == (num_timesteps, num_points)
+        assert np.shape(ht.values("darcy_velocity")) == (
+            num_timesteps,
+            num_points,
+            2,
+        )
+        assert np.shape(ht[7:].values("temperature")) == (
+            num_timesteps - 7,
+            num_points,
+        )
+        assert np.shape(ht[7:][::2].values("temperature")) == (
+            (num_timesteps - 7) / 2,
+            num_points,
+        )
+        assert np.shape(ht[7:][::2][5:].values("temperature")) == (
+            (num_timesteps - 7) / 2 - 5,
+            num_points,
+        )
+        # extra check here where mesh_cache is still empty
+        ht_half = ht.transform(
+            lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
+        )
+        assert np.shape(ht_half.values("temperature")) == (num_timesteps, 100)
+        # artificial cell data
+        for mesh in ht:
+            mesh.cell_data["test"] = np.arange(mesh.n_cells)
+        ht_half = ht.transform(
+            lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=True)
+        )
+        # indexing time and domain simultaneously
+        assert ht_half[0].n_points == 100
+        assert np.shape(ht_half[1:-1].values("temperature")) == (
+            num_timesteps - 2,
+            100,
+        )
+        assert ht_half[-1].n_cells == 81
+        assert np.shape(ht_half[1:-1].values("test")) == (num_timesteps - 2, 81)
+        # nested transform
+        ht_quarter = ht_half.transform(
+            lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
+        )
+        assert ht_quarter[0].n_cells == 45
+        assert np.shape(ht_quarter.values("test")) == (num_timesteps, 45)
+        assert np.shape(ht[1:3].values("temperature")) == (2, num_points)
+        assert np.shape(ht[1]["temperature"]) == (num_points,)
+        assert np.shape(ht[1:2].values("temperature")) == (1, num_points)
+        assert ht.extract(slice(1, 4))[0].n_points == 3
+        last_2_steps = ht[-2:].extract(slice(1, 4)).values("darcy_velocity")
+        assert np.shape(last_2_steps) == (2, 3, 2)
+        assert ht.extract(slice(1, 4), "cells")[0].n_cells == 3
+        last_2_steps = ht[-2:].extract(slice(1, 4), "cells").values("test")
+        assert np.shape(last_2_steps) == (2, 3)
+
+    @pytest.mark.parametrize(
+        "ht",
+        [
+            examples.load_meshseries_HT_2D_XDMF()[-2:-1],
+            examples.load_meshseries_HT_2D_paraview_XMF()[-2:-1],
+            examples.load_meshseries_HT_2D_PVD()[-2:-1],
+            examples.load_meshseries_HT_2D_VTU(),
+        ],
+    )
+    def test_meshseries_values(self, ht):
+        assert np.shape(ht.values("temperature")) == (1, 190)
+        assert np.shape(ht.values("darcy_velocity")) == (1, 190, 2)
+        assert np.shape(ht.values("temperature")[:, 0:5]) == (1, 5)
+        assert np.shape(ht.values("darcy_velocity")[:, 1:4, :]) == (1, 3, 2)
+
+    def test_meshseries_xdmf_rawdata(self):
         xdmf = examples.load_meshseries_HT_2D_XDMF()
-        # all data is in separated groups of one h5 file
-        xmf = examples.load_meshseries_HT_2D_paraview_XMF()
-        pvd = examples.load_meshseries_HT_2D_PVD()
-        vtu = examples.load_meshseries_HT_2D_VTU()
-
-        for ht in [xdmf, xmf, pvd]:
-            assert np.shape(ht.values("temperature")) == (97, 190)
-            assert np.shape(ht.values("darcy_velocity")) == (97, 190, 2)
-            assert np.shape(ht[7:].values("temperature")) == (90, 190)
-            assert np.shape(ht[7:][::2].values("temperature")) == (45, 190)
-            assert np.shape(ht[7:][::2][5:].values("temperature")) == (40, 190)
-            # extra check here where mesh_cache is still empty
-            ht_half = ht.transform(
-                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
-            )
-            assert np.shape(ht_half.values("temperature")) == (97, 100)
-            # artificial cell data
-            for mesh in ht:
-                mesh.cell_data["test"] = np.arange(mesh.n_cells)
-            ht_half = ht.transform(
-                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=True)
-            )
-            # indexing time and domain simultaneously
-            assert ht_half[0].n_points == 100
-            assert np.shape(ht_half[1:-1].values("temperature")) == (95, 100)
-            assert ht_half[-1].n_cells == 81
-            assert np.shape(ht_half[1:-1].values("test")) == (95, 81)
-            # nested transform
-            ht_quarter = ht_half.transform(
-                lambda mesh: mesh.clip("y", origin=mesh.center, crinkle=False)
-            )
-            assert ht_quarter[0].n_cells == 45
-            assert np.shape(ht_quarter.values("test")) == (97, 45)
-
-            assert np.shape(ht[1:3].values("temperature")) == (2, 190)
-            assert np.shape(ht[1]["temperature"]) == (190,)
-            assert np.shape(ht[1:2].values("temperature")) == (1, 190)
-            assert ht.extract(slice(1, 4))[0].n_points == 3
-            last_2_steps = ht[-2:].extract(slice(1, 4)).values("darcy_velocity")
-            assert np.shape(last_2_steps) == (2, 3, 2)
-            assert ht.extract(slice(1, 4), "cells")[0].n_cells == 3
-            last_2_steps = ht[-2:].extract(slice(1, 4), "cells").values("test")
-            assert np.shape(last_2_steps) == (2, 3)
-
-        assert np.shape(vtu.values("temperature")) == (1, 190)
-        assert np.shape(vtu.values("darcy_velocity")) == (1, 190, 2)
-        assert np.shape(vtu.values("temperature")[:, 0:5]) == (1, 5)
-        assert np.shape(vtu.values("darcy_velocity")[:, 1:4, :]) == (1, 3, 2)
-
         h5file = xdmf.rawdata_file()
         assert h5file is not None
         assert h5file.suffix == ".h5"
 
         # This XDMF file is not generate via OGS/OGSTools, therefore the
         # underlying file structure is not known and no optimization is possible.
+        xmf = examples.load_meshseries_HT_2D_paraview_XMF()
         assert xmf.rawdata_file() is None
 
     def test_all_types(self):
@@ -381,60 +415,57 @@ class TestUtils:
             > np.zeros_like(ms_sp["darcy_velocity_1"].to_numpy())
         ).all()
 
-    def test_ip_mesh(self):
+    @pytest.mark.parametrize(
+        ("elem_order", "quads", "intpt_order", "mixed"),
+        [
+            (1, False, 2, False),
+            (1, False, 2, True),
+            (1, False, 3, False),
+            (1, False, 4, False),
+            (1, True, 2, False),
+            (1, True, 3, False),
+            (1, True, 4, False),
+            (2, False, 4, False),
+            (2, True, 4, False),
+        ],
+    )
+    def test_ip_mesh(self, elem_order, quads, intpt_order, mixed):
         "Test creation of integration point meshes."
 
         tmp_path = Path(mkdtemp())
         mesh_path = Path(tmp_path) / "mesh.msh"
         sigma_ip = ogs.variables.stress.replace(data_name="sigma_ip")
 
-        def run_and_check(
-            elem_order: int, quads: bool, intpt_order: int, mixed: bool = False
-        ):
-            ogs.meshlib.gmsh_meshing.rect(
-                n_edge_cells=6,
-                n_layers=2,
-                structured_grid=quads,
-                order=elem_order,
-                out_name=mesh_path,
-                mixed_elements=mixed,
-                jiggle=0.01,
-            )
-            msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
-
-            model = ogs.Project(
-                output_file=tmp_path / "default.prj",
-                input_file=examples.prj_mechanics,
-            )
-            model.replace_text(intpt_order, xpath=".//integration_order")
-            model.write_input()
-            model.run_model(
-                write_logs=True, args=f"-m {tmp_path} -o {tmp_path}"
-            )
-            meshseries = ogs.MeshSeries(tmp_path / "mesh.pvd")
-            int_pts = meshseries.mesh(-1).to_ip_point_cloud()
-            ip_ms = meshseries.ip_tesselated()
-            ip_mesh = ip_ms.mesh(-1)
-            vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
-            assert not np.any(np.isnan(vals))
-            assert int_pts.number_of_points == ip_mesh.number_of_cells
-            containing_cells = ip_mesh.find_containing_cell(int_pts.points)
-            # check for integration points coinciding with the tessellated cells
-            np.testing.assert_equal(
-                sigma_ip.magnitude.transform(ip_mesh)[containing_cells],
-                sigma_ip.magnitude.transform(int_pts),
-            )
-
-        run_and_check(elem_order=1, quads=False, intpt_order=2)
-        run_and_check(elem_order=1, quads=False, intpt_order=3)
-        run_and_check(elem_order=1, quads=False, intpt_order=4)
-        run_and_check(elem_order=2, quads=False, intpt_order=4)
-        run_and_check(elem_order=1, quads=True, intpt_order=2)
-        run_and_check(elem_order=1, quads=True, intpt_order=3)
-        run_and_check(elem_order=1, quads=True, intpt_order=4)
-        run_and_check(elem_order=2, quads=True, intpt_order=4)
-        run_and_check(elem_order=2, quads=True, intpt_order=4)
-        run_and_check(elem_order=1, quads=False, intpt_order=2, mixed=True)
+        ogs.meshlib.gmsh_meshing.rect(
+            n_edge_cells=6,
+            n_layers=2,
+            structured_grid=quads,
+            order=elem_order,
+            out_name=mesh_path,
+            mixed_elements=mixed,
+            jiggle=0.01,
+        )
+        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        model = ogs.Project(
+            output_file=tmp_path / "default.prj",
+            input_file=examples.prj_mechanics,
+        )
+        model.replace_text(intpt_order, xpath=".//integration_order")
+        model.write_input()
+        model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
+        meshseries = ogs.MeshSeries(tmp_path / "mesh.pvd")
+        int_pts = meshseries.mesh(-1).to_ip_point_cloud()
+        ip_ms = meshseries.ip_tesselated()
+        ip_mesh = ip_ms.mesh(-1)
+        vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
+        assert not np.any(np.isnan(vals))
+        assert int_pts.number_of_points == ip_mesh.number_of_cells
+        containing_cells = ip_mesh.find_containing_cell(int_pts.points)
+        # check for integration points coinciding with the tessellated cells
+        np.testing.assert_equal(
+            sigma_ip.magnitude.transform(ip_mesh)[containing_cells],
+            sigma_ip.magnitude.transform(int_pts),
+        )
 
     def test_reader(self):
         assert isinstance(examples.load_meshseries_THM_2D_PVD(), ogs.MeshSeries)
