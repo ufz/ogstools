@@ -64,7 +64,7 @@ shp2msh = 'ogstools.meshlib.shp2msh_cli:cli'
 
 [project.optional-dependencies]
 dev = ["pre-commit>=2.20", "build", "black"]
-test = ["pytest", "coverage", "parameterized"]
+test = ["pytest", "coverage", "parameterized", "pytest-xdist", "pytest-dependency"]
 docs = [
   "sphinx",
   "sphinx-argparse >=0.2.5, <0.5.0",

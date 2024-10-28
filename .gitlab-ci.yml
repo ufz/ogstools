@@ -98,14 +98,14 @@ tests win:
     - .venv\Scripts\Activate.ps1
     - pip install -e ".[dev,test,docs]"
   script:
-    - pytest
+    - make test
 
 # Remove -j 1 when this is resolved:
 # https://github.com/pydata/pydata-sphinx-theme/issues/1643
 .docs-script: &docs-script
   - make setup_devcontainer
   - source .venv-devcontainer/bin/activate
-  - make docs SPHINXOPTS="-W --keep-going -n -j 1"
+  - make docs SPHINXOPTS="-W --keep-going -n -j 4"
   - mv docs/_build/html public
 
 docs preview:
