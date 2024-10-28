@@ -33,14 +33,17 @@ dependencies = [
   "matplotlib>=3.7.1",
   "meshio>=5.3.0",
   "pyvista[all]>=0.40.1",
-  "numpy>=1.20.0,<2.1", # max limited by geopandas (required by pandamesh)
+  "numpy>=1.20.0,<2.1",
+  # max limited by geopandas (required by pandamesh)
   "scipy>=1.10.1",
   "Pint>=0.22",
   "papermill>=2.4.0",
-  "pandamesh>=0.2.1", # meshing algorithm changed with this version
-  "ogs>=6.5.3",
+  "pandamesh>=0.2.1",
+  # meshing algorithm changed with this version
   "typeguard>=4.0.0",
-  "lxml>=4.6.0"
+  "lxml>=4.6.0",
+  "ogs>=6.5.3",
+  "pandas>=2.2.3",
 ]
 
 [project.urls]
@@ -91,6 +94,8 @@ addopts = [
   "--strict-markers",
   "--strict-config",
   "--import-mode=importlib",
+  "--log-cli-level=INFO",
+  "--tb=short",
 ]
 xfail_strict = true
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
