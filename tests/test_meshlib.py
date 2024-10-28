@@ -364,9 +364,9 @@ class TestUtils:
             ["pressure", "temperature"],
             profile,
         )
-        assert not (np.any(np.isnan(ms_sp["pressure"])))
+        assert not np.any(np.isnan(ms_sp["pressure"]))
         assert (ms_sp["pressure"].to_numpy() > 0).all()
-        assert not (np.any(np.isnan(ms_sp["temperature"])))
+        assert not np.any(np.isnan(ms_sp["temperature"]))
         assert (
             ms_sp["temperature"].to_numpy()
             >= np.zeros_like(ms_sp["temperature"].to_numpy())

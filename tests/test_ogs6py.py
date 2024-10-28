@@ -1114,7 +1114,7 @@ class TestiOGS:
                 assert line == lines_ref[i]
 
     def test_replace_text(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace.prj"
+        prjfile = "tunnel_ogs6py_replace_text.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_text("tunnel_replace", xpath="./time_loop/output/prefix")
         model.write_input()
@@ -1361,7 +1361,7 @@ class TestiOGS:
                 assert line == lines_ref[i]
 
     def test_replace_phase_property(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace.prj"
+        prjfile = "tunnel_ogs6py_replace_phase_property.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_phase_property_value(
             mediumid=0, phase="Solid", name="thermal_expansivity", value=5
@@ -1374,7 +1374,7 @@ class TestiOGS:
         assert find[0].text == "5"
 
     def test_replace_medium_property(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace.prj"
+        prjfile = "tunnel_ogs6py_replace_medium_property.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_medium_property_value(
             mediumid=0, name="porosity", value=42
@@ -1387,7 +1387,7 @@ class TestiOGS:
         assert find[0].text == "42"
 
     def test_replace_parameter(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace.prj"
+        prjfile = "tunnel_ogs6py_replace_parameter.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_parameter_value(name="E", value=32)
         model.write_input()
@@ -1396,7 +1396,7 @@ class TestiOGS:
         assert find[0].text == "32"
 
     def test_replace_mesh(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replacemesh.prj"
+        prjfile = "tunnel_ogs6py_replace_mesh.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_mesh(
             oldmesh="tunnel_inner.vtu", newmesh="tunnel_inner_new.vtu"
@@ -1432,6 +1432,7 @@ class TestiOGS:
         find = root.findall("./geometry")
         assert find[0].text == "geometry.gml"
 
+    @pytest.mark.dependency(depends=["tunnel_ogs6py_prj_file"])
     def test_add_block(self) -> NoReturn:
         prjfile = "tunnel_ogs6py_add_block.prj"
         model = Project(input_file="tunnel_ogs6py.prj", output_file=prjfile)
