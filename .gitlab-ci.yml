@@ -13,7 +13,7 @@ workflow:
   rules:
     - if: $CI_MERGE_REQUEST_IID
       changes:
-        - Dockerfile
+        - .devcontainer/*
       variables:
         DOCKER_IMAGE: $CI_REGISTRY_IMAGE/devcontainer-3.10:$CI_COMMIT_REF_SLUG
     - if: $CI_MERGE_REQUEST_IID
@@ -52,6 +52,25 @@ tests (arch):
     - *setup-headless
     - make test
 
+tests (arch - ogs custom stable):
+  tags: [shell, envinf]
+  needs: []
+  script:
+    - make setup_with_ogs_custom_stable
+    - *setup-headless
+    - make test
+
+tests (arch - ogs custom latest):
+  tags: [shell, envinf]
+  when: manual
+  needs: []
+  script:
+    - make setup_with_ogs_custom_latest
+    - *setup-headless
+    - make test
+
+
+
 tests:
   script:
     - make setup_devcontainer
@@ -86,7 +105,7 @@ tests win:
 .docs-script: &docs-script
   - make setup_devcontainer
   - source .venv-devcontainer/bin/activate
-  - make docs SPHINXOPTS="-W --keep-going -n -j 1"
+  - make docs SPHINXOPTS="-W --keep-going -n -j 4"
   - mv docs/_build/html public
 
 docs preview:
