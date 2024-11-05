@@ -154,7 +154,7 @@ class Mesh(pv.UnstructuredGrid):
         def read_feflow(
             cls,
             feflow_file: Path | str,
-        ) -> "Mesh":
+        ) -> Mesh:
             """
             Initialize a Mesh object read from a FEFLOW file. This mesh stores all model specific
             information such as boundary conditions or material parameters.

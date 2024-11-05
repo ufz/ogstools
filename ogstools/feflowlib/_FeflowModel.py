@@ -207,4 +207,4 @@ class FeflowModel:
         # check prj file for opalinuston with correct parameter for inhomogeneous parameter...
         prj = self.prj(end_time, time_stepping)
         prj.write_input()
-        prj.run_model()
+        prj.run_model(write_logs=True)

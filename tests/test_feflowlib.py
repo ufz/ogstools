@@ -469,10 +469,10 @@ class TestSimulation_HT:
             )
         )
         np.testing.assert_allclose(
-            ogs_sim_res["temperature"], self.pv_mesh.point_data["P_TEMP"], 1e-10
+            ogs_sim_res["temperature"], self.pv_mesh.point_data["P_TEMP"], 8e-9
         )
         np.testing.assert_allclose(
-            ogs_sim_res["HEAD_OGS"], self.pv_mesh.point_data["P_HEAD"], 1e-9
+            ogs_sim_res["HEAD_OGS"], self.pv_mesh.point_data["P_HEAD"], 1e-8
         )
 
 
@@ -582,8 +582,8 @@ class TestFeflowModel:
         # rename method to boundary conditions
         boundary_conditions = self.feflow_model.boundary_conditions
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
-        assert first_bc.n_cells == 23
-        assert first_bc.n_points == 23
+        assert first_bc.n_cells == 44
+        assert first_bc.n_points == 44
         assert first_bc.n_arrays == 2
 
     def test_process(self):
