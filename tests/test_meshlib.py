@@ -42,11 +42,11 @@ class TestUtils:
                 output_file=tmp_dir / "default.prj",
                 input_file=examples.prj_mechanics,
             )
-            model.replace_text("XDMF", xpath="./timeloop/output/type")
+            model.replace_text("XDMF", xpath="./time_loop/output/type")
             model.replace_text(4, xpath=".//integration_order")
             model.write_input()
             model.run_model(write_logs=False, args=f"-m {tmp_dir} -o {tmp_dir}")
-            ogs.MeshSeries(tmp_dir / "mesh_domain.xdmf").mesh(0)
+            ogs.MeshSeries(tmp_dir / "mesh_mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",
