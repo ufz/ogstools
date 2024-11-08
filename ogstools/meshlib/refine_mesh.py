@@ -15,12 +15,10 @@ def refine(layerset: LayerSet, factor: int) -> LayerSet:
     This function takes a LayerSet and refines it by increasing the number of subdivisions
     in each layer. The factor parameter determines the degree of refinement.
 
-    Args:
-        layerset (LayerSet): The original LayerSet to be refined.
-        factor (int): The refinement factor to increase the number of subdivisions.
+    :param layerset: The original LayerSet to be refined.
+    :param factor:   The refinement factor for the number of subdivisions.
 
-    Returns:
-        LayerSet: A new LayerSet with increased subdivisions for each layer.
+    :returns: A new LayerSet with increased subdivisions for each layer.
     """
 
     def refined_num_subsections(num_subsections: int, factor: int) -> int:

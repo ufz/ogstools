@@ -279,7 +279,7 @@ class MeshSeries:
         OGS Simulation results with XDMF support efficient raw data access via
         `h5py <https://docs.h5py.org/en/stable/quick.html#quick>`_
 
-        :return: The location of the file containing the raw data. If it does not
+        :returns: The location of the file containing the raw data. If it does not
                  support efficient read (e.g., no efficient slicing), it returns None.
         """
         if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
@@ -734,8 +734,7 @@ class MeshSeries:
                 kwargs.get("vmax", plot.setup.vmax) or np.nanmax(values),
                 kwargs.get("num_levels", plot.setup.num_levels),
             )
-        cmap, norm = plot.utils.get_cmap_norm(levels, variable)
-        cmap = kwargs.get("cmap", cmap)
+        cmap, norm = plot.utils.get_cmap_norm(levels, variable, **kwargs)
 
         non_flat_axis = np.argwhere(
             np.invert(np.all(np.isclose(points, points[0]), axis=0))

@@ -24,9 +24,7 @@ class PythonScript(build_tree.BuildTree):
         """
         Set a filename for a python script.
 
-        Parameters
-        ----------
-        filename : `str`
+        :param filename:
         """
         self.populate_tree(
             self.root, "python_script", text=filename, overwrite=True

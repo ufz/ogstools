@@ -24,8 +24,6 @@ class Geo(build_tree.BuildTree):
         """
         Adds a geometry file.
 
-        Parameters
-        ----------
-        filename : `str`
+        :param filename:
         """
         self.populate_tree(self.root, "geometry", text=filename, overwrite=True)

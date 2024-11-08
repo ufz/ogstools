@@ -31,9 +31,8 @@ class Boundary(ABC):
         """
         Get the dimension of the boundary.
 
-        Returns:
-            int: The dimension of the boundary. For example, the dimension of a boundary
-            of a cube (3D) is 2.
+        :returns:   The dimension of the boundary. For example, the dimension
+                    of a boundary of a cube (3D) is 2.
         """
         return 0
 
@@ -64,11 +63,9 @@ class Layer(Boundary):
         For each surface, including intermediate surfaces (num_of_subdivisions > 0),
         this method generates .asc files.
 
-        Args:
-            resolution (float): The resolution for raster creation.
+        :param resolution: The resolution for raster creation.
 
-        Returns:
-            list[Path]: A list of filenames to .asc raster files.
+        :returns: A list of filenames to .asc raster files.
         """
 
         top_raster = self.top.create_raster_file(resolution)
@@ -110,11 +107,9 @@ class LocationFrame:
         """
         Generate GML representation of the location frame.
 
-        Args:
-            filename (Path): The filename to save the GML representation to.
+        :param filename: The filename to save the GML representation to.
 
-        Returns:
-            None
+        :returns: None
         """
         cli.generateGeometry(
             geometry_name="SceneRectangle",
@@ -152,11 +147,9 @@ class Raster:
         """
         Create and save a raster representation as a VTK unstructured grid.
 
-        Args:
-            outfilevtu (Path): The path to save the VTK unstructured grid representation.
+        :param outfilevtu: The path to save the VTK unstructured grid.
 
-        Returns:
-            Path: The path to the saved VTK unstructured grid representation.
+        :returns: The path to the saved VTK unstructured grid representation.
         """
         centroid = (
             (self.frame.xmax + self.frame.xmin) / 2,

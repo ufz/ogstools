@@ -67,8 +67,7 @@ def jupytext_to_jupyter(
     :param show_progress:   If True, display a progress bar during execution.
                             Defaults to False.
 
-    Returns:
-        None: The function does not return a value, but generates the Jupyter notebook.
+    :returns: None, but generates the Jupyter notebook.
     """
     nb = jupytext.read(template_path)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb") as temp:

@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import numpy as np
+import pkg_resources
 import pytest
 import pyvista as pv
 
@@ -27,6 +28,30 @@ class TestUtils:
         assert not xmf_ms.has_fast_access("temperature")
         assert xmf_ms.rawdata_path("temperature").suffix in [".xdmf", ".xmf"]
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
+
+    @pytest.mark.skipif(
+        pkg_resources.get_distribution("ogs").version == "6.5.3",
+        reason="OGS Bug in xdmf output for homogeneous meshes",
+    )
+    def test_read_quadratic_xdmf(self):
+        "Test reading quadratic xdmf meshes. Doesn't work with native meshio."
+        tmp_dir = Path(mkdtemp())
+        mesh_path = tmp_dir / "mesh.msh"
+        for quads in [True, False]:
+            ogs.meshlib.gmsh_meshing.rect(
+                1, 1, structured_grid=quads, order=2, out_name=mesh_path
+            )
+            msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+
+            model = ogs.Project(
+                output_file=tmp_dir / "default.prj",
+                input_file=examples.prj_mechanics,
+            )
+            model.replace_text("XDMF", xpath="./time_loop/output/type")
+            model.replace_text(4, xpath=".//integration_order")
+            model.write_input()
+            model.run_model(write_logs=False, args=f"-m {tmp_dir} -o {tmp_dir}")
+            ogs.MeshSeries(tmp_dir / "mesh_mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",

@@ -13,7 +13,7 @@ def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     prepared for meshing.
 
     :param shape_file: Path of shape-file to be prepared for meshing.
-    :return: GeoDataFrame ready to get meshed.
+    :returns: GeoDataFrame ready to get meshed.
     """
     shape_file = Path(shape_file)
     gdf = read_file(shape_file)
@@ -46,7 +46,7 @@ def _points_cells_from_shapefile(
     :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
         If None - cellsize is 1/100 of larger bound (x or y).
 
-    :return: tuple of points and cells of the mesh.
+    :returns: tuple of points and cells of the mesh.
     """
     geodataframe = _prepare_shp_for_meshing(shapefile)
     if cellsize is None:
@@ -91,7 +91,7 @@ def _mesh_from_points_cells(
     :param points: An array of shape (n_points, 3) containing the coordinates of each point.
     :param cells: An array of lists, where each inner list represents a cell and contains the indices of its points.
 
-    :return: A Mesh object
+    :returns: A Mesh object
     """
     # Convert points to numpy array if it's not already
     points = np.asarray(points)
@@ -137,7 +137,7 @@ def read_shape(
     :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
         If None - cellsize is 1/100 of larger bound (x or y).
 
-    :return: pv.UnstructuredGrid
+    :returns: pv.UnstructuredGrid
     """
     points_cells = _points_cells_from_shapefile(
         shapefile, simplify, mesh_generator, cellsize

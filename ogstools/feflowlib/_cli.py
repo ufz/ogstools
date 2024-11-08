@@ -96,7 +96,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     :param output: output path of vtu-file
     :param case: option for conversion process
     :param BC: option if boundary condition shall be extracted or not
-    :return: error code if function failed (1) or was successful (0)
+    :returns: error code if function failed (1) or was successful (0)
     """
     # log feflow version
     logger.info(

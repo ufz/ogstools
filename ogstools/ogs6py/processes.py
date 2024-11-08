@@ -39,10 +39,8 @@ class Processes(build_tree.BuildTree):
         """
         Adds a process variable.
 
-        Parameters
-        ----------
-        process_variable : `str`
-        process_variable_name : `str`
+        :param process_variable:
+        :param process_variable_name:
         """
         self.procvars = self.populate_tree(
             self.process, "process_variables", overwrite=True
@@ -61,10 +59,8 @@ class Processes(build_tree.BuildTree):
         """
         Adds a secondary variable.
 
-        Parameters
-        ----------
-        internal_variable : `str`
-        output_name : `str`
+        param: internal_variable:
+        param: output_name:
         """
         self.secondvars = self.populate_tree(
             self.process, "secondary_variables", overwrite=True

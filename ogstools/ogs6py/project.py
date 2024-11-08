@@ -272,27 +272,20 @@ class Project:
         self,
         parent_xpath: str = "./",
         tag: str | None = None,
-        text: str | None = None,
-        attrib_list: Any | None = None,
-        attrib_value_list: Any | None = None,
+        text: str | int | float | None = None,
+        attrib_list: list[str] | None = None,
+        attrib_value_list: list[str] | None = None,
     ) -> None:
         """General method to add an Entry.
 
         An element is a single tag containing 'text',
         attributes and anttribute values.
 
-        Parameters
-        ----------
-        parent_xpath : `str`, optional
-            XPath of the parent tag
-        tag : `str`
-            tag name
-        text : `str`, `int` or `float`
-            content
-        attrib : `str`
-            attribute keyword
-        attrib_value : `str`, `int` or `float`
-            value of the attribute keyword
+        :param parent_xpath:        XPath of the parent tag
+        :param tag:                 tag name
+        :param text:                content
+        :param attrib_list:         list of attribute keywords
+        :param attrib_value_list:   list of values of the attribute keywords
         """
         root = self._get_root()
         parents = root.findall(parent_xpath)
@@ -317,12 +310,8 @@ class Project:
     def add_include(self, parent_xpath: str = "./", file: str = "") -> None:
         """Add include element.
 
-        Parameters
-        ----------
-        parent_xpath : `str`, optional
-            XPath of the parent tag
-        file : `str`
-            file name
+        :param parent_xpath: XPath of the parent tag
+        :param file:         file name
         """
         self.add_includes.append({"parent_xpath": parent_xpath, "file": file})
 
@@ -340,25 +329,18 @@ class Project:
         block_attrib: Any | None = None,
         parent_xpath: str = "./",
         taglist: list[str] | None = None,
-        textlist: list[str] | None = None,
+        textlist: list[Any] | None = None,
     ) -> None:
         """General method to add a Block.
 
         A block consists of an enclosing tag containing a number of
         subtags retaining a key-value structure.
 
-        Parameters
-        ----------
-        blocktag : `str`
-            name of the enclosing tag
-        block_attrib : 'dict', optional
-            attributes belonging to the blocktag
-        parent_xpath : `str`, optional
-            XPath of the parent tag
-        taglist : `list`
-            list of strings containing the keys
-        textlist : `list`
-            list of strings, ints or floats retaining the corresponding values
+        :param blocktag:     name of the enclosing tag
+        :param block_attrib: attributes belonging to the blocktag
+        :param parent_xpath: XPath of the parent tag
+        :param taglist:      list of strings containing the keys
+        :param textlist:     list retaining the corresponding values
 
         """
         root = self._get_root()
@@ -379,14 +361,9 @@ class Project:
     ) -> None:
         """Replaces MPL properties by a comment.
 
-        Parameters
-        ----------
-        mediumid : `int`
-            id of the medium
-        phase : `str`
-            name of the phase
-        name : `str`
-            property name
+        :param mediumid: id of the medium
+        :param phase:    name of the phase
+        :param name:     property name
         """
         root = self._get_root()
         mediumpointer = self._get_medium_pointer(root, mediumid)
@@ -407,10 +384,7 @@ class Project:
     def deactivate_parameter(self, name: str) -> None:
         """Replaces parameters by a comment.
 
-        Parameters
-        ----------
-        name : `str`
-            property name
+        :param name: property name
         """
         root = self._get_root()
         parameterpath = "./parameters/parameter"
@@ -426,11 +400,9 @@ class Project:
     ) -> None:
         """Removes an element.
 
-        Parameters
-        ----------
-        xpath : `str`
-        tag : `str`
-        text : `str`
+        :param xpath:
+        :param tag:
+        :param text:
         """
         root = self._get_root()
         elements = root.findall(xpath)
@@ -449,17 +421,10 @@ class Project:
     ) -> None:
         """General method for replacing text between opening and closing tags.
 
-
-        Parameters
-        ----------
-        value : `str`/`any`
-            Text
-        xpath : `str`, optional
-            XPath of the tag
-        occurrence : `int`, optional
-            Easy way to address nonunique XPath addresses by their occurrence
-            from the top of the XML file
-            Default: -1
+        :param value:      Text
+        :param xpath:      XPath of the tag
+        :param occurrence: Easy way to address nonunique XPath addresses by
+                           their occurrence from the top of the XML file
         """
         root = self._get_root()
         find_xpath = root.findall(xpath)
@@ -475,15 +440,9 @@ class Project:
     ) -> None:
         """General method for replacing a block by an include.
 
-
-        Parameters
-        ----------
-        xpath : `str`, optional
-            XPath of the tag
-        filename : `str`, optional
-            name of the include file
-        occurrence : `int`, optional
-            Addresses nonunique XPath by their occurece
+        :param xpath:      XPath of the tag
+        :param filename:   name of the include file
+        :param occurrence: Addresses nonunique XPath by their occurece
         """
         print(
             "Note: Includes are only written if write_input(keep_includes=True) is called."
@@ -498,10 +457,8 @@ class Project:
     def replace_mesh(self, oldmesh: str, newmesh: str) -> None:
         """Method to replace meshes.
 
-        Parameters
-        ----------
-        oldmesh : `str`
-        newmesh : `str`
+        :param oldmesh:
+        :param newmesh:
         """
         root = self._get_root()
         bulkmesh = root.find("./mesh")
@@ -532,16 +489,10 @@ class Project:
     ) -> None:
         """Replacing parametertypes and values.
 
-        Parameters
-        ----------
-        name : `str`
-            parametername
-        parametertype : `str`
-            parametertype
-        taglist : `list`
-            list of tags needed for parameter spec
-        textlist : `list`
-            values of parameter
+        :param name:          parametername
+        :param parametertype: parametertype
+        :param taglist:       list of tags needed for parameter spec
+        :param textlist:      values of parameter
         """
         root = self._get_root()
         parameterpath = "./parameters/parameter[name='" + name + "']"
@@ -564,17 +515,10 @@ class Project:
     ) -> None:
         """Replacing parameter values.
 
-        Parameters
-        ----------
-        name : `str`
-            parametername
-        value : `str`
-            value
-        parametertype : `str`
-            parameter type
-        valuetag : `str`, optional
-            name of the tag containing the value, e.g., values
-            Default: value
+        :param name:          parametername
+        :param value:         value
+        :param parametertype: parameter type
+        :param valuetag:      name of the tag containing the value, e.g., values
         """
         root = self._get_root()
         parameterpath = "./parameters/parameter"
@@ -595,23 +539,13 @@ class Project:
     ) -> None:
         """Replaces properties in medium phases.
 
-        Parameters
-        ----------
-        mediumid : `int`
-            id of the medium
-        phase : `str`
-            name of the phase
-        component : `str`
-            name of the component
-        name : `str`
-            property name
-        value : `str`/any
-            value
-        propertytype : `str`
-            type of the property
-        valuetag : `str`/any
-            name of the tag containing the value, e.g., values
-            Default: value
+        :param mediumid:     id of the medium
+        :param phase:        name of the phase
+        :param component:    name of the component
+        :param name:         property name
+        :param value:        value
+        :param propertytype: type of the property
+        :param valuetag:     name of the tag containing the value, e.g., values
         """
         root = self._get_root()
         mediumpointer = self._get_medium_pointer(root, mediumid)
@@ -636,19 +570,11 @@ class Project:
     ) -> None:
         """Replaces properties in medium (not belonging to any phase).
 
-        Parameters
-        ----------
-        mediumid : `int`
-            id of the medium
-        name : `str`
-            property name
-        value : `str`/any
-            value
-        propertytype : `str`
-            type of the property
-        valuetag : `str`/any
-            name of the tag containing the value, e.g., values
-            Default: value
+        :param mediumid:     id of the medium
+        :param name:         property name
+        :param value:        value
+        :param propertytype: type of the property
+        :param valuetag:     name of the tag containing the value, e.g., values
         """
         root = self._get_root()
         mediumpointer = self._get_medium_pointer(root, mediumid)
@@ -697,16 +623,10 @@ class Project:
         Takes the last time step from the PVD file mentioned in the PRJ file.
         Sets initial conditions accordingly.
 
-        Parameters
-        ----------
-        restart_suffix : `str`,
-            suffix by which the output prefix is appended
-        t_initial : `float`, optional
-            first time step, takes the last from previous simulation if None
-        t_end : `float`, optional
-            last time step, the same as in previous run if None
-        zero_displacement: `bolean`, False
-            sets the initial displacement to zero if True
+        :param restart_suffix:    suffix by which the output prefix is appended
+        :param t_initial:         first time step, takes the last from previous simulation if None
+        :param t_end:             last time step, the same as in previous run if None
+        :param zero_displacement: sets the initial displacement to zero if True
         """
 
         root_prj = self._get_root()
@@ -847,23 +767,15 @@ class Project:
 
         Runs OGS with the project file specified as output_file.
 
-        Parameters
-        ----------
-        logfile : `str`, optional
-            Name of the file to write STDOUT of ogs
-            Default: out
-        path : `str`, optional
-            Path of the directory in which the ogs executable can be found.
-            If ``container_path`` is given: Path to the directory in which the
-            Singularity executable can be found.
-        args : `str`, optional
-            additional arguments for the ogs executable
-        container_path : `str`, optional
-            Path of the OGS container file.
-        wrapper : `str`, optional
-            add a wrapper command. E.g. mpirun
-        write_logs: `bolean`, optional
-            set False to omit logging
+        :param logfile: Name of the file to write STDOUT of ogs
+        :param path:    Path of the directory in which the ogs executable can be found.
+                       If ``container_path`` is given: Path to the directory in which the
+                       Singularity executable can be found.
+        :param args:   additional arguments for the ogs executable
+        :param container_path:   Path of the OGS container file.
+        :param wrapper:          add a wrapper command. E.g. mpirun
+        :param write_logs:       set False to omit logging
+        :param write_prj_to_pvd: write the prj file as a comment in the pvd
         """
         ogs_path: Path = Path()
         env_export = ""
@@ -984,9 +896,7 @@ class Project:
     def write_input(self, keep_includes: bool = False) -> None:
         """Writes the projectfile to disk.
 
-        Parameters
-        ----------
-        keep_includes : `boolean`, optional
+        :param keep_includes:
         """
         if self.tree is not None:
             self._remove_empty_elements()
@@ -1136,9 +1046,7 @@ class Project:
         defined in the Material Property (MPL) section of
         the input file.
 
-        Parameters
-        ----------
-        mediamapping : `dict`, optional
+        :param mediamapping:
         """
         newtree = copy.deepcopy(self.tree)
         if (newtree is None) or (self.tree is None):
@@ -1188,11 +1096,9 @@ class Project:
         """Write material properties to disc
         as latex table.
 
-        Parameters
-        ----------
-        latexfile : `str`
-        mediamapping : `dict`, optional
-        float_format : `str`
+        :param latexfile:
+        :param mediamapping:
+        :param float_format:
         """
         with latexfile.open("w") as tf:
             tf.write(

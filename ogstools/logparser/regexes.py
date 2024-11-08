@@ -173,7 +173,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
     """
     Defines regular expressions for parsing OpenGeoSys log messages.
 
-    :return:  A list of tuples, each containing a regular expression pattern
+    :returns:  A list of tuples, each containing a regular expression pattern
               and the corresponding message class.
     """
     return [

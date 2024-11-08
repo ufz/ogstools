@@ -182,7 +182,7 @@ def distance_in_segments(
     :param profile: output from interp_points function. 2D array of N points \
          (profile nodes) of shape (N, 3)
 
-    :return: 1D array of distances in each segment to its starting point \
+    :returns: 1D array of distances in each segment to its starting point \
         of shape (N, 3), where N is the number of points in profile
     """
     point_index = [
@@ -208,7 +208,7 @@ def distance_in_profile(points: np.ndarray) -> np.ndarray:
     """
     :param points: 2D array of N points (profile nodes) of shape (N, 3)
 
-    :return: 1D array of distances of each point to the beginning of the \
+    :returns: 1D array of distances of each point to the beginning of the \
           profile (first row in points), shape of (N,)
     """
     return np.concatenate(

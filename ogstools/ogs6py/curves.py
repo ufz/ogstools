@@ -24,11 +24,9 @@ class Curves(build_tree.BuildTree):
         """
         Adds a new curve.
 
-        Parameters
-        ----------
-        name : `str`
-        coords : `list`
-        values : `list`
+        :param name:
+        :param coords:
+        :param values:
         """
         if len(coords) != len(values):
             msg = """Number of time coordinate points differs \

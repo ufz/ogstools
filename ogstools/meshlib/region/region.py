@@ -35,15 +35,15 @@ class RegionSet:
         of the local coordinate system. The u-axis corresponds to the x-coordinate, the v-axis
         corresponds to the y-coordinate, and the w-axis corresponds to the z-coordinate.
 
-        Returns:
-            tuple: A tuple (u_min, u_max, v_min, v_max, w_min, w_max) representing the boundaries
-            of the mesh in the local coordinate system.
+        :returns:   A tuple (u_min, u_max, v_min, v_max, w_min, w_max)
+                    representing the boundaries of the mesh in the local
+                    coordinate system.
 
-        Notes:
+        notes:
             - If the original mesh was created from boundaries, this function returns the original boundaries.
             - The returned boundaries adhere to the definition of [Pyvista Box](https://docs.pyvista.org/version/stable/api/utilities/_autosummary/pyvista.Box.html).
 
-        Example:
+        example:
             mesh = ...
             u_min, u_max, v_min, v_max, w_min, w_max = mesh.box_boundaries()
         """
@@ -74,10 +74,9 @@ def to_boundary(
                                 of normals as input and returns an array
                                 indicating whether the condition is met.
 
-    Returns:
-        pv.UnstructuredGrid: A mesh containing only the cells that meet the filter condition.
+    :returns: A mesh containing only the cells that meet the filter condition.
 
-    Example:
+    example:
         surface_mesh = ...
         specific_cells = to_boundary(surface_mesh, lambda normals: [n[2] > 0.5 for n in normals])
     """
@@ -105,17 +104,15 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     The function will use prism elements for meshing if possible; otherwise, it will use
     tetrahedral elements.
 
-    Parameters:
-        layer_set (LayerSet): A :class:`boundary_set.LayerSet`.
-        resolution (float): The desired resolution in [meter] for meshing. It must greater than 0.
+    :param layer_set: A :class:`boundary_set.LayerSet`.
+    :param resolution: The desired resolution in [meter] for meshing. It must greater than 0.
 
-    Returns:
-        RegionSet: A :class:`boundary_set.LayerSet` object containing the meshed representation of the geological structure.
+    :returns: A :class:`boundary_set.LayerSet` object containing the meshed representation of the geological structure.
 
-    Raises:
+    raises:
         ValueError: If an error occurs during the meshing process.
 
-    Example:
+    example:
         layer_set = LayerSet(...)
         resolution = 0.1
         region_set = to_region_prism(layer_set, resolution)
@@ -173,13 +170,12 @@ def layer_to_simplified_mesh(
                                     [min_x, max_x, min_y, max_y, min_z, max_z] for 3D mesh.
                                     The `bounds` define the region of the geological structure that will be meshed.
 
-    Returns:
-        pv.UnstructuredGrid: A simplified unstructured grid mesh representing the layer.
+    :returns: A simplified unstructured grid mesh representing the layer.
 
-    Raises:
+    raises:
         Exception: If the specified `rank` is not 2 or 3, indicating an invalid mesh dimensionality.
 
-    Example:
+    example:
         layer = ...
         resolution = 1.5  # Example resolution in geological units
         rank = 2  # Mesh will be 2D
@@ -228,13 +224,12 @@ def to_region_simplified(
     :param xy_resolution (float):   The desired spatial resolution of the mesh in the XY plane.
     :param rank (int):              The rank of the mesh (2 for 2D, 3 for 3D).
 
-    Returns:
-        RegionSet: A `RegionSet` object containing the simplified meshed representation of the geological structure.
+    :returns: A `RegionSet` object containing the simplified meshed representation of the geological structure.
 
-    Raises:
+    raises:
         AssertionError: If the length of the `bounds` retrieved from the `layer_set` is not 6.
 
-    Example:
+    example:
         layer_set = LayerSet(...)
         xy_resolution = 0.1  # Example resolution in XY plane
         rank = 2  # Mesh will be 2D
@@ -256,37 +251,35 @@ def to_region_simplified(
 
 
 def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
-    raster_vtu, rastered_layers_txt1 = layer_set.create_raster(
-        resolution=resolution
-    )
-
     """
     Convert a layered geological structure to a tetrahedral meshed region.
 
     This function converts a layered geological structure represented by a `LayerSet`
     into a tetrahedral meshed region using the specified `resolution`.
 
-    Parameters:
-        layer_set (LayerSet): A `LayerSet` object representing the layered geological structure.
-        resolution (int): The desired resolution for meshing.
+    :param layer_set: A `LayerSet` object representing the layered geological structure.
+    :param resolution: The desired resolution for meshing.
 
-    Returns:
-        RegionSet: A `RegionSet` object containing the tetrahedral meshed representation of the geological structure.
+    :returns: A `RegionSet` object containing the tetrahedral meshed representation of the geological structure.
 
-    Raises:
+    raises:
         ValueError: If an error occurs during the meshing process.
 
-    Notes:
+    notes:
         - The `LayerSet` object contains information about the layers in the geological structure.
         - The `resolution` parameter determines the desired spatial resolution of the mesh.
         - The function utilizes tetrahedral meshing using Tetgen software to create the meshed representation.
         - The resulting mesh is tetrahedral, and material IDs are assigned to mesh cells based on the geological layers.
 
-    Example:
+    example:
         layer_set = LayerSet(...)
         resolution = 1  # Example resolution for meshing
         region_set = to_region_tetraeder(layer_set, resolution)
     """
+
+    raster_vtu, rastered_layers_txt1 = layer_set.create_raster(
+        resolution=resolution
+    )
 
     smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetraeder")[1])
 
@@ -343,17 +336,15 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     This function converts a layered geological structure represented by a `LayerSet`
     into a voxelized mesh using the specified `resolution`.
 
-    Parameters:
-        layer_set (LayerSet): A `LayerSet` object representing the layered geological structure.
-        resolution (list): A list of [x_resolution, y_resolution, z_resolution] for voxelization.
+    :param layer_set: A `LayerSet` object representing the layered geological structure.
+    :param resolution: A list of [x_resolution, y_resolution, z_resolution] for voxelization.
 
-    Returns:
-        Mesh: A `Mesh` object containing the voxelized mesh representation of the geological structure.
+    :returns: A `Mesh` object containing the voxelized mesh representation of the geological structure.
 
-    Raises:
+    raises:
         ValueError: If an error occurs during the voxelization process.
 
-    Example:
+    example:
         layer_set = LayerSet(...)
         resolution = [0.1, 0.1, 0.1]  # Example voxelization resolutions in x, y, and z dimensions
         voxel_mesh = to_region_voxel(layer_set, resolution)
