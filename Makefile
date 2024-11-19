@@ -39,9 +39,14 @@ setup_with_ogs_custom_stable:
 	$(MAKE) setup_with_ogs_compile COMMIT_HASH=3f359feee4
 
 # Install OGS and dependencies in a virtual environment
-setup_with_ogs_compile: clone  ## Setup a virtual environment and install all development dependencies
+# clone  ## Setup a virtual environment and install all development dependencies
+# .venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
+setup_with_ogs_compile:
 	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
+	.venv/bin/pip install -e .[dev,test,docs]
+	.venv/bin/pip uninstall ogs -y
+	.venv/bin/pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre
+
 	@echo
 	@echo "ATTENTION: You need to activate the virtual environment in every shell with:"
 	@echo "source .venv/bin/activate"
