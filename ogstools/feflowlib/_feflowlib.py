@@ -316,7 +316,7 @@ def get_species_parameter(
     return species_dict, obsolete_data
 
 
-def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
+def _calculate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
     """
     Calculates the retardation factor from the absorption coefficient, which is called
     Henry constant in FEFLOW, according to the formula: R = 1 + (1-p)/p * S. With R
@@ -414,7 +414,7 @@ def update_geometry(
                 logger.error(
                     "Unknown geometry to remove obsolet data after conversion of chemical species."
                 )
-        _caclulate_retardation_factor(mesh)
+        _calculate_retardation_factor(mesh)
     return _convert_to_SI_units(mesh)
 
 
