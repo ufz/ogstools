@@ -325,13 +325,14 @@ def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
 
     :param mesh: mesh
     """
-    for spec_porosity in [
-        species_porosity
-        for species_porosity in mesh.cell_data
-        if "PORO" in species_porosity
-    ]:
-        porosity = mesh.cell_data[spec_porosity]
-        species = spec_porosity.replace("P_PORO", "")
+    species_porosities = [
+        porosity
+        for porosity in mesh.cell_data
+        if "PORO" in porosity and porosity != "P_POROH"
+    ]
+    for species_porosity in species_porosities:
+        porosity = mesh.cell_data[species_porosity]
+        species = species_porosity.replace("P_PORO", "")
         # calculation of the retardation factor
         mesh.cell_data[species + "retardation_factor"] = (
             1 + mesh.cell_data[species + "P_SORP"] * (1 - porosity) / porosity
@@ -391,7 +392,7 @@ def update_geometry(
         mesh.cell_data.update({c_data: values})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
-    if doc.getProblemClass() in [1, 3]:
+    if doc.getProblemClass() in [1, 3, 5, 7]:
         (
             species_dict,
             obsolete_data,

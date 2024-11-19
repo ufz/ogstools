@@ -377,9 +377,9 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
     :returns: list of species
     """
     species = [
-        cell_data.replace("_P_PORO", "")
+        cell_data.replace("_P_DECA", "")
         for cell_data in mesh.cell_data
-        if "P_PORO" in cell_data
+        if "P_DECA" in cell_data
     ]
     if not species:
         ValueError(
@@ -1023,7 +1023,8 @@ def setup_prj_file(
         )
     ):
         model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
-    if "thermal" in process:
+
+    if "thermal" in process or "heat" in process:
         model.processes.add_process_variable(
             process_variable="temperature",
             process_variable_name="temperature",
@@ -1041,10 +1042,11 @@ def setup_prj_file(
         model.processes.add_process_variable(
             process_variable="pressure", process_variable_name="HEAD_OGS"
         )
-    elif "Component" in process:
-        model.processes.add_process_variable(
-            process_variable="pressure", process_variable_name="HEAD_OGS"
-        )
+    if "Component" in process or "mass" in process:
+        if "heat" not in process:
+            model.processes.add_process_variable(
+                process_variable="pressure", process_variable_name="HEAD_OGS"
+            )
         model.parameters.add_parameter(name="C0", type="Constant", value=0)
         if species_list is not None:
             for species in species_list:
@@ -1058,7 +1060,7 @@ def setup_prj_file(
                     order=1,
                     initial_condition="C0",
                 )
-    else:
+    if "Liquid flow" in process or "Steady state diffusion" in process:
         model.processes.add_process_variable(
             process_variable="process_variable",
             process_variable_name="HEAD_OGS",
@@ -1082,10 +1084,6 @@ def setup_prj_file(
                 process_var = point_data.split("_P_", 1)[0]
             # Every point boundary condition refers to a separate mesh
             model.mesh.add_mesh(filename=point_data + ".vtu")
-            if "HEAT" in point_data:
-                process_var = "temperature"
-            elif "FLOW" in point_data:
-                process_var = "HEAD_OGS"
             if "3RD" in point_data:
                 model.parameters.add_parameter(
                     name="u_0",
@@ -1186,9 +1184,6 @@ def setup_prj_file(
         assert species_list is not None
         materials_in_CT(material_properties, species_list, model)
         _add_global_process_coupling_CT(model, species_list, max_iter, rel_tol)
-    else:
-        msg = "Only 'steady state diffusion', 'liquid flow', 'hydro thermal' and 'component transport' processes are supported."
-        raise ValueError(msg)
 
     # add deactivated subdomains if existing
     if 0 in mesh.cell_data["P_INACTIVE_ELE"]:

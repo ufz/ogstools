@@ -17,6 +17,7 @@ from . import _tools
 from ._feflowlib import convert_properties_mesh
 from ._templates import (
     component_transport,
+    generic_prj_template,
     hydro_thermal,
     liquid_flow,
     steady_state_diffusion,
@@ -140,6 +141,14 @@ class FeflowModel:
             material_properties = _tools.get_material_properties_of_CT_model(
                 self.mesh
             )
+        else:
+            # For later functions of the converter, material properties are needed.
+            # For this reason, a defaultdict is returned with no material properties in
+            # this case.
+            material_properties = defaultdict(str)
+            material_properties["undefined"] = (
+                f"Material properties are only saved on the mesh for this process: '{process}'",
+            )
 
         return material_properties
 
@@ -173,11 +182,23 @@ class FeflowModel:
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
             )
-        elif "Component transport" in self.process:
+        elif "Component transport" in self.process or "mass" in self.process:
+            process_name = (
+                "CT" if "Component transport" in self.process else "undefined"
+            )
             species = _tools.get_species(self.mesh)
             template_model = component_transport(
                 Path(self.mesh_path.with_suffix("")),
                 species,
+                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                process_name=process_name,
+                dimension=self.dimension,
+                end_time=end_time,
+                time_stepping=time_stepping,
+            )
+        else:
+            template_model = generic_prj_template(
+                Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
@@ -190,7 +211,9 @@ class FeflowModel:
             self.material_properties,
             self.process,
             species_list=(
-                species if "Component transport" in self.process else None
+                species
+                if "Component" in self.process
+                else (species if "mass" in self.process else None)
             ),
             model=template_model,
         )
