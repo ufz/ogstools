@@ -50,7 +50,7 @@ plotter.show()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
 # Get the ogs6py model to create a prj-file and run the simulation.
-prj = feflow_model.prj()
+prj = feflow_model.prj(end_time=1e11, time_stepping=[(1, 1e10)])
 # The model must be written before it can be run.
 prj.write_input()
 # Print the prj-file as an example.
@@ -88,11 +88,13 @@ diff_mesh = ot.meshlib.difference(feflow_model.mesh, ogs_sim_res, "HEAD")
 hydraulic_head_diff = ot.variables.Scalar(
     data_name="HEAD_difference", data_unit="m", output_unit="m"
 )
-ot.plot.contourf(diff_mesh, hydraulic_head_diff)
+ot.plot.contourf(diff_mesh, hydraulic_head_diff, vmin=-1.5e-9, vmax=1.5e-9)
 # %%
 feflow_model.mesh["temperature"] = feflow_model.mesh["P_TEMP"]
 # Plot differences in temperature.
 diff_mesh = ot.meshlib.difference(
     feflow_model.mesh, ogs_sim_res, ot.variables.temperature
 )
-ot.plot.contourf(diff_mesh, ot.variables.temperature.difference)
+ot.plot.contourf(
+    diff_mesh, ot.variables.temperature.difference, vmin=-8.7e-9, vmax=8.7e-9
+)

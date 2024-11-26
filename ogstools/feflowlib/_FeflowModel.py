@@ -181,6 +181,8 @@ class FeflowModel:
                 Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
+                end_time=end_time,
+                time_stepping=time_stepping,
             )
         elif "Component transport" in self.process or "mass" in self.process:
             process_name = (

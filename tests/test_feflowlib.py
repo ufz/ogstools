@@ -451,6 +451,8 @@ class TestSimulation_HT:
             str(self.temp_dir / "sim_HT_Dirichlet"),
             Project(output_file=prjfile),
             dimension,
+            end_time=1e11,
+            time_stepping=[(1, 1e10)],
         )
         prj = setup_prj_file(
             self.vtu_path,

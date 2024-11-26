@@ -289,7 +289,13 @@ def component_transport(
 
 
 def hydro_thermal(
-    saving_path: Path, prj: Project, dimension: int = 3
+    saving_path: Path,
+    prj: Project,
+    dimension: int = 3,
+    fixed_out_times: list | None = None,
+    time_stepping: list | None = None,
+    initial_time: int = 0,
+    end_time: int | float = 1,
 ) -> Project:
     gravity = " ".join(["0"] * dimension)
     prj.processes.set_process(
@@ -303,7 +309,9 @@ def hydro_thermal(
         prj,
         process_name="HydroThermal",
         dimension=dimension,
-        end_time=1e11,
-        time_stepping=[(1, 1e10)],
+        fixed_out_times=fixed_out_times,
+        initial_time=initial_time,
+        end_time=end_time,
+        time_stepping=time_stepping,
         eigen_sparseLu=True,
     )
