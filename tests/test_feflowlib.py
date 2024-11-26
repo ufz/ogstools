@@ -423,7 +423,7 @@ class TestConverter:
 class TestSimulation_HT:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT_model))
+        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
         self.pv_mesh = convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "HT_Dirichlet.vtu"
         self.pv_mesh.save(self.vtu_path)
@@ -567,19 +567,26 @@ class TestSimulation_CT:
 
 class TestFeflowModel:
     def setup_method(self):
-        self.feflow_model = FeflowModel(examples.feflow_model_2D_HT_model)
+        self.feflow_model = FeflowModel(examples.feflow_model_2D_HT)
+        self.feflow_model_HTC = FeflowModel(examples.feflow_model_2D_HTC)
 
     def test_bulk_mesh(self):
         bulk_mesh = self.feflow_model.ogs_bulk_mesh
+        assert bulk_mesh.n_arrays == 1
+
+        bulk_mesh = self.feflow_model_HTC.ogs_bulk_mesh
         assert bulk_mesh.n_arrays == 1
 
     def test_material_properties(self):
         material_prop = self.feflow_model.material_properties
         assert material_prop[0]["anisotropy_angle"] == 0
         assert material_prop[0]["specific_heat_capacity_fluid"] == 4200000
+        assert (
+            "not supported"
+            in self.feflow_model_HTC.material_properties["undefined"][0]
+        )
 
     def test_boundary_conditions(self):
-        # rename method to boundary conditions
         boundary_conditions = self.feflow_model.boundary_conditions
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
         assert first_bc.n_cells == 44
@@ -596,8 +603,9 @@ class TestFeflowModel:
             FeflowModel(examples.feflow_model_box_Robin).process
             == "Liquid flow"
         )
+        assert "not supported" in self.feflow_model_HTC.process
 
-    def test_prj_file(self):
+    def test_prj_file_HT(self):
         temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
         model = FeflowModel(
             examples.feflow_model_box_Neumann,
@@ -661,3 +669,74 @@ class TestFeflowModel:
         assert float(permeability) == float(
             self.feflow_model.mesh.cell_data["P_COND"][0]
         )
+
+    def test_prj_file_HTC(self):
+        temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
+        model = FeflowModel(
+            examples.feflow_model_2D_HTC,
+            temp_dir + "/feflow_model_HTC",
+        )
+        model_prj = model.prj()
+        model_prj.write_input()
+        prjfile_root = ET.parse(temp_dir + "/feflow_model_HTC.prj").getroot()
+
+        elements = list(prjfile_root)
+        assert len(elements) == 8
+        # Test if the meshes are correct
+        meshes = prjfile_root.find("meshes")
+        meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
+        meshes_list_expected = [
+            "feflow_model_HTC.vtu",
+            "P_BC_FLOW.vtu",
+            "P_BCFLOW_2ND.vtu",
+            "single_species_P_BC_MASS.vtu",
+        ]
+        assert meshes_list == meshes_list_expected
+        # Test if the parameters are correct
+
+        parameters = prjfile_root.find("parameters")
+        parameters_list = [
+            parameter.find("name").text
+            for parameter in parameters.findall("parameter")
+        ]
+        parameters_list_expected = [
+            "T0",
+            "C0",
+            "p0",
+            "P_BC_FLOW",
+            "P_BCFLOW_2ND",
+            "single_species_P_BC_MASS",
+        ]
+        # Test if boundary conditions are written correctly.
+        for parameter, parameter_expected in zip(
+            parameters_list, parameters_list_expected, strict=False
+        ):
+            assert parameter == parameter_expected
+
+        boundary_conditions = prjfile_root.find(
+            "process_variables/process_variable/boundary_conditions"
+        )
+        boundary_condtitions_list = [
+            boundary_condition.find("mesh").text
+            for boundary_condition in boundary_conditions.findall(
+                "boundary_condition"
+            )
+        ]
+        bc_expected_list = [
+            "single_species_P_BC_MASS",
+            "P_BC_FLOW",
+            "P_BCFLOW_2ND",
+        ]
+        for bc, bc_expected in zip(
+            boundary_condtitions_list, bc_expected_list, strict=False
+        ):
+            assert bc == bc_expected
+        """
+        permeability = prjfile_root.find(
+            "media/medium[@id='0']/properties/property[name='permeability']/value"
+        ).text[0:23]
+        # The index [0:23] is because one needs to read all decimals to get the value.
+        assert float(permeability) == float(
+            self.feflow_model.mesh.cell_data["P_COND"][0]
+        )
+        """
