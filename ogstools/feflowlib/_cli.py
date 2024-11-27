@@ -24,7 +24,9 @@ parser = ArgumentParser(
 )
 
 parser.add_argument("-i", "--input", help="The path to the input FEFLOW file.")
-parser.add_argument("-o", "--output", help="The path to the output VTK file.")
+parser.add_argument(
+    "-o", "--output", help="The path to the output VTK file.", default=None
+)
 parser.add_argument(
     "case",
     choices=["bulk_mesh", "OGS"],
@@ -119,5 +121,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
 
 def cli() -> int:
     args = parser.parse_args()
+    args.output = args.input if args.output is None else args.output
+    print(args.output)
     feflow_converter(args.input, args.output, args.case, args.BC)
     return 0
