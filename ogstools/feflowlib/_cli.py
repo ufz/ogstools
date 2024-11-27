@@ -51,6 +51,7 @@ parser.add_argument(
 
 # log configuration
 logger = log.getLogger(__name__)
+logger.setLevel(log.INFO)
 
 
 def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
@@ -70,6 +71,10 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
         ifm.getKernelVersion() / 1000,
         ifm.getKernelRevision(),
     )
+    # create file handler which logs even debug messages
+    fh = log.FileHandler(output.replace("vtu", "log"))
+    fh.setLevel(log.DEBUG)
+    logger.addHandler(fh)
 
     if not Path(input).exists():
         print("The input file does not exist.")
@@ -90,14 +95,14 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     for path, boundary_mesh in feflow_model.boundary_conditions.items():
         boundary_mesh.save(path)
 
-    log.info(
+    logger.info(
         "Boundary conditions have been written to separate mesh vtu-files."
     )
 
     if "OGS" in case:
         ogs_prj = feflow_model.prj()
         ogs_prj.write_input()
-        log.info(
+        logger.info(
             """
             A prj file has been created for the %s process.\n
             Depending on the purpose and process to be modeled, manual adjustments are needed!
@@ -111,10 +116,8 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     )
     return 0
 
-    # Correct final message! OGS and no_BC should not be valid input. Remove -i -o
-    # Rework logger.info messages during conversion process, introduce -v for verbose?
 
-
-def cli() -> None:
+def cli() -> int:
     args = parser.parse_args()
     feflow_converter(args.input, args.output, args.case, args.BC)
+    return 0

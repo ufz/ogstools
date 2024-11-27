@@ -230,7 +230,7 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
             material_properties[int(material_id)] = [property_of_material[0]]
         else:
             material_properties[material_id] = ["inhomogeneous"]
-            logger.info(
+            logger.warning(
                 "The property %s in material %s is inhomogeneously distributed.",
                 property,
                 material_id,

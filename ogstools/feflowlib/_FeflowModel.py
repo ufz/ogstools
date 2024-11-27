@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import logging as log
 from collections import defaultdict
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from ._templates import (
     liquid_flow,
     steady_state_diffusion,
 )
+
+logger = log.getLogger(__name__)
 
 
 class FeflowModel:
@@ -148,6 +151,12 @@ class FeflowModel:
             material_properties = defaultdict(str)
             material_properties["undefined"] = (
                 f"Material properties are only saved on the mesh for this process: '{process}'",
+            )
+            logger.warning(
+                (
+                    "Material properties are not supported in a model using such a process:",
+                    process,
+                )
             )
 
         return material_properties

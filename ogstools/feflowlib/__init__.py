@@ -66,7 +66,7 @@ __all__ = [
 log.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     encoding="utf-8",
-    level=log.INFO,
+    level=log.WARN,
     stream=stdout,
     datefmt="%d.%m.%Y %H:%M:%S",
 )
