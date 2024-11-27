@@ -569,6 +569,27 @@ def write_mesh_for_heterogeneous_material_properties(
         )
 
 
+def _get_permeability(material_properties: dict, material_id: int) -> str:
+    if (
+        material_properties[material_id]["permeability_X"]
+        == material_properties[material_id]["permeability_Y"]
+        == material_properties[material_id]["permeability_Z"]
+    ):
+        permeability_val = str(
+            material_properties[material_id]["permeability_X"]
+        )
+    else:
+        permeability_val = (
+            str(material_properties[material_id]["permeability_X"])
+            + " "
+            + str(material_properties[material_id]["permeability_Y"])
+            + " "
+            + str(material_properties[material_id]["permeability_Z"])
+        )
+
+    return permeability_val
+
+
 def materials_in_steady_state_diffusion(
     material_properties: dict,
     model: Project,
@@ -606,11 +627,7 @@ def materials_in_steady_state_diffusion(
                 medium_id=material_id,
                 name="diffusion",
                 type="Constant",
-                value=str(material_properties[material_id]["permeability_X"])
-                + " "
-                + str(material_properties[material_id]["permeability_Y"])
-                + " "
-                + str(material_properties[material_id]["permeability_Z"]),
+                value=_get_permeability(material_properties, material_id),
             )
         elif "permeability" in material_properties[material_id]:
             model.media.add_property(
@@ -619,6 +636,8 @@ def materials_in_steady_state_diffusion(
                 type="Constant",
                 value=str(material_properties[material_id]["permeability"]),
             )
+        else:
+            logger.error("No permeability was detected.")
 
         model.media.add_property(
             medium_id=material_id,
@@ -666,11 +685,7 @@ def materials_in_liquid_flow(
                 medium_id=material_id,
                 name="permeability",
                 type="Constant",
-                value=str(material_properties[material_id]["permeability_X"])
-                + " "
-                + str(material_properties[material_id]["permeability_Y"])
-                + " "
-                + str(material_properties[material_id]["permeability_Z"]),
+                value=_get_permeability(material_properties, material_id),
             )
         elif "permeability" in material_properties[material_id]:
             model.media.add_property(
@@ -679,6 +694,8 @@ def materials_in_liquid_flow(
                 type="Constant",
                 value=str(material_properties[material_id]["permeability"]),
             )
+        else:
+            logger.error("No permeability was detected.")
 
         model.media.add_property(
             medium_id=material_id,
@@ -796,11 +813,7 @@ def materials_in_HT(
                 medium_id=material_id,
                 name="permeability",
                 type="Constant",
-                value=str(material_properties[material_id]["permeability_X"])
-                + " "
-                + str(material_properties[material_id]["permeability_Y"])
-                + " "
-                + str(material_properties[material_id]["permeability_Z"]),
+                value=_get_permeability(material_properties, material_id),
             )
         elif "permeability" in material_properties[material_id]:
             model.media.add_property(
@@ -816,6 +829,8 @@ def materials_in_HT(
                     * material_properties[material_id]["anisotropy_factor"]
                 ),
             )
+        else:
+            logger.error("No permeability was detected.")
         model.media.add_property(
             medium_id=material_id,
             name="porosity",
@@ -936,11 +951,7 @@ def materials_in_CT(
                 medium_id=material_id,
                 name="permeability",
                 type="Constant",
-                value=str(material_properties[material_id]["permeability_X"])
-                + " "
-                + str(material_properties[material_id]["permeability_Y"])
-                + " "
-                + str(material_properties[material_id]["permeability_Z"]),
+                value=_get_permeability(material_properties, material_id),
             )
         elif "permeability" in material_properties[material_id]:
             model.media.add_property(
@@ -949,6 +960,8 @@ def materials_in_CT(
                 type="Constant",
                 value=str(material_properties[material_id]["permeability"]),
             )
+        else:
+            logger.error("No permeability was detected.")
 
     for material_id in material_properties:
         xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
