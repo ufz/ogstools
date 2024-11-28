@@ -154,7 +154,7 @@ class FeflowModel:
             )
             logger.warning(
                 (
-                    "Material properties are not supported in a model using such a process:",
+                    "Material properties are not supported (at the moment) in a model using such a process:",
                     process,
                 )
             )
@@ -163,7 +163,10 @@ class FeflowModel:
 
     # @property
     def prj(
-        self, end_time: int = 1, time_stepping: list | None = None
+        self,
+        end_time: int = 1,
+        time_stepping: list | None = None,
+        steady: bool = False,
     ) -> Project:
         """
         A proposition for a prj-file to run a OGS simulation.
@@ -172,7 +175,7 @@ class FeflowModel:
 
         :return: The ogs6py model created from the FEFLOW model.
         """
-        if "Liquid flow" in self.process:
+        if "Liquid flow" in self.process and not steady:
             template_model = liquid_flow(
                 Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
@@ -180,7 +183,7 @@ class FeflowModel:
                 end_time=end_time,
                 time_stepping=time_stepping,
             )
-        elif "Steady state diffusion" in self.process:
+        elif "Liquid flow" in self.process and steady:
             template_model = steady_state_diffusion(
                 Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
@@ -220,7 +223,7 @@ class FeflowModel:
             self.mesh_path,
             self.mesh,
             self.material_properties,
-            self.process,
+            self.process if not steady else "Steady state diffusion",
             species_list=(
                 species
                 if "Component" in self.process
@@ -230,7 +233,10 @@ class FeflowModel:
         )
 
     def run_OGS(
-        self, end_time: int = 1, time_stepping: list | None = None
+        self,
+        end_time: int = 1,
+        time_stepping: list | None = None,
+        steady: bool = False,
     ) -> None:
         self.mesh.save(self.mesh_path)
         for path, boundary_mesh in self.boundary_conditions.items():
@@ -239,6 +245,6 @@ class FeflowModel:
         # fix prj-file for heterogeneous material properties
         # write tests for it
         # check prj file for opalinuston with correct parameter for inhomogeneous parameter...
-        prj = self.prj(end_time, time_stepping)
+        prj = self.prj(end_time, time_stepping, steady)
         prj.write_input()
         prj.run_model(write_logs=True)

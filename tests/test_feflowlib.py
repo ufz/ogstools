@@ -112,7 +112,6 @@ class TestSimulation_Neumann:
 
         # Compare ogs simulation with FEFLOW simulation
         ms = ml.MeshSeries(self.temp_dir / "sim_boxNeumann.pvd")
-        # Read the last timestep:
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
@@ -569,8 +568,35 @@ class TestSimulation_CT:
 
 class TestFeflowModel:
     def setup_method(self):
+        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.feflow_model = FeflowModel(examples.feflow_model_2D_HT)
-        self.feflow_model_HTC = FeflowModel(examples.feflow_model_2D_HTC)
+        self.feflow_model_HTC = FeflowModel(
+            examples.feflow_model_2D_HTC, self.temp_dir / "HTC"
+        )
+        self.feflow_model_H = FeflowModel(
+            examples.feflow_model_box_Neumann, self.temp_dir / "boxNeumann"
+        )
+
+    def test_H_model_LQF_SSD(self):
+        self.feflow_model_H.run_OGS(
+            end_time=int(1e8),
+            time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
+        )
+        ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.feflow_model_H.mesh.point_data["P_HEAD"],
+            atol=5e-6,
+        )
+        self.feflow_model_H.run_OGS(steady=True)
+        ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.feflow_model_H.mesh.point_data["P_HEAD"],
+            atol=5e-6,
+        )
 
     def test_bulk_mesh(self):
         bulk_mesh = self.feflow_model.ogs_bulk_mesh
@@ -673,14 +699,10 @@ class TestFeflowModel:
         )
 
     def test_prj_file_HTC(self):
-        temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
-        model = FeflowModel(
-            examples.feflow_model_2D_HTC,
-            temp_dir + "/feflow_model_HTC",
-        )
+        model = self.feflow_model_HTC
         model_prj = model.prj()
         model_prj.write_input()
-        prjfile_root = ET.parse(temp_dir + "/feflow_model_HTC.prj").getroot()
+        prjfile_root = ET.parse(str(self.temp_dir) + "/HTC.prj").getroot()
 
         elements = list(prjfile_root)
         assert len(elements) == 8
@@ -688,7 +710,7 @@ class TestFeflowModel:
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
         meshes_list_expected = [
-            "feflow_model_HTC.vtu",
+            "HTC.vtu",
             "P_BC_FLOW.vtu",
             "P_BCFLOW_2ND.vtu",
             "single_species_P_BC_MASS.vtu",
