@@ -16,6 +16,7 @@ from ogstools.ogs6py import Project
 
 from . import _tools
 from ._feflowlib import convert_properties_mesh
+from ._prj_tools import setup_prj_file
 from ._templates import (
     component_transport,
     generic_prj_template,
@@ -219,7 +220,7 @@ class FeflowModel:
                 time_stepping=time_stepping,
             )
 
-        return _tools.setup_prj_file(
+        return setup_prj_file(
             self.mesh_path,
             self.mesh,
             self.material_properties,

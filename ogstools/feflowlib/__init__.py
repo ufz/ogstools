@@ -19,6 +19,7 @@ from ._feflowlib import (
     update_geometry,
 )
 from ._FeflowModel import FeflowModel
+from ._prj_tools import setup_prj_file
 from ._templates import (
     component_transport,
     hydro_thermal,
@@ -34,7 +35,6 @@ from ._tools import (
     get_species,
     get_specific_surface,
     helpFormat,
-    setup_prj_file,
     write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
