@@ -1612,16 +1612,11 @@ class TestiOGS:
             else f"echo $OMP_NUM_THREADS > {log_OMP_NUM_THREADS.resolve()} && echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
         )
 
-        ogs_path = str(Path(sys.executable).parent) + (
-            "\\" if sys.platform == "win32" else "/"
-        )
-
         with pytest.raises(
             RuntimeError,
             match=r"OGS execution was not successful. Please set write_logs to True to obtain more information.",
         ):
             model.run_model(
-                path=ogs_path,
                 write_logs=False,
                 wrapper=wrapper,
                 write_prj_to_pvd=False,
