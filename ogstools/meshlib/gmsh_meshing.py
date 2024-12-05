@@ -61,7 +61,8 @@ def rect(
     left_tags = []
     top_tag = bottom_tag
     if layer_ids is None:
-        layer_ids = range(n_layers)
+        layer_ids = list(range(n_layers))
+    assert isinstance(layer_ids, list)
     for n in range(n_layers):
         recombine = n % 2 if mixed_elements else structured_grid
         newEntities = gmsh.model.geo.extrude(
