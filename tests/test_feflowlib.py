@@ -570,6 +570,9 @@ class TestFeflowModel:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.feflow_model = FeflowModel(examples.feflow_model_2D_HT)
+        self.feflow_model_HT_hetero = FeflowModel(
+            examples.feflow_model_2D_HT, self.temp_dir / "HT_hetero"
+        )
         self.feflow_model_HTC = FeflowModel(
             examples.feflow_model_2D_HTC, self.temp_dir / "HTC"
         )
@@ -597,6 +600,48 @@ class TestFeflowModel:
             self.feflow_model_H.mesh.point_data["P_HEAD"],
             atol=5e-6,
         )
+
+    def test_HT_model_heterogeneous_material_properties(self):
+        self.feflow_model_HT_hetero.run_OGS(
+            end_time=int(1e11),
+            time_stepping=[(1, 1e10)],
+        )
+        ms = ml.MeshSeries(self.temp_dir / "HT_hetero.pvd")
+        ogs_sim_res = ms.mesh(ms.timesteps[-1])
+        np.testing.assert_allclose(
+            ogs_sim_res["HEAD_OGS"],
+            self.feflow_model_HT_hetero.mesh.point_data["P_HEAD"],
+            atol=2e-9,
+        )
+
+        np.testing.assert_allclose(
+            ogs_sim_res["temperature"],
+            self.feflow_model_HT_hetero.mesh.point_data["P_TEMP"],
+            atol=6e-5,
+        )
+
+        prjfile_root = ET.parse(self.temp_dir / "HT_hetero.prj").getroot()
+
+        elements = list(prjfile_root)
+        assert len(elements) == 8
+        parameters = prjfile_root.find("parameters")
+        parameters_list = [
+            parameter.find("name").text
+            for parameter in parameters.findall("parameter")
+        ]
+        parameters_list_expected = [
+            "T0",
+            "p0",
+            "P_BC_FLOW",
+            "P_BC_HEAT",
+            "P_COND",
+            "P_CONDUCF",
+            "P_POROH",
+        ]
+        for parameter, parameter_expected in zip(
+            parameters_list, parameters_list_expected, strict=False
+        ):
+            assert parameter == parameter_expected
 
     def test_bulk_mesh(self):
         bulk_mesh = self.feflow_model.ogs_bulk_mesh
