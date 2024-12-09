@@ -149,6 +149,7 @@ class FeflowModel:
             # For later functions of the converter, material properties are needed.
             # For this reason, a defaultdict is returned with no material properties in
             # this case.
+            # ToDo: return a dict of all properties with a warning!
             material_properties = defaultdict(str)
             material_properties["undefined"] = (
                 f"Material properties are only saved on the mesh for this process: '{process}'",
@@ -219,7 +220,6 @@ class FeflowModel:
                 end_time=end_time,
                 time_stepping=time_stepping,
             )
-
         return setup_prj_file(
             self.mesh_path,
             self.mesh,
@@ -242,10 +242,6 @@ class FeflowModel:
         self.mesh.save(self.mesh_path)
         for path, boundary_mesh in self.boundary_conditions.items():
             boundary_mesh.save(path)
-        # write mesh for heterogeneous material properties
-        # fix prj-file for heterogeneous material properties
-        # write tests for it
-        # check prj file for opalinuston with correct parameter for inhomogeneous parameter...
         prj = self.prj(end_time, time_stepping, steady)
         prj.write_input()
         prj.run_model(write_logs=True)

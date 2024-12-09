@@ -113,6 +113,30 @@ def _get_permeability(material_properties: dict, material_id: int) -> str:
     return permeability_val
 
 
+def _add_heterogeneous_material_property(
+    model: Project,
+    material_id: int,
+    property: str,
+    feflow_property: str,
+    phase_type: str | None = None,
+) -> Project:
+    kwargs = {
+        "medium_id": material_id,
+        "name": property,
+        "type": "Parameter",
+        "parameter_name": feflow_property,
+    }
+    if phase_type is not None:
+        kwargs["phase_type"] = phase_type
+    model.media.add_property(**kwargs)
+
+    model.parameters.add_parameter(
+        name=feflow_property, type="MeshElement", field_name=feflow_property
+    )
+
+    return model
+
+
 def _add_permeabilty_prj(
     material_properties: dict,
     model: Project,
@@ -128,26 +152,20 @@ def _add_permeabilty_prj(
     :param steady: choose steady state diffusion
     :returns: model
     """
-
     diffusion_or_permeability = "diffusion" if steady else "permeability"
     if any(
-        mat_value == "inhomogeneous" and "permeability" in mat_property
+        isinstance(mat_value, str) and "permeability" in mat_property
         for mat_property, mat_value in material_properties[material_id].items()
     ):
-        model.media.add_property(
-            medium_id=material_id,
-            name=diffusion_or_permeability,
-            type="Parameter",
-            parameter_name=diffusion_or_permeability + "_" + str(material_id),
-        )
-        model.mesh.add_mesh(filename=str(material_id) + ".vtu")
-        model.parameters.add_parameter(
-            name=diffusion_or_permeability + "_" + str(material_id),
-            type="MeshElement",
-            field_name="KF",
-            mesh=str(material_id),
-        )
-
+        if "permeability_X" in material_properties[material_id]:
+            # _add_KF_tensor_from_permeability_X_Y_Z()
+            _add_heterogeneous_material_property(
+                model, material_id, diffusion_or_permeability, "KF"
+            )
+        else:
+            _add_heterogeneous_material_property(
+                model, material_id, diffusion_or_permeability, "P_COND"
+            )
     elif "permeability_X" in material_properties[material_id]:
         model.media.add_property(
             medium_id=material_id,
@@ -168,14 +186,12 @@ def _add_permeabilty_prj(
             + str(
                 material_properties[material_id]["permeability"]
                 * material_properties[material_id]["anisotropy_factor"]
-                * material_properties[material_id]["anisotropy_factor"]
             ),
         )
         logger.warning(
             "Permeability anisotropy is implemented only for 2D HT cases."
             "The anisotropy angle is assumed to reference the y-axis."
         )
-
     elif "permeability" in material_properties[material_id]:
         model.media.add_property(
             medium_id=material_id,
@@ -188,6 +204,37 @@ def _add_permeabilty_prj(
         logger.error("No permeability was detected.")
 
     return model
+
+
+def _handle_heterogeneous_material_properties(
+    material_value: float | str,
+    material_property: str,
+    model: Project,
+    material_id: int,
+) -> list:
+    hetero_properties = []
+    if (
+        isinstance(material_value, str)
+        and "permeability" not in material_property
+    ):
+        hetero_properties.append(material_property)
+        if "fluid" in material_property:
+            phase_type = "AqueousLiquid"
+            material_property = material_property.replace("_fluid", "")
+        elif "solid" in material_property or "storage" in material_property:
+            phase_type = "Solid"
+            material_property = material_property.replace("_solid", "")
+        else:
+            phase_type = None
+        _add_heterogeneous_material_property(
+            model,
+            material_id,
+            material_property,
+            material_value.replace("inhomogeneous_", ""),
+            phase_type,
+        )
+
+    return hetero_properties
 
 
 def materials_in_steady_state_diffusion(
@@ -205,10 +252,7 @@ def materials_in_steady_state_diffusion(
     """
     for material_id in material_properties:
         _add_permeabilty_prj(
-            material_properties,
-            model,
-            material_id,
-            steady=True,
+            material_properties, model, material_id, steady=True
         )
 
         model.media.add_property(
@@ -257,12 +301,17 @@ def materials_in_liquid_flow(
             type="Constant",
             value=1,
         )
-        model.media.add_property(
-            medium_id=material_id,
-            name="storage",
-            type="Constant",
-            value=material_properties[material_id]["storage"],
-        )
+        if isinstance(material_properties[material_id]["storage"], str):
+            _add_heterogeneous_material_property(
+                model, material_id, "storage", "P_COMP"
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name="storage",
+                type="Constant",
+                value=material_properties[material_id]["storage"],
+            )
         model.media.add_property(
             medium_id=material_id,
             name="porosity",
@@ -284,23 +333,98 @@ def materials_in_HT(
     :returns: model
     """
     for material_id in material_properties:
+        _add_permeabilty_prj(material_properties, model, material_id)
+
+        for mat_property, mat_value in material_properties[material_id].items():
+            hetero_properties = _handle_heterogeneous_material_properties(
+                mat_value, mat_property, model, material_id
+            )
+
+        if "specific_heat_capacity_fluid" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                phase_type="AqueousLiquid",
+                name="specific_heat_capacity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "specific_heat_capacity_fluid"
+                ],
+            )
+
+        if "thermal_conductivity_fluid" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                phase_type="AqueousLiquid",
+                name="thermal_conductivity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "thermal_conductivity_fluid"
+                ],
+            )
+        if "storage" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                phase_type="Solid",
+                name="storage",
+                type="Constant",
+                value=material_properties[material_id]["storage"],
+            )
+        if "specific_heat_capacity_solid" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                phase_type="Solid",
+                name="specific_heat_capacity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "specific_heat_capacity_solid"
+                ],
+            )
+        if "thermal_conductivity_solid" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                phase_type="Solid",
+                name="thermal_conductivity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "thermal_conductivity_solid"
+                ],
+            )
+        if "porosity" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                name="porosity",
+                type="Constant",
+                value=material_properties[material_id]["porosity"],
+            )
+        if "thermal_transversal_dispersivity" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                name="thermal_transversal_dispersivity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "thermal_transversal_dispersivity"
+                ],
+            )
+        if "thermal_longitudinal_dispersivity" not in hetero_properties:
+            model.media.add_property(
+                medium_id=material_id,
+                name="thermal_longitudinal_dispersivity",
+                type="Constant",
+                value=material_properties[material_id][
+                    "thermal_longitudinal_dispersivity"
+                ],
+            )
         model.media.add_property(
             medium_id=material_id,
-            phase_type="AqueousLiquid",
-            name="specific_heat_capacity",
-            type="Constant",
-            value=material_properties[material_id][
-                "specific_heat_capacity_fluid"
-            ],
+            name="thermal_conductivity",
+            type="EffectiveThermalConductivityPorosityMixing",
         )
         model.media.add_property(
             medium_id=material_id,
-            phase_type="AqueousLiquid",
-            name="thermal_conductivity",
+            phase_type="Solid",
+            name="density",
             type="Constant",
-            value=material_properties[material_id][
-                "thermal_conductivity_fluid"
-            ],
+            value=1,
         )
         model.media.add_property(
             medium_id=material_id,
@@ -316,68 +440,6 @@ def materials_in_HT(
             type="Constant",
             value=1,
         )
-        model.media.add_property(
-            medium_id=material_id,
-            phase_type="Solid",
-            name="storage",
-            type="Constant",
-            value=material_properties[material_id]["storage"],
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            phase_type="Solid",
-            name="density",
-            type="Constant",
-            value=1,
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            phase_type="Solid",
-            name="specific_heat_capacity",
-            type="Constant",
-            value=material_properties[material_id][
-                "specific_heat_capacity_solid"
-            ],
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            phase_type="Solid",
-            name="thermal_conductivity",
-            type="Constant",
-            value=material_properties[material_id][
-                "thermal_conductivity_solid"
-            ],
-        )
-
-        model.media.add_property(
-            medium_id=material_id,
-            name="porosity",
-            type="Constant",
-            value=material_properties[material_id]["porosity"],
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            name="thermal_conductivity",
-            type="EffectiveThermalConductivityPorosityMixing",
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            name="thermal_transversal_dispersivity",
-            type="Constant",
-            value=material_properties[material_id][
-                "thermal_transversal_dispersivity"
-            ],
-        )
-        model.media.add_property(
-            medium_id=material_id,
-            name="thermal_longitudinal_dispersivity",
-            type="Constant",
-            value=material_properties[material_id][
-                "thermal_longitudinal_dispersivity"
-            ],
-        )
-
-        _add_permeabilty_prj(material_properties, model, material_id)
     return model
 
 
@@ -435,6 +497,13 @@ def materials_in_CT(
                 if "transversal_dispersivity" in prop
             ]
         )
+        if any(
+            len(mat_prop_list) > 1
+            for mat_prop_list in [porosity_val, long_disp_val, trans_disp_val]
+        ):
+            logger.warning(
+                "There are species with different porosity,transversal/longitunal_dispersivity values. Therefore, independent OGS-models need to be set up manually"
+            )
         model.media.add_property(
             medium_id=material_id,
             name="porosity",
@@ -443,7 +512,6 @@ def materials_in_CT(
                 str(porosity_val) if len(porosity_val) > 1 else porosity_val[0]
             ),
         )
-
         model.media.add_property(
             medium_id=material_id,
             name="longitudinal_dispersivity",
