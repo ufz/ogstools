@@ -42,6 +42,7 @@ def rect(
     jiggle: float = 0.0,
     out_name: Path | str = Path("rect.msh"),
     msh_version: float | None = None,
+    layer_ids: list | None = None,
 ) -> None:
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
@@ -59,6 +60,9 @@ def rect(
     right_tags = []
     left_tags = []
     top_tag = bottom_tag
+    if layer_ids is None:
+        layer_ids = list(range(n_layers))
+    assert isinstance(layer_ids, list)
     for n in range(n_layers):
         recombine = n % 2 if mixed_elements else structured_grid
         newEntities = gmsh.model.geo.extrude(
@@ -72,7 +76,7 @@ def rect(
         top_tag = abs(newEntities[0][1])
         plane_tag = abs(newEntities[1][1])
         layer_name = f"Layer {n}" if n_layers > 1 else name
-        tag = -1 if n_layers > 1 else 0
+        tag = layer_ids[n]
         gmsh.model.addPhysicalGroup(
             dim=2, tags=[plane_tag], name=layer_name, tag=tag
         )

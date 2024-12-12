@@ -323,16 +323,19 @@ def msh2vtu(
                     pg_key = "PhysicalGroup_" + str(pg_id)
                     field_data[pg_key] = np.array([pg_id, pg_dim])
 
-        id_list_domains = [
-            physical_group[PH_INDEX]
-            for physical_group in field_data.values()
-            if physical_group[GEO_INDEX] == domain_dim
-        ]
-        id_offset = (
-            min(id_list_domains, default=0)
-            if reindex and len(id_list_domains) > 1
-            else 0
+        id_list_domains = np.unique(
+            [
+                ct_id
+                for domain_cell_type in domain_cell_types
+                for ct_id in cell_data_dict[GMSH_PHYSICAL_KEY][domain_cell_type]
+            ]
         )
+        id_map = {
+            ph_id: re_id if reindex else ph_id
+            for ph_id, re_id in zip(
+                *np.unique(id_list_domains, return_inverse=True), strict=True
+            )
+        }
 
     else:
         logging.info("No physical groups found.")
@@ -381,7 +384,7 @@ def msh2vtu(
                 # ogs needs MaterialIDs as int32, possibly beginning with zero
                 # (by id_offset)
                 domain_cell_data_values = np.int32(
-                    domain_cell_data_values - id_offset
+                    list(map(id_map.get, domain_cell_data_values))
                 )
 
         else:
@@ -645,7 +648,9 @@ def msh2vtu(
                             cell_data_dict[GMSH_PHYSICAL_KEY][cell_type][
                                 selection_index
                             ]
-                            - id_offset
+                        )
+                        selection_cell_data_values = list(
+                            map(id_map.get, selection_cell_data_values)
                         )
 
                     else:  # any cells of lower dimension than boundary
