@@ -85,13 +85,7 @@ def get_dimension(mesh: pv.UnstructuredGrid) -> int:
 
     :param mesh: mesh
     """
-    if len(np.unique(mesh.celltypes)) == 1:
-        return mesh.get_cell(0).dimension
-
-    msg = (
-        "The dimension can only be returned, if all cells are of the same type."
-    )
-    raise ValueError(msg)
+    return mesh.get_cell(0).dimension
 
 
 def extract_point_boundary_conditions(
