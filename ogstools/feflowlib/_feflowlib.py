@@ -23,46 +23,41 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     :param doc: The FEFLOW data.
     :returns: pts, cells, celltypes (points, cells, celltypes)
     """
-    # 0. define variables
+    # Define variables
     cell_type_dict = {
         2: {3: pv.CellType.TRIANGLE, 4: pv.CellType.QUAD},
         3: {
             4: pv.CellType.TETRA,
+            5: pv.CellType.PYRAMID,
             6: pv.CellType.WEDGE,
             8: pv.CellType.HEXAHEDRON,
         },
     }
     dimension = doc.getNumberOfDimensions()
-    # 1. get a list of all cells/elements and reverse it for correct node order in OGS
-    elements = np.fliplr(np.array(doc.c.mesh.get_imatrix())).tolist()
-    # 2. write the amount of nodes per element to the first entry of each list
+    # Get a list of all cells/elements and reverse it for correct node order in OGS
+    elements = [sublist[::-1] for sublist in doc.c.mesh.get_imatrix()]
+
+    # Write the amount of nodes per element to the first entry of each list
     # of nodes. This is needed for pyvista !
-    # 2 could also be done with np.hstack([len(ele)]*len(elements,elements))
-    # also write the celltypes.
+    # Could also be done with np.hstack([len(ele)]*len(elements,elements))
+    # Also define the celltypes.
     celltypes = []
     for element in elements:
         nElement = len(element)
         element.insert(0, nElement)
         celltypes.append(cell_type_dict[dimension][nElement])
-
-    # 3. bring the elements to the right format for pyvista
-    cells = np.array(elements).ravel()
-    # 4 .write the list for all points and their global coordinates
+    # Write the list for all points and their global coordinates.
     if dimension == 2:
         points = doc.c.mesh.df.nodes(global_cos=True)
         pts = points[["X", "Y"]].to_numpy()
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
         pts = np.pad(pts, [(0, 0), (0, 1)])
-        # order of points in the cells needs to be flipped
-        if nElement == 3:
-            cells = cells.reshape(-1, 4)
-            cells[:, -3:] = np.flip(cells[:, -3:], axis=1)
-            np.concatenate(cells)
-        if nElement == 4:
-            cells = cells.reshape(-1, 5)
-            cells[:, -4:] = np.flip(cells[:, -4:], axis=1)
-            np.concatenate(cells)
+        # Order of points in the cells needs to be flipped
+        elements = [
+            element[: -(len(element) - 1)] + element[-1 : -len(element) : -1]
+            for element in elements
+        ]
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}
@@ -72,12 +67,13 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
         msg = "The input data is neither 2D nor 3D, which it needs to be."
         raise ValueError(msg)
 
-    # 5. log information
+    # Log information
     logger.info(
         "There are %s number of points and %s number of cells to be converted.",
         len(pts),
         len(celltypes),
     )
+    cells = [point for cell in elements for point in cell]
     return pts, cells, celltypes
 
 
