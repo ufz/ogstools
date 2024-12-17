@@ -18,7 +18,6 @@ from ._feflowlib import (
     points_and_cells,
     update_geometry,
 )
-from ._FeflowModel import FeflowModel
 from ._prj_tools import setup_prj_file
 from ._templates import (
     component_transport,
@@ -38,6 +37,7 @@ from ._tools import (
     write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
+from .feflow_model import FeflowModel
 
 __all__ = [
     "combine_material_properties",
