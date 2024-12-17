@@ -211,13 +211,12 @@ def _handle_heterogeneous_material_properties(
     material_property: str,
     model: Project,
     material_id: int,
-) -> list:
-    hetero_properties = []
+) -> str:
     if (
         isinstance(material_value, str)
         and "permeability" not in material_property
     ):
-        hetero_properties.append(material_property)
+        hetero_property = material_property
         if "fluid" in material_property:
             phase_type = "AqueousLiquid"
             material_property = material_property.replace("_fluid", "")
@@ -233,8 +232,8 @@ def _handle_heterogeneous_material_properties(
             material_value.replace("inhomogeneous_", ""),
             phase_type,
         )
-
-    return hetero_properties
+        return hetero_property
+    return ""
 
 
 def materials_in_steady_state_diffusion(
@@ -334,10 +333,12 @@ def materials_in_HT(
     """
     for material_id in material_properties:
         _add_permeabilty_prj(material_properties, model, material_id)
-
+        hetero_properties = []
         for mat_property, mat_value in material_properties[material_id].items():
-            hetero_properties = _handle_heterogeneous_material_properties(
-                mat_value, mat_property, model, material_id
+            hetero_properties.append(
+                _handle_heterogeneous_material_properties(
+                    mat_value, mat_property, model, material_id
+                )
             )
 
         if "specific_heat_capacity_fluid" not in hetero_properties:
