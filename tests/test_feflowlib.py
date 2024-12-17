@@ -13,10 +13,10 @@ from ogstools.ogs6py import Project
 
 pytest.importorskip("ifm")
 
-import ifm_contrib as ifm  # noqa: E402
+import ifm_contrib as ifm  # noqa: E402 / because of ifm-skip
 
 # pylint: disable=C0413,C0412
-from ogstools.feflowlib import (  # noqa: E402
+from ogstools.feflowlib import (  # noqa: E402 / because of ifm-skip
     FeflowModel,
     component_transport,
     convert_properties_mesh,
@@ -32,7 +32,7 @@ from ogstools.feflowlib import (  # noqa: E402
     steady_state_diffusion,
     write_point_boundary_conditions,
 )
-from ogstools.feflowlib._tools import (  # noqa: E402
+from ogstools.feflowlib._tools import (  # noqa: E402 / because of ifm-skip
     get_material_properties_of_H_model,
 )
 
@@ -58,8 +58,8 @@ class TestSimulation_Neumann:
 
     def test_neumann_ogs_steady_state_diffusion(self):
         """
-        Test if ogs simulation for a steady state diffusion results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for steady state diffusion
+        are similar to FEFLOW simulation results with Neumann BC.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxNeumann_test.prj"
@@ -89,8 +89,8 @@ class TestSimulation_Neumann:
 
     def test_neumann_ogs_liquid_flow(self):
         """
-        Test if ogs simulation with liquid flow results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for liquid flow process
+        are similar to FEFLOW simulation results with Neumann BC.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxNeumann_test.prj"
@@ -135,8 +135,8 @@ class TestSimulation_Robin:
 
     def test_robin_ogs_steady_state_diffusion(self):
         """
-        Test if ogs simulation for a steady state diffusion results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for steady state diffusion
+        are similar to FEFLOW simulation results with Robin/Cauchy BC.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxRobin_test.prj"
@@ -166,8 +166,8 @@ class TestSimulation_Robin:
 
     def test_robin_ogs_liquid_flow(self):
         """
-        Test if ogs simulation for a steady state diffusion results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for liquid flow process
+        are similar to FEFLOW simulation results with Robin/Cauchy BC.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxRobin_test.prj"
@@ -213,8 +213,8 @@ class TestSimulation_Well:
 
     def test_well_ogs_steady_state_diffusion(self):
         """
-        Test if ogs simulation for a steady state diffusion results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for steady state diffusion
+        are similar to FEFLOW simulation results with source/sink term.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxWell_test.prj"
@@ -243,8 +243,8 @@ class TestSimulation_Well:
 
     def test_well_ogs_liquid_flow(self):
         """
-        Test if ogs simulation for a steady state diffusion results
-        are similar to FEFLOW simulation results.
+        Test if OGS simulation results for liquid flow process
+        are similar to FEFLOW simulation results with source/sink term.
         """
         # Run ogs
         prjfile = self.temp_dir / "boxWell_test.prj"
@@ -283,12 +283,14 @@ class TestConverter:
         self.pv_mesh = convert_properties_mesh(self.doc)
 
     def test_mesh_class(self):
+        "Test if ogstools-mesh class can read FEFLOW model."
         mesh = ml.Mesh.read_feflow(examples.feflow_model_box_Neumann)
         assert mesh.n_points == 6768
         assert mesh.n_cells == 11462
         assert mesh.get_cell(0).type == pv.CellType.WEDGE
 
-    def test_mesh_manipulation_3D(self):
+    def test_mesh_preservation_3D(self):
+        "Test if converted properties mesh preserves unchanged after extraction of BC."
         testing_mesh = self.pv_mesh.copy()
         extract_point_boundary_conditions(self.temp_dir, testing_mesh)
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
@@ -298,9 +300,7 @@ class TestConverter:
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
 
     def test_geometry(self):
-        """
-        Test if geometry can be converted correctly.
-        """
+        "Test if geometry can be converted correctly."
         doc = ifm.loadDocument(str(examples.feflow_model_2layers))
         points, cells, celltypes = points_and_cells(doc)
         assert len(points) == 75
@@ -308,9 +308,7 @@ class TestConverter:
         assert celltypes[0] == pv.CellType.HEXAHEDRON
 
     def test_toymodel_mesh_conversion(self):
-        """
-        Test if geometry of a toymodel is converted correctly.
-        """
+        "Test if geometry of a toymodel is converted correctly."
         # 1. Test if geometry is fine
         points, cells, celltypes = points_and_cells(self.doc)
         assert len(points) == 6768
@@ -322,9 +320,7 @@ class TestConverter:
         assert len(self.pv_mesh.point_data) == 11
 
     def test_toymodel_point_boundary_condition(self):
-        """
-        Test if separate meshes for boundary condition are written correctly.
-        """
+        "Test if separate meshes for boundary condition are written correctly."
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         bc_flow = pv.read(str(self.temp_dir / "P_BC_FLOW.vtu"))
         assert bc_flow.n_points == 66
@@ -334,9 +330,7 @@ class TestConverter:
         assert len(bc_flow_2nd.point_data) == 2
 
     def test_toymodel_cell_boundary_condition(self):
-        """
-        Test if separate meshes for boundary condition are written correctly.
-        """
+        "Test if separate meshes for boundary condition are written correctly."
         topsurface = extract_cell_boundary_conditions(
             self.temp_dir / "boxNeumann.vtu", self.pv_mesh
         )[1]
@@ -350,26 +344,22 @@ class TestConverter:
         assert topsurface.n_cells == 1042
 
     def test_toymodel_prj_file(self):
-        """
-        Test the prj_file that can be written
-        """
+        "Test the prj_file that can be written."
         prj = setup_prj_file(
-            self.temp_dir / "boxNeumann_.vtu",
+            self.temp_dir / "boxNeumann.vtu",
             self.pv_mesh,
             get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
         )
-        prj.write_input(self.temp_dir / "boxNeumann_.prj")
-        prjfile_root = ET.parse(
-            str(self.temp_dir / "boxNeumann_.prj")
-        ).getroot()
+        prj.write_input(self.temp_dir / "boxNeumann.prj")
+        prjfile_root = ET.parse(str(self.temp_dir / "boxNeumann.prj")).getroot()
         elements = list(prjfile_root)
         assert len(elements) == 8
         # Test if the meshes are correct
         meshes = prjfile_root.find("meshes")
         meshes_list = [mesh.text for mesh in meshes.findall("mesh")]
         meshes_list_expected = [
-            "boxNeumann_.vtu",
+            "boxNeumann.vtu",
             "P_BC_FLOW.vtu",
             "P_BCFLOW_2ND.vtu",
         ]
@@ -412,8 +402,7 @@ class TestConverter:
         diffusion_value = prjfile_root.find(
             "media/medium[@id='0']/properties/property[name='diffusion']/value"
         ).text[0:23]
-        # The index [0] is because one needs to compare one value from the list. And all
-        # values are the same.
+        # The index [0:23] is because one needs to read all decimals to get the value.
         assert float(diffusion_value) == float(
             self.pv_mesh.cell_data["P_CONDX"][0]
         )
@@ -428,7 +417,8 @@ class TestSimulation_HT:
         self.pv_mesh.save(self.vtu_path)
         write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
 
-    def test_mesh_manipulation_2D(self):
+    def test_mesh_preservation_2D(self):
+        "Test if converted properties mesh preserves unchanged after extraction of BC."
         testing_mesh = self.pv_mesh.copy()
         extract_point_boundary_conditions(self.temp_dir, testing_mesh)
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
@@ -571,7 +561,7 @@ class TestFeflowModel:
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.feflow_model = FeflowModel(examples.feflow_model_2D_HT)
         self.feflow_model_HT_hetero = FeflowModel(
-            examples.feflow_model_2D_HT, self.temp_dir / "HT_hetero"
+            examples.feflow_model_2D_HT_hetero, self.temp_dir / "HT_hetero"
         )
         self.feflow_model_HTC = FeflowModel(
             examples.feflow_model_2D_HTC, self.temp_dir / "HTC"
@@ -581,6 +571,10 @@ class TestFeflowModel:
         )
 
     def test_H_model_LQF_SSD(self):
+        """
+        Test if converted FeflowModel object can be run to reproduce FEFLOW results
+        for liquid flow and steady state diffusion.
+        """
         self.feflow_model_H.run_OGS(
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
@@ -602,6 +596,10 @@ class TestFeflowModel:
         )
 
     def test_HT_model_heterogeneous_material_properties(self):
+        """
+        Test if converted FeflowModel object can be run to reproduce FEFLOW results
+        for hydro thermal process with heterogeneous material properties.
+        """
         self.feflow_model_HT_hetero.run_OGS(
             end_time=int(1e11),
             time_stepping=[(1, 1e10)],
@@ -611,13 +609,14 @@ class TestFeflowModel:
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
             self.feflow_model_HT_hetero.mesh.point_data["P_HEAD"],
-            atol=2e-9,
+            atol=1e-9,
         )
 
         np.testing.assert_allclose(
             ogs_sim_res["temperature"],
             self.feflow_model_HT_hetero.mesh.point_data["P_TEMP"],
-            atol=6e-5,
+            atol=0.01,
+            rtol=5e-05,
         )
 
         prjfile_root = ET.parse(self.temp_dir / "HT_hetero.prj").getroot()
@@ -644,22 +643,45 @@ class TestFeflowModel:
             assert parameter == parameter_expected
 
     def test_bulk_mesh(self):
+        "Test if bulk mesh only contains 1 array (MaterialIDs)."
         bulk_mesh = self.feflow_model.ogs_bulk_mesh
+        assert bulk_mesh.n_arrays == 1
+
+        bulk_mesh = self.feflow_model_H.ogs_bulk_mesh
+        assert bulk_mesh.n_arrays == 1
+
+        bulk_mesh = self.feflow_model_HT_hetero.ogs_bulk_mesh
         assert bulk_mesh.n_arrays == 1
 
         bulk_mesh = self.feflow_model_HTC.ogs_bulk_mesh
         assert bulk_mesh.n_arrays == 1
 
     def test_material_properties(self):
+        "Test if material properties are returned correctly from FeflowModel"
         material_prop = self.feflow_model.material_properties
         assert material_prop[0]["anisotropy_angle"] == 0
         assert material_prop[0]["specific_heat_capacity_fluid"] == 4200000
+
+        material_prop_hetero = self.feflow_model_HT_hetero.material_properties
+        assert "inhomogeneous" in material_prop_hetero[0]["permeability"]
+        assert "inhomogeneous" in material_prop_hetero[0]["porosity"]
+        assert "inhomogeneous" in (
+            material_prop_hetero[0]["thermal_conductivity_fluid"]
+        )
+        assert material_prop_hetero[0]["thermal_conductivity_solid"] == 3.0
+
+        material_prop_H = self.feflow_model_H.material_properties
+        assert material_prop_H[0]["permeability_X"] == 1.1574074074074073e-05
+        assert material_prop_H[0]["storage"] == 9.999999747378752e-05
+
         assert (
             "not supported"
             in self.feflow_model_HTC.material_properties["undefined"][0]
         )
+        # add test for undefined material properties for unsupported model
 
     def test_boundary_conditions(self):
+        "Test if BC are returned correctly from FeflowModel"
         boundary_conditions = self.feflow_model.boundary_conditions
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
         assert first_bc.n_cells == 44
@@ -667,6 +689,7 @@ class TestFeflowModel:
         assert first_bc.n_arrays == 2
 
     def test_process(self):
+        "Test if process is detected correctly."
         assert self.feflow_model.process == "Hydro thermal"
         assert (
             FeflowModel(examples.feflow_model_2D_CT_t_28).process
@@ -679,6 +702,10 @@ class TestFeflowModel:
         assert "not supported" in self.feflow_model_HTC.process
 
     def test_prj_file_HT(self):
+        """
+        Test if prj-file is created correctly using
+        FeflowModel object for a HT process.
+        """
         temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
         model = FeflowModel(
             examples.feflow_model_box_Neumann,
@@ -744,6 +771,10 @@ class TestFeflowModel:
         )
 
     def test_prj_file_HTC(self):
+        """
+        Test if prj-file is created correctly using
+        FeflowModel object for a HTC process.
+        """
         model = self.feflow_model_HTC
         model_prj = model.prj()
         model_prj.write_input()
@@ -800,12 +831,3 @@ class TestFeflowModel:
             boundary_condtitions_list, bc_expected_list, strict=False
         ):
             assert bc == bc_expected
-        """
-        permeability = prjfile_root.find(
-            "media/medium[@id='0']/properties/property[name='permeability']/value"
-        ).text[0:23]
-        # The index [0:23] is because one needs to read all decimals to get the value.
-        assert float(permeability) == float(
-            self.feflow_model.mesh.cell_data["P_COND"][0]
-        )
-        """
