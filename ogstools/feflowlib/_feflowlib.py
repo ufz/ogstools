@@ -35,17 +35,19 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     }
     dimension = doc.getNumberOfDimensions()
     # Get a list of all cells/elements and reverse it for correct node order in OGS
-    elements = [sublist[::-1] for sublist in doc.c.mesh.get_imatrix()]
-
+    elements = doc.c.mesh.get_imatrix()
     # Write the amount of nodes per element to the first entry of each list
     # of nodes. This is needed for pyvista !
     # Could also be done with np.hstack([len(ele)]*len(elements,elements))
     # Also define the celltypes.
     celltypes = []
-    for element in elements:
+    for i, element in enumerate(elements):
         nElement = len(element)
-        element.insert(0, nElement)
-        celltypes.append(cell_type_dict[dimension][nElement])
+        celltype = cell_type_dict[dimension][nElement]
+        celltypes.append(celltype)
+        if celltype == pv.CellType.PYRAMID:
+            elements[i] = element[:4][::-1] + element[4:]
+        elements[i].insert(0, nElement)
     # Write the list for all points and their global coordinates.
     if dimension == 2:
         points = doc.c.mesh.df.nodes(global_cos=True)
@@ -53,11 +55,6 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
         pts = np.pad(pts, [(0, 0), (0, 1)])
-        # Order of points in the cells needs to be flipped
-        elements = [
-            element[: -(len(element) - 1)] + element[-1 : -len(element) : -1]
-            for element in elements
-        ]
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}
