@@ -6,7 +6,7 @@
 
 import logging as log
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 import pyvista as pv
@@ -129,10 +129,16 @@ def _add_heterogeneous_material_property(
     if phase_type is not None:
         kwargs["phase_type"] = phase_type
     model.media.add_property(**kwargs)
-
-    model.parameters.add_parameter(
-        name=feflow_property, type="MeshElement", field_name=feflow_property
-    )
+    model_tree: Any = model.tree  # Actually this should be ET.ElementET
+    parameters = [
+        parameter.find("name").text
+        for parameter in model_tree.getroot().findall("./parameters/parameter")
+    ]
+    # Parameter need to occur only once!
+    if feflow_property not in parameters:
+        model.parameters.add_parameter(
+            name=feflow_property, type="MeshElement", field_name=feflow_property
+        )
 
     return model
 
