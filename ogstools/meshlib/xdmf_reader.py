@@ -478,8 +478,6 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
         dirpath = self.filename.resolve().parent
         full_hdf5_path = dirpath / filename
 
-        import h5py
-
         with h5py.File(full_hdf5_path, "r") as file:
             if h5path[0] != "/":
                 raise ReadError()
@@ -488,6 +486,12 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             for key in h5path[1:].split("/"):
                 f = f[key]
             # `[()]` gives a np.ndarray
-            data = np.copy(f[selection].squeeze())
-            file.close()
-        return data
+            selected_shape = f[selection]
+
+            try:
+                data = np.reshape(selected_shape, dims)  # may be copy or view
+            except ValueError as e:
+                msg = f"Error reshaping data: {e}. Shape: {selected_shape.shape}, dims: {dims}, DataItem: {data_item.text}."
+                raise ValueError(msg) from e
+            assert data.base is not None  # the xdmf dim should be correct
+            return np.copy(data)

@@ -34,7 +34,7 @@ class TestUtils:
         reason="OGS Bug in xdmf output for homogeneous meshes",
     )
     def test_read_quadratic_xdmf(self):
-        "Test reading quadratic xdmf meshes. Doesn't work with native meshio."
+        "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
         tmp_dir = Path(mkdtemp())
         mesh_path = tmp_dir / "mesh.msh"
         for quads in [True, False]:
