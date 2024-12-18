@@ -16,6 +16,7 @@ from ogstools.examples import (
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
     prj_heat_transport,
+    prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
     prj_pid_timestepping,
@@ -31,6 +32,7 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
+from ogstools.meshlib.gmsh_meshing import BHE, gen_bhe_mesh
 from ogstools.ogs6py import Project
 
 
@@ -1598,11 +1600,32 @@ class TestiOGS:
     def test_OMP_NUM_THREADS(self, num_threads) -> NoReturn:
         temp = Path(tempfile.mkdtemp())
 
+        vtu_file = temp / "bhe_simple.vtu"
+        gen_bhe_mesh(
+            length=5,
+            width=5,
+            layer=[20],
+            groundwater=[],
+            BHE_Array=[
+                BHE(x=2.5, y=2.5, z_begin=0, z_end=18, borehole_radius=0.076)
+            ],
+            meshing_type="prism",
+            out_name=vtu_file,
+            target_z_size_coarse=2,
+            target_z_size_fine=1,
+            inner_mesh_size=1,
+            outer_mesh_size=2.5,
+            n_refinement_layers=1,
+            dist_box_x=1.5,
+            dist_box_y=1.5,
+        )
+
         log_OMP_NUM_THREADS = temp / "log_OMP_NUM_THREADS.txt"
         log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
 
         model = Project(
-            input_file=prj_beier_sandbox,
+            input_file=prj_heat_transport_bhe_simple,
+            output_file=temp / "test_Threads.prj",
             OMP_NUM_THREADS=num_threads,
         )
 
@@ -1612,15 +1635,13 @@ class TestiOGS:
             else f"echo $OMP_NUM_THREADS > {log_OMP_NUM_THREADS.resolve()} && echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
         )
 
-        with pytest.raises(
-            RuntimeError,
-            match=r"OGS execution was not successful. Please set write_logs to True to obtain more information.",
-        ):
-            model.run_model(
-                write_logs=False,
-                wrapper=wrapper,
-                write_prj_to_pvd=False,
-            )
+        model.write_input()
+        model.run_model(
+            write_logs=False,
+            wrapper=wrapper,
+            write_prj_to_pvd=False,
+            args=f"-o {temp.resolve()}",
+        )
 
         assert (
             log_OMP_NUM_THREADS.exists()
