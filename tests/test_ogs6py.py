@@ -12,6 +12,7 @@ import pytest
 from lxml import etree as ET
 
 from ogstools.examples import (
+    prj_aniso_expansion,
     prj_beier_sandbox,
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
@@ -32,7 +33,8 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
-from ogstools.meshlib.gmsh_meshing import BHE, gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import BHE, cuboid, gen_bhe_mesh
+from ogstools.msh2vtu import msh2vtu
 from ogstools.ogs6py import Project
 
 
@@ -1671,11 +1673,30 @@ class TestiOGS:
     @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
     def test_OGS_ASM_THREADS(self, num_threads) -> NoReturn:
         temp = Path(tempfile.mkdtemp())
+        meshname = temp / "cuboid.msh"
+
+        cuboid(
+            lengths=1.0,
+            n_edge_cells=1,
+            n_layers=1,
+            structured_grid=True,
+            out_name=meshname,
+            msh_version=None,
+        )
+
+        msh2vtu(
+            meshname,
+            output_path=meshname.parents[0],
+            dim=[1, 3],
+            reindex=True,
+            log_level="ERROR",
+        )
 
         log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
 
         model = Project(
-            input_file=prj_beier_sandbox,
+            input_file=prj_aniso_expansion,
+            output_file=temp / "test_asm_threads.prj",
             OGS_ASM_THREADS=num_threads,
         )
 
@@ -1685,15 +1706,13 @@ class TestiOGS:
             else f"echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
         )
 
-        with pytest.raises(
-            RuntimeError,
-            match=r"OGS execution was not successful. Please set write_logs to True to obtain more information.",
-        ):
-            model.run_model(
-                write_logs=False,
-                wrapper=wrapper,
-                write_prj_to_pvd=False,
-            )
+        model.write_input()
+        model.run_model(
+            write_logs=False,
+            wrapper=wrapper,
+            write_prj_to_pvd=False,
+            args=f"-o {temp.resolve()}",
+        )
 
         assert (
             log_OGS_ASM_THREADS.exists()

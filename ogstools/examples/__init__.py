@@ -92,6 +92,7 @@ serial_warning_only = _logs_dir / "serial_warning_only.txt"
 
 ##
 
+prj_aniso_expansion = _prj_dir / "aniso_expansion.prj"
 prj_deactivate_replace = _prj_dir / "deactivate_replace.prj"
 prj_mechanics = _prj_dir / "mechanics.prj"
 prj_steady_state_diffusion = _prj_dir / "steady_state_diffusion.prj"
