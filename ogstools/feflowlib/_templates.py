@@ -17,6 +17,7 @@ def generic_prj_template(
     time_stepping: list | None = None,
     initial_time: int = 0,
     end_time: int | float = 1,
+    error_tolerance: float = 1e-10,
     output_variables: list | None = None,
     eigen_sparseLu: bool = False,
     petsc_CG: bool = False,
@@ -108,8 +109,8 @@ def generic_prj_template(
         kind="lis",
         solver_type="cg",
         precon_type="jacobi",
-        max_iteration_step="1000",
-        error_tolerance="1e-10",
+        max_iteration_step="100000",
+        error_tolerance=str(error_tolerance),
     )
 
     if petsc_CG:
@@ -120,7 +121,7 @@ def generic_prj_template(
             solver_type="cg",
             precon_type="bjacobi",
             max_iteration_step="1000",
-            error_tolerance="1e-10",
+            error_tolerance=str(error_tolerance),
         )
     if eigen_CG:
         prj.linear_solvers.add_lin_solver(
@@ -128,8 +129,8 @@ def generic_prj_template(
             kind="eigen",
             solver_type="CG",
             precon_type="DIAGONAL",
-            max_iteration_step="1000",
-            error_tolerance="1e-10",
+            max_iteration_step="100000",
+            error_tolerance=str(error_tolerance),
         )
     if eigen_sparseLu:
         prj.linear_solvers.add_lin_solver(
@@ -146,6 +147,7 @@ def steady_state_diffusion(
     saving_path: Path,
     prj: Project,
     dimension: int = 3,
+    error_tolerance: float = 1e-10,
 ) -> Project:
     """
     A template for a steady state diffusion process to be simulated in ogs.
@@ -163,6 +165,7 @@ def steady_state_diffusion(
         prj,
         process_name="SteadyStateDiffusion",
         dimension=dimension,
+        error_tolerance=error_tolerance,
     )
     prj.time_loop.set_stepping(
         process="SteadyStateDiffusion",
@@ -184,6 +187,7 @@ def liquid_flow(
     time_stepping: list | None = None,
     initial_time: int = 0,
     end_time: int | float = 1,
+    error_tolerance: float = 1e-10,
 ) -> Project:
     """
     A template for a steady liquid flow process to be simulated in ogs.
@@ -214,6 +218,7 @@ def liquid_flow(
         time_stepping=time_stepping,
         initial_time=initial_time,
         end_time=end_time,
+        error_tolerance=error_tolerance,
     )
 
 
@@ -227,6 +232,7 @@ def component_transport(
     time_stepping: list | None = None,
     initial_time: int = 0,
     end_time: int | float = 1,
+    error_tolerance: float = 1e-10,
 ) -> Project:
     """
     A template for component transport process to be simulated in ogs.
@@ -284,6 +290,7 @@ def component_transport(
         fixed_out_times=fixed_out_times,
         end_time=end_time,
         time_stepping=time_stepping,
+        error_tolerance=error_tolerance,
         output_variables=species + ["HEAD_OGS"],
     )
 
@@ -296,6 +303,7 @@ def hydro_thermal(
     time_stepping: list | None = None,
     initial_time: int = 0,
     end_time: int | float = 1,
+    error_tolerance: float = 1e-10,
 ) -> Project:
     gravity = " ".join(["0"] * dimension)
     prj.processes.set_process(
@@ -310,8 +318,9 @@ def hydro_thermal(
         process_name="HydroThermal",
         dimension=dimension,
         fixed_out_times=fixed_out_times,
+        time_stepping=time_stepping,
         initial_time=initial_time,
         end_time=end_time,
-        time_stepping=time_stepping,
+        error_tolerance=error_tolerance,
         eigen_sparseLu=True,
     )

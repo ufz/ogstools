@@ -168,6 +168,7 @@ class FeflowModel:
         self,
         end_time: int = 1,
         time_stepping: list | None = None,
+        error_tolerance: float = 1e-10,
         steady: bool = False,
     ) -> Project:
         """
@@ -184,11 +185,13 @@ class FeflowModel:
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
+                error_tolerance=error_tolerance,
             )
         elif "Liquid flow" in self.process and steady:
             template_model = steady_state_diffusion(
                 Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
+                error_tolerance=error_tolerance,
             )
         elif "Hydro thermal" in self.process:
             template_model = hydro_thermal(
@@ -197,6 +200,7 @@ class FeflowModel:
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
+                error_tolerance=error_tolerance,
             )
         elif "Component transport" in self.process or "mass" in self.process:
             process_name = (
@@ -211,6 +215,7 @@ class FeflowModel:
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
+                error_tolerance=error_tolerance,
             )
         else:
             template_model = generic_prj_template(
@@ -219,6 +224,7 @@ class FeflowModel:
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
+                error_tolerance=error_tolerance,
             )
         return setup_prj_file(
             self.mesh_path,
@@ -237,11 +243,17 @@ class FeflowModel:
         self,
         end_time: int = 1,
         time_stepping: list | None = None,
+        error_tolerance: float = 1e-10,
         steady: bool = False,
     ) -> None:
         self.mesh.save(self.mesh_path)
         for path, boundary_mesh in self.boundary_conditions.items():
             boundary_mesh.save(path)
-        prj = self.prj(end_time, time_stepping, steady)
+        prj = self.prj(
+            end_time,
+            time_stepping,
+            error_tolerance,
+            steady,
+        )
         prj.write_input()
         prj.run_model(write_logs=True)
