@@ -1,4 +1,4 @@
-![OGS workflow overview](https://ogstools.opengeosys.org/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
+![OGSTools](https://ogstools.opengeosys.org/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
 is a:
 
