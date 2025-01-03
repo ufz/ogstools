@@ -92,6 +92,7 @@ serial_warning_only = _logs_dir / "serial_warning_only.txt"
 
 ##
 
+prj_aniso_expansion = _prj_dir / "aniso_expansion.prj"
 prj_deactivate_replace = _prj_dir / "deactivate_replace.prj"
 prj_mechanics = _prj_dir / "mechanics.prj"
 prj_steady_state_diffusion = _prj_dir / "steady_state_diffusion.prj"
@@ -102,6 +103,7 @@ prj_trm_from_scratch = _prj_dir / "trm_from_scratch.prj"
 prj_include_solid = _prj_dir / "solid_inc.xml"
 prj_include_solid_ref = _prj_dir / "solid.xml"
 prj_heat_transport = _prj_dir / "HeatTransportBHE_ogs6py.prj"
+prj_heat_transport_bhe_simple = _prj_dir / "HeatTransportBHE_simple.prj"
 prj_staggered = _prj_dir / "hm1_3Dcube.prj"
 prj_staggered_ref = _prj_dir / "hm1_3Dcube_ref.prj"
 prj_pid_timestepping = _prj_dir / "PID_timestepping.prj"

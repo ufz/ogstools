@@ -12,10 +12,12 @@ import pytest
 from lxml import etree as ET
 
 from ogstools.examples import (
+    prj_aniso_expansion,
     prj_beier_sandbox,
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
     prj_heat_transport,
+    prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
     prj_pid_timestepping,
@@ -31,6 +33,8 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
+from ogstools.meshlib.gmsh_meshing import BHE, cuboid, gen_bhe_mesh
+from ogstools.msh2vtu import msh2vtu
 from ogstools.ogs6py import Project
 
 
@@ -1593,3 +1597,132 @@ class TestiOGS:
 
         # clean up the temporary dir
         sing_dir.cleanup()
+
+    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
+    def test_OMP_NUM_THREADS(self, num_threads) -> NoReturn:
+        temp = Path(tempfile.mkdtemp())
+
+        vtu_file = temp / "bhe_simple.vtu"
+        gen_bhe_mesh(
+            length=5,
+            width=5,
+            layer=[20],
+            groundwater=[],
+            BHE_Array=[
+                BHE(x=2.5, y=2.5, z_begin=0, z_end=18, borehole_radius=0.076)
+            ],
+            meshing_type="prism",
+            out_name=vtu_file,
+            target_z_size_coarse=2,
+            target_z_size_fine=1,
+            inner_mesh_size=1,
+            outer_mesh_size=2.5,
+            n_refinement_layers=1,
+            dist_box_x=1.5,
+            dist_box_y=1.5,
+        )
+
+        log_OMP_NUM_THREADS = temp / "log_OMP_NUM_THREADS.txt"
+        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
+
+        model = Project(
+            input_file=prj_heat_transport_bhe_simple,
+            output_file=temp / "test_Threads.prj",
+            OMP_NUM_THREADS=num_threads,
+        )
+
+        wrapper = (
+            f"echo %OMP_NUM_THREADS% > {log_OMP_NUM_THREADS.resolve()} && echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
+            if sys.platform == "win32"
+            else f"echo $OMP_NUM_THREADS > {log_OMP_NUM_THREADS.resolve()} && echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
+        )
+
+        model.write_input()
+        model.run_model(
+            write_logs=False,
+            wrapper=wrapper,
+            write_prj_to_pvd=False,
+            args=f"-o {temp.resolve()}",
+        )
+
+        assert (
+            log_OMP_NUM_THREADS.exists()
+        ), f"Log file {log_OMP_NUM_THREADS} was not created."
+        assert (
+            log_OGS_ASM_THREADS.exists()
+        ), f"Log file {log_OGS_ASM_THREADS} was not created."
+
+        with log_OMP_NUM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OMP_NUM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OMP_NUM_THREADS={num_threads}"
+
+        with log_OGS_ASM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OGS_ASM_THREADS={num_threads}"
+
+    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
+    def test_OGS_ASM_THREADS(self, num_threads) -> NoReturn:
+        temp = Path(tempfile.mkdtemp())
+        meshname = temp / "cuboid.msh"
+
+        cuboid(
+            lengths=1.0,
+            n_edge_cells=1,
+            n_layers=1,
+            structured_grid=True,
+            out_name=meshname,
+            msh_version=None,
+        )
+
+        msh2vtu(
+            meshname,
+            output_path=meshname.parents[0],
+            dim=[1, 3],
+            reindex=True,
+            log_level="ERROR",
+        )
+
+        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
+
+        model = Project(
+            input_file=prj_aniso_expansion,
+            output_file=temp / "test_asm_threads.prj",
+            OGS_ASM_THREADS=num_threads,
+        )
+
+        wrapper = (
+            f"echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
+            if sys.platform == "win32"
+            else f"echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
+        )
+
+        model.write_input()
+        model.run_model(
+            write_logs=False,
+            wrapper=wrapper,
+            write_prj_to_pvd=False,
+            args=f"-o {temp.resolve()}",
+        )
+
+        assert (
+            log_OGS_ASM_THREADS.exists()
+        ), f"Log file {log_OGS_ASM_THREADS} was not created."
+
+        with log_OGS_ASM_THREADS.open("r") as log_file:
+            omp_num_threads = log_file.readline().strip()
+            assert (
+                omp_num_threads.isdigit()
+            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
+            assert (
+                int(omp_num_threads) == num_threads
+            ), f"Expected OGS_ASM_THREADS={num_threads}"

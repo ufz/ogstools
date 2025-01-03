@@ -778,11 +778,11 @@ class Project:
         :param write_prj_to_pvd: write the prj file as a comment in the pvd
         """
         ogs_path: Path = Path()
-        env_export = ""
+        env = os.environ.copy()
         if self.threads is not None:
-            env_export += f"export OMP_NUM_THREADS={self.threads} && "
+            env["OMP_NUM_THREADS"] = f"{self.threads}"
         if self.asm_threads is not None:
-            env_export += f"export OGS_ASM_THREADS={self.asm_threads} && "
+            env["OGS_ASM_THREADS"] = f"{self.asm_threads}"
         if container_path is not None:
             container_path = Path(container_path)
             container_path = container_path.expanduser()
@@ -830,26 +830,15 @@ class Project:
                         ee https://www.opengeosys.org/docs/userguide/basics/introduction/\
                         for installation instructions."""
                 raise RuntimeError(msg)
-        cmd = env_export
+        cmd = " "
         if wrapper is not None:
             cmd += wrapper + " "
         cmd += f"{ogs_path} "
         if container_path is not None:
             if wrapper is not None:
-                cmd = (
-                    env_export
-                    + "singularity exec "
-                    + f"{container_path} "
-                    + wrapper
-                    + " "
-                )
+                cmd = "singularity exec " + f"{container_path} " + wrapper + " "
             else:
-                cmd = (
-                    env_export
-                    + "singularity exec "
-                    + f"{container_path} "
-                    + "ogs "
-                )
+                cmd = "singularity exec " + f"{container_path} " + "ogs "
         if args is not None:
             argslist = args.split(" ")
             output_dir_flag = False
@@ -869,9 +858,11 @@ class Project:
             returncode = subprocess.run(
                 cmd,
                 shell=True,
+                executable="C:\\Windows\\System32\\cmd.exe",
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
                 check=False,
+                env=env,
             )
         else:
             returncode = subprocess.run(
@@ -881,6 +872,7 @@ class Project:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
                 check=False,
+                env=env,
             )
         stopt = time.time()
         self.exec_time = stopt - startt
