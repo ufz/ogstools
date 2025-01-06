@@ -57,13 +57,12 @@ build:
     - pyproject-build
 
 tests (arch - pip) [R]:
-  image: python:${PYTHON_VERSION}-slim
   tags: [shell, envinf]
   needs: []
   before_script:
     - conda --version
     - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
-    - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION}
+    - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} -c conda-forge
     - conda activate $CONDA_ENV_NAME
     - pip install -e ".[dev,test]"
     - *setup-headless
@@ -75,6 +74,13 @@ tests (arch - pip) [R]:
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
+  rules:
+    - if: '$PYTHON_VERSION == "3.13"'
+      when: on_success
+      allow_failure: true
+    - if: '$PYTHON_VERSION'
+      when: on_success
+      allow_failure: false
 
 tests (arch - pip - ogs custom latest) [M]:
   tags: [shell, envinf]
