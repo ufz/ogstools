@@ -27,10 +27,23 @@ cache:
     - .cache
 
 .setup-headless: &setup-headless
-  - make setup
-  - make setup_headless
+  - pip uninstall gmsh vtk -y
+  - pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
+  - pip install -i https://gmsh.info/python-packages-dev-nox gmsh
+
+.pip-setup-activate: &pip-setup-activate
+  - python -m venv .venv --upgrade-deps
   - source .venv/bin/activate
 
+.conda-setup-activate: &conda-setup-activate
+  - conda --version
+  - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
+  - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} -c conda-forge
+  - conda activate $CONDA_ENV_NAME
+
+.custom-ogs-install: &custom-ogs-install
+  - pip uninstall ogs -y
+  - pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre
 
 .regression-rules: &regression-rules
   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -56,14 +69,11 @@ build:
     - pip install build
     - pyproject-build
 
-tests (arch - pip) [R]:
+tests (arch - conda) [R]:
   tags: [shell, envinf]
   needs: []
   before_script:
-    - conda --version
-    - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
-    - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} -c conda-forge
-    - conda activate $CONDA_ENV_NAME
+    - *conda-setup-activate
     - pip install -e ".[dev,test]"
     - *setup-headless
   script:
@@ -82,15 +92,39 @@ tests (arch - pip) [R]:
       when: on_success
       allow_failure: false
 
+
 tests (arch - pip - ogs custom latest) [M]:
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
   needs: []
-  script:
-    - make setup_with_ogs_custom_latest
+  before_script:
+    - *pip-setup-activate
+    - pip install -e .[dev,test,docs]
+    - *custom-ogs-install
     - *setup-headless
-    - make test
+  script:
+    - pytest
+
+tests (arch - conda - ogs custom latest) [M]:
+  tags: [shell, envinf]
+  rules:
+    - *maintenance-rules
+  needs: []
+  before_script:
+    - *conda-setup-activate
+    - pip install -e .[dev,test,docs]
+    - *custom-ogs-install
+    - *setup-headless
+  script:
+    - pytest
+  parallel:
+    matrix:
+      - PYTHON_VERSION: "3.10"
+      - PYTHON_VERSION: "3.11"
+      - PYTHON_VERSION: "3.12"
+      - PYTHON_VERSION: "3.13"
+
 
 
 tests coverage (arch - container) [R]:
