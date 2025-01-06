@@ -33,8 +33,7 @@ dependencies = [
   "matplotlib>=3.7.1",
   "meshio>=5.3.0",
   "pyvista[all]>=0.40.1",
-  "numpy>=1.20.0,<2.1",
-  # max limited by geopandas (required by pandamesh)
+  "numpy>=1.20.0",
   "scipy>=1.10.1",
   "Pint>=0.22",
   "papermill>=2.4.0",
