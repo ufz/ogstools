@@ -31,6 +31,17 @@ cache:
   - make setup_headless
   - source .venv/bin/activate
 
+
+.regression-rules: &regression-rules
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+.maintenance-rules: &maintenance-rules
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    when: manual
+    allow_failure: true
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+
+
 pre-commit:
   tags: [shell, envinf]
   rules:
@@ -45,16 +56,17 @@ build:
     - pip install build
     - pyproject-build
 
-tests (arch):
+tests (arch - pip) [R]:
   tags: [shell, envinf]
   needs: []
   script:
     - *setup-headless
     - make test
 
-tests (arch - ogs custom latest):
+tests (arch - pip - ogs custom latest) [M]:
   tags: [shell, envinf]
-  when: manual
+  rules:
+    - *maintenance-rules
   needs: []
   script:
     - make setup_with_ogs_custom_latest
@@ -62,8 +74,7 @@ tests (arch - ogs custom latest):
     - make test
 
 
-
-tests:
+tests coverage (arch - container) [R]:
   script:
     - make setup_devcontainer
     - source .venv-devcontainer/bin/activate
@@ -81,9 +92,10 @@ tests:
     name: code coverage $CI_MERGE_REQUEST_IID
     url: ${ARTIFACTS_PAGES_URL}/htmlcov/index.html
 
-tests win:
+tests (win - pip) [R]:
   tags: [windows]
-  when: manual
+  rules:
+    - *regression-rules
   needs: []
   before_script:
     - python -m venv .venv
@@ -100,7 +112,7 @@ tests win:
   - make docs SPHINXOPTS="-W --keep-going -n -j 4"
   - mv docs/_build/html public
 
-docs preview:
+docs preview [R]:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
@@ -199,7 +211,7 @@ user container image:
     - docker build -t $DOCKER_USER_IMAGE .
     - docker push $DOCKER_USER_IMAGE
 
-code_quality_ruff:
+code_quality_ruff [R]:
   image: python:3.10-slim
   needs: []
   script:
@@ -210,7 +222,7 @@ code_quality_ruff:
     reports:
       codequality: ruff-code-quality-report.json
 
-code_quality_mypy:
+code_quality_mypy [R]:
   image: python:3.10-slim
   needs: []
   script:
