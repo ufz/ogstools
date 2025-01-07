@@ -42,7 +42,7 @@ cache:
   - conda activate $CONDA_ENV_NAME
 
 .custom-ogs-install: &custom-ogs-install
-  - pip uninstall ogs -y
+#  - pip uninstall ogs -y
   - pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre
 
 .regression-rules: &regression-rules
@@ -100,8 +100,8 @@ tests (arch - pip - ogs custom latest) [M]:
   needs: []
   before_script:
     - *pip-setup-activate
-    - pip install -e .[dev,test,docs]
     - *custom-ogs-install
+    - pip install -e .[dev,test,docs]
     - *setup-headless
   script:
     - pytest
@@ -113,8 +113,8 @@ tests (arch - conda - ogs custom latest) [M]:
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e .[dev,test,docs]
     - *custom-ogs-install
+    - pip install -e .[dev,test,docs]
     - *setup-headless
   script:
     - pytest
