@@ -65,20 +65,23 @@ feflow2ogs = 'ogstools.feflowlib._cli:cli'
 shp2msh = 'ogstools.meshlib.shp2msh_cli:cli'
 
 [project.optional-dependencies]
+pinned = []
+
 dev = ["pre-commit>=2.20", "build", "black"]
-test = ["pytest", "coverage", "parameterized", "pytest-xdist", "pytest-dependency"]
+test = ["coverage", "ogstools[pinned]", "parameterized","pytest", "pytest-xdist", "pytest-dependency",]
 docs = [
-  "sphinx",
-  "sphinx-argparse >=0.2.5, <0.5.0",
-  "sphinxcontrib-programoutput",
-  "sphinxcontrib-apidoc",
-  "sphinxcontrib-mermaid",
   "livereload",
-  "pydata-sphinx-theme",
   "myst-parser",
   "myst_nb",
+  "ogstools[pinned]",
+  "pydata-sphinx-theme",
+  "sphinx",
+  "sphinx-argparse >=0.2.5, <0.5.0",
   "sphinx-design",
   "sphinx_gallery",
+  "sphinxcontrib-apidoc",
+  "sphinxcontrib-mermaid",
+  "sphinxcontrib-programoutput",
   "trame-vtk>=2.6.0",
 ]
 feflow = [
