@@ -26,7 +26,7 @@ cache:
   paths:
     - .cache
 
-.setup-headless: &setup-headless
+.pip-setup-extra-headless: &pip-setup-extra-headless
   - pip uninstall gmsh vtk -y
   - pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
   - pip install -i https://gmsh.info/python-packages-dev-nox gmsh
@@ -41,7 +41,7 @@ cache:
   - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} -c conda-forge
   - conda activate $CONDA_ENV_NAME
 
-.custom-ogs-install: &custom-ogs-install
+.pip-install-ogs-latest: &pip-install-ogs-latest
 #  - pip uninstall ogs -y
   - pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre
 
@@ -75,7 +75,7 @@ tests (arch - conda) [R]:
   before_script:
     - *conda-setup-activate
     - pip install -e ".[dev,test]"
-    - *setup-headless
+    - *pip-setup-extra-headless
   script:
     - pytest
   parallel:
@@ -100,9 +100,9 @@ tests (arch - pip - ogs custom latest) [M]:
   needs: []
   before_script:
     - *pip-setup-activate
-    - *custom-ogs-install
+    - *pip-install-ogs-latest
     - pip install -e .[dev,test,docs]
-    - *setup-headless
+    - *pip-setup-extra-headless
   script:
     - pytest
 
@@ -113,9 +113,9 @@ tests (arch - conda - ogs custom latest) [M]:
   needs: []
   before_script:
     - *conda-setup-activate
-    - *custom-ogs-install
+    - *pip-install-ogs-latest
     - pip install -e .[dev,test,docs]
-    - *setup-headless
+    - *pip-setup-extra-headless
   script:
     - pytest
   parallel:

@@ -1,7 +1,7 @@
 help:  ## Show this help
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | column -t -s :
 
-.PHONY : setup setup_headless test coverage check clean docs cleandocs preview
+.PHONY : setup pip_setup_headless test coverage check clean docs cleandocs preview
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	python -m venv .venv --upgrade-deps
@@ -32,16 +32,10 @@ clone:
 		cd "$(TARGET_DIR)" && git pull origin master; \
 	fi
 
-setup_with_ogs_custom_latest:
-	$(MAKE) setup_with_ogs_compile COMMIT_HASH=master
-
-setup_with_ogs_custom_stable:
-	$(MAKE) setup_with_ogs_compile COMMIT_HASH=3f359feee4
-
 # Install OGS and dependencies in a virtual environment
 # clone  ## Setup a virtual environment and install all development dependencies
 # .venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
-setup_with_ogs_compile:
+pip_setup_with_ogs_latest:
 	python -m venv .venv --upgrade-deps
 	.venv/bin/pip install -e .[dev,test,docs]
 	.venv/bin/pip uninstall ogs -y
@@ -51,12 +45,12 @@ setup_with_ogs_compile:
 	@echo "ATTENTION: You need to activate the virtual environment in every shell with:"
 	@echo "source .venv/bin/activate"
 
-setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
+pip_setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh vtk -y
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
 	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
-setup_devcontainer:  ## Internal usage
+setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
 	.venv-devcontainer/bin/pip install -e .[dev,test,docs,feflow]
