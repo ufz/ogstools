@@ -74,7 +74,7 @@ tests (arch - conda) [R]:
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[dev,test]"
+    - pip install -e ".[test]"
     - *pip-setup-extra-headless
   script:
     - pytest
@@ -101,7 +101,7 @@ tests (arch - pip - ogs custom latest) [M]:
   before_script:
     - *pip-setup-activate
     - *pip-install-ogs-latest
-    - pip install -e .[dev,test,docs]
+    - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
     - pytest
@@ -114,7 +114,7 @@ tests (arch - conda - ogs custom latest) [M]:
   before_script:
     - *conda-setup-activate
     - *pip-install-ogs-latest
-    - pip install -e .[dev,test,docs]
+    - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
     - pytest
@@ -153,7 +153,7 @@ tests (win - pip) [R]:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[dev,test,docs]"
+    - pip install -e ".[test]"
   script:
     - pytest
 
@@ -176,6 +176,36 @@ docs preview [R]:
   environment:
     name: docs preview $CI_MERGE_REQUEST_IID $CI_PROJECT_ROOT_NAMESPACE
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
+
+docs preview [M]:
+  tags: [shell, envinf]
+  rules:
+    - *maintenance-rules
+  before_script:
+    - *pip-setup-activate
+    - *pip-install-ogs-latest
+    - pip install -e .[docs]
+    - *pip-setup-extra-headless
+  script:
+    - make docs SPHINXOPTS="-W --keep-going -n -j 4"
+    - mv docs/_bpublicuild/html
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: docs preview $CI_COMMIT_REF_SLUG
+    url: "${ARTIFACTS_PAGES_URL}/public/index.html"
+
+setup all [M]:
+  tags: [shell, envinf]
+  rules:
+    - *maintenance-rules
+  before_script:
+    - *pip-setup-activate
+    - *pip-install-ogs-latest
+  script:
+    - pip install -e .[dev,test,docs]
+    - *pip-setup-extra-headless
 
 pages:
   stage: deploy
@@ -286,6 +316,8 @@ code_quality_mypy [R]:
   artifacts:
     reports:
       codequality: mypy-code-quality-report.json
+
+
 
 ogs/tools/feflow-converter-tests:
   stage: test
