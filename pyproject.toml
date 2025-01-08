@@ -218,7 +218,6 @@ docs = [
   "livereload",
   "myst-parser",
   "myst_nb",
-#  "ogstools[pinned]",
   "pydata-sphinx-theme",
   "sphinx",
   "sphinx-argparse >=0.2.5, <0.5.0",
