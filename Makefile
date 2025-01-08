@@ -32,10 +32,9 @@ clone:
 		cd "$(TARGET_DIR)" && git pull origin master; \
 	fi
 
-# Install OGS and dependencies in a virtual environment
-# clone  ## Setup a virtual environment and install all development dependencies
-# .venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
-pip_setup_with_ogs_latest:
+# All latest versions (including latest OGS). Should be installed into a fresh virtual environment
+# Hint for custom ogs: .venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
+pip_setup_latest:
 	python -m venv .venv --upgrade-deps
 	.venv/bin/pip install -e .[dev,test,docs]
 	.venv/bin/pip uninstall ogs -y
@@ -45,6 +44,7 @@ pip_setup_with_ogs_latest:
 	@echo "ATTENTION: You need to activate the virtual environment in every shell with:"
 	@echo "source .venv/bin/activate"
 
+# Assumes ogstools is already installed
 pip_setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh vtk -y
 	.venv/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
