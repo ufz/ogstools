@@ -74,7 +74,7 @@ tests (arch - conda) [R]:
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[test]"
+    - pip install -e ".[pinned,test]"
     - *pip-setup-extra-headless
   script:
     - pytest
@@ -153,7 +153,7 @@ tests (win - pip) [R]:
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[test]"
+    - pip install -e ".[pinned,test]"
   script:
     - pytest
 
