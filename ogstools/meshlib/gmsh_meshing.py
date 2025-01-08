@@ -332,7 +332,7 @@ class BHE:
     z_begin: float = -1.0
     """BHE begin depth (zero or negative) in m"""
     z_end: float = -60.0
-    """BHE end depth (zero or negative) in m"""
+    """BHE end depth (negative) in m"""
     borehole_radius: float = 0.076
     """borehole radius in m"""
 
@@ -913,6 +913,9 @@ def gen_bhe_mesh_gmsh(
     BHE_to_soil = np.zeros(shape=(len(BHE_array), 5), dtype=np.int8)
 
     for j, BHE_j in enumerate(BHE_array):
+        if BHE_j.z_begin > 0:  # pragma: no cover
+            msg = "BHE begin depth must be zero or negative"
+            raise Exception(msg)
         for i, _ in enumerate(layer):
             # Auswertung für BHE_Beginn
             if np.abs(BHE_j.z_begin) < np.sum(layer[: i + 1]) and np.abs(
@@ -946,6 +949,9 @@ def gen_bhe_mesh_gmsh(
 
     # detect the soil layer, in which the BHE ends
     for j, BHE_j in enumerate(BHE_array):
+        if BHE_j.z_end >= BHE_j.z_begin:  # pragma: no cover
+            msg = "BHE end depth must be smaller than BHE begin depth"
+            raise Exception(msg)
         for i, _ in enumerate(layer):
             if np.abs(BHE_j.z_end) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_end
