@@ -96,7 +96,10 @@ class Variable:
             mesh_dependent=new_variable.mesh_dependent,
             process_with_units=new_variable.process_with_units,
             cmap=new_variable.cmap,
+            bilinear_cmap=new_variable.bilinear_cmap,
             categoric=new_variable.categoric,
+            color=new_variable.color,
+            linestyle=new_variable.linestyle,
         ).replace(**changes)
 
     def transform(
