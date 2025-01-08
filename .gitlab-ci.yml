@@ -196,7 +196,7 @@ docs preview [M]:
     name: docs preview $CI_COMMIT_REF_SLUG
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
-setup all [M]:
+setup maintainer [M]:
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -205,6 +205,17 @@ setup all [M]:
     - *pip-install-ogs-latest
   script:
     - pip install -e .[dev,test,docs]
+    - *pip-setup-extra-headless
+
+setup developer [R]:
+  tags: [shell, envinf]
+  rules:
+    - *regression-rules
+  before_script:
+    - *pip-setup-activate
+    - *pip-install-ogs-latest
+  script:
+    - pip install -e .[pinned,dev,test,docs]
     - *pip-setup-extra-headless
 
 pages:
