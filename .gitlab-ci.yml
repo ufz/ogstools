@@ -87,10 +87,8 @@ tests (arch - conda) [R]:
       - PYTHON_VERSION: "3.13"
   rules:
     - if: '$PYTHON_VERSION == "3.13"'
-      when: on_success
       allow_failure: true
     - if: '$PYTHON_VERSION'
-      when: on_success
       allow_failure: false
 
 
@@ -185,6 +183,7 @@ docs preview [R]:
 
 docs preview [M]:
   stage: maintenance
+  needs: []
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -205,6 +204,7 @@ docs preview [M]:
 
 setup maintainer [M]:
   stage: maintenance
+  needs: []
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
