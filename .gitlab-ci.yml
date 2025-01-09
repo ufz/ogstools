@@ -1,5 +1,6 @@
 stages:
   - test
+  - maintenance
   - prepare
   - deploy
 
@@ -69,6 +70,7 @@ build:
     - pyproject-build
 
 tests (arch - conda) [R]:
+  stage: test
   tags: [shell, envinf]
   needs: []
   before_script:
@@ -93,6 +95,7 @@ tests (arch - conda) [R]:
 
 
 tests (arch - pip - ogs custom latest) [M]:
+  stage: maintenance
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -106,6 +109,7 @@ tests (arch - pip - ogs custom latest) [M]:
     - pytest
 
 tests (arch - conda - ogs custom latest) [M]:
+  stage: maintenance
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -127,6 +131,7 @@ tests (arch - conda - ogs custom latest) [M]:
 
 
 tests coverage (arch - container) [R]:
+  stage: test
   script:
     - make setup_devcontainer
     - source .venv-devcontainer/bin/activate
@@ -145,6 +150,7 @@ tests coverage (arch - container) [R]:
     url: ${ARTIFACTS_PAGES_URL}/htmlcov/index.html
 
 tests (win - pip) [R]:
+  stage: test
   tags: [windows]
   rules:
     - *regression-rules
@@ -165,6 +171,7 @@ tests (win - pip) [R]:
   - mv docs/_build/html public
 
 docs preview [R]:
+  stage: test
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
@@ -177,6 +184,7 @@ docs preview [R]:
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
 docs preview [M]:
+  stage: maintenance
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -196,6 +204,7 @@ docs preview [M]:
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
 setup maintainer [M]:
+  stage: maintenance
   tags: [shell, envinf]
   rules:
     - *maintenance-rules
@@ -207,6 +216,7 @@ setup maintainer [M]:
     - *pip-setup-extra-headless
 
 setup developer [R]:
+  stage: test
   tags: [shell, envinf]
   rules:
     - *regression-rules
