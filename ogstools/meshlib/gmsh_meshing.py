@@ -907,17 +907,20 @@ def gen_bhe_mesh_gmsh(
     ### Start of the algorithm ###
     BHE_array = np.asarray(BHE_Array)
 
-    # detect the soil layer, in which the BHE starts - for the moment only for detection
     i = 0
     # [:,0] - index of BHE; Array, in welcher Schicht die jeweilige BHE anfängt [:,1] endet [:,3] und wo ein kritischer Übergang folgt [:,2] für BHE_Begin und [:,4] für BHE_End mit 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
     BHE_to_soil = np.zeros(shape=(len(BHE_array), 5), dtype=np.int8)
 
+    # detect the soil layer, in which the BHE ends
     for j, BHE_j in enumerate(BHE_array):
+        if BHE_j.z_end >= BHE_j.z_begin:  # pragma: no cover
+            msg = f"BHE end depth must be smaller than BHE begin depth for BHE {j}"
+            raise ValueError(msg)
         if BHE_j.z_begin > 0:  # pragma: no cover
-            msg = "BHE begin depth must be zero or negative"
-            raise Exception(msg)
+            msg = "BHE begin depth must be zero or negative for BHE {j}"
+            raise ValueError(msg)
         for i, _ in enumerate(layer):
-            # Auswertung für BHE_Beginn
+            # detect the soil layer, in which the BHE starts - for the moment only for detection
             if np.abs(BHE_j.z_begin) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_begin
             ) >= np.sum(layer[:i]):
@@ -947,12 +950,7 @@ def gen_bhe_mesh_gmsh(
                 else:
                     BHE_to_soil[j, 2] = 0
 
-    # detect the soil layer, in which the BHE ends
-    for j, BHE_j in enumerate(BHE_array):
-        if BHE_j.z_end >= BHE_j.z_begin:  # pragma: no cover
-            msg = "BHE end depth must be smaller than BHE begin depth"
-            raise Exception(msg)
-        for i, _ in enumerate(layer):
+            # detect the soil layer, in which the BHE ends
             if np.abs(BHE_j.z_end) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_end
             ) >= np.sum(layer[:i]):
