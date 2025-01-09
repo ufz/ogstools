@@ -27,9 +27,8 @@ cache:
     - .cache
 
 .pip-setup-extra-headless: &pip-setup-extra-headless
-  - pip uninstall gmsh vtk -y
-  - pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
-  - pip install -i https://gmsh.info/python-packages-dev-nox gmsh
+  - pip install --extra-index-url https://wheels.vtk.org --upgrade --force-reinstall vtk-osmesa
+  - pip install -i https://gmsh.info/python-packages-dev-nox --upgrade --force-reinstall gmsh
 
 .pip-setup-activate: &pip-setup-activate
   - python -m venv .venv --upgrade-deps
