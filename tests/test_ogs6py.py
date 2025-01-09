@@ -1609,7 +1609,7 @@ class TestiOGS:
             layer=[20],
             groundwater=[],
             BHE_Array=[
-                BHE(x=2.5, y=2.5, z_begin=0, z_end=18, borehole_radius=0.076)
+                BHE(x=2.5, y=2.5, z_begin=0, z_end=-18, borehole_radius=0.076)
             ],
             meshing_type="prism",
             out_name=vtu_file,
