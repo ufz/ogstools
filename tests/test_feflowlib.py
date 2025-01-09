@@ -559,7 +559,7 @@ class TestSimulation_CT:
 class TestFeflowModel:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.feflow_model = FeflowModel(examples.feflow_model_2D_HT)
+        self.feflow_model_HT = FeflowModel(examples.feflow_model_2D_HT)
         self.feflow_model_HT_hetero = FeflowModel(
             examples.feflow_model_2D_HT_hetero, self.temp_dir / "HT_hetero"
         )
@@ -575,10 +575,11 @@ class TestFeflowModel:
         Test if converted FeflowModel object can be run to reproduce FEFLOW results
         for liquid flow and steady state diffusion.
         """
-        self.feflow_model_H.run_OGS(
+        self.feflow_model_H.setup_prj(
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
+        self.feflow_model_H.run()
         ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
@@ -586,7 +587,8 @@ class TestFeflowModel:
             self.feflow_model_H.mesh.point_data["P_HEAD"],
             atol=5e-6,
         )
-        self.feflow_model_H.run_OGS(steady=True)
+        self.feflow_model_H.setup_prj(steady=True)
+        self.feflow_model_H.run()
         ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
@@ -600,10 +602,11 @@ class TestFeflowModel:
         Test if converted FeflowModel object can be run to reproduce FEFLOW results
         for hydro thermal process with heterogeneous material properties.
         """
-        self.feflow_model_HT_hetero.run_OGS(
+        self.feflow_model_HT_hetero.setup_prj(
             end_time=int(1e11),
             time_stepping=[(1, 1e10)],
         )
+        self.feflow_model_HT_hetero.run()
         ms = ml.MeshSeries(self.temp_dir / "HT_hetero.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
@@ -644,7 +647,7 @@ class TestFeflowModel:
 
     def test_bulk_mesh(self):
         "Test if bulk mesh only contains 1 array (MaterialIDs)."
-        bulk_mesh = self.feflow_model.ogs_bulk_mesh
+        bulk_mesh = self.feflow_model_HT.ogs_bulk_mesh
         assert bulk_mesh.n_arrays == 1
 
         bulk_mesh = self.feflow_model_H.ogs_bulk_mesh
@@ -658,39 +661,70 @@ class TestFeflowModel:
 
     def test_material_properties(self):
         "Test if material properties are returned correctly from FeflowModel"
-        material_prop = self.feflow_model.material_properties
-        assert material_prop[0]["anisotropy_angle"] == 0
-        assert material_prop[0]["specific_heat_capacity_fluid"] == 4200000
+        material_prop = self.feflow_model_HT.material_properties
+        material_ID = 0
+        assert material_prop[material_ID]["anisotropy_angle"] == 0
+        assert material_prop[material_ID]["anisotropy_factor"] == 1
+        assert material_prop[material_ID]["storage"] == 0
+        assert (
+            material_prop[material_ID]["permeability"] == 1.1574074074074073e-05
+        )
+        assert material_prop[material_ID]["thermal_conductivity_fluid"] == 0.65
+        assert material_prop[material_ID]["thermal_conductivity_solid"] == 3
+        assert material_prop[material_ID]["porosity"] == 0.4000000059604645
+        assert (
+            material_prop[material_ID]["thermal_longitudinal_dispersivity"] == 5
+        )
+        assert (
+            material_prop[material_ID]["thermal_transversal_dispersivity"]
+            == 0.5
+        )
+
+        assert (
+            material_prop[material_ID]["specific_heat_capacity_fluid"]
+            == 4200000
+        )
+        assert (
+            material_prop[material_ID]["specific_heat_capacity_solid"]
+            == 1633000
+        )
 
         material_prop_hetero = self.feflow_model_HT_hetero.material_properties
-        assert "inhomogeneous" in material_prop_hetero[0]["permeability"]
-        assert "inhomogeneous" in material_prop_hetero[0]["porosity"]
-        assert "inhomogeneous" in (
-            material_prop_hetero[0]["thermal_conductivity_fluid"]
+        assert (
+            "inhomogeneous" in material_prop_hetero[material_ID]["permeability"]
         )
-        assert material_prop_hetero[0]["thermal_conductivity_solid"] == 3.0
+        assert "inhomogeneous" in material_prop_hetero[material_ID]["porosity"]
+        assert "inhomogeneous" in (
+            material_prop_hetero[material_ID]["thermal_conductivity_fluid"]
+        )
+        assert (
+            material_prop_hetero[material_ID]["thermal_conductivity_solid"]
+            == 3.0
+        )
 
         material_prop_H = self.feflow_model_H.material_properties
-        assert material_prop_H[0]["permeability_X"] == 1.1574074074074073e-05
-        assert material_prop_H[0]["storage"] == 9.999999747378752e-05
+        assert (
+            material_prop_H[material_ID]["permeability_X"]
+            == 1.1574074074074073e-05
+        )
+        assert material_prop_H[material_ID]["storage"] == 9.999999747378752e-05
 
         assert (
             "not supported"
             in self.feflow_model_HTC.material_properties["undefined"][0]
         )
-        # add test for undefined material properties for unsupported model
 
     def test_boundary_conditions(self):
-        "Test if BC are returned correctly from FeflowModel"
-        boundary_conditions = self.feflow_model.boundary_conditions
+        "Test for one model (HT) if boundary condition are returned correctly from FeflowModel."
+        boundary_conditions = self.feflow_model_HT.boundary_conditions
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
         assert first_bc.n_cells == 44
         assert first_bc.n_points == 44
         assert first_bc.n_arrays == 2
 
-    def test_process(self):
-        "Test if process is detected correctly."
-        assert self.feflow_model.process == "Hydro thermal"
+    def test_processes(self):
+        "Test if processes are detected correctly."
+        assert self.feflow_model_HT.process == "Hydro thermal"
         assert (
             FeflowModel(examples.feflow_model_2D_CT_t_28).process
             == "Component transport"
@@ -699,22 +733,24 @@ class TestFeflowModel:
             FeflowModel(examples.feflow_model_box_Robin).process
             == "Liquid flow"
         )
-        assert "not supported" in self.feflow_model_HTC.process
+        assert (
+            "not supported by this feflow converter"
+            in self.feflow_model_HTC.process
+        )
 
     def test_prj_file_HT(self):
         """
         Test if prj-file is created correctly using
         FeflowModel object for a HT process.
         """
-        temp_dir = str(tempfile.mkdtemp("feflow_test_simulation"))
+        temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         model = FeflowModel(
             examples.feflow_model_box_Neumann,
-            temp_dir + "/boxNeumann_feflow_model",
+            temp_dir / "boxNeumann_feflow_model",
         )
-        model_prj = model.prj()
-        model_prj.write_input()
+        model.project.write_input()
         prjfile_root = ET.parse(
-            temp_dir + "/boxNeumann_feflow_model.prj"
+            temp_dir / "boxNeumann_feflow_model.prj"
         ).getroot()
 
         elements = list(prjfile_root)
@@ -767,8 +803,9 @@ class TestFeflowModel:
         ).text[0:23]
         # The index [0:23] is because one needs to read all decimals to get the value.
         assert float(permeability) == float(
-            self.feflow_model.mesh.cell_data["P_COND"][0]
-        )
+            self.feflow_model_HT.mesh.cell_data["P_COND"][0]
+        )  # cell_data["P_COND"][0] refers to the first value of the "P_COND" array,
+        # as the values are homogeneous they are all the same.
 
     def test_prj_file_HTC(self):
         """
@@ -776,9 +813,8 @@ class TestFeflowModel:
         FeflowModel object for a HTC process.
         """
         model = self.feflow_model_HTC
-        model_prj = model.prj()
-        model_prj.write_input()
-        prjfile_root = ET.parse(str(self.temp_dir) + "/HTC.prj").getroot()
+        model.project.write_input()
+        prjfile_root = ET.parse(str(self.temp_dir / "HTC.prj")).getroot()
 
         elements = list(prjfile_root)
         assert len(elements) == 8
