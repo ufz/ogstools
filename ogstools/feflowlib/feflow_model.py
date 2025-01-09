@@ -19,7 +19,7 @@ from ._feflowlib import convert_properties_mesh
 from ._prj_tools import setup_prj_file
 from ._templates import (
     component_transport,
-    generic_prj_template,
+    create_prj_template,
     hydro_thermal,
     liquid_flow,
     steady_state_diffusion,
@@ -53,8 +53,22 @@ class FeflowModel:
             self.mesh_path = Path(out_path).with_suffix(".vtu")
         ifm.forceLicense("Viewer")
         self._doc = ifm.loadDocument(str(feflow_file))
-        self.mesh = convert_properties_mesh(self._doc)
-        self.dimension = self._doc.getNumberOfDimensions()
+        self._mesh = convert_properties_mesh(self._doc)
+        self._dimension = self._doc.getNumberOfDimensions()
+        self.setup_prj()  # _project object with default values is initialized here
+        self._mesh_saving_needed = True
+
+    @property
+    def project(self) -> Project:
+        return self._project
+
+    @property
+    def mesh(self) -> pv.UnstructuredGrid:
+        return self._mesh
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
 
     @property
     def ogs_bulk_mesh(self) -> pv.UnstructuredGrid:
@@ -114,11 +128,11 @@ class FeflowModel:
             0: "Liquid flow",
             1: "Component transport",
             2: "Hydro thermal",
-            3: "Combined flow, mass and heat transport [not supported yet]",
-            4: "Combined flow and age transport [not supported yet]",
-            5: "Combined flow, mass, and age transport [not supported yet]",
-            6: "Combined flow, heat, and age transport [not supported yet]",
-            7: "Combined flow, mass, age, and heat transport [not supported yet]",
+            3: "Combined flow, mass and heat transport [not supported by this feflow converter]",
+            4: "Combined flow and age transport [not supported by this feflow converter]",
+            5: "Combined flow, mass, and age transport [not supported by this feflow converter]",
+            6: "Combined flow, heat, and age transport [not supported by this feflow converter]",
+            7: "Combined flow, mass, age, and heat transport [not supported by this feflow converter]",
         }
 
         return problem_classes[self._doc.getProblemClass()]
@@ -163,14 +177,14 @@ class FeflowModel:
 
         return material_properties
 
-    # @property
-    def prj(
+    # feflow specific
+    def setup_prj(
         self,
         end_time: int = 1,
         time_stepping: list | None = None,
         error_tolerance: float = 1e-10,
         steady: bool = False,
-    ) -> Project:
+    ) -> None:
         """
         A proposition for a prj-file to run a OGS simulation.
         It may be not complete and manual adjustments for time
@@ -218,7 +232,7 @@ class FeflowModel:
                 error_tolerance=error_tolerance,
             )
         else:
-            template_model = generic_prj_template(
+            template_model = create_prj_template(
                 Path(self.mesh_path.with_suffix("")),
                 Project(output_file=self.mesh_path.with_suffix(".prj")),
                 dimension=self.dimension,
@@ -226,7 +240,8 @@ class FeflowModel:
                 time_stepping=time_stepping,
                 error_tolerance=error_tolerance,
             )
-        return setup_prj_file(
+        # replaces default
+        self._project = setup_prj_file(
             self.mesh_path,
             self.mesh,
             self.material_properties,
@@ -238,22 +253,32 @@ class FeflowModel:
             ),
             model=template_model,
         )
+        self._prj_saving_needed = True
 
-    def run_OGS(
-        self,
-        end_time: int = 1,
-        time_stepping: list | None = None,
-        error_tolerance: float = 1e-10,
-        steady: bool = False,
-    ) -> None:
-        self.mesh.save(self.mesh_path)
-        for path, boundary_mesh in self.boundary_conditions.items():
-            boundary_mesh.save(path)
-        prj = self.prj(
-            end_time,
-            time_stepping,
-            error_tolerance,
-            steady,
-        )
-        prj.write_input()
-        prj.run_model(write_logs=True)
+    def save(self, output_path: None | Path = None) -> None:
+        """
+        Save the converted FEFLOW model.
+
+        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        """
+        if output_path is None:
+            output_path = self.mesh_path
+        self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
+        if self._mesh_saving_needed:
+            self.mesh.save(output_path.with_suffix(".vtu"))
+            for path, boundary_mesh in self.boundary_conditions.items():
+                boundary_mesh.save(path)
+            self._mesh_saving_needed = False
+        else:
+            logger.info(
+                "The mesh and boundary meshes have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
+            )
+
+    def run(self, output_path: None | Path = None) -> None:
+        """
+        Run the converted FEFLOW model.
+
+        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        """
+        self.save(output_path)
+        self.project.run_model()

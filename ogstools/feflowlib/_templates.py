@@ -8,7 +8,7 @@ from pathlib import Path
 from ogstools.ogs6py import Project
 
 
-def generic_prj_template(
+def create_prj_template(
     saving_path: Path,
     prj: Project,
     process_name: str = "undefined",
@@ -160,7 +160,7 @@ def steady_state_diffusion(
         type="STEADY_STATE_DIFFUSION",
         integration_order=2,
     )
-    generic_prj_template(
+    create_prj_template(
         saving_path,
         prj,
         process_name="SteadyStateDiffusion",
@@ -209,7 +209,7 @@ def liquid_flow(
         specific_body_force=gravity,
         linear="true",
     )
-    return generic_prj_template(
+    return create_prj_template(
         saving_path,
         prj,
         process_name="LiquidFlow",
@@ -281,7 +281,7 @@ def component_transport(
                 repeat=time_step[0], delta_t=time_step[1], process=process_name
             )
 
-    return generic_prj_template(
+    return create_prj_template(
         saving_path,
         prj,
         process_name=process_name,
@@ -312,7 +312,7 @@ def hydro_thermal(
         integration_order=3,
         specific_body_force=gravity,
     )
-    return generic_prj_template(
+    return create_prj_template(
         saving_path,
         prj,
         process_name="HydroThermal",

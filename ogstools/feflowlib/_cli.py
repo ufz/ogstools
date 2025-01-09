@@ -102,8 +102,7 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     )
 
     if "OGS" in case:
-        ogs_prj = feflow_model.prj()
-        ogs_prj.write_input()
+        feflow_model.project.write_input()
         logger.info(
             """
             A prj file has been created for the %s process.\n
