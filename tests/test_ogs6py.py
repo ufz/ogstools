@@ -33,7 +33,8 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
-from ogstools.meshlib.gmsh_meshing import BHE, cuboid, gen_bhe_mesh
+from ogstools.meshlib.gmsh_BHE import BHE, gen_bhe_mesh
+from ogstools.meshlib.gmsh_meshing import cuboid
 from ogstools.msh2vtu import msh2vtu
 from ogstools.ogs6py import Project
 
