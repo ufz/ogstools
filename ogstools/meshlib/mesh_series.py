@@ -267,10 +267,6 @@ class MeshSeries:
             )
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
-        if self._data_type == "pvd":
-            mesh.filepath = Path(self.timestep_files[data_timestep])
-        else:
-            mesh.filepath = Path(self.filepath)
         return mesh
 
     def rawdata_file(self) -> Path | None:

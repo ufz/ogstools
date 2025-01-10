@@ -5,7 +5,7 @@ import numpy as np
 import pyvista as pv
 from parameterized import parameterized
 
-from ogstools.meshlib.gmsh_meshing import BHE, Groundwater, gen_bhe_mesh
+from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 
 # confinded aquifer: top level of groundwater ends at soil layer transition

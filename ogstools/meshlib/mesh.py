@@ -28,8 +28,6 @@ class Mesh(pv.UnstructuredGrid):
     Contains additional data and functions mainly for postprocessing.
     """
 
-    filepath: Path | None = None
-
     # pylint: disable=C0116
     @copy_method_signature(data_processing.difference)
     def difference(self, *args: Any, **kwargs: Any) -> Any:
@@ -119,7 +117,6 @@ class Mesh(pv.UnstructuredGrid):
         else:
             mesh = cls(pv.read(filepath))
 
-        mesh.filepath = Path(filepath).with_suffix(".vtu")
         mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
             [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
         )

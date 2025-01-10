@@ -1,4 +1,5 @@
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import TypeVar
 
 import numpy as np
@@ -199,10 +200,10 @@ def to_ip_point_cloud(mesh: Mesh) -> pv.UnstructuredGrid:
     for key in bad_keys:
         if key in _mesh.field_data:
             _mesh.field_data.remove(key)
-    parentpath = Path() if mesh.filepath is None else mesh.filepath.parent
-    input_file = parentpath / "ipDataToPointCloud_input.vtu"
+    tempdir = mkdtemp(prefix="to_ip_point_cloud")
+    input_file = Path(tempdir) / "ipDataToPointCloud_input.vtu"
     _mesh.save(input_file)
-    output_file = parentpath / "ip_mesh.vtu"
+    output_file = Path(tempdir) / "ip_mesh.vtu"
     ogs.cli.ipDataToPointCloud(i=str(input_file), o=str(output_file))
     return pv.XMLUnstructuredGridReader(output_file).read()
 

@@ -14,6 +14,7 @@ __all__ = ["analytical_diffusion"]
 _meshseries_dir = EXAMPLES_DIR / "meshseries"
 _feflow_dir = EXAMPLES_DIR / "feflow"
 _logs_dir = EXAMPLES_DIR / "logs"
+_msh_dir = EXAMPLES_DIR / "msh"
 _prj_dir = EXAMPLES_DIR / "prj"
 _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
 _shp_dir = EXAMPLES_DIR / "shapefiles"
@@ -66,6 +67,9 @@ def load_mesh_mechanics_2D():
         _meshseries_dir / "mechanics_example.vtu", spatial_output_unit="km"
     )
 
+
+msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"
+msh_geoterrain_3d = _msh_dir / "geoterrain_3d.msh"
 
 feflow_model_2layers = _feflow_dir / "2layers_model.fem"
 feflow_model_box_Neumann = _feflow_dir / "box_3D_neumann.fem"
