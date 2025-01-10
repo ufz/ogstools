@@ -50,8 +50,9 @@ plotter.show()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
 # Get the ogs6py model to create a prj-file and run the simulation.
-prj = feflow_model.prj(end_time=1e11, time_stepping=[(1, 1e10)])
+feflow_model.set_up_prj(end_time=1e11, time_stepping=[(1, 1e10)])
 # The model must be written before it can be run.
+prj = feflow_model.project
 prj.write_input()
 # Print the prj-file as an example.
 model_prjfile = ET.parse(feflow_model.mesh_path.with_suffix(".prj"))

@@ -50,12 +50,13 @@ for path, mesh in feflow_model.boundary_conditions.items():
     mesh.save(path)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-prj = feflow_model.prj(
+feflow_model.set_up_prj(
     end_time=int(4.8384e07),
     time_stepping=list(
         zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
     ),
 )
+prj = feflow_model.project
 # The model must be written before it can be run.
 prj.write_input()
 # Print the prj-file as an example.

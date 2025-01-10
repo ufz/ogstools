@@ -20,15 +20,16 @@ from ogstools.feflowlib import FeflowModel
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_model = FeflowModel(feflow_model_2layers, temp_dir / "2layers")
-feflow_model.mesh.plot(scalars="P_HEAD", show_edges=True, off_screen=True)
+mesh = feflow_model.mesh
+mesh.plot(scalars="P_HEAD", show_edges=True, off_screen=True)
 # Print information about the mesh.
-print(feflow_model.mesh)
+print(mesh)
 # %%
 # 2. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
 # Further information can be found at https://docs.pyvista.org/version/stable/user-guide/simple.html.
 # For example it can be saved as a VTK Unstructured Grid File (\*.vtu).
 # This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
-feflow_model.mesh.save("2layers_model.vtu")
+mesh.save("2layers_model.vtu")
 # %%
 # 4. Use the ogstools plotting functionalities.
 fig = ot.plot.contourf(pv_mesh.slice("z"), "P_HEAD")
