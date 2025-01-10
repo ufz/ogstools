@@ -16,6 +16,7 @@ import numpy as np
 import pyvista as pv
 from parameterized import parameterized
 
+from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
 from ogstools.meshlib import gmsh_meshing
 from ogstools.msh2vtu import msh2vtu
 from ogstools.msh2vtu._cli import cli
@@ -210,3 +211,53 @@ def test_gmsh(tmp_path: Path):
         except Exception:
             msg = "Generated vtu-files are erroneous."
             raise ValueError(msg) from None
+
+
+def test_subdomains_2D(tmp_path: Path):
+    "Test explicitly the correct number of cells and coordinates in subdomains"
+    assert msh2vtu(msh_geolayers_2d, tmp_path) == 0
+
+    boundaries = {
+        "Bottom": (120, 1, -7500),
+        "Left": (8, 0, -60000),
+        "Right": (8, 0, 60000),
+        "Top": (120, 1, 0),
+    }
+    for name, (ref_num_cells, coord, coord_value) in boundaries.items():
+        mesh = pv.UnstructuredGrid(
+            Path(tmp_path, f"geolayers_2d_physical_group_{name}.vtu")
+        )
+        assert ref_num_cells == mesh.number_of_cells
+        assert np.all(mesh.points[:, coord] == coord_value)
+
+    subdomains = {
+        "SedimentLayer1": (69, [0.0, -623.7103154035065, 0.0]),
+        "SedimentLayer2": (146, [0.0, -1248.505178045855, 0.0]),
+        "SedimentLayer3": (230, [0.0, -1873.982884659469, 0.0]),
+    }
+    for name, (ref_num_cells, ref_center) in subdomains.items():
+        mesh = pv.UnstructuredGrid(
+            Path(tmp_path, f"geolayers_2d_physical_group_{name}.vtu")
+        )
+        assert ref_num_cells == mesh.number_of_cells
+        np.testing.assert_allclose(ref_center, mesh.center)
+
+
+def test_subdomains_3D(tmp_path: Path):
+    "Test explicitly the correct number of cells and coordinates in subdomains"
+    assert msh2vtu(msh_geoterrain_3d, tmp_path) == 0
+
+    boundaries = {
+        "BottomSouthLine": (20, [0.5, 0.0, -0.5]),
+        "BottomSurface": (944, [0.5, 0.5, -0.5]),
+        "WestSurface": (520, [0.0, 0.5, -0.22519078490665562]),
+        "EastSurface": (497, [1.0, 0.5, -0.22502145354703557]),
+        "TopSouthLine": (22, [0.5, 0.0, 0.0001775511298476931]),
+        "TopSurface": (1176, [0.5, 0.5, -1.3476350030128259e-05]),
+    }
+    for name, (num_cells, center) in boundaries.items():
+        mesh = pv.UnstructuredGrid(
+            Path(tmp_path, f"geoterrain_3d_physical_group_{name}.vtu")
+        )
+        assert num_cells == mesh.number_of_cells
+        np.testing.assert_allclose(center, mesh.center)
