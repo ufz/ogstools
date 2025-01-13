@@ -8,6 +8,7 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
+
 import copy
 import os
 import shutil
@@ -885,11 +886,17 @@ class Project:
             print(f"Error code: {returncode.returncode}")
             self._post_run_1(write_logs)
 
-    def write_input(self, keep_includes: bool = False) -> None:
+    def write_input(
+        self, prjfile_path: None | Path = None, keep_includes: bool = False
+    ) -> None:
         """Writes the projectfile to disk.
 
+        :param prjfile_path: Path to write the project file to. If not specified, the initialised path is used.
         :param keep_includes:
         """
+        if prjfile_path is not None:
+            self.prjfile = prjfile_path
+
         if self.tree is not None:
             self._remove_empty_elements()
             if keep_includes is True:
