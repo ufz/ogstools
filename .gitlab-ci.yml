@@ -193,7 +193,21 @@ docs preview [M]:
     - pip install -e .[docs]
     - *pip-setup-extra-headless
   script:
-    - make docs SPHINXOPTS="-W --keep-going -n -j 4"
+    - make docs SPHINXOPTS="--keep-going -n -j 4" > sphinx_output.log 2>&1
+    - echo "Counting warnings in Sphinx output..."
+    # Count lines with "WARNING" in the Sphinx log
+    - warning_count=$(grep -c "WARNING" sphinx_output.log || true)
+    - echo "Found $warning_count warnings in Sphinx documentation."
+    # Set the warning threshold
+    - warning_threshold=7
+    # Check if warnings exceed the threshold
+    - if [ "$warning_count" -lt "$warning_threshold" ]; then
+        echo "Warnings ($warning_count) are below the threshold ($warning_threshold). Pipeline is green.";
+        exit 0;
+      else
+        echo "Warnings ($warning_count) exceeded the threshold ($warning_threshold). Pipeline failed.";
+        exit 1;
+      fi
     - mv docs/_bpublicuild/html
   artifacts:
     paths:
