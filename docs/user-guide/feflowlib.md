@@ -146,7 +146,9 @@ Further information can be found at: [](../reference/ogstools.feflowlib).
 
 Following examples demonstrate the usage of the feflowlib::
 
-- [](../auto_examples/howto_conversions/plot_C_feflowlib_2layers_model.rst)
+- [](../auto_examples/howto_conversions/plot_A_feflowlib_start.rst)
+- [](../auto_examples/howto_conversions/plot_B_feflowlib_BC_mesh.rst)
+- [](../auto_examples/howto_conversions/plot_C_feflowlib_prj.rst)
 - [](../auto_examples/howto_conversions/plot_D_feflowlib_CT_simulation.rst)
 - [](../auto_examples/howto_conversions/plot_E_feflowlib_H_simulation.rst)
 - [](../auto_examples/howto_conversions/plot_F_feflowlib_HT_simulation.rst)

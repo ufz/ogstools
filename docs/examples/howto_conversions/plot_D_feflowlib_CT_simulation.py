@@ -1,6 +1,6 @@
 """
-Feflowlib: Component-transport model - conversion and simulation
-================================================================
+Workflow: Component-transport model - conversion, simulation, postprocessing
+============================================================================
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple mass transport FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
@@ -50,7 +50,7 @@ for path, mesh in feflow_model.boundary_conditions.items():
     mesh.save(path)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-feflow_model.set_up_prj(
+feflow_model.setup_prj(
     end_time=int(4.8384e07),
     time_stepping=list(
         zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
@@ -66,7 +66,7 @@ ET.dump(ET.parse(feflow_model.mesh_path.with_suffix(".prj")))
 prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ms = ot.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
+ms = ot.MeshSeries(temp_dir / "2D_CT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """

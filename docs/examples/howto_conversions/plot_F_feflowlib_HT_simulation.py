@@ -1,6 +1,6 @@
 """
-Feflowlib: Hydro-thermal model - conversion and simulation
-==========================================================
+Workflow: Hydro-thermal model - conversion, simulation and post-processing
+==========================================================================
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple hydro thermal FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
@@ -16,7 +16,7 @@ from pathlib import Path
 import pyvista as pv
 
 import ogstools as ot
-from ogstools.examples import feflow_model_2D_HT_model
+from ogstools.examples import feflow_model_2D_HT
 from ogstools.feflowlib import (
     FeflowModel,
 )
@@ -25,9 +25,7 @@ from ogstools.feflowlib import (
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_model = FeflowModel(
-    feflow_model_2D_HT_model, temp_dir / "2D_HT_model.vtu"
-)
+feflow_model = FeflowModel(feflow_model_2D_HT, temp_dir / "2D_HT_model.vtu")
 feflow_temperature = ot.variables.temperature.replace(data_name="P_TEMP")
 ot.plot.contourf(feflow_model.mesh, feflow_temperature)
 
@@ -50,7 +48,7 @@ plotter.show()
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
 # Get the ogs6py model to create a prj-file and run the simulation.
-feflow_model.set_up_prj(end_time=1e11, time_stepping=[(1, 1e10)])
+feflow_model.setup_prj(end_time=1e11, time_stepping=[(1, 1e10)])
 # The model must be written before it can be run.
 prj = feflow_model.project
 prj.write_input()
@@ -62,7 +60,7 @@ ET.dump(model_prjfile)
 prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
-ms = ot.MeshSeries(temp_dir / "sim_2D_HT_model.pvd")
+ms = ot.MeshSeries(temp_dir / "2D_HT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """

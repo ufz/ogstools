@@ -1,11 +1,11 @@
 """
-Feflowlib: Hydraulic model - conversion and simulation
-======================================================
+Workflow: Hydraulic model - conversion, simulation and post-processing
+======================================================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple flow/hydraulic FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
-be simulated in OGS.
+be simulated in ot.
 """
 
 # %%
@@ -57,7 +57,7 @@ path_topsurface, topsurface = list(BC_dict.items())[-1]
 topsurface.save(path_topsurface)
 # %%
 # 3. Setup a prj-file to run a OGS-simulation.
-feflow_model.set_up_prj(
+feflow_model.setup_prj(
     end_time=int(1e8),
     time_stepping=[(1, 10), (5, 100), (10, 1000), (10, 1e6), (1, 1e7)],
 )
@@ -72,7 +72,7 @@ ET.dump(model_prjfile)
 prj.run_model(logfile=temp_dir / "out.log")
 # %%
 # 5. Read the results and plot them.
-ms = ot.MeshSeries(temp_dir / "sim_boxNeumann.pvd")
+ms = ot.MeshSeries(temp_dir / "boxNeumann.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """

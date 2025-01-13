@@ -26,6 +26,7 @@ from ._templates import (
     steady_state_diffusion,
 )
 from ._tools import (
+    assign_bulk_ids,
     combine_material_properties,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
@@ -34,12 +35,14 @@ from ._tools import (
     get_species,
     get_specific_surface,
     helpFormat,
+    remove_bulk_ids,
     write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
 from .feflow_model import FeflowModel
 
 __all__ = [
+    "assign_bulk_ids",
     "combine_material_properties",
     "component_transport",
     "convert_geometry_mesh",
@@ -55,6 +58,7 @@ __all__ = [
     "hydro_thermal",
     "liquid_flow",
     "points_and_cells",
+    "remove_bulk_ids",
     "setup_prj_file",
     "steady_state_diffusion",
     "update_geometry",
