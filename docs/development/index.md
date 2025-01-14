@@ -5,7 +5,7 @@ Create a virtual environment, activate it and install required packages:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,test,docs]"
+pip install -e ".[pinned,dev,test,docs]"
 
 # enable basic style checks once
 pre-commit install

@@ -15,3 +15,9 @@ This is not released yet!
 - MeshSeries get extract() method to select points or cells via ids
 - MeshSeries can be sliced to get new MeshSeries with the selected subset of timesteps
 - difference() between two meshes is now possible even with different topologies
+
+## Infrastructure
+
+- Python 3.13 support (CI testing)
+- Testing of all supported Python version 3.10-3.13 (pip and conda)
+- Testing with pinned dependencies in regression tests and with open dependencies in maintenance tests
