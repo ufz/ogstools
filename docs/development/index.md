@@ -1,5 +1,20 @@
 # Development setup
 
+# Cloning the Source Repository
+
+You can clone the source repository from https://gitlab.opengeosys.org/ogs/tools/ogstools and install the latest version by running:
+
+`git clone git@gitlab.opengeosys.org:ogs/tools/ogstools.git` or
+`git clone https://gitlab.opengeosys.org/ogs/tools/ogstools.git`
+
+# Development environment
+
+Change into the directory with the cloned ogstools sources. (`.` assumes that your working directory contains the ogstools sources, the directory where you find the `pyproject.toml`).
+
+```bash
+cd ogstools
+```
+
 Create a virtual environment, activate it and install required packages:
 
 ```bash
