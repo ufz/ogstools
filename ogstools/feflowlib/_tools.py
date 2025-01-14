@@ -13,6 +13,8 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
+from ogstools import Mesh
+
 # log configuration
 logger = log.getLogger(__name__)
 
@@ -75,7 +77,7 @@ def remove_bulk_ids(mesh: pv.UnstructuredGrid) -> None:
     mesh.cell_data.remove("bulk_element_ids")
 
 
-def get_dimension(mesh: pv.UnstructuredGrid) -> int:
+def get_dimension(mesh: pv.UnstructuredGrid | Mesh) -> int:
     """
     Return the dimension of the mesh.
 

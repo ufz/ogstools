@@ -10,6 +10,7 @@ from importlib import metadata
 from . import plot, variables
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
+from .ogs_model import OGSModel  # noqa: F401
 
 with suppress(ImportError):
     from .feflowlib import FeflowModel  # noqa: F401
