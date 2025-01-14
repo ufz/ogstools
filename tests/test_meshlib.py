@@ -522,7 +522,10 @@ class TestUtils:
         temp_dir = Path(mkdtemp())
         msh_path = temp_dir / "tri_mesh.msh"
         ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-        assert ogs.msh2vtu(msh_path, temp_dir, reindex=False, log=False) == 0
+        assert len(
+            ogs.msh2vtu(msh_path, temp_dir, reindex=False, log=False)
+        ) == 1 + len(np.unique(mesh["MaterialIDs"]))
+        # boundaries are not assigned a physical tag in remesh_with_trinagles
 
     def test_indexing(self):
         ms = examples.load_meshseries_HT_2D_XDMF()

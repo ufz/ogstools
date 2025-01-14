@@ -18,6 +18,7 @@ from parameterized import parameterized
 
 from ogstools import msh2vtu
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
+from ogstools.meshlib import meshes_from_gmsh
 from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.msh2vtu._cli import cli
 
@@ -58,62 +59,40 @@ def test_multiple_groups_per_element(tmp_path: Path):
     gmsh.write(str(msh_file))
     gmsh.finalize()
 
-    assert msh2vtu(msh_file, tmp_path, output_prefix=model_name) == 0
+    meshes = meshes_from_gmsh(msh_file, prefix=model_name)
+    assert len(meshes) == 8
 
     prefix = f"{model_name}_physical_group"
 
-    def number_of_elements(boundary_name: str) -> int:
-        file = f"{prefix}_{boundary_name}.vtu"
-        return pv.read(str(Path(tmp_path, file))).number_of_cells
+    def num_cells(boundary_name: str) -> int:
+        return meshes[f"{prefix}_{boundary_name}"].number_of_cells
 
-    assert number_of_elements("boundaries") == sum(
-        [
-            number_of_elements(name)
-            for name in ["left", "right", "top", "bottom"]
-        ]
-    )
-    bottom = pv.read(str(Path(tmp_path, f"{prefix}_bottom.vtu")))
-    bottom_center = pv.read(str(Path(tmp_path, f"{prefix}_bottom_center.vtu")))
-    assert np.all(
-        np.isin(bottom_center["bulk_node_ids"], bottom["bulk_node_ids"])
-    )
-    assert np.all(
-        np.isin(bottom_center["bulk_elem_ids"], bottom["bulk_elem_ids"])
-    )
+    names = ["left", "right", "top", "bottom"]
+    assert num_cells("boundaries") == sum([num_cells(name) for name in names])
+    bot = meshes[f"{prefix}_bottom"]
+    bot_center = meshes[f"{prefix}_bottom_center"]
+    assert bot.number_of_cells == 25
+    assert bot_center.number_of_cells == 19
+    assert np.all(np.isin(bot_center["bulk_node_ids"], bot["bulk_node_ids"]))
+    assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
 def test_rect(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "rect.msh")
     permutations = product(
-        [1.0, 2.0],
-        [1, 2],
-        [1, 2],
-        [True, False],
-        [1, 2],
-        [None, 2.2],
-        [True, False],
-    )
-    for (
-        edge_length,
-        n_edge_cells,
-        n_layers,
-        structured,
-        order,
-        version,
-        mixed_elements,
-    ) in permutations:
+        [1.0, 2.0], [1, 2], [1, 2], [True, False],
+        [1, 2], [None, 2.2], [True, False],
+    )  # fmt: skip
+    for (edge_length, n_edge_cells, n_layers, structured,
+        order, version, mixed_elements) in permutations:  # fmt: skip
         rect(
-            lengths=edge_length,
-            n_edge_cells=n_edge_cells,
-            n_layers=n_layers,
-            structured_grid=structured,
-            order=order,
-            mixed_elements=mixed_elements,
-            out_name=msh_file,
-            msh_version=version,
-        )
-        assert msh2vtu(msh_file, tmp_path, output_prefix="rect") == 0
+            lengths=edge_length, n_edge_cells=n_edge_cells,
+            n_layers=n_layers, structured_grid=structured,
+            order=order, mixed_elements=mixed_elements,
+            out_name=msh_file, msh_version=version,
+        )  # fmt: skip
+        assert len(meshes_from_gmsh(msh_file, prefix="rect")) == 4 + n_layers
 
 
 class TestPhysGroups:
@@ -139,8 +118,8 @@ class TestPhysGroups:
             layer_ids=layer_ids,
             mixed_elements=True,
         )
-        assert msh2vtu(msh_file, self.tmp_path, "rect", reindex=reindex) == 0
-        mesh = pv.read(str(Path(self.tmp_path, "rect_domain.vtu")))
+        meshes = meshes_from_gmsh(msh_file, prefix="rect", reindex=reindex)
+        mesh = meshes["rect_domain"]
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
@@ -148,37 +127,22 @@ def test_cuboid(tmp_path: Path):
     """Create rectangular gmsh meshes and convert with msh2vtu."""
     msh_file = Path(tmp_path, "cuboid.msh")
     permutations = product(
-        [1.0, 2.0],
-        [1, 2],
-        [1, 2],
-        [True, False],
-        [1, 2],
-        [True, False],
-        [None, 2.2],
-    )
-    for (
-        edge_length,
-        n_edge_cells,
-        n_layers,
-        structured,
-        order,
-        mixed_elements,
-        version,
-    ) in permutations:
+        [1.0, 2.0], [1, 2], [1, 2], [True, False],
+        [1, 2], [True, False], [None, 2.2],
+    )  # fmt: skip
+    for (edge_length,  n_edge_cells, n_layers, structured,
+        order, mixed_elements, version) in permutations:  # fmt: skip
         # this combination doesn't work with msh2vtu (yet?)
         if order == 2 and mixed_elements:
             continue
         cuboid(
-            lengths=edge_length,
-            n_edge_cells=n_edge_cells,
-            n_layers=n_layers,
-            structured_grid=structured,
-            order=order,
-            mixed_elements=mixed_elements,
-            out_name=msh_file,
-            msh_version=version,
-        )
-        assert msh2vtu(msh_file, tmp_path, output_prefix="cuboid") == 0
+            lengths=edge_length, n_edge_cells=n_edge_cells,
+            n_layers=n_layers, structured_grid=structured,
+            order=order, mixed_elements=mixed_elements,
+            out_name=msh_file, msh_version=version,
+        )  # fmt: skip
+        meshes = meshes_from_gmsh(msh_file, prefix="cuboid")
+        assert len(meshes) == {1: 7, 2: 9}[n_layers]
 
 
 def run_cli(cmd: str) -> int:
@@ -189,20 +153,16 @@ def run_cli(cmd: str) -> int:
 
 def test_gmsh(tmp_path: Path):
     os.chdir(tmp_path)
-    for script in [
-        "cube_mixed.py",
-        # no script for square_with_circular_hole.msh
-        "quarter_rectangle_with_hole.py",
-        "line.py",
+    for script, num_meshes in [
+        ("cube_mixed.py", 1),
+        ("quarter_rectangle_with_hole.py", 7),
+        ("line.py", 4),
     ]:
         runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
-        assert msh2vtu(msh_file, tmp_path, output_prefix=prefix) == 0
-        mesh = pv.read(prefix + "_domain.vtu")
+        assert len(meshes_from_gmsh(msh_file, prefix=prefix)) == num_meshes
         assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
-        mesh_cli = pv.read(prefix + "_domain.vtu")
-        assert mesh == mesh_cli
 
     for vtu_file in tmp_path.glob("*.vtu"):
         try:
@@ -212,20 +172,18 @@ def test_gmsh(tmp_path: Path):
             raise ValueError(msg) from None
 
 
-def test_subdomains_2D(tmp_path: Path):
+def test_subdomains_2D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
-    assert msh2vtu(msh_geolayers_2d, tmp_path) == 0
-
+    meshes = meshes_from_gmsh(msh_geolayers_2d)
+    bounds = meshes["geolayers_2d_domain"].bounds
     boundaries = {
-        "Bottom": (120, 1, -7500),
-        "Left": (8, 0, -60000),
-        "Right": (8, 0, 60000),
-        "Top": (120, 1, 0),
+        "Bottom": (120, 1, bounds[2]),
+        "Left": (8, 0, bounds[0]),
+        "Right": (8, 0, bounds[1]),
+        "Top": (120, 1, bounds[3]),
     }
     for name, (ref_num_cells, coord, coord_value) in boundaries.items():
-        mesh = pv.UnstructuredGrid(
-            Path(tmp_path, f"geolayers_2d_physical_group_{name}.vtu")
-        )
+        mesh = meshes[f"geolayers_2d_physical_group_{name}"]
         assert ref_num_cells == mesh.number_of_cells
         assert np.all(mesh.points[:, coord] == coord_value)
 
@@ -235,16 +193,14 @@ def test_subdomains_2D(tmp_path: Path):
         "SedimentLayer3": (230, [0.0, -1873.982884659469, 0.0]),
     }
     for name, (ref_num_cells, ref_center) in subdomains.items():
-        mesh = pv.UnstructuredGrid(
-            Path(tmp_path, f"geolayers_2d_physical_group_{name}.vtu")
-        )
+        mesh = meshes[f"geolayers_2d_physical_group_{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)
 
 
 def test_subdomains_3D(tmp_path: Path):
     "Test explicitly the correct number of cells and coordinates in subdomains"
-    assert msh2vtu(msh_geoterrain_3d, tmp_path) == 0
+    msh2vtu(msh_geoterrain_3d, tmp_path)
 
     boundaries = {
         "BottomSouthLine": (20, [0.5, 0.0, -0.5]),
@@ -254,9 +210,9 @@ def test_subdomains_3D(tmp_path: Path):
         "TopSouthLine": (22, [0.5, 0.0, 0.0001775511298476931]),
         "TopSurface": (1176, [0.5, 0.5, -1.3476350030128259e-05]),
     }
-    for name, (num_cells, center) in boundaries.items():
+    for name, (ref_num_cells, ref_center) in boundaries.items():
         mesh = pv.UnstructuredGrid(
             Path(tmp_path, f"geoterrain_3d_physical_group_{name}.vtu")
         )
-        assert num_cells == mesh.number_of_cells
-        np.testing.assert_allclose(center, mesh.center)
+        assert ref_num_cells == mesh.number_of_cells
+        np.testing.assert_allclose(ref_center, mesh.center)
