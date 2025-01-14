@@ -1,4 +1,4 @@
-![OGS workflow overview](https://ogs.ogs.xyz/tools/ogstools/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
+![OGS workflow overview](https://ogstools.opengeosys.org/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
 is a:
 
@@ -9,9 +9,9 @@ is a:
 # Overview
 
 - **Website:** <https://www.opengeosys.org>
-- **Documentation:** <https://ogs.ogs.xyz/tools/ogstools>
+- **Documentation:** <https://ogstools.opengeosys.org>
 - **Source code:** <https://gitlab.opengeosys.org/ogs/tools/ogstools>
-- **Contributing:** <https://ogs.ogs.xyz/tools/ogstools/development/index.html>
+- **Contributing:** <https://ogstools.opengeosys.org/development/index.html>
 - **Bug reports:** <https://discourse.opengeosys.org>
 
 # Installation
@@ -22,15 +22,15 @@ Install the latest version of ogstools:
 pip install ogstools
 ```
 
-For further details see the [User Guide](https://ogs.ogs.xyz/tools/ogstools/user-guide/index.html).
+For further details see the [User Guide](https://ogstools.opengeosys.org/user-guide/index.html).
 
 # Getting started
 
-For first steps, please take a look at our [examples](https://ogs.ogs.xyz/tools/ogstools/auto_examples/index.html).
+For first steps, please take a look at our [examples](https://ogstools.opengeosys.org/auto_examples/index.html).
 
 # Contribution
 
-Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
+Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [Developer Guide](https://ogstools.opengeosys.org/development/index.html) as your initial point of reference.
 
 You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/blob/main/donation.md) your existing code snippets.
 

@@ -12,7 +12,7 @@ The `msh2vtu`-tool by Dominik Kern (TU Bergakademie Freiberg) has been integrate
 
 ### Documentation web site
 
-This documentation website has been implemented and is available at <https://ogs.ogs.xyz/tools/ogstools>.
+This documentation website has been implemented and is available at <https://ogstools.opengeosys.org>.
 
 ### Unit testing and style checks
 

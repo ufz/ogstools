@@ -46,7 +46,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Documentation" = 'https://ogs.ogs.xyz/tools/ogstools'
+"Documentation" = 'https://ogstools.opengeosys.org'
 "Bug Tracker" = 'https://discourse.opengeosys.org'
 "Source Code" = 'https://gitlab.opengeosys.org/ogs/tools/ogstools'
 
