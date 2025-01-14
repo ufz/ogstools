@@ -37,7 +37,7 @@ from tempfile import mkdtemp
 import pyvista as pv
 from IPython.display import HTML
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples, workflow
 from ogstools.studies import convergence
 
@@ -56,14 +56,14 @@ refinements = 6
 edge_cells = [2**i for i in range(refinements)]
 for n_edge_cells in edge_cells:
     msh_path = temp_dir / "square.msh"
-    ogs.meshlib.rect(
+    ot.meshlib.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
-    meshes = ogs.meshes_from_gmsh(filename=msh_path, log=False)
+    meshes = ot.meshes_from_gmsh(filename=msh_path, log=False)
     for name, mesh in meshes.items():
         pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
 
-    model = ogs.Project(
+    model = ot.Project(
         output_file=temp_dir / "default.prj",
         input_file=examples.prj_steady_state_diffusion,
     )
@@ -80,10 +80,10 @@ for n_edge_cells in edge_cells:
 # %%
 analytical_solution_path = temp_dir / "analytical_solution.vtu"
 solution = examples.analytical_diffusion(
-    ogs.MeshSeries(result_paths[-1]).mesh(0)
+    ot.MeshSeries(result_paths[-1]).mesh(0)
 )
-ogs.plot.setup.show_element_edges = True
-fig = ogs.plot.contourf(solution, ogs.variables.hydraulic_head)
+ot.plot.setup.show_element_edges = True
+fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
 solution.save(analytical_solution_path)
 
 # %% [markdown]

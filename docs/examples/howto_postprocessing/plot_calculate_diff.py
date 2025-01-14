@@ -17,7 +17,7 @@ This example shows how to calculate differences between meshes.
 
 # sphinx_gallery_end_ignore
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples
 
 # sphinx_gallery_start_ignore
@@ -27,35 +27,35 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 
-ogs.plot.setup.dpi = 75
-ogs.plot.setup.show_element_edges = True
+ot.plot.setup.dpi = 75
+ot.plot.setup.show_element_edges = True
 
 tmp_dir = Path(mkdtemp())
 mesh_path = tmp_dir / "mesh.msh"
 vtu_path = tmp_dir / "mesh_domain.vtu"
 
 
-def custom_mesh(lengths: int, element_order: int, quads: bool) -> ogs.Mesh:
+def custom_mesh(lengths: int, element_order: int, quads: bool) -> ot.Mesh:
     "Creates a custom mesh and runs a Mechanics simulation on it."
-    ogs.meshlib.rect(
+    ot.meshlib.rect(
         lengths=lengths,
         n_edge_cells=21,
         structured_grid=quads,
         order=element_order,
         out_name=mesh_path,
     )
-    meshes = ogs.meshes_from_gmsh(mesh_path, log=False)
+    meshes = ot.meshes_from_gmsh(mesh_path, log=False)
     for name, mesh in meshes.items():
         pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
 
-    model = ogs.Project(
+    model = ot.Project(
         output_file=tmp_dir / "default.prj", input_file=examples.prj_mechanics
     )
     if element_order == 2:
         model.replace_text(4, ".//integration_order")
     model.write_input()
     model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
-    return ogs.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
+    return ot.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
 
 
 # sphinx_gallery_end_ignore
@@ -78,8 +78,8 @@ mesh2 = mesh_series.mesh(-1)
 # variable between the two provided meshes. Then we plot the difference:
 
 # %%
-mesh_diff = mesh1.difference(mesh2, ogs.variables.temperature)
-fig = mesh_diff.plot_contourf(ogs.variables.temperature)
+mesh_diff = mesh1.difference(mesh2, ot.variables.temperature)
+fig = mesh_diff.plot_contourf(ot.variables.temperature)
 
 # %% [markdown]
 # Difference between two meshes of different topology
@@ -96,7 +96,7 @@ tri_mesh = custom_mesh(lengths=1, element_order=2, quads=False)
 # size:
 
 # %%
-fig = ogs.plot.contourf([quad_mesh, tri_mesh], ogs.variables.stress["xx"])
+fig = ot.plot.contourf([quad_mesh, tri_mesh], ot.variables.stress["xx"])
 
 # %% [markdown]
 # To better quantify it we form the difference and plot the result. The base
@@ -105,8 +105,8 @@ fig = ogs.plot.contourf([quad_mesh, tri_mesh], ogs.variables.stress["xx"])
 # topologies is inherently affected by interpolation.
 
 # %%
-diff_mesh = quad_mesh.difference(tri_mesh, ogs.variables.stress)
-fig = diff_mesh.plot_contourf(ogs.variables.stress.difference["xx"])
+diff_mesh = quad_mesh.difference(tri_mesh, ot.variables.stress)
+fig = diff_mesh.plot_contourf(ot.variables.stress.difference["xx"])
 
 # %% [markdown]
 # Doing it the other way around shows the difference on the tri-mesh. Here, we
@@ -114,8 +114,8 @@ fig = diff_mesh.plot_contourf(ogs.variables.stress.difference["xx"])
 # which are outside of the domain of the second mesh are masked.
 
 # %%
-diff_mesh = tri_mesh.difference(quad_mesh, ogs.variables.stress)
-fig = diff_mesh.plot_contourf(ogs.variables.stress.difference["xx"])
+diff_mesh = tri_mesh.difference(quad_mesh, ot.variables.stress)
+fig = diff_mesh.plot_contourf(ot.variables.stress.difference["xx"])
 
 # %% [markdown]
 # Differences between multiple meshes
@@ -151,8 +151,8 @@ fig = diff_mesh.plot_contourf(ogs.variables.stress.difference["xx"])
 meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
-mesh_diff_pair_wise = ogs.meshlib.difference_pairwise(
-    meshes_1, meshes_2, ogs.variables.temperature
+mesh_diff_pair_wise = ot.meshlib.difference_pairwise(
+    meshes_1, meshes_2, ot.variables.temperature
 )
 print(f"Length of mesh_list1: {len(meshes_1)}")
 print(f"Length of mesh_list2: {len(meshes_2)}")
@@ -182,8 +182,8 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 # %%
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = ogs.meshlib.difference_matrix(
-    mesh_list, variable=ogs.variables.temperature
+mesh_diff_matrix = ot.meshlib.difference_matrix(
+    mesh_list, variable=ot.variables.temperature
 )
 print(f"Length of mesh_list1: {len(mesh_list)}")
 print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
@@ -218,8 +218,8 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
-mesh_diff_matrix = ogs.meshlib.difference_matrix(
-    mesh_list_matrix_1, mesh_list_matrix_2, ogs.variables.temperature
+mesh_diff_matrix = ot.meshlib.difference_matrix(
+    mesh_list_matrix_1, mesh_list_matrix_2, ot.variables.temperature
 )
 print(f"Length of mesh_list_matrix_1: {len(mesh_list_matrix_1)}")
 print(f"Length of mesh_list_matrix_2: {len(mesh_list_matrix_2)}")

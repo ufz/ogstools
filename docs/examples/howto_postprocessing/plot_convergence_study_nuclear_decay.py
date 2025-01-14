@@ -38,7 +38,7 @@ import pyvista as pv
 from IPython.display import HTML
 from scipy.constants import Julian_year as sec_per_yr
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples, physics, studies, workflow
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
@@ -65,13 +65,11 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %%
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
-    ogs.meshlib.rect(
-        lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path
-    )
-    for name, mesh in ogs.meshes_from_gmsh(msh_path, log=False).items():
+    ot.meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
+    for name, mesh in ot.meshes_from_gmsh(msh_path, log=False).items():
         pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
 
-    prj = ogs.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
+    prj = ot.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
     prj.replace_text(str(dt * sec_per_yr), ".//delta_t")
     prj.replace_text(prefix.format(dt), ".//prefix")
     prj.write_input()
@@ -90,12 +88,12 @@ fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
 for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
-    mesh_series = ogs.MeshSeries(sim_result)
+    mesh_series = ot.MeshSeries(sim_result)
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
         mesh = mesh_series.mesh(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
-    max_T = ogs.variables.temperature.transform(results["temperature"])
+    max_T = ot.variables.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues("a"))
@@ -162,9 +160,9 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # model behavior.
 
 # %%
-mesh_series = [ogs.MeshSeries(sim_result) for sim_result in sim_results]
+mesh_series = [ot.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
-    mesh_series, ogs.variables.temperature, units=["s", "yrs"]
+    mesh_series, ot.variables.temperature, units=["s", "yrs"]
 )
 
 # %% [markdown]

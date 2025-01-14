@@ -15,11 +15,11 @@ The names of the method calls are based on the corresponding XML tags.
 from pathlib import Path
 from tempfile import mkdtemp
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools.definitions import EXAMPLES_DIR
 
 output_dir = Path(mkdtemp())
-prj = ogs.Project(output_file=output_dir / "mechanics_new.prj")
+prj = ot.Project(output_file=output_dir / "mechanics_new.prj")
 
 # %%
 # Define geometry and/or meshes:

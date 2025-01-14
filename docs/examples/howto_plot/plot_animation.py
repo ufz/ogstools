@@ -13,7 +13,7 @@ example from the ogs benchmark gallery
 import matplotlib.pyplot as plt
 import numpy as np
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
@@ -46,7 +46,7 @@ timevalues = np.linspace(
 # method of MeshSeries.
 
 
-def mesh_func(mesh: ogs.Mesh) -> ogs.Mesh:
+def mesh_func(mesh: ot.Mesh) -> ot.Mesh:
     "Clip the left half of the mesh."
     return mesh.clip("-x", [0, 0, 0])
 
@@ -58,7 +58,7 @@ def plot_func(ax: plt.Axes, timevalue: float) -> None:
 
 # %%
 anim = mesh_series.transform(mesh_func).animate(
-    ogs.variables.saturation, timevalues, plot_func, vmin=0, vmax=100, dpi=50
+    ot.variables.saturation, timevalues, plot_func, vmin=0, vmax=100, dpi=50
 )
 
 # %% [markdown]
@@ -66,7 +66,7 @@ anim = mesh_series.transform(mesh_func).animate(
 #
 # ..  code-block:: python
 #
-#   ogs.plot.utils.save_animation(anim, "Saturation", fps=5)
+#   ot.plot.utils.save_animation(anim, "Saturation", fps=5)
 #
 
 # sphinx_gallery_start_ignore

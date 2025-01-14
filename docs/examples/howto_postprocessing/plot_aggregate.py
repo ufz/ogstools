@@ -14,11 +14,11 @@ To see this benchmark results over all timesteps have a look at
 """
 
 # %%
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples
 
 mesh_series = examples.load_meshseries_CT_2D_XDMF()
-saturation = ogs.variables.saturation
+saturation = ot.variables.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -52,7 +52,7 @@ fig = mesh.plot_contourf(saturation)
 
 # %%
 mesh = mesh_series.time_of_max(saturation)
-fig = mesh.plot_contourf(ogs.variables.Scalar("max_Saturation_time", "s", "a"))
+fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "s", "a"))
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:

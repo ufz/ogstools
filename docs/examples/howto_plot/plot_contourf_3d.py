@@ -16,10 +16,10 @@ data: "facies" with a native pyvista plot.
 import numpy as np
 from pyvista import examples
 
-import ogstools as ogs
+import ogstools as ot
 
 mesh = examples.load_channels()
-data = ogs.variables.Scalar("facies", categoric=True)
+data = ot.variables.Scalar("facies", categoric=True)
 mesh.plot(cmap="bwr")
 
 
@@ -27,7 +27,7 @@ mesh.plot(cmap="bwr")
 # Let's create multiple slices along the z axis and plot them in a 2 by 2 grid.
 
 slices = np.reshape(list(mesh.slice_along_axis(n=4, axis="z")), (2, 2))
-fig = ogs.plot.contourf(slices, data)
+fig = ot.plot.contourf(slices, data)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"z = {slice.center[2]:.1f}")
 
@@ -35,7 +35,7 @@ for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
 # We can also slice along the y-axis and plot the meshes in one row.
 
 slices = np.reshape(mesh.slice_along_axis(n=3, axis="y"), (1, -1))
-fig = ogs.plot.contourf(slices, data)
+fig = ot.plot.contourf(slices, data)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"y = {slice.center[1]:.1f}")
 
@@ -43,4 +43,4 @@ for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
 # Arbitrary oriented slices are also possible. They get projected to the
 # cardinal plane, from which they have the least rotational offset.
 
-fig = ogs.plot.contourf(mesh.slice([1, -2, 0]), data)
+fig = ot.plot.contourf(mesh.slice([1, -2, 0]), data)

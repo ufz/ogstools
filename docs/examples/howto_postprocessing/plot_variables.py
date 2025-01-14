@@ -10,10 +10,10 @@ mesh data. There are also several predefined variables.
 """
 
 # %%
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples
 
-ogs.variables.get_dataframe()
+ot.variables.get_dataframe()
 
 # %% [markdown]
 # Scalar, Vector and Matrix inherit from the class Variable with its
@@ -22,21 +22,21 @@ ogs.variables.get_dataframe()
 # applies a function if specified. In this case we convert from K to °C:
 
 # %%
-ogs.variables.temperature.transform(273.15, strip_unit=False)
+ot.variables.temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
 # You can also create your own variables by creating a Scalar, Vector or Matrix
 # variable. The following doesn't do any unit conversion.
 
 # %%
-custom_temperature = ogs.variables.Scalar(
+custom_temperature = ot.variables.Scalar(
     data_name="temperature", data_unit="K", output_unit="K"
 )
 custom_temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
 # Or use existing presets as a template and replace some parameters:
-custom_temperature = ogs.variables.temperature.replace(output_unit="°F")
+custom_temperature = ot.variables.temperature.replace(output_unit="°F")
 custom_temperature.transform(273.15, strip_unit=False)
 
 # %% [markdown]
@@ -47,10 +47,10 @@ custom_temperature.transform(273.15, strip_unit=False)
 # length 4 [xx, yy, zz, xy] or 6 [xx, yy, zz, xy, yz, xz].
 
 # %%
-ogs.variables.displacement[1].transform([0.01, 0.02, 0.03], strip_unit=False)
+ot.variables.displacement[1].transform([0.01, 0.02, 0.03], strip_unit=False)
 
 # %%
-ogs.variables.strain["xx"].transform(
+ot.variables.strain["xx"].transform(
     [0.01, 0.02, 0.03, 0.04, 0.05, 0.06], strip_unit=False
 )
 
@@ -58,7 +58,7 @@ ogs.variables.strain["xx"].transform(
 # Magnitude of a 2D displacement vector:
 
 # %%
-ogs.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
+ot.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 
 # %% [markdown]
 # We suggest specifying the variables and their transformations once.
@@ -67,8 +67,8 @@ ogs.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 # task of processing the data (e.g. calculate the von Mises stress):
 
 # %%
-fig = ogs.plot.contourf(
-    examples.load_mesh_mechanics_2D(), ogs.variables.stress.von_Mises
+fig = ot.plot.contourf(
+    examples.load_mesh_mechanics_2D(), ot.variables.stress.von_Mises
 )
 
 # %% [markdown]

@@ -17,7 +17,7 @@ The recommended strategy is:
 - Back up your environment with `pip freeze > yourfile.txt`
 - Upgrade ogs6py to 0.403 first and resolve issues (see breaking changes).
 - Uninstall ogs6py and install ogstools
-- Remove `import ogs6py`. Add `import ogstools as ogs`. The former `OGS` becomes `Project` and function parameters of `OGS.__init__()` are now with lower case names. See example in Features
+- Remove `import ogs6py`. Add `import ogstools as ot`. The former `OGS` becomes `Project` and function parameters of `OGS.__init__()` are now with lower case names. See example in Features
 
 ## API changes
 
@@ -51,9 +51,9 @@ The recommended strategy is:
 before:
 
 ```python
-import ogstools as ogs
+import ogstools as ot
 
-prj = ogs.Project(input_file="mechanics.prj", output_file="old_parameter_add.prj")
+prj = ot.Project(input_file="mechanics.prj", output_file="old_parameter_add.prj")
 prj.add_block(
     blocktag="parameter",
     parent_xpath="./parameters",
@@ -66,9 +66,9 @@ prj.write_input()
 now:
 
 ```python
-import ogstools as ogs
+import ogstools as ot
 
-prj = ogs.Project(input_file="mechanics.prj", output_file="new_parameter_add.prj")
+prj = ot.Project(input_file="mechanics.prj", output_file="new_parameter_add.prj")
 prj.parameters.add_parameter(name="density", type="Constant", value="1900")
 prj.write_input()
 ```
@@ -96,7 +96,7 @@ prj.write_input()
 - Mesh can be created from a shapefile
 
 ```
-mesh = ogs.Mesh.read(test_shapefile)
+mesh = ot.Mesh.read(test_shapefile)
 ```
 
 - Mesh can be remeshed with triangle
@@ -105,9 +105,9 @@ mesh = ogs.Mesh.read(test_shapefile)
 - MeshSeries allows multidimensional indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>
 
 ```python
-import ogstools as ogs
+import ogstools as ot
 
-ms = ogs.MeshSeries("filepath/filename_pvd_or_xdmf")
+ms = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
 ms.data("darcy_velocity")[-2:, 1:4, :]  # shape is(2, 3, 2)
 result_mesh = ms[-1]
 for mesh in ms:

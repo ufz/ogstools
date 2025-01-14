@@ -21,14 +21,14 @@ to adapt.
 from pathlib import Path
 from tempfile import mkdtemp
 
-import ogstools as ogs
+import ogstools as ot
 from ogstools import examples
 
 mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 
 # %% This is our example mesh which we want to discretize with triangle
 # elements.
-fig = mesh.plot_contourf(ogs.variables.material_id)
+fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
 # Here, we do the remeshing and convert the resulting msh file to an
@@ -38,6 +38,6 @@ fig = mesh.plot_contourf(ogs.variables.material_id)
 mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
-ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-meshes = ogs.meshes_from_gmsh(msh_path, reindex=False, log=False)
-fig = meshes["domain"].plot_contourf(ogs.variables.material_id)
+ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
+meshes = ot.meshes_from_gmsh(msh_path, reindex=False, log=False)
+fig = meshes["domain"].plot_contourf(ot.variables.material_id)
