@@ -109,7 +109,6 @@ class TestRaster:
         locFrame = LocationFrame(0.0, 20.0, -1.4, 12.4)
         raster = Raster(locFrame, 25)
         outfile = Path(tempfile.mkstemp(".vtu", "Raster")[1])
-        outfile = "y.vtu"
         vtu = raster.as_vtu(outfile)
         # start of test
         # expect a new file to written and now able to read as vtu

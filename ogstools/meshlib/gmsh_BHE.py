@@ -911,6 +911,7 @@ def gen_bhe_mesh_gmsh(
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
     gmsh.initialize()
+    gmsh.option.setNumber("General.Verbosity", 2)
     gmsh.model.add(Path(out_name).stem)
 
     if meshing_type == "structured":
