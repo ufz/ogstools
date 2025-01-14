@@ -9,6 +9,12 @@ You can clone the source repository from https://gitlab.opengeosys.org/ogs/tools
 
 # Development environment
 
+Change into the directory with the cloned ogstools sources. (`.` assumes that your working directory contains the ogstools sources, the directory where you find the `pyproject.toml`).
+
+```bash
+cd ogstools
+```
+
 Create a virtual environment, activate it and install required packages:
 
 ```bash
