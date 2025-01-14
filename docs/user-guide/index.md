@@ -73,5 +73,6 @@ See the following tool descriptions:
 maxdepth: 1
 glob: 1
 ---
+../auto_user-guide/*
 *
 ```

@@ -79,6 +79,7 @@ docs:  ## Builds the documentation
 cleandocs:  ## Cleans up temporary documentation files
 	rm -r docs/_build
 	rm -r docs/auto_examples
+	rm -r docs/auto_user-guide
 	rm -r docs/reference/*.rst
 
 preview:  ## Runs an auto-updating web server for the documentation
