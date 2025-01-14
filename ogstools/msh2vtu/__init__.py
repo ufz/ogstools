@@ -3,7 +3,3 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
-
-from .converter import msh2vtu
-
-__all__ = ["msh2vtu"]

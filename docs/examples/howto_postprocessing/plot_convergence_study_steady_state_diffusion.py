@@ -34,6 +34,7 @@ First, the required packages are imported and an output directory is created:
 from pathlib import Path
 from tempfile import mkdtemp
 
+import pyvista as pv
 from IPython.display import HTML
 
 import ogstools as ogs
@@ -46,7 +47,7 @@ result_paths = []
 
 # %% [markdown]
 # The meshes and their boundaries are generated easily via gmsh and
-# :py:mod:`ogstools.msh2vtu`.
+# :py:mod:`ogstools.meshlib.gmsh_converter.meshes_from_gmsh`.
 # Then we run the different simulations with increasingly fine spatial
 # discretization via ogs6py and store the results for the convergence study.
 
@@ -58,7 +59,9 @@ for n_edge_cells in edge_cells:
     ogs.meshlib.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
-    ogs.msh2vtu(filename=msh_path, output_path=temp_dir, log=False)
+    meshes = ogs.meshes_from_gmsh(filename=msh_path, log=False)
+    for name, mesh in meshes.items():
+        pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
 
     model = ogs.Project(
         output_file=temp_dir / "default.prj",

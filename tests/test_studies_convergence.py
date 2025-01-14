@@ -5,6 +5,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
+import pyvista as pv
 
 import ogstools as ot
 from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
@@ -25,7 +26,9 @@ class TestConvergence:
                 structured_grid=True,
                 out_name=msh_path,
             )
-            ot.msh2vtu(filename=msh_path, output_path=temp_dir, log=False)
+            meshes = ot.meshes_from_gmsh(filename=msh_path, log=False)
+            for name, mesh in meshes.items():
+                pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
             model = ot.Project(
                 output_file=temp_dir / "default.prj",
                 input_file=prj_steady_state_diffusion,

@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import NoReturn
 
 import pytest
+import pyvista as pv
 from lxml import etree as ET
 
-from ogstools import msh2vtu
+from ogstools import meshes_from_gmsh
 from ogstools.examples import (
     prj_aniso_expansion,
     prj_beier_sandbox,
@@ -818,10 +819,10 @@ class TestiOGS:
 
     def test_buildfromscratch_bhe(self) -> NoReturn:
         model = Project(output_file="HeatTransportBHE_ogs6py.prj", MKL=False)
-        model.mesh.add_mesh(filename="bhe_mesh.vtu")
-        model.mesh.add_mesh(filename="bhe_mesh_inflowsf.vtu")
-        model.mesh.add_mesh(filename="bhe_mesh_bottomsf.vtu")
-        model.mesh.add_mesh(filename="bhe_mesh_topsf.vtu")
+        model.mesh.add_mesh(filename="mesh.vtu")
+        model.mesh.add_mesh(filename="mesh_inflowsf.vtu")
+        model.mesh.add_mesh(filename="mesh_bottomsf.vtu")
+        model.mesh.add_mesh(filename="mesh_topsf.vtu")
         model.processes.set_process(
             name="HeatTransportBHE",
             type="HEAT_TRANSPORT_BHE",
@@ -879,19 +880,19 @@ class TestiOGS:
         )
         model.process_variables.add_bc(
             process_variable_name="temperature_soil",
-            mesh="bhe_mesh_topsf",
+            mesh="mesh_topsf",
             type="Dirichlet",
             parameter="T_Surface",
         )
         model.process_variables.add_bc(
             process_variable_name="temperature_soil",
-            mesh="bhe_mesh_bottomsf",
+            mesh="mesh_bottomsf",
             type="Neumann",
             parameter="dT_Groundsource",
         )
         model.process_variables.add_bc(
             process_variable_name="temperature_soil",
-            mesh="bhe_mesh_inflowsf",
+            mesh="mesh_inflowsf",
             type="Dirichlet",
             parameter="T_Inflow",
         )
@@ -1039,7 +1040,7 @@ class TestiOGS:
         model.parameters.add_parameter(
             name="T0",
             type="MeshNode",
-            mesh="bhe_mesh",
+            mesh="mesh",
             field_name="temperature_soil",
         )
         model.parameters.add_parameter(
@@ -1057,7 +1058,7 @@ class TestiOGS:
         model.parameters.add_parameter(
             name="T_Inflow",
             type="MeshNode",
-            mesh="bhe_mesh_inflowsf",
+            mesh="mesh_inflowsf",
             field_name="temperature_soil",
         )
         model.parameters.add_parameter(
@@ -1640,7 +1641,7 @@ class TestiOGS:
 
         model.write_input()
         model.run_model(
-            write_logs=False,
+            write_logs=True,
             wrapper=wrapper,
             write_prj_to_pvd=False,
             args=f"-o {temp.resolve()}",
@@ -1685,13 +1686,9 @@ class TestiOGS:
             msh_version=None,
         )
 
-        msh2vtu(
-            meshname,
-            output_path=meshname.parents[0],
-            dim=[1, 3],
-            reindex=True,
-            log=False,
-        )
+        meshes = meshes_from_gmsh(meshname, dim=[1, 3], log=False)
+        for name, mesh in meshes.items():
+            pv.save_meshio(Path(meshname.parents[0], name + ".vtu"), mesh)
 
         log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
 
@@ -1709,7 +1706,7 @@ class TestiOGS:
 
         model.write_input()
         model.run_model(
-            write_logs=False,
+            write_logs=True,
             wrapper=wrapper,
             write_prj_to_pvd=False,
             args=f"-o {temp.resolve()}",

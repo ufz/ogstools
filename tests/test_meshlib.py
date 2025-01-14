@@ -40,7 +40,7 @@ class TestUtils:
             ogs.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
-            ogs.msh2vtu(mesh_path, tmp_dir, log=False)
+            ogs.meshes_from_gmsh(mesh_path, tmp_dir, log=False, save=True)
 
             model = ogs.Project(
                 output_file=tmp_dir / "default.prj",
@@ -469,7 +469,9 @@ class TestUtils:
             mixed_elements=mixed,
             jiggle=0.01,
         )
-        ogs.msh2vtu(mesh_path, tmp_path, reindex=True, log=False)
+        meshes = ogs.meshes_from_gmsh(mesh_path, log=False)
+        for name, mesh in meshes.items():
+            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
         model = ogs.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -501,20 +503,22 @@ class TestUtils:
         "Test reading of quadratic elements in xdmf."
 
         tmp_path = Path(mkdtemp())
-        mesh_path = Path(tmp_path) / "mesh.msh"
+        msh_path = Path(tmp_path) / "mesh.msh"
         ogs.meshlib.rect(
-            n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
+            n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
         )
-        ogs.msh2vtu(mesh_path, tmp_path, reindex=True, log=False)
+        meshes = ogs.meshes_from_gmsh(msh_path, log=False)
+        for name, mesh in meshes.items():
+            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
         model = ogs.Project(
-            output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
+            output_file=tmp_path / "default.prj",
         )
         model.replace_text("4", xpath=".//integration_order")
         model.replace_text("XDMF", xpath="./time_loop/output/type")
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-        mesh = ogs.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").mesh(-1)
+        mesh = ogs.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(-1)
         assert not np.any(np.isnan(ogs.variables.stress.transform(mesh)))
 
     def test_remesh_with_tri(self):
@@ -523,7 +527,7 @@ class TestUtils:
         msh_path = temp_dir / "tri_mesh.msh"
         ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
         assert len(
-            ogs.msh2vtu(msh_path, temp_dir, reindex=False, log=False)
+            ogs.meshes_from_gmsh(msh_path, reindex=False, log=False).items()
         ) == 1 + len(np.unique(mesh["MaterialIDs"]))
         # boundaries are not assigned a physical tag in remesh_with_trinagles
 

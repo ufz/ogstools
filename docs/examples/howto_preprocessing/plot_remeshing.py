@@ -31,14 +31,13 @@ mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 fig = mesh.plot_contourf(ogs.variables.material_id)
 
 # %% [markdown]
-# Here, we do the remeshing and use msh2vtu to convert the resulting msh file to
-# an OGS-compatible vtu file.
+# Here, we do the remeshing and convert the resulting msh file to an
+# OGS-compatible vtu file.
 
 # %%
 mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
 ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-ogs.msh2vtu(msh_path, temp_dir, reindex=False, log=False)
-mesh = ogs.Mesh(temp_dir / "tri_mesh_domain.vtu")
-fig = mesh.plot_contourf(ogs.variables.material_id)
+meshes = ogs.meshes_from_gmsh(msh_path, reindex=False, log=False)
+fig = meshes["domain"].plot_contourf(ogs.variables.material_id)

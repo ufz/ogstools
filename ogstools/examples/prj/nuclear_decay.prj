@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <OpenGeoSysProject>
     <meshes>
-        <mesh>rect_domain.vtu</mesh>
-        <mesh>rect_physical_group_left.vtu</mesh>
-        <mesh>rect_physical_group_bottom.vtu</mesh>
-        <mesh>rect_physical_group_right.vtu</mesh>
+        <mesh>domain.vtu</mesh>
+        <mesh>physical_group_left.vtu</mesh>
+        <mesh>physical_group_bottom.vtu</mesh>
+        <mesh>physical_group_right.vtu</mesh>
     </meshes>
 	<python_script>decay_boundary_conditions.py</python_script>
     <processes>
@@ -99,12 +99,12 @@
             <initial_condition>T0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>rect_physical_group_right</mesh>
+                    <mesh>physical_group_right</mesh>
                     <type>Dirichlet</type>
                     <parameter>T0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>rect_physical_group_left</mesh>
+                    <mesh>physical_group_left</mesh>
 					<type>Python</type>
                     <bc_object>T_source_term</bc_object>
                 </boundary_condition>

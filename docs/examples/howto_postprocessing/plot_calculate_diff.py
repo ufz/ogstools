@@ -22,6 +22,7 @@ from ogstools import examples
 
 # sphinx_gallery_start_ignore
 
+import pyvista as pv
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -43,7 +44,9 @@ def custom_mesh(lengths: int, element_order: int, quads: bool) -> ogs.Mesh:
         order=element_order,
         out_name=mesh_path,
     )
-    ogs.msh2vtu(mesh_path, tmp_dir, log=False)
+    meshes = ogs.meshes_from_gmsh(mesh_path, log=False)
+    for name, mesh in meshes.items():
+        pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
 
     model = ogs.Project(
         output_file=tmp_dir / "default.prj", input_file=examples.prj_mechanics

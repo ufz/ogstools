@@ -14,24 +14,24 @@ import meshio
 import numpy as np
 import pyvista as pv
 
+from .mesh import Mesh
+
 logging.basicConfig()  # Important, initializes root logger
 logger = logging.getLogger(__name__)
 
 
 def meshes_from_gmsh(
     filename: Path,
-    prefix: str = "",
     dim: int | list[int] = 0,
-    reindex: bool = False,
+    reindex: bool = True,
     log: bool = True,
-) -> dict[str, pv.UnstructuredGrid]:
+) -> dict[str, Mesh]:
     """
     Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
     Extracts domain-, boundary- and physical group-submeshes.
 
     :param filename:    Gmsh mesh file (.msh) as input data
-    :param prefix: Name prefix, defaults to basename of inputfile
     :param dim: Spatial dimension (1, 2 or 3), trying automatic detection,
                 if not given. If multiple dimensions are provided, all elements
                 of these dimensions are embedded in the resulting domain mesh.
@@ -51,8 +51,6 @@ def meshes_from_gmsh(
     if not filename.is_file():
         raise FileNotFoundError
 
-    output_basename = filename.stem if prefix == "" else prefix
-
     meshes: dict[str, meshio.Mesh] = {}
     mesh: meshio.Mesh = meshio.read(str(filename))
     pv_mesh = pv.from_meshio(mesh).clean()
@@ -64,33 +62,29 @@ def meshes_from_gmsh(
         logger.info("Detected domain dimension of %d", dim[0])
     elif isinstance(dim, int):
         dim = [dim]
-    domain_mesh = pv_mesh.extract_cells(
-        [cell.dimension in dim for cell in pv_mesh.cell]
+    domain_mesh = Mesh(
+        pv_mesh.extract_cells([cell.dimension in dim for cell in pv_mesh.cell])
     )
     mat_ids = domain_mesh.cell_data.pop(
         "gmsh:physical", np.zeros(domain_mesh.number_of_cells)
     )
     unique_mat_ids = np.unique(mat_ids)
     logger.info("Found material IDs: %s", unique_mat_ids)
-    if reindex:
-        id_map = dict(
-            zip(*np.unique(unique_mat_ids, return_inverse=True), strict=True)
-        )
-        mat_ids = np.asarray(list(map(id_map.get, mat_ids)))
-        logger.info("Renumbered to: %s", np.unique(mat_ids))
     domain_mesh.clear_cell_data()
     domain_mesh.clear_point_data()
     domain_mesh.clear_field_data()
     domain_mesh.cell_data["MaterialIDs"] = np.int32(mat_ids)
+    if reindex:
+        domain_mesh.reindex_material_ids()
+        logger.info("Renumbered to: %s", np.unique(domain_mesh["MaterialIDs"]))
 
-    domain_name = output_basename + "_domain"
-    meshes[domain_name] = domain_mesh
-    logger.info("%s: %s", domain_name, domain_mesh)
+    meshes["domain"] = domain_mesh
+    logger.info("%s: %s", "domain", domain_mesh)
 
     group_ids = np.unique(pv_mesh["gmsh:physical"])
     for name, (group_index, group_dim) in mesh.field_data.items():
         # skip iteration for domain mesh
-        if name == output_basename:
+        if name == filename.stem:
             continue
 
         # for old gmsh versions
@@ -101,7 +95,9 @@ def meshes_from_gmsh(
         # for recent gmsh versions (allows cells belonging to multiple groups)
         else:
             # Gmsh may store element of the same physical id in different
-            # blocks. To get mark all elements of this is in
+            # blocks. To mark all those elements correctly for extraction in the
+            # pyvista mesh, we need to add an offset of the running total of
+            # counted cells, as we don't have these blocks in the pyvista mesh.
             group_offsets = {index: 0 for index in group_ids}
             group_cells = np.full(pv_mesh.number_of_cells, False)
             for index, cell_ids in enumerate(mesh.cell_sets[name]):
@@ -149,9 +145,9 @@ def meshes_from_gmsh(
             subdomain.point_data.remove("gmsh:dim_tags")
         subdomain.field_data.clear()
 
-        subdomain_name = f"{output_basename}_physical_group_{name}"
-        meshes[subdomain_name] = subdomain
-        logger.info("%s: %s", subdomain_name, subdomain)
+        meshes[f"physical_group_{name}"] = Mesh(subdomain)
+        logger.info("%s: %s", f"physical_group_{name}", subdomain)
 
     logger.info("Conversion complete.")
+
     return meshes

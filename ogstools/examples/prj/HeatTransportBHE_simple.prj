@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <OpenGeoSysProject>
     <meshes>
-        <mesh>bhe_simple_domain.vtu</mesh>
+        <mesh>domain.vtu</mesh>
     </meshes>
     <processes>
         <process>

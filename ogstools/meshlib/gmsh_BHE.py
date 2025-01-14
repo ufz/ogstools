@@ -5,8 +5,9 @@ from tempfile import mkdtemp
 
 import gmsh
 import numpy as np
+import pyvista as pv
 
-from ogstools.msh2vtu import msh2vtu
+from ogstools.meshlib import meshes_from_gmsh
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,7 @@ def gen_bhe_mesh_gmsh(
     out_name: Path = Path("bhe_mesh.msh"),
 ) -> None:
     """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with msh2vtu with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with meshes_from_gmsh with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param length: Length of the model area in m (x-dimension)
     :param width: Width of the model area in m (y-dimension)
@@ -1021,18 +1022,14 @@ def gen_bhe_mesh(
         out_name=msh_file,
     )
 
-    msh2vtu(
-        msh_file,
-        output_path=out_name.parents[0],
-        dim=[1, 3],
-        reindex=True,
-        log=False,
-    )
+    meshes = meshes_from_gmsh(msh_file, dim=[1, 3], log=False)
+    for name, mesh in meshes.items():
+        pv.save_meshio(Path(out_name.parents[0], name + ".vtu"), mesh)
 
     mesh_names = [
-        f"{mesh_name}_domain.vtu",
-        f"{mesh_name}_physical_group_Top_Surface.vtu",
-        f"{mesh_name}_physical_group_Bottom_Surface.vtu",
+        "domain.vtu",
+        "physical_group_Top_Surface.vtu",
+        "physical_group_Bottom_Surface.vtu",
     ]
 
     groundwater = (
@@ -1040,8 +1037,6 @@ def gen_bhe_mesh(
     )
 
     for i, _ in enumerate(groundwater):
-        mesh_names.append(
-            f"{mesh_name}_physical_group_Groundwater_Inflow_{i}.vtu"
-        )
+        mesh_names.append(f"physical_group_Groundwater_Inflow_{i}.vtu")
 
     return mesh_names

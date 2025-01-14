@@ -6,7 +6,7 @@ This is the first release of the `ogstools`-package, a joint effort of OGS users
 
 ### msh2vtu
 
-The `msh2vtu`-tool by Dominik Kern (TU Bergakademie Freiberg) has been integrated into ogstools. For more info see [](../user-guide/msh2vtu.md). Its former repository at GitHub [dominik-kern/msh2vtu](https://github.com/dominik-kern/msh2vtu) has been deprecated and development continues under the ogstools umbrella.
+The `msh2vtu`-tool by Dominik Kern (TU Bergakademie Freiberg) has been integrated into ogstools. For more info see [](../auto_user-guide/plot_msh2vtu.rst). Its former repository at GitHub [dominik-kern/msh2vtu](https://github.com/dominik-kern/msh2vtu) has been deprecated and development continues under the ogstools umbrella.
 
 ## Infrastructure
 

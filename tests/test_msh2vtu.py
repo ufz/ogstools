@@ -1,5 +1,5 @@
 """
-Tests (pytest) for msh2vtu
+Tests (pytest) for msh2vtu and meshes_from_gmsh
 """
 
 import os
@@ -13,12 +13,10 @@ from unittest.mock import patch
 import gmsh
 import meshio
 import numpy as np
-import pyvista as pv
 from parameterized import parameterized
 
-from ogstools import msh2vtu
+from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
-from ogstools.meshlib import meshes_from_gmsh
 from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.msh2vtu._cli import cli
 
@@ -42,7 +40,6 @@ def test_multiple_groups_per_element(tmp_path: Path):
     gmsh.model.geo.addCurveLoop([1, 2, 3, 4, 5, 6], 1)
     gmsh.model.geo.addPlaneSurface([1], 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(2, 20)
-    gmsh.model.geo.addPhysicalGroup(dim=2, tags=[1], name="domain")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[2], name="bottom_center")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[1, 2, 3], name="bottom")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[4], name="right")
@@ -54,23 +51,20 @@ def test_multiple_groups_per_element(tmp_path: Path):
 
     gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(2)
-    model_name = "multiple_groups_per_element"
-    msh_file = Path(tmp_path, model_name + ".msh")
+    msh_file = Path(tmp_path, "multiple_groups_per_element.msh")
     gmsh.write(str(msh_file))
     gmsh.finalize()
 
-    meshes = meshes_from_gmsh(msh_file, prefix=model_name)
-    assert len(meshes) == 8
-
-    prefix = f"{model_name}_physical_group"
+    meshes = meshes_from_gmsh(msh_file)
+    assert len(meshes) == 7
 
     def num_cells(boundary_name: str) -> int:
-        return meshes[f"{prefix}_{boundary_name}"].number_of_cells
+        return meshes[f"physical_group_{boundary_name}"].number_of_cells
 
     names = ["left", "right", "top", "bottom"]
     assert num_cells("boundaries") == sum([num_cells(name) for name in names])
-    bot = meshes[f"{prefix}_bottom"]
-    bot_center = meshes[f"{prefix}_bottom_center"]
+    bot = meshes["physical_group_bottom"]
+    bot_center = meshes["physical_group_bottom_center"]
     assert bot.number_of_cells == 25
     assert bot_center.number_of_cells == 19
     assert np.all(np.isin(bot_center["bulk_node_ids"], bot["bulk_node_ids"]))
@@ -78,7 +72,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
 
 
 def test_rect(tmp_path: Path):
-    """Create rectangular gmsh meshes and convert with msh2vtu."""
+    """Create different setups of a rectangular mesh."""
     msh_file = Path(tmp_path, "rect.msh")
     permutations = product(
         [1.0, 2.0], [1, 2], [1, 2], [True, False],
@@ -92,7 +86,7 @@ def test_rect(tmp_path: Path):
             order=order, mixed_elements=mixed_elements,
             out_name=msh_file, msh_version=version,
         )  # fmt: skip
-        assert len(meshes_from_gmsh(msh_file, prefix="rect")) == 4 + n_layers
+        assert len(meshes_from_gmsh(msh_file)) == 4 + n_layers
 
 
 class TestPhysGroups:
@@ -110,7 +104,7 @@ class TestPhysGroups:
 
     @parameterized.expand(PHYS_GROUPS_TEST_ARGS)
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
-        """Create rectangular gmsh meshes and convert with msh2vtu."""
+        """Test different setups of physical groups."""
         msh_file = Path(self.tmp_path, "rect.msh")
         rect(
             n_layers=len(layer_ids),
@@ -118,13 +112,13 @@ class TestPhysGroups:
             layer_ids=layer_ids,
             mixed_elements=True,
         )
-        meshes = meshes_from_gmsh(msh_file, prefix="rect", reindex=reindex)
-        mesh = meshes["rect_domain"]
+        meshes = meshes_from_gmsh(msh_file, reindex=reindex)
+        mesh = meshes["domain"]
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
 def test_cuboid(tmp_path: Path):
-    """Create rectangular gmsh meshes and convert with msh2vtu."""
+    """Test different setups of a cuboid mesh."""
     msh_file = Path(tmp_path, "cuboid.msh")
     permutations = product(
         [1.0, 2.0], [1, 2], [1, 2], [True, False],
@@ -132,7 +126,7 @@ def test_cuboid(tmp_path: Path):
     )  # fmt: skip
     for (edge_length,  n_edge_cells, n_layers, structured,
         order, mixed_elements, version) in permutations:  # fmt: skip
-        # this combination doesn't work with msh2vtu (yet?)
+        # this combination doesn't work (yet?)
         if order == 2 and mixed_elements:
             continue
         cuboid(
@@ -141,7 +135,7 @@ def test_cuboid(tmp_path: Path):
             order=order, mixed_elements=mixed_elements,
             out_name=msh_file, msh_version=version,
         )  # fmt: skip
-        meshes = meshes_from_gmsh(msh_file, prefix="cuboid")
+        meshes = meshes_from_gmsh(msh_file)
         assert len(meshes) == {1: 7, 2: 9}[n_layers]
 
 
@@ -161,7 +155,7 @@ def test_gmsh(tmp_path: Path):
         runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
-        assert len(meshes_from_gmsh(msh_file, prefix=prefix)) == num_meshes
+        assert len(meshes_from_gmsh(msh_file)) == num_meshes
         assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
 
     for vtu_file in tmp_path.glob("*.vtu"):
@@ -175,7 +169,7 @@ def test_gmsh(tmp_path: Path):
 def test_subdomains_2D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
     meshes = meshes_from_gmsh(msh_geolayers_2d)
-    bounds = meshes["geolayers_2d_domain"].bounds
+    bounds = meshes["domain"].bounds
     boundaries = {
         "Bottom": (120, 1, bounds[2]),
         "Left": (8, 0, bounds[0]),
@@ -183,7 +177,7 @@ def test_subdomains_2D():
         "Top": (120, 1, bounds[3]),
     }
     for name, (ref_num_cells, coord, coord_value) in boundaries.items():
-        mesh = meshes[f"geolayers_2d_physical_group_{name}"]
+        mesh = meshes[f"physical_group_{name}"]
         assert ref_num_cells == mesh.number_of_cells
         assert np.all(mesh.points[:, coord] == coord_value)
 
@@ -193,14 +187,14 @@ def test_subdomains_2D():
         "SedimentLayer3": (230, [0.0, -1873.982884659469, 0.0]),
     }
     for name, (ref_num_cells, ref_center) in subdomains.items():
-        mesh = meshes[f"geolayers_2d_physical_group_{name}"]
+        mesh = meshes[f"physical_group_{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)
 
 
-def test_subdomains_3D(tmp_path: Path):
+def test_subdomains_3D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
-    msh2vtu(msh_geoterrain_3d, tmp_path)
+    meshes = meshes_from_gmsh(msh_geoterrain_3d)
 
     boundaries = {
         "BottomSouthLine": (20, [0.5, 0.0, -0.5]),
@@ -211,8 +205,6 @@ def test_subdomains_3D(tmp_path: Path):
         "TopSurface": (1176, [0.5, 0.5, -1.3476350030128259e-05]),
     }
     for name, (ref_num_cells, ref_center) in boundaries.items():
-        mesh = pv.UnstructuredGrid(
-            Path(tmp_path, f"geoterrain_3d_physical_group_{name}.vtu")
-        )
+        mesh = meshes[f"physical_group_{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)
