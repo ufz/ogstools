@@ -7,6 +7,10 @@ This is not released yet!
 - MeshSeries.data --> MeshSeries.values
 - MeshSeries.clear --> MeshSeries.clear_cache
 - meshlib.gmsh_meshing.remesh_with_triangle --> meshlib.gmsh_meshing.remesh_with_triangles
+- msh2vtu python interface was replaced with meshes_from_gmsh
+  - CLI tool msh2vtu is not affected by this
+  - parameter keep_ids was removed (in our OGS world there is no reason to keep the gmsh data names and the wrong data types in the meshes, which would happen if k was used)
+  - parameter log_level was changed to log (True or False)
 
 ## Features
 

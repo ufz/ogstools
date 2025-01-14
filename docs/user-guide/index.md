@@ -70,8 +70,10 @@ See the following tool descriptions:
 
 ```{toctree}
 ---
-maxdepth: 1
-glob: 1
+maxdepth: 0
+glob: 0
 ---
-*
+../auto_user-guide/plot*
+../user-guide/*
+
 ```

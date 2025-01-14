@@ -37,9 +37,9 @@ line_styles = [
     (0, (3, 5, 1, 5, 1, 5)),  # dash dot dotted
     (0, (3, 10, 1, 10)),  # loosely dash dotted
 ]
-group_color_thermal = "C6"
-group_color_hydraulic = "C0"
-group_color_mechanical = "C14"
+group_color_thermal = "tab:red"
+group_color_hydraulic = "tab:blue"
+group_color_mechanical = "black"  # green would be bad for colorblindess
 
 # ====== general ======
 material_id = Scalar(data_name="MaterialIDs", categoric=True, cmap="tab20")

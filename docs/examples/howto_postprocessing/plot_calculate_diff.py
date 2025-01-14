@@ -22,11 +22,10 @@ from ogstools import examples
 
 # sphinx_gallery_start_ignore
 
+import pyvista as pv
 from pathlib import Path
 from tempfile import mkdtemp
 
-from ogstools.meshlib.gmsh_meshing import rect
-from ogstools.msh2vtu import msh2vtu
 
 ogs.plot.setup.dpi = 75
 ogs.plot.setup.show_element_edges = True
@@ -38,14 +37,16 @@ vtu_path = tmp_dir / "mesh_domain.vtu"
 
 def custom_mesh(lengths: int, element_order: int, quads: bool) -> ogs.Mesh:
     "Creates a custom mesh and runs a Mechanics simulation on it."
-    rect(
+    ogs.meshlib.rect(
         lengths=lengths,
         n_edge_cells=21,
         structured_grid=quads,
         order=element_order,
         out_name=mesh_path,
     )
-    msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+    meshes = ogs.meshes_from_gmsh(mesh_path, log=False)
+    for name, mesh in meshes.items():
+        pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
 
     model = ogs.Project(
         output_file=tmp_dir / "default.prj", input_file=examples.prj_mechanics

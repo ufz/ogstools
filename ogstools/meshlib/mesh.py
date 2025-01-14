@@ -136,3 +136,13 @@ class Mesh(pv.UnstructuredGrid):
                 shapefile, simplify, mesh_generator, cellsize
             )
         )
+
+    def reindex_material_ids(self) -> None:
+        unique_mat_ids = np.unique(self["MaterialIDs"])
+        id_map = dict(
+            zip(*np.unique(unique_mat_ids, return_inverse=True), strict=True)
+        )
+        self["MaterialIDs"] = np.int32(
+            list(map(id_map.get, self["MaterialIDs"]))
+        )
+        return

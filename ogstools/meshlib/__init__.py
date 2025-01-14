@@ -16,6 +16,7 @@ from .data_processing import (
     interp_points,
     sample_polyline,
 )
+from .gmsh_converter import meshes_from_gmsh
 from .gmsh_meshing import cuboid, rect
 from .ip_mesh import to_ip_mesh, to_ip_point_cloud
 from .mesh import Mesh
@@ -45,6 +46,8 @@ __all__ = [
     "distance_in_profile",
     "distance_in_segments",
     "interp_points",
+    "meshes_from_gmsh",
+    "read_shape",
     "rect",
     "sample_polyline",
     "to_ip_mesh",
@@ -53,6 +56,4 @@ __all__ = [
     "to_region_simplified",
     "to_region_tetraeder",
     "to_region_voxel",
-    "read_shape",
-    "",
 ]

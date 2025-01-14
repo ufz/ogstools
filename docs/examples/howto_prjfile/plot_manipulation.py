@@ -9,20 +9,23 @@ E.g., to iterate over three Young's moduli one can use the replace parameter met
 """
 
 # %%
-# Initialize the ogs6py object:
+from pathlib import Path
+from tempfile import mkdtemp
+
 import ogstools as ogs
 from ogstools.definitions import EXAMPLES_DIR
 
+model_dir = Path(mkdtemp())
 youngs_moduli = [1, 2, 3]
 filename = EXAMPLES_DIR / "prj/simple_mechanics.prj"
 for youngs_modulus in youngs_moduli:
-    prj = ogs.Project(input_file=filename, output_file=filename)
+    prj = ogs.Project(input_file=filename, output_file=model_dir / filename)
     prj.replace_parameter_value(name="E", value=youngs_modulus)
     prj.replace_text(
         f"out_E={youngs_modulus}", xpath="./time_loop/output/prefix"
     )
     prj.write_input()
-    prj.run_model()
+    prj.run_model(args=f"-m {EXAMPLES_DIR}/prj/ -o {model_dir}")
 
 # %%
 # Instead of the `replace_parameter` method, the more general `replace_text` method

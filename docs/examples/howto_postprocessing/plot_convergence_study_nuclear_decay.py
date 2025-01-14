@@ -34,18 +34,20 @@ from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pyvista as pv
 from IPython.display import HTML
 from scipy.constants import Julian_year as sec_per_yr
 
 import ogstools as ogs
-from ogstools import examples, meshlib, msh2vtu, physics, studies, workflow
+from ogstools import examples, physics, studies, workflow
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
 # %% [markdown]
 # Let's run the different simulations with increasingly fine spatial and
 # temporal discretization via ogs6py. The mesh and its boundaries are generated
-# easily via gmsh and :py:mod:`ogstools.msh2vtu`. First some definitions:
+# easily via gmsh and :py:mod:`ogstools.meshlib.gmsh_converter.meshes_from_gmsh`.
+# First some definitions:
 
 # %%
 n_refinements = 4
@@ -66,14 +68,15 @@ for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
     ogs.meshlib.rect(
         lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path
     )
-    _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
+    for name, mesh in ogs.meshes_from_gmsh(msh_path, log=False).items():
+        pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
 
     prj = ogs.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
     prj.replace_text(str(dt * sec_per_yr), ".//delta_t")
     prj.replace_text(prefix.format(dt), ".//prefix")
     prj.write_input()
     prj.run_model(write_logs=False, args=ogs_args)
-    sim_results += [temp_dir / (prefix.format(dt) + "_rect_domain.xdmf")]
+    sim_results += [temp_dir / (prefix.format(dt) + "_domain.xdmf")]
 
 # %% plotting:
 # Let's extract the temperature evolution and the applied heat via vtuIO and
@@ -159,7 +162,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # model behavior.
 
 # %%
-mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
+mesh_series = [ogs.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
     mesh_series, ogs.variables.temperature, units=["s", "yrs"]
 )

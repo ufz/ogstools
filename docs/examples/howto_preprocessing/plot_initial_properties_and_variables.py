@@ -20,8 +20,8 @@ from ogstools import examples
 # A bulk mesh file is loaded. If it already contains old Material IDs
 # we delete them first.
 
-m = ot.Mesh(examples.mechanics_vtu)
-m.cell_data.remove("MaterialIDs")
+mesh = ot.Mesh(examples.mechanics_vtu)
+mesh.cell_data.remove("MaterialIDs")
 
 
 # %% [markdown]
@@ -37,15 +37,15 @@ def material_ids(pt: np.array) -> int:
 # size as the number of elements in the mesh.
 # The numpy array is later implicitly converted into a VTK array of
 # VTK-type Int32 which is the required by OpenGeoSys for Material IDs.
-ccp = m.cell_centers().points
+ccp = mesh.cell_centers().points
 mat_ids = np.array([material_ids(pt) for pt in ccp], dtype=np.int32)
 
 # %% [markdown]
 # Then the array is attached to the mesh.
 
-m.cell_data.set_array(mat_ids, "MaterialIDs")
+mesh.cell_data.set_array(mat_ids, "MaterialIDs")
 
-fig = m.plot_contourf(ot.variables.material_id)
+fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
 # Likewise material properties / MeshElement parameters can be set
@@ -56,34 +56,36 @@ fig = m.plot_contourf(ot.variables.material_id)
 #
 # In this example we use the y-coordinates to create a linear pressure gradient
 # along the y-axis.
-y = m.points[:, 1]
+y = mesh.points[:, 1]
 p = 1e6 * y / (np.min(y) - np.max(y)) + 4e6
 
 
 # %%
 # The array is added to the mesh.
-m.point_data.set_array(p, "pressure_gradient")
+mesh.point_data.set_array(p, "pressure_gradient")
 
-fig = m.plot_contourf("pressure_gradient")
+fig = mesh.plot_contourf("pressure_gradient")
 
 # %%
 # This also works with multidimensional data.
-eps = np.zeros((len(m.points), 4))
-m.point_data.set_array(eps, "epsilon_0")
+eps = np.zeros((len(mesh.points), 4))
+mesh.point_data.set_array(eps, "epsilon_0")
 
 # %% [markdown]
 # Mapping element data to node data
 # ---------------------------------
 # First, we convert the cell data to point data.
 # Subsequently, a new array is created and filled point-by-point.
-mat_ids = m.cell_data_to_point_data().point_data["MaterialIDs"]
-p0 = np.where(mat_ids.astype(int) == 0, -1.2e8, -1e6 * m.points[:, 1])
+mat_ids = mesh.cell_data_to_point_data().point_data["MaterialIDs"]
+p0 = np.where(mat_ids.astype(int) == 0, -1.2e8, -1e6 * mesh.points[:, 1])
 
 # %%
-# Finally, the array is added to the mesh and
+# Finally, the array is added to the mesh and can be
 # saved to disc using pyvista/meshio.
-m.point_data.set_array(p0, "initial_pressure")
+mesh.point_data.set_array(p0, "initial_pressure")
 
-m.save("bulk_mesh.vtu")
+# import pyvista as pv
+#
+# pv.save_meshio("bulk_mesh.vtu", mesh)
 
-fig = m.plot_contourf("initial_pressure")
+fig = mesh.plot_contourf("initial_pressure")

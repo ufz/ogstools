@@ -20,10 +20,11 @@ represented by one subsection of a cell.
 from pathlib import Path
 from tempfile import mkdtemp
 
+import pyvista as pv
+
 import ogstools as ogs
 from ogstools import examples
 from ogstools.meshlib.gmsh_meshing import rect
-from ogstools.msh2vtu import msh2vtu
 
 ogs.plot.setup.dpi = 75
 ogs.plot.setup.show_element_edges = True
@@ -33,8 +34,7 @@ sigma_ip = ogs.variables.stress.replace(
 )
 
 tmp_dir = Path(mkdtemp())
-mesh_path = tmp_dir / "mesh.msh"
-vtu_path = tmp_dir / "mesh_domain.vtu"
+msh_path = tmp_dir / "mesh.msh"
 
 
 def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
@@ -43,9 +43,11 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
         n_edge_cells=6,
         structured_grid=quads,
         order=elem_order,
-        out_name=mesh_path,
+        out_name=msh_path,
     )
-    msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+    meshes = ogs.meshes_from_gmsh(msh_path, log=False)
+    for name, mesh in meshes.items():
+        pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
 
     model = ogs.Project(
         output_file=tmp_dir / "default.prj",

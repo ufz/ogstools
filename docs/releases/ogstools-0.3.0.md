@@ -36,7 +36,7 @@
 - Reworked aspect ratios (with examples).
 - Interactive PyVista examples.
 
-[`msh2vtu`](../user-guide/msh2vtu.md) got:
+[`msh2vtu`](../auto_user-guide/plot_msh2vtu.rst) got:
 
 - A cleaner Python interface without the need to run argparse in between.
 - A modification for `msh2vtu` to allow to convert BHE meshes.

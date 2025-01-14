@@ -5,13 +5,11 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
+import pyvista as pv
 
+import ogstools as ot
 from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
-from ogstools.meshlib import MeshSeries, gmsh_meshing
-from ogstools.msh2vtu import msh2vtu
-from ogstools.ogs6py import Project
 from ogstools.studies import convergence
-from ogstools.variables import Scalar
 
 
 class TestConvergence:
@@ -23,13 +21,15 @@ class TestConvergence:
         edge_cells = [2**i for i in range(3, 6)]
         for n_edge_cells in edge_cells:
             msh_path = temp_dir / "square.msh"
-            gmsh_meshing.rect(
+            ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=n_edge_cells,
                 structured_grid=True,
                 out_name=msh_path,
             )
-            msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
-            model = Project(
+            meshes = ot.meshes_from_gmsh(filename=msh_path, log=False)
+            for name, mesh in meshes.items():
+                pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
+            model = ot.Project(
                 output_file=temp_dir / "default.prj",
                 input_file=prj_steady_state_diffusion,
             )
@@ -39,13 +39,13 @@ class TestConvergence:
             ogs_args = f"-m {temp_dir} -o {temp_dir}"
             model.run_model(write_logs=False, args=ogs_args)
             sim_results += [
-                MeshSeries(str(temp_dir / (prefix + ".pvd"))).mesh(-1)
+                ot.MeshSeries(str(temp_dir / (prefix + ".pvd"))).mesh(-1)
             ]
 
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
         np.testing.assert_array_less(0.0, spacing)
-        variable = Scalar("pressure", "m", "m")
+        variable = ot.variables.Scalar("pressure", "m", "m")
         conv = convergence.grid_convergence(
             sim_results, variable, topology, refinement_ratio=2.0
         )

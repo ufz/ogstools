@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
 <OpenGeoSysProject>
     <meshes>
-        <mesh>cuboid_domain.vtu</mesh>
-        <mesh>cuboid_physical_group_back.vtu</mesh>
-        <mesh>cuboid_physical_group_bottom.vtu</mesh>
-        <mesh>cuboid_physical_group_front.vtu</mesh>
-        <mesh>cuboid_physical_group_top.vtu</mesh>
-        <mesh>cuboid_physical_group_right.vtu</mesh>
-        <mesh>cuboid_physical_group_left.vtu</mesh>
+        <mesh>domain.vtu</mesh>
+        <mesh>physical_group_back.vtu</mesh>
+        <mesh>physical_group_bottom.vtu</mesh>
+        <mesh>physical_group_front.vtu</mesh>
+        <mesh>physical_group_top.vtu</mesh>
+        <mesh>physical_group_right.vtu</mesh>
+        <mesh>physical_group_left.vtu</mesh>
     </meshes>
     <processes>
         <process>
@@ -255,32 +255,32 @@
             <initial_condition>T_ref</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_top</mesh>
+                    <mesh>physical_group_top</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_bottom</mesh>
+                    <mesh>physical_group_bottom</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_left</mesh>
+                    <mesh>physical_group_left</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_right</mesh>
+                    <mesh>physical_group_right</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_front</mesh>
+                    <mesh>physical_group_front</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_back</mesh>
+                    <mesh>physical_group_back</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
@@ -299,19 +299,19 @@
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_left</mesh>
+                    <mesh>physical_group_left</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_bottom</mesh>
+                    <mesh>physical_group_bottom</mesh>
                     <type>Dirichlet</type>
                     <component>2</component>
                     <parameter>0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>cuboid_physical_group_front</mesh>
+                    <mesh>physical_group_front</mesh>
                     <type>Dirichlet</type>
                     <component>1</component>
                     <parameter>0</parameter>

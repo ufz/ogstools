@@ -165,6 +165,7 @@ cython_debug/
 #.idea/S
 
 /docs/auto_examples/
+/docs/auto_user-guide/
 
 # ignore jupyter notebooks in main folder (useful for testing, annoying for git)
 /**.ipynb

@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
 <OpenGeoSysProject>
     <meshes>
-        <mesh>bhe_mesh.vtu</mesh>
-        <mesh>bhe_mesh_inflowsf.vtu</mesh>
-        <mesh>bhe_mesh_bottomsf.vtu</mesh>
-        <mesh>bhe_mesh_topsf.vtu</mesh>
+        <mesh>mesh.vtu</mesh>
+        <mesh>mesh_inflowsf.vtu</mesh>
+        <mesh>mesh_bottomsf.vtu</mesh>
+        <mesh>mesh_topsf.vtu</mesh>
     </meshes>
     <processes>
         <process>
@@ -226,7 +226,7 @@
         <parameter>
             <name>T0</name>
             <type>MeshNode</type>
-            <mesh>bhe_mesh</mesh>
+            <mesh>mesh</mesh>
             <field_name>temperature_soil</field_name>
         </parameter>
         <parameter>
@@ -248,7 +248,7 @@
         <parameter>
             <name>T_Inflow</name>
             <type>MeshNode</type>
-            <mesh>bhe_mesh_inflowsf</mesh>
+            <mesh>mesh_inflowsf</mesh>
             <field_name>temperature_soil</field_name>
         </parameter>
         <parameter>
@@ -278,17 +278,17 @@
             <boundary_conditions>
                 <boundary_condition>
                     <type>Dirichlet</type>
-                    <mesh>bhe_mesh_topsf</mesh>
+                    <mesh>mesh_topsf</mesh>
                     <parameter>T_Surface</parameter>
                 </boundary_condition>
                 <boundary_condition>
                     <type>Neumann</type>
-                    <mesh>bhe_mesh_bottomsf</mesh>
+                    <mesh>mesh_bottomsf</mesh>
                     <parameter>dT_Groundsource</parameter>
                 </boundary_condition>
                 <boundary_condition>
                     <type>Dirichlet</type>
-                    <mesh>bhe_mesh_inflowsf</mesh>
+                    <mesh>mesh_inflowsf</mesh>
                     <parameter>T_Inflow</parameter>
                 </boundary_condition>
             </boundary_conditions>

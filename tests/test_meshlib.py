@@ -10,7 +10,6 @@ import pyvista as pv
 
 import ogstools as ogs
 from ogstools import examples
-from ogstools.msh2vtu import msh2vtu
 
 
 class TestUtils:
@@ -38,10 +37,10 @@ class TestUtils:
         tmp_dir = Path(mkdtemp())
         mesh_path = tmp_dir / "mesh.msh"
         for quads in [True, False]:
-            ogs.meshlib.gmsh_meshing.rect(
+            ogs.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
-            msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+            ogs.meshes_from_gmsh(mesh_path, tmp_dir, log=False, save=True)
 
             model = ogs.Project(
                 output_file=tmp_dir / "default.prj",
@@ -461,7 +460,7 @@ class TestUtils:
         mesh_path = Path(tmp_path) / "mesh.msh"
         sigma_ip = ogs.variables.stress.replace(data_name="sigma_ip")
 
-        ogs.meshlib.gmsh_meshing.rect(
+        ogs.meshlib.rect(
             n_edge_cells=6,
             n_layers=2,
             structured_grid=quads,
@@ -470,7 +469,9 @@ class TestUtils:
             mixed_elements=mixed,
             jiggle=0.01,
         )
-        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        meshes = ogs.meshes_from_gmsh(mesh_path, log=False)
+        for name, mesh in meshes.items():
+            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
         model = ogs.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -502,20 +503,22 @@ class TestUtils:
         "Test reading of quadratic elements in xdmf."
 
         tmp_path = Path(mkdtemp())
-        mesh_path = Path(tmp_path) / "mesh.msh"
-        ogs.meshlib.gmsh_meshing.rect(
-            n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
+        msh_path = Path(tmp_path) / "mesh.msh"
+        ogs.meshlib.rect(
+            n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
         )
-        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        meshes = ogs.meshes_from_gmsh(msh_path, log=False)
+        for name, mesh in meshes.items():
+            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
         model = ogs.Project(
-            output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
+            output_file=tmp_path / "default.prj",
         )
         model.replace_text("4", xpath=".//integration_order")
         model.replace_text("XDMF", xpath="./time_loop/output/type")
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-        mesh = ogs.MeshSeries(tmp_path / "mesh_mesh_domain.xdmf").mesh(-1)
+        mesh = ogs.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(-1)
         assert not np.any(np.isnan(ogs.variables.stress.transform(mesh)))
 
     def test_remesh_with_tri(self):
@@ -523,9 +526,10 @@ class TestUtils:
         temp_dir = Path(mkdtemp())
         msh_path = temp_dir / "tri_mesh.msh"
         ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-        assert (
-            msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
-        )
+        assert len(
+            ogs.meshes_from_gmsh(msh_path, reindex=False, log=False).items()
+        ) == 1 + len(np.unique(mesh["MaterialIDs"]))
+        # boundaries are not assigned a physical tag in remesh_with_trinagles
 
     def test_indexing(self):
         ms = examples.load_meshseries_HT_2D_XDMF()

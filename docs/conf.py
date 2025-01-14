@@ -49,6 +49,7 @@ exclude_patterns = [
     "reference/ogstools.rst",
     "examples/**/README.rst",
     "examples/README.rst",
+    "user-guide/README.rst",
 ]
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
@@ -108,6 +109,7 @@ apidoc_module_dir = "../ogstools"
 apidoc_output_dir = "reference"
 apidoc_excluded_paths = [
     "../**/examples/**",
+    "../**/user-guide/**",
     "./**/tests/**",
     "../**/**/templates/**",
 ]
@@ -140,8 +142,8 @@ def reset_plot_setup(*_):
 
 
 sphinx_gallery_conf = {
-    "examples_dirs": ["examples"],
-    "gallery_dirs": ["auto_examples"],
+    "examples_dirs": ["examples", "user-guide"],
+    "gallery_dirs": ["auto_examples", "auto_user-guide"],
     "show_signature": False,
     "download_all_examples": False,
     "image_scrapers": ("matplotlib", DynamicScraper()),
