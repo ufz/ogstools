@@ -23,7 +23,6 @@ from tempfile import mkdtemp
 import ogstools as ogs
 from ogstools import examples
 from ogstools.meshlib.gmsh_meshing import rect
-from ogstools.msh2vtu import msh2vtu
 
 ogs.plot.setup.dpi = 75
 ogs.plot.setup.show_element_edges = True
@@ -45,7 +44,7 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
         order=elem_order,
         out_name=mesh_path,
     )
-    msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+    ogs.msh2vtu(mesh_path, tmp_dir, log=False)
 
     model = ogs.Project(
         output_file=tmp_dir / "default.prj",

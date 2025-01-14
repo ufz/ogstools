@@ -16,9 +16,9 @@ import numpy as np
 import pyvista as pv
 from parameterized import parameterized
 
+from ogstools import msh2vtu
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
-from ogstools.meshlib import gmsh_meshing
-from ogstools.msh2vtu import msh2vtu
+from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.msh2vtu._cli import cli
 
 
@@ -103,7 +103,7 @@ def test_rect(tmp_path: Path):
         version,
         mixed_elements,
     ) in permutations:
-        gmsh_meshing.rect(
+        rect(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             n_layers=n_layers,
@@ -126,15 +126,14 @@ class TestPhysGroups:
         (False, [0], [0]),          (False, [999], [999]),
         (False, [0, 2], [0, 2]),    (False, [4, 8], [4, 8]),
         (True, [0], [0]),           (True, [999], [0]),
-        (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1])  # fmt:skip
-    )
+        (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1])
+    )  # fmt:skip
 
     @parameterized.expand(PHYS_GROUPS_TEST_ARGS)
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Create rectangular gmsh meshes and convert with msh2vtu."""
         msh_file = Path(self.tmp_path, "rect.msh")
-        # one physical group with tag 0 (default, layer_ids could be omitted)
-        gmsh_meshing.rect(
+        rect(
             n_layers=len(layer_ids),
             out_name=msh_file,
             layer_ids=layer_ids,
@@ -169,7 +168,7 @@ def test_cuboid(tmp_path: Path):
         # this combination doesn't work with msh2vtu (yet?)
         if order == 2 and mixed_elements:
             continue
-        gmsh_meshing.cuboid(
+        cuboid(
             lengths=edge_length,
             n_edge_cells=n_edge_cells,
             n_layers=n_layers,

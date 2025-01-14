@@ -1025,7 +1025,7 @@ def gen_bhe_mesh(
         output_path=out_name.parents[0],
         dim=[1, 3],
         reindex=True,
-        log_level="ERROR",
+        log=False,
     )
 
     mesh_names = [

@@ -11,6 +11,7 @@ from typing import NoReturn
 import pytest
 from lxml import etree as ET
 
+from ogstools import msh2vtu
 from ogstools.examples import (
     prj_aniso_expansion,
     prj_beier_sandbox,
@@ -35,7 +36,6 @@ from ogstools.examples import (
 )
 from ogstools.meshlib.gmsh_BHE import BHE, gen_bhe_mesh
 from ogstools.meshlib.gmsh_meshing import cuboid
-from ogstools.msh2vtu import msh2vtu
 from ogstools.ogs6py import Project
 
 
@@ -1690,7 +1690,7 @@ class TestiOGS:
             output_path=meshname.parents[0],
             dim=[1, 3],
             reindex=True,
-            log_level="ERROR",
+            log=False,
         )
 
         log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"

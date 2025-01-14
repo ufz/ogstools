@@ -10,7 +10,6 @@ import pyvista as pv
 
 import ogstools as ogs
 from ogstools import examples
-from ogstools.msh2vtu import msh2vtu
 
 
 class TestUtils:
@@ -38,10 +37,10 @@ class TestUtils:
         tmp_dir = Path(mkdtemp())
         mesh_path = tmp_dir / "mesh.msh"
         for quads in [True, False]:
-            ogs.meshlib.gmsh_meshing.rect(
+            ogs.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
-            msh2vtu(mesh_path, tmp_dir, log_level="ERROR")
+            ogs.msh2vtu(mesh_path, tmp_dir, log=False)
 
             model = ogs.Project(
                 output_file=tmp_dir / "default.prj",
@@ -461,7 +460,7 @@ class TestUtils:
         mesh_path = Path(tmp_path) / "mesh.msh"
         sigma_ip = ogs.variables.stress.replace(data_name="sigma_ip")
 
-        ogs.meshlib.gmsh_meshing.rect(
+        ogs.meshlib.rect(
             n_edge_cells=6,
             n_layers=2,
             structured_grid=quads,
@@ -470,7 +469,7 @@ class TestUtils:
             mixed_elements=mixed,
             jiggle=0.01,
         )
-        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        ogs.msh2vtu(mesh_path, tmp_path, reindex=True, log=False)
         model = ogs.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -503,10 +502,10 @@ class TestUtils:
 
         tmp_path = Path(mkdtemp())
         mesh_path = Path(tmp_path) / "mesh.msh"
-        ogs.meshlib.gmsh_meshing.rect(
+        ogs.meshlib.rect(
             n_edge_cells=6, structured_grid=False, order=2, out_name=mesh_path
         )
-        msh2vtu(mesh_path, tmp_path, reindex=True, log_level="ERROR")
+        ogs.msh2vtu(mesh_path, tmp_path, reindex=True, log=False)
         model = ogs.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -523,9 +522,7 @@ class TestUtils:
         temp_dir = Path(mkdtemp())
         msh_path = temp_dir / "tri_mesh.msh"
         ogs.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-        assert (
-            msh2vtu(msh_path, temp_dir, reindex=False, log_level="ERROR") == 0
-        )
+        assert ogs.msh2vtu(msh_path, temp_dir, reindex=False, log=False) == 0
 
     def test_indexing(self):
         ms = examples.load_meshseries_HT_2D_XDMF()

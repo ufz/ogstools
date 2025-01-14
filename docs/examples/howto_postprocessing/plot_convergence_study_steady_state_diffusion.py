@@ -37,7 +37,7 @@ from tempfile import mkdtemp
 from IPython.display import HTML
 
 import ogstools as ogs
-from ogstools import examples, msh2vtu, variables, workflow
+from ogstools import examples, workflow
 from ogstools.studies import convergence
 
 temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
@@ -55,10 +55,10 @@ refinements = 6
 edge_cells = [2**i for i in range(refinements)]
 for n_edge_cells in edge_cells:
     msh_path = temp_dir / "square.msh"
-    ogs.meshlib.gmsh_meshing.rect(
+    ogs.meshlib.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
-    msh2vtu.msh2vtu(filename=msh_path, output_path=temp_dir, log_level="ERROR")
+    ogs.msh2vtu(filename=msh_path, output_path=temp_dir, log=False)
 
     model = ogs.Project(
         output_file=temp_dir / "default.prj",
@@ -80,7 +80,7 @@ solution = examples.analytical_diffusion(
     ogs.MeshSeries(result_paths[-1]).mesh(0)
 )
 ogs.plot.setup.show_element_edges = True
-fig = ogs.plot.contourf(solution, variables.hydraulic_head)
+fig = ogs.plot.contourf(solution, ogs.variables.hydraulic_head)
 solution.save(analytical_solution_path)
 
 # %% [markdown]

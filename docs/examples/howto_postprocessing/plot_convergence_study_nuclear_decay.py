@@ -38,7 +38,7 @@ from IPython.display import HTML
 from scipy.constants import Julian_year as sec_per_yr
 
 import ogstools as ogs
-from ogstools import examples, meshlib, msh2vtu, physics, studies, workflow
+from ogstools import examples, physics, studies, workflow
 
 temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 
@@ -66,7 +66,7 @@ for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
     ogs.meshlib.rect(
         lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path
     )
-    _ = msh2vtu.msh2vtu(msh_path, output_path=temp_dir, log_level="ERROR")
+    _ = ogs.msh2vtu(msh_path, output_path=temp_dir, log=False)
 
     prj = ogs.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
     prj.replace_text(str(dt * sec_per_yr), ".//delta_t")
@@ -159,7 +159,7 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # model behavior.
 
 # %%
-mesh_series = [meshlib.MeshSeries(sim_result) for sim_result in sim_results]
+mesh_series = [ogs.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
     mesh_series, ogs.variables.temperature, units=["s", "yrs"]
 )
