@@ -171,9 +171,6 @@ def extract_cell_boundary_conditions(
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
-    +++WARNING+++: This function still in a experimental state since it is not clear how exactly this function will
-    be used in the future.
-    TODO: Allow a generic definition of the normal vector for the filter condition.
 
     :param bulk_mesh_path: name of the mesh
     :param mesh: mesh
