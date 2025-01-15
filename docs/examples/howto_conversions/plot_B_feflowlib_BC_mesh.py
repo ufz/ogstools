@@ -18,13 +18,13 @@ import pyvista as pv
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_HT
-from ogstools.feflowlib import FeflowModel, assign_bulk_ids
+from ogstools.feflowlib import assign_bulk_ids
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("converted_models"))
-feflow_model = FeflowModel(feflow_model_2D_HT, temp_dir / "HT_model")
+feflow_model = ot.FeflowModel(feflow_model_2D_HT, temp_dir / "HT_model")
 mesh = feflow_model.mesh
 # Print information about the mesh.
 print(mesh)

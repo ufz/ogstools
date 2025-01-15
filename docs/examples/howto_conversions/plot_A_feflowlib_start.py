@@ -12,12 +12,12 @@ This example shows how a FEFLOW model can be converted and simulated in OGS.
 import tempfile
 from pathlib import Path
 
+from ogstools import FeflowModel
 from ogstools.examples import (
     feflow_model_2D_CT_t_560,
     feflow_model_2D_HT,
     feflow_model_box_Robin,
 )
-from ogstools.feflowlib import FeflowModel
 
 # %%
 # 1. Convert the models.
