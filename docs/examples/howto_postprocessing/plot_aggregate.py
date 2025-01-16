@@ -14,6 +14,8 @@ To see this benchmark results over all timesteps have a look at
 """
 
 # %%
+import numpy as np
+
 import ogstools as ot
 from ogstools import examples
 
@@ -34,7 +36,7 @@ saturation = ot.variables.saturation
 
 # %% [markdown]
 # You aggregate the data in MeshSeries over all timesteps given some
-# aggregation function, e.g. "min", "max", "var"
+# aggregation function, e.g. np.min, np.max, np.var
 # (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate_over_time`).
 # The following code gets the maximum saturation for each point in the mesh over
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
@@ -42,7 +44,7 @@ saturation = ot.variables.saturation
 # correct data anyway if given the original variable
 
 # %%
-mesh = mesh_series.aggregate_over_time(saturation, "max")
+mesh = mesh_series.aggregate_over_time(saturation, np.max)
 fig = mesh.plot_contourf(saturation)
 
 # %% [markdown]
@@ -59,7 +61,7 @@ fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "s", "a"))
 
 
 # %%
-mesh = mesh_series.aggregate_over_time(saturation, "var")
+mesh = mesh_series.aggregate_over_time(saturation, np.var)
 fig = mesh.plot_contourf(saturation)
 
 # %% [markdown]
@@ -74,4 +76,4 @@ fig = mesh.plot_contourf(saturation)
 # of e.g. the max or mean value of a variable in the entire domain.
 
 # %%
-fig = mesh_series.plot_domain_aggregate(saturation, "mean", time_unit="a")
+fig = mesh_series.plot_domain_aggregate(saturation, np.mean, time_unit="a")

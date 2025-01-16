@@ -191,10 +191,12 @@ class TestUtils:
     def test_time_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        funcs = ["min", "max", "mean", "median", "sum", "std", "var"]
+        funcs = [np.min, np.max, np.mean, np.median, np.sum, np.std, np.var]
         for func in funcs:
             agg_mesh = mesh_series.aggregate_over_time("temperature", func)
-            assert not np.any(np.isnan(agg_mesh["temperature_" + func]))
+            assert not np.any(
+                np.isnan(agg_mesh["temperature_" + func.__name__])
+            )
 
     def test_aggregate_time_of_limit(self):
         "Test aggregation of meshseries."
@@ -208,7 +210,7 @@ class TestUtils:
         "Test aggregation of mesh_dependent variable on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
         prop = ot.variables.dilatancy_alkan
-        agg_mesh = mesh_series.aggregate_over_time(prop, "max")
+        agg_mesh = mesh_series.aggregate_over_time(prop, np.max)
         assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
         agg_mesh = mesh_series.time_of_max(prop)
         assert not np.any(np.isnan(agg_mesh[f"max_{prop.output_name}_time"]))
@@ -216,16 +218,16 @@ class TestUtils:
     def test_domain_aggregate(self):
         "Test aggregation of meshseries."
         ms = examples.load_meshseries_HT_2D_XDMF()[1:]
-        temp_min = ms.aggregate_over_domain("temperature", "min")
-        temp_mean = ms.aggregate_over_domain("temperature", "mean")
-        temp_max = ms.aggregate_over_domain("temperature", "max")
+        temp_min = ms.aggregate_over_domain("temperature", np.min)
+        temp_mean = ms.aggregate_over_domain("temperature", np.mean)
+        temp_max = ms.aggregate_over_domain("temperature", np.max)
         assert np.all(temp_max > temp_mean)
         assert np.all(temp_mean > temp_min)
 
     def test_plot_domain_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mesh_series.plot_domain_aggregate("temperature", "mean", "a")
+        mesh_series.plot_domain_aggregate("temperature", np.mean, "a")
 
     def test_time_slice(self):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
