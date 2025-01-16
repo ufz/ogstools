@@ -71,6 +71,7 @@ def load_mesh_mechanics_2D():
 msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"
 msh_geoterrain_3d = _msh_dir / "geoterrain_3d.msh"
 
+feflow_model_box_IOFLOW = _feflow_dir / "box_3D_cauchy_areal_IO_FLOW.fem"
 feflow_model_box_Neumann = _feflow_dir / "box_3D_neumann.fem"
 feflow_model_box_Robin = _feflow_dir / "box_3D_cauchy_areal.fem"
 feflow_model_box_well_BC = _feflow_dir / "box_3D_wellBC.fem"
