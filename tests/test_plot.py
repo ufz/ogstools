@@ -193,7 +193,7 @@ class TestPlotting:
     def test_aggregate_plots(self):
         """Test creation of limit plots."""
         mesh = examples.load_meshseries_CT_2D_XDMF().aggregate_over_time(
-            "Si", "var"
+            "Si", np.var
         )
         mesh.plot_contourf("Si_var")
         plt.close()

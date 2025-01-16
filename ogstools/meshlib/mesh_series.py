@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterator, Sequence
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
-from typing import Any, ClassVar, Literal, overload
+from typing import Any, Literal, overload
 
 import meshio
 import numpy as np
@@ -178,20 +178,14 @@ class MeshSeries:
             f"rawdata_file:     {self.rawdata_file()}\n"
         )
 
-    _np_str: ClassVar = {
-        "min": np.min, "max": np.max, "mean": np.mean, "median": np.median,
-        "sum": np.sum, "std": np.std, "var": np.var,
-    }  # fmt: skip
-
     def aggregate_over_time(
-        self,
-        variable: Variable | str,
-        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+        self, variable: Variable | str, func: Callable
     ) -> Mesh:
         """Aggregate data over all timesteps using a specified function.
 
         :param variable:    The mesh variable to be aggregated.
-        :param func:        The aggregation function to apply.
+        :param func:        The aggregation function to apply. E.g. np.min,
+                            np.max, np.mean, np.median, np.sum, np.std, np.var
         :returns:   A mesh with aggregated data according to the given function.
         """
         # TODO: add function to create an empty mesh from a given on
@@ -200,10 +194,10 @@ class MeshSeries:
         mesh.clear_point_data()
         mesh.clear_cell_data()
         if isinstance(variable, Variable):
-            output_name = f"{variable.output_name}_{func}"
+            output_name = f"{variable.output_name}_{func.__name__}"
         else:
-            output_name = f"{variable}_{func}"
-        mesh[output_name] = self._np_str[func](self.values(variable), axis=0)
+            output_name = f"{variable}_{func.__name__}"
+        mesh[output_name] = func(self.values(variable), axis=0)
         return mesh
 
     def clear_cache(self) -> None:
@@ -429,23 +423,22 @@ class MeshSeries:
         return self._time_of_extremum(variable, np.argmax, "max")
 
     def aggregate_over_domain(
-        self,
-        variable: Variable | str,
-        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+        self, variable: Variable | str, func: Callable
     ) -> np.ndarray:
         """Aggregate data over domain per timestep using a specified function.
 
         :param variable:    The mesh variable to be aggregated.
-        :param func:        The aggregation function to apply.
+        :param func:        The aggregation function to apply. E.g. np.min,
+                            np.max, np.mean, np.median, np.sum, np.std, np.var
 
         :returns:   A numpy array with aggregated data.
         """
-        return self._np_str[func](self.values(variable), axis=1)
+        return func(self.values(variable), axis=1)
 
     def plot_domain_aggregate(
         self,
         variable: Variable | str,
-        func: Literal["min", "max", "mean", "median", "sum", "std", "var"],
+        func: Callable,
         time_unit: str | None = "s",
         ax: plt.Axes | None = None,
         **kwargs: Any,
@@ -453,10 +446,11 @@ class MeshSeries:
         """
         Plot the transient aggregated data over the domain per timestep.
 
-        :param variable:        The mesh variable to be aggregated.
-        :param func:            The aggregation function to apply.
-        :param time_unit:       Output unit of the timevalues.
-        :param ax:              matplotlib axis to use for plotting
+        :param variable:    The mesh variable to be aggregated.
+        :param func:        The aggregation function to apply. E.g. np.min,
+                            np.max, np.mean, np.median, np.sum, np.std, np.var
+        :param time_unit:   Output unit of the timevalues.
+        :param ax:          matplotlib axis to use for plotting
         :param kwargs:      Keyword args passed to matplotlib's plot function.
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
@@ -472,9 +466,9 @@ class MeshSeries:
             fig = None
         if "label" in kwargs:
             label = kwargs.pop("label")
-            ylabel = variable.get_label() + " " + func
+            ylabel = variable.get_label() + " " + func.__name__
         else:
-            label = func
+            label = func.__name__
             ylabel = variable.get_label()
         ax.plot(x_values, values, label=label, **kwargs)
         ax.set_axisbelow(True)
