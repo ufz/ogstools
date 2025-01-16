@@ -5,6 +5,7 @@ Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
+
 from typing import Any
 
 from lxml import etree as ET

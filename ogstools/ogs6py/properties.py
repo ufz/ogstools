@@ -5,6 +5,7 @@ Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

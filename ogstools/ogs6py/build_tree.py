@@ -6,7 +6,6 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
 
 """
 
-
 from typing import TypeAlias
 
 from lxml import etree as ET

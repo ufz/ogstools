@@ -126,12 +126,10 @@ class MeshSeries:
         return deepcopy(self) if deep else self
 
     @overload
-    def __getitem__(self, index: int) -> Mesh:
-        ...
+    def __getitem__(self, index: int) -> Mesh: ...
 
     @overload
-    def __getitem__(self, index: slice | Sequence) -> MeshSeries:
-        ...
+    def __getitem__(self, index: slice | Sequence) -> MeshSeries: ...
 
     def __getitem__(self, index: Any) -> Any:
         if isinstance(index, int):

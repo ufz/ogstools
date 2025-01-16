@@ -125,10 +125,12 @@ def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
 
 
 def get_rows_cols(
-    meshes: list[pv.UnstructuredGrid]
-    | np.ndarray
-    | pv.UnstructuredGrid
-    | pv.MultiBlock,
+    meshes: (
+        list[pv.UnstructuredGrid]
+        | np.ndarray
+        | pv.UnstructuredGrid
+        | pv.MultiBlock
+    ),
 ) -> tuple[int, ...]:
     if isinstance(meshes, np.ndarray):
         if meshes.ndim in [1, 2]:

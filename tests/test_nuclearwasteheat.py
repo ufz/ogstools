@@ -1,6 +1,5 @@
 """Unit tests for nuclearwasteheat."""
 
-
 import numpy as np
 
 import ogstools.physics.nuclearwasteheat as nuclear
