@@ -11,7 +11,6 @@ be simulated in ot.
 # %%
 # 0. Necessary imports
 import tempfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +27,6 @@ from ogstools.feflowlib import (
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_model = FeflowModel(feflow_model_box_Neumann, temp_dir / "boxNeumann")
-
 pv.global_theme.colorbar_orientation = "vertical"
 feflow_model.mesh.plot(
     show_edges=True,
@@ -38,7 +36,6 @@ feflow_model.mesh.plot(
     scalar_bar_args={"position_x": 0.1, "position_y": 0.25},
 )
 print(feflow_model.mesh)
-feflow_model.mesh.save(feflow_model.mesh_path)
 # %%
 # 2. Extract the boundary conditions.
 BC_dict = feflow_model.boundary_conditions
@@ -52,24 +49,15 @@ for i, (path, boundary_condition) in enumerate(BC_dict.items()):
         plotter.subplot(i, 0)
         plotter.add_mesh(boundary_condition, scalars=Path(path).stem)
 plotter.show()
-path_topsurface, topsurface = list(BC_dict.items())[-1]
-# On the topsurface are cell based boundary condition.
-topsurface.save(path_topsurface)
 # %%
-# 3. Setup a prj-file to run a OGS-simulation.
+# 3. Define endtime and time stepping in the project-file.
 feflow_model.setup_prj(
     end_time=int(1e8),
     time_stepping=[(1, 10), (5, 100), (10, 1000), (10, 1e6), (1, 1e7)],
 )
-# The model must be written before it can be run.
-prj = feflow_model.project
-prj.write_input()
-# Print the prj-file as an example.
-model_prjfile = ET.parse(feflow_model.mesh_path.with_suffix(".prj"))
-ET.dump(model_prjfile)
 # %%
 # 4. Run the model
-prj.run_model(logfile=temp_dir / "out.log")
+feflow_model.run()
 # %%
 # 5. Read the results and plot them.
 ms = ot.MeshSeries(temp_dir / "boxNeumann.pvd")
@@ -90,8 +78,6 @@ ogs_sim_res.plot(
 # 5.1 Plot the hydraulic head simulated in OGS with :py:mod:`ogstools.plot.contourf`.
 head = ot.variables.Scalar(data_name="HEAD_OGS", data_unit="m", output_unit="m")
 fig = ot.plot.contourf(ogs_sim_res.slice(normal="z", origin=[50, 50, 0]), head)
-
-
 # %%
 # 6. Calculate the difference to the FEFLOW simulation and plot it.
 diff = feflow_model.mesh["P_HEAD"] - ogs_sim_res["HEAD_OGS"]
@@ -115,9 +101,8 @@ slices = np.reshape(
 fig = ot.plot.contourf(slices, diff_head)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
     ax.set_title(f"z = {slice.center[2]:.1f} {ms.spatial_output_unit}")
-
 # %%
-# Slices are taken along the y-axis.
+# 6.2 Slices are taken along the y-axis.
 slices = np.reshape(
     list(feflow_model.mesh.slice_along_axis(n=4, axis="y")), (2, 2)
 )

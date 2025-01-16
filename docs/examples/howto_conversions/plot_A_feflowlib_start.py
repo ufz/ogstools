@@ -29,7 +29,6 @@ feflow_model_HC = FeflowModel(
     feflow_model_2D_CT_t_560, temp_dir / "2D_HC_model.vtu"
 )
 feflow_model_HT = FeflowModel(feflow_model_2D_HT, temp_dir / "2D_HT_model.vtu")
-
 # %%
 # 2. Define simulation times.
 # Simulate the steady state diffusion process in OGS for the H-model.
@@ -41,7 +40,6 @@ feflow_model_HC.setup_prj(
     ),
 )
 feflow_model_HT.setup_prj(end_time=1e11, time_stepping=[(1, 1e10)])
-
 # %%
 # 3. Run the simulations.
 feflow_model_H.run()

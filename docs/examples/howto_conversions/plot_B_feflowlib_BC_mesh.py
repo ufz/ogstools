@@ -48,20 +48,17 @@ ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 # %%
 # 6. The boundary meshes are manipulated to alter the model.
-boundary_conditions = feflow_model.boundary_conditions
-feflow_model.save()
 # 6.1 The Dirichlet boundary conditions for the hydraulic head are set to 0.
-bc_flow = boundary_conditions[str(temp_dir / "P_BC_FLOW.vtu")]["P_BC_FLOW"]
-boundary_conditions[str(temp_dir / "P_BC_FLOW.vtu")]["P_BC_FLOW"][
+bc_flow = feflow_model.boundary_conditions[str(temp_dir / "P_BC_FLOW.vtu")][
+    "P_BC_FLOW"
+]
+feflow_model.boundary_conditions[str(temp_dir / "P_BC_FLOW.vtu")]["P_BC_FLOW"][
     bc_flow == 10
 ] = 0
-
 # %%
 # 6.2 Save the new boundary conditions and run the model.
-for path, boundary_mesh in boundary_conditions.items():
-    pv.save_meshio(path, boundary_mesh)
-prj = feflow_model.project
-prj.run_model()
+# Overwrite is needed to save the changed boundary meshes.
+feflow_model.run(overwrite=True)
 # %%
 # 6.3 The corresponding simulation results look like.
 ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
@@ -81,13 +78,10 @@ new_bc = mesh.extract_points(
 new_bc["bulk_node_ids"] = np.array(wanted_pts, dtype=np.uint64)
 # Define the temperature values of these points.
 new_bc["P_BC_HEAT"] = np.array([300] * len(wanted_pts), dtype=np.float64)
-# Overwrite the old boundary mesh.
-pv.save_meshio(str(temp_dir / "P_BC_HEAT.vtu"), new_bc)
-# pv.save_meshio(str(temp_dir / "P_BC_HEAT.vtu"), new_bc)
+feflow_model.boundary_conditions[str(temp_dir / "P_BC_HEAT.vtu")] = new_bc
 # %%
 # 7. Run the new model and plot the simulation results.
-prj = feflow_model.project
-prj.run_model()
+feflow_model.run(overwrite=True)
 ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)

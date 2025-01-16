@@ -10,7 +10,6 @@ be simulated in ot.
 # %%
 # 0. Necessary imports
 import tempfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pyvista as pv
@@ -23,14 +22,13 @@ from ogstools.examples import feflow_model_2D_HT
 # During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
 feflow_model = ot.FeflowModel(feflow_model_2D_HT, temp_dir / "2D_HT_model.vtu")
+# %%
+# 2. Plot the temperature simulated in FEFLOW on the mesh, and print information about the mesh.
 feflow_temperature = ot.variables.temperature.replace(data_name="P_TEMP")
 ot.plot.contourf(feflow_model.mesh, feflow_temperature)
-
-
-feflow_model.mesh.save(feflow_model.mesh_path)
 print(feflow_model.mesh)
 # %%
-# 2. Extract the boundary conditions.
+# 3. Extract the boundary conditions.
 BC_dict = feflow_model.boundary_conditions
 # Since there can be multiple point based boundary conditions on the bulk mesh, they are plotted iteratively.
 plotter = pv.Plotter(shape=(len(BC_dict), 1))
@@ -43,20 +41,14 @@ for i, (path, boundary_condition) in enumerate(BC_dict.items()):
         plotter.view_xy()
 plotter.show()
 # %%
-# 3. Setup a prj-file to run a OGS-simulation.
+# 4. Setup a prj-file to run a OGS-simulation.
 # Get the ogs6py model to create a prj-file and run the simulation.
 feflow_model.setup_prj(end_time=1e11, time_stepping=[(1, 1e10)])
-# The model must be written before it can be run.
-prj = feflow_model.project
-prj.write_input()
-# Print the prj-file as an example.
-model_prjfile = ET.parse(feflow_model.mesh_path.with_suffix(".prj"))
-ET.dump(model_prjfile)
 # %%
-# 4. Run the model.
-prj.run_model(logfile=temp_dir / "out.log")
+# 5. Run the model.
+feflow_model.run()
 # %%
-# 5. Read the results and plot them.
+# 6. Read the results and plot them.
 ms = ot.MeshSeries(temp_dir / "2D_HT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
@@ -74,9 +66,8 @@ ot.plot.contourf(ogs_sim_res, hydraulic_head)
 # %%
 # Plot the temperature, which was simulated in OGS.
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
-
 # %%
-# 6. Plot the difference between the FEFLOW and OGS simulation.
+# 7. Plot the difference between the FEFLOW and OGS simulation.
 feflow_model.mesh["HEAD"] = feflow_model.mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
 # Plot differences in hydraulic head/height.
@@ -85,7 +76,7 @@ hydraulic_head_diff = ot.variables.Scalar(
     data_name="HEAD_difference", data_unit="m", output_unit="m"
 )
 ot.plot.contourf(diff_mesh, hydraulic_head_diff, vmin=-1.5e-9, vmax=1.5e-9)
-# %%
+# Plot differences in temperature.
 feflow_model.mesh["temperature"] = feflow_model.mesh["P_TEMP"]
 # Plot differences in temperature.
 diff_mesh = ot.meshlib.difference(
