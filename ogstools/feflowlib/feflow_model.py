@@ -53,22 +53,11 @@ class FeflowModel:
             self.mesh_path = Path(out_path).with_suffix(".vtu")
         ifm.forceLicense("Viewer")
         self._doc = ifm.loadDocument(str(feflow_file))
-        self._mesh = convert_properties_mesh(self._doc)
-        self._dimension = self._doc.getNumberOfDimensions()
+        self.mesh = convert_properties_mesh(self._doc)
+        self.dimension = self._doc.getNumberOfDimensions()
         self.setup_prj()  # _project object with default values is initialized here
+        self._init_boundary_conditions()
         self._mesh_saving_needed = True
-
-    @property
-    def project(self) -> Project:
-        return self._project
-
-    @property
-    def mesh(self) -> pv.UnstructuredGrid:
-        return self._mesh
-
-    @property
-    def dimension(self) -> int:
-        return self._dimension
 
     @property
     def ogs_bulk_mesh(self) -> pv.UnstructuredGrid:
@@ -83,8 +72,7 @@ class FeflowModel:
         bulk_mesh["MaterialIDs"] = self.mesh["MaterialIDs"]
         return bulk_mesh
 
-    @property
-    def boundary_conditions(self) -> dict:
+    def _init_boundary_conditions(self) -> None:
         """
         The boundary meshes for a ogs model.
 
@@ -92,7 +80,7 @@ class FeflowModel:
         """
         # ToDo: Introduce this behaviour to feflowlib.tools with a type.
         # And return type of name for cell and pt BC should be the same not possix Path...
-        boundary_conditions = _tools.extract_point_boundary_conditions(
+        _boundary_conditions = _tools.extract_point_boundary_conditions(
             self.mesh_path.parent, self.mesh
         )
 
@@ -112,8 +100,9 @@ class FeflowModel:
             ) = _tools.extract_cell_boundary_conditions(
                 self.mesh_path, self.mesh
             )
-            boundary_conditions[cell_bc_path] = cell_bc_mesh
-        return boundary_conditions
+            _boundary_conditions[cell_bc_path] = cell_bc_mesh
+
+        self.boundary_conditions = _boundary_conditions
 
     @property
     def process(self) -> str:
@@ -241,7 +230,7 @@ class FeflowModel:
                 error_tolerance=error_tolerance,
             )
         # replaces default
-        self._project = setup_prj_file(
+        self.project = setup_prj_file(
             self.mesh_path,
             self.mesh,
             self.material_properties,
@@ -253,18 +242,20 @@ class FeflowModel:
             ),
             model=template_model,
         )
-        self._prj_saving_needed = True
 
-    def save(self, output_path: None | Path = None) -> None:
+    def save(
+        self, output_path: None | Path = None, force_saving: bool = False
+    ) -> None:
         """
-        Save the converted FEFLOW model.
+        Save the converted FEFLOW model. Saves the meshes only if they have not been saved previously.
+        or 'force_saving' is true.
 
         :param output_path: The path where the mesh, boundary meshes and project file will be written.
         """
         if output_path is None:
             output_path = self.mesh_path
         self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
-        if self._mesh_saving_needed:
+        if self._mesh_saving_needed or force_saving:
             self.mesh.save(output_path.with_suffix(".vtu"))
             for path, boundary_mesh in self.boundary_conditions.items():
                 boundary_mesh.save(path)
@@ -274,11 +265,13 @@ class FeflowModel:
                 "The mesh and boundary meshes have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
             )
 
-    def run(self, output_path: None | Path = None) -> None:
+    def run(
+        self, output_path: None | Path = None, overwrite: bool = False
+    ) -> None:
         """
         Run the converted FEFLOW model.
 
         :param output_path: The path where the mesh, boundary meshes and project file will be written.
         """
-        self.save(output_path)
+        self.save(output_path, overwrite)
         self.project.run_model()
