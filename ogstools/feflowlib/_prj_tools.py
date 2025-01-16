@@ -614,7 +614,7 @@ def setup_prj_file(
             and not np.all(mesh.cell_data["P_IOFLOW"] == 0)
         )
     ):
-        model.mesh.add_mesh(filename="topsurface_" + bulk_mesh_path.name)
+        model.mesh.add_mesh(filename="topsurface.vtu")
 
     if "thermal" in process or "heat" in process:
         model.processes.add_process_variable(
@@ -739,7 +739,7 @@ def setup_prj_file(
             mesh.cell_data[cell_data]
         ):
             if get_dimension(mesh) == 3:
-                IOFLOW_SOUF_mesh_name = "topsurface_" + bulk_mesh_path.stem
+                IOFLOW_SOUF_mesh_name = "topsurface"
             else:
                 IOFLOW_SOUF_mesh_name = bulk_mesh_path.stem
             if cell_data in ["P_IOFLOW"]:
@@ -762,7 +762,7 @@ def setup_prj_file(
                 name=cell_data,
                 type="MeshElement",
                 field_name=cell_data,
-                mesh="topsurface_" + bulk_mesh_path.stem,
+                mesh="topsurface",
             )
 
     # include material properties in the prj-file

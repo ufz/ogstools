@@ -81,7 +81,7 @@ class FeflowModel:
         # ToDo: Introduce this behaviour to feflowlib.tools with a type.
         # And return type of name for cell and pt BC should be the same not possix Path...
         _boundary_conditions = _tools.extract_point_boundary_conditions(
-            self.mesh_path.parent, self.mesh
+            self.mesh
         )
 
         if self.dimension == 3 and (
@@ -97,12 +97,12 @@ class FeflowModel:
             (
                 cell_bc_path,
                 cell_bc_mesh,
-            ) = _tools.extract_cell_boundary_conditions(
-                self.mesh_path, self.mesh
-            )
+            ) = _tools.extract_cell_boundary_conditions(self.mesh)
             _boundary_conditions[cell_bc_path] = cell_bc_mesh
 
-        self.boundary_conditions = _boundary_conditions
+        self.boundary_conditions: dict[
+            str, pv.UnstructuredGrid
+        ] = _boundary_conditions
 
     @property
     def process(self) -> str:
@@ -257,8 +257,8 @@ class FeflowModel:
         self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
         if self._mesh_saving_needed or force_saving:
             self.mesh.save(output_path.with_suffix(".vtu"))
-            for path, boundary_mesh in self.boundary_conditions.items():
-                boundary_mesh.save(path)
+            for name, boundary_mesh in self.boundary_conditions.items():
+                boundary_mesh.save(output_path.parent / (name + ".vtu"))
             self._mesh_saving_needed = False
         else:
             logger.info(

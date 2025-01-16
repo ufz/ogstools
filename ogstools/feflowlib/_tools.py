@@ -86,13 +86,12 @@ def get_dimension(mesh: pv.UnstructuredGrid) -> int:
 
 
 def extract_point_boundary_conditions(
-    out_mesh_path: Path, mesh: pv.UnstructuredGrid
-) -> dict:
+    mesh: pv.UnstructuredGrid,
+) -> dict[str, pv.UnstructuredGrid]:
     """
     Returns the point boundary conditions of the mesh. It works by iterating all point data and looking for
     data arrays that include the string "_BC". Depending on what follows, it defines the boundary condition type.
 
-    :param out_mesh_path: path of the output mesh
     :param mesh: mesh
     :returns: dict_of_point_boundary_conditions
     """
@@ -141,9 +140,7 @@ def extract_point_boundary_conditions(
                     filtered_points.point_data.remove(pt_data)
             # In OGS Neumann and Robin boundary condition have a different sign than in FEFLOW!
             # Also in FEFOW the Neumann BC for flow is in m/d and ogs works with SI-units (m/s)
-            dict_of_point_boundary_conditions[
-                str(out_mesh_path / point_data) + ".vtu"
-            ] = filtered_points
+            dict_of_point_boundary_conditions[point_data] = filtered_points
     # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
     remove_bulk_ids(mesh)
     return dict_of_point_boundary_conditions
@@ -158,21 +155,18 @@ def write_point_boundary_conditions(
     :param out_mesh_path: path for writing
     :param mesh: mesh
     """
-    point_boundary_conditions_dict = extract_point_boundary_conditions(
-        out_mesh_path, mesh
-    )
-    for path, boundary_condition in point_boundary_conditions_dict.items():
-        boundary_condition.save(path)
+    point_boundary_conditions_dict = extract_point_boundary_conditions(mesh)
+    for name, boundary_condition in point_boundary_conditions_dict.items():
+        boundary_condition.save(out_mesh_path / (name + ".vtu"))
 
 
 def extract_cell_boundary_conditions(
-    bulk_mesh_path: Path, mesh: pv.UnstructuredGrid
-) -> tuple[Path, pv.UnstructuredGrid]:
+    mesh: pv.UnstructuredGrid,
+) -> tuple[str, pv.UnstructuredGrid]:
     """
     Returns the cell boundary conditions of the mesh. It works by iterating all cell data and looking for
     data arrays that include the strings "P_SOUF" or "P_IOFLOW".
 
-    :param bulk_mesh_path: name of the mesh
     :param mesh: mesh
     :returns: path with name of mesh, topsurface mesh with cell boundary conditions
     """
@@ -197,7 +191,7 @@ def extract_cell_boundary_conditions(
     # Remove bulk node/element ids from bulk mesh, as they are not needed anymore.
     remove_bulk_ids(mesh)
     return (
-        bulk_mesh_path.with_stem("topsurface_" + bulk_mesh_path.stem),
+        "topsurface",
         topsurf,
     )
 

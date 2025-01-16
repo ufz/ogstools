@@ -42,12 +42,11 @@ BC_dict = feflow_model.boundary_conditions
 # Since there can be multiple point based boundary conditions on the bulk mesh,
 # they are saved and plotted iteratively.
 plotter = pv.Plotter(shape=(len(BC_dict), 1))
-for i, (path, boundary_condition) in enumerate(BC_dict.items()):
-    # topsurface_boxNeumann refers to a cell based boundary condition.
-    if Path(path).stem != "topsurface_boxNeumann":
-        boundary_condition.save(path)
+for i, (name, boundary_condition) in enumerate(BC_dict.items()):
+    # topsurface refers to a cell based boundary condition.
+    if name != "topsurface":
         plotter.subplot(i, 0)
-        plotter.add_mesh(boundary_condition, scalars=Path(path).stem)
+        plotter.add_mesh(boundary_condition, scalars=name)
 plotter.show()
 # %%
 # 3. Define endtime and time stepping in the project-file.

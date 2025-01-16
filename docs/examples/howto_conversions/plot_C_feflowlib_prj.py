@@ -6,6 +6,7 @@ Feflowlib: How to modify the project-file after converting a FEFLOW model.
 
 This example shows how to convert a FEFLOW model and how to modify the corresponding OGS project file and boundary meshes after conversion.
 """
+
 # %%
 # 0. Necessary imports
 import tempfile
@@ -48,11 +49,9 @@ ET.dump(model_prjfile)
 # 5. Remove some points of the boundary mesh.
 bounds = [0.037, 0.039, 0.003, 0.006, 0, 0]
 new_bc_mesh = feflow_model.boundary_conditions[
-    str(temp_dir / "single_species_P_BC_MASS.vtu")
+    "single_species_P_BC_MASS"
 ].clip_box(bounds, invert=False)
-feflow_model.boundary_conditions[
-    str(temp_dir / "single_species_P_BC_MASS.vtu")
-] = new_bc_mesh
+feflow_model.boundary_conditions["single_species_P_BC_MASS"] = new_bc_mesh
 # %%
 # 6. Run the model.
 feflow_model.run(overwrite=True)
