@@ -7,6 +7,7 @@ import numpy as np
 import pkg_resources
 import pytest
 import pyvista as pv
+from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import examples
@@ -472,3 +473,68 @@ class TestUtils:
         ms_shallowcopy = ms.copy(deep=False)
         ms.test_var = False
         assert not ms_shallowcopy.test_var
+
+    def test_save_pvd_mesh_series(self):
+        temp = Path(mkdtemp())
+        file_name = "test.pvd"
+
+        ms = examples.load_meshseries_HT_2D_PVD()
+        ms.save(Path(temp, file_name), deep=True)
+        ms_test = ot.MeshSeries(Path(temp, file_name))
+        assert len(ms.timevalues) == len(ms_test.timevalues)
+        assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
+        for var in ["temperature", "darcy_velocity", "pressure"]:
+            val_ref = np.sum(ms.aggregate_over_domain(var, np.max))
+            val_test = np.sum(ms_test.aggregate_over_domain(var, np.max))
+            assert np.abs(val_ref - val_test) < 1e-14
+
+        for m in ms_test:
+            assert "test" in m.filepath.name
+
+        ms.save(Path(temp, file_name), deep=False)
+        tree = ET.parse(Path(temp, file_name))
+        num_slices = len(ms.timevalues)
+        num_slices_test = len(tree.findall("./Collection/DataSet"))
+        assert num_slices == num_slices_test
+        pvd_entries = tree.findall("./Collection/DataSet")
+        for i in range(num_slices):
+            assert ms[i].filepath.name == pvd_entries[i].attrib["file"]
+            assert (
+                np.abs(
+                    ms.timevalues[i] - float(pvd_entries[i].attrib["timestep"])
+                )
+                < 1e-14
+            )
+
+    def test_save_xdmf_mesh_series(self):
+        temp = Path(mkdtemp())
+        file_name = "test.pvd"
+
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        ms.save(Path(temp, file_name), deep=True)
+        ms_test = ot.MeshSeries(Path(temp, file_name))
+        assert len(ms.timevalues) == len(ms_test.timevalues)
+        assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
+        assert (
+            np.abs(
+                np.sum(ms.aggregate_over_domain("Si", np.max))
+                - np.sum(ms_test.aggregate_over_domain("Si", np.max))
+            )
+            < 1e-14
+        )
+        for m in ms_test:
+            assert "test" in m.filepath.name
+
+        ms.save(Path(temp, file_name), deep=False)
+        tree = ET.parse(Path(temp, file_name))
+        num_slices = len(ms.timevalues)
+        pvd_entries = tree.findall("./Collection/DataSet")
+        num_slices_test = len(pvd_entries)
+        assert num_slices == num_slices_test
+        for i in range(num_slices):
+            assert (
+                np.abs(
+                    ms.timevalues[i] - float(pvd_entries[i].attrib["timestep"])
+                )
+                < 1e-14
+            )
