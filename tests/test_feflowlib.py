@@ -301,11 +301,11 @@ class TestConverter:
 
     def test_geometry(self):
         "Test if geometry can be converted correctly."
-        doc = ifm.loadDocument(str(examples.feflow_model_2layers))
+        doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
         points, cells, celltypes = points_and_cells(doc)
-        assert len(points) == 75
-        assert len(celltypes) == 32
-        assert celltypes[0] == pv.CellType.HEXAHEDRON
+        assert len(points) == 3228
+        assert len(celltypes) == 6260
+        assert celltypes[0] == pv.CellType.TRIANGLE
 
     def test_toymodel_mesh_conversion(self):
         "Test if geometry of a toymodel is converted correctly."
