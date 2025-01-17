@@ -40,7 +40,9 @@ class TestUtils:
             ot.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
-            ot.meshes_from_gmsh(mesh_path, tmp_dir, log=False, save=True)
+            meshes = ot.meshes_from_gmsh(mesh_path, log=False)
+            for name, mesh in meshes.items():
+                pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
 
             model = ot.Project(
                 output_file=tmp_dir / "default.prj",
@@ -50,7 +52,7 @@ class TestUtils:
             model.replace_text(4, xpath=".//integration_order")
             model.write_input()
             model.run_model(write_logs=False, args=f"-m {tmp_dir} -o {tmp_dir}")
-            ot.MeshSeries(tmp_dir / "mesh_mesh_domain.xdmf").mesh(0)
+            ot.MeshSeries(tmp_dir / "mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",
