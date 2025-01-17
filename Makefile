@@ -53,7 +53,7 @@ pip_setup_headless:  ## Install vtk-osmesa and gmsh without X11 dependencies
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
-	.venv-devcontainer/bin/pip install -e .[dev,test,docs,feflow]
+	.venv-devcontainer/bin/pip install -e .[dev,test,docs,feflow,pinned]
 	.venv-devcontainer/bin/pip uninstall gmsh vtk -y
 	.venv-devcontainer/bin/pip install --extra-index-url https://wheels.vtk.org vtk-osmesa
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
