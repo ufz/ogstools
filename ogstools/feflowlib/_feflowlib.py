@@ -35,17 +35,19 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
     }
     dimension = doc.getNumberOfDimensions()
     # Get a list of all cells/elements and reverse it for correct node order in OGS
-    elements = [sublist[::-1] for sublist in doc.c.mesh.get_imatrix()]
-
+    elements = doc.c.mesh.get_imatrix()
     # Write the amount of nodes per element to the first entry of each list
     # of nodes. This is needed for pyvista !
     # Could also be done with np.hstack([len(ele)]*len(elements,elements))
     # Also define the celltypes.
     celltypes = []
-    for element in elements:
+    for i, element in enumerate(elements):
         nElement = len(element)
-        element.insert(0, nElement)
-        celltypes.append(cell_type_dict[dimension][nElement])
+        celltype = cell_type_dict[dimension][nElement]
+        celltypes.append(celltype)
+        if celltype == pv.CellType.PYRAMID:
+            elements[i] = element[:4][::-1] + element[4:]
+        elements[i].insert(0, nElement)
     # Write the list for all points and their global coordinates.
     if dimension == 2:
         points = doc.c.mesh.df.nodes(global_cos=True)
@@ -53,11 +55,6 @@ def points_and_cells(doc: ifm.FeflowDoc) -> tuple[np.ndarray, list, list]:
         # A 0 is appended since in pyvista points must be given in 3D.
         # So we set the Z-coordinate to 0.
         pts = np.pad(pts, [(0, 0), (0, 1)])
-        # Order of points in the cells needs to be flipped
-        elements = [
-            element[: -(len(element) - 1)] + element[-1 : -len(element) : -1]
-            for element in elements
-        ]
     elif dimension == 3:
         points = doc.c.mesh.df.nodes(
             global_cos=True, par={"Z": ifm.Enum.P_ELEV}
@@ -192,15 +189,23 @@ def _point_and_cell_data(
 
     # 5. change format of cell data to a dictionary of lists
     cell_data = {key: [cell_data[key]] for key in cell_data}
-
     # 6. add MaterialIDs to cell data
-    cell_data["MaterialIDs"] = MaterialIDs
-
+    if "MaterialIDs" not in cell_data:
+        cell_data["MaterialIDs"] = MaterialIDs
+    else:
+        # This special treatmant is only to be consistent with the data type MaterialIDs usually have
+        # if not coming from user-data.
+        cell_data["MaterialIDs"] = np.array(cell_data["MaterialIDs"][0]).astype(
+            np.int32
+        )
     # if P_LOOKUP_REGION is given and there are more different MaterialIDs given
     # than defined in selections, use P_LOOKUP_REGION for MaterialIDs
-    if "P_LOOKUP_REGION" in cell_data and len(
-        np.unique(MaterialIDs.values())
-    ) < len(np.unique(cell_data["P_LOOKUP_REGION"])):
+    if (
+        "P_LOOKUP_REGION" in cell_data
+        and len(np.unique(MaterialIDs))
+        < len(np.unique(cell_data["P_LOOKUP_REGION"]))
+        and "MaterialIDs" not in user_data
+    ):
         cell_data["MaterialIDs"] = np.array(
             cell_data.pop("P_LOOKUP_REGION")
         ).astype(np.int32)
@@ -308,7 +313,7 @@ def get_species_parameter(
     return species_dict, obsolete_data
 
 
-def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
+def _calculate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
     """
     Calculates the retardation factor from the absorption coefficient, which is called
     Henry constant in FEFLOW, according to the formula: R = 1 + (1-p)/p * S. With R
@@ -317,17 +322,37 @@ def _caclulate_retardation_factor(mesh: pv.UnstructuredGrid) -> None:
 
     :param mesh: mesh
     """
-    for spec_porosity in [
-        species_porosity
-        for species_porosity in mesh.cell_data
-        if "PORO" in species_porosity
-    ]:
-        porosity = mesh.cell_data[spec_porosity]
-        species = spec_porosity.replace("P_PORO", "")
+    species_porosities = [
+        porosity
+        for porosity in mesh.cell_data
+        if "PORO" in porosity and porosity != "P_POROH"
+    ]
+    for species_porosity in species_porosities:
+        porosity = mesh.cell_data[species_porosity]
+        species = species_porosity.replace("P_PORO", "")
         # calculation of the retardation factor
         mesh.cell_data[species + "retardation_factor"] = (
             1 + mesh.cell_data[species + "P_SORP"] * (1 - porosity) / porosity
         )
+
+
+def _deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
+    """
+    Multiplies the MaterialID of all cells that are inactive in FEFLOW by -1.
+    Therefore, the input mesh is modified.
+    :param mesh: mesh
+    :return: 0 for no cells have been deactivated and 1 for cells have been deactivated
+    """
+    inactive_cells = np.where(mesh.cell_data["P_INACTIVE_ELE"] == 0)
+    if len(inactive_cells[0]) == 0:
+        return_int = 0
+    else:
+        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+        return_int = 1
+        log.info(
+            "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
+        )
+    return return_int
 
 
 def convert_geometry_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
@@ -364,7 +389,7 @@ def update_geometry(
         mesh.cell_data.update({c_data: values})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
-    if doc.getProblemClass() in [1, 3]:
+    if doc.getProblemClass() in [1, 3, 5, 7]:
         (
             species_dict,
             obsolete_data,
@@ -386,7 +411,7 @@ def update_geometry(
                 logger.error(
                     "Unknown geometry to remove obsolet data after conversion of chemical species."
                 )
-        _caclulate_retardation_factor(mesh)
+        _calculate_retardation_factor(mesh)
     return _convert_to_SI_units(mesh)
 
 
@@ -399,4 +424,5 @@ def convert_properties_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     """
     mesh = convert_geometry_mesh(doc)
     update_geometry(mesh, doc)
+    _deactivate_cells(mesh)
     return mesh

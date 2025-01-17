@@ -1,6 +1,6 @@
 """
-Feflowlib: Component-transport model - conversion and simulation
-================================================================
+Workflow: Component-transport model - conversion, simulation, postprocessing
+============================================================================
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 In this example we show how a simple mass transport FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
@@ -13,33 +13,20 @@ import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-import ifm_contrib as ifm
 import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
-from ogstools.feflowlib import (
-    component_transport,
-    convert_properties_mesh,
-    get_material_properties_of_CT_model,
-    get_species,
-    setup_prj_file,
-    write_point_boundary_conditions,
-)
 from ogstools.meshlib import Mesh
 
-ot.plot.setup.show_element_edges = True
 # %%
-# 1. Load a FEFLOW model (.fem) as a FEFLOW document, convert and save it. More details on
-# how the conversion function works can be found here: :py:mod:`ogstools.feflowlib.convert_properties_mesh`.
-feflow_model = ifm.loadDocument(str(feflow_model_2D_CT_t_560))
-feflow_pv_mesh = convert_properties_mesh(feflow_model)
-
+# 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
+# During the initialisation, the FEFLOW file is converted.
 temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-feflow_mesh_file = temp_dir / "2D_CT_model.vtu"
-feflow_pv_mesh.save(feflow_mesh_file)
-
+feflow_model = ot.FeflowModel(
+    feflow_model_2D_CT_t_560, temp_dir / "2D_CT_model"
+)
 feflow_concentration = ot.variables.Scalar(
     data_name="single_species_P_CONC",
     output_name="concentration",
@@ -48,60 +35,37 @@ feflow_concentration = ot.variables.Scalar(
 )
 # The original mesh is clipped to focus on the relevant part of it, where concentration is larger
 # than 1e-9 mg/l. The rest of the mesh has concentration values of 0.
+ot.plot.setup.show_element_edges = True
 ot.plot.contourf(
-    feflow_pv_mesh.clip_scalar(
+    feflow_model.mesh.clip_scalar(
         scalars="single_species_P_CONC", invert=False, value=1.0e-9
     ),
     feflow_concentration,
 )
-
 # %%
-# 2. Save the point boundary conditions (see: :py:mod:`ogstools.feflowlib.write_point_boundary_conditions`).
-write_point_boundary_conditions(temp_dir, feflow_pv_mesh)
-# %%
-# 3. Setup a prj-file (see: :py:mod:`ogstools.feflowlib.setup_prj_file`) to run a OGS-simulation.
-path_prjfile = feflow_mesh_file.with_suffix(".prj")
-prj = ot.Project(output_file=path_prjfile)
-species = get_species(feflow_pv_mesh)
-CT_model = component_transport(
-    saving_path=temp_dir / "sim_2D_CT_model",
-    species=species,
-    prj=prj,
-    dimension=2,
-    fixed_out_times=[48384000],
-    initial_time=0,
+# 2. Setup a prj-file to run a OGS-simulation.
+feflow_model.setup_prj(
     end_time=int(4.8384e07),
     time_stepping=list(
         zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
     ),
 )
-# Include the mesh specific configurations to the template.
-model = setup_prj_file(
-    bulk_mesh_path=feflow_mesh_file,
-    mesh=feflow_pv_mesh,
-    material_properties=get_material_properties_of_CT_model(feflow_pv_mesh),
-    process="component transport",
-    species_list=species,
-    model=CT_model,
-    max_iter=6,
-    rel_tol=1e-14,
-)
-# The model must be written before it can be run.
-model.write_input(path_prjfile)
+# Save the model (mesh, boundary meshes and project file).
+feflow_model.save()
 # Print the prj-file as an example.
-ET.dump(ET.parse(path_prjfile))
+ET.dump(ET.parse(feflow_model.mesh_path.with_suffix(".prj")))
 # %%
-# 4. Run the model.
-model.run_model(logfile=temp_dir / "out.log")
+# 3. Run the model.
+feflow_model.run()
 # %%
-# 5. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
-ms = ot.MeshSeries(temp_dir / "sim_2D_CT_model.pvd")
+# 4. Read the results along a line on the upper edge of the mesh parallel to the x-axis and plot them.
+ms = ot.MeshSeries(temp_dir / "2D_CT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """
 It is also possible to read the file directly with pyvista:
 ogs_sim_res = pv.read(
-   temp_dir / "sim_2D_CT_model_ts_65_t_48384000.000000.vtu"
+   temp_dir / "2D_CT_model_ts_65_t_48384000.000000.vtu"
 )
 """
 profile = np.array([[0.038 + 1.0e-8, 0.005, 0], [0.045, 0.005, 0]])
@@ -123,7 +87,7 @@ ogs_sim_res.plot_linesample(
     color="black",
     linewidth=2,
 )
-Mesh(feflow_pv_mesh).plot_linesample(
+Mesh(feflow_model.mesh).plot_linesample(
     "dist",
     feflow_concentration,
     profile_points=profile,
@@ -137,12 +101,10 @@ Mesh(feflow_pv_mesh).plot_linesample(
 )
 ax.legend(loc="best", fontsize=16)
 fig.tight_layout()
-
-
 # %%
-# 6. Concentration difference plotted on the mesh.
+# 5. Concentration difference plotted on the mesh.
 ogs_sim_res["concentration_difference"] = (
-    feflow_pv_mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
+    feflow_model.mesh["single_species_P_CONC"] - ogs_sim_res["single_species"]
 )
 concentration_difference = ot.variables.Scalar(
     data_name="concentration_difference",
@@ -152,13 +114,12 @@ concentration_difference = ot.variables.Scalar(
 )
 
 bounds = [0.038, 0.045, 0, 0.01, 0, 0]
-
 ot.plot.contourf(
     ogs_sim_res.clip_box(bounds, invert=False),
     concentration_difference,
 )
 # %%
-# 6.1 Concentration difference plotted along a line.
+# 5.1 Concentration difference plotted along a line.
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ogs_sim_res.plot_linesample(
     "dist",
