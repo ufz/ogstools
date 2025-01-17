@@ -27,7 +27,6 @@ from ._templates import (
 )
 from ._tools import (
     assign_bulk_ids,
-    combine_material_properties,
     extract_cell_boundary_conditions,
     extract_point_boundary_conditions,
     get_material_properties_of_CT_model,
@@ -36,14 +35,12 @@ from ._tools import (
     get_specific_surface,
     helpFormat,
     remove_bulk_ids,
-    write_mesh_of_combined_properties,
     write_point_boundary_conditions,
 )
 from .feflow_model import FeflowModel
 
 __all__ = [
     "assign_bulk_ids",
-    "combine_material_properties",
     "component_transport",
     "convert_geometry_mesh",
     "convert_properties_mesh",
@@ -62,7 +59,6 @@ __all__ = [
     "setup_prj_file",
     "steady_state_diffusion",
     "update_geometry",
-    "write_mesh_of_combined_properties",
     "write_point_boundary_conditions",
 ]
 
