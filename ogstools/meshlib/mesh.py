@@ -165,7 +165,7 @@ class Mesh(pv.UnstructuredGrid):
             """
             import ifm_contrib as ifm
 
-            from ogstools.feflowlib import convert_properties_mesh
+            from ogstools.feflowlib._feflowlib import convert_properties_mesh
 
             doc = ifm.loadDocument(str(feflow_file))
             return cls(convert_properties_mesh(doc))

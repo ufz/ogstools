@@ -16,7 +16,9 @@ from pathlib import Path
 
 import ifm_contrib as ifm
 
-from ogstools.feflowlib import FeflowModel, helpFormat
+from ogstools.feflowlib import FeflowModel
+
+from ._tools import helpFormat
 
 parser = ArgumentParser(
     description="This tool converts FEFLOW binary files to VTK format.",

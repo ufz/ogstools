@@ -15,25 +15,12 @@ pytest.importorskip("ifm")
 
 import ifm_contrib as ifm  # noqa: E402 / because of ifm-skip
 
-# pylint: disable=C0413,C0412
+from ogstools import FeflowModel  # noqa: E402 / because of ifm-skip
 from ogstools.feflowlib import (  # noqa: E402 / because of ifm-skip
-    FeflowModel,
-    component_transport,
-    convert_properties_mesh,
-    extract_cell_boundary_conditions,
-    extract_point_boundary_conditions,
-    get_material_properties_of_CT_model,
-    get_material_properties_of_HT_model,
-    get_species,
-    hydro_thermal,
-    liquid_flow,
-    points_and_cells,
-    setup_prj_file,
-    steady_state_diffusion,
-    write_point_boundary_conditions,
-)
-from ogstools.feflowlib._tools import (  # noqa: E402 / because of ifm-skip
-    get_material_properties_of_H_model,
+    _feflowlib,  # / because of ifm-skip
+    _prj_tools,  # / because of ifm-skip
+    _templates,  # / because of ifm-skip
+    _tools,  # / because of ifm-skip
 )
 
 
@@ -45,13 +32,13 @@ class TestSimulation_Neumann:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
-        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         neumann = np.array(self.pv_mesh["P_BCFLOW_2ND"])
         neumann = neumann[~np.isnan(neumann)]
         self.vtu_path = self.temp_dir / "boxNeumann.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
-        path_topsurface, topsurface = extract_cell_boundary_conditions(
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        path_topsurface, topsurface = _tools.extract_cell_boundary_conditions(
             self.pv_mesh
         )
         topsurface.save(path_topsurface + ".vtu")
@@ -63,14 +50,14 @@ class TestSimulation_Neumann:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxNeumann_test.prj"
-        ssd_model = steady_state_diffusion(
+        ssd_model = _templates.steady_state_diffusion(
             self.temp_dir / "sim_boxNeumann",
             Project(output_file=prjfile),
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -94,16 +81,16 @@ class TestSimulation_Neumann:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxNeumann_test.prj"
-        lqf_model = liquid_flow(
+        lqf_model = _templates.liquid_flow(
             self.temp_dir / "sim_boxNeumann",
             Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -124,11 +111,11 @@ class TestSimulation_Robin:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Robin))
-        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "boxRobin.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
-        path_topsurface, topsurface = extract_cell_boundary_conditions(
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        path_topsurface, topsurface = _tools.extract_cell_boundary_conditions(
             self.pv_mesh
         )
         topsurface.save(path_topsurface + ".vtu")
@@ -140,14 +127,14 @@ class TestSimulation_Robin:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxRobin_test.prj"
-        ssd_model = steady_state_diffusion(
+        ssd_model = _templates.steady_state_diffusion(
             str(self.temp_dir / "sim_boxRobin"),
             Project(output_file=prjfile),
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -171,16 +158,16 @@ class TestSimulation_Robin:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxRobin_test.prj"
-        lqf_model = liquid_flow(
+        lqf_model = _templates.liquid_flow(
             str(self.temp_dir / "sim_boxRobin"),
             Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -202,11 +189,11 @@ class TestSimulation_Well:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_well_BC))
-        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "boxWell.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
-        path_topsurface, topsurface = extract_cell_boundary_conditions(
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        path_topsurface, topsurface = _tools.extract_cell_boundary_conditions(
             self.pv_mesh
         )
         topsurface.save(path_topsurface + ".vtu")
@@ -218,14 +205,14 @@ class TestSimulation_Well:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxWell_test.prj"
-        ssd_model = steady_state_diffusion(
+        ssd_model = _templates.steady_state_diffusion(
             str(self.temp_dir / "sim_boxWell"),
             Project(output_file=prjfile),
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
             model=ssd_model,
         )
@@ -248,16 +235,16 @@ class TestSimulation_Well:
         """
         # Run ogs
         prjfile = self.temp_dir / "boxWell_test.prj"
-        lqf_model = liquid_flow(
+        lqf_model = _templates.liquid_flow(
             str(self.temp_dir / "sim_boxWell"),
             Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Liquid flow",
             model=lqf_model,
         )
@@ -280,7 +267,7 @@ class TestConverter:
         # Variables for the following tests:
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
-        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
 
     def test_mesh_class(self):
         "Test if ogstools-mesh class can read FEFLOW model."
@@ -292,15 +279,15 @@ class TestConverter:
     def test_mesh_preservation_3D(self):
         "Test if converted properties mesh preserves unchanged after extraction of BC."
         testing_mesh = self.pv_mesh.copy()
-        extract_point_boundary_conditions(testing_mesh)
+        _tools.extract_point_boundary_conditions(testing_mesh)
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
-        extract_cell_boundary_conditions(self.pv_mesh)[1]
+        _tools.extract_cell_boundary_conditions(self.pv_mesh)[1]
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
 
     def test_geometry(self):
         "Test if geometry can be converted correctly."
         doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
-        points, cells, celltypes = points_and_cells(doc)
+        points, cells, celltypes = _feflowlib.points_and_cells(doc)
         assert len(points) == 3228
         assert len(celltypes) == 6260
         assert celltypes[0] == pv.CellType.TRIANGLE
@@ -308,7 +295,7 @@ class TestConverter:
     def test_toymodel_mesh_conversion(self):
         "Test if geometry of a toymodel is converted correctly."
         # 1. Test if geometry is fine
-        points, cells, celltypes = points_and_cells(self.doc)
+        points, cells, celltypes = _feflowlib.points_and_cells(self.doc)
         assert len(points) == 6768
         assert len(celltypes) == 11462
         assert celltypes[0] == pv.CellType.WEDGE
@@ -319,7 +306,7 @@ class TestConverter:
 
     def test_toymodel_point_boundary_condition(self):
         "Test if separate meshes for boundary condition are written correctly."
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
         bc_flow = pv.read(str(self.temp_dir / "P_BC_FLOW.vtu"))
         assert bc_flow.n_points == 66
         assert len(bc_flow.point_data) == 2
@@ -329,7 +316,7 @@ class TestConverter:
 
     def test_toymodel_cell_boundary_condition(self):
         "Test if separate meshes for boundary condition are written correctly."
-        topsurface = extract_cell_boundary_conditions(self.pv_mesh)[1]
+        topsurface = _tools.extract_cell_boundary_conditions(self.pv_mesh)[1]
         cell_data_list_expected = ["P_IOFLOW", "P_SOUF", "bulk_element_ids"]
         cell_data_list = list(topsurface.cell_data)
         for cell_data, cell_data_expected in zip(
@@ -341,10 +328,10 @@ class TestConverter:
 
     def test_toymodel_prj_file(self):
         "Test the prj_file that can be written."
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.temp_dir / "boxNeumann.vtu",
             self.pv_mesh,
-            get_material_properties_of_H_model(self.pv_mesh),
+            _tools.get_material_properties_of_H_model(self.pv_mesh),
             "Steady state diffusion",
         )
         prj.write_input(self.temp_dir / "boxNeumann.prj")
@@ -408,17 +395,17 @@ class TestSimulation_HT:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
-        self.pv_mesh = convert_properties_mesh(self.doc)
+        self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "HT_Dirichlet.vtu"
         self.pv_mesh.save(self.vtu_path)
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
 
     def test_mesh_preservation_2D(self):
         "Test if converted properties mesh preserves unchanged after extraction of BC."
         testing_mesh = self.pv_mesh.copy()
-        extract_point_boundary_conditions(testing_mesh)
+        _tools.extract_point_boundary_conditions(testing_mesh)
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
-        extract_cell_boundary_conditions(self.pv_mesh)[1]
+        _tools.extract_cell_boundary_conditions(self.pv_mesh)[1]
         assert testing_mesh.n_arrays == self.pv_mesh.n_arrays
 
     def test_dirichlet_toymodel_ogs_ht(self):
@@ -430,17 +417,17 @@ class TestSimulation_HT:
         if self.pv_mesh.celltypes[0] in [5, 9]:
             dimension = 2
         prjfile = self.temp_dir / "HT_Dirichlet.prj"
-        prj = hydro_thermal(
+        prj = _templates.hydro_thermal(
             str(self.temp_dir / "sim_HT_Dirichlet"),
             Project(output_file=prjfile),
             dimension,
             end_time=1e11,
             time_stepping=[(1, 1e10)],
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.vtu_path,
             self.pv_mesh,
-            get_material_properties_of_HT_model(self.pv_mesh),
+            _tools.get_material_properties_of_HT_model(self.pv_mesh),
             "Hydro thermal",
             model=prj,
         )
@@ -465,15 +452,15 @@ class TestSimulation_CT:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
-        self.pv_mesh_560 = convert_properties_mesh(self.doc)
+        self.pv_mesh_560 = _feflowlib.convert_properties_mesh(self.doc)
         self.pv_mesh_560.save(self.temp_dir / "CT_2D_line.vtu")
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_168))
-        self.pv_mesh_168 = convert_properties_mesh(self.doc)
+        self.pv_mesh_168 = _feflowlib.convert_properties_mesh(self.doc)
         self.pv_mesh_168.save(self.temp_dir / "CT_2D_line_168.vtu")
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_28))
-        self.pv_mesh_28 = convert_properties_mesh(self.doc)
+        self.pv_mesh_28 = _feflowlib.convert_properties_mesh(self.doc)
         self.pv_mesh_28.save(self.temp_dir / "CT_2D_line_28.vtu")
-        write_point_boundary_conditions(self.temp_dir, self.pv_mesh_560)
+        _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh_560)
 
     def test_2_d_line_ct(self):
         """
@@ -485,8 +472,8 @@ class TestSimulation_CT:
             dimension = 2
 
         prjfile = self.temp_dir / "CT_2D_line.prj"
-        species = get_species(self.pv_mesh_560)
-        prj = component_transport(
+        species = _tools.get_species(self.pv_mesh_560)
+        prj = _templates.component_transport(
             self.temp_dir / "CT_2D_line",
             species,
             Project(output_file=prjfile),
@@ -502,10 +489,10 @@ class TestSimulation_CT:
                 zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
             ),
         )
-        prj = setup_prj_file(
+        prj = _prj_tools.setup_prj_file(
             self.temp_dir / "CT_2D_line.vtu",
             self.pv_mesh_560,
-            get_material_properties_of_CT_model(self.pv_mesh_560),
+            _tools.get_material_properties_of_CT_model(self.pv_mesh_560),
             "Component transport",
             species_list=species,
             model=prj,
