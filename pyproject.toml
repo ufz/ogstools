@@ -41,7 +41,7 @@ dependencies = [
   # meshing algorithm changed with this version
   "typeguard>=4.0.0",
   "lxml>=4.6.0",
-  "ogs>=6.5.3",
+  "ogs>=6.5.4",
   "pandas>=2.2.3",
 ]
 
