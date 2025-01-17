@@ -147,11 +147,15 @@ def run_cli(cmd: str) -> int:
 
 def test_gmsh(tmp_path: Path):
     os.chdir(tmp_path)
-    for script, num_meshes in [
-        ("cube_mixed.py", 1),
-        ("quarter_rectangle_with_hole.py", 7),
-        ("line.py", 4),
+    for script, num_meshes, version in [
+        ("cube_mixed.py", 1, None),
+        ("quarter_rectangle_with_hole.py", 11, 2.2),
+        ("quarter_rectangle_with_hole.py", 11, 4.1),
+        ("line.py", 4, None),
     ]:
+        if version is not None:
+            gmsh.initialize()
+            gmsh.option.setNumber("Mesh.MshFileVersion", version)
         runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")

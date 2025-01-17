@@ -116,23 +116,17 @@ gmsh.model.geo.mesh.setRecombine(dim2, 5)
 gmsh.model.geo.synchronize()
 
 # Physical groups (only this gets saved to file per default)
-Bottom = gmsh.model.addPhysicalGroup(dim1, [1, 2])
-gmsh.model.setPhysicalName(dim1, Bottom, "Bottom")
-
-Right = gmsh.model.addPhysicalGroup(dim1, [3, 4])
-gmsh.model.setPhysicalName(dim1, Right, "Right")
-
-Top = gmsh.model.addPhysicalGroup(dim1, [5, 6])
-gmsh.model.setPhysicalName(dim1, Top, "Top")
-
-Left = gmsh.model.addPhysicalGroup(dim1, [7, 8])
-gmsh.model.setPhysicalName(dim1, Left, "Left")
-
-Hole = gmsh.model.addPhysicalGroup(dim1, [9, 10])
-gmsh.model.setPhysicalName(dim1, Hole, "Hole")
-
-Plate = gmsh.model.addPhysicalGroup(dim2, [1, 2, 3, 4, 5])
-gmsh.model.setPhysicalName(dim2, Plate, "Plate")
+gmsh.model.addPhysicalGroup(dim1, [1, 2], name="Bottom")
+gmsh.model.addPhysicalGroup(dim1, [3, 4], name="Right")
+gmsh.model.addPhysicalGroup(dim1, [5, 6], name="Top")
+gmsh.model.addPhysicalGroup(dim1, [7, 8], name="Left")
+gmsh.model.addPhysicalGroup(dim1, [9, 10], name="Hole")
+for index in range(5):
+    # Intentionally set tags to values already use by groups of lower dim
+    # for more extensive testing
+    gmsh.model.addPhysicalGroup(
+        dim2, [index + 1], tag=index + 1, name=f"Plate_{index}"
+    )
 
 gmsh.model.geo.synchronize()
 

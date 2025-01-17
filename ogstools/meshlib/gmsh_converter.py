@@ -57,8 +57,9 @@ def meshes_from_gmsh(
     if "gmsh:physical" not in pv_mesh.cell_data:
         pv_mesh.cell_data["gmsh:physical"] = np.zeros(pv_mesh.number_of_cells)
 
+    pv_cell_dims = np.asarray([cell.dimension for cell in pv_mesh.cell])
     if dim == 0:
-        dim = [np.max([cell.dimension for cell in pv_mesh.cell])]
+        dim = [np.max(pv_cell_dims)]
         logger.info("Detected domain dimension of %d", dim[0])
     elif isinstance(dim, int):
         dim = [dim]
@@ -89,9 +90,9 @@ def meshes_from_gmsh(
 
         # for old gmsh versions
         if mesh.cell_sets == {}:
-            subdomain = pv_mesh.threshold(
-                [group_index, group_index], "gmsh:physical"
-            )
+            subdomain = pv_mesh.extract_cells(
+                pv_cell_dims == group_dim
+            ).threshold([group_index, group_index], "gmsh:physical")
         # for recent gmsh versions (allows cells belonging to multiple groups)
         else:
             # Gmsh may store element of the same physical id in different
@@ -105,7 +106,10 @@ def meshes_from_gmsh(
                     continue
                 # assert all in this array are the same
                 group_id = mesh.cell_data["gmsh:physical"][index][0]
-                select = np.argwhere(pv_mesh["gmsh:physical"] == group_id)[:, 0]
+                select = np.argwhere(
+                    (pv_mesh["gmsh:physical"] == group_id)
+                    & (pv_cell_dims == group_dim)
+                )[:, 0]
                 group_cells[select[cell_ids + group_offsets[group_id]]] = True
                 group_offsets[group_id] += len(
                     mesh.cell_data["gmsh:physical"][index]
@@ -124,9 +128,12 @@ def meshes_from_gmsh(
             msg = "Unexpectedly got an empty mesh."
             raise RuntimeError(msg)
 
-        max_sub_dim = np.max([cell.dimension for cell in subdomain.cell])
-        if max_sub_dim != group_dim:
-            msg = f"Subdomain dim should be {group_dim} but is {max_sub_dim}."
+        sub_cell_dims = np.array([cell.dimension for cell in subdomain.cell])
+        if not np.all(sub_cell_dims == sub_cell_dims[0]):
+            msg = (
+                f"Subdomain should only contain cells of dim {group_dim}, but"
+                f"{name} contains cells of dim {np.unique(sub_cell_dims)}."
+            )
             raise AssertionError(msg)
 
         # rename vtk fields to OGS conventions and change to correct type
