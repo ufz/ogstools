@@ -139,7 +139,7 @@ pinned = [
   "nbformat==5.10.4",
   "nest-asyncio==1.6.0",
   "numpy==2.2.1",
-  "ogs==6.5.3",
+  "ogs==6.5.4",
   "overrides==7.7.0",
   "packaging==24.2",
   "pandamesh==0.2.2",
