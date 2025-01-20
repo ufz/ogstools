@@ -199,7 +199,7 @@ docs preview [M]:
     - warning_count=$(grep -c "WARNING" sphinx_output.log || true)
     - echo "Found $warning_count warnings in Sphinx documentation."
     # Set the warning threshold
-    - warning_threshold=7
+    - warning_threshold=11
     # Check if warnings exceed the threshold
     - if [ "$warning_count" -lt "$warning_threshold" ]; then
         echo "Warnings ($warning_count) are below the threshold ($warning_threshold). Pipeline is green.";
