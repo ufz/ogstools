@@ -4,15 +4,14 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from itertools import pairwise, product
+from itertools import product
 from typing import TypeVar
 
 import numpy as np
-import pandas as pd
 import pyvista as pv
 from typeguard import typechecked
 
-from ogstools.variables import Variable, get_preset
+from ogstools.variables import Variable
 
 Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
@@ -139,155 +138,3 @@ def difference_matrix(
         difference(m1, m2, variable) for m1, m2 in product(meshes_1, meshes_2)
     ]
     return np.asarray(diff_meshes).reshape((len(meshes_1), len(meshes_2)))
-
-
-@typechecked
-def interp_points(points: np.ndarray, resolution: int = 100) -> np.ndarray:
-    """
-    Provides lists of points on every segment at a line profile between \
-          arbitrary number of points pairs.
-
-    :param points: Numpy array of N points to sample between.\
-             Has to be of shape (N, 3).
-
-    :param resolution: Resolution of the sampled profile. Total number of \
-          points within all profile segments.
-
-    :returns: Numpy array of shape (N, 3), without duplicated nodal points.
-    """
-    profile = np.zeros([0, 3])
-    distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
-
-    npoints_per_segment = np.ceil(
-        distances / np.sum(distances) * resolution
-    ).astype(int)
-
-    for pt1, pt2, n_points in zip(
-        points[:-1], points[1:], npoints_per_segment, strict=True
-    ):
-        new_seg_points = np.linspace(pt1, pt2, n_points, False)
-        profile = np.vstack([profile, new_seg_points])
-
-    return np.vstack([profile, points[-1]])
-
-
-@typechecked
-def distance_in_segments(
-    profile_nodes: np.ndarray, profile: np.ndarray
-) -> np.ndarray:
-    """
-    Calculate the distance within segments of a polyline profile.
-
-    :param profile_nodes: 2D array of N points (profile nodes) of shape (N, 3)
-    :param profile: output from interp_points function. 2D array of N points \
-         (profile nodes) of shape (N, 3)
-
-    :returns: 1D array of distances in each segment to its starting point \
-        of shape (N, 3), where N is the number of points in profile
-    """
-    point_index = [
-        np.argmin(np.sum(np.abs(profile - pt), axis=1)) for pt in profile_nodes
-    ]
-    if not (point_index[0] == 0 and point_index[-1] == profile.shape[0] - 1):
-        err_msg = "Something went wrong with generating profile_points!"
-        raise ValueError(err_msg)
-    dist_in_segment = np.zeros([profile.shape[0]])
-    for pt_id1, pt_id2 in pairwise(point_index):
-        dist_current_segment = profile[pt_id1:pt_id2] - profile[pt_id1]
-        dist_current_segment = np.linalg.norm(dist_current_segment, axis=1)
-        dist_in_segment[pt_id1:pt_id2] = dist_current_segment
-
-    # Handle last point
-    dist_in_segment[-1] = np.linalg.norm(profile[-1] - profile_nodes[-2])
-
-    return dist_in_segment
-
-
-@typechecked
-def distance_in_profile(points: np.ndarray) -> np.ndarray:
-    """
-    :param points: 2D array of N points (profile nodes) of shape (N, 3)
-
-    :returns: 1D array of distances of each point to the beginning of the \
-          profile (first row in points), shape of (N,)
-    """
-    return np.concatenate(
-        ([0], np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1)))
-    )
-
-
-def sample_polyline(
-    mesh: pv.UnstructuredGrid,
-    variables: str | Variable | list[str] | list[Variable],
-    profile_nodes: np.ndarray,
-    resolution: int | None = 100,
-) -> tuple[pd.DataFrame, np.ndarray]:
-    """
-    Sample one or more variables along a polyline.
-    Profiles created by user can be passed as profile_nodes parameter. In this
-    case user should also set resolution to None in order to avoid further
-    interpolation between the points.
-
-    :param mesh: Mesh from which variables will be sampled.
-    :param variables: Name or list of names of variables to sample.
-    :param profile_nodes: 2D array of N points (profile nodes) of shape (N, 3)
-    :param resolution: Total number of sampling points.
-
-    :returns:   tuple containing DataFrame with results of the profile sampling
-                and Numpy array of distances from the beginning of the profile
-                at points defined in profile_points.
-    """
-    _variables = [variables] if not isinstance(variables, list) else variables
-    variables = [get_preset(var, mesh) for var in _variables]
-
-    if resolution is None:
-        # Only cumulative distance alongside the profile will be returned
-        profile_points = profile_nodes
-    assert isinstance(resolution, int)
-    profile_points = interp_points(profile_nodes, resolution=resolution)
-    sampled_data_dist_in_segment = distance_in_segments(
-        profile_nodes, profile_points
-    )
-    dist_at_nodes = distance_in_profile(profile_nodes)
-
-    sampled_data_distance = distance_in_profile(profile_points)
-
-    line = pv.PolyData(profile_points)
-    sampled_data = line.sample(mesh)
-
-    output_data = {["x", "y", "z"][i]: profile_points[:, i] for i in [0, 1, 2]}
-
-    # TODO: data should be written in output_name otherwise different
-    # variables with the same data_name will override each other
-    for variable_current in variables:
-        # TODO: workaround for Issue 59
-        if variable_current.data_name in sampled_data.point_data:
-            variable_name = variable_current.data_name
-        elif variable_current.output_name in sampled_data.point_data:
-            variable_name = variable_current.output_name
-        else:
-            err_msg = "Cannot match variable name to variables available\
-                in mesh!"
-            raise KeyError(err_msg)
-        sampled_data_variable = sampled_data[variable_name]
-        if isinstance(variable_current, Variable):
-            sampled_data_variable = variable_current.transform(
-                data=sampled_data_variable
-            )
-        if variable_name not in output_data:
-            if len(sampled_data_variable.shape) > 1:
-                # Vector variables
-                for variable_id in range(sampled_data_variable.shape[1]):
-                    variable_key = f"{variable_name}_{variable_id}"
-                    output_data[variable_key] = sampled_data_variable[
-                        :, variable_id
-                    ]
-            else:
-                # Scalar variables
-                output_data[variable_name] = sampled_data_variable
-
-    output_data["dist"] = sampled_data_distance
-    if isinstance(resolution, int):
-        output_data["dist_in_segment"] = sampled_data_dist_in_segment
-
-    return pd.DataFrame.from_dict(output_data), dist_at_nodes

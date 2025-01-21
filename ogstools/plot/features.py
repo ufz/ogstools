@@ -75,12 +75,3 @@ def shape_on_top(
     ]
     ax.set_ylim(top=float(np.max(contour_vals)))
     ax.fill_between(x_vals, y_vals, contour_vals, facecolor="lightgrey")
-
-def outline(
-    ax: plt.Axes, mesh: pv.DataSet, style: str, lw: int, projection: int = 2
-) -> None:
-    "Plot the outline of a mesh on a matplotlib ax object."
-    contour = mesh.extract_surface().strip(join=True)
-    x_id, y_id = np.delete([0, 1, 2], projection)
-    x, y = contour.points[contour.lines[1:]].T[[x_id, y_id]]
-    ax.plot(x, y, style, lw=lw)

@@ -16,7 +16,6 @@ import pyvista as pv
 import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
-from ogstools.plot import lineplots
 
 from . import data_processing, geo, ip_mesh, shape_meshing
 
@@ -52,14 +51,6 @@ class Mesh(pv.UnstructuredGrid):
     @copy_method_signature(plot.streamlines)
     def plot_streamlines(self, *args: Any, **kwargs: Any) -> Any:
         return plot.streamlines(self, *args, **kwargs)
-
-    @copy_method_signature(lineplots.linesample)
-    def plot_linesample(self, *args: Any, **kwargs: Any) -> Any:
-        return lineplots.linesample(self, *args, **kwargs)
-
-    @copy_method_signature(lineplots.linesample_contourf)
-    def plot_linesample_contourf(self, *args: Any, **kwargs: Any) -> Any:
-        return lineplots.linesample_contourf(self, *args, **kwargs)
 
     def to_ip_mesh(self) -> Mesh:
         return Mesh(ip_mesh.to_ip_mesh(self))
