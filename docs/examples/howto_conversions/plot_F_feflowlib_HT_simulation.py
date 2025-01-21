@@ -75,6 +75,7 @@ hydraulic_head_diff = ot.variables.Scalar(
     data_name="HEAD_difference", data_unit="m", output_unit="m"
 )
 ot.plot.contourf(diff_mesh, hydraulic_head_diff, vmin=-1.5e-9, vmax=1.5e-9)
+# %%
 # Plot differences in temperature.
 feflow_model.mesh["temperature"] = feflow_model.mesh["P_TEMP"]
 # Plot differences in temperature.

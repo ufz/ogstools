@@ -48,7 +48,7 @@ ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 # %%
 # 6. The boundary meshes are manipulated to alter the model.
-# The original boundary conditions are shown in this example: :ref:`sphx_glr_auto_examples_howto_conversions_plot_F_HT_simulation.py`
+# The original boundary conditions are shown in this example: :ref:`sphx_glr_auto_examples_howto_conversions_plot_F_feflowlib_HT_simulation.py`
 # 6.1 The Dirichlet boundary conditions for the hydraulic head are set to 0. Therefore, no water flows from the left to the right edge.
 bc_flow = feflow_model.subdomains["P_BC_FLOW"]["P_BC_FLOW"]
 feflow_model.subdomains["P_BC_FLOW"]["P_BC_FLOW"][bc_flow == 10] = 0
