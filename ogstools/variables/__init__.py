@@ -26,20 +26,10 @@ T_MASK = "temperature_active"
 H_MASK = "pressure_active"
 M_MASK = "displacement_active"
 
-# Default style to be used in plotting functions
-# For now for Scalars only
-# TODO: expand to Matrix and Vector
-line_styles = [
-    (0, ()),  # solid
-    (0, (1, 1)),  # dotted
-    (0, (5, 5)),  # dashed
-    (0, (3, 5, 1, 5)),  # dash dotted
-    (0, (3, 5, 1, 5, 1, 5)),  # dash dot dotted
-    (0, (3, 10, 1, 10)),  # loosely dash dotted
-]
-group_color_thermal = "tab:red"
-group_color_hydraulic = "tab:blue"
-group_color_mechanical = "black"  # green would be bad for colorblindess
+# Default colors to be used in plotting functions
+COLOR_THERMAL = "tab:red"
+COLOR_HYDRO = "tab:blue"
+COLOR_MECH = "black"  # green would be bad for colorblindess
 
 # ====== general ======
 material_id = Scalar(data_name="MaterialIDs", categoric=True, cmap="tab20")
@@ -53,14 +43,10 @@ temperature = Scalar(
     mask=T_MASK,
     cmap=temperature_cmap,
     bilinear_cmap=True,
-    color=group_color_thermal,
-    linestyle=line_styles[0],
+    color=COLOR_THERMAL,
 )
 heatflowrate = Scalar(
-    data_name="HeatFlowRate",
-    mask=T_MASK,
-    color=group_color_thermal,
-    linestyle=line_styles[1],
+    data_name="HeatFlowRate", mask=T_MASK, color=COLOR_THERMAL
 )
 
 # ====== hydraulic ======
@@ -72,8 +58,7 @@ pressure = Scalar(
     symbol="p",
     mask=H_MASK,
     cmap="Blues",
-    color=group_color_hydraulic,
-    linestyle=line_styles[0],
+    color=COLOR_HYDRO,
 )
 hydraulic_head = Scalar(
     data_name="pressure",
@@ -83,8 +68,7 @@ hydraulic_head = Scalar(
     symbol="h",
     mask=H_MASK,
     cmap="Blues",
-    color=group_color_hydraulic,
-    linestyle=line_styles[1],
+    color=COLOR_HYDRO,
 )
 velocity = Vector(
     data_name="velocity",
@@ -93,6 +77,8 @@ velocity = Vector(
     output_name="darcy_velocity",
     symbol="v",
     mask=H_MASK,
+    cmap="Blues",
+    color=COLOR_HYDRO,
 )
 massflowrate = Scalar(data_name="MassFlowRate", mask=H_MASK)
 
@@ -104,6 +90,7 @@ displacement = Vector(
     symbol="u",
     mask=M_MASK,
     cmap="PRGn",
+    color=COLOR_MECH,
     bilinear_cmap=True,
 )
 strain = Matrix(
@@ -112,6 +99,7 @@ strain = Matrix(
     output_unit="percent",
     output_name="strain",
     symbol=r"\varepsilon",
+    color=COLOR_MECH,
     mask=M_MASK,
 )
 stress = Matrix(
@@ -120,6 +108,7 @@ stress = Matrix(
     output_unit="MPa",
     output_name="stress",
     symbol=r"\sigma",
+    color=COLOR_MECH,
     mask=M_MASK,
 )
 effective_pressure = Scalar(
@@ -128,10 +117,9 @@ effective_pressure = Scalar(
     output_unit="MPa",
     output_name="effective_pressure",
     symbol=r"\pi",
-    mask=M_MASK,
     func=tensor_math.effective_pressure,
-    color=group_color_mechanical,
-    linestyle=line_styles[0],
+    mask=M_MASK,
+    color=COLOR_MECH,
 )
 dilatancy_critescu_tot = Scalar(
     data_name="sigma",
@@ -139,18 +127,16 @@ dilatancy_critescu_tot = Scalar(
     output_unit="",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    mask=M_MASK,
     func=mesh_dependent.dilatancy_critescu,
+    mask=M_MASK,
+    color=COLOR_MECH,
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
-    color=group_color_mechanical,
-    linestyle=line_styles[1],
 )
 dilatancy_critescu_eff = dilatancy_critescu_tot.replace(
     output_name="effective_dilatancy_criterion",
     func=partial(mesh_dependent.dilatancy_critescu, effective=True),
-    linestyle=line_styles[2],
 )
 
 dilatancy_alkan = Scalar(
@@ -159,18 +145,16 @@ dilatancy_alkan = Scalar(
     output_unit="MPa",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    mask=M_MASK,
     func=mesh_dependent.dilatancy_alkan,
+    mask=M_MASK,
+    color=COLOR_MECH,
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
-    color=group_color_mechanical,
-    linestyle=line_styles[3],
 )
 dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
     func=partial(mesh_dependent.dilatancy_alkan, effective=True),
-    linestyle=line_styles[4],
 )
 
 fluid_pressure_crit = Scalar(
@@ -179,13 +163,12 @@ fluid_pressure_crit = Scalar(
     output_unit="MPa",
     output_name="fluid_pressure_criterion",
     symbol="F_p",
-    mask=M_MASK,
     func=mesh_dependent.fluid_pressure_criterion,
+    mask=M_MASK,
+    color=COLOR_MECH,
     mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
-    color=group_color_mechanical,
-    linestyle=line_styles[5],
 )
 nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 
