@@ -729,15 +729,15 @@ class TestFeflowModel:
 
     def test_boundary_conditions(self):
         "Test for one model (HT) if boundary condition are returned correctly from FeflowModel."
-        boundary_conditions = self.feflow_model_HT.boundary_conditions
+        boundary_conditions = self.feflow_model_HT.subdomains
         first_bc = boundary_conditions[next(iter(boundary_conditions))]
         assert first_bc.n_cells == 44
         assert first_bc.n_points == 44
         assert first_bc.n_arrays == 2
-        boundary_conditions = self.feflow_model_HT_hetero.boundary_conditions
+        boundary_conditions = self.feflow_model_HT_hetero.subdomains
         neumann_BC = boundary_conditions["P_BCFLOW_2ND"]
         assert neumann_BC.celltypes[0] == 3  # 3 is a Line element
-        assert "topsurface" in self.feflow_H_box_IOFLOW.boundary_conditions
+        assert "topsurface" in self.feflow_H_box_IOFLOW.subdomains
 
     def test_processes(self):
         "Test if processes are detected correctly."

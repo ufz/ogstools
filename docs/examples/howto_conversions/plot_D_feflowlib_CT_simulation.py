@@ -47,7 +47,7 @@ time_steps = list(
     zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
 )
 feflow_model.setup_prj(end_time=int(4.8384e07), time_stepping=time_steps)
-# Save the model (mesh, boundary meshes and project file).
+# Save the model (mesh, subdomains and project file).
 feflow_model.save()
 # Print the prj-file as an example.
 ET.dump(ET.parse(feflow_model.mesh_path.with_suffix(".prj")))
