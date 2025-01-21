@@ -917,6 +917,12 @@ class MeshSeries:
         return cast(Path, filename)
 
     def save(self, filename: str, deep: bool = True) -> None:
+        """
+        Save mesh series to disk.
+
+        :param filename:   Filename to save the series to. Extension specifies the file type. Currently only PVD is supported.
+        :param deep:  Specifies whether VTU/H5 files should be written.
+        """
         fn = Path(filename)
         fns = [
             self._check_path(self.mesh(t).filepath) for t in self.meshindices
