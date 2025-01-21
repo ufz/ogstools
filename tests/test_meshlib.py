@@ -165,7 +165,7 @@ class TestUtils:
             assert not np.any(np.isnan(ms.timesteps))
             assert not np.any(np.isnan(ms.values("temperature")))
 
-            assert ms.timevalues()[
+            assert ms.timevalues[
                 ms.closest_timestep(1.0)
             ] == ms.closest_timevalue(1.0)
 
@@ -229,14 +229,14 @@ class TestUtils:
     def test_plot_domain_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mesh_series.plot_domain_aggregate("temperature", np.mean, "a")
+        mesh_series.plot_domain_aggregate("temperature", np.mean)
 
     def test_time_slice(self):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
         mesh_series.plot_time_slice("temperature", points, levels=[78, 79, 80])
         mesh_series.plot_time_slice(
-            "temperature", points, y_axis="y", interpolate=False, time_unit="h",
+            "temperature", points, y_axis="y", interpolate=False,
             time_logscale=True, cb_loc="left", dpi=50, fontsize=10
         )  # fmt: skip
 
@@ -542,7 +542,7 @@ class TestUtils:
     def test_slice(self):
         ms = examples.load_meshseries_HT_2D_XDMF()
         ms_sliced = ms[1::2]
-        assert len(ms.timevalues()) >= 2 * len(ms_sliced.timevalues())
+        assert len(ms.timevalues) >= 2 * len(ms_sliced.timevalues)
 
     def test_transform(self):
         ms = examples.load_meshseries_THM_2D_PVD()

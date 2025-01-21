@@ -14,7 +14,7 @@ import pandas as pd
 import pyvista as pv
 from matplotlib.collections import PolyCollection
 
-from .shared import setup, spatial_quantity
+from .shared import setup
 
 
 def layer_boundaries(
@@ -30,9 +30,9 @@ def layer_boundaries(
         for reg_id in np.unique(segments.cell_data["RegionId"]):
             segment = segments.threshold((reg_id, reg_id), "RegionId")
             edges = segment.extract_surface().strip(True, 10000)
-            x_b, y_b = spatial_quantity(mesh).transform(
-                edges.points[edges.lines % edges.n_points].T[[x_id, y_id]]
-            )
+            x_b, y_b = edges.points[edges.lines % edges.n_points].T[
+                [x_id, y_id]
+            ]
             ax.plot(x_b, y_b, "-k", lw=setup.linewidth)
 
 
@@ -49,9 +49,7 @@ def element_edges(
             for cp, ct in zip(cell_points, cell_types, strict=False)
             if ct == cell_type
         ]
-        verts = spatial_quantity(lin_mesh).transform(
-            np.delete(cell_pts, projection, -1)
-        )
+        verts = np.delete(cell_pts, projection, -1)
         lw = 0.5 * setup.linewidth
         pc = PolyCollection(verts.tolist(), fc="None", ec="black", lw=lw)
         ax.add_collection(pc)
@@ -75,15 +73,8 @@ def shape_on_top(
     contour_vals = [
         y + scaling * contour(x) for y, x in zip(y_vals, x_vals, strict=False)
     ]
-    spatial = spatial_quantity(surf).transform
-    ax.set_ylim(top=float(spatial(np.max(contour_vals))))
-    ax.fill_between(
-        spatial(x_vals),
-        spatial(y_vals),
-        spatial(contour_vals),
-        facecolor="lightgrey",
-    )
-
+    ax.set_ylim(top=float(np.max(contour_vals)))
+    ax.fill_between(x_vals, y_vals, contour_vals, facecolor="lightgrey")
 
 def outline(
     ax: plt.Axes, mesh: pv.DataSet, style: str, lw: int, projection: int = 2
@@ -91,7 +82,5 @@ def outline(
     "Plot the outline of a mesh on a matplotlib ax object."
     contour = mesh.extract_surface().strip(join=True)
     x_id, y_id = np.delete([0, 1, 2], projection)
-    x, y = spatial_quantity(mesh).transform(
-        contour.points[contour.lines[1:]].T[[x_id, y_id]]
-    )
+    x, y = contour.points[contour.lines[1:]].T[[x_id, y_id]]
     ax.plot(x, y, style, lw=lw)

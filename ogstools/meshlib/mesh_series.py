@@ -39,29 +39,19 @@ class MeshSeries:
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
 
-    def __init__(
-        self,
-        filepath: str | Path,
-        time_unit: str = "s",
-        spatial_unit: str = "m",
-        spatial_output_unit: str = "m",
-    ) -> None:
+    def __init__(self, filepath: str | Path) -> None:
         """
         Initialize a MeshSeries object
 
             :param filepath:    Path to the PVD or XDMF file.
-            :param time_unit:   Data unit of the timevalues.
-            :param data_length_unit:    Length unit of the mesh data.
-            :param output_length_unit:  Length unit in plots.
 
             :returns:           A MeshSeries object
         """
         if isinstance(filepath, Path):
             filepath = str(filepath)
         self.filepath = filepath
-        self.time_unit = time_unit
-        self.spatial_unit = spatial_unit
-        self.spatial_output_unit = spatial_output_unit
+        self._spatial_factor = 1.0
+        self._time_factor = 1.0
         self._mesh_cache: dict[float, Mesh] = {}
         self._mesh_func_opt: Callable[[Mesh], Mesh] | None = None
         self._data_type = filepath.split(".")[-1]
@@ -171,9 +161,8 @@ class MeshSeries:
         return (
             f"MeshSeries:\n"
             f"filepath:         {self.filepath}\n"
-            f"spatial_unit:     {self.spatial_unit}\n"
             f"data_type:        {self._data_type}\n"
-            f"timevalues:       {self._timevalues[0]}{self.time_unit} to {self._timevalues[-1]}{self.time_unit} in {len(self._timevalues)} steps\n"
+            f"timevalues:       {self.timevalues[0]} to {self.timevalues[-1]} in {len(self.timevalues)} steps\n"
             f"reader:           {reader}\n"
             f"rawdata_file:     {self.rawdata_file()}\n"
         )
@@ -205,19 +194,16 @@ class MeshSeries:
 
     def closest_timestep(self, timevalue: float) -> int:
         """Return the corresponding timestep from a timevalue."""
-        return int(np.argmin(np.abs(self._timevalues - timevalue)))
+        return int(np.argmin(np.abs(self.timevalues - timevalue)))
 
     def closest_timevalue(self, timevalue: float) -> float:
         """Return the closest timevalue to a timevalue."""
-        return self._timevalues[self.closest_timestep(timevalue)]
+        return self.timevalues[self.closest_timestep(timevalue)]
 
     def ip_tesselated(self) -> MeshSeries:
         "Create a new MeshSeries from integration point tessellation."
         ip_ms = MeshSeries(
-            Path(self.filepath).parent / "ip_meshseries.synthetic",
-            self.time_unit,
-            self.spatial_unit,
-            self.spatial_output_unit,
+            Path(self.filepath).parent / "ip_meshseries.synthetic"
         )
         ip_mesh = self.mesh(0).to_ip_mesh()
         ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
@@ -229,18 +215,20 @@ class MeshSeries:
             }
             ip_mesh.cell_data.update(ip_data)
             ip_ms._mesh_cache[
-                self.timevalues()[ts]
+                self.timevalues[ts]
             ] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
     def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Returns the mesh at the given timestep."""
-        timevalue = self.timevalues()[timestep]
-        if not np.any(timevalue_match := (self._timevalues == timevalue)):
+        timevalue = self.timevalues[timestep]
+        if not np.any(self.timevalues == timevalue):
             msg = f"Value {timevalue} not found in the array."
             raise ValueError(msg)
-        data_timestep = np.argmax(timevalue_match)
+        data_timestep = np.argmax(
+            self._timevalues * self._time_factor == timevalue
+        )
         if timevalue in self._mesh_cache:
             mesh = self._mesh_cache[timevalue]
         else:
@@ -254,11 +242,7 @@ class MeshSeries:
                 case _:
                     msg = f"Unexpected datatype {self._data_type}."
                     raise TypeError(msg)
-            mesh = Mesh(
-                self.mesh_func(pv_mesh),
-                self.spatial_unit,
-                self.spatial_output_unit,
-            )
+            mesh = Mesh(self.mesh_func(pv_mesh))
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
         return mesh
@@ -278,7 +262,7 @@ class MeshSeries:
 
     def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
         """Return the temporal interpolated mesh for a given timevalue."""
-        t_vals = self._timevalues
+        t_vals = self.timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
         ts2 = min(ts1 + 1, len(t_vals) - 1)
         if np.isclose(timevalue, t_vals[ts1]):
@@ -296,21 +280,18 @@ class MeshSeries:
             )
         return mesh
 
-    def timevalues(self, time_unit: str | None = None) -> np.ndarray:
-        "Return the timevalues, optionally converted to another time unit."
+    @property
+    def timevalues(self) -> np.ndarray:
+        "Return the timevalues."
         vals = self._timevalues
         for index in self._time_indices:
             vals = vals[index]
-        return (
-            u_reg.Quantity(vals, self.time_unit)
-            .to(self.time_unit if time_unit is None else time_unit)
-            .magnitude
-        )
+        return vals * self._time_factor
 
     @property
     def timesteps(self) -> list:
         """Return the timesteps of the timeseries data."""
-        return np.arange(len(self.timevalues()), dtype=int)
+        return np.arange(len(self.timevalues), dtype=int)
 
     def _xdmf_values(self, variable_name: str) -> np.ndarray:
         dataitems = self._xdmf_reader.data_items[variable_name]
@@ -337,7 +318,7 @@ class MeshSeries:
             ms_copy = self.copy(deep=True)
             ms_copy._mesh_func_opt = None  # pylint: disable=protected-access
             ms_copy.clear_cache()
-            raw_meshes = [ms_copy.mesh(0)] * len(result)
+            raw_meshes = list(ms_copy)
             for mesh, data in zip(raw_meshes, result, strict=True):
                 mesh[variable_name] = data
             meshes = list(map(self.mesh_func, raw_meshes))
@@ -369,7 +350,7 @@ class MeshSeries:
         if (
             self._data_type == "xdmf"
             and variable_name in self._xdmf_reader.data_items
-            and not all(tv in self._mesh_cache for tv in self.timevalues())
+            and not all(tv in self._mesh_cache for tv in self.timevalues)
         ):
             result = self._xdmf_values(variable_name)
         else:
@@ -409,7 +390,7 @@ class MeshSeries:
         mesh.clear_point_data()
         mesh.clear_cell_data()
         output_name = f"{prefix}_{variable.output_name}_time"
-        mesh[output_name] = self._timevalues[
+        mesh[output_name] = self.timevalues[
             np_func(self.values(variable), axis=0)
         ]
         return mesh
@@ -439,7 +420,6 @@ class MeshSeries:
         self,
         variable: Variable | str,
         func: Callable,
-        time_unit: str | None = "s",
         ax: plt.Axes | None = None,
         **kwargs: Any,
     ) -> plt.Figure | None:
@@ -449,7 +429,6 @@ class MeshSeries:
         :param variable:    The mesh variable to be aggregated.
         :param func:        The aggregation function to apply. E.g. np.min,
                             np.max, np.mean, np.median, np.sum, np.std, np.var
-        :param time_unit:   Output unit of the timevalues.
         :param ax:          matplotlib axis to use for plotting
         :param kwargs:      Keyword args passed to matplotlib's plot function.
 
@@ -457,9 +436,8 @@ class MeshSeries:
         """
         variable = get_preset(variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
-        time_unit = time_unit if time_unit is not None else self.time_unit
-        x_values = self.timevalues(time_unit)
-        x_label = f"time t / {time_unit}"
+        x_values = self.timevalues
+        x_label = f"time t / {plot.setup.time_unit}"
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -522,7 +500,6 @@ class MeshSeries:
         variable: Variable | str,
         variable_abscissa: Variable | str | None = None,
         labels: list[str] | None = None,
-        time_unit: str | None = "s",
         interp_method: Literal["nearest", "linear"] = "linear",
         colors: list | None = None,
         linestyles: list | None = None,
@@ -536,7 +513,6 @@ class MeshSeries:
             :param points:          The points to sample at.
             :param variable:   The variable to be sampled.
             :param labels:          The labels for each observation point.
-            :param time_unit:       Output unit of the timevalues.
             :param interp_method:   Choose the interpolation method, defaults to
                                     `linear` for xdmf MeshSeries and
                                     `probefilter` for pvd MeshSeries.
@@ -553,11 +529,9 @@ class MeshSeries:
         )
         if values.shape[0] == 1:
             values = values.ravel()
-        Q_ = u_reg.Quantity
-        time_unit_conversion = Q_(Q_(self.time_unit), time_unit).magnitude
         if variable_abscissa is None:
-            x_values = time_unit_conversion * self._timevalues
-            x_label = f"time / {time_unit}" if time_unit else "time"
+            x_values = self.timevalues
+            x_label = f"time / {plot.setup.time_unit}"
         else:
             variable_abscissa = get_preset(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
@@ -666,7 +640,6 @@ class MeshSeries:
         points: np.ndarray,
         y_axis: Literal["x", "y", "z", "dist", "auto"] = "auto",
         interpolate: bool = True,
-        time_unit: str = "s",
         time_logscale: bool = False,
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
@@ -681,7 +654,6 @@ class MeshSeries:
                         is changing, this axis is taken, otherwise the distance
                         along the line is taken.
         :param interpolate:     Smoothen the result be interpolation.
-        :param time_unit:       Time unit displayed on the x-axis.
         :param time_logscale:   Should log-scaling be applied to the time-axis?
         :param fig:             matplotlib figure to use for plotting.
         :param ax:              matplotlib axis to use for plotting.
@@ -707,9 +679,7 @@ class MeshSeries:
             msg = "Please provide fig and ax together or not at all."
             raise ValueError(msg)
 
-        time = Variable("", self.time_unit, time_unit).transform(
-            self._timevalues
-        )
+        time = self.timevalues
         if time_logscale:
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
@@ -738,8 +708,6 @@ class MeshSeries:
         else:
             y = np.linalg.norm(points - points[0], axis=1)
             ylabel = "distance"
-        spatial = plot.shared.spatial_quantity(self.mesh(0))
-        y = spatial.transform(y)
 
         if interpolate:
             grid_interp = RegularGridInterpolator(
@@ -764,8 +732,10 @@ class MeshSeries:
             ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
 
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
-        ax.set_ylabel(ylabel + " / " + spatial.output_unit, fontsize=fontsize)
-        xlabel = "time / " + time_unit
+        ax.set_ylabel(
+            ylabel + " / " + plot.setup.spatial_unit, fontsize=fontsize
+        )
+        xlabel = "time / " + plot.setup.time_unit
         if time_logscale:
             xlabel = "log10( " + xlabel + " )"
         ax.set_xlabel(xlabel, fontsize=fontsize)
@@ -779,8 +749,12 @@ class MeshSeries:
     def mesh_func(self) -> Callable[[Mesh], Mesh]:
         """Returns stored transformation function or identity if not given."""
         if self._mesh_func_opt is None:
-            return lambda mesh: mesh
-        return self._mesh_func_opt
+            return lambda mesh: mesh.scale(self._spatial_factor)
+        return lambda mesh: Mesh(
+            self._mesh_func_opt(mesh).scale(  # type: ignore[misc]
+                self._spatial_factor
+            )
+        )
 
     def transform(
         self, mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh
@@ -796,13 +770,46 @@ class MeshSeries:
         ms_copy = self.copy(deep=True)
         # pylint: disable=protected-access
         for cache_timevalue, cache_mesh in self._mesh_cache.items():
-            ms_copy._mesh_cache[cache_timevalue] = Mesh(
-                mesh_func(cache_mesh),
-                ms_copy.spatial_unit,
-                ms_copy.spatial_output_unit,
-            )
+            ms_copy._mesh_cache[cache_timevalue] = Mesh(mesh_func(cache_mesh))
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
         return ms_copy
+
+    def scale(
+        self,
+        spatial: float | tuple[str, str] = 1.0,
+        time: float | tuple[str, str] = 1.0,
+    ) -> MeshSeries:
+        """Scale the spatial coordinates and timevalues.
+
+        Useful to convert to other units, e.g. "m" to "km" or "s" to "a".
+        If given as tuple of strings, the latter units will also be set in
+        ot.plot.setup.spatial_unt and ot.plot.setup.time_unit for plotting.
+
+        :param spatial: Float factor or a tuple of str (from_unit, to_unit).
+        :param time:    Float factor or a tuple of str (from_unit, to_unit).
+        """
+        Qty = u_reg.Quantity
+        if isinstance(spatial, float):
+            spatial_factor = spatial
+        else:
+            spatial_factor = Qty(Qty(spatial[0]), spatial[1]).magnitude
+            plot.setup.spatial_unit = spatial[1]
+        if isinstance(time, float):
+            time_factor = time
+        else:
+            time_factor = Qty(Qty(time[0]), time[1]).magnitude
+            plot.setup.time_unit = time[1]
+        self._spatial_factor *= spatial_factor
+        self._time_factor *= time_factor
+
+        scaled_cache = {
+            timevalue * time_factor: Mesh(mesh.scale(spatial_factor))
+            for timevalue, mesh in self._mesh_cache.items()
+        }
+        self.clear_cache()
+        self._mesh_cache = scaled_cache
+
+        return self
 
     @typechecked
     def extract(

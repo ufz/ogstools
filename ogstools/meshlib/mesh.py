@@ -16,7 +16,6 @@ import pyvista as pv
 import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
-from ogstools.definitions import SPATIAL_UNITS_KEY
 from ogstools.plot import lineplots
 
 from . import data_processing, geo, ip_mesh, shape_meshing
@@ -76,16 +75,12 @@ class Mesh(pv.UnstructuredGrid):
     def __init__(
         self,
         pv_mesh: pv.UnstructuredGrid | None = None,
-        spatial_unit: str = "m",
-        spatial_output_unit: str = "m",
         **kwargs: dict,
     ):
         """
         Initialize a Mesh object
 
             :param pv_mesh:     Underlying pyvista mesh.
-            :param data_length_unit:    Length unit of the mesh data.
-            :param output_length_unit:  Length unit in plots.
         """
         if not pv_mesh:
             # for copy constructor
@@ -93,23 +88,13 @@ class Mesh(pv.UnstructuredGrid):
             super().__init__(**kwargs)
         else:
             super().__init__(pv_mesh, **kwargs)
-        self.field_data[SPATIAL_UNITS_KEY] = np.asarray(
-            [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
-        )
 
     @classmethod
-    def read(
-        cls,
-        filepath: str | Path,
-        spatial_unit: str = "m",
-        spatial_output_unit: str = "m",
-    ) -> Mesh:
+    def read(cls, filepath: str | Path) -> Mesh:
         """
         Initialize a Mesh object
 
             :param filepath:            Path to the mesh or shapefile file.
-            :param data_length_unit:    Spatial data unit of the mesh.
-            :param output_length_unit:  Spatial output unit of the mesh.
 
             :returns:                   A Mesh object
         """
@@ -118,9 +103,6 @@ class Mesh(pv.UnstructuredGrid):
         else:
             mesh = cls(pv.read(filepath))
 
-        mesh.field_data[SPATIAL_UNITS_KEY] = np.asarray(
-            [ord(char) for char in f"{spatial_unit},{spatial_output_unit}"]
-        )
         return mesh
 
     @classmethod

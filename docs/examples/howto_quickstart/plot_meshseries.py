@@ -31,11 +31,16 @@ ms
 # %% [markdown]
 # Accessing time values
 # =====================
-# Time values can be unit transformed. By default they are output in seconds.
+# Time values (and spatial coordinates) can be unit transformed via
+# :meth:`~ogstools.meshlib.mesh_series.MeshSeries.scale`. Either pass a tuple
+# to convert from the first to the second unit or pass a scaling factor.
 
 # %%
-print(f"First 3 time values are: {ms.timevalues()[:3]} s.")
-print(f"Last time value is: {ms.timevalues(time_unit='h')[-1]} h.")
+print(f"First 3 time values are: {ms.timevalues[:3]} s.")
+ms = ms.scale(time=("s", "h"))
+print(f"Last time value is: {ms.timevalues[-1]} h.")
+ms = ms.scale(time=3600.0)
+print(f"Last time value is: {ms.timevalues[-1]} s.")
 
 # %% [markdown]
 # Accessing meshes

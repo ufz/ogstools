@@ -21,26 +21,22 @@ _shp_dir = EXAMPLES_DIR / "shapefiles"
 
 
 def load_meshseries_THM_2D_PVD():
-    return MeshSeries(
-        str(_meshseries_dir / "2D.pvd"), time_unit="s", spatial_output_unit="km"
-    )
+    return MeshSeries(str(_meshseries_dir / "2D.pvd"))
 
 
 def load_meshseries_CT_2D_XDMF():
-    return MeshSeries(str(_meshseries_dir / "elder.xdmf"), time_unit="s")
+    return MeshSeries(str(_meshseries_dir / "elder.xdmf"))
 
 
 def load_meshseries_HT_2D_XDMF():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf"),
-        time_unit="s",
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf")
     )
 
 
 def load_meshseries_HT_2D_PVD():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd"),
-        time_unit="s",
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd")
     )
 
 
@@ -50,22 +46,18 @@ def load_meshseries_HT_2D_VTU():
             _meshseries_dir
             / "2D_single_fracture_HT_2D_single_fracture"
             / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"
-        ),
-        time_unit="s",
+        )
     )
 
 
 def load_meshseries_HT_2D_paraview_XMF():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf"),
-        time_unit="s",
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")
     )
 
 
 def load_mesh_mechanics_2D():
-    return Mesh.read(
-        _meshseries_dir / "mechanics_example.vtu", spatial_output_unit="km"
-    )
+    return Mesh.read(_meshseries_dir / "mechanics_example.vtu")
 
 
 msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"

@@ -23,7 +23,7 @@ from ogstools.variables import Variable, Vector, get_preset
 
 from . import features
 from .levels import compute_levels, median_exponent
-from .shared import setup, spatial_quantity
+from .shared import setup
 from .vectorplots import streamlines
 
 # TODO: define default data_name for regions in setup
@@ -167,8 +167,7 @@ def subplot(
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
-    spatial = spatial_quantity(surf_tri)
-    x, y = spatial.transform(surf_tri.points.T[[x_id, y_id]])
+    x, y = surf_tri.points.T[[x_id, y_id]]
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = variable.magnitude.transform(surf_tri)
     # Passing the data and not the mesh here purposely to ensure correct shape
@@ -239,7 +238,7 @@ def subplot(
         if not show:
             continue
         index = np.unravel_index(func(values), values.shape)[0]
-        x_pos, y_pos = spatial.transform(mesh.points[index, [x_id, y_id]])
+        x_pos, y_pos = mesh.points[index, [x_id, y_id]]
         value = values[mesh.find_closest_point(mesh.points[index])]
         color = utils.contrast_color(cmap(norm(value)))
         ax.plot(
@@ -273,7 +272,7 @@ def subplot(
                 mticker.FixedLocator(list(ax.get_xticks()))
             )
             secax.set_xticklabels(sec_labels)
-            secax.set_xlabel(f'{"xyz"[projection]} / {spatial.output_unit}')
+            secax.set_xlabel(f'{"xyz"[projection]} / {setup.spatial_unit}')
             utils.update_font_sizes(secax, fontsize)
 
 
@@ -371,9 +370,8 @@ def draw_plot(
 
     # One mesh is sufficient, it should be the same for all of them
     x_id, y_id, _, _ = utils.get_projection(np_meshes[0, 0])
-    spatial_unit = spatial_quantity(np_meshes[0, 0]).output_unit
     utils.label_spatial_axes(
-        np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=spatial_unit
+        np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=setup.spatial_unit
     )
     # make extra space for the upper limit of the colorbar
     if setup.layout == "tight" and fig is not None:

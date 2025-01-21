@@ -37,7 +37,7 @@ plot.setup.combined_colorbar = False
 # extrapolation.
 
 mesh_series = [meshlib.MeshSeries(mesh_path) for mesh_path in mesh_paths]
-timestep_sizes = [np.mean(np.diff(ms.timevalues())) for ms in mesh_series]
+timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
 meshes = [ms.mesh(ms.closest_timestep(timevalue)) for ms in mesh_series]
 topology: pv.UnstructuredGrid = meshes[-3]
 variable = variables.get_preset(variable_name, meshes[0])

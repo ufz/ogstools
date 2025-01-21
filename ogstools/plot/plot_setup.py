@@ -64,6 +64,10 @@ class PlotSetup:
     "Thickness of lines."
     label_split: int | None
     "Split Variable labels if they exceed this value."
+    spatial_unit: str
+    "Unit of the spatial dimension."
+    time_unit: str
+    "Unit of the time dimension."
 
     @classmethod
     def from_dict(cls: type["PlotSetup"], obj: dict) -> "PlotSetup":
@@ -89,9 +93,20 @@ class PlotSetup:
             fontsize=obj["fontsize"],
             linewidth=obj["linewidth"],
             label_split=obj["label_split"],
+            spatial_unit=obj["spatial_unit"],
+            time_unit=obj["time_unit"],
         )
 
     def reset(self) -> None:
         """Reset the plot setup to default values."""
         for k, v in self.from_dict(setup_dict).__dict__.items():
             self.__dict__[k] = v
+
+    def set_units(
+        self, spatial: str | None = None, time: str | None = None
+    ) -> None:
+        "Convenience function to update spatial and time unit at once."
+        if spatial is not None:
+            self.spatial_unit = spatial
+        if time is not None:
+            self.time_unit = time

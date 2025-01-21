@@ -201,7 +201,7 @@ class TestPlotting:
     def test_animation(self):
         """Test creation of animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(
             ot.variables.temperature,
             timevalues,
@@ -214,7 +214,7 @@ class TestPlotting:
     def test_save_animation(self):
         """Test saving of an animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(ot.variables.temperature, timevalues)
         if not utils.save_animation(anim, mkstemp()[1], 5):
             pytest.skip("Saving animation failed.")

@@ -34,7 +34,7 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 
 # %%
 timevalues = np.linspace(
-    mesh_series.timevalues()[0], mesh_series.timevalues()[-1], num=25
+    mesh_series.timevalues[0], mesh_series.timevalues[-1], num=25
 )
 
 # %% [markdown]

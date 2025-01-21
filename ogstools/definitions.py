@@ -8,5 +8,3 @@ import pathlib
 
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
 EXAMPLES_DIR = ROOT_DIR / "examples"
-
-SPATIAL_UNITS_KEY = "data_length_unit"
