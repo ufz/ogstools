@@ -601,9 +601,9 @@ class MeshSeries:
         **kwargs: Any,
     ) -> FuncAnimation:
         """
-        Create an animation for a variable with given meshindices.
+        Create an animation for a variable with given timevalues.
 
-        :param variable: the field to be visualized on all meshindices
+        :param variable: the field to be visualized on all timevalues
         :param timevalues: the timevalues to animate
         :param plot_func:   A function which expects to read a matplotlib Axes
                             and the time value of the current frame. Useful to
