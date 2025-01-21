@@ -4,6 +4,16 @@
 
 ## API breaking changes
 
+- FeflowModel-class introduced:
+  - FeflowModel.mesh -> to get the mesh with all FEFLOW properties, replaces feflowlib.convert_properties_mesh()
+  - FeflowModel.ogs_bulk_mesh -> to get the mesh with only materialIDs
+  - FeflowModel.subdomains -> access the boundary conditions and the source terms of the FEFLOW model, replaces feflowlib.extract_point_boundary_conditions(), feflowlib.extract_cell_boundary_conditions()
+  - FeflowModel.process -> see the process to be simulated
+  - FeflowModel.material_properties -> access the material_properties, replaces feflowlib.get_material_properties_of_H_model(), feflowlib.get_material_properties_of_HT_model(), feflowlib.get_material_properties_of_CT_model()
+  - FeflowModel.project -> access the project file
+  - FeflowModel.setup_prj() -> create the project file, replaces feflowlib.setup_prj_file()
+  - FeflowModel.save() -> save the mesh, subdomain, and the project-file
+  - FeflowModel.run() -> run the FEFLOW model in OGS
 - MeshSeries.data --> MeshSeries.values
 - MeshSeries.clear --> MeshSeries.clear_cache
 - In aggregate functions func str is replaced by callables (e.g. numpy.min)
@@ -21,17 +31,22 @@
 
 ## Bugfixes
 
+- FeflowModel: fix material_properties for HT process
+- FeflowModel: could not convert mixed celltypes in FEFLOW mesh
 - Failed sub library imports led to incomplete and unhandled package import
 - MeshSeries was unable to handle xdmf with just one timestep correctly
 - MeshSeries kept the hdf5 file handle open - parallel read access was not possible
 - OMP_NUM_THREADS was not working on Windows
-- Feflow mesh did not allow mixed celltypes
 - plot functions had sometimes different color schemes in the color bar
 - Tortuosity was not a medium property
 - BHE mesh (z coordinate negative)
 
 ## Features
 
+- FeflowModel: heterogeneous material properties are now saved on the mesh and not a separate mesh
+- FeflowModel: allow generic creation of project files for unsupported processes to have a proposal of a project file, which needs to be modified manually to have working OGS model
+- FeflowModel: allow configuration of time stepping and error tolerance for all processes
+- FeflowModel: use materialIDs from FEFLOW-user-data, if defined
 - MeshSeries gets copy() method.
 - MeshSeries gets transform() method, that applies an arbitrary transformation function to all time steps.
 - MeshSeries get extract() method to select points or cells via ids
@@ -56,6 +71,7 @@
 ## Examples
 
 - All examples use `import ogstools as ot`. To not be confused with ogs python bindings
+- New examples to show post-conversion modifications of FEFLOW model(modify boundary conditions and project-file)
 
 # Footnotes
 
