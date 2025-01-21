@@ -6,8 +6,6 @@ import numpy as np
 import ogs
 import pyvista as pv
 
-from ogstools.definitions import SPATIAL_UNITS_KEY
-
 Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
 
 
@@ -192,7 +190,6 @@ def to_ip_point_cloud(mesh: Mesh) -> pv.UnstructuredGrid:
     "Convert integration point data to a pyvista point cloud."
     # ipDataToPointCloud can't handle this
     bad_keys = [
-        SPATIAL_UNITS_KEY,
         "material_state_variable_ElasticStrain_ip",
         "free_energy_density_ip",
     ]
@@ -223,7 +220,6 @@ def to_ip_mesh(mesh: Mesh) -> pv.UnstructuredGrid:
         _mesh = mesh.extract_cells_by_type(cell_type)
         new_meshes += [tessellate(_mesh, cell_type, integration_order)]
     new_mesh = new_meshes[0]
-    new_mesh.field_data[SPATIAL_UNITS_KEY] = mesh.field_data[SPATIAL_UNITS_KEY]
     for _mesh in new_meshes[1:]:
         new_mesh = new_mesh.merge(_mesh)
     new_mesh = new_mesh.clean()

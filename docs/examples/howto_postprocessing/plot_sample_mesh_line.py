@@ -1,209 +1,144 @@
 """
-Extract a 1D profile from 2D and plot it
-========================================
+*****************************
+Plot data of a sampling lines
+*****************************
 
-.. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
+.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
+
+This example provides clean coding recipes for plotting data of meshes over
+sampling lines. We also present different ways to setup the sampling lines.
+For plotting we us the function :py:func:`ogstools.plot.line`.
 """
 
 # %%
+
+# sphinx_gallery_start_ignore
+
+# sphinx_gallery_thumbnail_number = -1
+
+# sphinx_gallery_end_ignore
+
+from itertools import pairwise
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pyvista as pv
 
 import ogstools as ot
 from ogstools import examples
 
-# %% [markdown]
-# Single fracture
-# ------------------
-# Define a profile line by providing a list of points in x, y, z coordinates
-# and load an example data set:
-
-# %%
-mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
-
-profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
-
-# %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
-    mesh, ["pressure", "temperature"], profile_HT
-)
+ot.plot.setup.show_region_bounds = False
+mesh = examples.load_mesh_mechanics_2D()
 
 # %% [markdown]
-# It has returned a pandas DataFrame containing all information about the
-# profile and a numpy array with the position of the "knot-points".
-# Let's investigate the DataFrame first:
+# Simple case: straight line
+# ==========================
+# We use the ``pyvista`` function ``sample_over_line`` and use two points to define
+# the line and get a Mesh with the sampled data. Let's plot the Mesh and the
+# line together.
 
 # %%
-mesh_sp.head(10)
+sample = mesh.sample_over_line([25, -460, 0], [100, -800, 0])
+fig = ot.plot.contourf(mesh, ot.variables.temperature)
+fig = ot.plot.line(
+    mesh=sample, y_var="y", x_var="x", ax=fig.axes[0], linestyle="--"
+)
 
 # %% [markdown]
-# We can see the spatial coordinates of points on the profile ("x", "y", "z"
-# - columns), distances from the beginning of the profile ("dist") and within
-# current segment ("dist_in_segment"). Note, that since we defined our profile
-# on only two points, there is only one segment, hence in this special case
-# columns dist and dist_in_segment are identical. At the end of the DataFrame
-# we can can find two columns with the variables that we are interested in:
-# "temperature" and "pressure". Each occupies one column, as those are scalar
-# values. Using columns "dist", "pressure" and "temperature" we can easily
-# plot the data:
+# Now we plot the temperature data. The spatial coordinate for the x-axis is
+# automatically detected here by not passing ``x_var`` explicitly.
 
 # %%
-fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-ax = mesh.plot_linesample(
-    x="dist",
-    variable="pressure",
-    profile_points=profile_HT,
-    ax=ax,
-    fontsize=15,
-)
-ax_twinx = ax.twinx()
-ax_twinx = mesh.plot_linesample(
-    x="dist",
-    variable="temperature",
-    profile_points=profile_HT,
-    ax=ax_twinx,
-    fontsize=15,
-)
-ot.plot.utils.color_twin_axes(
-    [ax, ax_twinx],
-    [ot.variables.pressure.color, ot.variables.temperature.color],
-)
+fig = ot.plot.line(sample, ot.variables.temperature)
 fig.tight_layout()
 
 
 # %% [markdown]
-# What happens when we are interested in a vector variable?
-# We can see it in the following example using the Darcy velocity:
+# Simple case: circular arc
+# =========================
+# With 3 points we can define an arc over which to sample the data.
+# Having the arc directly on a boundary might result in some gaps in the
+# sampled data, thus we extend the arc by a small margin.
 
 # %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
-    mesh, "darcy_velocity", profile_HT
+sample = mesh.sample_over_circular_arc(
+    pointa=[100 - 1e-4, -650, 0],
+    pointb=[200 + 1e-4, -650, 0],
+    center=[150, -650, 0],
 )
-
-# %%
-mesh_sp.head(5)
-
-# %% [markdown]
-# Now we have two columns for the variable. The Darcy velocity is a vector,
-# therefore "sample_over_polyline" has split it into two columns and appended
-# the variable name with increasing integer. Note, that this suffix has no
-# physical meaning and only indicates order. It is up to user to interpret it
-# in a meaningful way. By the
-# `OpenGeoSys conventions <https://www.opengeosys.org/docs/userguide/basics/conventions/#a-namesymmetric-tensorsa--symmetric-tensors-and-kelvin-mapping>`_,
-# "darcy_velocity_0" will be in the x-direction and "darcy_velocity_1" in
-# y-direction.
-
-
-# %% [markdown]
-# Elder benchmark
-# ------------------
-# In this example we will use a Variable object from the ogstools to
-# sample the data. This allows "sample_over_polyline" to automatically
-# convert from the "data_unit" to the "output_unit":
-
-# %%
-profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
-mesh = examples.load_meshseries_CT_2D_XDMF().mesh(11)
-
-# %%
-mesh_sp, mesh_kp = ot.meshlib.sample_polyline(
-    mesh, ot.variables.saturation, profile_CT
-)
-
-# %% [markdown]
-# As before we can see the profile parameters and propertiy values in a
-# DataFrame:
-
-# %%
-mesh_sp.head(5)
-
-
-# %% [markdown]
-# This time we will prepare more complicated plot showing both the mesh and
-# the profile.
-
-# %%
-fig, ax = mesh.plot_linesample_contourf(
-    ot.variables.saturation, profile_CT, resolution=100
-)
-
-# %% [markdown]
-# THM
-# ------
-# It is also possible to obtain more than one variable at the same time using
-# more complex profiles. They can be constructed by providing more than
-# 2 points. With those points:
-
-# %%
-profile_THM = np.array(
-    [
-        [-1000.0, -175.0, 6700.0],  # Point A
-        [-600.0, -600.0, 6700.0],  # Point B
-        [100.0, -300.0, 6700.0],  # Point C
-        [3500, -900.0, 6700.0],  # Point D
-    ]
-)
-# %% [markdown]
-# the profile will run as follows:
-#
-# .. math::
-#
-#   \text{AB} \rightarrow \text{BC} \rightarrow \text{CD}
-#
-# Point B will at the same time be the last point in the first segment AB
-# and first one in second segment BC, however in the returned array,
-# it will occur only once.
-# For this example we will use a different dataset:
-
-# %%
-mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
-
-# %%
-ms_THM_sp, dist_at_knot = ot.meshlib.sample_polyline(
-    mesh,
-    [ot.variables.pressure, ot.variables.temperature],
-    profile_THM,
-    resolution=100,
-)
-
-# %% [markdown]
-# Again, we can investigate the returned DataFrame, but this time we will
-# have a look at its beginning:
-
-# %%
-ms_THM_sp.head(5)
-
-# %%
-# and end:
-
-# %%
-ms_THM_sp.tail(10)
-
-# %% [markdown]
-# Note, that unlike in the first example, here the columns "dist" and
-# "dist_in_segment" are not identical, as this time profile consists of
-# multiple segments. The following figure illustrates the difference:
-plt.rcdefaults()
-ax: plt.Axes
-fig, ax = plt.subplots(1, 1, figsize=(7, 3))
-ax.plot(ms_THM_sp["dist"], label="dist")
-ax.plot(ms_THM_sp["dist_in_segment"], label="dist_in_segment")
-ax.set_xlabel("Point ID / -")
-ax.set_ylabel("Distance / m")
-ax.legend()
+fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
+ot.plot.contourf(mesh, ot.variables.displacement["x"], fig=fig, ax=axs[1])
+ot.plot.line(sample, "y", "x", axs[1], linewidth="8", color="red")
+ot.plot.line(sample, ot.variables.displacement["x"], ax=axs[0])
 fig.tight_layout()
 
 # %% [markdown]
-# The orange line returns to 0 twice. It is because of how the overlap of nodal
-# points between segments is handled. A nodal point always belongs to the
-# segment it starts: point B is included in segment BC but not AB and point
-# C in CD but not in in BC. The following figure shows the profile on the mesh:
+# Other methods to setup the sampling line
+# ========================================
+# The following section shows different methods of creating sampling lines.
+
+# %% [markdown]
+# Linear spaced points
+# --------------------
+# This basically does the same as the ``pyvista`` function `sample_over_line`.
 
 # %%
-# plt.rcdefaults()
-fig, ax = mesh.plot_linesample_contourf(
-    [ot.variables.pressure, ot.variables.temperature],
-    profile_THM,
-    resolution=100,
-)
+pts = np.linspace([50, -460, 0], [50, -800, 0], 100)
+sample_1 = pv.PolyData(pts).sample(mesh)
+
+# %% [markdown]
+# Mutilsegmented line from list of points
+# ---------------------------------------
+# The following code allows you to have a line connecting multiple observation
+# points.
+
 # %%
+obs_pts = np.asarray([[150, -460, 0], [50, -650, 0], [150, -800, 0]])
+pts = np.vstack([np.linspace(pt1, pt2, 50) for pt1, pt2 in pairwise(obs_pts)])
+sample_2 = pv.PolyData(pts).sample(mesh)
+
+# %% [markdown]
+# Spline from list of points
+# --------------------------
+# You can also create smooth sampling lines by using a fitting function.
+# The following creates a second order polynomial fit for the x-coordinates
+# in dependence of the y-coordinates.
+
+# %%
+pts = np.asarray([[200, -460, 0], [250, -650, 0], [200, -800, 0]])
+fit = np.poly1d(np.polyfit(pts[:, 1], pts[:, 0], 2))
+y = np.linspace(-460, -800, 100)
+pts = np.transpose([fit(y), y, y * 0])
+sample_3 = pv.PolyData(pts).sample(mesh)
+
+# %% [markdown]
+# Use existing geometry
+# ---------------------
+# Another way to setup the sampling line is to extract points from the domain
+# mesh. Here, we use the ``clip`` function from ``pyvista`` and some boolean logic,
+# to extract a vertical line through the center, which follows the boundary of
+# the hole. We need to sort the points however, to have them adjacent.
+
+# %%
+edges = mesh.clip("x").extract_feature_edges()
+is_top_bot = np.isin(edges.points[:, 1], [-800, -460])
+is_left = edges.points[:, 0] == 0
+pts = edges.points[np.invert(is_top_bot | is_left)]
+sample_4 = pv.PolyData(pts[np.argsort(pts[:, 1])]).sample(mesh)
+
+# %% [markdown]
+# Now we plot all samples for comparison.
+
+# %%
+fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
+u_x = ot.variables.displacement["x"]
+ot.plot.contourf(mesh, u_x, fig=fig, ax=axs[1])
+for i, sample in enumerate([sample_1, sample_2, sample_3, sample_4]):
+    c = f"C{i}"  # cycle through default color cycle
+    ot.plot.line(sample, "y", "x", ax=axs[1], linestyle="--", color=c)
+    ot.plot.line(sample, "y", u_x, ax=axs[0], label=f"sample {i + 1}", color=c)
+fig.tight_layout()
+
+# %% [markdown]
+# If you want to sample data over multiple timesteps in a MeshSeries, have a
+# look at :ref:`sphx_glr_auto_examples_howto_plot_plot_timeslice.py`.

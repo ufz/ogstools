@@ -34,14 +34,14 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 
 # %%
 timevalues = np.linspace(
-    mesh_series.timevalues()[0], mesh_series.timevalues()[-1], num=25
+    mesh_series.timevalues[0], mesh_series.timevalues[-1], num=25
 )
 
 # %% [markdown]
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
 # Note that rendering many frames in conjunction with large meshes might take
-# a really long time. We can pass a `plot_func` which can apply custom
+# a really long time. We can pass a ``plot_func`` which can apply custom
 # formatting and / or plotting. To modify the domain, we can use the transform
 # method of MeshSeries.
 

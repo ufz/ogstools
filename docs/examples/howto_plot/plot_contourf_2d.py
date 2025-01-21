@@ -17,7 +17,7 @@ import ogstools as ot
 from ogstools import examples
 
 ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
+mesh = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km")).mesh(1)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -33,7 +33,7 @@ fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
 # Now, let's plot the temperature field (point_data) at the first timestep.
-# The default temperature variable from the `variables` reads the temperature
+# The default temperature variable from the ``variables`` reads the temperature
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%

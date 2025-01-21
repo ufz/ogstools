@@ -88,7 +88,7 @@ fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
 for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
-    mesh_series = ot.MeshSeries(sim_result)
+    mesh_series = ot.MeshSeries(sim_result).scale(time=("s", "yrs"))
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
         mesh = mesh_series.mesh(ts)
@@ -96,7 +96,7 @@ for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
     max_T = ot.variables.temperature.transform(results["temperature"])
     # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
-    tv = np.asarray(mesh_series.timevalues("a"))
+    tv = np.asarray(mesh_series.timevalues)
     ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")
     edges = np.append(0, tv)
     mean_t = 0.5 * (edges[1:] + edges[:-1])

@@ -7,18 +7,18 @@
 # Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """Plotting utilities for simple access."""
 
+from .shared import setup  # noqa: I001
 from . import utils
 from .contourplots import contourf, subplot
-from .features import outline, shape_on_top
+from .features import shape_on_top
 from .levels import compute_levels
-from .shared import setup
+from .lineplots import line
 from .vectorplots import quiver, streamlines
 
 __all__ = [
     "compute_levels",
     "contourf",
-    "outline",
-    "plot_time_slice",
+    "line",
     "quiver",
     "setup",
     "shape_on_top",

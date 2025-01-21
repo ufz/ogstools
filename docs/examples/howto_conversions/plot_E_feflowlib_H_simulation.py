@@ -99,7 +99,8 @@ slices = np.reshape(
 )
 fig = ot.plot.contourf(slices, diff_head)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
-    ax.set_title(f"z = {slice.center[2]:.1f} {ms.spatial_output_unit}")
+    ax.set_title(f"z = {slice.center[2]:.1f} m", fontsize=32)
+
 # %%
 # 6.2 Slices are taken along the y-axis.
 slices = np.reshape(
@@ -107,4 +108,4 @@ slices = np.reshape(
 )
 fig = ot.plot.contourf(slices, diff_head)
 for ax, slice in zip(fig.axes, np.ravel(slices), strict=False):
-    ax.set_title(f"y = {slice.center[1]:.1f} {ms.spatial_output_unit}")
+    ax.set_title(f"y = {slice.center[1]:.1f} m", fontsize=32)

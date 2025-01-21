@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import ogstools as ot
 from ogstools import examples
 
-meshseries = examples.load_meshseries_THM_2D_PVD()
+meshseries = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km"))
 
 ot.plot.setup.combined_colorbar = False
 

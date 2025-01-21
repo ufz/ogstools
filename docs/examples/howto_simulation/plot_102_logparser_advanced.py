@@ -72,7 +72,7 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 # For this example we are only interested in the number of iterations per time step.
 # Because the parsing process is expensive, it is useful to store the records to a file.
 # According to :py:mod:`ogstools.logparser.parse_file`
-# via parameter `regexes` a list of reduced or custom regexes can be provided.
+# via parameter ``regexes`` a list of reduced or custom regexes can be provided.
 #
 # Save and load records
 # ~~~~~~~~~~~~~~~~~~~~~

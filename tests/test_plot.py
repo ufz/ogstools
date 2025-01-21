@@ -201,7 +201,7 @@ class TestPlotting:
     def test_animation(self):
         """Test creation of animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(
             ot.variables.temperature,
             timevalues,
@@ -214,7 +214,7 @@ class TestPlotting:
     def test_save_animation(self):
         """Test saving of an animation."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues()[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
         anim = meshseries.animate(ot.variables.temperature, timevalues)
         if not utils.save_animation(anim, mkstemp()[1], 5):
             pytest.skip("Saving animation failed.")
@@ -263,33 +263,11 @@ class TestPlotting:
     def test_lineplot(self):
         """Test creation of a linesplot from sampled profile data"""
         mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
-        profile_HT = np.array([[4, 2, 0], [4, 18, 0]])
-        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-        ax = mesh.plot_linesample(
-            x="dist",
-            variable="pressure",
-            profile_points=profile_HT,
-            ax=ax,
-            fontsize=15,
-        )
-        ax_twinx = ax.twinx()
-        ax_twinx = mesh.plot_linesample(
-            x="dist",
-            variable="temperature",
-            profile_points=profile_HT,
-            ax=ax_twinx,
-            fontsize=15,
-        )
-        plt.close()
-
-    def test_plot_profile(self):
-        """Test creation of a profile plot from sampled profile data"""
-        ms_CT = examples.load_meshseries_CT_2D_XDMF()
-        profile_CT = np.array([[47.0, 1.17, 72.0], [-4.5, 1.17, -59.0]])
-        fig, ax = ms_CT.mesh(11).plot_linesample_contourf(
-            ot.variables.saturation,
-            profile_CT,
-            resolution=100,
-            plot_nodal_pts=True,
-        )
-        plt.close()
+        profile_HT = mesh.sample_over_line([4, 2, 0], [4, 18, 0])
+        ot.plot.setup.set_units(spatial="km", time="a")
+        fig = ot.plot.line(profile_HT, "pressure")
+        ot.plot.line(profile_HT, ot.variables.pressure, "x", ax=fig.axes[0])
+        fig = ot.plot.line(
+            profile_HT, "y", "x", figsize=[5, 5], color="g", linewidth=1,
+            ls="--", label="test", grid=True,
+        )  # fmt: skip

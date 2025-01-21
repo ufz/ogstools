@@ -89,12 +89,18 @@ def update_font_sizes(
     """
     Update font sizes of labels and texts.
 
+    This also scales the ticks accordingly.
+
     :param ax: matplotlib axes which should be updated
     :param fontsize: font size for the labels and ticks
     """
     if fontsize is None:
         fontsize = setup.fontsize
     ax: plt.Axes
+    scale = fontsize / setup.fontsize
+    tick_pad = scale * setup.tick_pad
+    tick_len = scale * setup.tick_length
+    min_tick_len = tick_len * 2.0 / 3.5  # matplotlib default
     for ax in np.ravel(np.asarray(axes)):
         tick_labels = ax.get_xticklabels() + ax.get_yticklabels()
         labels = [ax.title, ax.xaxis.label, ax.yaxis.label]
@@ -102,6 +108,8 @@ def update_font_sizes(
         ax.tick_params(axis="both", which="both", labelsize=fontsize)
         for item in tick_labels + labels + [offset_text]:
             item.set_fontsize(fontsize)
+        ax.tick_params("both", which="major", pad=tick_pad, length=tick_len)
+        ax.tick_params("both", which="minor", pad=tick_pad, length=min_tick_len)
     return
 
 

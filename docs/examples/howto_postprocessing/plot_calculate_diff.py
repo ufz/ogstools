@@ -69,7 +69,7 @@ def custom_mesh(lengths: int, element_order: int, quads: bool) -> ot.Mesh:
 # the variable of interest, the difference will work fine.
 
 # %%
-mesh_series = examples.load_meshseries_THM_2D_PVD()
+mesh_series = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km"))
 mesh1 = mesh_series.mesh(0)
 mesh2 = mesh_series.mesh(-1)
 

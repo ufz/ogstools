@@ -31,11 +31,16 @@ ms
 # %% [markdown]
 # Accessing time values
 # =====================
-# Time values can be unit transformed. By default they are output in seconds.
+# Time values (and spatial coordinates) can be unit transformed via
+# :meth:`~ogstools.meshlib.mesh_series.MeshSeries.scale`. Either pass a tuple
+# to convert from the first to the second unit or pass a scaling factor.
 
 # %%
-print(f"First 3 time values are: {ms.timevalues()[:3]} s.")
-print(f"Last time value is: {ms.timevalues(time_unit='h')[-1]} h.")
+print(f"First 3 time values are: {ms.timevalues[:3]} s.")
+ms = ms.scale(time=("s", "h"))
+print(f"Last time value is: {ms.timevalues[-1]} h.")
+ms = ms.scale(time=3600.0)
+print(f"Last time value is: {ms.timevalues[-1]} s.")
 
 # %% [markdown]
 # Accessing meshes
@@ -62,7 +67,7 @@ mesh_ts10.plot(show_edges=True)
 # number of points/cells, and the last dimension is the number of components of
 # the variable.
 #
-# By default, `values` would read the entire dataset. If only a subset of the
+# By default, ``values`` would read the entire dataset. If only a subset of the
 # MeshSeries should be read you can select the relevant timesteps by indexing /
 # slicing the MeshSeries directly. This selection will also be adhered to if you
 # read individual meshes.
@@ -77,7 +82,7 @@ print("Every second timestep:", np.shape(ms[::2].values("temperature")))
 print("Last two steps:", np.shape(ms[-2:].values("darcy_velocity")))
 
 # %% [markdown]
-# To select points or cells you can use the `extract` method to specify the
+# To select points or cells you can use the ``extract`` method to specify the
 # corresponding ids.
 
 # %%
@@ -86,7 +91,7 @@ print("Data on extracted points:", np.shape(temp_at_points))
 print("Temperatures at last timestep:", temp_at_points[-1])
 
 # %% [markdown]
-# You can also use pyvista dataset filters to `transform` the domain for the
+# You can also use pyvista dataset filters to ``transform`` the domain for the
 # entire MeshSeries.
 
 # %%

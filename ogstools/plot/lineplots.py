@@ -1,167 +1,79 @@
-from string import ascii_uppercase
-from typing import Any, Literal
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
 
-from ogstools.meshlib.data_processing import sample_polyline
-from ogstools.plot import contourf, setup, utils
-from ogstools.plot.shared import spatial_quantity
+from ogstools.plot import setup, utils
 from ogstools.variables import Variable, get_preset
 
 
-# TODO: ability to swap x and y?
-def linesample(
+def line(
     mesh: pv.UnstructuredGrid,
-    x: str,  # TODO renamed it to "along" maybe
-    variable: str | Variable,
-    profile_points: np.ndarray,
-    ax: plt.Axes,
-    resolution: int | None = 100,
-    grid: Literal["major", "both", None] = None,
+    y_var: str | Variable,
+    x_var: str | Variable | None = None,
+    ax: plt.Axes | None = None,
     **kwargs: Any,
-) -> plt.Axes:
+) -> plt.Figure | None:
+    """Plot some data of a (1D) mesh.
+
+    You can pass "x", "y" or "z" to either of x_var or y_var to specify which
+    spatial dimension should be used for the corresponding axis. You can also
+    pass two data variables for a phase plot.
+
+    :param mesh:    The mesh which contains the data to plot
+    :param y_var:   The variable to use for the y-axis
+    :param x_var:   The variable to use for the x-axis, if None automatic
+                    detection of spatial axis is tried.
+    :param ax:      The matplotlib axis to use for plotting, if None creates a
+                    new figure.
+    :Keyword Arguments:
+        - figsize:      figure size
+        - color:        color of the line
+        - linewidth:    width of the line
+        - linestyle:    style of the line
+        - label:        label in the legend
+        - grid:         if True, show grid
+        - all other kwargs get passed to matplotlib's plot function
     """
-    Plot selected variables obtained from sample_over_polyline function,
-    this function calls to it internally. Values provided in param x and y
-    refer to columns of the DataFrame returned by it.
 
-    :param mesh: mesh to sample from.
-    :param x: Value to be used on x-axis of the plot
-    :param variable: Values to be used on y-axis of the plot
-    :param profile_points: Points defining the profile (and its segments)
-    :param ax: User-created array of Matplotlib axis object
-    :param resolution: Resolution of the sampled profile. Total number of
-        points within all profile segments.
-    :param resolution: Resolution of the sampled profile. Total number of
-        points within all profile segments.
-    :param grid: Which gridlines should be drawn?
-    :param kwargs: Optional keyword arguments passed to matplotlib.pyplot.plot
-        to customize plot options like a line label (for auto legends), linewidth,
-        antialiasing, marker face color.
+    figsize = kwargs.pop("figsize", [16, 10])
+    ax_ = plt.subplots(figsize=figsize)[1] if ax is None else ax
 
-    :returns: Matplotlib Axes object
-    """
+    if x_var is None:
+        non_flat_axis = np.argwhere(
+            np.invert(np.all(np.isclose(mesh.points, mesh.points[0]), axis=0))
+        ).ravel()
+        x_var = "xyz"[non_flat_axis[0]]
 
-    variable = get_preset(variable, mesh)
-    mesh_sp, _ = sample_polyline(mesh, variable, profile_points, resolution)
+    x_var = get_preset(x_var, mesh).magnitude
+    y_var = get_preset(y_var, mesh).magnitude
 
-    assert isinstance(ax, plt.Axes)
+    kwargs.setdefault("color", y_var.color)
+    pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
+    lw_scale = 5 if pure_spatial else 3
+    kwargs.setdefault("linewidth", setup.linewidth * lw_scale)
+    fontsize = kwargs.pop("fontsize", setup.fontsize)
+    show_grid = kwargs.pop("grid", True) and not pure_spatial
 
-    spatial_qty = spatial_quantity(mesh)
-    kwargs.setdefault("label", variable.data_name)
-    kwargs.setdefault("color", variable.color)
-    kwargs.setdefault("linestyle", variable.linestyle)
-    if "ls" in kwargs:
-        kwargs.pop("linestyle")
+    ax_.plot(x_var.transform(mesh), y_var.transform(mesh), **kwargs)
 
-    utils.update_font_sizes(axes=ax, fontsize=kwargs.pop("fontsize", 20))
-    ax.plot(
-        spatial_qty.transform(mesh_sp[x]),
-        mesh_sp[variable.data_name],
-        **kwargs,
-    )
-    ax.set_xlabel("Profile distance / " + spatial_qty.output_unit)
-    ax.set_ylabel(variable.get_label(setup.label_split))
+    if "label" in kwargs:
+        ax_.legend(fontsize=fontsize)
 
-    if grid in ["both", "major"]:
-        ax.grid(which="major", color="lightgrey", linestyle="-")
-    if grid == "major":
-        ax.minorticks_off()
-    if grid == "both":
-        ax.grid(which="minor", color="0.95", linestyle="--")
-        ax.minorticks_on()
+    if ax_.get_xlabel() == "":
+        ax_.set_xlabel(x_var.get_label(setup.label_split))
+    if ax_.get_ylabel() == "":
+        ax_.set_ylabel(y_var.get_label(setup.label_split))
 
-    return ax
+    utils.update_font_sizes(axes=ax_, fontsize=fontsize)
 
+    if show_grid:
+        ax_.grid(which="major", color="lightgrey", linestyle="-")
+        ax_.grid(which="minor", color="0.95", linestyle="--")
+        ax_.minorticks_on()
 
-def linesample_contourf(
-    mesh: pv.UnstructuredGrid,
-    variables: str | list | Variable,
-    profile_points: np.ndarray,
-    resolution: int | None = None,
-    plot_nodal_pts: bool | None = True,
-    nodal_pts_labels: str | list | None = None,
-) -> tuple[plt.Figure, plt.Axes]:
-    """
-    Default plot for the data obtained from sampling along a profile on a mesh.
+    if ax is not None:
+        return ax.figure
 
-    :param mesh:            mesh to plot and sample from.
-    :param variables:       Variables to be read from the mesh
-    :param profile_points:  Points defining the profile (and its segments)
-    :param resolution:  Resolution of the sampled profile. Total number of
-                        points within all profile segments.
-    :param plot_nodal_pts:      Plot and annotate all nodal points in profile
-    :param nodal_pts_labels:    Labels for nodal points (only use if
-                                plot_nodal_points is set to True)
-
-    :returns: Tuple containing Matplotlib Figure and Axis objects
-    """
-    # TODO: Add support for plotting only geometry at top subplot and
-    # lineplot with twinx in the bottom one
-    if not isinstance(variables, list):
-        variables = [variables]
-
-    _, dist_at_knot = sample_polyline(
-        mesh, variables, profile_points, resolution=resolution
-    )
-
-    fig, ax = plt.subplots(
-        2, len(variables), figsize=(len(variables) * 13, 12), squeeze=False
-    )
-    spatial_qty = spatial_quantity(mesh)
-    x_id, y_id, _, _ = utils.get_projection(mesh)
-    for index, variable in enumerate(variables):
-        contourf(mesh, variable, fig=fig, ax=ax[0, index])
-        linesample(
-            mesh,
-            x="dist",
-            variable=variable,
-            profile_points=profile_points,
-            ax=ax[1, index],
-            resolution=resolution,
-            grid="both",
-        )
-
-        if plot_nodal_pts:
-            if nodal_pts_labels is None:
-                nodal_pts_labels = list(
-                    ascii_uppercase[0 : len(profile_points)]
-                )
-            ax[0][index].plot(
-                spatial_qty.transform(profile_points[:, x_id]),
-                spatial_qty.transform(profile_points[:, y_id]),
-                "-*",
-                linewidth=2,
-                markersize=7,
-                color="orange",
-            )
-            for nodal_pt_id, nodal_pt in enumerate(dist_at_knot):
-                xy = profile_points[nodal_pt_id, [x_id, y_id]]
-                text_xy = utils.padded(ax[0][index], *spatial_qty.transform(xy))
-                ax[0][index].text(
-                    *text_xy,
-                    nodal_pts_labels[nodal_pt_id],
-                    color="orange",
-                    fontsize=setup.fontsize,
-                    ha="center",
-                    va="center",
-                )
-                ax[1][index].axvline(
-                    spatial_qty.transform(nodal_pt),
-                    linestyle="--",
-                    color="orange",
-                    linewidth=2,
-                )
-            ax_twiny = ax[1][index].twiny()
-            ax_twiny.set_xlim(ax[1][index].get_xlim())
-            ax_twiny.set_xticks(
-                spatial_qty.transform(dist_at_knot),
-                nodal_pts_labels,
-                color="orange",
-            )
-    utils.update_font_sizes(fig.axes)
-    fig.tight_layout()
-
-    return fig, ax
+    return ax_.figure

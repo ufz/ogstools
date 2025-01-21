@@ -4,7 +4,7 @@ Remeshing with triangle elements
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
-This short example showcases the function `remesh_with_tri` which allows us to
+This short example showcases the function ``remesh_with_tri`` which allows us to
 take an existing mesh and re-discretize it with triangle elements. This is
 useful for models, where the underlying meshing script is not available or hard
 to adapt.

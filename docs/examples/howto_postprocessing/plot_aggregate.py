@@ -19,7 +19,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF()
+mesh_series = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "a"))
 saturation = ot.variables.saturation
 
 # %% [markdown]
@@ -54,7 +54,7 @@ fig = mesh.plot_contourf(saturation)
 
 # %%
 mesh = mesh_series.time_of_max(saturation)
-fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "s", "a"))
+fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "a", "a"))
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
@@ -76,4 +76,4 @@ fig = mesh.plot_contourf(saturation)
 # of e.g. the max or mean value of a variable in the entire domain.
 
 # %%
-fig = mesh_series.plot_domain_aggregate(saturation, np.mean, time_unit="a")
+fig = mesh_series.plot_domain_aggregate(saturation, np.mean)

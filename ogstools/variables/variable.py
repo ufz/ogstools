@@ -56,8 +56,6 @@ class Variable:
     """Does this variable only have categoric values?"""
     color: str | None = None
     """Default color for plotting"""
-    linestyle: tuple | None = None
-    """Default linestyle for plotting"""
 
     def __post_init__(self) -> None:
         if not self.output_name:
@@ -99,7 +97,6 @@ class Variable:
             bilinear_cmap=new_variable.bilinear_cmap,
             categoric=new_variable.categoric,
             color=new_variable.color,
-            linestyle=new_variable.linestyle,
         ).replace(**changes)
 
     def transform(

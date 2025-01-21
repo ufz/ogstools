@@ -39,7 +39,7 @@ df_ts_it
 # %% [markdown]
 # The log file
 # -------------
-# Running `ogs` in the command line outputs the logs into the console output. With
+# Running ``ogs`` in the command line outputs the logs into the console output. With
 # `tee
 # <https://en.wikipedia.org/wiki/Tee_(command)>`_ in Linux and Mac
 # and
@@ -64,7 +64,7 @@ df_ts_it
 # :py:mod:`ogstools.logparser.fill_ogs_context` are explained in
 # :ref:`sphx_glr_auto_examples_howto_simulation_plot_102_logparser_advanced.py`.
 # All predefined analyses need the result of fill_ogs_context.
-# Here `const_viscosity_thermal_convection_log` is string representing the
+# Here ``const_viscosity_thermal_convection_log`` is string representing the
 # location of the ogs log file.
 print(log_const_viscosity_thermal_convection)
 # %%
@@ -81,7 +81,7 @@ df_log = fill_ogs_context(df_records)
 #
 # Here we are interested in every time step of the simulation and how many
 # iterations have been needed.
-# The predefined analyses only work with logs from `ogs` run with level `info` or finer (`debug`), like `ogs -l info` or `ogs - l debug`.
+# The predefined analyses only work with logs from ``ogs`` run with level ``info`` or finer (`debug`), like `ogs -l info` or `ogs - l debug`.
 # (see
 # `OGS Developer Guide - log and debug output
 # <https://www.opengeosys.org/docs/devguide/advanced/log-and-debug-output>`_
@@ -96,6 +96,6 @@ df_ts_it
 # Pandas to plot
 # --------------
 # You can directly use
-# `plot` `
+# ``plot``
 # <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.plot.html>`_ from pandas.
 df_ts_it.plot(grid=True)

@@ -11,6 +11,12 @@ This is not released yet!
   - CLI tool msh2vtu is not affected by this
   - parameter keep_ids was removed (in our OGS world there is no reason to keep the gmsh data names and the wrong data types in the meshes, which would happen if k was used)
   - parameter log_level was changed to log (True or False)
+- removed:
+  - MeshSeries.spatial_data_unit/spatial_output_unit/time_unit (see
+    MeshSeries.scale())
+  - plot.linesample/linesample_contourf
+  - meshlib.data_processing.interp_points/distance_in_profile/sample_polyline
+    (see update line sample example)
 
 ## Features
 
@@ -19,6 +25,11 @@ This is not released yet!
 - MeshSeries get extract() method to select points or cells via ids
 - MeshSeries can be sliced to get new MeshSeries with the selected subset of timesteps
 - difference() between two meshes is now possible even with different topologies
+- MeshSeries gets scale() method to scale spatially or temporally
+- variables.get_preset will now return a Variable corresponding to the spatial
+  coordinates if given "x", "y" or "z"
+- plot module gets line() function as a general purpose 1D plotting function
+- plot.setup get spatial_unit and time_unit which are used for labeling
 
 ## Infrastructure
 
