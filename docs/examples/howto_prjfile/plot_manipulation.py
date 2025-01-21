@@ -28,7 +28,7 @@ for youngs_modulus in youngs_moduli:
     prj.run_model(args=f"-m {EXAMPLES_DIR}/prj/ -o {model_dir}")
 
 # %%
-# Instead of the `replace_parameter` method, the more general `replace_text` method
+# Instead of the ``replace_parameter`` method, the more general ``replace_text`` method
 # can also be used to replace the young modulus in this example:
 prj.replace_text(youngs_modulus, xpath="./parameters/parameter[name='E']/value")
 

@@ -33,7 +33,7 @@ fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
 # Now, let's plot the temperature field (point_data) at the first timestep.
-# The default temperature variable from the `variables` reads the temperature
+# The default temperature variable from the ``variables`` reads the temperature
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%

@@ -64,7 +64,7 @@ fig = mesh_series.plot_probe(points=points[:4], variable=si, labels=labels[:4])
 # You can also pass create your own matplotlib figure and pass the axes object.
 # Additionally, you can pass any keyword arguments which are known by
 # matplotlibs plot function to further customize the curves.
-# In this case `marker` and `linewidth` are not part of the API of `plot_probe`
+# In this case ``marker`` and ``linewidth`` are not part of the API of `plot_probe`
 # but get processed correctly anyway.
 # If you want to have more freedom with the data you can just do the probing,
 # adapt to your needs and then do the plotting yourself:

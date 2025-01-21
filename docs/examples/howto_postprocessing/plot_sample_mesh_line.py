@@ -33,7 +33,7 @@ mesh = examples.load_mesh_mechanics_2D()
 # %% [markdown]
 # Simple case: straight line
 # ==========================
-# We use the `pyvista` function `sample_over_line` and use two points to define
+# We use the ``pyvista`` function ``sample_over_line`` and use two points to define
 # the line and get a Mesh with the sampled data. Let's plot the Mesh and the
 # line together.
 
@@ -46,7 +46,7 @@ fig = ot.plot.line(
 
 # %% [markdown]
 # Now we plot the temperature data. The spatial coordinate for the x-axis is
-# automatically detected here by not passing `x_var` explicitly.
+# automatically detected here by not passing ``x_var`` explicitly.
 
 # %%
 fig = ot.plot.line(sample, ot.variables.temperature)
@@ -80,7 +80,7 @@ fig.tight_layout()
 # %% [markdown]
 # Linear spaced points
 # --------------------
-# This basically does the same as the `pyvista` function `sample_over_line`.
+# This basically does the same as the ``pyvista`` function `sample_over_line`.
 
 # %%
 pts = np.linspace([50, -460, 0], [50, -800, 0], 100)
@@ -115,7 +115,7 @@ sample_3 = pv.PolyData(pts).sample(mesh)
 # Use existing geometry
 # ---------------------
 # Another way to setup the sampling line is to extract points from the domain
-# mesh. Here, we use the `clip` function from `pyvista` and some boolean logic,
+# mesh. Here, we use the ``clip`` function from ``pyvista`` and some boolean logic,
 # to extract a vertical line through the center, which follows the boundary of
 # the hole. We need to sort the points however, to have them adjacent.
 

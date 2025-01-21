@@ -41,7 +41,7 @@ timevalues = np.linspace(
 # Now, let's animate the saturation solution. A timescale at the top
 # indicates existing timesteps and the position of the current timevalue.
 # Note that rendering many frames in conjunction with large meshes might take
-# a really long time. We can pass a `plot_func` which can apply custom
+# a really long time. We can pass a ``plot_func`` which can apply custom
 # formatting and / or plotting. To modify the domain, we can use the transform
 # method of MeshSeries.
 
