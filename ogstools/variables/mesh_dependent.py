@@ -7,6 +7,8 @@
 "Functions related to stress analysis which can be only applied to a mesh."
 
 
+from collections.abc import Callable
+
 import numpy as np
 import pyvista as pv
 from pint.facets.plain import PlainQuantity
@@ -14,6 +16,19 @@ from pint.facets.plain import PlainQuantity
 from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
 from .unit_registry import u_reg
 from .variable import Variable
+
+
+def get_pts(
+    index: int,
+) -> Callable[[pv.UnstructuredGrid, Variable], np.ndarray]:
+    "Returns the coordinates of all points with the given index"
+
+    def get_pts_coordinate(
+        mesh: pv.UnstructuredGrid, _: Variable
+    ) -> np.ndarray:
+        return mesh.points[:, index]
+
+    return get_pts_coordinate
 
 
 def fluid_pressure_criterion(

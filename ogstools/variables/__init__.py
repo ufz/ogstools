@@ -201,6 +201,25 @@ saturation = Scalar(
 all_variables = [v for v in locals().values() if isinstance(v, Variable)]
 
 
+def _spatial_preset(axis: str) -> Scalar:
+    # pylint: disable=import-outside-toplevel
+    # Importing here dynamically to avoid circular import
+    # If we want to avoid this, we'd have to move plot.setup to someplace
+    # outside of plot
+    from ogstools.plot import setup  # noq: I001
+
+    # pylint: enable=import-outside-toplevel
+
+    return Scalar(
+        axis,
+        setup.spatial_unit,  # type:ignore[attr-defined]
+        setup.spatial_unit,  # type:ignore[attr-defined]
+        mesh_dependent=True,
+        func=mesh_dependent.get_pts("xyz".index(axis)),
+        color="k",
+    )
+
+
 def get_preset(variable: Variable | str, mesh: pv.UnstructuredGrid) -> Variable:
     """
     Returns a Variable preset or creates one with correct type.
@@ -219,6 +238,8 @@ def get_preset(variable: Variable | str, mesh: pv.UnstructuredGrid) -> Variable:
     error_msg = (
         f"Data not found in mesh. Available data names are {data_keys}. "
     )
+    if isinstance(variable, str) and variable in ["x", "y", "z"]:
+        return _spatial_preset(variable)
 
     if isinstance(variable, Variable):
         if variable.data_name in data_keys:
