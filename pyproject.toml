@@ -269,6 +269,7 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 warn_unreachable = true
 enable_incomplete_feature = ["Unpack"]
+show_absolute_path = true
 
 [tool.ruff]
 target-version = "py310"
