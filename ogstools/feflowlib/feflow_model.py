@@ -78,8 +78,6 @@ class FeflowModel:
 
         :return: Dictionary (dict) of boundary meshes, with name as key and mesh as value.
         """
-        # ToDo: Introduce this behaviour to feflowlib.tools with a type.
-        # And return type of name for cell and pt BC should be the same not possix Path...
         _subdomains = _tools.extract_point_boundary_conditions(self.mesh)
 
         if self.dimension == 3 and (
@@ -148,7 +146,7 @@ class FeflowModel:
             # For later functions of the converter, material properties are needed.
             # For this reason, a defaultdict is returned with no material properties in
             # this case.
-            # ToDo: return a dict of all properties with a warning!
+            # ToDo: return a dict of all possible material properties with a warning!
             material_properties = defaultdict(str)
             material_properties["undefined"] = (
                 f"Material properties are only saved on the mesh for this process: '{process}'",
