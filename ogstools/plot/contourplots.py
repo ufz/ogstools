@@ -443,13 +443,5 @@ def contourf(
     utils.update_font_sizes(
         fig.axes, fontsize=kwargs.get("fontsize", setup.fontsize)
     )
-    min_tick_length = setup.tick_length * 2.0 / 3.5  # mpl default
-    for ax in fig.axes:
-        ax.tick_params(
-            "both", which="major", pad=setup.tick_pad, length=setup.tick_length
-        )
-        ax.tick_params(
-            "both", which="minor", pad=setup.tick_pad, length=min_tick_length
-        )
 
     return fig
