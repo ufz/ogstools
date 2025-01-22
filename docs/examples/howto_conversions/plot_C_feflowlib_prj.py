@@ -46,12 +46,12 @@ feflow_model.save()
 model_prjfile = ET.parse(temp_dir / "CT_model.prj")
 ET.dump(model_prjfile)
 # %%
-# 5. Remove some points of the boundary mesh.
+# 5. Remove some points of the boundary mesh, which is part of the subdomains.
 bounds = [0.037, 0.039, 0.003, 0.006, 0, 0]
-new_bc_mesh = feflow_model.boundary_conditions[
-    "single_species_P_BC_MASS"
-].clip_box(bounds, invert=False)
-feflow_model.boundary_conditions["single_species_P_BC_MASS"] = new_bc_mesh
+new_bc_mesh = feflow_model.subdomains["single_species_P_BC_MASS"].clip_box(
+    bounds, invert=False
+)
+feflow_model.subdomains["single_species_P_BC_MASS"] = new_bc_mesh
 # %%
 # 6. Run the model.
 feflow_model.run(overwrite=True)

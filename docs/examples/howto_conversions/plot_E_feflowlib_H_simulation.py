@@ -37,12 +37,12 @@ feflow_model.mesh.plot(
 )
 print(feflow_model.mesh)
 # %%
-# 2. Extract the boundary conditions.
-BC_dict = feflow_model.boundary_conditions
-# Since there can be multiple point based boundary conditions on the bulk mesh,
-# they are saved and plotted iteratively.
-plotter = pv.Plotter(shape=(len(BC_dict), 1))
-for i, (name, boundary_condition) in enumerate(BC_dict.items()):
+# 2. Extract the subdomains conditions.
+subdomains = feflow_model.subdomains
+# Since there can be multiple boundary conditions in the subdomains,
+# they are plotted iteratively.
+plotter = pv.Plotter(shape=(len(subdomains), 1))
+for i, (name, boundary_condition) in enumerate(subdomains.items()):
     # topsurface refers to a cell based boundary condition.
     if name != "topsurface":
         plotter.subplot(i, 0)

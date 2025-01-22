@@ -56,7 +56,7 @@ class FeflowModel:
         self.mesh = convert_properties_mesh(self._doc)
         self.dimension = self._doc.getNumberOfDimensions()
         self.setup_prj()  # _project object with default values is initialized here
-        self._init_boundary_conditions()
+        self._init_subdomains()
         self._mesh_saving_needed = True
 
     @property
@@ -72,17 +72,13 @@ class FeflowModel:
         bulk_mesh["MaterialIDs"] = self.mesh["MaterialIDs"]
         return bulk_mesh
 
-    def _init_boundary_conditions(self) -> None:
+    def _init_subdomains(self) -> None:
         """
         The boundary meshes for a ogs model.
 
         :return: Dictionary (dict) of boundary meshes, with name as key and mesh as value.
         """
-        # ToDo: Introduce this behaviour to feflowlib.tools with a type.
-        # And return type of name for cell and pt BC should be the same not possix Path...
-        _boundary_conditions = _tools.extract_point_boundary_conditions(
-            self.mesh
-        )
+        _subdomains = _tools.extract_point_boundary_conditions(self.mesh)
 
         if self.dimension == 3 and (
             (
@@ -98,11 +94,9 @@ class FeflowModel:
                 cell_bc_path,
                 cell_bc_mesh,
             ) = _tools.extract_cell_boundary_conditions(self.mesh)
-            _boundary_conditions[cell_bc_path] = cell_bc_mesh
+            _subdomains[cell_bc_path] = cell_bc_mesh
 
-        self.boundary_conditions: dict[
-            str, pv.UnstructuredGrid
-        ] = _boundary_conditions
+        self.subdomains: dict[str, pv.UnstructuredGrid] = _subdomains
 
     @property
     def process(self) -> str:
@@ -152,7 +146,7 @@ class FeflowModel:
             # For later functions of the converter, material properties are needed.
             # For this reason, a defaultdict is returned with no material properties in
             # this case.
-            # ToDo: return a dict of all properties with a warning!
+            # ToDo: return a dict of all possible material properties with a warning!
             material_properties = defaultdict(str)
             material_properties["undefined"] = (
                 f"Material properties are only saved on the mesh for this process: '{process}'",
@@ -250,19 +244,19 @@ class FeflowModel:
         Save the converted FEFLOW model. Saves the meshes only if they have not been saved previously.
         or 'force_saving' is true.
 
-        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        :param output_path: The path where the mesh, subdomains and project file will be written.
         """
         if output_path is None:
             output_path = self.mesh_path
         self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
         if self._mesh_saving_needed or force_saving:
             self.mesh.save(output_path.with_suffix(".vtu"))
-            for name, boundary_mesh in self.boundary_conditions.items():
-                boundary_mesh.save(output_path.parent / (name + ".vtu"))
+            for name, subdomain in self.subdomains.items():
+                subdomain.save(output_path.parent / (name + ".vtu"))
             self._mesh_saving_needed = False
         else:
             logger.info(
-                "The mesh and boundary meshes have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
+                "The mesh and subdomains have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
             )
 
     def run(
@@ -271,7 +265,7 @@ class FeflowModel:
         """
         Run the converted FEFLOW model.
 
-        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        :param output_path: The path where the mesh, subdomains and project file will be written.
         """
         self.save(output_path, overwrite)
         self.project.run_model()

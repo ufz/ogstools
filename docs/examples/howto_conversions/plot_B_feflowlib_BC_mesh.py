@@ -48,12 +48,12 @@ ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 # %%
 # 6. The boundary meshes are manipulated to alter the model.
-# 6.1 The Dirichlet boundary conditions for the hydraulic head are set to 0.
-bc_flow = feflow_model.boundary_conditions["P_BC_FLOW"]["P_BC_FLOW"]
-feflow_model.boundary_conditions["P_BC_FLOW"]["P_BC_FLOW"][bc_flow == 10] = 0
+# The original boundary conditions are shown in this example: :ref:`sphx_glr_auto_examples_howto_conversions_plot_F_feflowlib_HT_simulation.py`
+# 6.1 The Dirichlet boundary conditions for the hydraulic head are set to 0. Therefore, no water flows from the left to the right edge.
+bc_flow = feflow_model.subdomains["P_BC_FLOW"]["P_BC_FLOW"]
+feflow_model.subdomains["P_BC_FLOW"]["P_BC_FLOW"][bc_flow == 10] = 0
 # %%
-# 6.2 Save the new boundary conditions and run the model.
-# Overwrite is needed to save the changed boundary meshes.
+# 6.2 Overwrite the new boundary conditions and run the model.
 feflow_model.run(overwrite=True)
 # %%
 # 6.3 The corresponding simulation results look like.
@@ -62,7 +62,7 @@ ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 # %%
-# 6.3 Create new boundary mesh.
+# 6.4 Create a new boundary mesh and overwrite the existing subdomains with this boundary mesh.
 assign_bulk_ids(mesh)
 # Get the points of the bulk mesh to build a new boundary mesh.
 wanted_pts = [1492, 1482, 1481, 1491, 1479, 1480, 1839, 1840]
@@ -74,7 +74,7 @@ new_bc = mesh.extract_points(
 new_bc["bulk_node_ids"] = np.array(wanted_pts, dtype=np.uint64)
 # Define the temperature values of these points.
 new_bc["P_BC_HEAT"] = np.array([300] * len(wanted_pts), dtype=np.float64)
-feflow_model.boundary_conditions["P_BC_HEAT"] = new_bc
+feflow_model.subdomains["P_BC_HEAT"] = new_bc
 # %%
 # 7. Run the new model and plot the simulation results.
 feflow_model.run(overwrite=True)
