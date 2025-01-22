@@ -146,10 +146,10 @@ class MeshSeries:
         raise ValueError
 
     def __len__(self) -> int:
-        return len(self.meshindices)
+        return len(self.timesteps)
 
     def __iter__(self) -> Iterator[Mesh]:
-        for i in self.meshindices:
+        for i in np.arange(len(self.timevalues), dtype=int):
             yield self.mesh(i)
 
     def __str__(self) -> str:
@@ -209,7 +209,7 @@ class MeshSeries:
         ip_mesh = self.mesh(0).to_ip_mesh()
         ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
-        for i in self.meshindices:
+        for i in np.arange(len(self.timevalues), dtype=int):
             ip_data = {
                 key: self.mesh(i).field_data[key][np.argsort(ordering)]
                 for key in ip_mesh.cell_data
@@ -294,21 +294,15 @@ class MeshSeries:
         return vals * self._time_factor
 
     @property
-    def meshindices(self) -> list:
-        """Return internal meshindices data."""
-        return np.arange(len(self.timevalues), dtype=int)
-
-    @property
     def timesteps(self) -> list:
         """
         Return the OGS simulation timesteps of the timeseries data.
         Not to be confused with timevalues which returns a list of
-        times usually given in in time units and meshindices() which
-        is counting only steps contained in the time series.
+        times usually given in in time units.
         """
 
         # TODO: read time steps from fn string if available
-        return self.meshindices
+        return np.arange(len(self.timevalues), dtype=int)
 
     def _xdmf_values(self, variable_name: str) -> np.ndarray:
         dataitems = self._xdmf_reader.data_items[variable_name]
@@ -865,7 +859,7 @@ class MeshSeries:
         return fns_new
 
     def _save_vtu(self, new_pvd_fn: Path, fns: list[Path]) -> None:
-        for i, timestep in enumerate(self.meshindices):
+        for i, timestep in enumerate(self.timesteps):
             if ".vtu" in fns[i].name:
                 pv.save_meshio(
                     Path(new_pvd_fn.parent, fns[i].name), self.mesh(i)
@@ -925,7 +919,8 @@ class MeshSeries:
         """
         fn = Path(filename)
         fns = [
-            self._check_path(self.mesh(t).filepath) for t in self.meshindices
+            self._check_path(self.mesh(t).filepath)
+            for t in np.arange(len(self.timevalues), dtype=int)
         ]
         if ".pvd" in fn.name:
             if deep is True:
