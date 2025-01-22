@@ -530,3 +530,106 @@ class TestUtils:
         for i in range(num_slices):
             ts = float(pvd_entries[i].attrib["timestep"])
             assert np.abs(ms.timevalues[i] - ts) < 1e-14
+
+    def test_remove_array(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        arrays_before = {
+            "cell": [
+                "MaterialIDs",
+                "bulk_element_ids",
+                "bulk_face_ids",
+                "effective_pressure",
+                "pressure_active",
+            ],
+            "field": [
+                "IntegrationPointMetaData",
+                "OGS_VERSION",
+                "epsilon_ip",
+                "sigma_ip",
+            ],
+            "point": [
+                "HeatFlowRate",
+                "MassFlowRate",
+                "NodalForces",
+                "bulk_node_ids",
+                "displacement",
+                "epsilon",
+                "pressure",
+                "pressure_interpolated",
+                "sigma",
+                "temperature",
+                "temperature_interpolated",
+                "velocity",
+            ],
+        }
+        arrays_after = {
+            "cell": [
+                "MaterialIDs",
+                "bulk_element_ids",
+                "bulk_face_ids",
+                "pressure_active",
+            ],
+            "field": ["IntegrationPointMetaData", "OGS_VERSION", "epsilon_ip"],
+            "point": [
+                "HeatFlowRate",
+                "MassFlowRate",
+                "NodalForces",
+                "bulk_node_ids",
+                "displacement",
+                "epsilon",
+                "pressure",
+                "pressure_interpolated",
+                "sigma",
+                "temperature_interpolated",
+                "velocity",
+            ],
+        }
+        for m in ms:
+            for data_type in arrays_before:
+                if data_type == "cell":
+                    assert m.cell_data.keys() == arrays_before[data_type]
+                elif data_type == "point":
+                    assert m.point_data.keys() == arrays_before[data_type]
+                else:
+                    assert m.field_data.keys() == arrays_before[data_type]
+        ms.remove_array("effective_pressure", data_type="cell")
+        ms.remove_array("sigma_ip", data_type="field")
+        ms.remove_array("temperature", data_type="point")
+        for m in ms:
+            for data_type in arrays_after:
+                if data_type == "cell":
+                    assert m.cell_data.keys() == arrays_after[data_type]
+                elif data_type == "point":
+                    assert m.point_data.keys() == arrays_after[data_type]
+                else:
+                    assert m.field_data.keys() == arrays_after[data_type]
+        # same with skip last option
+        ms = examples.load_meshseries_THM_2D_PVD()
+        for m in ms:
+            for data_type in arrays_before:
+                if data_type == "cell":
+                    assert m.cell_data.keys() == arrays_before[data_type]
+                elif data_type == "point":
+                    assert m.point_data.keys() == arrays_before[data_type]
+                else:
+                    assert m.field_data.keys() == arrays_before[data_type]
+        ms.remove_array("effective_pressure", data_type="cell", skip_last=True)
+        ms.remove_array("sigma_ip", data_type="field", skip_last=True)
+        ms.remove_array("temperature", data_type="point", skip_last=True)
+        for i, m in enumerate(ms):
+            for data_type in arrays_after:
+                if data_type == "cell":
+                    if i == len(ms) - 1:
+                        assert m.cell_data.keys() == arrays_before[data_type]
+                    else:
+                        assert m.cell_data.keys() == arrays_after[data_type]
+                elif data_type == "point":
+                    if i == len(ms) - 1:
+                        assert m.point_data.keys() == arrays_before[data_type]
+                    else:
+                        assert m.point_data.keys() == arrays_after[data_type]
+                else:
+                    if i == len(ms) - 1:
+                        assert m.field_data.keys() == arrays_before[data_type]
+                    else:
+                        assert m.field_data.keys() == arrays_after[data_type]
