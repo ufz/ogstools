@@ -121,7 +121,6 @@ tests (arch - conda - ogs custom latest) [M]:
     - pytest
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
@@ -153,6 +152,8 @@ tests (win - pip) [R]:
   rules:
     - *regression-rules
   needs: []
+  variables:
+    MPLBACKEND: Agg  # non-interactive backend for matplotlib
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
@@ -193,7 +194,7 @@ docs preview [M]:
     - pip install -e .[docs]
     - *pip-setup-extra-headless
   script:
-    - make docs SPHINXOPTS="--keep-going -n -j 4" > sphinx_output.log 2>&1
+    - make docs SPHINXOPTS="--keep-going -n -j 4" | tee sphinx_output.log
     - echo "Counting warnings in Sphinx output..."
     # Count lines with "WARNING" in the Sphinx log
     - warning_count=$(grep -c "WARNING" sphinx_output.log || true)
