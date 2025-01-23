@@ -12,11 +12,12 @@ from collections.abc import Callable, Iterator, Sequence
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, overload
+from typing import Any, Literal, cast, overload
 
 import meshio
 import numpy as np
 import pyvista as pv
+from lxml import etree as ET
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.interpolate import (
@@ -148,8 +149,8 @@ class MeshSeries:
         return len(self.timesteps)
 
     def __iter__(self) -> Iterator[Mesh]:
-        for t in self.timesteps:
-            yield self.mesh(t)
+        for i in np.arange(len(self.timevalues), dtype=int):
+            yield self.mesh(i)
 
     def __str__(self) -> str:
         if self._data_type == "vtu":
@@ -208,14 +209,14 @@ class MeshSeries:
         ip_mesh = self.mesh(0).to_ip_mesh()
         ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
-        for ts in self.timesteps:
+        for i in np.arange(len(self.timevalues), dtype=int):
             ip_data = {
-                key: self.mesh(ts).field_data[key][np.argsort(ordering)]
+                key: self.mesh(i).field_data[key][np.argsort(ordering)]
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
             ip_ms._mesh_cache[
-                self.timevalues[ts]
+                self.timevalues[i]
             ] = ip_mesh.copy()  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
@@ -245,6 +246,10 @@ class MeshSeries:
             mesh = Mesh(self.mesh_func(pv_mesh))
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
+        if self._data_type == "pvd":
+            mesh.filepath = Path(self.timestep_files[data_timestep])
+        else:
+            mesh.filepath = Path(self.filepath)
         return mesh
 
     def rawdata_file(self) -> Path | None:
@@ -290,7 +295,13 @@ class MeshSeries:
 
     @property
     def timesteps(self) -> list:
-        """Return the timesteps of the timeseries data."""
+        """
+        Return the OGS simulation timesteps of the timeseries data.
+        Not to be confused with timevalues which returns a list of
+        times usually given in time units.
+        """
+
+        # TODO: read time steps from fn string if available
         return np.arange(len(self.timevalues), dtype=int)
 
     def _xdmf_values(self, variable_name: str) -> np.ndarray:
@@ -579,16 +590,15 @@ class MeshSeries:
     def animate(
         self,
         variable: Variable,
-        timesteps: Sequence | None = None,
+        timevalues: Sequence | None = None,
         plot_func: Callable[[plt.Axes, float], None] = lambda *_: None,
         **kwargs: Any,
     ) -> FuncAnimation:
         """
-        Create an animation for a variable with given timesteps.
+        Create an animation for a variable with given timevalues.
 
-        :param variable: the field to be visualized on all timesteps
-        :param timesteps: if sequence of int: the timesteps to animate
-                        if sequence of float: the timevalues to animate
+        :param variable: the field to be visualized on all timevalues
+        :param timevalues: the timevalues to animate
         :param plot_func:   A function which expects to read a matplotlib Axes
                             and the time value of the current frame. Useful to
                             customize the plot in the animation.
@@ -598,7 +608,7 @@ class MeshSeries:
         plot.setup.layout = "tight"
         plot.setup.combined_colorbar = True
 
-        ts = self.timesteps if timesteps is None else timesteps
+        ts = self.timevalues if timevalues is None else timevalues
 
         fig = plot.contourf(self.mesh(0, lazy_eval=False), variable)
         assert isinstance(fig, plt.Figure)
@@ -609,14 +619,14 @@ class MeshSeries:
         def init() -> None:
             pass
 
-        def animate_func(i: int | float, fig: plt.Figure) -> None:
+        def animate_func(tv: float, fig: plt.Figure) -> None:
             fig.axes[-1].remove()  # remove colorbar
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
-            mesh = self[i] if isinstance(i, int) else self.read_interp(i, True)
+            mesh = self.read_interp(tv, True)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                plot_func(fig.axes[0], i)
+                plot_func(fig.axes[0], tv)
                 plot.contourplots.draw_plot(
                     mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
                 )  # type: ignore[assignment]
@@ -834,3 +844,90 @@ class MeshSeries:
             ),
         }
         return self.transform(func[preference])
+
+    def _rename_vtufiles(self, new_pvd_fn: Path, fns: list[Path]) -> list:
+        fns_new: list[Path] = []
+        for filename in fns:
+            filepathparts_at_timestep = list(filename.parts)
+            filepathparts_at_timestep[-1] = filepathparts_at_timestep[
+                -1
+            ].replace(
+                Path(self.filepath).name.split(".")[0],
+                new_pvd_fn.name.split(".")[0],
+            )
+            fns_new.append(Path(*filepathparts_at_timestep))
+        return fns_new
+
+    def _save_vtu(self, new_pvd_fn: Path, fns: list[Path]) -> None:
+        for i, timestep in enumerate(self.timesteps):
+            if ".vtu" in fns[i].name:
+                pv.save_meshio(
+                    Path(new_pvd_fn.parent, fns[i].name), self.mesh(i)
+                )
+            elif ".xdmf" in fns[i].name:
+                newname = fns[i].name.replace(
+                    ".xdmf", f"_ts_{timestep}_t_{self.timevalues[i]}.vtu"
+                )
+                pv.save_meshio(Path(new_pvd_fn.parent, newname), self.mesh(i))
+            else:
+                s = "File type not supported."
+                raise RuntimeError(s)
+
+    def _save_pvd(self, new_pvd_fn: Path, fns: list[Path]) -> None:
+        root = ET.Element("VTKFile")
+        root.attrib["type"] = "Collection"
+        root.attrib["version"] = "0.1"
+        root.attrib["byte_order"] = "LittleEndian"
+        root.attrib["compressor"] = "vtkZLibDataCompressor"
+        collection = ET.SubElement(root, "Collection")
+        for i, timestep in enumerate(self.timevalues):
+            timestepselement = ET.SubElement(collection, "DataSet")
+            timestepselement.attrib["timestep"] = str(timestep)
+            timestepselement.attrib["group"] = ""
+            timestepselement.attrib["part"] = "0"
+            if ".xdmf" in fns[i].name:
+                newname = fns[i].name.replace(
+                    ".xdmf", f"_ts_{self.timesteps[i]}_t_{timestep}.vtu"
+                )
+                timestepselement.attrib["file"] = newname
+            elif ".vtu" in fns[i].name:
+                timestepselement.attrib["file"] = fns[i].name
+            else:
+                s = "File type not supported."
+                raise RuntimeError(s)
+        tree = ET.ElementTree(root)
+        tree.write(
+            new_pvd_fn,
+            encoding="ISO-8859-1",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+
+    def _check_path(self, filename: Path | None) -> Path:
+        if not isinstance(filename, Path):
+            s = "filename is empty"
+            raise RuntimeError(s)
+        assert isinstance(filename, Path)
+        return cast(Path, filename)
+
+    def save(self, filename: str, deep: bool = True) -> None:
+        """
+        Save mesh series to disk.
+
+        :param filename:   Filename to save the series to. Extension specifies
+                           the file type. Currently only PVD is supported.
+        :param deep:  Specifies whether VTU/H5 files should be written.
+        """
+        fn = Path(filename)
+        fns = [
+            self._check_path(self.mesh(t).filepath)
+            for t in np.arange(len(self.timevalues), dtype=int)
+        ]
+        if ".pvd" in fn.name:
+            if deep is True:
+                fns = self._rename_vtufiles(fn, fns)
+                self._save_vtu(fn, fns)
+            self._save_pvd(fn, fns)
+        else:
+            s = "Currently the save method is implemented for PVD/VTU only."
+            raise RuntimeError(s)
