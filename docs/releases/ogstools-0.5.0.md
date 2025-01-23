@@ -37,6 +37,7 @@
 - MeshSeries get extract() method to select points or cells via ids
 - MeshSeries can be sliced to get new MeshSeries with the selected subset of timesteps
 - MeshSeries gets a modify function that applies arbitrary function to all timestep - meshes.
+- MeshSeries gets a save function (only for pvd implemented yet)
 - difference() between two meshes is now possible even with different topologies
 - Project write_input, path can be specified
 - MeshSeries gets scale() method to scale spatially or temporally
