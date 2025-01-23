@@ -49,7 +49,7 @@ for mesh, timevalue in zip(mesh_series, mesh_series.timevalues, strict=True):
     color = str(0.8 * timevalue / mesh_series.timevalues[-1])
     label = f"{timevalue:.1f} a"
     fig = ot.plot.line(
-        sample, "z", si, ax=ax, label=label, color=color, fontsize=20
+        sample, si, "z", ax=ax, label=label, color=color, fontsize=20
     )
 # %% [markdown]
 # As the above kind of plot is getting cluttered for lots of timesteps we

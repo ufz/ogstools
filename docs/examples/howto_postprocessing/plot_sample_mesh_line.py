@@ -33,20 +33,18 @@ mesh = examples.load_mesh_mechanics_2D()
 # %% [markdown]
 # Simple case: straight line
 # ==========================
-# We use the ``pyvista`` function ``sample_over_line`` and use two points to define
-# the line and get a Mesh with the sampled data. Let's plot the Mesh and the
-# line together.
+# We use the ``pyvista`` function ``sample_over_line`` and use two points to
+# define the line and get a Mesh with the sampled data. Let's plot the Mesh and
+# the line together.
 
 # %%
 sample = mesh.sample_over_line([25, -460, 0], [100, -800, 0])
-fig = ot.plot.contourf(mesh, ot.variables.temperature)
-fig = ot.plot.line(
-    mesh=sample, y_var="y", x_var="x", ax=fig.axes[0], linestyle="--"
-)
+fig = mesh.plot_contourf(ot.variables.temperature)
+fig = ot.plot.line(sample, ax=fig.axes[0], linestyle="--")
 
 # %% [markdown]
 # Now we plot the temperature data. The spatial coordinate for the x-axis is
-# automatically detected here by not passing ``x_var`` explicitly.
+# automatically detected here.
 
 # %%
 fig = ot.plot.line(sample, ot.variables.temperature)
@@ -67,8 +65,8 @@ sample = mesh.sample_over_circular_arc(
     center=[150, -650, 0],
 )
 fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
-ot.plot.contourf(mesh, ot.variables.displacement["x"], fig=fig, ax=axs[1])
-ot.plot.line(sample, "y", "x", axs[1], linewidth="8", color="red")
+mesh.plot_contourf(ot.variables.displacement["x"], fig=fig, ax=axs[1])
+ot.plot.line(sample, ax=axs[1], linewidth="8", color="red")
 ot.plot.line(sample, ot.variables.displacement["x"], ax=axs[0])
 fig.tight_layout()
 
@@ -132,11 +130,11 @@ sample_4 = pv.PolyData(pts[np.argsort(pts[:, 1])]).sample(mesh)
 # %%
 fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
 u_x = ot.variables.displacement["x"]
-ot.plot.contourf(mesh, u_x, fig=fig, ax=axs[1])
+mesh.plot_contourf(u_x, fig=fig, ax=axs[1])
 for i, sample in enumerate([sample_1, sample_2, sample_3, sample_4]):
     c = f"C{i}"  # cycle through default color cycle
-    ot.plot.line(sample, "y", "x", ax=axs[1], linestyle="--", color=c)
-    ot.plot.line(sample, "y", u_x, ax=axs[0], label=f"sample {i + 1}", color=c)
+    ot.plot.line(sample, ax=axs[1], linestyle="--", color=c)
+    ot.plot.line(sample, u_x, "y", ax=axs[0], label=f"sample {i + 1}", color=c)
 fig.tight_layout()
 
 # %% [markdown]
