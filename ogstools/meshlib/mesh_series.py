@@ -298,7 +298,7 @@ class MeshSeries:
         """
         Return the OGS simulation timesteps of the timeseries data.
         Not to be confused with timevalues which returns a list of
-        times usually given in in time units.
+        times usually given in time units.
         """
 
         # TODO: read time steps from fn string if available
@@ -914,7 +914,8 @@ class MeshSeries:
         """
         Save mesh series to disk.
 
-        :param filename:   Filename to save the series to. Extension specifies the file type. Currently only PVD is supported.
+        :param filename:   Filename to save the series to. Extension specifies
+                           the file type. Currently only PVD is supported.
         :param deep:  Specifies whether VTU/H5 files should be written.
         """
         fn = Path(filename)
