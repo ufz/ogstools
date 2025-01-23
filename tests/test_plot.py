@@ -262,12 +262,42 @@ class TestPlotting:
 
     def test_lineplot(self):
         """Test creation of a linesplot from sampled profile data"""
-        mesh = examples.load_meshseries_HT_2D_XDMF().mesh(-1)
-        profile_HT = mesh.sample_over_line([4, 2, 0], [4, 18, 0])
         ot.plot.setup.set_units(spatial="km", time="a")
-        fig = ot.plot.line(profile_HT, "pressure")
-        ot.plot.line(profile_HT, ot.variables.pressure, "x", ax=fig.axes[0])
-        fig = ot.plot.line(
-            profile_HT, "y", "x", figsize=[5, 5], color="g", linewidth=1,
+        mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
+        mesh.points[:, 2] = 0.0
+        x1, x2, y1, y2 = mesh.bounds[:4]
+        xc, yc, z = mesh.center
+        sample_x = mesh.sample_over_line([x1, yc, z], [x2, yc, z])
+        sample_y = mesh.sample_over_line([xc, y1, z], [xc, y2, z])
+        sample_xy = mesh.sample_over_line([x1, y1, z], [x2, y2, z])
+        sample_xz = mesh.rotate_x(90).sample_over_line([x1, 0, y1], [x2, 0, y2])
+        sample_yz = mesh.rotate_y(90).sample_over_line([0, y1, x1], [0, y2, x2])
+
+        def check(*args, x_l: str, y_l: str) -> None:
+            fig = ot.plot.line(*args, figsize=[4, 3])
+            assert fig.axes[0].get_xlabel().split(" ")[0] == x_l
+            assert fig.axes[0].get_ylabel().split(" ")[0] == y_l
+
+        check(sample_x, ot.variables.temperature, x_l="x", y_l="temperature")
+        check(sample_x, x_l="x", y_l="y")
+        check(sample_y, ot.variables.temperature, x_l="y", y_l="temperature")
+        check(sample_y, x_l="x", y_l="y")
+        check(sample_xy, ot.variables.temperature, x_l="x", y_l="temperature")
+        check(sample_xy, x_l="x", y_l="y")
+        check(sample_xz, ot.variables.temperature, x_l="x", y_l="temperature")
+        check(sample_xz, x_l="x", y_l="z")
+        check(sample_yz, ot.variables.temperature, x_l="y", y_l="temperature")
+        check(sample_yz, x_l="y", y_l="z")
+        check(sample_yz, "z", "y", x_l="z", y_l="y")
+        check(sample_x, "x", "temperature", x_l="x", y_l="temperature")
+        check(sample_y, "temperature", "y", x_l="temperature", y_l="y")
+        check(sample_xy, ot.variables.displacement, ot.variables.temperature,
+              x_l="displacement", y_l="temperature")  # fmt: skip
+        _, ax = plt.subplots(figsize=[4, 3])
+        ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax)
+        _ = ot.plot.line(
+            sample_y, "y", "x", figsize=[5, 5], color="g", linewidth=1,
             ls="--", label="test", grid=True,
         )  # fmt: skip
+        with pytest.raises(TypeError):
+            ot.plot.line(sample_y, ax)
