@@ -127,7 +127,15 @@ class OGSModel:
 
     if find_spec("ifm") is not None:
 
-        def from_feflow(self, feflow_model: "ot.FeflowModel") -> None:
-            self._mesh = feflow_model.mesh
-            self._subdomains = feflow_model.boundary_conditions
-            self._project = feflow_model.project
+        @classmethod
+        def from_feflow_model(
+            cls, feflow_model: "ot.FeflowModel"
+        ) -> "OGSModel":
+            return cls(
+                feflow_model.mesh, feflow_model.subdomains, feflow_model.project
+            )
+
+        @classmethod
+        def read_feflow(cls, feflow_file: Path) -> "OGSModel":
+            feflow_model = ot.FeflowModel(feflow_file)
+            return cls.from_feflow_model(feflow_model)
