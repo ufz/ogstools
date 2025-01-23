@@ -499,12 +499,8 @@ class TestUtils:
         pvd_entries = tree.findall("./Collection/DataSet")
         for i in range(num_slices):
             assert ms[i].filepath.name == pvd_entries[i].attrib["file"]
-            assert (
-                np.abs(
-                    ms.timevalues[i] - float(pvd_entries[i].attrib["timestep"])
-                )
-                < 1e-14
-            )
+            ts = float(pvd_entries[i].attrib["timestep"])
+            assert np.abs(ms.timevalues[i] - ts) < 1e-14
 
     def test_save_xdmf_mesh_series(self):
         temp = Path(mkdtemp())
@@ -532,9 +528,5 @@ class TestUtils:
         num_slices_test = len(pvd_entries)
         assert num_slices == num_slices_test
         for i in range(num_slices):
-            assert (
-                np.abs(
-                    ms.timevalues[i] - float(pvd_entries[i].attrib["timestep"])
-                )
-                < 1e-14
-            )
+            ts = float(pvd_entries[i].attrib["timestep"])
+            assert np.abs(ms.timevalues[i] - ts) < 1e-14

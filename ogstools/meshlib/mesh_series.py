@@ -619,14 +619,14 @@ class MeshSeries:
         def init() -> None:
             pass
 
-        def animate_func(i: int | float, fig: plt.Figure) -> None:
+        def animate_func(tv: float, fig: plt.Figure) -> None:
             fig.axes[-1].remove()  # remove colorbar
             for ax in np.ravel(np.asarray(fig.axes)):
                 ax.clear()
-            mesh = self[i] if isinstance(i, int) else self.read_interp(i, True)
+            mesh = self.read_interp(tv, True)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                plot_func(fig.axes[0], i)
+                plot_func(fig.axes[0], tv)
                 plot.contourplots.draw_plot(
                     mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
                 )  # type: ignore[assignment]
