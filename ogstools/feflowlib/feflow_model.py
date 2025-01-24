@@ -12,7 +12,7 @@ import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
 
-from ogstools.ogs6py import Project
+import ogstools as ot
 
 from . import _tools
 from ._feflowlib import convert_properties_mesh
@@ -28,7 +28,7 @@ from ._templates import (
 logger = log.getLogger(__name__)
 
 
-class FeflowModel:
+class FeflowModel(ot.OGSModel):
     """
     The FEFLOW model class to access the FEFLOW model.
 
@@ -38,19 +38,19 @@ class FeflowModel:
     def __init__(
         self,
         feflow_file: Path | str,
-        out_path: Path | None = None,
+        output_path: Path | None = None,
     ):
         """
         Initialize a FEFLOW model object
 
             :param feflow_file:     Path to the feflow file.
-            :param out_path:        Path for the output, if not defined, the same path as input file is taken.
+            :param output_path:        Path for the output, if not defined, the same path as input file is taken.
         """
         feflow_file = Path(feflow_file)
-        if out_path is None:
-            self.mesh_path = Path(feflow_file.with_suffix(".vtu"))
+        if output_path is None:
+            self.output_path = Path(feflow_file.with_suffix(".vtu"))
         else:
-            self.mesh_path = Path(out_path).with_suffix(".vtu")
+            self.output_path = Path(output_path).with_suffix(".vtu")
         ifm.forceLicense("Viewer")
         self._doc = ifm.loadDocument(str(feflow_file))
         self.mesh = convert_properties_mesh(self._doc)
@@ -177,8 +177,8 @@ class FeflowModel:
         """
         if "Liquid flow" in self.process and not steady:
             template_model = liquid_flow(
-                Path(self.mesh_path.with_suffix("")),
-                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                Path(self.output_path.with_suffix("")),
+                ot.Project(output_file=self.output_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
@@ -186,14 +186,14 @@ class FeflowModel:
             )
         elif "Liquid flow" in self.process and steady:
             template_model = steady_state_diffusion(
-                Path(self.mesh_path.with_suffix("")),
-                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                Path(self.output_path.with_suffix("")),
+                ot.Project(output_file=self.output_path.with_suffix(".prj")),
                 error_tolerance=error_tolerance,
             )
         elif "Hydro thermal" in self.process:
             template_model = hydro_thermal(
-                Path(self.mesh_path.with_suffix("")),
-                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                Path(self.output_path.with_suffix("")),
+                ot.Project(output_file=self.output_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
@@ -205,9 +205,9 @@ class FeflowModel:
             )
             species = _tools.get_species(self.mesh)
             template_model = component_transport(
-                Path(self.mesh_path.with_suffix("")),
+                Path(self.output_path.with_suffix("")),
                 species,
-                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                ot.Project(output_file=self.output_path.with_suffix(".prj")),
                 process_name=process_name,
                 dimension=self.dimension,
                 end_time=end_time,
@@ -216,8 +216,8 @@ class FeflowModel:
             )
         else:
             template_model = create_prj_template(
-                Path(self.mesh_path.with_suffix("")),
-                Project(output_file=self.mesh_path.with_suffix(".prj")),
+                Path(self.output_path.with_suffix("")),
+                ot.Project(output_file=self.output_path.with_suffix(".prj")),
                 dimension=self.dimension,
                 end_time=end_time,
                 time_stepping=time_stepping,
@@ -225,7 +225,7 @@ class FeflowModel:
             )
         # replaces default
         self.project = setup_prj_file(
-            self.mesh_path,
+            self.output_path,
             self.mesh,
             self.material_properties,
             self.process if not steady else "Steady state diffusion",
@@ -236,36 +236,3 @@ class FeflowModel:
             ),
             model=template_model,
         )
-
-    def save(
-        self, output_path: None | Path = None, force_saving: bool = False
-    ) -> None:
-        """
-        Save the converted FEFLOW model. Saves the meshes only if they have not been saved previously.
-        or 'force_saving' is true.
-
-        :param output_path: The path where the mesh, subdomains and project file will be written.
-        """
-        if output_path is None:
-            output_path = self.mesh_path
-        self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
-        if self._mesh_saving_needed or force_saving:
-            self.mesh.save(output_path.with_suffix(".vtu"))
-            for name, subdomain in self.subdomains.items():
-                subdomain.save(output_path.parent / (name + ".vtu"))
-            self._mesh_saving_needed = False
-        else:
-            logger.info(
-                "The mesh and subdomains have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
-            )
-
-    def run(
-        self, output_path: None | Path = None, overwrite: bool = False
-    ) -> None:
-        """
-        Run the converted FEFLOW model.
-
-        :param output_path: The path where the mesh, subdomains and project file will be written.
-        """
-        self.save(output_path, overwrite)
-        self.project.run_model()

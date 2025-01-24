@@ -31,7 +31,6 @@ class OGSModel:
         mesh: pv.UnstructuredGrid | ot.Mesh,
         subdomains: dict[str, ot.Mesh | pv.UnstructuredGrid],
         project: Project,
-        name: str = "OGS_default_model",
         output_path: Path | None = None,
     ):
         """
@@ -41,30 +40,20 @@ class OGSModel:
             :param subdomains: All subdomains (boundary conditions/ source terms) required for the model.
             :param project_file: Project file used to define the model.
             :param name: Name of the OGS model.
-            :param output_path: Output path, if the model is to be saved.
+            :param output_path: Output path, refers to the path to the directory with the filename of the bulk mesh.
         """
         if output_path is None:
-            self.output_path = Path.cwd()
-        self._mesh = mesh
-        self._subdomains = subdomains
-        self._project = project
-        self.name = name
+            self.output_path = Path.cwd() / "OGS_model.vtu"
+        else:
+            self.output_path = output_path.with_suffix(".vtu")
+        self.mesh: ot.Mesh | pv.UnstructuredGrid = mesh
+        self.subdomains: dict[str, ot.Mesh | pv.UnstructuredGrid] = subdomains
+        self.project = project
         self._mesh_saving_needed = True
-
-    @property
-    def project(self) -> Project:
-        return self._project
-
-    @property
-    def mesh(self) -> ot.Mesh | pv.UnstructuredGrid:
-        return self._mesh
-
-    @property
-    def subdomains(self) -> dict[str, ot.Mesh | pv.UnstructuredGrid]:
-        return self._subdomains
 
     """
     # ToDo move get_dimension out of feflowlib
+    # Anyway, not 100% sure if this is needed...
     from ogstools.feflowlib._tools import get_dimension
     @property
     def dimension(self) -> int:
@@ -90,39 +79,53 @@ class OGSModel:
 
         return None
 
-    def save(self, output_path: None | Path = None) -> None:
+    def save(
+        self, output_path: None | Path = None, force_saving: bool = False
+    ) -> None:
         """
-        Save the OGS model.
+        Save the converted FEFLOW model. Saves the meshes only if they have not been saved previously.
+        or 'force_saving' is true.
 
-        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        :param output_path: The path where the mesh, subdomains and project file will be written.
+        :param force_saving: Save, even the model already was saved.
         """
         if output_path is None:
             output_path = self.output_path
-        pv.save_meshio(
-            output_path.with_name(self.name).with_suffix(".vtu"), self.mesh
-        )
-        for name, subdomain in self.subdomains.items():
-            pv.save_meshio(
-                output_path.with_name(name).with_suffix(".vtu"),
-                subdomain,
+        else:
+            self.project.replace_mesh(
+                self.output_path.name, output_path.with_suffix(".vtu").name
             )
-        self.project.write_input(
-            output_path.with_name(self.name).with_suffix(".prj")
-        )
+            self.project.replace_text(
+                str(output_path.with_suffix("")),
+                xpath="./time_loop/output/prefix",
+            )
+
+            # Overwrite output_path (not 100% if this is the best practice.)
+            # cannot happen before changing the mesh in project-file
+            self.output_path = output_path
+        self.project.write_input(prjfile_path=output_path.with_suffix(".prj"))
+        if self._mesh_saving_needed or force_saving:
+            self.mesh.save(output_path.with_suffix(".vtu"))
+            for name, subdomain in self.subdomains.items():
+                subdomain.save(output_path.parent / (name + ".vtu"))
+            self._mesh_saving_needed = False
         """
         else:
             logger.info(
-                "The mesh and boundary meshes have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
+                "The mesh and subdomains have already been saved. As no changes have been detected, saving of the mesh is skipped. The project file is saved (again)."
             )
         """
 
-    def run(self, output_path: None | Path = None) -> None:
+    def run(
+        self, output_path: None | Path = None, overwrite: bool = False
+    ) -> None:
         """
-        Run the OGS model.
+        Run the converted FEFLOW model.
 
-        :param output_path: The path where the mesh, boundary meshes and project file will be written.
+        :param output_path: The path where the mesh, subdomains and project file will be written.
+        :param force_saving: Save, even the model already was saved.
         """
-        self.save(output_path)
+        self.save(output_path, overwrite)
         self.project.run_model()
 
     if find_spec("ifm") is not None:
@@ -131,9 +134,12 @@ class OGSModel:
         def from_feflow_model(
             cls, feflow_model: "ot.FeflowModel"
         ) -> "OGSModel":
-            return cls(
+            ogs_model_instance = cls(
                 feflow_model.mesh, feflow_model.subdomains, feflow_model.project
             )
+            # Copy path from FEFLOW model
+            ogs_model_instance.output_path = feflow_model.output_path
+            return ogs_model_instance
 
         @classmethod
         def read_feflow(cls, feflow_file: Path) -> "OGSModel":
