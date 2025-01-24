@@ -85,9 +85,9 @@ prj.write_input()
 
 ### plot
 
-- Time slice plots can be created easily: filled contour plots of transient data along a sampling line ([example](https://ogstools.opengeosys.org/auto_examples/howto_plot/plot_timeslice.html#))
+- Time slice plots can be created easily: filled contour plots of transient data along a sampling line ([example](https://ogstools.opengeosys.org/0.4.0/auto_examples/howto_plot/plot_timeslice.html#))
 
-![time_slice](https://ogstools.opengeosys.org/_images/sphx_glr_plot_timeslice_001.png)
+![time_slice](https://ogstools.opengeosys.org/0.4.0/_images/sphx_glr_plot_timeslice_001.png)
 
 - Variables now have default symbols (e.g. used for labels in plots)
 
@@ -100,8 +100,8 @@ mesh = ot.Mesh.read(test_shapefile)
 ```
 
 - Mesh can be remeshed with triangle
-  ![Mesh_triangle](https://ogstools.opengeosys.org/_images/sphx_glr_plot_remeshing_002.png)
-- MeshSeries has a performant algorithm for integration point tessellation called `MeshSeries.ip_tesselated()` -  [example for analyzing integration point data](https://ogstools.opengeosys.org/auto_examples/howto_postprocessing/plot_ipdata.html#sphx-glr-auto-examples-howto-postprocessing-plot-ipdata-py)
+  ![Mesh_triangle](https://ogstools.opengeosys.org/0.4.0/_images/sphx_glr_plot_remeshing_002.png)
+- MeshSeries has a performant algorithm for integration point tessellation called `MeshSeries.ip_tesselated()` -  [example for analyzing integration point data](https://ogstools.opengeosys.org/0.4.0/auto_examples/howto_postprocessing/plot_ipdata.html#sphx-glr-auto-examples-howto-postprocessing-plot-ipdata-py)
 - MeshSeries allows multidimensional indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>
 
 ```python
