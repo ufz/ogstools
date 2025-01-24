@@ -943,14 +943,14 @@ class MeshSeries:
                           field, cell or point
         :param skip_last: Skips the last time slice (e.g. for restart purposes).
         """
-        for i, m in enumerate(self):
+        for i, mesh in enumerate(self):
             if ((skip_last) is False) or (i < len(self) - 1):
                 if data_type == "field":
-                    m.field_data.remove(name)
+                    mesh.field_data.remove(name)
                 elif data_type == "cell":
-                    m.cell_data.remove(name)
+                    mesh.cell_data.remove(name)
                 elif data_type == "point":
-                    m.point_data.remove(name)
+                    mesh.point_data.remove(name)
                 else:
                     msg = "array type unknown"
                     raise RuntimeError(msg)
