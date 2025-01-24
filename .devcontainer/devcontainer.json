@@ -2,9 +2,11 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
   "name": "ogstools with FEFLOW",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  // Swap "build" and "image" for locally building the container
+  // "build": {
+  //   "dockerfile": "Dockerfile"
+  // },
+  "image": "registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/devcontainers/features/git-lfs:1": {}
