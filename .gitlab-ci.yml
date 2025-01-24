@@ -276,7 +276,7 @@ deploy-pages-tag:
     - mv ../public $CI_COMMIT_TAG
     - git add $CI_COMMIT_TAG
     - >
-      jq 'map(if has("preferred") then del(.preferred) else . end) + [{"version": env.PARENT_PIPELINE_TAG,"url": "https://ogstools.opengeosys.org/\($ENV.PARENT_PIPELINE_TAG)/","preferred": true}]' _static/versions.json > versions.tmp
+      jq 'map(if has("preferred") then del(.preferred) else . end) + [{"version": "$CI_COMMIT_TAG","url": "https://ogstools.opengeosys.org/$CI_COMMIT_TAG/","preferred": true}]' _static/versions.json > versions.tmp
     - mv versions.tmp _static/versions.json
     - git add _static/versions.json
     - rm stable && ln -s $CI_COMMIT_TAG stable && git add stable
