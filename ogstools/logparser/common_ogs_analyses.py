@@ -123,12 +123,10 @@ def analysis_convergence_newton_iteration(df: pd.DataFrame) -> pd.DataFrame:
             context.append("component")
         _check_input(df, interest, context)
         # Eliminate all entries for coupling iteration (not of interest in this study)
-        dfe_newton_iteration[
-            "coupling_iteration"
-        ] = dfe_newton_iteration.groupby("mpi_process")[
-            ["coupling_iteration"]
-        ].fillna(
-            method="bfill"
+        dfe_newton_iteration["coupling_iteration"] = (
+            dfe_newton_iteration.groupby("mpi_process")[
+                ["coupling_iteration"]
+            ].fillna(method="bfill")
         )
         dfe_newton_iteration = dfe_newton_iteration[
             ~dfe_newton_iteration["coupling_iteration_process"].notna()
@@ -161,12 +159,10 @@ def analysis_convergence_coupling_iteration(df: pd.DataFrame) -> pd.DataFrame:
         context.append("component")
     _check_input(df, interest, context)
 
-    dfe_convergence_coupling_iteration[
-        "coupling_iteration"
-    ] = dfe_convergence_coupling_iteration.groupby("mpi_process")[
-        ["coupling_iteration"]
-    ].fillna(
-        method="ffill"
+    dfe_convergence_coupling_iteration["coupling_iteration"] = (
+        dfe_convergence_coupling_iteration.groupby("mpi_process")[
+            ["coupling_iteration"]
+        ].fillna(method="ffill")
     )
     # All context log lines (iteration_number) have no values for dx, dx_x, x . From now on not needed -> dropped
     dfe_convergence_coupling_iteration = (

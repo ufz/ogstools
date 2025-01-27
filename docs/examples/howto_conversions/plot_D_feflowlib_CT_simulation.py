@@ -43,9 +43,7 @@ clipped_mesh = feflow_model.mesh.clip_scalar(
 ot.plot.contourf(clipped_mesh, concentration)
 # %%
 # 2. Setup a prj-file to run a OGS-simulation.
-time_steps = list(
-    zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False)
-)
+time_steps = list(zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False))
 feflow_model.setup_prj(end_time=int(4.8384e07), time_stepping=time_steps)
 # Save the model (mesh, subdomains and project file).
 feflow_model.save()

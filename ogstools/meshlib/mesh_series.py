@@ -126,12 +126,10 @@ class MeshSeries:
         return deepcopy(self) if deep else self
 
     @overload
-    def __getitem__(self, index: int) -> Mesh:
-        ...
+    def __getitem__(self, index: int) -> Mesh: ...
 
     @overload
-    def __getitem__(self, index: slice | Sequence) -> MeshSeries:
-        ...
+    def __getitem__(self, index: slice | Sequence) -> MeshSeries: ...
 
     def __getitem__(self, index: Any) -> Any:
         if isinstance(index, int):
@@ -215,9 +213,9 @@ class MeshSeries:
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
-            ip_ms._mesh_cache[
-                self.timevalues[i]
-            ] = ip_mesh.copy()  # pylint: disable=protected-access
+            ip_ms._mesh_cache[self.timevalues[i]] = (
+                ip_mesh.copy()
+            )  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 

@@ -348,9 +348,9 @@ def get_material_properties_of_CT_model(
         for material_id, property_value in get_material_properties(
             mesh, parameter_feflow
         ).items():
-            material_properties[int(material_id)][
-                parameter_ogs
-            ] = property_value[0]
+            material_properties[int(material_id)][parameter_ogs] = (
+                property_value[0]
+            )
 
     return material_properties
 

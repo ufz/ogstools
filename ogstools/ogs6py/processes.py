@@ -5,6 +5,7 @@ Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
+
 from typing import Any
 
 from lxml import etree as ET
@@ -95,10 +96,10 @@ class Processes(build_tree.BuildTree):
             if key == "darcy_gravity":
                 for i, entry in enumerate(args["darcy_gravity"]):
                     if entry != 0.0:
-                        self.process_baseentries[
-                            "darcy_gravity"
-                        ] = self.populate_tree(
-                            self.process, "darcy_gravity", overwrite=True
+                        self.process_baseentries["darcy_gravity"] = (
+                            self.populate_tree(
+                                self.process, "darcy_gravity", overwrite=True
+                            )
                         )
                         self.populate_tree(
                             self.process_baseentries["darcy_gravity"],

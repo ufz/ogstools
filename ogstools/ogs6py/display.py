@@ -5,6 +5,7 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
               http://www.opengeosys.org/project/license
 
 """
+
 from contextlib import suppress
 
 from lxml import etree as ET

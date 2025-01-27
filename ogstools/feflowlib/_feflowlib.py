@@ -306,9 +306,9 @@ def get_species_parameter(
                         if species != "single_species"
                         else doc.getParameter(getattr(ifm.Enum, data))
                     )
-                    species_dict[point_or_cell][
-                        species + "_" + data
-                    ] = np.array(doc.getParamValues(par))
+                    species_dict[point_or_cell][species + "_" + data] = (
+                        np.array(doc.getParamValues(par))
+                    )
 
     return species_dict, obsolete_data
 
