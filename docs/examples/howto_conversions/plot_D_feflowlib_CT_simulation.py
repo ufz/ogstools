@@ -50,7 +50,7 @@ feflow_model.setup_prj(end_time=int(4.8384e07), time_stepping=time_steps)
 # Save the model (mesh, subdomains and project file).
 feflow_model.save()
 # Print the prj-file as an example.
-ET.dump(ET.parse(feflow_model.mesh_path.with_suffix(".prj")))
+ET.dump(ET.parse(feflow_model.output_path.with_suffix(".prj")))
 # %%
 # 3. Run the model.
 feflow_model.run()
