@@ -213,9 +213,9 @@ class MeshSeries:
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
-            ip_ms._mesh_cache[
-                self.timevalues[i]
-            ] = ip_mesh.copy()  # pylint: disable=protected-access
+            ip_ms._mesh_cache[self.timevalues[i]] = (
+                ip_mesh.copy()
+            )  # pylint: disable=protected-access
         ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
         return ip_ms
 
