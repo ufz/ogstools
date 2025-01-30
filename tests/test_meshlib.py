@@ -530,3 +530,53 @@ class TestUtils:
         for i in range(num_slices):
             ts = float(pvd_entries[i].attrib["timestep"])
             assert np.abs(ms.timevalues[i] - ts) < 1e-14
+
+    def test_remove_array(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        lengths = {"cell": 5, "field": 4, "point": 12}
+        arrays_to_be_removed = {
+            "cell": "effective_pressure",
+            "field": "sigma_ip",
+            "point": "temperature",
+        }
+
+        def data(m):
+            return {
+                "point": m.point_data,
+                "cell": m.cell_data,
+                "field": m.field_data,
+            }
+
+        for mesh in ms:
+            for array_type in arrays_to_be_removed:
+                array_names = data(mesh)[array_type].keys()
+                assert arrays_to_be_removed[array_type] in array_names
+                assert lengths[array_type] == len(array_names)
+        ms.remove_array("effective_pressure", data_type="cell")
+        ms.remove_array("sigma_ip", data_type="field")
+        ms.remove_array("temperature", data_type="point")
+        for mesh in ms:
+            for array_type in arrays_to_be_removed:
+                array_names = data(mesh)[array_type].keys()
+                assert arrays_to_be_removed[array_type] not in array_names
+                assert lengths[array_type] - 1 == len(array_names)
+
+        # same with skip last option
+        ms = examples.load_meshseries_THM_2D_PVD()
+        for mesh in ms:
+            for array_type in arrays_to_be_removed:
+                array_names = data(mesh)[array_type].keys()
+                assert arrays_to_be_removed[array_type] in array_names
+                assert lengths[array_type] == len(array_names)
+        ms.remove_array("effective_pressure", data_type="cell", skip_last=True)
+        ms.remove_array("sigma_ip", data_type="field", skip_last=True)
+        ms.remove_array("temperature", data_type="point", skip_last=True)
+        for i, mesh in enumerate(ms):
+            for array_type in arrays_to_be_removed:
+                array_names = data(mesh)[array_type].keys()
+                if i == len(ms) - 1:
+                    assert arrays_to_be_removed[array_type] in array_names
+                    assert lengths[array_type] == len(array_names)
+                else:
+                    assert arrays_to_be_removed[array_type] not in array_names
+                    assert lengths[array_type] - 1 == len(array_names)

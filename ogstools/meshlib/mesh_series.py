@@ -929,3 +929,26 @@ class MeshSeries:
         else:
             s = "Currently the save method is implemented for PVD/VTU only."
             raise RuntimeError(s)
+
+    def remove_array(
+        self, name: str, data_type: str = "field", skip_last: bool = False
+    ) -> None:
+        """
+        Removes an array from all time slices of the mesh series.
+
+        :param name: Array name
+        :param data_type: Data type of the array. Could be either
+                          field, cell or point
+        :param skip_last: Skips the last time slice (e.g. for restart purposes).
+        """
+        for i, mesh in enumerate(self):
+            if ((skip_last) is False) or (i < len(self) - 1):
+                if data_type == "field":
+                    mesh.field_data.remove(name)
+                elif data_type == "cell":
+                    mesh.cell_data.remove(name)
+                elif data_type == "point":
+                    mesh.point_data.remove(name)
+                else:
+                    msg = "array type unknown"
+                    raise RuntimeError(msg)
