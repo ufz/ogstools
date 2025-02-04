@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import pandamesh as pm
 import pyvista as pv
 from geopandas import GeoDataFrame, read_file
 
@@ -15,6 +14,7 @@ def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
     :param shape_file: Path of shape-file to be prepared for meshing.
     :returns: GeoDataFrame ready to get meshed.
     """
+
     shape_file = Path(shape_file)
     gdf = read_file(shape_file)
     if "MultiPolygon" in gdf["geometry"].geom_type.to_numpy():
@@ -67,6 +67,8 @@ def _points_cells_from_shapefile(
         "triangle",
         "gmsh",
     ], "mesh_generator must be 'triangle' or 'gmsh'"
+
+    import pandamesh as pm
 
     if mesh_generator == "triangle":
         mesher = pm.TriangleMesher(geodataframe)
