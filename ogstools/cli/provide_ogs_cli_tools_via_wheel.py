@@ -1,10 +1,5 @@
-import os
-import platform
-import subprocess
 import sys
-from pathlib import Path
-
-from . import OGS_USE_PATH
+from typing import Any
 
 binaries_list = [
     "addDataToRaster",
@@ -73,7 +68,7 @@ binaries_list = [
 ]
 
 
-def pyproject_get_binaries():
+def pyproject_get_binaries() -> dict[str, str]:
     return {
         binary: f"ogs._internal.provide_ogs_cli_tools_via_wheel:{binary}"
         for binary in binaries_list
@@ -81,11 +76,11 @@ def pyproject_get_binaries():
 
 
 # Not used when OGS_USE_PATH is true!
-def ogs():
+def ogs() -> None:
     raise SystemExit(ogs_with_args(sys.argv))
 
 
-def ogs_with_args(argv):
+def ogs_with_args(argv: Any) -> int:
     import ogs.simulator as sim
 
     return_code = sim.initialize(argv)
@@ -107,28 +102,29 @@ def ogs_with_args(argv):
     return return_code
 
 
-if "PEP517_BUILD_BACKEND" not in os.environ:
-    # Here, we assume that this script is installed, e.g., in a virtual environment
-    # alongside a "bin" directory.
-    OGS_BIN_DIR = Path(__file__).parent.parent.parent / "bin"  # installed wheel
-    if not OGS_BIN_DIR.exists():
-        OGS_BIN_DIR = OGS_BIN_DIR.parent  # build directory
-
-    if platform.system() == "Windows":
-        os.add_dll_directory(OGS_BIN_DIR)
-
-    def _program(name, args):
-        exe = OGS_BIN_DIR / name
-        if OGS_USE_PATH:
-            exe = name
-            print(f"OGS_USE_PATH is true: {name} from $PATH is used!")
-        return subprocess.run([exe] + args).returncode  # noqa: PLW1510
-
-    FUNC_TEMPLATE = (
-        """def {0}(): raise SystemExit(_program("{0}", sys.argv[1:]))"""
-    )
-    for f in binaries_list:
-        if f == "ogs" and not OGS_USE_PATH:
-            continue  # provided by separate function
-        # When OGS_USE_PATH is true then ogs()-function above is not used!
-        exec(FUNC_TEMPLATE.format(f))
+# if "PEP517_BUILD_BACKEND" not in os.environ:
+#     # Here, we assume that this script is installed, e.g., in a virtual environment
+#     # alongside a "bin" directory.
+#     OGS_BIN_DIR = Path(__file__).parent.parent.parent / "bin"  # installed wheel
+#     if not OGS_BIN_DIR.exists():
+#         OGS_BIN_DIR = OGS_BIN_DIR.parent  # build directory
+#
+#     if platform.system() == "Windows":
+#         os.add_dll_directory(OGS_BIN_DIR)
+#
+#     def _program(name, args):
+#         exe = OGS_BIN_DIR / name
+#         if OGS_USE_PATH:
+#             exe = name
+#             print(f"OGS_USE_PATH is true: {name} from $PATH is used!")
+#         return subprocess.run([exe] + args).returncode
+#
+#     FUNC_TEMPLATE = (
+#         """def {0}(): raise SystemExit(_program("{0}", sys.argv[1:]))"""
+#     )
+#     for f in binaries_list:
+#         if f == "ogs" and not OGS_USE_PATH:
+#             continue  # provided by separate function
+#         # When OGS_USE_PATH is true then ogs()-function above is not used!
+#         exec(FUNC_TEMPLATE.format(f))
+#

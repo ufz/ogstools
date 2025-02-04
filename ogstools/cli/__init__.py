@@ -1,3 +1,5 @@
-import os
+from ogstools.find_ogs import check_ogs
 
-OGS_USE_PATH = os.getenv("OGS_USE_PATH", "False").lower() in ("true", "1", "t")
+cli = check_ogs(False)
+
+__all__ = ["cli"]

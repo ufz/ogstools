@@ -1,7 +1,8 @@
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
-from . import OGS_USE_PATH
 from .provide_ogs_cli_tools_via_wheel import binaries_list, ogs_with_args
 
 # Here, we assume that this script is installed, e.g., in a virtual environment
@@ -11,14 +12,15 @@ if not OGS_BIN_DIR.exists():
     OGS_BIN_DIR = OGS_BIN_DIR.parent  # build directory
 
 
-class CLI:
-    def __init__(self):
+class CLI_ON_PATH:
+    def __init__(self, ogs_bin_dir: Path):
+        self.ogs_bin_dir = ogs_bin_dir
         for b in binaries_list:
             if b == "ogs":
                 continue  # command provided separately
-            setattr(self, b, CLI._get_run_cmd(b))
+            setattr(self, b, CLI_ON_PATH._get_run_cmd(ogs_bin_dir, b))
 
-    def ogs(self, *args, **kwargs):
+    def ogs(self, *args: Any, **kwargs: Any) -> int:
         """
         This function wraps the commandline tool ogs for easy use from Python.
 
@@ -43,16 +45,16 @@ class CLI:
         >>> cli.generateStructuredMesh(e="line", lx=1, nx=10, o=outfile)
         """
 
-        cmdline = CLI._get_cmdline("ogs", *args, **kwargs)
+        cmdline = CLI_ON_PATH._get_cmdline("ogs", *args, **kwargs)
 
-        if OGS_USE_PATH:
+        if self.ogs_bin_dir:
             print("OGS_USE_PATH is true: ogs from $PATH is used!")
             return subprocess.call(cmdline)
 
         return ogs_with_args(cmdline)
 
     @staticmethod
-    def _format_kv(kwargs):
+    def _format_kv(kwargs: Any) -> Any:
         for key, v in kwargs.items():
             # Convert None to True
             if v is None:
@@ -76,17 +78,16 @@ class CLI:
                 yield f"{v}"
 
     @staticmethod
-    def _get_cmdline(cmd, *args, **kwargs):
-        str_kwargs = list(CLI._format_kv(kwargs))
+    def _get_cmdline(cmd: str, *args: Any, **kwargs: Any) -> list[str]:
+        str_kwargs = list(CLI_ON_PATH._format_kv(kwargs))
         return [cmd] + str_kwargs + list(args)
 
     @staticmethod
-    def _get_run_cmd(attr):
-        def run_cmd(*args, **kwargs):
-            cmd = OGS_BIN_DIR / attr
-            if OGS_USE_PATH:
-                cmd = attr
-            cmdline = CLI._get_cmdline(cmd, *args, **kwargs)
+    def _get_run_cmd(ogs_bin_dir: Path, attr: str) -> Callable:
+        def run_cmd(*args: Any, **kwargs: Any) -> int:
+            cmd = str(ogs_bin_dir / attr)
+            print("CMD:", cmd)
+            cmdline = CLI_ON_PATH._get_cmdline(cmd, *args, **kwargs)
             return subprocess.call(cmdline)
 
         # TODO: Only arguments with underscores work. Arguments with dashes not.
@@ -115,6 +116,3 @@ class CLI:
             """
 
         return run_cmd
-
-
-cli = CLI()

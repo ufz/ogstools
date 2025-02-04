@@ -55,7 +55,10 @@ class Surface:
         """
         outfile = Path(tempfile.mkstemp(".asc", self.filename.stem)[1])
 
-        from ogs import cli
+        try:
+            from ogs import cli
+        except ImportError:
+            from ogstools.cli import cli
 
         ret = cli.Mesh2Raster(
             i=str(self.filename), o=str(outfile), c=resolution
