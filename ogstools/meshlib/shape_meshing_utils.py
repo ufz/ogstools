@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import numpy as np
+import pyvista as pv
 from geopandas import GeoDataFrame, read_file
-from pyvista import pv
 
 
 def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:

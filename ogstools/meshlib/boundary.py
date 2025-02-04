@@ -11,7 +11,6 @@ from math import ceil
 from pathlib import Path
 
 import pyvista as pv
-from ogs import cli
 
 from .boundary_subset import Surface
 
@@ -74,6 +73,8 @@ class Layer(Boundary):
             return [top_raster, bottom_raster]
 
         outfile = Path(tempfile.mkstemp(".asc")[1])
+        from ogs import cli
+
         ret = cli.createIntermediateRasters(
             file1=top_raster,
             file2=bottom_raster,
@@ -111,6 +112,8 @@ class LocationFrame:
 
         :returns: None
         """
+        from ogs import cli
+
         cli.generateGeometry(
             geometry_name="SceneRectangle",
             x0=str(self.xmin),

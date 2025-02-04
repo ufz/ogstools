@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pyvista as pv
-from ogs import cli
 
 from ..boundary_set import Layer, LayerSet
 
@@ -123,6 +122,8 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     )
 
     outfile = Path(tempfile.mkstemp(".vtu", "region_prism")[1])
+    from ogs import cli
+
     ret = cli.createLayeredMeshFromRasters(
         i=raster_vtu, r=rastered_layers_txt, o=outfile
     )
@@ -283,6 +284,8 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
 
     smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetraeder")[1])
 
+    from ogs import cli
+
     ret_smesh = cli.createTetgenSmeshFromRasters(
         i=raster_vtu, r=rastered_layers_txt1, o=smesh_file
     )
@@ -355,6 +358,8 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     with layers_txt.open("w") as file:
         file.write("\n".join(str(filename) for filename in layer_filenames))
     outfile = Path(tempfile.mkstemp(".vtu", "region_voxel")[1])
+    from ogs import cli
+
     ret = cli.Layers2Grid(
         i=layers_txt,
         o=outfile,

@@ -23,7 +23,7 @@ def read_shape(
     :returns: pv.UnstructuredGrid
     """
 
-    from shape_meshing_utils import (
+    from ogstools.meshlib.shape_meshing_utils import (
         _mesh_from_points_cells,
         _points_cells_from_shapefile,
     )

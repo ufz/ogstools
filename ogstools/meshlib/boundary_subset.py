@@ -9,7 +9,6 @@ from pathlib import Path
 
 import numpy as np
 import pyvista as pv
-from ogs import cli
 from typeguard import typechecked
 
 
@@ -55,6 +54,8 @@ class Surface:
         :returns the path and filename of the created file (.asc)
         """
         outfile = Path(tempfile.mkstemp(".asc", self.filename.stem)[1])
+
+        from ogs import cli
 
         ret = cli.Mesh2Raster(
             i=str(self.filename), o=str(outfile), c=resolution
