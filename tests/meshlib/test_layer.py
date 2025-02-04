@@ -21,6 +21,7 @@ from ogstools.meshlib.region import (
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
+@pytest.mark.tools()  # Mesh2Raster
 class TestLayer:
     def test_intermediate_1(self):
         """
@@ -84,6 +85,7 @@ class TestLayer:
 
 
 class TestRaster:
+    @pytest.mark.tools()  # generateGeometry
     def testgmlwrite(self):
         """
         Checks if GML is created and its content (some parts)

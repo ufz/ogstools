@@ -1,5 +1,7 @@
 from collections import Counter
 
+import pytest
+
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib.boundary import Layer
 from ogstools.meshlib.boundary_set import LayerSet
@@ -14,6 +16,7 @@ from ogstools.meshlib.region import (
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
+@pytest.mark.tools()  # multiple tools
 class TestDemo:
     def test_allcompare(self):
         # To define a mesh with 3 layers from example input, create 4 surfaces (3 bottom surface + 1 top surface)
@@ -66,6 +69,7 @@ class TestDemo:
             == number_of_layers
         )
 
+    @pytest.mark.tools()  # createLayeredMeshFromRasters
     def test_gettingstarted(self):
         # Define a simple surface
         bounds = (-200, 200, -200, 200)

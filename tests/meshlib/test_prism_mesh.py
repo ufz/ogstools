@@ -1,3 +1,5 @@
+import pytest
+
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
@@ -11,6 +13,7 @@ class TestPrismMesh:
     materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"
 
+    @pytest.mark.tools()  # createLayeredMeshFromRasters
     def test_mesh_fine_xy_coarse_z(self):
         mesh1_df = dataframe_from_csv(
             1,

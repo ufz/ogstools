@@ -1,3 +1,5 @@
+import pytest
+
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary_set import LayerSet
@@ -11,6 +13,7 @@ class TestTetraeder:
     materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"
 
+    @pytest.mark.tools()  # createTetgenSmeshFromRasters
     def test_mesh_coarse_xyz(self):
         mesh1_df = dataframe_from_csv(
             1,
