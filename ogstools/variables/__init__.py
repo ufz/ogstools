@@ -18,7 +18,7 @@ from .matrix import Matrix
 from .tensor_math import identity
 from .unit_registry import u_reg
 from .variable import Scalar, Variable
-from .vector import Vector
+from .vector import BHE_Vector, Vector
 
 __all__ = ["u_reg"]
 
@@ -179,6 +179,10 @@ saturation = Scalar(
     output_unit="%",
     output_name="Saturation",
     symbol="s",
+)
+
+temperature_BHE = BHE_Vector(
+    data_name="temperature_BHE", data_unit="K", output_unit="°C", symbol="T"
 )
 
 all_variables = [v for v in locals().values() if isinstance(v, Variable)]

@@ -189,3 +189,43 @@ class TestPhysicalVariable:
         name_len = len(ov.stress.output_name) + 8  # for symbol and unit
         assert "\n" in ov.stress.get_label(name_len)
         assert "\n" not in ov.stress.get_label(name_len + 1)
+
+    def test_BHE_temperature(self):
+        with pytest.raises(TypeError):
+            _ = ov.temperature_BHE.magnitude.transform(1)
+        for _, components in ov.BHE_Vector.BHE_COMPONENTS.items():
+            values = 273.15 + np.arange(len(components))
+            for index, component in enumerate(components):
+                assert index == ov.temperature_BHE[component].transform(values)
+
+    def test_BHE_temperature_components(self):
+        var = ov.temperature_BHE
+        with pytest.raises(IndexError):
+            _ = var[0, 0, 0].transform(1)
+        mesh = examples.load_mesh_mechanics_2D()  # could be any mesh
+        temp = np.full((mesh.n_points, 3), 273.15)
+        mesh.point_data["temperature_BHE"] = temp
+        mesh.point_data["temperature_BHE1"] = temp + np.asarray([1, -1, 0.5])
+        mesh.point_data["temperature_BHE2"] = temp + np.asarray([2, -2, 1.0])
+        assert np.all(var["in"].transform(mesh) == 0)
+        for i in range(1, 3):
+            assert np.all(var[i, "in"].transform(mesh) == i)
+            assert np.all(var[i, "out"].transform(mesh) == -i)
+            assert np.all(var[i, "grout"].transform(mesh) == 0.5 * i)
+
+    def test_BHE_temperature_by_type(self):
+        comps = ov.BHE_Vector.BHE_COMPONENTS
+        bhe_mesh_series = [
+            (examples.load_meshseries_BHE_3D_1P(), comps["1P"]),
+            (examples.load_meshseries_BHE_3D_1U(), comps["1U"]),
+            (examples.load_meshseries_BHE_3D_2U(), comps["2U"]),
+            (examples.load_meshseries_BHE_3D_CXA(), comps["CXA"]),
+            (examples.load_meshseries_BHE_3D_CXC(), comps["CXC"]),
+        ]
+        for ms, components in bhe_mesh_series:
+            temp = [
+                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0, 0]
+                for comp in components
+            ]
+            # initial vector is +1 for every component
+            assert np.all(np.diff(temp) == 1)

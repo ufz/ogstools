@@ -4,8 +4,9 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
+from typing import ClassVar, Literal, TypeAlias, TypeVar
 
 import numpy as np
 from pint.facets.plain import PlainQuantity
@@ -15,6 +16,8 @@ from ogstools.variables.variable import Scalar, Variable
 from .tensor_math import _split_quantity, _to_quantity
 
 ValType: TypeAlias = PlainQuantity | np.ndarray
+
+T = TypeVar("T")
 
 
 def vector_norm(values: ValType) -> ValType:
@@ -58,6 +61,81 @@ class Vector(Variable):
             symbol=f"||{{{self.symbol}}}||",
             func=lambda x: vector_norm(self.func(x)),
         )
+
+
+@dataclass
+class BHE_Vector(Variable):
+    """
+    ========= ===========================
+    BHE type  available Vector components
+    ========= ===========================
+    1U        in, out, grout1, grout2
+    2U        in1, in2, out1, out2, grout1, grout2, grout3, grout4
+    1P        in, grout
+    CXC       in, out, grout
+    CXA       in, out, grout
+    ========= ===========================
+    """
+
+    BHE_COMPONENTS: ClassVar[dict[str, list[str]]] = {
+        "1U":  ["in", "out", "grout1", "grout2"],
+        "2U":  ["in1", "in2", "out1", "out2", "grout1", "grout2", "grout3", "grout4"],
+        "CXC": ["in", "out", "grout"],
+        "CXA": ["in", "out", "grout"],
+        "1P":  ["in", "grout"],
+    }  # fmt: skip
+
+    def __getitem__(self, index: int | str | tuple) -> Scalar:
+        """
+        Get a scalar variable as a specific component of the vector variable.
+
+        :param index: The index of the component.
+
+        :returns: A scalar variable as a vector component.
+        """
+
+        if isinstance(index, tuple) and len(index) > 2:
+            msg = "Expected at most two indices: (BHE number, component)"
+            raise IndexError(msg)
+        suffix = f"{index[0]}" if isinstance(index, tuple) else ""
+        comp_index = index[1] if isinstance(index, tuple) else index
+
+        def get_component(comp_index: int | str) -> Callable:
+            if isinstance(comp_index, int):
+                return lambda x: self.func(x)[..., comp_index]
+
+            def component_selector(x: T) -> T:
+                data: np.ndarray = self.func(x)
+                len_data = data.shape[-1]
+
+                for _, components in BHE_Vector.BHE_COMPONENTS.items():
+                    if len_data == len(components):
+                        if comp_index in components:
+                            return data[..., components.index(comp_index)]
+                        msg = f"Unknown str index {comp_index}"
+                        raise ValueError(msg)
+                msg = f"Unknown BHE type with BHE vector length {len_data}"
+                raise ValueError(msg)
+
+            return component_selector
+
+        return Scalar.from_variable(
+            self,
+            data_name=self.data_name + suffix,
+            output_name=self.output_name + suffix + f"_{comp_index}",
+            symbol=f"{{{self.symbol}}}_{comp_index}",
+            func=get_component(comp_index),
+        )
+
+    @property
+    def magnitude(self) -> Scalar:
+        ":returns: A scalar variable as the magnitude of the vector."
+        msg = """You tried to get the magnitude of a BHE temperature vector,
+        which most likely is unintended. Please access the different components
+        via indexing: e.g. ot.variables.temperature_BHE["T_in"].\n""" + str(
+            BHE_Vector.__doc__
+        )
+        raise TypeError(msg)
 
 
 @dataclass
