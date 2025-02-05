@@ -102,6 +102,49 @@ tests (arch - pip - ogs custom latest) [M]:
   script:
     - pytest
 
+
+tests (arch - pip - no OGS) [M]:
+  stage: maintenance
+  rules:
+    - *maintenance-rules
+  tags: [shell, envinf]
+  needs: []
+  before_script:
+    - *pip-setup-activate
+    - pip install -e .[test]
+    - pip uninstall ogs -y
+    - *pip-setup-extra-headless
+  script:
+    - python -c "import ogstools as ot; ot.status(verbose=True)"
+    - pytest -m "not (tools or system)"
+
+# tests (arch - pip - with OGS_IN_PATH) [M]:
+# Actually a test with OGS in path was planned (just another export -> export PATH=$PWD/.venv_only_ogs/bin:$PATH )
+# It will not work easily -> https://stackoverflow.com/questions/46242623/modify-path-for-gitlab-runner
+# So we will skip this test for now, and remove the option to have OGS in path in the future, anyway
+
+tests (arch - pip - with OGS_BIN_PATH) [M]:
+  stage: maintenance
+  tags: [shell, envinf]
+  rules:
+    - *maintenance-rules
+  needs: []
+  before_script:
+    - python -m venv .venv_only_ogs --upgrade-deps
+    - source .venv_only_ogs/bin/activate
+    - pip install ogs
+    - export OGS_BIN_PATH=$PWD/.venv_only_ogs/bin
+    - deactivate
+    - *pip-setup-activate
+    - pip install -e .[test]
+    - pip uninstall ogs -y
+    - *pip-setup-extra-headless
+  script:
+    - python -c "import ogstools as ot; ot.status(verbose=True)"
+    - pytest -m "tools"
+    - pytest -m "system"
+
+
 tests (arch - conda - ogs custom latest) [M]:
   stage: maintenance
   tags: [shell, envinf]
