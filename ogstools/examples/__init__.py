@@ -50,6 +50,26 @@ def load_meshseries_HT_2D_VTU():
     )
 
 
+def load_meshseries_BHE_3D_1P():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_1P.pvd")
+
+
+def load_meshseries_BHE_3D_1U():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_1U.pvd")
+
+
+def load_meshseries_BHE_3D_2U():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_2U.pvd")
+
+
+def load_meshseries_BHE_3D_CXA():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXA.pvd")
+
+
+def load_meshseries_BHE_3D_CXC():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd")
+
+
 def load_meshseries_HT_2D_paraview_XMF():
     return MeshSeries(
         str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")

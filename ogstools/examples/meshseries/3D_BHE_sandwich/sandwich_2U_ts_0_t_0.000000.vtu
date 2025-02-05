@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<VTKFile type="UnstructuredGrid" version="1.0" byte_order="LittleEndian" header_type="UInt64" compressor="vtkZLibDataCompressor">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Int8" Name="OGS_VERSION" NumberOfTuples="5" format="appended" RangeMin="46"                   RangeMax="54"                   offset="0"                   />
+    </FieldData>
+    <Piece NumberOfPoints="12"                   NumberOfCells="6"                   >
+      <PointData>
+        <DataArray type="Float64" Name="temperature_BHE1" NumberOfComponents="8" format="appended" RangeMin="0"                    RangeMax="810.79453624"         offset="64"                  />
+        <DataArray type="Float64" Name="temperature_soil" format="appended" RangeMin="293.15"               RangeMax="293.15"               offset="176"                 />
+      </PointData>
+      <CellData>
+      </CellData>
+      <Points>
+        <DataArray type="Float64" Name="Points" NumberOfComponents="3" format="appended" RangeMin="0"                    RangeMax="3.1622776602"         offset="244"                 />
+      </Points>
+      <Cells>
+        <DataArray type="Int64" Name="connectivity" format="appended" RangeMin=""                     RangeMax=""                     offset="356"                 />
+        <DataArray type="Int64" Name="offsets" format="appended" RangeMin=""                     RangeMax=""                     offset="464"                 />
+        <DataArray type="UInt8" Name="types" format="appended" RangeMin=""                     RangeMax=""                     offset="540"                 />
+      </Cells>
+    </Piece>
+  </UnstructuredGrid>
+  <AppendedData encoding="base64">
+   _AQAAAAAAAAAAgAAAAAAAAAUAAAAAAAAADQAAAAAAAAA=eF4z0zPVMwEAAvoA/A==AQAAAAAAAAAAgAAAAAAAAAADAAAAAAAAMQAAAAAAAAA=eF5LSwOCTYUOICrtEJS+BKUfQelPUJqpCEILQWmlIgeGAQZpo+4fUDDU3Q8Ab5NnLQ==AQAAAAAAAAAAgAAAAAAAAGAAAAAAAAAAEQAAAAAAAAA=eF5LSwOCoCKHNBrRAN2CJBk=AQAAAAAAAAAAgAAAAAAAACABAAAAAAAAMQAAAAAAAAA=eF5jYCAGfLDHz8cFcOlDp3GphwMHVC5cnQMaHwYcGLACDjRxmD6YOLo5HA4ArTYOng==AQAAAAAAAAAAgAAAAAAAAMAAAAAAAAAAMAAAAAAAAAA=eF5jYIAARijNBKWZoTQLlGYlIM4GpdmhNAcBcU4ozQWludHE2dBoZjQaBgAsKAB/AQAAAAAAAAAAgAAAAAAAADAAAAAAAAAAGAAAAAAAAAA=eF5jY4AAHigtBKVFoLQYlJaA0gAJcABnAQAAAAAAAAAAgAAAAAAAAAYAAAAAAAAADgAAAAAAAAA=eF7j5eVlZmYGAADbADE=
+  </AppendedData>
+</VTKFile>
