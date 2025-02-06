@@ -237,7 +237,7 @@ class TestPlotting:
         )
         for axis in ["x", "y", "z", [1, 1, 0]]:
             ax: plt.Axes
-            fig, ax = plt.subplots()
+            _, ax = plt.subplots()
             i_grid, j_grid, u, v, lw = ot.plot.vectorplots._vectorfield(
                 mesh.slice(axis), ot.variables.velocity
             )
@@ -246,7 +246,7 @@ class TestPlotting:
             ax.streamplot(
                 i_grid, j_grid, u, v, color="k", linewidth=lw, density=1.5
             )
-        plt.close()
+            plt.close()
 
     def test_xdmf(self):
         """Test creation of 2D plots from xdmf data."""
@@ -277,6 +277,7 @@ class TestPlotting:
             fig = ot.plot.line(*args, figsize=[4, 3])
             assert fig.axes[0].get_xlabel().split(" ")[0] == x_l
             assert fig.axes[0].get_ylabel().split(" ")[0] == y_l
+            plt.close()
 
         check(sample_x, ot.variables.temperature, x_l="x", y_l="temperature")
         check(sample_x, x_l="x", y_l="y")
@@ -294,10 +295,11 @@ class TestPlotting:
         check(sample_xy, ot.variables.displacement, ot.variables.temperature,
               x_l="displacement", y_l="temperature")  # fmt: skip
         _, ax = plt.subplots(figsize=[4, 3])
-        ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax)
+        ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax, lw=1)
         _ = ot.plot.line(
-            sample_y, "y", "x", figsize=[5, 5], color="g", linewidth=1,
-            ls="--", label="test", grid=True,
+            sample_y, "y", "x", sort=False, figsize=[5, 5], color="g",
+            linewidth=1, ls="--", label="test", grid=True,
         )  # fmt: skip
         with pytest.raises(TypeError):
             ot.plot.line(sample_y, ax)
+        plt.close()

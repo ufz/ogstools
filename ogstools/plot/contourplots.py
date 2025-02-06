@@ -221,7 +221,7 @@ def subplot(
     show_region_bounds = kwargs.get(
         "show_region_bounds", setup.show_region_bounds
     )
-    if show_region_bounds and "MaterialIDs" in mesh.cell_data:
+    if show_region_bounds:
         features.layer_boundaries(ax, mesh, projection)
 
     if isinstance(variable, Vector):

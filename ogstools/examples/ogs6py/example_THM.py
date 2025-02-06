@@ -1,7 +1,5 @@
 import ogstools as ot
 
-# if MKL set vars vars script should be executed before OGS
-# prj = ot.Project(output_file="thm_test.prj", MKL=True, OMP_NUM_THREADS=4)
 prj = ot.Project(output_file="thm_test.prj", OMP_NUM_THREADS=4)
 prj.geometry.add_geometry(filename="square_1x1_thm.gml")
 prj.mesh.add_mesh(filename="quarter_002_2nd.vtu", axially_symmetric="true")

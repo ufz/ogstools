@@ -13,6 +13,7 @@ def line(
     var1: str | Variable | None = None,
     var2: str | Variable | None = None,
     ax: plt.Axes | None = None,
+    sort: bool = True,
     **kwargs: Any,
 ) -> plt.Figure | None:
     """Plot some data of a (1D) mesh.
@@ -33,6 +34,8 @@ def line(
     :param var2:    Variable for the y-axis if var1 is given.
     :param ax:      The matplotlib axis to use for plotting, if None a new
                     figure will be created.
+    :param sort:    Automatically sort the values along the dimension of the
+                    mesh with the largest extent
     :Keyword Arguments:
         - figsize:      figure size (default=[16, 10])
         - color:        color of the line
@@ -59,13 +62,13 @@ def line(
         case None, None:
             if len(axes_idx) == 1:
                 axes_idx = [0, axes_idx[0] if axes_idx[0] != 0 else 1]
-            x_var = get_preset("xyz"[axes_idx[0]], mesh).magnitude
-            y_var = get_preset("xyz"[axes_idx[1]], mesh).magnitude
+            x_var = get_preset("xyz"[axes_idx[0]], mesh)
+            y_var = get_preset("xyz"[axes_idx[1]], mesh)
         case var1, None:
-            x_var = get_preset("xyz"[axes_idx[0]], mesh).magnitude
+            x_var = get_preset("xyz"[axes_idx[0]], mesh)
             y_var = get_preset(var1, mesh).magnitude  # type: ignore[arg-type]
         case None, var2:
-            x_var = get_preset("xyz"[axes_idx[0]], mesh).magnitude
+            x_var = get_preset("xyz"[axes_idx[0]], mesh)
             y_var = get_preset(var2, mesh).magnitude  # type: ignore[arg-type]
         case var1, var2:
             x_var = get_preset(var1, mesh).magnitude  # type: ignore[arg-type]
@@ -74,11 +77,25 @@ def line(
     kwargs.setdefault("color", y_var.color)
     pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
     lw_scale = 4 if pure_spatial else 2.5
-    kwargs.setdefault("linewidth", setup.linewidth * lw_scale)
+    if "lw" in kwargs:
+        kwargs["lw"] *= lw_scale
+    elif "linewidth" in kwargs:
+        kwargs["linewidth"] *= lw_scale
+    else:
+        kwargs.setdefault("linewidth", setup.linewidth * lw_scale)
     fontsize = kwargs.pop("fontsize", setup.fontsize)
     show_grid = kwargs.pop("grid", True) and not pure_spatial
 
-    ax_.plot(x_var.transform(mesh), y_var.transform(mesh), **kwargs)
+    if sort:
+        sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
+        sort_ids = np.argsort(mesh.points[:, sort_idx])
+    else:
+        sort_ids = slice(None)
+    ax_.plot(
+        x_var.transform(mesh)[sort_ids],
+        y_var.transform(mesh)[sort_ids],
+        **kwargs,
+    )
 
     if "label" in kwargs:
         ax_.legend(fontsize=fontsize)
