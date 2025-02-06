@@ -791,7 +791,7 @@ class MeshSeries:
 
         Useful to convert to other units, e.g. "m" to "km" or "s" to "a".
         If given as tuple of strings, the latter units will also be set in
-        ot.plot.setup.spatial_unt and ot.plot.setup.time_unit for plotting.
+        ot.plot.setup.spatial_unit and ot.plot.setup.time_unit for plotting.
 
         :param spatial: Float factor or a tuple of str (from_unit, to_unit).
         :param time:    Float factor or a tuple of str (from_unit, to_unit).
@@ -807,17 +807,18 @@ class MeshSeries:
         else:
             time_factor = Qty(Qty(time[0]), time[1]).magnitude
             plot.setup.time_unit = time[1]
-        self._spatial_factor *= spatial_factor
-        self._time_factor *= time_factor
+        new_ms = self.copy()
+        new_ms._spatial_factor *= spatial_factor
+        new_ms._time_factor *= time_factor
 
         scaled_cache = {
             timevalue * time_factor: Mesh(mesh.scale(spatial_factor))
-            for timevalue, mesh in self._mesh_cache.items()
+            for timevalue, mesh in new_ms._mesh_cache.items()
         }
-        self.clear_cache()
-        self._mesh_cache = scaled_cache
+        new_ms.clear_cache()
+        new_ms._mesh_cache = scaled_cache
 
-        return self
+        return new_ms
 
     @typechecked
     def extract(
