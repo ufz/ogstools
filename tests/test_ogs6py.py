@@ -53,9 +53,7 @@ mapping = dict.fromkeys(range(32))
 class TestiOGS:
     @pytest.mark.dependency(name="tunnel_ogs6py_prj_file")
     def test_buildfromscratch(self) -> NoReturn:
-        model = Project(
-            output_file="tunnel_ogs6py.prj", MKL=True, OMP_NUM_THREADS=4
-        )
+        model = Project(output_file="tunnel_ogs6py.prj", OMP_NUM_THREADS=4)
         model.mesh.add_mesh(
             filename="Decovalex-0-simplified-plain-with-p0-plain.vtu"
         )
@@ -818,7 +816,7 @@ class TestiOGS:
                 assert line == lines_ref[i]
 
     def test_buildfromscratch_bhe(self) -> NoReturn:
-        model = Project(output_file="HeatTransportBHE_ogs6py.prj", MKL=False)
+        model = Project(output_file="HeatTransportBHE_ogs6py.prj")
         model.mesh.add_mesh(filename="mesh.vtu")
         model.mesh.add_mesh(filename="mesh_inflowsf.vtu")
         model.mesh.add_mesh(filename="mesh_bottomsf.vtu")
