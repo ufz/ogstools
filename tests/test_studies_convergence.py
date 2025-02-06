@@ -4,6 +4,7 @@ from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
 
@@ -73,5 +74,6 @@ class TestConvergence:
 
         _ = convergence.plot_convergence(metrics, variable)
         _ = convergence.plot_convergence_errors(metrics)
+        plt.close()
 
         rmtree(temp_dir)

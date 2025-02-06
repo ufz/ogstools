@@ -4,6 +4,7 @@ from importlib.metadata import version
 from pathlib import Path
 from tempfile import mkdtemp
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
@@ -230,16 +231,20 @@ class TestUtils:
     def test_plot_domain_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        mesh_series.plot_domain_aggregate("temperature", np.mean)
+        _ = mesh_series.plot_domain_aggregate("temperature", np.mean)
+        plt.close()
 
     def test_time_slice(self):
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        mesh_series.plot_time_slice("temperature", points, levels=[78, 79, 80])
-        mesh_series.plot_time_slice(
+        _ = mesh_series.plot_time_slice(
+            "temperature", points, levels=[78, 79, 80]
+        )
+        _ = mesh_series.plot_time_slice(
             "temperature", points, y_axis="y", interpolate=False,
             time_logscale=True, cb_loc="left", dpi=50, fontsize=10
         )  # fmt: skip
+        plt.close()
 
     def test_probe(self):
         "Test point probing on meshseries."
@@ -253,16 +258,17 @@ class TestUtils:
         """Test creation of probe plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
         points = meshseries.mesh(0).center
-        meshseries.plot_probe(points, ot.variables.temperature)
+        _ = meshseries.plot_probe(points, ot.variables.temperature)
         points = meshseries.mesh(0).points[[0, -1]]
-        meshseries.plot_probe(points, ot.variables.temperature)
-        meshseries.plot_probe(points, ot.variables.velocity)
-        meshseries.plot_probe(points, ot.variables.stress)
-        meshseries.plot_probe(points, ot.variables.stress.von_Mises)
+        _ = meshseries.plot_probe(points, ot.variables.temperature)
+        _ = meshseries.plot_probe(points, ot.variables.velocity)
+        _ = meshseries.plot_probe(points, ot.variables.stress)
+        _ = meshseries.plot_probe(points, ot.variables.stress.von_Mises)
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         points = mesh_series.mesh(0).center
-        meshseries.plot_probe(points, ot.variables.temperature)
-        meshseries.plot_probe(points, ot.variables.velocity)
+        _ = meshseries.plot_probe(points, ot.variables.temperature)
+        _ = meshseries.plot_probe(points, ot.variables.velocity)
+        plt.close()
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
