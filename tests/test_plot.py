@@ -294,10 +294,10 @@ class TestPlotting:
         check(sample_xy, ot.variables.displacement, ot.variables.temperature,
               x_l="displacement", y_l="temperature")  # fmt: skip
         _, ax = plt.subplots(figsize=[4, 3])
-        ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax)
+        ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax, lw=1)
         _ = ot.plot.line(
-            sample_y, "y", "x", figsize=[5, 5], color="g", linewidth=1,
-            ls="--", label="test", grid=True,
+            sample_y, "y", "x", sort=False, figsize=[5, 5], color="g",
+            linewidth=1, ls="--", label="test", grid=True,
         )  # fmt: skip
         with pytest.raises(TypeError):
             ot.plot.line(sample_y, ax)

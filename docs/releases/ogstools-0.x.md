@@ -8,4 +8,6 @@ This is not released yet!
 
 ## Features
 
+- plot.line now automatically sorts the data
+
 ## Infrastructure

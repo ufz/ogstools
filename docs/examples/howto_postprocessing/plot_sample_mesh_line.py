@@ -66,7 +66,7 @@ sample = mesh.sample_over_circular_arc(
 )
 fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
 mesh.plot_contourf(ot.variables.displacement["x"], fig=fig, ax=axs[1])
-ot.plot.line(sample, ax=axs[1], linewidth="8", color="red")
+ot.plot.line(sample, ax=axs[1], lw=3, color="red")
 ot.plot.line(sample, ot.variables.displacement["x"], ax=axs[0])
 fig.tight_layout()
 
@@ -115,14 +115,14 @@ sample_3 = pv.PolyData(pts).sample(mesh)
 # Another way to setup the sampling line is to extract points from the domain
 # mesh. Here, we use the ``clip`` function from ``pyvista`` and some boolean logic,
 # to extract a vertical line through the center, which follows the boundary of
-# the hole. We need to sort the points however, to have them adjacent.
+# the hole.
 
 # %%
 edges = mesh.clip("x").extract_feature_edges()
 is_top_bot = np.isin(edges.points[:, 1], [-800, -460])
 is_left = edges.points[:, 0] == 0
 pts = edges.points[np.invert(is_top_bot | is_left)]
-sample_4 = pv.PolyData(pts[np.argsort(pts[:, 1])]).sample(mesh)
+sample_4 = pv.PolyData(pts).sample(mesh)
 
 # %% [markdown]
 # Now we plot all samples for comparison.
