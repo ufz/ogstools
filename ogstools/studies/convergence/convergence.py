@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pyvista as pv
 from pint import UnitRegistry
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from ogstools import meshlib, variables
 

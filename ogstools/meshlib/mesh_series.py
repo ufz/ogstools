@@ -25,7 +25,7 @@ from scipy.interpolate import (
     NearestNDInterpolator,
     RegularGridInterpolator,
 )
-from tqdm.auto import tqdm
+from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
@@ -356,14 +356,17 @@ class MeshSeries:
         else:
             variable_name = variable
 
+        all_cached = np.all(np.isin(self.timevalues, self._mesh_cache))
         if (
             self._data_type == "xdmf"
             and variable_name in self._xdmf_reader.data_items
-            and not all(tv in self._mesh_cache for tv in self.timevalues)
+            and not all_cached
         ):
             result = self._xdmf_values(variable_name)
         else:
-            result = np.asarray([mesh[variable_name] for mesh in self])
+            result = np.asarray(
+                [mesh[variable_name] for mesh in tqdm(self, disable=all_cached)]
+            )
         if isinstance(variable, Variable):
             return variable.transform(result)
         return result
@@ -635,7 +638,7 @@ class MeshSeries:
         return FuncAnimation(
             fig,  # type: ignore[arg-type]
             _func,  # type: ignore[arg-type]
-            frames=tqdm(ts),
+            frames=tqdm(ts, total=len(ts) - 1),
             blit=False,
             interval=50,
             repeat=False,
