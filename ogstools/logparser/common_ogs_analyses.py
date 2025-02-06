@@ -126,7 +126,7 @@ def analysis_convergence_newton_iteration(df: pd.DataFrame) -> pd.DataFrame:
         dfe_newton_iteration["coupling_iteration"] = (
             dfe_newton_iteration.groupby("mpi_process")[
                 ["coupling_iteration"]
-            ].fillna(method="bfill")
+            ].bfill()
         )
         dfe_newton_iteration = dfe_newton_iteration[
             ~dfe_newton_iteration["coupling_iteration_process"].notna()
@@ -162,7 +162,7 @@ def analysis_convergence_coupling_iteration(df: pd.DataFrame) -> pd.DataFrame:
     dfe_convergence_coupling_iteration["coupling_iteration"] = (
         dfe_convergence_coupling_iteration.groupby("mpi_process")[
             ["coupling_iteration"]
-        ].fillna(method="ffill")
+        ].ffill()
     )
     # All context log lines (iteration_number) have no values for dx, dx_x, x . From now on not needed -> dropped
     dfe_convergence_coupling_iteration = (
@@ -248,15 +248,13 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
                 )
 
     df_raw_log["time_step"] = (
-        df_raw_log.groupby("mpi_process")[["time_step"]]
-        .fillna(method="ffill")
-        .fillna(value=0)
+        df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
 
     # Back fill, because iteration number can be found in logs at the END of the iteration
     df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
         ["iteration_number"]
-    ].fillna(method="bfill")
+    ].bfill()
 
     if "component" in df_raw_log:
         df_raw_log["component"] = df_raw_log.groupby("mpi_process")[
@@ -266,10 +264,10 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     if "process" in df_raw_log:
         df_raw_log["process"] = df_raw_log.groupby("mpi_process")[
             ["process"]
-        ].fillna(method="bfill")
+        ].bfill()
     # Attention - coupling iteration applies to successor line and to all other predecessors - it needs further processing for specific analysis
     if "coupling_iteration_process" in df_raw_log:
         df_raw_log["coupling_iteration_process"] = df_raw_log.groupby(
             "mpi_process"
-        )[["coupling_iteration_process"]].fillna(method="ffill", limit=1)
+        )[["coupling_iteration_process"]].ffill(limit=1)
     return df_raw_log

@@ -1,10 +1,10 @@
 """Unit tests for meshlib."""
 
+from importlib.metadata import version
 from pathlib import Path
 from tempfile import mkdtemp
 
 import numpy as np
-import pkg_resources
 import pytest
 import pyvista as pv
 from lxml import etree as ET
@@ -30,7 +30,7 @@ class TestUtils:
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
     @pytest.mark.skipif(
-        pkg_resources.get_distribution("ogs").version == "6.5.3",
+        version("ogs") == "6.5.3",
         reason="OGS Bug in xdmf output for homogeneous meshes",
     )
     def test_read_quadratic_xdmf(self):
@@ -548,35 +548,35 @@ class TestUtils:
             }
 
         for mesh in ms:
-            for array_type in arrays_to_be_removed:
+            for array_type, array_name in arrays_to_be_removed.items():
                 array_names = data(mesh)[array_type].keys()
-                assert arrays_to_be_removed[array_type] in array_names
+                assert array_name in array_names
                 assert lengths[array_type] == len(array_names)
         ms.remove_array("effective_pressure", data_type="cell")
         ms.remove_array("sigma_ip", data_type="field")
         ms.remove_array("temperature", data_type="point")
         for mesh in ms:
-            for array_type in arrays_to_be_removed:
+            for array_type, array_name in arrays_to_be_removed.items():
                 array_names = data(mesh)[array_type].keys()
-                assert arrays_to_be_removed[array_type] not in array_names
+                assert array_name not in array_names
                 assert lengths[array_type] - 1 == len(array_names)
 
         # same with skip last option
         ms = examples.load_meshseries_THM_2D_PVD()
         for mesh in ms:
-            for array_type in arrays_to_be_removed:
+            for array_type, array_name in arrays_to_be_removed.items():
                 array_names = data(mesh)[array_type].keys()
-                assert arrays_to_be_removed[array_type] in array_names
+                assert array_name in array_names
                 assert lengths[array_type] == len(array_names)
         ms.remove_array("effective_pressure", data_type="cell", skip_last=True)
         ms.remove_array("sigma_ip", data_type="field", skip_last=True)
         ms.remove_array("temperature", data_type="point", skip_last=True)
         for i, mesh in enumerate(ms):
-            for array_type in arrays_to_be_removed:
+            for array_type, array_name in arrays_to_be_removed.items():
                 array_names = data(mesh)[array_type].keys()
                 if i == len(ms) - 1:
-                    assert arrays_to_be_removed[array_type] in array_names
+                    assert array_name in array_names
                     assert lengths[array_type] == len(array_names)
                 else:
-                    assert arrays_to_be_removed[array_type] not in array_names
+                    assert array_name not in array_names
                     assert lengths[array_type] - 1 == len(array_names)

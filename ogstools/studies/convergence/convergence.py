@@ -17,7 +17,7 @@ from tqdm import tqdm
 from ogstools import meshlib, variables
 
 u_reg: UnitRegistry = UnitRegistry()
-u_reg.default_format = "~.3g"
+u_reg.formatter.default_format = "~.3g"
 
 
 def resample(
