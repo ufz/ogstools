@@ -24,6 +24,7 @@ from scipy.interpolate import (
     LinearNDInterpolator,
     NearestNDInterpolator,
     RegularGridInterpolator,
+    interp1d,
 )
 from tqdm import tqdm
 from typeguard import typechecked
@@ -484,9 +485,13 @@ class MeshSeries:
         :param data_name:       Name of the data to sample.
         :param interp_method:   Interpolation method, defaults to `linear`
 
-        :returns:   `numpy` array of interpolated data at observation points.
+        :returns:   `numpy` array of interpolated data at observation points
+                    with the following shape:
+
+                    - multiple points: (n_timesteps, n_points, [n_components])
+                    - single points: (n_timesteps, [n_components])
         """
-        points = np.asarray(points).reshape((-1, 3))
+        pts = np.asarray(points).reshape((-1, 3))
         values = np.swapaxes(self.values(data_name), 0, 1)
         geom = self.mesh(0).points
 
@@ -497,14 +502,32 @@ class MeshSeries:
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
-        points = np.delete(points, flat_axis, 1)
+        pts = np.delete(pts, flat_axis, 1)
 
-        interp = {
-            "nearest": NearestNDInterpolator(geom, values),
-            "linear": LinearNDInterpolator(geom, values, np.nan),
-        }[interp_method]
+        dim = int(np.max([cell.dimension for cell in self.mesh(0).cell]))
+        match dim > 1, interp_method:
+            case True, "nearest":
+                result = np.swapaxes(
+                    NearestNDInterpolator(geom, values)(pts), 0, 1
+                )
+            case True, "linear":
+                result = np.swapaxes(
+                    LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
+                )
+            case False, kind:
+                result = interp1d(geom[:, 0], values.T, kind=kind)(
+                    np.squeeze(pts, 1)
+                )
+            case _, _:
+                msg = (
+                    "No interpolation method implemented for mesh of "
+                    f"{dim=} and {interp_method=}"
+                )
+                raise TypeError(msg)
 
-        return np.swapaxes(interp(points), 0, 1)
+        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+            result = np.squeeze(result, axis=1)
+        return result
 
     def plot_probe(
         self,

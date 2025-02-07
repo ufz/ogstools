@@ -224,7 +224,7 @@ class TestPhysicalVariable:
         ]
         for ms, components in bhe_mesh_series:
             temp = [
-                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0, 0]
+                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0]
                 for comp in components
             ]
             # initial vector is +1 for every component
