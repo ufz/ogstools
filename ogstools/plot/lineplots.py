@@ -36,7 +36,8 @@ def line(
                     figure will be created.
     :param sort:    Automatically sort the values along the dimension of the
                     mesh with the largest extent
-    :Keyword Arguments:
+
+    Keyword Arguments:
         - figsize:      figure size (default=[16, 10])
         - color:        color of the line
         - linewidth:    width of the line

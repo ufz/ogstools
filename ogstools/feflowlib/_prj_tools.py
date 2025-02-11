@@ -572,17 +572,17 @@ def setup_prj_file(
     :param mesh: mesh
     :param material_properties: material properties
     :param process: the process to be prepared
-    :Keyword Arguments (kwargs):
-       * *model* (``ogs.OGS``) --
+
+    Keyword Arguments:
+       - *model* (``ogs.OGS``) --
          A ogs6py (ogs) model that is extended, should be used for templates
-       * *species_list* (``list``) --
+       - *species_list* (``list``) --
          All chemical species that occur in a model, if the model is to simulate a
          Component Transport (HC/CT) process.
-       * *max_iter* (``int``) --
+       - *max_iter* (``int``) --
          Maximal iterations of process coupling in a CT process.
-       * *relative_tolerance* (``float``) --
+       - *relative_tolerance* (``float``) --
          Relative tolerance of process coupling in a CT process.
-    :returns: model
 
 
     """

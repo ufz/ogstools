@@ -399,7 +399,8 @@ def contourf(
     :param variable:   The field to be visualized on all meshes
     :param fig:         matplotlib figure to use for plotting
     :param ax:          matplotlib axis to use for plotting
-    :Keyword Arguments:
+
+    Keyword Arguments:
         - cb_labelsize:       colorbar labelsize
         - cb_loc:             colorbar location ('left' or 'right')
         - cb_pad:             colorbar padding

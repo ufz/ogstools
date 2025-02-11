@@ -443,9 +443,10 @@ class MeshSeries:
         :param func:        The aggregation function to apply. E.g. np.min,
                             np.max, np.mean, np.median, np.sum, np.std, np.var
         :param ax:          matplotlib axis to use for plotting
-        :param kwargs:      Keyword args passed to matplotlib's plot function.
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
+
+        Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
         variable = get_preset(variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
@@ -545,17 +546,15 @@ class MeshSeries:
         """
         Plot the transient variable on the observation points in the MeshSeries.
 
-            :param points:          The points to sample at.
-            :param variable:   The variable to be sampled.
-            :param labels:          The labels for each observation point.
-            :param interp_method:   Choose the interpolation method, defaults to
-                                    `linear` for xdmf MeshSeries and
-                                    `probefilter` for pvd MeshSeries.
-            :param interp_backend:  Interpolation backend for PVD MeshSeries.
-            :param kwargs:          Keyword arguments passed to matplotlib's
-                                    plot function.
+        :param points:          The points to sample at.
+        :param variable:   The variable to be sampled.
+        :param labels:          The labels for each observation point.
+        :param interp_method:   Choose the interpolation method, defaults to
+                                `linear` for xdmf MeshSeries and
+                                `probefilter` for pvd MeshSeries.
+        :param interp_backend:  Interpolation backend for PVD MeshSeries.
 
-            :returns:   A matplotlib Figure
+        Keyword Arguments get passed to `matplotlib.pyplot.plot`
         """
         points = np.asarray(points).reshape((-1, 3))
         variable = get_preset(variable, self.mesh(0))
@@ -627,7 +626,7 @@ class MeshSeries:
                             and the time value of the current frame. Useful to
                             customize the plot in the animation.
 
-        :Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
+        Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
         """
         plot.setup.layout = "tight"
         plot.setup.combined_colorbar = True
@@ -693,7 +692,7 @@ class MeshSeries:
         :param ax:              matplotlib axis to use for plotting.
         :param cb_loc:          Colorbar location. If None, omit colorbar.
 
-        :Keyword Arguments:
+        Keyword Arguments:
             - cb_labelsize:       colorbar labelsize
             - cb_loc:             colorbar location ('left' or 'right')
             - cb_pad:             colorbar padding
