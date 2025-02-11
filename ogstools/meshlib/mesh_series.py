@@ -573,8 +573,8 @@ class MeshSeries:
                 self.probe(points, variable_abscissa.data_name, interp_method)
             )
             x_unit_str = (
-                f" / {variable_abscissa.get_output_unit()}"
-                if variable_abscissa.get_output_unit()
+                f" / {variable_abscissa.get_output_unit}"
+                if variable_abscissa.get_output_unit
                 else ""
             )
             x_label = (

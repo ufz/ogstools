@@ -33,9 +33,9 @@ class Variable:
     """The name of the variable data in the mesh."""
     data_unit: str = ""
     """The unit of the variable data in the mesh."""
-    output_unit: str = ""
+    output_unit: str = "data_unit"
     """The output unit of the variable."""
-    output_name: str = ""
+    output_name: str = "data_name"
     """The output name of the variable."""
     symbol: str = ""
     """The symbol representing this variable."""
@@ -58,8 +58,10 @@ class Variable:
     """Default color for plotting"""
 
     def __post_init__(self) -> None:
-        if not self.output_name:
+        if self.output_name == "data_name":
             self.output_name = self.data_name
+        if self.output_unit == "data_unit":
+            self.output_unit = self.data_unit
 
     @property
     def type_name(self) -> str:
@@ -133,17 +135,14 @@ class Variable:
                 result = Qty(Qty(self.func(np.asarray(data)), d_u), o_u)
         return result.magnitude if strip_unit else result
 
+    @property
     def get_output_unit(self) -> str:
-        """
-        Get the output unit.
-
-        returns: The output unit.
-        """
+        "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
     def difference(self) -> "Variable":
-        "returns: A variable relating to differences in this quantity."
+        "A variable relating to differences in this quantity."
         quantity = u_reg.Quantity(1, self.output_unit)
         diff_quantity: PlainQuantity = quantity - quantity
         diff_unit = str(diff_quantity.units)
@@ -171,9 +170,7 @@ class Variable:
         return self.data_name == self.mask
 
     def get_mask(self) -> "Variable":
-        """
-        :returns: A variable representing this variables mask.
-        """
+        "A variable representing this variables mask."
         return Variable(
             data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
         )
@@ -210,9 +207,7 @@ class Variable:
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"
-        unit_str = (
-            f" / {self.get_output_unit()}" if self.get_output_unit() else ""
-        )
+        unit_str = f" / {self.get_output_unit}" if self.get_output_unit else ""
         symbol_str = " " + f"${self.symbol}$" if self.symbol != "" else ""
         name = self.output_name
         if symbol_str != "":
