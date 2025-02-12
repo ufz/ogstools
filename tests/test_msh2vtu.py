@@ -86,7 +86,9 @@ def test_rect(tmp_path: Path):
             order=order, mixed_elements=mixed_elements,
             out_name=msh_file, msh_version=version,
         )  # fmt: skip
-        assert len(meshes_from_gmsh(msh_file)) == 4 + n_layers
+        n_meshes = len(meshes_from_gmsh(msh_file, log=False))
+        msg = f"Expecting {4 + n_layers} meshes, got {n_meshes=}."
+        assert n_meshes == 4 + n_layers, msg
 
 
 class TestPhysGroups:
@@ -112,7 +114,7 @@ class TestPhysGroups:
             layer_ids=layer_ids,
             mixed_elements=True,
         )
-        meshes = meshes_from_gmsh(msh_file, reindex=reindex)
+        meshes = meshes_from_gmsh(msh_file, reindex=reindex, log=False)
         mesh = meshes["domain"]
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
@@ -135,7 +137,7 @@ def test_cuboid(tmp_path: Path):
             order=order, mixed_elements=mixed_elements,
             out_name=msh_file, msh_version=version,
         )  # fmt: skip
-        meshes = meshes_from_gmsh(msh_file)
+        meshes = meshes_from_gmsh(msh_file, log=False)
         assert len(meshes) == {1: 7, 2: 9}[n_layers]
 
 
@@ -159,7 +161,7 @@ def test_gmsh(tmp_path: Path):
         runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
         prefix = str(Path(script).stem)
         msh_file = Path(tmp_path, prefix + ".msh")
-        assert len(meshes_from_gmsh(msh_file)) == num_meshes
+        assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes
         assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
 
     for vtu_file in tmp_path.glob("*.vtu"):
@@ -172,7 +174,7 @@ def test_gmsh(tmp_path: Path):
 
 def test_subdomains_2D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
-    meshes = meshes_from_gmsh(msh_geolayers_2d)
+    meshes = meshes_from_gmsh(msh_geolayers_2d, log=False)
     bounds = meshes["domain"].bounds
     boundaries = {
         "Bottom": (120, 1, bounds[2]),
@@ -198,7 +200,7 @@ def test_subdomains_2D():
 
 def test_subdomains_3D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
-    meshes = meshes_from_gmsh(msh_geoterrain_3d)
+    meshes = meshes_from_gmsh(msh_geoterrain_3d, log=False)
 
     boundaries = {
         "BottomSouthLine": (20, [0.5, 0.0, -0.5]),
