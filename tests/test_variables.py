@@ -147,9 +147,9 @@ class TestPhysicalVariable:
 
     def test_units(self):
         """Test get_output_unit functionality."""
-        assert ov.temperature.get_output_unit() == "°C"
-        assert ov.pressure.get_output_unit() == "MPa"
-        assert ov.strain.get_output_unit() == "%"
+        assert ov.temperature.get_output_unit == "°C"
+        assert ov.pressure.get_output_unit == "MPa"
+        assert ov.strain.get_output_unit == "%"
 
     def test_mask(self):
         """Test mask functionality."""
@@ -224,8 +224,15 @@ class TestPhysicalVariable:
         ]
         for ms, components in bhe_mesh_series:
             temp = [
-                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0, 0]
+                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0]
                 for comp in components
             ]
             # initial vector is +1 for every component
             assert np.all(np.diff(temp) == 1)
+
+    def test_shorthand_ctor(self):
+        var_full = ov.Scalar(data_name="test", data_unit="unit",
+                             output_unit="unit", output_name="test")  # fmt:skip
+        var_short = ov.Scalar(data_name="test", data_unit="unit")
+        assert var_full.output_unit == var_short.output_unit
+        assert var_full.output_name == var_short.output_name

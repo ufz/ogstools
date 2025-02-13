@@ -24,6 +24,7 @@ from scipy.interpolate import (
     LinearNDInterpolator,
     NearestNDInterpolator,
     RegularGridInterpolator,
+    interp1d,
 )
 from tqdm import tqdm
 from typeguard import typechecked
@@ -442,9 +443,10 @@ class MeshSeries:
         :param func:        The aggregation function to apply. E.g. np.min,
                             np.max, np.mean, np.median, np.sum, np.std, np.var
         :param ax:          matplotlib axis to use for plotting
-        :param kwargs:      Keyword args passed to matplotlib's plot function.
 
         :returns:   A matplotlib Figure or None if plotting on existing axis.
+
+        Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
         variable = get_preset(variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
@@ -484,9 +486,13 @@ class MeshSeries:
         :param data_name:       Name of the data to sample.
         :param interp_method:   Interpolation method, defaults to `linear`
 
-        :returns:   `numpy` array of interpolated data at observation points.
+        :returns:   `numpy` array of interpolated data at observation points
+                    with the following shape:
+
+                    - multiple points: (n_timesteps, n_points, [n_components])
+                    - single points: (n_timesteps, [n_components])
         """
-        points = np.asarray(points).reshape((-1, 3))
+        pts = np.asarray(points).reshape((-1, 3))
         values = np.swapaxes(self.values(data_name), 0, 1)
         geom = self.mesh(0).points
 
@@ -497,14 +503,32 @@ class MeshSeries:
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
-        points = np.delete(points, flat_axis, 1)
+        pts = np.delete(pts, flat_axis, 1)
 
-        interp = {
-            "nearest": NearestNDInterpolator(geom, values),
-            "linear": LinearNDInterpolator(geom, values, np.nan),
-        }[interp_method]
+        dim = int(np.max([cell.dimension for cell in self.mesh(0).cell]))
+        match dim > 1, interp_method:
+            case True, "nearest":
+                result = np.swapaxes(
+                    NearestNDInterpolator(geom, values)(pts), 0, 1
+                )
+            case True, "linear":
+                result = np.swapaxes(
+                    LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
+                )
+            case False, kind:
+                result = interp1d(geom[:, 0], values.T, kind=kind)(
+                    np.squeeze(pts, 1)
+                )
+            case _, _:
+                msg = (
+                    "No interpolation method implemented for mesh of "
+                    f"{dim=} and {interp_method=}"
+                )
+                raise TypeError(msg)
 
-        return np.swapaxes(interp(points), 0, 1)
+        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+            result = np.squeeze(result, axis=1)
+        return result
 
     def plot_probe(
         self,
@@ -522,17 +546,15 @@ class MeshSeries:
         """
         Plot the transient variable on the observation points in the MeshSeries.
 
-            :param points:          The points to sample at.
-            :param variable:   The variable to be sampled.
-            :param labels:          The labels for each observation point.
-            :param interp_method:   Choose the interpolation method, defaults to
-                                    `linear` for xdmf MeshSeries and
-                                    `probefilter` for pvd MeshSeries.
-            :param interp_backend:  Interpolation backend for PVD MeshSeries.
-            :param kwargs:          Keyword arguments passed to matplotlib's
-                                    plot function.
+        :param points:          The points to sample at.
+        :param variable:   The variable to be sampled.
+        :param labels:          The labels for each observation point.
+        :param interp_method:   Choose the interpolation method, defaults to
+                                `linear` for xdmf MeshSeries and
+                                `probefilter` for pvd MeshSeries.
+        :param interp_backend:  Interpolation backend for PVD MeshSeries.
 
-            :returns:   A matplotlib Figure
+        Keyword Arguments get passed to `matplotlib.pyplot.plot`
         """
         points = np.asarray(points).reshape((-1, 3))
         variable = get_preset(variable, self.mesh(0))
@@ -550,8 +572,8 @@ class MeshSeries:
                 self.probe(points, variable_abscissa.data_name, interp_method)
             )
             x_unit_str = (
-                f" / {variable_abscissa.get_output_unit()}"
-                if variable_abscissa.get_output_unit()
+                f" / {variable_abscissa.get_output_unit}"
+                if variable_abscissa.get_output_unit
                 else ""
             )
             x_label = (
@@ -604,7 +626,7 @@ class MeshSeries:
                             and the time value of the current frame. Useful to
                             customize the plot in the animation.
 
-        :Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
+        Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
         """
         plot.setup.layout = "tight"
         plot.setup.combined_colorbar = True
@@ -670,7 +692,7 @@ class MeshSeries:
         :param ax:              matplotlib axis to use for plotting.
         :param cb_loc:          Colorbar location. If None, omit colorbar.
 
-        :Keyword Arguments:
+        Keyword Arguments:
             - cb_labelsize:       colorbar labelsize
             - cb_loc:             colorbar location ('left' or 'right')
             - cb_pad:             colorbar padding

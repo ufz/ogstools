@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from dataclasses import dataclass
 from typing import Literal
 
 from ogstools.variables import tensor_math
@@ -12,7 +11,6 @@ from ogstools.variables.variable import Scalar, Variable
 from ogstools.variables.vector import Vector, VectorList
 
 
-@dataclass
 class Matrix(Variable):
     """Represent a matrix variable.
 

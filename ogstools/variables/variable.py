@@ -57,9 +57,39 @@ class Variable:
     color: str | None = None
     """Default color for plotting"""
 
-    def __post_init__(self) -> None:
-        if not self.output_name:
-            self.output_name = self.data_name
+    def __init__(
+        self,
+        data_name: str,
+        data_unit: str = "",
+        output_unit: str | None = None,
+        output_name: str | None = None,
+        symbol: str = "",
+        mask: str = "",
+        func: Callable = identity,
+        mesh_dependent: bool = False,
+        process_with_units: bool = False,
+        cmap: Colormap | str = "coolwarm",
+        bilinear_cmap: bool = False,
+        categoric: bool = False,
+        color: str | None = None,
+    ) -> None:
+        self.data_name = data_name
+        self.data_unit = data_unit
+        self.output_unit = (
+            str(output_unit) if output_unit is not None else data_unit
+        )
+        self.output_name = (
+            str(output_name) if output_name is not None else data_name
+        )
+        self.symbol = symbol
+        self.mask = mask
+        self.func = func
+        self.mesh_dependent = mesh_dependent
+        self.process_with_units = process_with_units
+        self.cmap = cmap
+        self.bilinear_cmap = bilinear_cmap
+        self.categoric = categoric
+        self.color = color
 
     @property
     def type_name(self) -> str:
@@ -133,17 +163,14 @@ class Variable:
                 result = Qty(Qty(self.func(np.asarray(data)), d_u), o_u)
         return result.magnitude if strip_unit else result
 
+    @property
     def get_output_unit(self) -> str:
-        """
-        Get the output unit.
-
-        returns: The output unit.
-        """
+        "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
     def difference(self) -> "Variable":
-        "returns: A variable relating to differences in this quantity."
+        "A variable relating to differences in this quantity."
         quantity = u_reg.Quantity(1, self.output_unit)
         diff_quantity: PlainQuantity = quantity - quantity
         diff_unit = str(diff_quantity.units)
@@ -171,9 +198,7 @@ class Variable:
         return self.data_name == self.mask
 
     def get_mask(self) -> "Variable":
-        """
-        :returns: A variable representing this variables mask.
-        """
+        "A variable representing this variables mask."
         return Variable(
             data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
         )
@@ -210,9 +235,7 @@ class Variable:
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"
-        unit_str = (
-            f" / {self.get_output_unit()}" if self.get_output_unit() else ""
-        )
+        unit_str = f" / {self.get_output_unit}" if self.get_output_unit else ""
         symbol_str = " " + f"${self.symbol}$" if self.symbol != "" else ""
         name = self.output_name
         if symbol_str != "":
@@ -250,6 +273,5 @@ class Variable:
         return label
 
 
-@dataclass
 class Scalar(Variable):
     "Represent a scalar variable."

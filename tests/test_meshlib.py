@@ -246,13 +246,36 @@ class TestUtils:
         )  # fmt: skip
         plt.close()
 
-    def test_probe(self):
-        "Test point probing on meshseries."
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.mesh(0).cell_centers().points
+    def _check_probe(self, ms: ot.MeshSeries, points: np.ndarray) -> None:
+        "checks different variants for points arg: point_array, point, [point]"
+        pt_ids = np.asarray([ms[0].find_closest_point(pt) for pt in points])
+        ref_values = np.asarray([mesh["temperature"][pt_ids] for mesh in ms])
+        slice_shapes = [
+            [slice(None), (len(ms.timevalues), len(points))],
+            [0, (len(ms.timevalues),)],
+            [[0], (len(ms.timevalues), 1)],
+        ]
         for method in ["nearest", "linear"]:
-            values = mesh_series.probe(points, "temperature", method)
-            assert not np.any(np.isnan(values))
+            for slicing, shape in slice_shapes:
+                values = ms.probe(points[slicing], "temperature", method)
+                assert values.shape == shape
+                np.testing.assert_allclose(values, ref_values[:, slicing])
+                assert not np.any(np.isnan(values))
+
+    def test_probe_2D_mesh(self):
+        "Test point probing on a 2D meshseries."
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        pt_min, pt_max = np.reshape(ms[0].bounds, (3, 2)).T
+        points = np.linspace(pt_min, pt_max, num=10)
+        self._check_probe(ms, points)
+
+    def test_probe_1D_mesh(self):
+        "Test point probing on a 1D meshseries."
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        ms_1D = ms.extract(ms[0].points[:, 1] == 0)
+        pt_min, pt_max = np.reshape(ms_1D[0].bounds, (3, 2)).T
+        points = np.linspace(pt_min, pt_max, num=10)
+        self._check_probe(ms_1D, points)
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
