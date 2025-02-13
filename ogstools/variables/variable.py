@@ -35,7 +35,7 @@ class Variable:
     """The unit of the variable data in the mesh."""
     output_unit: str = ""
     """The output unit of the variable."""
-    output_name: str = "data_name"
+    output_name: str = ""
     """The output name of the variable."""
     symbol: str = ""
     """The symbol representing this variable."""
@@ -76,11 +76,11 @@ class Variable:
         self.data_name = data_name
         self.data_unit = data_unit
         self.output_unit = (
-            output_unit or data_unit
-        )  # Default output_unit to data_unit or None
+            str(output_unit) if output_unit is not None else data_unit
+        )
         self.output_name = (
-            output_name or data_name
-        )  # Default output_name to data_name
+            str(output_name) if output_name is not None else data_name
+        )
         self.symbol = symbol
         self.mask = mask
         self.func = func
@@ -273,6 +273,5 @@ class Variable:
         return label
 
 
-@dataclass
 class Scalar(Variable):
     "Represent a scalar variable."

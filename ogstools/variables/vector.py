@@ -27,7 +27,6 @@ def vector_norm(values: ValType) -> ValType:
     return _to_quantity(result, unit)
 
 
-@dataclass
 class Vector(Variable):
     """Represent a vector variable.
 
