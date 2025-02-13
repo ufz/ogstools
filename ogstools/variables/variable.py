@@ -33,7 +33,7 @@ class Variable:
     """The name of the variable data in the mesh."""
     data_unit: str = ""
     """The unit of the variable data in the mesh."""
-    output_unit: str = "data_unit"
+    output_unit: str = ""
     """The output unit of the variable."""
     output_name: str = "data_name"
     """The output name of the variable."""
@@ -57,11 +57,39 @@ class Variable:
     color: str | None = None
     """Default color for plotting"""
 
-    def __post_init__(self) -> None:
-        if self.output_name == "data_name":
-            self.output_name = self.data_name
-        if self.output_unit == "data_unit":
-            self.output_unit = self.data_unit
+    def __init__(
+        self,
+        data_name: str,
+        data_unit: str = "",
+        output_unit: str | None = None,
+        output_name: str | None = None,
+        symbol: str = "",
+        mask: str = "",
+        func: Callable = identity,
+        mesh_dependent: bool = False,
+        process_with_units: bool = False,
+        cmap: Colormap | str = "coolwarm",
+        bilinear_cmap: bool = False,
+        categoric: bool = False,
+        color: str | None = None,
+    ) -> None:
+        self.data_name = data_name
+        self.data_unit = data_unit
+        self.output_unit = (
+            output_unit or data_unit
+        )  # Default output_unit to data_unit or None
+        self.output_name = (
+            output_name or data_name
+        )  # Default output_name to data_name
+        self.symbol = symbol
+        self.mask = mask
+        self.func = func
+        self.mesh_dependent = mesh_dependent
+        self.process_with_units = process_with_units
+        self.cmap = cmap
+        self.bilinear_cmap = bilinear_cmap
+        self.categoric = categoric
+        self.color = color
 
     @property
     def type_name(self) -> str:
