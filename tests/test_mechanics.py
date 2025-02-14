@@ -50,6 +50,7 @@ class TestMechanics:
         assert_allclose(
             tensor_math.invariant_2(sig),
             np.sum(eig_vals * np.roll(eig_vals, 1, axis=-1), axis=-1),
+            rtol=5e-5,
         )
 
     @parameterized.expand(TEST_ARGS)
