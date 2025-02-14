@@ -373,7 +373,7 @@ class MeshSeries:
         else:
             variable_name = variable
 
-        all_cached = np.all(np.isin(self.timevalues, self._mesh_cache))
+        all_cached = self._is_all_cached
         if (
             self._data_type == ".xdmf"
             and variable_name in self._xdmf_reader.data_items
@@ -387,6 +387,13 @@ class MeshSeries:
         if isinstance(variable, Variable):
             return variable.transform(result)
         return result
+
+    @property
+    def _is_all_cached(self) -> bool:
+        "Check if all meshes in this meshseries are cached"
+        return np.isin(
+            self.timevalues, np.fromiter(self._mesh_cache.keys(), float)
+        ).all()
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)

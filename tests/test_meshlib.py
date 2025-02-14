@@ -179,6 +179,14 @@ class TestUtils:
             assert timevalue == ms.timevalues[i]
             assert mesh == ms[i]
 
+    def test_cache(self):
+        ms = examples.load_meshseries_HT_2D_PVD()
+        assert not ms._is_all_cached  # pylint: disable=W0212
+        _ = ms[::2]
+        assert not ms._is_all_cached  # pylint: disable=W0212
+        _ = ms.values("temperature")
+        assert ms._is_all_cached  # pylint: disable=W0212
+
     def test_cache_copy(self):
         "Test that the cache of a MeshSeries is a deep copy as well."
         ms = examples.load_meshseries_HT_2D_XDMF()
