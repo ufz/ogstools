@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable, Iterator, Sequence
-from copy import copy, deepcopy
+from copy import copy as shallowcopy
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from typing import Any, Literal, cast, overload
@@ -125,7 +126,7 @@ class MeshSeries:
                 # Shallow copy of reader is needed, because timesteps are
                 # stored in reader, deep copy doesn't work for _pvd_reader
                 # and _xdmf_reader
-                setattr(self_copy, key, copy(value))
+                setattr(self_copy, key, shallowcopy(value))
         return self_copy
 
     def copy(self, deep: bool = True) -> MeshSeries:
@@ -138,7 +139,7 @@ class MeshSeries:
 
         :returns: Copy of self.
         """
-        return deepcopy(self) if deep else self
+        return deepcopy(self) if deep else shallowcopy(self)
 
     @overload
     def __getitem__(self, index: int) -> Mesh: ...
@@ -150,7 +151,7 @@ class MeshSeries:
         if isinstance(index, int):
             return self.mesh(index)
         if isinstance(index, slice | Sequence):
-            ms_copy = self.copy(deep=True)
+            ms_copy = self.copy(deep=False)
             if ms_copy._time_indices == [slice(None)]:
                 ms_copy._time_indices = [index]
             else:
