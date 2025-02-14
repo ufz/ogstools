@@ -94,6 +94,18 @@ class MeshSeries:
                 )
                 raise TypeError(msg)
 
+    @classmethod
+    def from_data(
+        cls, meshes: Sequence[pv.DataSet], timevalues: np.ndarray
+    ) -> MeshSeries:
+        "Create a MeshSeries from a list of meshes and timevalues."
+        new_ms = cls()
+        new_ms._timevalues = deepcopy(timevalues)  # pylint: disable=W0212
+        new_ms._mesh_cache.update(
+            dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
+        )
+        return new_ms
+
     def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
         # For shallow copy: self.copy(deep=False)
@@ -204,21 +216,18 @@ class MeshSeries:
 
     def ip_tesselated(self) -> MeshSeries:
         "Create a new MeshSeries from integration point tessellation."
-        ip_ms = MeshSeries()
         ip_mesh = self.mesh(0).to_ip_mesh()
         ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
+        ip_meshes = []
         for i in np.arange(len(self.timevalues), dtype=int):
             ip_data = {
                 key: self.mesh(i).field_data[key][np.argsort(ordering)]
                 for key in ip_mesh.cell_data
             }
             ip_mesh.cell_data.update(ip_data)
-            ip_ms._mesh_cache[self.timevalues[i]] = (
-                ip_mesh.copy()
-            )  # pylint: disable=protected-access
-        ip_ms._timevalues = self._timevalues  # pylint: disable=protected-access
-        return ip_ms
+            ip_meshes += [ip_mesh.copy()]
+        return MeshSeries.from_data(ip_meshes, self.timevalues)
 
     def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
         """Returns the mesh at the given timestep."""

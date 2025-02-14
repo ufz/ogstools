@@ -11,6 +11,15 @@ This is not released yet!
 
 ## Features
 
+- MeshSeries can now be initialized with `from_data(meshes, timevalues)`
 - plot.line now automatically sorts the data
 
 ## Infrastructure
+
+## Maintainer TODOs
+
+### next sub release
+
+### next main release
+
+- MeshSeries: from_data() constructor -> __init__()
