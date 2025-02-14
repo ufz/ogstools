@@ -33,11 +33,12 @@ from typeguard import typechecked
 from ogstools import plot
 from ogstools.variables import Variable, get_preset, u_reg
 
+from .data_dict import DataDict
 from .mesh import Mesh
 from .xdmf_reader import XDMFReader
 
 
-class MeshSeries:
+class MeshSeries(Sequence[Mesh]):
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
@@ -147,9 +148,14 @@ class MeshSeries:
     @overload
     def __getitem__(self, index: slice | Sequence) -> MeshSeries: ...
 
+    @overload
+    def __getitem__(self, index: str | Variable) -> np.ndarray: ...
+
     def __getitem__(self, index: Any) -> Any:
         if isinstance(index, int):
             return self.mesh(index)
+        if isinstance(index, str):
+            return self.values(index)
         if isinstance(index, slice | Sequence):
             ms_copy = self.copy(deep=False)
             if ms_copy._time_indices == [slice(None)]:
@@ -395,6 +401,21 @@ class MeshSeries:
         return np.isin(
             self.timevalues, np.fromiter(self._mesh_cache.keys(), float)
         ).all()
+
+    @property
+    def point_data(self) -> DataDict:
+        "Useful for reading or setting point_data for the entire meshseries."
+        return DataDict(self, lambda mesh: mesh.point_data)
+
+    @property
+    def cell_data(self) -> DataDict:
+        "Useful for reading or setting cell_data for the entire meshseries."
+        return DataDict(self, lambda mesh: mesh.cell_data)
+
+    @property
+    def field_data(self) -> DataDict:
+        "Useful for reading or setting field_data for the entire meshseries."
+        return DataDict(self, lambda mesh: mesh.field_data)
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
@@ -992,6 +1013,12 @@ class MeshSeries:
                           field, cell or point
         :param skip_last: Skips the last time slice (e.g. for restart purposes).
         """
+        depr_msg = (
+            "Please use `del meshseries.field_data[key]` or "
+            "`del meshseries[:-1].field_data[key]` if you want to keep the "
+            "data in the last timestep"
+        )
+        warnings.warn(depr_msg, DeprecationWarning, stacklevel=1)
         for i, mesh in enumerate(self):
             if ((skip_last) is False) or (i < len(self) - 1):
                 if data_type == "field":

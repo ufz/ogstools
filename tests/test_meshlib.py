@@ -187,6 +187,27 @@ class TestUtils:
         _ = ms.values("temperature")
         assert ms._is_all_cached  # pylint: disable=W0212
 
+    def test_datadict(self):
+        "Test getting and setting values inside the different data arrays"
+        ms = examples.load_meshseries_THM_2D_PVD()
+        np.testing.assert_array_equal(
+            ms.values("temperature"), ms.point_data["temperature"]
+        )
+        ref_cell_values = 0.5 * ms.values("effective_pressure")
+        ms.cell_data["effective_pressure"] *= 0.5
+        np.testing.assert_array_equal(
+            ref_cell_values, ms.cell_data["effective_pressure"]
+        )
+        assert np.all(ms.field_data["sigma_ip"] != 0.0)
+        ms.field_data["sigma_ip"] = 0.0
+        assert np.all(ms.field_data["sigma_ip"] == 0.0)
+
+        for ms_key, mesh_key in zip(
+            ms.point_data, ms[0].point_data, strict=True
+        ):
+            assert ms_key == mesh_key
+        assert len(ms.cell_data) == len(ms[0].cell_data)
+
     def test_cache_copy(self):
         "Test that the cache of a MeshSeries is a deep copy as well."
         ms = examples.load_meshseries_HT_2D_XDMF()
@@ -505,17 +526,23 @@ class TestUtils:
 
     def test_copy_deep(self):
         ms = examples.load_meshseries_THM_2D_PVD()
-        ms.test_var = False
+        ms.point_data["temperature"] = 0
         ms_deepcopy = ms.copy(deep=True)
-        ms_deepcopy.test_var = True
-        assert ms.test_var != ms_deepcopy.test_var
+        ms_deepcopy.point_data["temperature"] = 1
+        assert np.all(
+            ms.point_data["temperature"]
+            != ms_deepcopy.point_data["temperature"]
+        )
 
     def test_copy_shallow(self):
         ms = examples.load_meshseries_THM_2D_PVD()
-        ms.test_var = True
+        ms.point_data["temperature"] = 0
         ms_shallowcopy = ms.copy(deep=False)
-        ms.test_var = False
-        assert not ms_shallowcopy.test_var
+        ms_shallowcopy.point_data["temperature"] = 1
+        assert np.all(
+            ms.point_data["temperature"]
+            == ms_shallowcopy.point_data["temperature"]
+        )
 
     def test_save_pvd_mesh_series(self):
         temp = Path(mkdtemp())
@@ -575,51 +602,30 @@ class TestUtils:
             assert np.abs(ms.timevalues[i] - ts) < 1e-14
 
     def test_remove_array(self):
-        ms = examples.load_meshseries_THM_2D_PVD()
-        lengths = {"cell": 5, "field": 4, "point": 12}
-        arrays_to_be_removed = {
-            "cell": "effective_pressure",
-            "field": "sigma_ip",
-            "point": "temperature",
-        }
 
-        def data(m):
-            return {
-                "point": m.point_data,
-                "cell": m.cell_data,
-                "field": m.field_data,
-            }
+        def data(ms_or_mesh: ot.MeshSeries) -> tuple[tuple[dict, str, int]]:
+            "return a tuple of datafields, array_to_remove and num_arrays"
+            return (
+                (ms_or_mesh.point_data, "temperature", 12),
+                (ms_or_mesh.cell_data, "effective_pressure", 5),
+                (ms_or_mesh.field_data, "sigma_ip", 4),
+            )
 
-        for mesh in ms:
-            for array_type, array_name in arrays_to_be_removed.items():
-                array_names = data(mesh)[array_type].keys()
-                assert array_name in array_names
-                assert lengths[array_type] == len(array_names)
-        ms.remove_array("effective_pressure", data_type="cell")
-        ms.remove_array("sigma_ip", data_type="field")
-        ms.remove_array("temperature", data_type="point")
-        for mesh in ms:
-            for array_type, array_name in arrays_to_be_removed.items():
-                array_names = data(mesh)[array_type].keys()
-                assert array_name not in array_names
-                assert lengths[array_type] - 1 == len(array_names)
-
-        # same with skip last option
-        ms = examples.load_meshseries_THM_2D_PVD()
-        for mesh in ms:
-            for array_type, array_name in arrays_to_be_removed.items():
-                array_names = data(mesh)[array_type].keys()
-                assert array_name in array_names
-                assert lengths[array_type] == len(array_names)
-        ms.remove_array("effective_pressure", data_type="cell", skip_last=True)
-        ms.remove_array("sigma_ip", data_type="field", skip_last=True)
-        ms.remove_array("temperature", data_type="point", skip_last=True)
-        for i, mesh in enumerate(ms):
-            for array_type, array_name in arrays_to_be_removed.items():
-                array_names = data(mesh)[array_type].keys()
-                if i == len(ms) - 1:
-                    assert array_name in array_names
-                    assert lengths[array_type] == len(array_names)
-                else:
-                    assert array_name not in array_names
-                    assert lengths[array_type] - 1 == len(array_names)
+        for slicing in [slice(None), slice(-1)]:
+            ms = examples.load_meshseries_THM_2D_PVD()
+            for datafield, arr_to_rm, num_arrays in data(ms[slicing]):
+                assert arr_to_rm in datafield, "Expected array is missing."
+                assert (
+                    len(datafield.keys()) == num_arrays
+                ), "Unexpected number of arrays in MeshSeries."
+                del datafield[arr_to_rm]
+                assert arr_to_rm not in datafield, "Deleted array still exists."
+                assert (
+                    len(datafield.keys()) == num_arrays - 1
+                ), "Unexpected number of arrays after deletion."
+            for datafield, arr_to_rm, num_arrays in data(ms.mesh(-1)):
+                skip_last = slicing == slice(-1)
+                array_present = arr_to_rm in datafield
+                assert array_present == skip_last
+                expected_num_arrays = num_arrays - int(not skip_last)
+                assert len(datafield.keys()) == expected_num_arrays
