@@ -268,7 +268,7 @@ class DataItems:
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
-    def __init__(self, filename: str):
+    def __init__(self, filename: str | Path):
         super().__init__(filename)
 
         ### extension for indexing

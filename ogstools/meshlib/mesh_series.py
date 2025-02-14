@@ -41,7 +41,7 @@ class MeshSeries:
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
 
-    def __init__(self, filepath: str | Path) -> None:
+    def __init__(self, filepath: str | Path | None = None) -> None:
         """
         Initialize a MeshSeries object
 
@@ -49,48 +49,50 @@ class MeshSeries:
 
             :returns:           A MeshSeries object
         """
-        if isinstance(filepath, Path):
-            filepath = str(filepath)
-        self.filepath = filepath
         self._spatial_factor = 1.0
         self._time_factor = 1.0
         self._mesh_cache: dict[float, Mesh] = {}
         self._mesh_func_opt: Callable[[Mesh], Mesh] | None = None
-        self._data_type = filepath.split(".")[-1]
         # list of slices to be able to have nested slices with xdmf
         # (but only the first slice will be efficient)
         self._time_indices: list[slice | Any] = [slice(None)]
         self._timevalues: np.ndarray
-        "original data timevalues - do not change except in synthetic data."
-        if self._data_type == "xmf":
-            self._data_type = "xdmf"
+        "original data timevalues - do not change."
 
-        if self._data_type == "pvd":
-            self._pvd_reader = pv.PVDReader(filepath)
-            self.timestep_files = [
-                str(Path(filepath).parent / dataset.path)
-                for dataset in self._pvd_reader.datasets
-            ]
-            self._timevalues = np.asarray(self._pvd_reader.time_values)
-        elif self._data_type == "xdmf":
-            self._xdmf_reader = XDMFReader(filepath)
-
-            self._timevalues = np.asarray(
-                [
-                    float(element.attrib["Value"])
-                    for collection_i in self._xdmf_reader.collection
-                    for element in collection_i
-                    if element.tag == "Time"
-                ]
-            )
-        elif self._data_type == "vtu":
-            self._vtu_reader = pv.XMLUnstructuredGridReader(filepath)
-            self._timevalues = np.zeros(1)
-        elif self._data_type == "synthetic":
+        if filepath is None:
+            self.filepath = self._data_type = None
             return
-        else:
-            msg = "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or 'vtu' files."
-            raise TypeError(msg)
+        self.filepath = Path(filepath)
+        self._data_type = self.filepath.suffix
+        match self._data_type:
+            case ".pvd":
+                self._pvd_reader = pv.PVDReader(self.filepath)
+                self.timestep_files = [
+                    str(self.filepath.parent / dataset.path)
+                    for dataset in self._pvd_reader.datasets
+                ]
+                self._timevalues = np.asarray(self._pvd_reader.time_values)
+            case ".xdmf" | ".xmf":
+                self._data_type = ".xdmf"
+                self._xdmf_reader = XDMFReader(self.filepath)
+
+                self._timevalues = np.asarray(
+                    [
+                        float(element.attrib["Value"])
+                        for collection_i in self._xdmf_reader.collection
+                        for element in collection_i
+                        if element.tag == "Time"
+                    ]
+                )
+            case ".vtu":
+                self._vtu_reader = pv.XMLUnstructuredGridReader(self.filepath)
+                self._timevalues = np.zeros(1)
+            case suffix:
+                msg = (
+                    "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or "
+                    f"'vtu' files, but not '{suffix}'"
+                )
+                raise TypeError(msg)
 
     def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
@@ -152,9 +154,9 @@ class MeshSeries:
             yield self.mesh(i)
 
     def __str__(self) -> str:
-        if self._data_type == "vtu":
+        if self._data_type == ".vtu":
             reader = self._vtu_reader
-        elif self._data_type == "pvd":
+        elif self._data_type == ".pvd":
             reader = self._pvd_reader
         else:
             reader = self._xdmf_reader
@@ -202,9 +204,7 @@ class MeshSeries:
 
     def ip_tesselated(self) -> MeshSeries:
         "Create a new MeshSeries from integration point tessellation."
-        ip_ms = MeshSeries(
-            Path(self.filepath).parent / "ip_meshseries.synthetic"
-        )
+        ip_ms = MeshSeries()
         ip_mesh = self.mesh(0).to_ip_mesh()
         ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
@@ -233,11 +233,11 @@ class MeshSeries:
             mesh = self._mesh_cache[timevalue]
         else:
             match self._data_type:
-                case "pvd":
+                case ".pvd":
                     pv_mesh = self._read_pvd(data_timestep)
-                case "xdmf":
+                case ".xdmf":
                     pv_mesh = self._read_xdmf(data_timestep)
-                case "vtu":
+                case ".vtu":
                     pv_mesh = self._vtu_reader.read()
                 case _:
                     msg = f"Unexpected datatype {self._data_type}."
@@ -245,10 +245,10 @@ class MeshSeries:
             mesh = Mesh(self.mesh_func(pv_mesh))
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
-        if self._data_type == "pvd":
+        if self._data_type == ".pvd":
             mesh.filepath = Path(self.timestep_files[data_timestep])
         else:
-            mesh.filepath = Path(self.filepath)
+            mesh.filepath = self.filepath
         return mesh
 
     def rawdata_file(self) -> Path | None:
@@ -260,7 +260,7 @@ class MeshSeries:
         :returns: The location of the file containing the raw data. If it does not
                  support efficient read (e.g., no efficient slicing), it returns None.
         """
-        if self._data_type == "xdmf" and self._xdmf_reader.has_fast_access():
+        if self._data_type == ".xdmf" and self._xdmf_reader.has_fast_access():
             return self._xdmf_reader.rawdata_path()  # single h5 file
         return None
 
@@ -359,7 +359,7 @@ class MeshSeries:
 
         all_cached = np.all(np.isin(self.timevalues, self._mesh_cache))
         if (
-            self._data_type == "xdmf"
+            self._data_type == ".xdmf"
             and variable_name in self._xdmf_reader.data_items
             and not all_cached
         ):
@@ -871,12 +871,13 @@ class MeshSeries:
 
     def _rename_vtufiles(self, new_pvd_fn: Path, fns: list[Path]) -> list:
         fns_new: list[Path] = []
+        assert self.filepath is not None
         for filename in fns:
             filepathparts_at_timestep = list(filename.parts)
             filepathparts_at_timestep[-1] = filepathparts_at_timestep[
                 -1
             ].replace(
-                Path(self.filepath).name.split(".")[0],
+                self.filepath.name.split(".")[0],
                 new_pvd_fn.name.split(".")[0],
             )
             fns_new.append(Path(*filepathparts_at_timestep))
