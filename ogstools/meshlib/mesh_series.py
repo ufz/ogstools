@@ -181,6 +181,13 @@ class MeshSeries:
             f"rawdata_file:     {self.rawdata_file()}\n"
         )
 
+    # deliberately typing as Sequence and not as zip because typing as zip
+    # leads to a weird cross-referencing error from sphinx side with no easy
+    # apparent fix
+    def items(self) -> Sequence[tuple[float, Mesh]]:
+        "Returns zipped tuples of timevalues and meshes."
+        return zip(self.timevalues, self, strict=True)  # type: ignore[return-value]
+
     def aggregate_over_time(
         self, variable: Variable | str, func: Callable
     ) -> Mesh:

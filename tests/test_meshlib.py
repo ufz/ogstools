@@ -173,6 +173,12 @@ class TestUtils:
 
             ms.clear_cache()
 
+    def test_items(self):
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        for i, (timevalue, mesh) in enumerate(ms.items()):
+            assert timevalue == ms.timevalues[i]
+            assert mesh == ms[i]
+
     def test_cache_copy(self):
         "Test that the cache of a MeshSeries is a deep copy as well."
         ms = examples.load_meshseries_HT_2D_XDMF()

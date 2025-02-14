@@ -12,6 +12,7 @@ This is not released yet!
 ## Features
 
 - MeshSeries can now be initialized with `from_data(meshes, timevalues)`
+- MeshSeries now has an .items() iterator
 - plot.line now automatically sorts the data
 
 ## Infrastructure
