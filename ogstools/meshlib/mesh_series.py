@@ -50,6 +50,7 @@ class MeshSeries(Sequence[Mesh]):
         """
         self._spatial_factor = 1.0
         self._time_factor = 1.0
+        self._epsilon = 1.0e-6
         self._mesh_cache: dict[float, Mesh] = {}
         self._mesh_func_opt: Callable[[Mesh], Mesh] | None = None
         # list of slices to be able to have nested slices with xdmf
@@ -104,6 +105,36 @@ class MeshSeries(Sequence[Mesh]):
             dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
         )
         return new_ms
+
+    def extend(self, mesh_series: MeshSeries) -> None:
+        """
+        Extends self with mesh_series.
+        If the last element of the mesh series is within epsilon
+        to the first element of mesh_series to extend, the duplicate element is removed
+        """
+        ms1_list = list(self)
+        ms2_list = list(mesh_series)
+        ms1_timevalues = self.timevalues
+        ms2_timevalues = mesh_series.timevalues
+        offset = 0.0
+        delta = ms2_timevalues[0] - ms1_timevalues[-1]
+        offset = 0.0 if delta >= 0 else ms1_timevalues[-1]
+        if ((delta < 0) and (ms2_timevalues[0] == 0.0)) or (
+            np.abs(delta) < self._epsilon
+        ):
+            ms1_timevalues = ms1_timevalues[:-1]
+            ms1_list = ms1_list[:-1]
+        ms2_timevalues = ms2_timevalues + offset
+        self._timevalues = np.append(ms1_timevalues, ms2_timevalues, axis=0)
+        self._mesh_cache.update(
+            dict(
+                zip(
+                    np.append(ms1_timevalues, ms2_timevalues, axis=0),
+                    ms1_list + ms2_list,
+                    strict=True,
+                )
+            )
+        )
 
     @classmethod
     def resample(
