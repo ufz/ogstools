@@ -694,10 +694,10 @@ class MeshSeries(Sequence[Mesh]):
             mesh = self.read_interp(tv, True)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                plot_func(fig.axes[0], tv)
                 plot.contourplots.draw_plot(
                     mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
                 )  # type: ignore[assignment]
+                plot_func(fig.axes[0], tv)
                 plot.utils.update_font_sizes(fig.axes, fontsize)
 
         _func = partial(animate_func, fig=fig)
@@ -928,11 +928,15 @@ class MeshSeries(Sequence[Mesh]):
             fns_new.append(Path(*filepathparts_at_timestep))
         return fns_new
 
-    def _save_vtu(self, new_pvd_fn: Path, fns: list[Path]) -> None:
+    def _save_vtu(
+        self, new_pvd_fn: Path, fns: list[Path], ascii: bool = False
+    ) -> None:
         for i, timestep in enumerate(self.timesteps):
             if ".vtu" in fns[i].name:
                 pv.save_meshio(
-                    Path(new_pvd_fn.parent, fns[i].name), self.mesh(i)
+                    Path(new_pvd_fn.parent, fns[i].name),
+                    self.mesh(i),
+                    binary=not ascii,
                 )
             elif ".xdmf" in fns[i].name:
                 newname = fns[i].name.replace(
@@ -980,13 +984,17 @@ class MeshSeries(Sequence[Mesh]):
         assert isinstance(filename, Path)
         return cast(Path, filename)
 
-    def save(self, filename: str, deep: bool = True) -> None:
+    def save(
+        self, filename: str, deep: bool = True, ascii: bool = False
+    ) -> None:
         """
         Save mesh series to disk.
 
         :param filename:   Filename to save the series to. Extension specifies
                            the file type. Currently only PVD is supported.
         :param deep:  Specifies whether VTU/H5 files should be written.
+        :param ascii: Specifies if ascii or binary format should be used,
+                      defaults to binary (False) - True for ascii.
         """
         fn = Path(filename)
         fns = [
@@ -996,7 +1004,7 @@ class MeshSeries(Sequence[Mesh]):
         if ".pvd" in fn.name:
             if deep is True:
                 fns = self._rename_vtufiles(fn, fns)
-                self._save_vtu(fn, fns)
+                self._save_vtu(fn, fns, ascii=ascii)
             self._save_pvd(fn, fns)
         else:
             s = "Currently the save method is implemented for PVD/VTU only."

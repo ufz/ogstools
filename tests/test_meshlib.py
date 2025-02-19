@@ -561,6 +561,9 @@ class TestUtils:
         for m in ms_test:
             assert "test" in m.filepath.name
 
+        # Smoke test for ascii output
+        ms.save(Path(temp, "test_ascii.pvd"), ascii=True)
+
         ms.save(Path(temp, file_name), deep=False)
         tree = ET.parse(Path(temp, file_name))
         num_slices = len(ms.timevalues)

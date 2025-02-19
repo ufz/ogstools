@@ -6,6 +6,7 @@ from tempfile import mkstemp
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.animation import FFMpegWriter, ImageMagickWriter
 from pyvista import examples as pv_examples
 
 import ogstools as ot
@@ -211,14 +212,39 @@ class TestPlotting:
         anim.to_jshtml()
         plt.close()
 
-    def test_save_animation(self):
-        """Test saving of an animation."""
+    def test_save_animation_mp4(self):
+        """Test saving of an animation to mp4."""
         meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
+        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
         anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if not utils.save_animation(anim, mkstemp()[1], 5):
-            pytest.skip("Saving animation failed.")
+        if FFMpegWriter.isAvailable():
+            utils.save_animation(anim, mkstemp(suffix=".mp4")[1], 5)
+        else:
+            pytest.skip("ffmpeg not available")
         plt.close()
+
+    def test_save_animation_gif(self):
+        """Test saving of an animation to gif."""
+        meshseries = examples.load_meshseries_THM_2D_PVD()
+        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
+        anim = meshseries.animate(ot.variables.temperature, timevalues)
+        if ImageMagickWriter.isAvailable():
+            utils.save_animation(anim, mkstemp(suffix=".gif")[1], 5)
+        else:
+            pytest.skip("ImageMagick not available")
+        plt.close()
+
+    def test_save_animation_wrong_ext(self):
+        """Test handling of the wrong extension when saving animation"""
+        meshseries = examples.load_meshseries_THM_2D_PVD()
+        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
+        anim = meshseries.animate(ot.variables.temperature, timevalues)
+        if FFMpegWriter.isAvailable():
+            with pytest.raises(RuntimeError) as err:
+                utils.save_animation(anim, mkstemp(suffix=".cpp")[1], 5)
+            assert err.type is RuntimeError
+        else:
+            pytest.skip("ImageMagick not available")
 
     def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""

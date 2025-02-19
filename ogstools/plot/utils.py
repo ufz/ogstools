@@ -6,9 +6,10 @@
 
 
 from math import nextafter
+from pathlib import Path
 from typing import Any
+from warnings import warn
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
@@ -160,7 +161,7 @@ def get_projection(
     return x_id, y_id, projection, mean_normal
 
 
-def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
+def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
     """
     Save a FuncAnimation with some codec presets.
 
@@ -169,33 +170,54 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> bool:
     :param fps:         the number of frames per second
     """
     print("Start saving animation...")
-    codec_args = (
-        "-crf 28 -preset ultrafast -pix_fmt yuv420p "
-        "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
-    ).split(" ")
 
-    writer: FFMpegWriter | ImageMagickWriter | None = None
-    if FFMpegWriter.isAvailable():
-        writer = FFMpegWriter(fps=fps, codec="libx265", extra_args=codec_args)
-        filename += ".mp4"
-    else:
-        print("\nffmpeg not available. It is recommended for saving animation.")
-        filename += ".gif"
-        if ImageMagickWriter.isAvailable():
-            writer = ImageMagickWriter()
-        else:
-            print(
-                "ImageMagick also not available. Falling back to"
-                f" {mpl.rcParams['animation.writer']}."
+    extension = Path(filename).suffix
+    msg = ""
+
+    match extension, FFMpegWriter.isAvailable(), ImageMagickWriter.isAvailable():
+        case _, False, False:
+            msg = """Neither .mp4 nor .gif writers are installed.\n
+                     Try installing ffmpeg and/or ImageMagick
+                     respectively to enable them."""
+        case ".mp4", True, _:
+            codec_args = (
+                "-crf 28 -preset ultrafast -pix_fmt yuv420p "
+                "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
+            ).split(" ")
+            writer = FFMpegWriter(
+                fps=fps, codec="libx265", extra_args=codec_args
             )
+        case ".gif", _, True:
+            warn(
+                """\n Gif format may struggle with cache overflow errors,
+                    due to lossless compression.\n You can try avoiding it by
+                    lowering dpi with: ogstools.plot.setup.dpi=50 \n
+                        or you can export to mp4 format instead.""",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            writer = ImageMagickWriter()
+        case ".mp4", False, True:
+            msg = """ffmpeg is not installed. Output to .mp4 not possible.\n
+                     Try .gif extension instead or install ffmpeg."""
+        case ".gif", True, False:
+            msg = """ImageMagick is not installed.\n
+                     Output to .gif not possible.\n
+                     Try .mp4 extension or install ImageMagick."""
+        case extension, _, _:
+            msg = f"""{extension} is not a supported file type.\n
+                     Only .mp4 and .gif are supported.\n
+                     Try installing ffmpeg for .mp4 or ImageMagic for .gif."""
+
+    if msg != "":
+        raise RuntimeError(msg)
+
     try:
         anim.save(filename, writer=writer)
         print("Successful!")
-        return True
     except Exception as err:
-        print("\nSaving Animation failed with the following error:")
-        print(err)
-        return False
+        msg = f"\nSaving Animation failed with the following error: {err}"
+        raise RuntimeError(msg) from err
 
 
 def get_cmap_norm(
