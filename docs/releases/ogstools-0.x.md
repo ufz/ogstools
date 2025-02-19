@@ -14,6 +14,7 @@ This is not released yet!
 - MeshSeries can now be initialized with `from_data(meshes, timevalues)`
 - MeshSeries now has an .items() iterator
 - plot.line now automatically sorts the data
+- User can select format when saving animation (gif or mp4)
 
 ## Infrastructure
 
