@@ -1,5 +1,7 @@
 """Unit tests for variables."""
 
+from itertools import pairwise
+
 import numpy as np
 import pytest
 from pint.facets.plain import PlainQuantity
@@ -8,6 +10,14 @@ from ogstools import examples
 from ogstools import variables as ov
 
 Qty = ov.u_reg.Quantity
+
+bhe_mesh_series = {
+    "1P": examples.load_meshseries_BHE_3D_1P(),
+    "1U": examples.load_meshseries_BHE_3D_1U(),
+    "2U": examples.load_meshseries_BHE_3D_2U(),
+    "CXA": examples.load_meshseries_BHE_3D_CXA(),
+    "CXC": examples.load_meshseries_BHE_3D_CXC(),
+}
 
 
 class TestPhysicalVariable:
@@ -213,16 +223,20 @@ class TestPhysicalVariable:
             assert np.all(var[i, "out"].transform(mesh) == -i)
             assert np.all(var[i, "grout"].transform(mesh) == 0.5 * i)
 
-    def test_BHE_temperature_by_type(self):
+    @pytest.mark.parametrize(
+        "bhe_component_gen",
+        [
+            lambda c: c,
+            lambda c: [list(pair) for pair in pairwise(c)],
+            lambda c: range(len(c)),
+            lambda c: [list(pair) for pair in pairwise(range(len(c)))],
+        ],
+    )
+    def test_BHE_temperature_component_indexing(self, bhe_component_gen):
         comps = ov.BHE_Vector.BHE_COMPONENTS
-        bhe_mesh_series = [
-            (examples.load_meshseries_BHE_3D_1P(), comps["1P"]),
-            (examples.load_meshseries_BHE_3D_1U(), comps["1U"]),
-            (examples.load_meshseries_BHE_3D_2U(), comps["2U"]),
-            (examples.load_meshseries_BHE_3D_CXA(), comps["CXA"]),
-            (examples.load_meshseries_BHE_3D_CXC(), comps["CXC"]),
-        ]
-        for ms, components in bhe_mesh_series:
+        for name in comps:
+            ms = bhe_mesh_series[name]
+            components = bhe_component_gen(comps[name])
             temp = [
                 ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0]
                 for comp in components

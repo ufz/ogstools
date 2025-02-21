@@ -99,9 +99,9 @@ class BHE_Vector(Variable):
         suffix = f"{index[0]}" if isinstance(index, tuple) else ""
         comp_index = index[1] if isinstance(index, tuple) else index
 
-        def get_component(comp_index: int | str) -> Callable:
-            if isinstance(comp_index, int):
-                return lambda x: self.func(x)[..., comp_index]
+        def get_component(
+            comp_index: int | str | list[int] | list[str],
+        ) -> Callable:
 
             def component_selector(x: T) -> T:
                 data: np.ndarray = self.func(x)
@@ -109,10 +109,29 @@ class BHE_Vector(Variable):
 
                 for _, components in BHE_Vector.BHE_COMPONENTS.items():
                     if len_data == len(components):
-                        if comp_index in components:
-                            return data[..., components.index(comp_index)]
-                        msg = f"Unknown str index {comp_index}"
-                        raise ValueError(msg)
+                        if isinstance(comp_index, list):
+                            if all(isinstance(i, int) for i in comp_index):
+                                return data[..., comp_index]
+                            if all(isinstance(i, str) for i in comp_index):
+                                component_index_list = []
+                                for comp in comp_index:
+                                    assert isinstance(
+                                        comp, str
+                                    )  # Type assertion to make mypy happy
+                                    component_index_list.append(
+                                        components.index(comp)
+                                    )
+                                return data[..., component_index_list]
+
+                            msg = f"Unknown str index list {comp_index}"
+                            raise ValueError(msg)
+                        if isinstance(comp_index, str):
+                            if comp_index in components:
+                                return data[..., components.index(comp_index)]
+                            msg = f"Unknown str index {comp_index}"
+                            raise ValueError(msg)
+                        if isinstance(comp_index, int):
+                            return data[..., comp_index]
                 msg = f"Unknown BHE type with BHE vector length {len_data}"
                 raise ValueError(msg)
 
