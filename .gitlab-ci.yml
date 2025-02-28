@@ -6,8 +6,8 @@ stages:
 
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10
-  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10
+  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
+  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10-feflow-10.0
   ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
 
 workflow:
