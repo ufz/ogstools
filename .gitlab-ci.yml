@@ -281,7 +281,6 @@ pages:
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *docs-script
   artifacts:
@@ -293,7 +292,6 @@ pages-tag:
   stage: prepare
   rules:
     - if: $CI_COMMIT_TAG
-  image: registry.opengeosys.org/ogs/tools/feflow-python-docker:8.0.1
   script:
     - *docs-script
   artifacts:
