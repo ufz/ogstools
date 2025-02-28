@@ -244,8 +244,10 @@ class MeshSeries(Sequence[Mesh]):
             reader = self._vtu_reader
         elif self._data_type == ".pvd":
             reader = self._pvd_reader
-        else:
+        elif self._data_type == ".xdmf":
             reader = self._xdmf_reader
+        else:
+            reader = "None"
         return (
             f"MeshSeries:\n"
             f"filepath:         {self.filepath}\n"
