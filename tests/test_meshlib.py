@@ -270,15 +270,23 @@ class TestUtils:
         plt.close()
 
     def test_time_slice(self):
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
+        results = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        _ = mesh_series.plot_time_slice(
-            "temperature", points, levels=[78, 79, 80]
+        ms_pts = results.extract_probe(points, "temperature")
+        fig = ms_pts.plot_time_slice(
+            "x", "time", "temperature", levels=[78, 79, 80]
         )
-        _ = mesh_series.plot_time_slice(
-            "temperature", points, y_axis="y", interpolate=False,
-            time_logscale=True, cb_loc="left", dpi=50, fontsize=10
+        fig = ms_pts.plot_time_slice(
+            "time", "y", "temperature", time_logscale=True, cb_loc="left",
+            dpi=50, fontsize=10
         )  # fmt: skip
+        with pytest.raises(ValueError, match="fig and ax together"):
+            _ = ms_pts.plot_time_slice("x", "time", "temperature", fig=fig)
+        with pytest.raises(KeyError, match="has to be 'time'"):
+            _ = ms_pts.plot_time_slice("x", "y", "temperature")
+        with pytest.raises(KeyError, match="has to be a spatial"):
+            _ = ms_pts.plot_time_slice("time", "temperature", "y")
+
         plt.close()
 
     def _check_probe(self, ms: ot.MeshSeries, points: np.ndarray) -> None:

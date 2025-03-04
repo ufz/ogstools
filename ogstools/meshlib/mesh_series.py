@@ -24,7 +24,6 @@ from matplotlib.animation import FuncAnimation
 from scipy.interpolate import (
     LinearNDInterpolator,
     NearestNDInterpolator,
-    RegularGridInterpolator,
     interp1d,
 )
 from tqdm import tqdm
@@ -714,28 +713,25 @@ class MeshSeries(Sequence[Mesh]):
 
     def plot_time_slice(
         self,
-        variable: Variable | str,
-        points: np.ndarray,
-        y_axis: Literal["x", "y", "z", "dist", "auto"] = "auto",
-        interpolate: bool = True,
+        x: Literal["x", "y", "z", "time"],
+        y: Literal["x", "y", "z", "time"],
+        variable: str | Variable,
         time_logscale: bool = False,
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
         cbar: bool = True,
         **kwargs: Any,
-    ) -> plt.Figure:
+    ) -> plt.Figure | None:
         """
+        Create a heatmap for a variable over time and space.
+
+        :param x:    What to display on the x-axis (x, y, z or time)
+        :param y:    What to display on the y-axis (x, y, z or time)
         :param variable:    The variable to be visualized.
-        :param points:  The points along which the data is sampled over time.
-        :param y_axis:  The component of the sampling points which labels the
-                        y-axis. By default, if only one coordinate of the points
-                        is changing, this axis is taken, otherwise the distance
-                        along the line is taken.
-        :param interpolate:     Smoothen the result be interpolation.
         :param time_logscale:   Should log-scaling be applied to the time-axis?
         :param fig:             matplotlib figure to use for plotting.
         :param ax:              matplotlib axis to use for plotting.
-        :param cb_loc:          Colorbar location. If None, omit colorbar.
+        :param cbar:            If True, adds a colorbar.
 
         Keyword Arguments:
             - cb_labelsize:       colorbar labelsize
@@ -753,75 +749,59 @@ class MeshSeries(Sequence[Mesh]):
                 figsize=kwargs.get("figsize", [18, 14]),
                 dpi=kwargs.get("dpi", 100),
             )
+            optional_return_figure = fig
         elif ax is None or fig is None:
             msg = "Please provide fig and ax together or not at all."
             raise ValueError(msg)
+        else:
+            optional_return_figure = None
+        if "time" not in [x, y]:
+            msg = "One of x_var and y_var has to be 'time'."
+            raise KeyError(msg)
+        if x not in "xyz" and y not in "xyz":
+            msg = "One of x_var and y_var has to be a spatial coordinate."
+            raise KeyError(msg)
 
-        time = self.timevalues
+        var_z = Variable.find(variable, self.mesh(0))
+        var_x, var_y = normalize_vars(x, y, self.mesh(0))
         if time_logscale:
-            time = np.log10(time, where=time != 0)
-            time[0] = time[1] - (time[2] - time[1])
 
-        variable = Variable.find(variable, self.mesh(0))
-        values = variable.transform(self.probe(points, variable.data_name))
+            def log10time(vals: np.ndarray) -> np.ndarray:
+                log10vals = np.log10(vals, where=vals != 0)
+                if log10vals[0] == 0:
+                    log10vals[0] = log10vals[1] - (log10vals[2] - log10vals[1])
+                return log10vals
+
+            time_var = var_x if var_x.data_name == "time" else var_y
+            get_time = time_var.func
+            time_var.func = lambda ms, _: log10time(get_time(ms, _))
+            time_var.output_name = f"log10 {time_var.output_name}"
+
+        x_vals = var_x.transform(self)
+        y_vals = var_y.transform(self)
+        values = self.values(var_z)
+        if values.shape == (len(x_vals), len(y_vals)):
+            values = values.T
+
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
         else:
+            vmin, vmax = (plot.setup.vmin, plot.setup.vmax)
             levels = plot.levels.compute_levels(
-                kwargs.get("vmin", plot.setup.vmin) or np.nanmin(values),
-                kwargs.get("vmax", plot.setup.vmax) or np.nanmax(values),
+                kwargs.get("vmin", np.nanmin(values) if vmin is None else vmin),
+                kwargs.get("vmax", np.nanmax(values) if vmax is None else vmax),
                 kwargs.get("num_levels", plot.setup.num_levels),
             )
-        cmap, norm = plot.utils.get_cmap_norm(levels, variable, **kwargs)
-
-        non_flat_axis = np.argwhere(
-            np.invert(np.all(np.isclose(points, points[0]), axis=0))
-        )
-        if y_axis == "auto" and non_flat_axis.shape[0] == 1:
-            y = points[:, non_flat_axis[0, 0]]
-            ylabel = "xyz"[non_flat_axis[0, 0]]
-        elif y_axis in "xyz":
-            y = points[:, "xyz".index(y_axis)]
-            ylabel = y_axis
-        else:
-            y = np.linalg.norm(points - points[0], axis=1)
-            ylabel = "distance"
-
-        if interpolate:
-            grid_interp = RegularGridInterpolator(
-                (time, y), values, method="cubic"
-            )
-            tmin, tmax = (np.min(time), np.max(time))
-            ymin, ymax = (np.min(y), np.max(y))
-            t_linspace = np.linspace(tmin, tmax, num=100)
-            y_linspace = np.linspace(ymin, ymax, num=100)
-            z_grid = grid_interp(tuple(np.meshgrid(t_linspace, y_linspace)))
-            ax.imshow(
-                z_grid[::-1],
-                cmap=cmap,
-                norm=norm,
-                extent=(tmin, tmax, ymin, ymax),
-                aspect=(tmax - tmin) / (ymax - ymin) / kwargs.get("aspect", 1),
-                interpolation="bicubic",
-            )
-            if variable.bilinear_cmap and levels[0] < 0.0 < levels[-1]:
-                ax.contour(time, y, values.T, [0], colors="white")
-        else:
-            ax.pcolormesh(time, y, values.T, cmap=cmap, norm=norm)
+        cmap, norm = plot.utils.get_cmap_norm(levels, var_z, **kwargs)
+        ax.pcolormesh(x_vals, y_vals, values, cmap=cmap, norm=norm)
 
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
-        ax.set_ylabel(
-            ylabel + " / " + plot.setup.spatial_unit, fontsize=fontsize
-        )
-        xlabel = "time / " + plot.setup.time_unit
-        if time_logscale:
-            xlabel = "log10( " + xlabel + " )"
-        ax.set_xlabel(xlabel, fontsize=fontsize)
+        plot.utils.label_ax(fig, ax, var_x, var_y, fontsize)
         ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
         if cbar:
-            plot.contourplots.add_colorbars(fig, ax, variable, levels, **kwargs)
+            plot.contourplots.add_colorbars(fig, ax, var_z, levels, **kwargs)
         plot.utils.update_font_sizes(fig.axes, fontsize)
-        return fig
+        return optional_return_figure
 
     @property
     def mesh_func(self) -> Callable[[Mesh], Mesh]:
