@@ -228,14 +228,15 @@ class Variable:
         without.
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
+        is_ms = isinstance(data, Sequence) and isinstance(data[0], pv.DataSet)
         if self.mesh_dependent:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This variable can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)
@@ -328,22 +329,28 @@ class Variable:
         )
 
     def _get_data(
-        self, mesh: pv.UnstructuredGrid, masked: bool = True
+        self,
+        dataset: pv.UnstructuredGrid | Sequence,
+        masked: bool = True,
     ) -> np.ndarray:
         "Get the data associated with a scalar or vector variable from a mesh."
+        mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
         if self.data_name not in (
-            data_keys := ",".join(set().union(mesh.point_data, mesh.cell_data))
+            data_keys := set().union(mesh.point_data, mesh.cell_data)
         ):
             msg = (
                 f"Data name {self.data_name} not found in mesh. "
-                f"Available data names are {data_keys}. "
+                f"Available data names are {','.join(data_keys)}. "
             )
             raise KeyError(msg)
-        if masked and self.mask_used(mesh):
-            return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
-                self.data_name
-            ]
-        return mesh[self.data_name]
+        if masked and self.mask_used(dataset):
+            if isinstance(dataset, Sequence):
+                mask = np.asarray(mesh.ctp(False)[self.mask] == 1)
+                return dataset[self.data_name][:, mask]  # type: ignore[call-overload]
+            return dataset.ctp(False).threshold(
+                value=[1, 1], scalars=self.mask
+            )[self.data_name]
+        return dataset[self.data_name]  # type: ignore[call-overload]
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"

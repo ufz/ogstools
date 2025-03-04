@@ -256,3 +256,17 @@ class TestPhysicalVariable:
         assert ov.temperature.abs_error.transform(1) == 1
         assert ov.temperature.rel_error.transform(0.01) == 1
         assert ov.temperature.anasol.transform(274.15) == 1
+
+    def test_transform_meshseries(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+
+        def check_limits(
+            variable: ov.Variable, vmin: float, vmax: float
+        ) -> None:
+            vals = variable.transform(ms)
+            assert vmin <= np.min(vals)
+            assert vmax >= np.max(vals)
+
+        check_limits(ov.temperature, 7.9, 50)
+        check_limits(ov.pressure, 0, 8)
+        check_limits(ov.displacement.magnitude, 0, 0.3)
