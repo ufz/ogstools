@@ -336,6 +336,27 @@ class TestUtils:
         _ = meshseries.plot_probe(points, ot.variables.velocity)
         plt.close()
 
+    def test_extract_probe(self):
+        results = examples.load_meshseries_HT_2D_XDMF()
+        points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
+        ms_pts = results.extract_probe(points, "temperature")
+        np.testing.assert_array_equal(ms_pts[0].points, points)
+        ms_pts = results.extract_probe(points, "temperature", "nearest")
+        pt_id = results[0].find_closest_point(points[0])
+        np.testing.assert_array_equal(
+            ms_pts["temperature"][:, 0], results["temperature"][:, pt_id]
+        )
+
+    def test_resample(self):
+        results = examples.load_meshseries_HT_2D_XDMF()
+        in_between = 0.5 * (results.timevalues[:-1] + results.timevalues[1:])
+        resampled = results.resample(in_between)
+        for idx, mesh in enumerate(resampled):
+            for var in ["temperature", "pressure", "darcy_velocity"]:
+                delta = results[idx + 1][var] - results[idx][var]
+                half_delta = mesh[var] - results[idx][var]
+                np.testing.assert_almost_equal(half_delta, 0.5 * delta)
+
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh1 = meshseries.mesh(0)
