@@ -31,7 +31,7 @@ from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
-from ogstools.variables import Variable, get_preset, u_reg
+from ogstools.variables import Variable, normalize_vars, u_reg
 
 from .data_dict import DataDict
 from .mesh import Mesh
@@ -444,7 +444,7 @@ class MeshSeries(Sequence[Mesh]):
 
         The data is named as `f'{prefix}_{variable.output_name}_time'`."""
         mesh = self.mesh(0).copy(deep=True)
-        variable = get_preset(variable, mesh)
+        variable = Variable.find(variable, mesh)
         mesh.clear_point_data()
         mesh.clear_cell_data()
         output_name = f"{prefix}_{variable.output_name}_time"
@@ -493,7 +493,7 @@ class MeshSeries(Sequence[Mesh]):
 
         Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
-        variable = get_preset(variable, self.mesh(0))
+        variable = Variable.find(variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
         x_values = self.timevalues
         x_label = f"time t / {plot.setup.time_unit}"
@@ -602,7 +602,7 @@ class MeshSeries(Sequence[Mesh]):
         Keyword Arguments get passed to `matplotlib.pyplot.plot`
         """
         points = np.asarray(points).reshape((-1, 3))
-        variable = get_preset(variable, self.mesh(0))
+        variable = Variable.find(variable, self.mesh(0))
         values = variable.magnitude.transform(
             self.probe(points, variable.data_name, interp_method)
         )
@@ -612,7 +612,7 @@ class MeshSeries(Sequence[Mesh]):
             x_values = self.timevalues
             x_label = f"time / {plot.setup.time_unit}"
         else:
-            variable_abscissa = get_preset(variable_abscissa, self.mesh(0))
+            variable_abscissa = Variable.find(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
                 self.probe(points, variable_abscissa.data_name, interp_method)
             )
@@ -762,7 +762,7 @@ class MeshSeries(Sequence[Mesh]):
             time = np.log10(time, where=time != 0)
             time[0] = time[1] - (time[2] - time[1])
 
-        variable = get_preset(variable, self.mesh(0))
+        variable = Variable.find(variable, self.mesh(0))
         values = variable.transform(self.probe(points, variable.data_name))
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))

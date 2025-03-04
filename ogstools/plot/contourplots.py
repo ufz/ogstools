@@ -19,7 +19,7 @@ from matplotlib.patches import Rectangle as Rect
 
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
-from ogstools.variables import Variable, Vector, get_preset
+from ogstools.variables import Variable, Vector
 
 from . import features
 from .levels import compute_levels, median_exponent
@@ -149,7 +149,7 @@ def subplot(
 ) -> None:
     "Plot the variable field of a mesh on a matplotlib.axis."
 
-    variable = get_preset(variable, mesh)
+    variable = Variable.find(variable, mesh)
     if mesh.get_cell(0).dimension == 3:
         msg = "This method is for 2D meshes only, but found 3D elements."
         raise ValueError(msg)
@@ -419,7 +419,7 @@ def contourf(
     """
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
-    variable = get_preset(variable, _meshes[0])
+    variable = Variable.find(variable, _meshes[0])
     data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
         fig_aspect = np.mean(data_aspects)

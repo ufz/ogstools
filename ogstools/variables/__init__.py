@@ -9,13 +9,13 @@
 
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import pyvista as pv
 
 from . import mesh_dependent, tensor_math
 from .custom_colormaps import integrity_cmap, temperature_cmap
 from .matrix import Matrix
-from .tensor_math import identity
 from .unit_registry import u_reg
 from .variable import Scalar, Variable
 from .vector import BHE_Vector, Vector
@@ -188,88 +188,6 @@ temperature_BHE = BHE_Vector(
 all_variables = [v for v in locals().values() if isinstance(v, Variable)]
 
 
-def _spatial_preset(axis: str) -> Scalar:
-    # pylint: disable=import-outside-toplevel
-    # Importing here dynamically to avoid circular import
-    # If we want to avoid this, we'd have to move plot.setup to someplace
-    # outside of plot
-    from ogstools.plot import setup  # noq: I001
-
-    # pylint: enable=import-outside-toplevel
-
-    return Scalar(
-        axis,
-        setup.spatial_unit,  # type:ignore[attr-defined]
-        setup.spatial_unit,  # type:ignore[attr-defined]
-        mesh_dependent=True,
-        func=mesh_dependent.get_pts("xyz".index(axis)),
-        color="k",
-    )
-
-
-def get_preset(variable: Variable | str, mesh: pv.UnstructuredGrid) -> Variable:
-    """
-    Returns a Variable preset or creates one with correct type.
-
-    Searches for presets by data_name and output_name and returns if found.
-    If 'variable' is given as type Variable this will also look for
-    derived variables (difference, aggregate).
-    Otherwise create Scalar, Vector, or Matrix Variable depending on the shape
-    of data in mesh.
-
-    :param variable:    The variable to retrieve or its name if a string.
-    :param mesh:        The mesh containing the variable data.
-    :returns: A corresponding Variable preset or a new Variable of correct type.
-    """
-    data_keys: list[str] = list(set().union(mesh.point_data, mesh.cell_data))
-    error_msg = (
-        f"Data not found in mesh. Available data names are {data_keys}. "
-    )
-    if isinstance(variable, str) and variable in ["x", "y", "z"]:
-        return _spatial_preset(variable)
-
-    if isinstance(variable, Variable):
-        if variable.data_name in data_keys:
-            return variable
-        matches = [variable.output_name in data_key for data_key in data_keys]
-        if not any(matches):
-            raise KeyError(error_msg)
-        data_key = data_keys[matches.index(True)]
-        if data_key == f"{variable.output_name}_difference":
-            return variable.difference
-        if data_key.rsplit("_")[0] in [
-            "min", "max", "mean", "median", "sum", "std", "var"  # fmt:skip
-        ]:
-            return variable.replace(
-                data_name=data_key,
-                data_unit=variable.output_unit,
-                output_unit=variable.output_unit,
-                output_name=data_key,
-                symbol=variable.symbol,
-                func=identity,
-                mesh_dependent=False,
-            )
-        return variable.replace(data_name=data_key, output_name=data_key)
-
-    for prop in all_variables:
-        if prop.output_name == variable:
-            return prop
-    for prop in all_variables:
-        if prop.data_name == variable:
-            return prop
-
-    matches = [variable in data_key for data_key in data_keys]
-    if not any(matches):
-        raise KeyError(error_msg)
-
-    data_shape = mesh[variable].shape
-    if len(data_shape) == 1:
-        return Scalar(variable)
-    if data_shape[1] in [2, 3]:
-        return Vector(variable)
-    return Matrix(variable)
-
-
 def get_dataframe() -> pd.DataFrame:
     data = [
         "preset,data_name,data_unit,output_unit,output_name,type".split(",")
@@ -292,3 +210,31 @@ def get_dataframe() -> pd.DataFrame:
         .sort_values(["data_name", "preset"])
         .set_index("preset")
     )
+
+
+def normalize_vars(
+    var1: str | Variable | None, var2: str | Variable | None, mesh: pv.DataSet
+) -> tuple[Variable, Variable]:
+    "Normalize arguments to return two Variables."
+    default = ("time", "time") if "time" in [var1, var2] else "xyz"
+    axes_idx = np.argwhere(
+        np.invert(np.all(np.isclose(mesh.points, mesh.points[0]), axis=0))
+    ).ravel()
+    if len(axes_idx) == 0:
+        axes_idx = [0, 1]
+    match var1, var2:
+        case None, None:
+            if len(axes_idx) <= 1:
+                axes_idx = [0, axes_idx[0] if axes_idx[0] != 0 else 1]
+            x_var = Variable.find(default[axes_idx[0]], mesh)
+            y_var = Variable.find(default[axes_idx[1]], mesh)
+        case var1, None:
+            x_var = Variable.find(default[axes_idx[0]], mesh)
+            y_var = Variable.find(var1, mesh).magnitude  # type: ignore[arg-type]
+        case None, var2:
+            x_var = Variable.find(default[axes_idx[0]], mesh)
+            y_var = Variable.find(var2, mesh).magnitude  # type: ignore[arg-type]
+        case var1, var2:
+            x_var = Variable.find(var1, mesh).magnitude  # type: ignore[arg-type]
+            y_var = Variable.find(var2, mesh).magnitude  # type: ignore[arg-type]
+    return x_var, y_var

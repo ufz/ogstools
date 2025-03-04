@@ -13,7 +13,7 @@ import numpy as np
 from pyvista import UnstructuredGrid
 
 from ogstools.plot.shared import setup
-from ogstools.variables import Variable, get_preset
+from ogstools.variables import Variable
 
 
 def nice_num(val: float) -> float:
@@ -93,7 +93,7 @@ def combined_levels(
     """
     Calculate well spaced levels for the encompassing variable range in meshes.
     """
-    variable = get_preset(variable, meshes.ravel()[0])
+    variable = Variable.find(variable, meshes.ravel()[0])
     vmin, vmax = np.inf, -np.inf
     VMIN = kwargs.get("vmin", setup.vmin)
     VMAX = kwargs.get("vmax", setup.vmax)
