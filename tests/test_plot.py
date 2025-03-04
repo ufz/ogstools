@@ -106,6 +106,12 @@ class TestPlotting:
         str_lens = np.asarray([len(label) for label in labels])
         assert np.all(str_lens == str_lens[0])
 
+    def test_colors_from_cmap(self):
+        for cmap_color in ["tab10", "Blues", ["r", "g", "b"]]:
+            for n in [2, 5, 10]:
+                colors = ot.plot.utils.colors_from_cmap(cmap_color, n)
+                assert len(colors) == n
+
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()

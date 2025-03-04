@@ -5,6 +5,7 @@
 #
 
 
+from itertools import cycle, islice
 from math import nextafter
 from pathlib import Path
 from typing import Any
@@ -279,6 +280,20 @@ def contrast_color(color: Any) -> Any:
     # threshold lowered on purpose to prefer black coloring to only use white
     # when it is really necessary
     return "k" if (r * 0.299 + g * 0.587 + b * 0.114) > 0.2 else "w"
+
+
+def colors_from_cmap(cmap: str | list, num: int) -> list[str]:
+    "Convert a colormap to a list of colors."
+    if isinstance(cmap, str):  # Assuming it's a colormap name
+        cmap_: plt.Colormap = plt.get_cmap(cmap)
+        if cmap_.N <= 20:
+            # for discrete colormaps
+            return list(map(cmap_, range(num)))
+        # for continuous colormaps
+        return list(map(cmap_, np.linspace(0, 1, num)))
+    # Assuming it's already a list of colors, repeat list entries until length
+    # of num is reached
+    return list(islice(cycle(cmap), num))
 
 
 def padded(
