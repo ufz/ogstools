@@ -189,6 +189,38 @@ class Variable:
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
+    @property
+    def abs_error(self) -> "Variable":
+        "A variable relating to an absolute error of this quantity."
+        return self.difference.replace(
+            data_name=f"{self.data_name}_abs_error",
+            output_name="absolute_error",
+            symbol="\\epsilon_\\mathrm{abs}",
+            cmap="RdGy",
+            bilinear_cmap=True,
+        )
+
+    @property
+    def rel_error(self) -> "Variable":
+        "A variable relating to a relative error of this quantity."
+        return self.difference.replace(
+            data_name=f"{self.data_name}_rel_error",
+            data_unit="",
+            output_unit="percent",
+            output_name="relative_error",
+            symbol="\\epsilon_\\mathrm{rel}",
+            cmap="PuOr",
+            bilinear_cmap=True,
+        )
+
+    @property
+    def anasol(self) -> "Variable":
+        "A variable relating to an analytical solution of this quantity."
+        return self.replace(
+            data_name=f"{self.data_name}_anasol",
+            output_name=f"analytical {self.output_name} solution",
+        )
+
     def is_mask(self) -> bool:
         """
         Check if the variable is a mask.

@@ -250,3 +250,9 @@ class TestPhysicalVariable:
         var_short = ov.Scalar(data_name="test", data_unit="unit")
         assert var_full.output_unit == var_short.output_unit
         assert var_full.output_name == var_short.output_name
+
+    def test_derived_variables(self):
+        assert ov.temperature.difference.transform(1) == 1
+        assert ov.temperature.abs_error.transform(1) == 1
+        assert ov.temperature.rel_error.transform(0.01) == 1
+        assert ov.temperature.anasol.transform(274.15) == 1
