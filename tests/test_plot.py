@@ -293,9 +293,11 @@ class TestPlotting:
         plt.close()
 
     def test_lineplot(self):
-        """Test creation of a linesplot from sampled profile data"""
-        ot.plot.setup.set_units(spatial="km", time="a")
-        mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
+        """Test creation of a lineplot from sampled profile data"""
+        ms = examples.load_meshseries_THM_2D_PVD().scale(
+            spatial=("m", "km"), time=("s", "a")
+        )
+        mesh = ms.mesh(-1)
         mesh.points[:, 2] = 0.0
         x1, x2, y1, y2 = mesh.bounds[:4]
         xc, yc, z = mesh.center
@@ -304,27 +306,34 @@ class TestPlotting:
         sample_xy = mesh.sample_over_line([x1, y1, z], [x2, y2, z])
         sample_xz = mesh.rotate_x(90).sample_over_line([x1, 0, y1], [x2, 0, y2])
         sample_yz = mesh.rotate_y(90).sample_over_line([0, y1, x1], [0, y2, x2])
+        ms_sample_x = ms.transform(
+            lambda mesh: mesh.sample_over_line([x1, yc, z], [x2, yc, z])
+        )
 
-        def check(*args, x_l: str, y_l: str) -> None:
+        def check_labels(*args, x_l: str, y_l: str) -> None:
             fig = ot.plot.line(*args, figsize=[4, 3])
             assert fig.axes[0].get_xlabel().split(" ")[0] == x_l
             assert fig.axes[0].get_ylabel().split(" ")[0] == y_l
             plt.close()
 
-        check(sample_x, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_x, x_l="x", y_l="y")
-        check(sample_y, ot.variables.temperature, x_l="y", y_l="temperature")
-        check(sample_y, x_l="x", y_l="y")
-        check(sample_xy, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_xy, x_l="x", y_l="y")
-        check(sample_xz, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_xz, x_l="x", y_l="z")
-        check(sample_yz, ot.variables.temperature, x_l="y", y_l="temperature")
-        check(sample_yz, x_l="y", y_l="z")
-        check(sample_yz, "z", "y", x_l="z", y_l="y")
-        check(sample_x, "x", "temperature", x_l="x", y_l="temperature")
-        check(sample_y, "temperature", "y", x_l="temperature", y_l="y")
-        check(sample_xy, ot.variables.displacement, ot.variables.temperature,
+        temp = ot.variables.temperature
+        check_labels(ms_sample_x, temp, x_l="x", y_l="temperature")
+        check_labels(ms_sample_x, "time", temp, x_l="time", y_l="temperature")
+        check_labels(ms_sample_x, temp, "time", x_l="temperature", y_l="time")
+        check_labels(sample_x, temp, x_l="x", y_l="temperature")
+        check_labels(sample_x, x_l="x", y_l="y")
+        check_labels(sample_y, temp, x_l="y", y_l="temperature")
+        check_labels(sample_y, x_l="x", y_l="y")
+        check_labels(sample_xy, temp, x_l="x", y_l="temperature")
+        check_labels(sample_xy, x_l="x", y_l="y")
+        check_labels(sample_xz, temp, x_l="x", y_l="temperature")
+        check_labels(sample_xz, x_l="x", y_l="z")
+        check_labels(sample_yz, temp, x_l="y", y_l="temperature")
+        check_labels(sample_yz, x_l="y", y_l="z")
+        check_labels(sample_yz, "z", "y", x_l="z", y_l="y")
+        check_labels(sample_x, "x", "temperature", x_l="x", y_l="temperature")
+        check_labels(sample_y, "temperature", "y", x_l="temperature", y_l="y")
+        check_labels(sample_xy, ot.variables.displacement, temp,
               x_l="displacement", y_l="temperature")  # fmt: skip
         _, ax = plt.subplots(figsize=[4, 3])
         ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax, lw=1)

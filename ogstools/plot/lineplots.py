@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -5,11 +6,34 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.plot import setup, utils
-from ogstools.variables import Variable, get_preset
+from ogstools.variables import Variable, normalize_vars
+
+
+def _format_ax(
+    ax: plt.Axes,
+    x_var: Variable,
+    y_var: Variable,
+    pure_spatial: bool,
+    kwargs: dict,
+) -> None:
+    show_grid = kwargs.pop("grid", True) and not pure_spatial
+
+    if ax.get_xlabel() == "":
+        ax.set_xlabel(x_var.get_label(setup.label_split))
+    if ax.get_ylabel() == "":
+        ax.set_ylabel(y_var.get_label(setup.label_split))
+
+    if show_grid:
+        ax.grid(which="major", color="lightgrey", linestyle="-")
+        ax.grid(which="minor", color="0.95", linestyle="--")
+        ax.minorticks_on()
+
+    if not pure_spatial:
+        ax.figure.tight_layout()
 
 
 def line(
-    mesh: pv.DataSet,
+    dataset: pv.DataSet | Sequence[pv.DataSet],
     var1: str | Variable | None = None,
     var2: str | Variable | None = None,
     ax: plt.Axes | None = None,
@@ -29,7 +53,7 @@ def line(
     >>> line(mesh, ot.variables.pressure, "y")  # y over pressure
     >>> line(mesh, "pressure", "temperature")   # temperature over pressure
 
-    :param mesh:    The mesh which contains the data to plot
+    :param dataset:    The mesh which contains the data to plot
     :param var1:    Variable for the x-axis if var2 is given else for y-axis.
     :param var2:    Variable for the y-axis if var1 is given.
     :param ax:      The matplotlib axis to use for plotting, if None a new
@@ -49,71 +73,43 @@ def line(
     if isinstance(var1, plt.Axes) or isinstance(var2, plt.Axes):
         msg = "Please provide ax as keyword argument only!"
         raise TypeError(msg)
-
     figsize = kwargs.pop("figsize", [16, 10])
+    ax_: plt.Axes
     ax_ = plt.subplots(figsize=figsize)[1] if ax is None else ax
 
-    axes_idx = np.argwhere(
-        np.invert(np.all(np.isclose(mesh.points, mesh.points[0]), axis=0))
-    ).ravel()
-    if len(axes_idx) == 0:
-        axes_idx = [0, 1]
+    mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
+    x_var, y_var = normalize_vars(var1, var2, mesh)
 
-    match var1, var2:
-        case None, None:
-            if len(axes_idx) == 1:
-                axes_idx = [0, axes_idx[0] if axes_idx[0] != 0 else 1]
-            x_var = get_preset("xyz"[axes_idx[0]], mesh)
-            y_var = get_preset("xyz"[axes_idx[1]], mesh)
-        case var1, None:
-            x_var = get_preset("xyz"[axes_idx[0]], mesh)
-            y_var = get_preset(var1, mesh).magnitude  # type: ignore[arg-type]
-        case None, var2:
-            x_var = get_preset("xyz"[axes_idx[0]], mesh)
-            y_var = get_preset(var2, mesh).magnitude  # type: ignore[arg-type]
-        case var1, var2:
-            x_var = get_preset(var1, mesh).magnitude  # type: ignore[arg-type]
-            y_var = get_preset(var2, mesh).magnitude  # type: ignore[arg-type]
+    if isinstance(dataset, Sequence):
+        color = kwargs.pop("colors", kwargs.pop("color", "tab10"))
+        colorlist = utils.colors_from_cmap(color, len(dataset))
+        ax_.set_prop_cycle(color=colorlist)
+    else:
+        kwargs.setdefault("color", y_var.color)
 
-    kwargs.setdefault("color", y_var.color)
     pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
     lw_scale = 4 if pure_spatial else 2.5
-    if "lw" in kwargs:
-        kwargs["lw"] *= lw_scale
-    elif "linewidth" in kwargs:
-        kwargs["linewidth"] *= lw_scale
-    else:
-        kwargs.setdefault("linewidth", setup.linewidth * lw_scale)
-    fontsize = kwargs.pop("fontsize", setup.fontsize)
-    show_grid = kwargs.pop("grid", True) and not pure_spatial
+    kwargs.setdefault("linewidth", kwargs.pop("lw", None) or setup.linewidth)
+    kwargs["linewidth"] *= lw_scale
+    labels = kwargs.pop("labels", kwargs.pop("label", None))
 
-    if sort:
+    if sort and "time" not in [var1, var2]:
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
         sort_ids = np.argsort(mesh.points[:, sort_idx])
     else:
         sort_ids = slice(None)
-    ax_.plot(
-        x_var.transform(mesh)[sort_ids],
-        y_var.transform(mesh)[sort_ids],
-        **kwargs,
-    )
-
-    if "label" in kwargs:
+    x = x_var.transform(dataset)[..., sort_ids]
+    y = y_var.transform(dataset)[..., sort_ids]
+    if len(x.shape) < len(y.shape) and x.shape[0] != y.shape[0]:
+        y = y.T
+    if len(x.shape) > len(y.shape) and x.shape[0] != y.shape[0]:
+        x = x.T
+    if labels:
+        kwargs["label"] = labels
+    _format_ax(ax_, x_var, y_var, pure_spatial, kwargs)
+    fontsize = kwargs.pop("fontsize", setup.fontsize)
+    ax_.plot(x, y, **kwargs)
+    if labels:
         ax_.legend(fontsize=fontsize)
-
-    if ax_.get_xlabel() == "":
-        ax_.set_xlabel(x_var.get_label(setup.label_split))
-    if ax_.get_ylabel() == "":
-        ax_.set_ylabel(y_var.get_label(setup.label_split))
-
     utils.update_font_sizes(axes=ax_, fontsize=fontsize)
-
-    if show_grid:
-        ax_.grid(which="major", color="lightgrey", linestyle="-")
-        ax_.grid(which="minor", color="0.95", linestyle="--")
-        ax_.minorticks_on()
-
-    if ax is not None:
-        return ax.figure
-
-    return ax_.figure
+    return ax_.figure if ax is None else None
