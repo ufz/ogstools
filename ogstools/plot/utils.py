@@ -56,17 +56,17 @@ def justified_labels(points: np.ndarray) -> list[str]:
     )
     dim = points.shape[1]
     return [
-        ",".join(fmt(point[i]).rjust(col_lens[i]) for i in range(dim))
+        ", ".join(fmt(point[i]).rjust(col_lens[i]) for i in range(dim))
         for point in points
     ]
 
 
 @typechecked
 def label_spatial_axes(
+    fig: plt.Figure | None,
     axes: plt.Axes | np.ndarray,
-    x_label: str = "x",
-    y_label: str = "y",
-    spatial_unit: str = "m",
+    x_var: Variable,
+    y_var: Variable,
 ) -> None:
     """
     Add labels to x and y axis.
@@ -75,13 +75,43 @@ def label_spatial_axes(
     """
     if isinstance(axes, np.ndarray):
         ax: plt.Axes
-        for ax in axes[-1, :]:
-            ax.set_xlabel(f"{x_label} / {spatial_unit}")
-        for ax in axes[:, 0]:
-            ax.set_ylabel(f"{y_label} / {spatial_unit}")
+        if fig is not None:
+            for ax in np.ravel(axes):
+                label_ax(fig, ax, x_var, y_var)
+        else:
+            for ax in axes[-1, :]:
+                ax.set_xlabel(x_var.get_label())
+            for ax in axes[:, 0]:
+                ax.set_ylabel(y_var.get_label())
     else:
-        axes.set_xlabel(f"{x_label} / {spatial_unit}")
-        axes.set_ylabel(f"{y_label} / {spatial_unit}")
+        axes.set_xlabel(x_var.get_label())
+        axes.set_ylabel(y_var.get_label())
+
+
+def label_ax(
+    fig: plt.Figure,
+    ax: plt.Axes,
+    var_x: Variable,
+    var_y: Variable,
+    fontsize: float | None = None,
+) -> None:
+    """Labels the x- and y-Axes according to the given Variables.
+
+    Accounts for shared axes and if that's the case, only the first axes in a
+    row or column will be labeled."""
+    sharex = ax.get_shared_x_axes().joined(ax, fig.axes[0])
+    sharey = ax.get_shared_y_axes().joined(ax, fig.axes[0])
+    is_first_in_row = ax.get_position().xmin == min(
+        [ax_.get_position().xmin for ax_ in fig.axes]
+    )
+    is_first_in_col = ax.get_position().ymin == min(
+        [ax_.get_position().ymin for ax_ in fig.axes]
+    )
+    fontsize = setup.fontsize if fontsize is None else fontsize
+    if not sharex or (sharex and is_first_in_col):
+        ax.set_xlabel(var_x.get_label(), fontsize=fontsize)
+    if not sharey or (sharey and is_first_in_row):
+        ax.set_ylabel(var_y.get_label(), fontsize=fontsize)
 
 
 def update_font_sizes(

@@ -369,10 +369,10 @@ def draw_plot(
         add_colorbars(fig, np_axs[i, j], variable, _levels, **kwargs)
 
     # One mesh is sufficient, it should be the same for all of them
-    x_id, y_id, _, _ = utils.get_projection(np_meshes[0, 0])
-    utils.label_spatial_axes(
-        np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=setup.spatial_unit
-    )
+    mesh_0 = np_meshes[0, 0]
+    x_id, y_id, _, _ = utils.get_projection(mesh_0)
+    x_var, y_var = (Variable.find("xyz"[idx], mesh_0) for idx in (x_id, y_id))
+    utils.label_spatial_axes(fig, np_axs, x_var, y_var)
     # make extra space for the upper limit of the colorbar
     if setup.layout == "tight" and fig is not None:
         fig.tight_layout(pad=1.4)
