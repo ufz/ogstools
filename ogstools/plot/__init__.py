@@ -9,6 +9,7 @@
 
 from .shared import setup  # noqa: I001
 from . import utils
+from .animation import animate
 from .contourplots import contourf, subplot
 from .features import shape_on_top
 from .levels import compute_levels
@@ -16,6 +17,7 @@ from .lineplots import line
 from .vectorplots import quiver, streamlines
 
 __all__ = [
+    "animate",
     "compute_levels",
     "contourf",
     "line",

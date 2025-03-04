@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.animation import FFMpegWriter, ImageMagickWriter
+from parameterized import parameterized
 from pyvista import examples as pv_examples
 
 import ogstools as ot
@@ -205,52 +206,40 @@ class TestPlotting:
         mesh.plot_contourf("Si_var")
         plt.close()
 
-    def test_animation(self):
-        """Test creation of animation."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
-        anim = meshseries.animate(
-            ot.variables.temperature,
-            timevalues,
-            mesh_func=lambda mesh: mesh.clip("x"),
-            plot_func=lambda ax, t: ax.set_title(str(t)),
+    @parameterized.expand(
+        (
+            (None, "", "", None),
+            (FFMpegWriter.isAvailable(), ".mp4", "ffmpeg", None),
+            (ImageMagickWriter.isAvailable(), ".gif", "ImageMagick", None),
+            (True, ".cpp", "", RuntimeError),
         )
-        anim.to_jshtml()
-        plt.close()
+    )
+    def test_animation(
+        self, save: bool | None, ext: str, writer: str, err: Exception | None
+    ):
+        """Test creation and saving of an animation."""
+        ms_full = examples.load_meshseries_THM_2D_PVD()
+        timevalues = np.linspace(0, ms_full.timevalues[-1], num=3)
+        ms = ms_full.resample(timevalues).transform(lambda mesh: mesh.clip("x"))
+        fig = ms[0].plot_contourf(ot.variables.temperature)
 
-    def test_save_animation_mp4(self):
-        """Test saving of an animation to mp4."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if FFMpegWriter.isAvailable():
-            utils.save_animation(anim, mkstemp(suffix=".mp4")[1], 5)
-        else:
-            pytest.skip("ffmpeg not available")
-        plt.close()
+        def plot_func(timevalue: float, mesh: ot.Mesh) -> None:
+            fig.axes[0].clear()
+            mesh.plot_contourf(ot.variables.temperature, ax=fig.axes[0], dpi=50)
+            fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
 
-    def test_save_animation_gif(self):
-        """Test saving of an animation to gif."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if ImageMagickWriter.isAvailable():
-            utils.save_animation(anim, mkstemp(suffix=".gif")[1], 5)
+        anim = ot.plot.animate(fig, plot_func, ms.timevalues, ms)
+        if save is None:
+            anim.to_jshtml()
+        elif save:
+            if err:
+                with pytest.raises(err):
+                    utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+            else:
+                utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
         else:
-            pytest.skip("ImageMagick not available")
+            pytest.skip(f"{writer} not available")
         plt.close()
-
-    def test_save_animation_wrong_ext(self):
-        """Test handling of the wrong extension when saving animation"""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if FFMpegWriter.isAvailable():
-            with pytest.raises(RuntimeError) as err:
-                utils.save_animation(anim, mkstemp(suffix=".cpp")[1], 5)
-            assert err.type is RuntimeError
-        else:
-            pytest.skip("ImageMagick not available")
 
     def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""

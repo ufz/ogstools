@@ -26,7 +26,8 @@ def load_meshseries_THM_2D_PVD():
 
 
 def load_meshseries_CT_2D_XDMF():
-    return MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    ms = MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    return ms.transform(lambda mesh: mesh.translate([0, -mesh.center[1], 0]))
 
 
 def load_meshseries_HT_2D_XDMF():

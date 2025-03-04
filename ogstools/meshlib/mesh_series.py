@@ -11,7 +11,6 @@ import warnings
 from collections.abc import Callable, Iterator, Sequence
 from copy import copy as shallowcopy
 from copy import deepcopy
-from functools import partial
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 
@@ -20,7 +19,6 @@ import numpy as np
 import pyvista as pv
 from lxml import etree as ET
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
 from scipy.interpolate import (
     LinearNDInterpolator,
     NearestNDInterpolator,
@@ -685,63 +683,6 @@ class MeshSeries(Sequence[Mesh]):
         ax.label_outer()
         ax.minorticks_on()
         return fig
-
-    def animate(
-        self,
-        variable: Variable,
-        timevalues: Sequence | None = None,
-        plot_func: Callable[[plt.Axes, float], None] = lambda *_: None,
-        **kwargs: Any,
-    ) -> FuncAnimation:
-        """
-        Create an animation for a variable with given timevalues.
-
-        :param variable: the field to be visualized on all timevalues
-        :param timevalues: the timevalues to animate
-        :param plot_func:   A function which expects to read a matplotlib Axes
-                            and the time value of the current frame. Useful to
-                            customize the plot in the animation.
-
-        Keyword Arguments: See :py:mod:`ogstools.plot.contourf`
-        """
-        plot.setup.layout = "tight"
-        plot.setup.combined_colorbar = True
-
-        ts = self.timevalues if timevalues is None else timevalues
-
-        fig = plot.contourf(self.mesh(0, lazy_eval=False), variable)
-        assert isinstance(fig, plt.Figure)
-        plot_func(fig.axes[0], 0.0)
-        fontsize = kwargs.get("fontsize", plot.setup.fontsize)
-        plot.utils.update_font_sizes(fig.axes, fontsize)
-
-        def init() -> None:
-            pass
-
-        def animate_func(tv: float, fig: plt.Figure) -> None:
-            fig.axes[-1].remove()  # remove colorbar
-            for ax in np.ravel(np.asarray(fig.axes)):
-                ax.clear()
-            mesh = self.read_interp(tv, True)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                plot.contourplots.draw_plot(
-                    mesh, variable, fig=fig, axes=fig.axes[0], **kwargs
-                )  # type: ignore[assignment]
-                plot_func(fig.axes[0], tv)
-                plot.utils.update_font_sizes(fig.axes, fontsize)
-
-        _func = partial(animate_func, fig=fig)
-
-        return FuncAnimation(
-            fig,  # type: ignore[arg-type]
-            _func,  # type: ignore[arg-type]
-            frames=tqdm(ts, total=len(ts) - 1),
-            blit=False,
-            interval=50,
-            repeat=False,
-            init_func=init,  # type: ignore[arg-type]
-        )
 
     def plot_time_slice(
         self,
