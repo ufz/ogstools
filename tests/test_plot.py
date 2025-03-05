@@ -220,7 +220,9 @@ class TestPlotting:
         """Test creation and saving of an animation."""
         ms_full = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, ms_full.timevalues[-1], num=3)
-        ms = ms_full.resample(timevalues).transform(lambda mesh: mesh.clip("x"))
+        ms = ot.MeshSeries.resample(ms_full, timevalues).transform(
+            lambda mesh: mesh.clip("x")
+        )
         fig = ms[0].plot_contourf(ot.variables.temperature)
 
         def plot_func(timevalue: float, mesh: ot.Mesh) -> None:

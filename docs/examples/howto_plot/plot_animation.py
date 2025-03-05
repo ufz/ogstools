@@ -36,7 +36,7 @@ saturation = ot.variables.saturation
 # ms = ms[::2]
 # this uses equally spaced timesteps for a smooth animation
 timevalues = np.linspace(ms.timevalues[0], ms.timevalues[-1], num=21)
-ms = ms.resample(timevalues)
+ms = ot.MeshSeries.resample(ms, timevalues)
 
 # %% [markdown]
 # Now, let's animate the saturation solution. Note that rendering many frames in

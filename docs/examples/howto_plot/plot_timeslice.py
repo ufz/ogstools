@@ -40,7 +40,7 @@ fig.axes[0].plot(pts_diag[:, 0], pts_diag[:, 2], "-.k", linewidth=3)
 # for each timestep.
 
 # %%
-ms_vert = mesh_series.extract_probe(pts_vert)
+ms_vert = ot.MeshSeries.extract_probe(mesh_series, pts_vert)
 labels = [f"{tv:.1f} a" for tv in ms_vert.timevalues]
 fig = ot.plot.line(ms_vert, si, "z", labels=labels, colors="coolwarm")
 
@@ -58,7 +58,7 @@ fig = ms_vert.plot_time_slice("time", "z", si, vmin=0, vmax=100)
 # To create a smoother image, we can resample the MeshSeries to more timesteps.
 
 # %%
-ms_vert_fine = ms_vert.resample(np.linspace(0, 4.2, 300))
+ms_vert_fine = ot.MeshSeries.resample(ms_vert, np.linspace(0, 4.2, 300))
 fig = ms_vert_fine.plot_time_slice("time", "z", si, vmin=0, vmax=100)
 
 # %% [markdown]
@@ -66,7 +66,7 @@ fig = ms_vert_fine.plot_time_slice("time", "z", si, vmin=0, vmax=100)
 # to flip the x- and y-axis.
 
 # %%
-ms_diag = mesh_series.extract_probe(pts_diag)
-ms_diag_fine = ms_diag.resample(np.linspace(0, 4.2, 300))
+ms_diag = ot.MeshSeries.extract_probe(mesh_series, pts_diag)
+ms_diag_fine = ot.MeshSeries.resample(ms_diag, np.linspace(0, 4.2, 300))
 fig = ms_diag_fine.plot_time_slice("x", "time", si, vmin=0, vmax=100)
 fig.axes[0].invert_yaxis()

@@ -84,7 +84,7 @@ fig.tight_layout()
 # %%
 fig, axs = plt.subplots(1, 3, figsize=(40, 10))
 pts = np.asarray([[0.1, 0, 1], [0.3, 0, 1], [0.5, 0, 1]])
-probe = results.extract_probe(pts)
+probe = ot.MeshSeries.extract_probe(results, pts)
 labels = ot.plot.utils.justified_labels(pts)
 axs[0].plot([], [], "--k", label="analytical\nsolution")
 ot.plot.line(probe, "time", temp, ax=axs[0], marker="o", labels=labels)
@@ -135,8 +135,8 @@ fig.tight_layout()
 # %%
 fig, axs = plt.subplots(1, 3, figsize=[40, 10], sharey=True)
 line_pts = np.linspace([0, 0, 0], [1, 0, 0], num=100)
-ms_line = results.extract_probe(line_pts)
-ms_line = ms_line.resample(np.geomspace(1, 3000, num=100))
+ms_line = ot.MeshSeries.extract_probe(results, line_pts)
+ms_line = ot.MeshSeries.resample(ms_line, np.geomspace(1, 3000, num=100))
 for i, var in enumerate([temp, temp.abs_error, temp.rel_error]):
     ms_line.plot_time_slice(
         "time", "x", var, fig=fig, ax=axs[i], time_logscale=True

@@ -105,6 +105,45 @@ class MeshSeries(Sequence[Mesh]):
         )
         return new_ms
 
+    @classmethod
+    def resample(
+        cls, original: MeshSeries, timevalues: np.ndarray
+    ) -> MeshSeries:
+        "Return a new MeshSeries interpolated to the given timevalues."
+        interp_meshes = [original.read_interp(tv) for tv in timevalues]
+        return cls.from_data(interp_meshes, timevalues)
+
+    @classmethod
+    def extract_probe(
+        cls,
+        original: MeshSeries,
+        points: np.ndarray,
+        data_name: str | list[str] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
+    ) -> MeshSeries:
+        """Create a new MeshSeries by probing points on an existing MeshSeries.
+
+        :param points: The points at which to probe.
+        :param data_name: Data to extract. If None, use all point data.
+        :param interp_method: The interpolation method to use.
+
+        :returns: A MeshSeries (Pointcloud) containing the probed data.
+        """
+        pointset = pv.PolyData(points)
+        if data_name is None:
+            data_names = original[0].point_data.keys()
+        elif isinstance(data_name, str):
+            data_names = [data_name]
+        else:
+            data_names = data_name
+        meshes = [pointset.copy() for _ in original.timevalues]
+        probe_ms = cls.from_data(meshes, original.timevalues)
+        for name in data_names:
+            probe_ms.point_data[name] = original.probe(
+                points, name, interp_method
+            )
+        return probe_ms
+
     def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
         # For shallow copy: self.copy(deep=False)
@@ -303,11 +342,6 @@ class MeshSeries(Sequence[Mesh]):
                 timevalue - t_vals[ts1]
             )
         return mesh
-
-    def resample(self, timevalues: np.ndarray) -> MeshSeries:
-        "Return a new MeshSeries interpolated to the given timevalues."
-        interp_meshes = [self.read_interp(tv) for tv in timevalues]
-        return MeshSeries.from_data(interp_meshes, timevalues)
 
     @property
     def timevalues(self) -> np.ndarray:
@@ -519,33 +553,6 @@ class MeshSeries(Sequence[Mesh]):
         ax.label_outer()
         ax.minorticks_on()
         return fig
-
-    def extract_probe(
-        self,
-        points: np.ndarray,
-        data_name: str | list[str] | None = None,
-        interp_method: Literal["nearest", "linear"] = "linear",
-    ) -> MeshSeries:
-        """Extract a new MeshSeries by probing points.
-
-        :param points: The points at which to probe.
-        :param data_name: Data to extract. If None, use all point data.
-        :param interp_method: The interpolation method to use.
-
-        :returns: A MeshSeries (Pointcloud) containing the probed data.
-        """
-        pointset = pv.PolyData(points)
-        if data_name is None:
-            data_names = self[0].point_data.keys()
-        elif isinstance(data_name, str):
-            data_names = [data_name]
-        else:
-            data_names = data_name
-        meshes = [pointset.copy() for _ in self.timevalues]
-        probe_ms = MeshSeries.from_data(meshes, self.timevalues)
-        for name in data_names:
-            probe_ms.point_data[name] = self.probe(points, name, interp_method)
-        return probe_ms
 
     def probe(
         self,
