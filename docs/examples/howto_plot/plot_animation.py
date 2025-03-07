@@ -10,13 +10,13 @@ example from the ogs benchmark gallery
 """
 
 # %%
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF()
+ms = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "yrs"))
+saturation = ot.variables.saturation
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
@@ -27,39 +27,62 @@ mesh_series = examples.load_meshseries_CT_2D_XDMF()
 #   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
 
 # %% [markdown]
-# You can choose which timesteps to render by passing either an int array
-# corresponding to the indices, or a float array corresponding to the timevalues
-# to render. If a requested timevalue is not part of the timeseries it will be
-# interpolated. In this case every second frame will be interpolated.
+# You can choose which timesteps to render by either slicing the MeshSeries or
+# by resampling it to new timesteps (this interpolates between existing
+# timesteps).
 
 # %%
-timevalues = np.linspace(
-    mesh_series.timevalues[0], mesh_series.timevalues[-1], num=25
-)
+# this would only use every second timesteps for animation
+# ms = ms[::2]
+# this uses equally spaced timesteps for a smooth animation
+timevalues = np.linspace(ms.timevalues[0], ms.timevalues[-1], num=21)
+ms = ot.MeshSeries.resample(ms, timevalues)
 
 # %% [markdown]
-# Now, let's animate the saturation solution. A timescale at the top
-# indicates existing timesteps and the position of the current timevalue.
-# Note that rendering many frames in conjunction with large meshes might take
-# a really long time. We can pass a ``plot_func`` which can apply custom
-# formatting and / or plotting. To modify the domain, we can use the transform
-# method of MeshSeries.
-
-
-def mesh_func(mesh: ot.Mesh) -> ot.Mesh:
-    "Clip the left half of the mesh."
-    return mesh.clip("-x", [0, 0, 0])
-
-
-def plot_func(ax: plt.Axes, timevalue: float) -> None:
-    "Add the time to the title."
-    ax.set_title(f"{timevalue/(365.25*86400):.1f} yrs")
+# Now, let's animate the saturation solution. Note that rendering many frames in
+# conjunction with large meshes might take a really long time. You need to setup
+# a matplotlib figure first and a function, which is executed on each frame.
+# This function has to take the individual values of the sequences passed as
+# additional arguments, in this case the timevalues and the MeshSeries.
 
 
 # %%
-anim = mesh_series.transform(mesh_func).animate(
-    ot.variables.saturation, timevalues, plot_func, vmin=0, vmax=100, dpi=50
+# clip to the right half
+ms_r = ms.transform(lambda mesh: mesh.clip("-x", [-1, 0, 0]))
+
+# create initial figure with fixed colorbar
+fig = ot.plot.contourf(ms_r[0], saturation, vmin=0, vmax=100, dpi=50)
+fig.axes[0].set_title(f"{0} yrs", fontsize=32)
+
+
+def plot_contourf(timevalue: float, mesh: ot.Mesh) -> None:
+    fig.axes[0].clear()
+    ot.plot.contourf(mesh, saturation, ax=fig.axes[0], dpi=50)
+    fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
+
+
+anim = ot.plot.animate(fig, plot_contourf, ms_r.timevalues, ms_r)
+
+# %% [markdown]
+# You can also use any other function to create an animation this way.
+# Just make sure, that the function arguments and those passed to the animation
+# call fit together.
+
+# %%
+ms_x = ms.transform(
+    lambda mesh: mesh.sample_over_line([0, 0, 60], [150, 0, 60])
 )
+fig = ot.plot.line(ms_x[0], ot.variables.saturation)
+
+
+def plot_line(mesh: ot.Mesh) -> None:
+    fig.axes[0].clear()
+    ot.plot.line(mesh, saturation, ax=fig.axes[0])
+    fig.axes[0].set_ylim([0, 100])
+    fig.tight_layout()
+
+
+anim = ot.plot.animate(fig, plot_line, ms_x)
 
 # %% [markdown]
 # The animation can be saved (as mp4) like so:

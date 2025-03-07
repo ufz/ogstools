@@ -9,7 +9,7 @@ import numpy as np
 import pyvista as pv
 
 import ogstools as ot
-from ogstools.examples import analytical_diffusion, prj_steady_state_diffusion
+from ogstools.examples import anasol, prj_steady_state_diffusion
 from ogstools.studies import convergence
 
 
@@ -54,7 +54,7 @@ class TestConvergence:
             sim_results, variable, topology, refinement_ratio=2.0
         )
         np.testing.assert_allclose(conv["r"], richardson["r"], rtol=1e-10)
-        analytical = analytical_diffusion(topology)
+        analytical = anasol.diffusion_head_analytical(topology)
         np.testing.assert_allclose(
             richardson[variable.data_name],
             analytical[variable.data_name],

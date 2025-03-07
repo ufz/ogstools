@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.animation import FFMpegWriter, ImageMagickWriter
+from parameterized import parameterized
 from pyvista import examples as pv_examples
 
 import ogstools as ot
@@ -106,6 +107,12 @@ class TestPlotting:
         str_lens = np.asarray([len(label) for label in labels])
         assert np.all(str_lens == str_lens[0])
 
+    def test_colors_from_cmap(self):
+        for cmap_color in ["tab10", "Blues", ["r", "g", "b"]]:
+            for n in [2, 5, 10]:
+                colors = ot.plot.utils.colors_from_cmap(cmap_color, n)
+                assert len(colors) == n
+
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
@@ -199,52 +206,42 @@ class TestPlotting:
         mesh.plot_contourf("Si_var")
         plt.close()
 
-    def test_animation(self):
-        """Test creation of animation."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[-1], num=3)
-        anim = meshseries.animate(
-            ot.variables.temperature,
-            timevalues,
-            mesh_func=lambda mesh: mesh.clip("x"),
-            plot_func=lambda ax, t: ax.set_title(str(t)),
+    @parameterized.expand(
+        (
+            (None, "", "", None),
+            (FFMpegWriter.isAvailable(), ".mp4", "ffmpeg", None),
+            (ImageMagickWriter.isAvailable(), ".gif", "ImageMagick", None),
+            (True, ".cpp", "", RuntimeError),
         )
-        anim.to_jshtml()
-        plt.close()
+    )
+    def test_animation(
+        self, save: bool | None, ext: str, writer: str, err: Exception | None
+    ):
+        """Test creation and saving of an animation."""
+        ms_full = examples.load_meshseries_THM_2D_PVD()
+        timevalues = np.linspace(0, ms_full.timevalues[-1], num=3)
+        ms = ot.MeshSeries.resample(ms_full, timevalues).transform(
+            lambda mesh: mesh.clip("x")
+        )
+        fig = ms[0].plot_contourf(ot.variables.temperature)
 
-    def test_save_animation_mp4(self):
-        """Test saving of an animation to mp4."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if FFMpegWriter.isAvailable():
-            utils.save_animation(anim, mkstemp(suffix=".mp4")[1], 5)
-        else:
-            pytest.skip("ffmpeg not available")
-        plt.close()
+        def plot_func(timevalue: float, mesh: ot.Mesh) -> None:
+            fig.axes[0].clear()
+            mesh.plot_contourf(ot.variables.temperature, ax=fig.axes[0], dpi=50)
+            fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
 
-    def test_save_animation_gif(self):
-        """Test saving of an animation to gif."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if ImageMagickWriter.isAvailable():
-            utils.save_animation(anim, mkstemp(suffix=".gif")[1], 5)
+        anim = ot.plot.animate(fig, plot_func, ms.timevalues, ms)
+        if save is None:
+            anim.to_jshtml()
+        elif save:
+            if err:
+                with pytest.raises(err):
+                    utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+            else:
+                utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
         else:
-            pytest.skip("ImageMagick not available")
+            pytest.skip(f"{writer} not available")
         plt.close()
-
-    def test_save_animation_wrong_ext(self):
-        """Test handling of the wrong extension when saving animation"""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        timevalues = np.linspace(0, meshseries.timevalues[1], num=3)
-        anim = meshseries.animate(ot.variables.temperature, timevalues)
-        if FFMpegWriter.isAvailable():
-            with pytest.raises(RuntimeError) as err:
-                utils.save_animation(anim, mkstemp(suffix=".cpp")[1], 5)
-            assert err.type is RuntimeError
-        else:
-            pytest.skip("ImageMagick not available")
 
     def test_plot_3_d(self):
         """Test creation of slice plots for 3D mesh."""
@@ -287,9 +284,11 @@ class TestPlotting:
         plt.close()
 
     def test_lineplot(self):
-        """Test creation of a linesplot from sampled profile data"""
-        ot.plot.setup.set_units(spatial="km", time="a")
-        mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
+        """Test creation of a lineplot from sampled profile data"""
+        ms = examples.load_meshseries_THM_2D_PVD().scale(
+            spatial=("m", "km"), time=("s", "a")
+        )
+        mesh = ms.mesh(-1)
         mesh.points[:, 2] = 0.0
         x1, x2, y1, y2 = mesh.bounds[:4]
         xc, yc, z = mesh.center
@@ -298,27 +297,34 @@ class TestPlotting:
         sample_xy = mesh.sample_over_line([x1, y1, z], [x2, y2, z])
         sample_xz = mesh.rotate_x(90).sample_over_line([x1, 0, y1], [x2, 0, y2])
         sample_yz = mesh.rotate_y(90).sample_over_line([0, y1, x1], [0, y2, x2])
+        ms_sample_x = ms.transform(
+            lambda mesh: mesh.sample_over_line([x1, yc, z], [x2, yc, z])
+        )
 
-        def check(*args, x_l: str, y_l: str) -> None:
+        def check_labels(*args, x_l: str, y_l: str) -> None:
             fig = ot.plot.line(*args, figsize=[4, 3])
             assert fig.axes[0].get_xlabel().split(" ")[0] == x_l
             assert fig.axes[0].get_ylabel().split(" ")[0] == y_l
             plt.close()
 
-        check(sample_x, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_x, x_l="x", y_l="y")
-        check(sample_y, ot.variables.temperature, x_l="y", y_l="temperature")
-        check(sample_y, x_l="x", y_l="y")
-        check(sample_xy, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_xy, x_l="x", y_l="y")
-        check(sample_xz, ot.variables.temperature, x_l="x", y_l="temperature")
-        check(sample_xz, x_l="x", y_l="z")
-        check(sample_yz, ot.variables.temperature, x_l="y", y_l="temperature")
-        check(sample_yz, x_l="y", y_l="z")
-        check(sample_yz, "z", "y", x_l="z", y_l="y")
-        check(sample_x, "x", "temperature", x_l="x", y_l="temperature")
-        check(sample_y, "temperature", "y", x_l="temperature", y_l="y")
-        check(sample_xy, ot.variables.displacement, ot.variables.temperature,
+        temp = ot.variables.temperature
+        check_labels(ms_sample_x, temp, x_l="x", y_l="temperature")
+        check_labels(ms_sample_x, "time", temp, x_l="time", y_l="temperature")
+        check_labels(ms_sample_x, temp, "time", x_l="temperature", y_l="time")
+        check_labels(sample_x, temp, x_l="x", y_l="temperature")
+        check_labels(sample_x, x_l="x", y_l="y")
+        check_labels(sample_y, temp, x_l="y", y_l="temperature")
+        check_labels(sample_y, x_l="x", y_l="y")
+        check_labels(sample_xy, temp, x_l="x", y_l="temperature")
+        check_labels(sample_xy, x_l="x", y_l="y")
+        check_labels(sample_xz, temp, x_l="x", y_l="temperature")
+        check_labels(sample_xz, x_l="x", y_l="z")
+        check_labels(sample_yz, temp, x_l="y", y_l="temperature")
+        check_labels(sample_yz, x_l="y", y_l="z")
+        check_labels(sample_yz, "z", "y", x_l="z", y_l="y")
+        check_labels(sample_x, "x", "temperature", x_l="x", y_l="temperature")
+        check_labels(sample_y, "temperature", "y", x_l="temperature", y_l="y")
+        check_labels(sample_xy, ot.variables.displacement, temp,
               x_l="displacement", y_l="temperature")  # fmt: skip
         _, ax = plt.subplots(figsize=[4, 3])
         ot.plot.line(sample_y, ot.variables.pressure, "x", ax=ax, lw=1)

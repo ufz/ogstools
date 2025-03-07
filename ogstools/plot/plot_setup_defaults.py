@@ -34,7 +34,7 @@ setup_dict = {
     "tick_length": 14,
     "fontsize": 32,
     "linewidth": 1,
-    "label_split": 37,
+    "label_split": 30,
     "spatial_unit": "m",
     "time_unit": "s",
 }

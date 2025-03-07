@@ -40,7 +40,7 @@ mesh_series = [meshlib.MeshSeries(mesh_path) for mesh_path in mesh_paths]
 timestep_sizes = [np.mean(np.diff(ms.timevalues)) for ms in mesh_series]
 meshes = [ms.mesh(ms.closest_timestep(timevalue)) for ms in mesh_series]
 topology: pv.UnstructuredGrid = meshes[-3]
-variable = variables.get_preset(variable_name, meshes[0])
+variable = variables.Variable.find(variable_name, meshes[0])
 richardson = studies.convergence.richardson_extrapolation(
     meshes, variable, topology, refinement_ratio
 )

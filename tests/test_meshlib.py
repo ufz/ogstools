@@ -270,15 +270,23 @@ class TestUtils:
         plt.close()
 
     def test_time_slice(self):
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
+        results = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        _ = mesh_series.plot_time_slice(
-            "temperature", points, levels=[78, 79, 80]
+        ms_pts = ot.MeshSeries.extract_probe(results, points, "temperature")
+        fig = ms_pts.plot_time_slice(
+            "x", "time", "temperature", levels=[78, 79, 80]
         )
-        _ = mesh_series.plot_time_slice(
-            "temperature", points, y_axis="y", interpolate=False,
-            time_logscale=True, cb_loc="left", dpi=50, fontsize=10
+        fig = ms_pts.plot_time_slice(
+            "time", "y", "temperature", time_logscale=True, cb_loc="left",
+            dpi=50, fontsize=10
         )  # fmt: skip
+        with pytest.raises(ValueError, match="fig and ax together"):
+            _ = ms_pts.plot_time_slice("x", "time", "temperature", fig=fig)
+        with pytest.raises(KeyError, match="has to be 'time'"):
+            _ = ms_pts.plot_time_slice("x", "y", "temperature")
+        with pytest.raises(KeyError, match="has to be a spatial"):
+            _ = ms_pts.plot_time_slice("time", "temperature", "y")
+
         plt.close()
 
     def _check_probe(self, ms: ot.MeshSeries, points: np.ndarray) -> None:
@@ -327,6 +335,29 @@ class TestUtils:
         _ = meshseries.plot_probe(points, ot.variables.temperature)
         _ = meshseries.plot_probe(points, ot.variables.velocity)
         plt.close()
+
+    def test_extract_probe(self):
+        results = examples.load_meshseries_HT_2D_XDMF()
+        points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
+        ms_pts = ot.MeshSeries.extract_probe(results, points, "temperature")
+        np.testing.assert_array_equal(ms_pts[0].points, points)
+        ms_pts = ot.MeshSeries.extract_probe(
+            results, points, "temperature", "nearest"
+        )
+        pt_id = results[0].find_closest_point(points[0])
+        np.testing.assert_array_equal(
+            ms_pts["temperature"][:, 0], results["temperature"][:, pt_id]
+        )
+
+    def test_resample(self):
+        results = examples.load_meshseries_HT_2D_XDMF()
+        in_between = 0.5 * (results.timevalues[:-1] + results.timevalues[1:])
+        resampled = ot.MeshSeries.resample(results, in_between)
+        for idx, mesh in enumerate(resampled):
+            for var in ["temperature", "pressure", "darcy_velocity"]:
+                delta = results[idx + 1][var] - results[idx][var]
+                half_delta = mesh[var] - results[idx][var]
+                np.testing.assert_almost_equal(half_delta, 0.5 * delta)
 
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()

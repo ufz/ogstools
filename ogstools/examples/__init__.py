@@ -4,12 +4,13 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import numpy as np
+import pyvista as pv
+
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib import Mesh, MeshSeries
 
-from .analytical_solutions.steady_state_diffusion import analytical_diffusion
-
-__all__ = ["analytical_diffusion"]
+from . import analytical_solutions as anasol
 
 _meshseries_dir = EXAMPLES_DIR / "meshseries"
 _feflow_dir = EXAMPLES_DIR / "feflow"
@@ -25,7 +26,8 @@ def load_meshseries_THM_2D_PVD():
 
 
 def load_meshseries_CT_2D_XDMF():
-    return MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    ms = MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    return ms.transform(lambda mesh: mesh.translate([0, -mesh.center[1], 0]))
 
 
 def load_meshseries_HT_2D_XDMF():
@@ -74,6 +76,21 @@ def load_meshseries_HT_2D_paraview_XMF():
     return MeshSeries(
         str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")
     )
+
+
+def load_meshseries_diffusion_3D(Tb=373.15, Ta=293.15, alpha=1e-6):
+    timevalues = np.geomspace(1e3, 1e7, num=12)
+    xg, yg, zg = (np.linspace(0, 1, num) for num in [40, 2, 2])
+    mesh = pv.StructuredGrid(*np.meshgrid(xg, yg, zg, indexing="ij"))
+    meshes = []
+    x = mesh.points[:, 0]
+    for tv in timevalues:
+        offset = 2e1 * (1.1 - x) / tv**0.2
+        mesh["temperature"] = (
+            anasol.heat_conduction_temperature(x, tv, Tb, Ta, alpha) + offset
+        )
+        meshes += [Mesh(mesh.copy())]
+    return MeshSeries.from_data(meshes, timevalues)
 
 
 def load_mesh_mechanics_2D():

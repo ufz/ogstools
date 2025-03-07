@@ -165,19 +165,19 @@ class TestPhysicalVariable:
         """Test mask functionality."""
         assert ov.temperature.get_mask().is_mask()
 
-    def test_get_preset(self):
+    def test_find_variable(self):
         """Test find variable function."""
         mesh = examples.load_mesh_mechanics_2D()
         mesh.point_data["scalar"] = mesh["temperature"]
         mesh.point_data["vector"] = mesh["displacement"]
         mesh.point_data["matrix"] = mesh["sigma"]
-        assert ov.get_preset("temperature", mesh) == ov.temperature
-        assert ov.get_preset("displacement", mesh) == ov.displacement
-        assert ov.get_preset("sigma", mesh) == ov.stress
-        assert ov.get_preset("scalar", mesh) == ov.Scalar("scalar")
-        assert ov.get_preset("vector", mesh) == ov.Vector("vector")
-        assert ov.get_preset("matrix", mesh) == ov.Matrix("matrix")
-        pytest.raises(KeyError, ov.get_preset, "test", mesh)
+        assert ov.Variable.find("temperature", mesh) == ov.temperature
+        assert ov.Variable.find("displacement", mesh) == ov.displacement
+        assert ov.Variable.find("sigma", mesh) == ov.stress
+        assert ov.Variable.find("scalar", mesh) == ov.Scalar("scalar")
+        assert ov.Variable.find("vector", mesh) == ov.Vector("vector")
+        assert ov.Variable.find("matrix", mesh) == ov.Matrix("matrix")
+        pytest.raises(KeyError, ov.Variable.find, "test", mesh)
 
     def test_copy_ctor(self):
         """Test replace constructor."""
@@ -250,3 +250,23 @@ class TestPhysicalVariable:
         var_short = ov.Scalar(data_name="test", data_unit="unit")
         assert var_full.output_unit == var_short.output_unit
         assert var_full.output_name == var_short.output_name
+
+    def test_derived_variables(self):
+        assert ov.temperature.difference.transform(1) == 1
+        assert ov.temperature.abs_error.transform(1) == 1
+        assert ov.temperature.rel_error.transform(0.01) == 1
+        assert ov.temperature.anasol.transform(274.15) == 1
+
+    def test_transform_meshseries(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+
+        def check_limits(
+            variable: ov.Variable, vmin: float, vmax: float
+        ) -> None:
+            vals = variable.transform(ms)
+            assert vmin <= np.min(vals)
+            assert vmax >= np.max(vals)
+
+        check_limits(ov.temperature, 7.9, 50)
+        check_limits(ov.pressure, 0, 8)
+        check_limits(ov.displacement.magnitude, 0, 0.3)

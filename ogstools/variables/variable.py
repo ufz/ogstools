@@ -11,6 +11,8 @@ way (e.g. temperature, pressure, displacement, …). Unit conversion is handled
 via pint.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
@@ -95,7 +97,7 @@ class Variable:
     def type_name(self) -> str:
         return type(self).__name__
 
-    def replace(self: "Variable", **changes: Any) -> "Variable":
+    def replace(self: Variable, **changes: Any) -> Variable:
         """
         Create a new Variable object with modified attributes.
 
@@ -110,7 +112,7 @@ class Variable:
 
     @classmethod
     def from_variable(  # type: ignore[no-untyped-def]
-        cls, new_variable: "Variable", **changes: Any
+        cls, new_variable: Variable, **changes: Any
     ):
         "Create a new Variable object with modified attributes."
         return cls(
@@ -128,6 +130,84 @@ class Variable:
             categoric=new_variable.categoric,
             color=new_variable.color,
         ).replace(**changes)
+
+    @classmethod
+    def find(cls, variable: Variable | str, mesh: pv.DataSet) -> Variable:
+        """
+        Returns a Variable preset or creates one with correct type.
+
+        Searches for presets by data_name and output_name and returns if found.
+        If 'variable' is given as type Variable this will also look for
+        derived variables (difference, aggregate).
+        Otherwise create Scalar, Vector, or Matrix Variable depending on the shape
+        of data in mesh.
+
+        :param variable:    The variable to retrieve or its name if a string.
+        :param mesh:        The mesh containing the variable data.
+        :returns: A corresponding Variable preset or a new Variable of correct type.
+        """
+        data_keys: list[str] = list(
+            set().union(mesh.point_data, mesh.cell_data)
+        )
+        error_msg = (
+            f"Data not found in mesh. Available data names are {data_keys}. "
+        )
+        if isinstance(variable, str) and variable in ["x", "y", "z"]:
+            return _spatial_preset(variable)
+        if variable == "time":
+            return _time_preset()
+
+        if isinstance(variable, Variable):
+            if variable.data_name in data_keys:
+                return variable
+            matches = [
+                variable.output_name in data_key for data_key in data_keys
+            ]
+            if not any(matches):
+                raise KeyError(error_msg)
+            data_key = data_keys[matches.index(True)]
+            # TODO: remove these here and return them from compute functions
+            if data_key == f"{variable.output_name}_difference":
+                return variable.difference
+            if data_key.rsplit("_")[0] in [
+                "min", "max", "mean", "median", "sum", "std", "var"  # fmt:skip
+            ]:
+                return variable.replace(
+                    data_name=data_key,
+                    data_unit=variable.output_unit,
+                    output_unit=variable.output_unit,
+                    output_name=data_key,
+                    symbol=variable.symbol,
+                    func=identity,
+                    mesh_dependent=False,
+                )
+            return variable.replace(data_name=data_key, output_name=data_key)
+
+        # pylint: disable=import-outside-toplevel
+        from ogstools.variables import all_variables
+
+        # pylint: enable=import-outside-toplevel
+
+        for prop in all_variables:
+            if prop.output_name == variable:
+                return prop
+        for prop in all_variables:
+            if prop.data_name == variable:
+                return prop
+
+        matches = [variable in data_key for data_key in data_keys]
+        if not any(matches):
+            raise KeyError(error_msg)
+
+        data_shape = mesh[variable].shape
+        if len(data_shape) == 1:
+            return Scalar(variable)
+        subclasses = Variable.__subclasses__()
+        vector = next(x for x in subclasses if x.__name__ == "Vector")
+        matrix = next(x for x in subclasses if x.__name__ == "Matrix")
+        if data_shape[1] in [2, 3]:
+            return vector(variable)
+        return matrix(variable)
 
     def transform(
         self,
@@ -148,14 +228,15 @@ class Variable:
         without.
         """
         Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
+        is_ms = isinstance(data, Sequence) and isinstance(data[0], pv.DataSet)
         if self.mesh_dependent:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
                 result = Qty(self.func(data, self), o_u)
             else:
                 msg = "This variable can only be evaluated on a mesh."
                 raise TypeError(msg)
         else:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid):
+            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
                 result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
             elif self.process_with_units:
                 result = Qty(self.func(Qty(data, d_u)), o_u)
@@ -169,7 +250,7 @@ class Variable:
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
-    def difference(self) -> "Variable":
+    def difference(self) -> Variable:
         "A variable relating to differences in this quantity."
         quantity = u_reg.Quantity(1, self.output_unit)
         diff_quantity: PlainQuantity = quantity - quantity
@@ -189,6 +270,38 @@ class Variable:
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
+    @property
+    def abs_error(self) -> Variable:
+        "A variable relating to an absolute error of this quantity."
+        return self.difference.replace(
+            data_name=f"{self.data_name}_abs_error",
+            output_name="absolute_error",
+            symbol="\\epsilon_\\mathrm{abs}",
+            cmap="RdGy",
+            bilinear_cmap=True,
+        )
+
+    @property
+    def rel_error(self) -> Variable:
+        "A variable relating to a relative error of this quantity."
+        return self.difference.replace(
+            data_name=f"{self.data_name}_rel_error",
+            data_unit="",
+            output_unit="percent",
+            output_name="relative_error",
+            symbol="\\epsilon_\\mathrm{rel}",
+            cmap="PuOr",
+            bilinear_cmap=True,
+        )
+
+    @property
+    def anasol(self) -> Variable:
+        "A variable relating to an analytical solution of this quantity."
+        return self.replace(
+            data_name=f"{self.data_name}_anasol",
+            output_name=f"analytical {self.output_name} solution",
+        )
+
     def is_mask(self) -> bool:
         """
         Check if the variable is a mask.
@@ -197,14 +310,14 @@ class Variable:
         """
         return self.data_name == self.mask
 
-    def get_mask(self) -> "Variable":
+    def get_mask(self) -> Variable:
         "A variable representing this variables mask."
         return Variable(
             data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
         )
 
     @property
-    def magnitude(self) -> "Variable":
+    def magnitude(self) -> Variable:
         return self
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
@@ -216,22 +329,28 @@ class Variable:
         )
 
     def _get_data(
-        self, mesh: pv.UnstructuredGrid, masked: bool = True
+        self,
+        dataset: pv.UnstructuredGrid | Sequence,
+        masked: bool = True,
     ) -> np.ndarray:
         "Get the data associated with a scalar or vector variable from a mesh."
+        mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
         if self.data_name not in (
-            data_keys := ",".join(set().union(mesh.point_data, mesh.cell_data))
+            data_keys := set().union(mesh.point_data, mesh.cell_data)
         ):
             msg = (
                 f"Data name {self.data_name} not found in mesh. "
-                f"Available data names are {data_keys}. "
+                f"Available data names are {','.join(data_keys)}. "
             )
             raise KeyError(msg)
-        if masked and self.mask_used(mesh):
-            return mesh.ctp(True).threshold(value=[1, 1], scalars=self.mask)[
-                self.data_name
-            ]
-        return mesh[self.data_name]
+        if masked and self.mask_used(dataset):
+            if isinstance(dataset, Sequence):
+                mask = np.asarray(mesh.ctp(False)[self.mask] == 1)
+                return dataset[self.data_name][:, mask]  # type: ignore[call-overload]
+            return dataset.ctp(False).threshold(
+                value=[1, 1], scalars=self.mask
+            )[self.data_name]
+        return dataset[self.data_name]  # type: ignore[call-overload]
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"
@@ -275,3 +394,53 @@ class Variable:
 
 class Scalar(Variable):
     "Represent a scalar variable."
+
+
+def _spatial_preset(axis: str) -> Scalar:
+    # pylint: disable=import-outside-toplevel
+    # Importing here dynamically to avoid circular import
+    # If we want to avoid this, we'd have to move plot.setup to someplace
+    # outside of plot
+    from ogstools.plot import setup
+
+    # pylint: enable=import-outside-toplevel
+
+    def get_pts(
+        index: int,
+    ) -> Callable[[pv.UnstructuredGrid | Sequence, Variable], np.ndarray]:
+        "Returns the coordinates of all points with the given index"
+
+        def get_pts_coordinate(
+            dataset: pv.UnstructuredGrid | Sequence, _: Variable
+        ) -> np.ndarray:
+            mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
+            return mesh.points[:, index]
+
+        return get_pts_coordinate
+
+    return Scalar(
+        axis,
+        setup.spatial_unit,  # type:ignore[attr-defined]
+        setup.spatial_unit,  # type:ignore[attr-defined]
+        mesh_dependent=True,
+        func=get_pts("xyz".index(axis)),
+        color="k",
+    )
+
+
+def _time_preset() -> Scalar:
+    # pylint: disable=import-outside-toplevel
+    # Importing here dynamically to avoid circular import
+    # If we want to avoid this, we'd have to move plot.setup to someplace
+    # outside of plot
+    from ogstools.plot import setup
+
+    # pylint: enable=import-outside-toplevel
+
+    return Scalar(
+        "time",
+        setup.time_unit,  # type:ignore[attr-defined]
+        setup.time_unit,  # type:ignore[attr-defined]
+        mesh_dependent=True,
+        func=lambda ms, _: getattr(ms, "timevalues", range(len(ms))),
+    )

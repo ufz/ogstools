@@ -19,7 +19,7 @@ from matplotlib.patches import Rectangle as Rect
 
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
-from ogstools.variables import Variable, Vector, get_preset
+from ogstools.variables import Variable, Vector
 
 from . import features
 from .levels import compute_levels, median_exponent
@@ -149,7 +149,7 @@ def subplot(
 ) -> None:
     "Plot the variable field of a mesh on a matplotlib.axis."
 
-    variable = get_preset(variable, mesh)
+    variable = Variable.find(variable, mesh)
     if mesh.get_cell(0).dimension == 3:
         msg = "This method is for 2D meshes only, but found 3D elements."
         raise ValueError(msg)
@@ -369,10 +369,10 @@ def draw_plot(
         add_colorbars(fig, np_axs[i, j], variable, _levels, **kwargs)
 
     # One mesh is sufficient, it should be the same for all of them
-    x_id, y_id, _, _ = utils.get_projection(np_meshes[0, 0])
-    utils.label_spatial_axes(
-        np_axs, "xyz"[x_id], "xyz"[y_id], spatial_unit=setup.spatial_unit
-    )
+    mesh_0 = np_meshes[0, 0]
+    x_id, y_id, _, _ = utils.get_projection(mesh_0)
+    x_var, y_var = (Variable.find("xyz"[idx], mesh_0) for idx in (x_id, y_id))
+    utils.label_spatial_axes(fig, np_axs, x_var, y_var)
     # make extra space for the upper limit of the colorbar
     if setup.layout == "tight" and fig is not None:
         fig.tight_layout(pad=1.4)
@@ -419,7 +419,7 @@ def contourf(
     """
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
-    variable = get_preset(variable, _meshes[0])
+    variable = Variable.find(variable, _meshes[0])
     data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
         fig_aspect = np.mean(data_aspects)
@@ -431,16 +431,25 @@ def contourf(
     n_axs = shape[0] * shape[1]
     if fig is None and ax is None:
         fig, ax = _fig_init(shape[0], shape[1], fig_aspect, **kwargs)
+        optional_return_figure = fig
+    else:
+        optional_return_figure = None
+
     fig = draw_plot(meshes, variable, fig=fig, axes=ax, **kwargs)
+
     if ax is not None and isinstance(ax, plt.Axes):
         ax.set_aspect(1.0 / ax_aspects[0])
+        utils.update_font_sizes(
+            ax, fontsize=kwargs.get("fontsize", setup.fontsize)
+        )
     elif fig is not None:
         for _ax, aspect in zip(fig.axes[:n_axs], ax_aspects, strict=True):
             _ax.set_aspect(1.0 / aspect)
-    if fig is None:
+
+    if optional_return_figure is None:
         return None
+    assert fig is not None
     utils.update_font_sizes(
         fig.axes, fontsize=kwargs.get("fontsize", setup.fontsize)
     )
-
     return fig
