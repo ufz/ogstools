@@ -205,9 +205,10 @@ def to_ip_point_cloud(mesh: Mesh) -> pv.UnstructuredGrid:
     input_file = parentpath / "ipDataToPointCloud_input.vtu"
     _mesh.save(input_file)
     output_file = parentpath / "ip_mesh.vtu"
-    from ogs import cli
 
-    cli.ipDataToPointCloud(i=str(input_file), o=str(output_file))
+    from ogstools._find_ogs import cli
+
+    cli.ipDataToPointCloud(i=str(input_file), o=str(output_file))  # type: ignore[union-attr]
     return pv.XMLUnstructuredGridReader(output_file).read()
 
 

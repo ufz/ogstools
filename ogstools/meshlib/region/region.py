@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 from collections.abc import Callable
 from itertools import chain
@@ -122,9 +123,10 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
     )
 
     outfile = Path(tempfile.mkstemp(".vtu", "region_prism")[1])
-    from ogs import cli
 
-    ret = cli.createLayeredMeshFromRasters(
+    from ogstools._find_ogs import cli
+
+    ret = cli.createLayeredMeshFromRasters(  # type: ignore[union-attr]
         i=raster_vtu, r=rastered_layers_txt, o=outfile
     )
     if ret:
@@ -284,17 +286,32 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
 
     smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetraeder")[1])
 
-    from ogs import cli
+    from ogstools._find_ogs import cli
 
-    ret_smesh = cli.createTetgenSmeshFromRasters(
+    ret_smesh = cli.createTetgenSmeshFromRasters(  # type: ignore[union-attr]
         i=raster_vtu, r=rastered_layers_txt1, o=smesh_file
     )
     if ret_smesh:
         raise ValueError
-    ret_tetgen = cli.tetgen("-pkABEFN", smesh_file)
-    if ret_tetgen:
-        msg = print("Tetgen returns: ", ret_tetgen)
-        raise ValueError(msg)
+    try:
+        subprocess.run(
+            ["tetgen", "-pkABEFN", str(smesh_file)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    except subprocess.CalledProcessError as e:
+        m = f"Tetgen failed with return code {e.returncode}"
+        raise ValueError(m) from e
+
+    except FileNotFoundError as e:
+        m = f"Tetgen could not be found. You need to install it on your system. Error: {e}"
+        raise ValueError(m) from e
+
+    except Exception as e:
+        m = f"An unexpected error occurred when calling tetgen: {e}"
+        raise ValueError(m) from e
 
     outfile = smesh_file.with_suffix(".1.vtk")
     if not outfile.exists():
@@ -358,9 +375,10 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
     with layers_txt.open("w") as file:
         file.write("\n".join(str(filename) for filename in layer_filenames))
     outfile = Path(tempfile.mkstemp(".vtu", "region_voxel")[1])
-    from ogs import cli
 
-    ret = cli.Layers2Grid(
+    from ogstools._find_ogs import cli
+
+    ret = cli.Layers2Grid(  # type: ignore[union-attr]
         i=layers_txt,
         o=outfile,
         x=resolution[0],

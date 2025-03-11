@@ -73,9 +73,10 @@ class Layer(Boundary):
             return [top_raster, bottom_raster]
 
         outfile = Path(tempfile.mkstemp(".asc")[1])
-        from ogs import cli
 
-        ret = cli.createIntermediateRasters(
+        from ogstools._find_ogs import cli
+
+        ret = cli.createIntermediateRasters(  # type: ignore[union-attr]
             file1=top_raster,
             file2=bottom_raster,
             o=outfile,
@@ -112,9 +113,9 @@ class LocationFrame:
 
         :returns: None
         """
-        from ogs import cli
+        from ogstools._find_ogs import cli
 
-        cli.generateGeometry(
+        cli.generateGeometry(  # type: ignore[union-attr]
             geometry_name="SceneRectangle",
             x0=str(self.xmin),
             x1=str(self.xmax),

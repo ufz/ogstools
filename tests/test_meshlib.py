@@ -1,6 +1,5 @@
 """Unit tests for meshlib."""
 
-from importlib.metadata import version
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -30,14 +29,7 @@ class TestUtils:
         assert xmf_ms.rawdata_path("temperature").suffix in [".xdmf", ".xmf"]
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
-<<<<<<< HEAD
-    @pytest.mark.skipif(
-        version("ogs") == "6.5.3",
-        reason="OGS Bug in xdmf output for homogeneous meshes",
-    )
-=======
     @pytest.mark.system()
->>>>>>> 8e2379bd (Mark tests if they depend on ogs binary tools (tools) or ogs (system))
     def test_read_quadratic_xdmf(self):
         "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
         tmp_dir = Path(mkdtemp())

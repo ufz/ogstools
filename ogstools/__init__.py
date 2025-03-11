@@ -8,7 +8,7 @@ from contextlib import suppress
 from importlib import metadata
 
 from . import plot, variables
-from .find_ogs import check_ogs  # noqa: F401
+from ._find_ogs import status
 
 # from .find_ogs import check_path
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
@@ -25,7 +25,4 @@ __authors__ = metadata.metadata(__package__)["Author-email"]
 
 del metadata  # optional, avoids polluting the results of dir(__package__)
 
-__all__ = [
-    "plot",
-    "variables",
-]
+__all__ = ["plot", "variables", "status"]
