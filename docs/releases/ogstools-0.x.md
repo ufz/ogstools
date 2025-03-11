@@ -23,6 +23,7 @@ This is not released yet!
 
 - MeshSeries can now be initialized with `from_data(meshes, timevalues)`
 - MeshSeries now has an .items() iterator
+- MeshSeries has now an .extend function to combine 2 MeshSeries (e.g. for simulation restart/continuation)
 - plot.line now automatically sorts the data
 - User can select format when saving animation (gif or mp4)
 - variables.vector add BHE vector with support for slicing its components
