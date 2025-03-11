@@ -64,6 +64,43 @@ pip install git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git
 
 :::
 
+#### With self-compiled (custom) OGS
+
+With `pip install ogstools` an OGS wheel (it installs ogs binaries and tools) is installed as well.
+
+If you want to use a self-compiled or custom-built version of OGS instead of the one provided by pip, follow these steps:
+
+1. Install OGSTools and uninstall ogs
+
+```bash
+pip install ogstools
+pip uninstall ogs
+```
+
+2. Set the Path to your custom OGS binaries
+
+Specify the location of your self-compiled OGS binaries by setting the `OGS_BIN_PATH` environment variable to the folder that contains the ogs binary and other tools (e.g. vtkdiff).
+
+Recommended: Add to your virtual environment's activate script:
+
+```
+export OGS_BIN_PATH="/<absolute_path_to_your_custom_ogs>/bin/"
+```
+
+Alternatively, but not recommended: ogs can be on your global `PATH`:
+
+```
+export PATH=path_to_your_custom_ogs/bin:$PATH
+```
+
+3. Test
+
+```python
+import ogstools as ot
+
+ot.status(verbose=True)
+```
+
 ### First steps
 
 See the following tool descriptions:
