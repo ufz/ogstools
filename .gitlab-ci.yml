@@ -81,11 +81,6 @@ tests (arch - conda) [R]:
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
-  rules:
-    - if: '$PYTHON_VERSION == "3.13"'
-      allow_failure: true
-    - if: '$PYTHON_VERSION'
-      allow_failure: false
 
 
 tests (arch - pip - ogs custom latest) [M]:
