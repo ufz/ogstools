@@ -68,13 +68,6 @@ binaries_list = [
 ]
 
 
-def pyproject_get_binaries() -> dict[str, str]:
-    return {
-        binary: f"ogs._internal.provide_ogs_cli_tools_via_wheel:{binary}"
-        for binary in binaries_list
-    }
-
-
 # Not used when OGS_USE_PATH is true!
 def ogs() -> None:
     raise SystemExit(ogs_with_args(sys.argv))

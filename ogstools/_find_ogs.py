@@ -49,7 +49,7 @@ def has_ogs_wheel(verbose: bool = False) -> bool:
     import importlib.util
 
     if verbose:
-        print("2. OGS wheel: ", importlib.util.find_spec("ogs"), ".\n")
+        print("OGS wheel: ", importlib.util.find_spec("ogs"), ".\n")
     return importlib.util.find_spec("ogs") is not None
 
 
@@ -59,14 +59,14 @@ def has_ogs_in_path(verbose: bool = False) -> bool:
         x for x in ogs_executables if is_outside_python_env(x)
     ]
     if verbose:
-        print("3. OGS in PATH: ", all_outside_python_env, ".\n")
+        print("OGS in PATH: ", all_outside_python_env, ".\n")
     return any(is_outside_python_env(x) for x in ogs_executables)
 
 
 def read_ogs_path(verbose: bool = False) -> Path | None:
     optional_ogs_path_str: str | None = os.getenv("OGS_BIN_PATH", None)
     if verbose:
-        print("1. OGS_BIN_PATH: ", optional_ogs_path_str, ".\n")
+        print("OGS_BIN_PATH: ", optional_ogs_path_str, ".\n")
 
     if optional_ogs_path_str is None:
         return None
@@ -74,13 +74,19 @@ def read_ogs_path(verbose: bool = False) -> Path | None:
     ogs_path: Path = Path(optional_ogs_path_str)
 
     if not ogs_path.exists():
-        msg = f"2. OGS_BIN_PATH is invalid. It is set to {ogs_path!s}.\n"
+        msg = f"OGS_BIN_PATH is invalid. It is set to {ogs_path!s}.\n"
         raise ImportError(msg)
 
     return ogs_path
 
 
 def status(verbose: bool = False) -> bool:
+    """
+    Checks if OGS is installed correctly. It prints detailed error message if OGS is not installed correctly.
+        :param verbose: If verbose is True it prints always the status of related environment variables. (OGS_BIN_PATH, PATH, virtual environment)
+
+    :returns: True if OGS is installed correctly, False otherwise.
+    """
     ogs_in_specified_path = read_ogs_path(verbose) is not None
     ogs_wheel = has_ogs_wheel(verbose)
     ogs_in_global_path = has_ogs_in_path(verbose)
@@ -105,11 +111,10 @@ def status(verbose: bool = False) -> bool:
     msg = error_mapping.get(
         (ogs_wheel, ogs_in_specified_path, ogs_in_global_path), None
     )
-    if msg:
-        if verbose:
-            print(msg)
-        return False
-    return True
+
+    if msg and verbose:
+        print(msg)
+    return not msg
 
 
 def _get_cli() -> Any:

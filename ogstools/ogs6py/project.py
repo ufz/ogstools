@@ -796,6 +796,12 @@ class Project:
                 msg = """The specific file is not a Singularity container. \
                         Please provide a *.sif file containing OGS."""
                 raise RuntimeError(msg)
+
+        if path is None:
+            ogs_path_env = os.getenv("OGS_BIN_PATH", None)
+            if ogs_path_env is not None:
+                path = Path(ogs_path_env)
+
         if path:
             path = Path(path)
             path = path.expanduser()
