@@ -6,6 +6,7 @@ from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 import pyvista as pv
 
 import ogstools as ot
@@ -16,6 +17,7 @@ from ogstools.studies import convergence
 class TestConvergence:
     """Test case for convergent meshes."""
 
+    @pytest.mark.system()
     def test_steady_state_diffusion(self):
         temp_dir = Path(mkdtemp(prefix="test_steady_state_diffusion"))
         sim_results = []

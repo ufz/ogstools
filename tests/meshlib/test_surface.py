@@ -50,6 +50,7 @@ class TestSurface:
                 0,
             )
 
+    @pytest.mark.tools()
     def testsurface_to_raster(self):
         s1 = Surface(
             meshpath / "mesh1/surface_data/00_KB.vtu",

@@ -9,7 +9,6 @@ from pathlib import Path
 
 import numpy as np
 import pyvista as pv
-from ogs import cli
 from typeguard import typechecked
 
 
@@ -56,7 +55,9 @@ class Surface:
         """
         outfile = Path(tempfile.mkstemp(".asc", self.filename.stem)[1])
 
-        ret = cli.Mesh2Raster(
+        from ogstools._find_ogs import cli
+
+        ret = cli.Mesh2Raster(  # type: ignore[union-attr]
             i=str(self.filename), o=str(outfile), c=resolution
         )
 

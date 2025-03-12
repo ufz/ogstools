@@ -778,6 +778,7 @@ class Project:
         :param write_logs:       set False to omit logging
         :param write_prj_to_pvd: write the prj file as a comment in the pvd
         """
+
         ogs_path: Path = Path()
         env = os.environ.copy()
         if self.threads is not None:
@@ -795,6 +796,12 @@ class Project:
                 msg = """The specific file is not a Singularity container. \
                         Please provide a *.sif file containing OGS."""
                 raise RuntimeError(msg)
+
+        if path is None:
+            ogs_path_env = os.getenv("OGS_BIN_PATH", None)
+            if ogs_path_env is not None:
+                path = Path(ogs_path_env)
+
         if path:
             path = Path(path)
             path = path.expanduser()

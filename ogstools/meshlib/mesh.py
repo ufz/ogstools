@@ -13,7 +13,6 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 
-import ogstools.meshlib as ml
 from ogstools import plot
 from ogstools._internal import copy_method_signature
 
@@ -91,8 +90,11 @@ class Mesh(pv.UnstructuredGrid):
 
             :returns:                   A Mesh object
         """
+
+        from ogstools.meshlib.shape_meshing import read_shape
+
         if Path(filepath).suffix == ".shp":
-            mesh = cls(ml.read_shape(filepath))
+            mesh = cls(read_shape(filepath))
         else:
             mesh = cls(pv.read(filepath))
 

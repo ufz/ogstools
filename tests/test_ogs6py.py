@@ -1598,6 +1598,7 @@ class TestiOGS:
         # clean up the temporary dir
         sing_dir.cleanup()
 
+    @pytest.mark.system()
     @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
     def test_OMP_NUM_THREADS(self, num_threads) -> NoReturn:
         temp = Path(tempfile.mkdtemp())
@@ -1670,6 +1671,7 @@ class TestiOGS:
                 int(omp_num_threads) == num_threads
             ), f"Expected OGS_ASM_THREADS={num_threads}"
 
+    @pytest.mark.system()
     @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
     def test_OGS_ASM_THREADS(self, num_threads) -> NoReturn:
         temp = Path(tempfile.mkdtemp())

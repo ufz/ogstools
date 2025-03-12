@@ -1,3 +1,5 @@
+import pytest
+
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib._utils import dataframe_from_csv
 from ogstools.meshlib.boundary import Layer
@@ -12,6 +14,7 @@ class TestLayerSet:
     materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"
 
+    @pytest.mark.tools()  # createIntermediateRasters
     def test_create_with_3_intermediate(self):
         mesh3_df = dataframe_from_csv(
             3,
@@ -27,6 +30,7 @@ class TestLayerSet:
             raster_set_1_300[5]
         ), f"Index of base layer 02_krl is 2 (preceding base layers) + 1 intermediate layer in layer 1 and + 2 intermediate layer in layer 2. The name is {raster_set_1_300[5]}"
 
+    @pytest.mark.tools()  # createIntermediateRasters
     def test_create_with_no_intermediate(self):
         resolution = 300
         surface1 = Surface(
@@ -62,6 +66,7 @@ class TestLayerSet:
             len(raster_set) == 2 + 1
         ), "With no intermediate layers, expected num of layer to be equal to pairs of top/bottom layer + 1 for topmost layer"
 
+    @pytest.mark.tools()  # createIntermediateRasters
     def test_create_with_just1_intermediate(self):
         layerset2_df = dataframe_from_csv(
             2,

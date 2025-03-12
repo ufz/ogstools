@@ -35,8 +35,21 @@ This is not released yet!
 - new: meshseries.resample to interpolate the meshseries to new timevalues
 - new: extract_probe to create a new meshseries consisting only of points and
   probed data at these points
+- OGS_BIN_PATH is read, this allows to specify a location of a custom OGS (ogs wheel not needed)
+- Improved errors and warnings when system has multiple or no OGS on PATH
+- ogstools.status(verbose=True) prints status of OGS installation
 
 ## Infrastructure
+
+### Tests
+
+- Tests can be marked as system and tools
+  - system tests: Involve running a simulation with OGS
+  - tools tests: Involve calls to OGS binary tools and pybind11 functionality (in future)
+
+### Imports
+
+- When imports are actually implementation details they can be load within function called (delayed initialization) - Applied to imports that rely on OGS installation
 
 ## Maintainer TODOs
 
