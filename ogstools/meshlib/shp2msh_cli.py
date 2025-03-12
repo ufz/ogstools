@@ -21,15 +21,6 @@ parser.add_argument(
     type=float,
     default=None,
 )
-parser.add_argument(
-    "meshing",
-    choices=["triangle", "gmsh"],
-    default="triangle",
-    type=str,
-    help="Either Triangle or GMSH can be chosen for meshing.",
-    nargs="?",
-    const=1,
-)
 
 parser.add_argument(
     "simplify",
@@ -49,6 +40,5 @@ def cli() -> None:
     ml.read_shape(
         args.input,
         simplify=simple,
-        mesh_generator=args.meshing,
         cellsize=args.cellsize,
     ).save(args.output)

@@ -107,14 +107,9 @@ class Mesh(pv.UnstructuredGrid):
         cls,
         shapefile: str | Path,
         simplify: bool = False,
-        mesh_generator: str = "triangle",
         cellsize: int | None = None,
     ) -> Mesh:
-        return cls(
-            shape_meshing.read_shape(
-                shapefile, simplify, mesh_generator, cellsize
-            )
-        )
+        return cls(shape_meshing.read_shape(shapefile, simplify, cellsize))
 
     def reindex_material_ids(self) -> None:
         unique_mat_ids = np.unique(self["MaterialIDs"])

@@ -32,17 +32,15 @@ def _prepare_shp_for_meshing(shape_file: str | Path) -> GeoDataFrame:
 def _points_cells_from_shapefile(
     shapefile: str | Path,
     simplify: bool = False,
-    mesh_generator: str = "triangle",
     cellsize: int | None = None,
 ) -> tuple:
     """
-    Generate a triangle- or GMSH-mesh from a shapefile.
+    Generate a GMSH-mesh from a shapefile.
 
     :param shapefile: Shapefile to be meshed.
     :param simplify: With the Douglas-Peucker algorithm the geometry is simplified. The original line
         is split into smaller parts. All points with a distance smaller than half the cellsize are removed.
         Endpoints are preserved. More infos at https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html.
-    :param triangle: Use the triangle-mesher. If False, the gmsh-mesher is used.
     :param cellsize: Size of the cells in the mesh - only needed for simplify algorithm.
         If None - cellsize is 1/100 of larger bound (x or y).
 
@@ -63,20 +61,11 @@ def _points_cells_from_shapefile(
         geodataframe = GeoDataFrame(geometry=list(exploded_union["geometry"]))
     geodataframe["cellsize"] = cellsize
 
-    assert mesh_generator in [
-        "triangle",
-        "gmsh",
-    ], "mesh_generator must be 'triangle' or 'gmsh'"
-
     import pandamesh as pm
 
-    if mesh_generator == "triangle":
-        mesher = pm.TriangleMesher(geodataframe)
-        points_cells = mesher.generate()
-    elif mesh_generator == "gmsh":
-        mesher = pm.GmshMesher(geodataframe)
-        points_cells = mesher.generate()
-        pm.GmshMesher.finalize()
+    mesher = pm.GmshMesher(geodataframe)
+    points_cells = mesher.generate()
+    pm.GmshMesher.finalize()
 
     return points_cells
 
