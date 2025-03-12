@@ -501,7 +501,6 @@ class TestUtils:
         assert isinstance(examples.load_meshseries_THM_2D_PVD(), ot.MeshSeries)
         assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
         assert isinstance(ot.Mesh.read(examples.mechanics_vtu), ot.Mesh)
-        assert isinstance(ot.Mesh.read(examples.test_shapefile), ot.Mesh)
 
     @pytest.mark.system()
     def test_xdmf_quadratic(self):

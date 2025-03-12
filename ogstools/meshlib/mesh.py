@@ -16,7 +16,7 @@ import pyvista as pv
 from ogstools import plot
 from ogstools._internal import copy_method_signature
 
-from . import data_processing, geo, ip_mesh, shape_meshing
+from . import data_processing, geo, ip_mesh
 
 
 class Mesh(pv.UnstructuredGrid):
@@ -86,30 +86,14 @@ class Mesh(pv.UnstructuredGrid):
         """
         Initialize a Mesh object
 
-            :param filepath:            Path to the mesh or shapefile file.
+            :param filepath:            Path to the mesh file.
 
             :returns:                   A Mesh object
         """
 
-        from ogstools.meshlib.shape_meshing import read_shape
-
-        if Path(filepath).suffix == ".shp":
-            mesh = cls(read_shape(filepath))
-        else:
-            mesh = cls(pv.read(filepath))
-
+        mesh = cls(pv.read(filepath))
         mesh.filepath = Path(filepath).with_suffix(".vtu")
         return mesh
-
-    @classmethod
-    @copy_method_signature(shape_meshing.read_shape)
-    def read_shape(
-        cls,
-        shapefile: str | Path,
-        simplify: bool = False,
-        cellsize: int | None = None,
-    ) -> Mesh:
-        return cls(shape_meshing.read_shape(shapefile, simplify, cellsize))
 
     def reindex_material_ids(self) -> None:
         unique_mat_ids = np.unique(self["MaterialIDs"])
