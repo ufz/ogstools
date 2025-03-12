@@ -189,11 +189,13 @@ class Variable:
         # pylint: enable=import-outside-toplevel
 
         for prop in all_variables:
-            if prop.output_name == variable:
-                return prop
-        for prop in all_variables:
             if prop.data_name == variable:
                 return prop
+        for prop in all_variables:
+            if prop.output_name == variable:
+                if prop.data_name in data_keys:
+                    return prop
+                return prop.replace(data_name=prop.output_name)
 
         matches = [variable in data_key for data_key in data_keys]
         if not any(matches):
@@ -340,7 +342,7 @@ class Variable:
         ):
             msg = (
                 f"Data name {self.data_name} not found in mesh. "
-                f"Available data names are {','.join(data_keys)}. "
+                f"Available data names are {', '.join(data_keys)}. "
             )
             raise KeyError(msg)
         if masked and self.mask_used(dataset):

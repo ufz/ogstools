@@ -178,6 +178,10 @@ class TestPhysicalVariable:
         assert ov.Variable.find("vector", mesh) == ov.Vector("vector")
         assert ov.Variable.find("matrix", mesh) == ov.Matrix("matrix")
         pytest.raises(KeyError, ov.Variable.find, "test", mesh)
+        # testcase with str matching output_name of the predefined Variables
+        mesh = examples.load_meshseries_HT_2D_XDMF()[0]
+        darcy = ov.Variable.find("darcy_velocity", mesh)
+        assert darcy.data_name in mesh.point_data
 
     def test_copy_ctor(self):
         """Test replace constructor."""
