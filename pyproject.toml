@@ -229,7 +229,7 @@ docs = [
   "trame-vtk>=2.6.0",
 ]
 feflow = [
-  "ifm_contrib>=0.2.3",
+  "ifm_contrib>=0.2.4",
 ]
 
 [tool.pytest.ini_options]

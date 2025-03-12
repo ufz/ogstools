@@ -15,10 +15,10 @@ RUN curl -fsSL https://download.feflow.com/download/FEFLOW/linux/dhi-feflow-key.
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/feflow.gpg] https://download.feflow.com/download/FEFLOW/linux/apt-repo/$DIST_DIR stable main" | sudo tee /etc/apt/sources.list.d/feflow.stable.list \
     && apt-get update \
     && apt list | grep feflow  \
-    && apt-get install -yq --no-install-recommends feflow-ifm-devel feflow-python81 \
+    && yes | apt-get -y install -yq --no-install-recommends feflow100-ifm-devel feflow100-python \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV \
-    PYTHONPATH=/opt/feflow/8.1/python \
-    LD_LIBRARY_PATH=/opt/feflow/8.1/lib64:/opt/feflow/common/qt/lib64:/opt/feflow/common/lib64 \
-    FEFLOW81_ROOT=/opt/feflow/8.1
+    PYTHONPATH=/opt/feflow/10.0/python \
+    LD_LIBRARY_PATH=/opt/feflow/10.0/lib64:/opt/feflow/10.0/qt/lib64 \
+    FEFLOW100_ROOT=/opt/feflow/10.0
