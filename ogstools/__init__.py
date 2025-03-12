@@ -9,16 +9,12 @@ from importlib import metadata
 
 from . import plot, variables
 from ._find_ogs import status
-
-# from .find_ogs import check_path
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
 
 with suppress(ImportError):
     from .feflowlib import FeflowModel  # noqa: F401
 
-
-# check_path()  # check if environment has only 1 OGS available
 
 __version__ = metadata.version(__package__)
 __authors__ = metadata.metadata(__package__)["Author-email"]

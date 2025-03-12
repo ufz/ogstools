@@ -91,10 +91,10 @@ class Mesh(pv.UnstructuredGrid):
             :returns:                   A Mesh object
         """
 
-        import ogstools.meshlib as ml
+        from ogstools.meshlib.shape_meshing import read_shape
 
         if Path(filepath).suffix == ".shp":
-            mesh = cls(ml.read_shape(filepath))
+            mesh = cls(read_shape(filepath))
         else:
             mesh = cls(pv.read(filepath))
 
