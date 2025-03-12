@@ -51,6 +51,10 @@ This is not released yet!
 
 - When imports are actually implementation details they can be load within function called (delayed initialization) - Applied to imports that rely on OGS installation
 
+### Container
+
+- Container for FEFLOW 10.0 added
+
 ## Maintainer TODOs
 
 ### next sub release
