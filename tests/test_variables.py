@@ -178,6 +178,10 @@ class TestPhysicalVariable:
         assert ov.Variable.find("vector", mesh) == ov.Vector("vector")
         assert ov.Variable.find("matrix", mesh) == ov.Matrix("matrix")
         pytest.raises(KeyError, ov.Variable.find, "test", mesh)
+        # testcase with str matching output_name of the predefined Variables
+        mesh = examples.load_meshseries_HT_2D_XDMF()[0]
+        darcy = ov.Variable.find("darcy_velocity", mesh)
+        assert darcy.data_name in mesh.point_data
 
     def test_copy_ctor(self):
         """Test replace constructor."""
@@ -224,7 +228,10 @@ class TestPhysicalVariable:
             assert np.all(var[i, "grout"].transform(mesh) == 0.5 * i)
 
     @pytest.mark.parametrize(
-        "bhe_component_gen",
+        "bhe_type", list(ov.temperature_BHE.BHE_COMPONENTS)
+    )
+    @pytest.mark.parametrize(
+        "index_gen",
         [
             lambda c: c,
             lambda c: [list(pair) for pair in pairwise(c)],
@@ -232,17 +239,15 @@ class TestPhysicalVariable:
             lambda c: [list(pair) for pair in pairwise(range(len(c)))],
         ],
     )
-    def test_BHE_temperature_component_indexing(self, bhe_component_gen):
-        comps = ov.BHE_Vector.BHE_COMPONENTS
-        for name in comps:
-            ms = bhe_mesh_series[name]
-            components = bhe_component_gen(comps[name])
-            temp = [
-                ms.probe((0, 0, 0), ov.temperature_BHE[1, comp])[0]
-                for comp in components
-            ]
-            # initial vector is +1 for every component
-            assert np.all(np.diff(temp) == 1)
+    def test_BHE_temperature_component_indexing(self, bhe_type, index_gen):
+        ms = bhe_mesh_series[bhe_type]
+        index_combinations = index_gen(ov.BHE_Vector.BHE_COMPONENTS[bhe_type])
+        temp = [
+            ms.probe((0, 0, 0), ov.temperature_BHE[1, idx])[0]
+            for idx in index_combinations
+        ]
+        # initial vector is +1 for every component
+        assert np.all(np.diff(temp) == 1)
 
     def test_shorthand_ctor(self):
         var_full = ov.Scalar(data_name="test", data_unit="unit",
