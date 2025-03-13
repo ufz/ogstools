@@ -1,0 +1,36 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" version="1.1" vc:minVersion="1.1">
+    <xs:element name="OpenGeoSysProject" type="OpenGeoSysProjectType"/>
+
+    <xs:complexType name="constantParameter">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="value" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="type" type="xs:string" fixed="Constant"/>
+    </xs:complexType>
+
+    <xs:complexType name="curveParameter">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="curve" type="xs:string"/>
+            <xs:element name="parameter" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="type" type="xs:string" fixed="CurveScaled"/>
+    </xs:complexType>
+
+    <xs:complexType name="OpenGeoSysProjectType">
+        <xs:sequence>
+            <xs:element name="parameters">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="parameter" minOccurs="1" maxOccurs="unbounded">
+                            <xs:alternative test="@type = 'Constant'" type="constantParameter"/>
+                            <xs:alternative test="@type = 'CurveScaled'" type="curveParameter"/>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:any minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
