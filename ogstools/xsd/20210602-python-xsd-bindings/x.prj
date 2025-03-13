@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<OpenGeoSysProject>
+    <parameters>
+        <parameter type="Constant">
+            <name>p0</name>
+            <value>-0.1e6</value>
+        </parameter>
+        <parameter type="Constant">
+            <name>p_Dirichlet_left</name>
+            <value>0</value>
+        </parameter>
+        <parameter type="Constant">
+            <name>p_Dirichlet_right_spatial</name>
+            <value>1</value>
+        </parameter>
+        <parameter type="CurveScaled">
+            <name>p_Dirichlet_right</name>
+            <curve>p_Dirichlet_right_temporal</curve>
+            <parameter>p_Dirichlet_right_spatial</parameter>
+        </parameter>
+    </parameters>
+</OpenGeoSysProject>
