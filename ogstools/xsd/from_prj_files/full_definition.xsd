@@ -1,0 +1,1755 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="OpenGeoSysProject">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="meshes"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="geometry"/>
+          <xs:element ref="mesh"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="python_script"/>
+          <xs:element ref="rasters"/>
+          <xs:element ref="search_length_algorithm"/>
+        </xs:choice>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="include"/>
+          <xs:element ref="parameters"/>
+          <xs:element ref="process_variables"/>
+          <xs:element ref="processes"/>
+          <xs:element ref="chemical_system"/>
+          <xs:element ref="curves"/>
+          <xs:element ref="linear_solvers"/>
+          <xs:element ref="local_coordinate_system"/>
+          <xs:element ref="media"/>
+          <xs:element ref="nonlinear_solvers"/>
+          <xs:element ref="time_loop"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="insitu"/>
+          <xs:element ref="test_definition"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="python_script" type="xs:NCName"/>
+  <xs:element name="rasters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="raster"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="raster">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="file"/>
+        <xs:element ref="variable"/>
+        <xs:element ref="dimension"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dimension" type="xs:integer"/>
+  <xs:element name="search_length_algorithm">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element ref="value"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="chemical_system">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="mesh"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="linear_solver"/>
+          <xs:element ref="database"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="use_high_precision"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="number_of_components"/>
+          <xs:element ref="chemical_reactions"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="solution"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="equilibrium_reactants"/>
+          <xs:element ref="exchangers"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="surface"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="user_punch"/>
+          <xs:sequence>
+            <xs:element ref="kinetic_reactants"/>
+            <xs:element ref="rates"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="knobs"/>
+      </xs:sequence>
+      <xs:attribute name="chemical_solver" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="database" type="xs:string"/>
+  <xs:element name="use_high_precision" type="xs:boolean"/>
+  <xs:element name="number_of_components" type="xs:integer"/>
+  <xs:element name="chemical_reactions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="chemical_reaction"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="chemical_reaction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="stoichiometric_coefficients"/>
+        <xs:element ref="reaction_type"/>
+        <xs:element ref="first_order_rate_constant"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="stoichiometric_coefficients" type="xs:string"/>
+  <xs:element name="reaction_type" type="xs:NCName"/>
+  <xs:element name="first_order_rate_constant" type="xs:double"/>
+  <xs:element name="solution">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="temperature"/>
+        <xs:element ref="pressure"/>
+        <xs:element ref="pe"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="components"/>
+          <xs:element ref="charge_balance"/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="fixing_pe" type="xs:boolean"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="pe" type="xs:decimal"/>
+  <xs:element name="charge_balance" type="xs:NCName"/>
+  <xs:element name="equilibrium_reactants">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="phase_component"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="phase_component">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="name"/>
+        <xs:element minOccurs="0" ref="initial_amount"/>
+        <xs:element ref="saturation_index"/>
+        <xs:element minOccurs="0" ref="reaction_irreversibility"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="saturation_index" type="xs:decimal"/>
+  <xs:element name="reaction_irreversibility" type="xs:NCName"/>
+  <xs:element name="exchangers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="exchange_site"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="exchange_site">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ion_exchanging_species"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ion_exchanging_species" type="xs:NCName"/>
+  <xs:element name="surface">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="site"/>
+      </xs:sequence>
+      <xs:attribute name="site_unit" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="site">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="name"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="site_density"/>
+          <xs:element ref="specific_surface_area"/>
+          <xs:element ref="mass"/>
+        </xs:sequence>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="site_density" type="xs:decimal"/>
+  <xs:element name="specific_surface_area" type="xs:decimal"/>
+  <xs:element name="mass" type="xs:integer"/>
+  <xs:element name="user_punch">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="headline"/>
+        <xs:element maxOccurs="unbounded" ref="statement"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="headline" type="xs:string"/>
+  <xs:element name="kinetic_reactants">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="kinetic_reactant"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="rates">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="rate"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="rate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="kinetic_reactant"/>
+        <xs:element ref="expression"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="knobs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="max_iter"/>
+        <xs:element ref="relative_convergence_tolerance"/>
+        <xs:element ref="tolerance"/>
+        <xs:element ref="step_size"/>
+        <xs:element ref="scaling"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="relative_convergence_tolerance" type="xs:double"/>
+  <xs:element name="tolerance" type="xs:double"/>
+  <xs:element name="step_size" type="xs:integer"/>
+  <xs:element name="curves">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="curve"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="linear_solvers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="linear_solver"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="local_coordinate_system">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="basis_vector_0"/>
+        <xs:element ref="basis_vector_1"/>
+        <xs:element minOccurs="0" ref="basis_vector_2"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="basis_vector_0">
+    <xs:complexType mixed="true">
+      <xs:attribute name="implicit" type="xs:boolean"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="basis_vector_1" type="xs:NCName"/>
+  <xs:element name="basis_vector_2" type="xs:NCName"/>
+  <xs:element name="media">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="medium"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="medium">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="phases"/>
+        <xs:element minOccurs="0" ref="properties"/>
+      </xs:sequence>
+      <xs:attribute name="id"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="phases">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="phase"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="phase">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element minOccurs="0" ref="components"/>
+        <xs:element minOccurs="0" ref="properties"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="nonlinear_solvers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="nonlinear_solver"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="time_loop">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="global_process_coupling"/>
+        <xs:element minOccurs="0" ref="processes"/>
+        <xs:element minOccurs="0" ref="include"/>
+        <xs:element minOccurs="0" ref="output"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="outputs"/>
+          <xs:element ref="submesh_residuum_output"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="global_process_coupling">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="max_iter"/>
+        <xs:element ref="convergence_criteria"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="convergence_criteria">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="convergence_criterion"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="outputs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="output"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="submesh_residuum_output">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element minOccurs="0" ref="prefix"/>
+        <xs:element ref="timesteps"/>
+        <xs:element ref="variables"/>
+        <xs:element minOccurs="0" ref="suffix"/>
+        <xs:element ref="meshes"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="insitu">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="scripts"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="scripts">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="script"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="script">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="test_definition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="vtkdiff"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="vtkdiff">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="file"/>
+          <xs:element ref="regex"/>
+        </xs:choice>
+        <xs:element ref="field"/>
+        <xs:element ref="absolute_tolerance"/>
+        <xs:element ref="relative_tolerance"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="regex" type="xs:string"/>
+  <xs:element name="field" type="xs:string"/>
+  <xs:element name="absolute_tolerance" type="xs:double"/>
+  <xs:element name="relative_tolerance" type="xs:double"/>
+  <xs:element name="meshes">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="mesh"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="geometry" type="xs:string"/>
+  <xs:element name="mesh">
+    <xs:complexType mixed="true">
+      <xs:attribute name="axially_symmetric" type="xs:boolean"/>
+      <xs:attribute name="material_ids"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="type" type="xs:NMTOKEN"/>
+  <xs:element name="value">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="expression"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="file" type="xs:NCName"/>
+  <xs:element name="variable" type="xs:string"/>
+  <xs:element name="include">
+    <xs:complexType>
+      <xs:attribute name="file" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="max_iter" type="xs:integer"/>
+  <xs:element name="convergence_criterion">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="type"/>
+          <xs:element ref="norm_type"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element ref="abstol"/>
+            <xs:element ref="reltol"/>
+          </xs:choice>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element ref="abstols"/>
+            <xs:element ref="reltols"/>
+          </xs:choice>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="norm_type" type="xs:NCName"/>
+  <xs:element name="abstol" type="xs:double"/>
+  <xs:element name="reltol" type="xs:double"/>
+  <xs:element name="abstols" type="xs:string"/>
+  <xs:element name="reltols" type="xs:string"/>
+  <xs:element name="processes">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="include"/>
+        <xs:element maxOccurs="unbounded" ref="process"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="process">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="name"/>
+          <xs:element ref="type"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="subtype"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="process_variables"/>
+          <xs:element ref="reference_temperature"/>
+          <xs:element ref="apply_body_force_for_deformation"/>
+          <xs:element ref="calculatesurfaceflux"/>
+          <xs:element ref="characteristic_length"/>
+          <xs:element ref="chemically_induced_porosity_change"/>
+          <xs:element ref="constitutive_relation"/>
+          <xs:element ref="coupling_scheme"/>
+          <xs:element ref="deactivate_matrix_in_flow"/>
+          <xs:element ref="energy_split_model"/>
+          <xs:element ref="equation_balance_type"/>
+          <xs:element ref="explicit_hm_coupling_in_unsaturated_zone"/>
+          <xs:element ref="f_bar"/>
+          <xs:element ref="fracture_model"/>
+          <xs:element ref="fracture_properties"/>
+          <xs:element ref="ice_constitutive_relation"/>
+          <xs:element ref="initial_effective_stress"/>
+          <xs:element ref="initial_fracture_effective_stress"/>
+          <xs:element ref="initial_stress"/>
+          <xs:element ref="integration_order"/>
+          <xs:element ref="internal_length"/>
+          <xs:element ref="irreversible_threshold"/>
+          <xs:element ref="jacobian_assembler"/>
+          <xs:element ref="mass_lumping"/>
+          <xs:element ref="micro_porosity"/>
+          <xs:element ref="non_advective_form"/>
+          <xs:element ref="phasefield_model"/>
+          <xs:element ref="phasefield_parameters"/>
+          <xs:element ref="pressurized_crack_scheme"/>
+          <xs:element ref="secondary_variables"/>
+          <xs:element ref="softening_curve"/>
+          <xs:element ref="solid_density"/>
+          <xs:element ref="specific_body_force"/>
+          <xs:element ref="tabular_file"/>
+          <xs:element ref="thermal_parameters"/>
+          <xs:element ref="use_b_bar"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="numerical_stabilization"/>
+        <xs:element minOccurs="0" ref="use_server_communication"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="temperature"/>
+          <xs:element ref="borehole_heat_exchangers"/>
+          <xs:element ref="simplified_elasticity"/>
+          <xs:element ref="temperature_field"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="aperture_size"/>
+        <xs:choice>
+          <xs:element ref="linear"/>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="convergence_criterion"/>
+            <xs:element ref="nonlinear_solver"/>
+            <xs:element ref="time_discretization"/>
+            <xs:element ref="time_stepping"/>
+          </xs:choice>
+          <xs:sequence>
+            <xs:element ref="wellbore"/>
+            <xs:element ref="wellbore_ref_pressure"/>
+            <xs:element ref="wellbore_ref_enthalpy"/>
+            <xs:element ref="heat_exchange_with_formation"/>
+            <xs:element ref="reservoir_properties"/>
+            <xs:element ref="productivity_index"/>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="ref" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="subtype" type="xs:NCName"/>
+  <xs:element name="apply_body_force_for_deformation" type="xs:boolean"/>
+  <xs:element name="calculatesurfaceflux">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="mesh"/>
+        <xs:element ref="property_name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="characteristic_length" type="xs:decimal"/>
+  <xs:element name="chemically_induced_porosity_change" type="xs:boolean"/>
+  <xs:element name="constitutive_relation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="youngs_modulus"/>
+          <xs:element ref="poissons_ratio"/>
+        </xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="a"/>
+          <xs:element ref="n"/>
+          <xs:element ref="sigma0"/>
+          <xs:element ref="q"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="youngs_modulus_i"/>
+            <xs:element ref="youngs_modulus_a"/>
+            <xs:element ref="poissons_ratio_ii"/>
+            <xs:element ref="poissons_ratio_ia"/>
+            <xs:element ref="shear_modulus_ia"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="youngs_moduli"/>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element ref="poissons_ratios"/>
+              <xs:element ref="shear_moduli"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="shear_modulus"/>
+          <xs:element ref="bulk_modulus"/>
+          <xs:element ref="kappa"/>
+          <xs:element ref="beta"/>
+          <xs:element ref="gamma"/>
+          <xs:element ref="hardening_modulus"/>
+          <xs:element ref="alpha"/>
+          <xs:element ref="delta"/>
+          <xs:element ref="eps"/>
+          <xs:element ref="m"/>
+          <xs:element ref="alphap"/>
+          <xs:element ref="deltap"/>
+          <xs:element ref="epsp"/>
+          <xs:element ref="mp"/>
+          <xs:element ref="betap"/>
+          <xs:element ref="gammap"/>
+          <xs:element ref="tangent_type"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:element ref="damage_properties"/>
+          <xs:sequence>
+            <xs:element ref="kelvin_shear_modulus"/>
+            <xs:element ref="kelvin_viscosity"/>
+            <xs:element ref="maxwell_shear_modulus"/>
+            <xs:element ref="maxwell_bulk_modulus"/>
+            <xs:element ref="maxwell_viscosity"/>
+            <xs:element ref="dependency_parameter_mk"/>
+            <xs:element ref="dependency_parameter_mvk"/>
+            <xs:element ref="dependency_parameter_mvm"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="nonlinear_solver"/>
+        <xs:element minOccurs="0" ref="behaviour"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="library"/>
+          <xs:element ref="material_properties"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="initial_values"/>
+      </xs:sequence>
+      <xs:attribute name="id"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="a" type="xs:NCName"/>
+  <xs:element name="n" type="xs:NCName"/>
+  <xs:element name="sigma0" type="xs:NCName"/>
+  <xs:element name="q" type="xs:NCName"/>
+  <xs:element name="youngs_modulus_i" type="xs:NCName"/>
+  <xs:element name="youngs_modulus_a" type="xs:NCName"/>
+  <xs:element name="poissons_ratio_ii" type="xs:NCName"/>
+  <xs:element name="poissons_ratio_ia" type="xs:NCName"/>
+  <xs:element name="shear_modulus_ia" type="xs:NCName"/>
+  <xs:element name="youngs_moduli" type="xs:NCName"/>
+  <xs:element name="poissons_ratios" type="xs:NCName"/>
+  <xs:element name="shear_moduli" type="xs:NCName"/>
+  <xs:element name="shear_modulus" type="xs:NCName"/>
+  <xs:element name="bulk_modulus" type="xs:NCName"/>
+  <xs:element name="kappa" type="xs:NCName"/>
+  <xs:element name="beta" type="xs:NCName"/>
+  <xs:element name="gamma" type="xs:NCName"/>
+  <xs:element name="hardening_modulus" type="xs:NCName"/>
+  <xs:element name="delta" type="xs:NCName"/>
+  <xs:element name="eps" type="xs:NCName"/>
+  <xs:element name="m" type="xs:NCName"/>
+  <xs:element name="alphap" type="xs:NCName"/>
+  <xs:element name="deltap" type="xs:NCName"/>
+  <xs:element name="epsp" type="xs:NCName"/>
+  <xs:element name="mp" type="xs:NCName"/>
+  <xs:element name="betap" type="xs:NCName"/>
+  <xs:element name="gammap" type="xs:NCName"/>
+  <xs:element name="tangent_type" type="xs:NCName"/>
+  <xs:element name="damage_properties">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="alpha_d"/>
+        <xs:element ref="beta_d"/>
+        <xs:element ref="h_d"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="alpha_d" type="xs:NCName"/>
+  <xs:element name="beta_d" type="xs:NCName"/>
+  <xs:element name="h_d" type="xs:NCName"/>
+  <xs:element name="kelvin_shear_modulus" type="xs:NCName"/>
+  <xs:element name="kelvin_viscosity" type="xs:NCName"/>
+  <xs:element name="maxwell_shear_modulus" type="xs:NCName"/>
+  <xs:element name="maxwell_bulk_modulus" type="xs:NCName"/>
+  <xs:element name="maxwell_viscosity" type="xs:NCName"/>
+  <xs:element name="dependency_parameter_mk" type="xs:NCName"/>
+  <xs:element name="dependency_parameter_mvk" type="xs:NCName"/>
+  <xs:element name="dependency_parameter_mvm" type="xs:NCName"/>
+  <xs:element name="behaviour" type="xs:NCName"/>
+  <xs:element name="library">
+    <xs:complexType mixed="true">
+      <xs:attribute name="path_is_relative_to_prj_file" use="required" type="xs:boolean"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="material_properties">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="material_property"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="material_property">
+    <xs:complexType>
+      <xs:attribute name="name" use="required" type="xs:NCName"/>
+      <xs:attribute name="parameter" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="initial_values">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="state_variable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="state_variable">
+    <xs:complexType>
+      <xs:attribute name="name" use="required" type="xs:NCName"/>
+      <xs:attribute name="parameter" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="coupling_scheme">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="type"/>
+        <xs:element ref="fixed_stress_over_time_step"/>
+        <xs:element ref="fixed_stress_stabilization_parameter"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="fixed_stress_over_time_step" type="xs:boolean"/>
+  <xs:element name="fixed_stress_stabilization_parameter" type="xs:decimal"/>
+  <xs:element name="deactivate_matrix_in_flow" type="xs:boolean"/>
+  <xs:element name="energy_split_model" type="xs:NCName"/>
+  <xs:element name="equation_balance_type" type="xs:NCName"/>
+  <xs:element name="explicit_hm_coupling_in_unsaturated_zone" type="xs:boolean"/>
+  <xs:element name="f_bar" type="xs:NCName"/>
+  <xs:element name="fracture_model">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element ref="normal_stiffness"/>
+        <xs:element ref="shear_stiffness"/>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="friction_angle"/>
+            <xs:element ref="dilatancy_angle"/>
+            <xs:element ref="cohesion"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="fracture_toughness"/>
+            <xs:element ref="peak_normal_traction"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element ref="penalty_aperture_cutoff"/>
+        <xs:element ref="tension_cutoff"/>
+        <xs:element minOccurs="0" ref="nonlinear_solver"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="normal_stiffness" type="xs:NCName"/>
+  <xs:element name="shear_stiffness" type="xs:NCName"/>
+  <xs:element name="dilatancy_angle" type="xs:NCName"/>
+  <xs:element name="fracture_toughness" type="xs:NCName"/>
+  <xs:element name="peak_normal_traction" type="xs:NCName"/>
+  <xs:element name="penalty_aperture_cutoff" type="xs:double"/>
+  <xs:element name="tension_cutoff" type="xs:integer"/>
+  <xs:element name="fracture_properties">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="material_id"/>
+        <xs:element ref="initial_aperture"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="material_id" type="xs:integer"/>
+  <xs:element name="ice_constitutive_relation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element ref="youngs_modulus"/>
+        <xs:element ref="poissons_ratio"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="initial_effective_stress" type="xs:NCName"/>
+  <xs:element name="initial_fracture_effective_stress" type="xs:NCName"/>
+  <xs:element name="initial_stress">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NCName">
+          <xs:attribute name="type" type="xs:NCName"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="integration_order" type="xs:integer"/>
+  <xs:element name="internal_length" type="xs:double"/>
+  <xs:element name="irreversible_threshold" type="xs:decimal"/>
+  <xs:element name="jacobian_assembler">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="component_magnitudes"/>
+          <xs:element ref="relative_epsilons"/>
+        </xs:sequence>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="component_magnitudes" type="xs:string"/>
+  <xs:element name="relative_epsilons" type="xs:string"/>
+  <xs:element name="mass_lumping" type="xs:boolean"/>
+  <xs:element name="micro_porosity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="mass_exchange_coefficient"/>
+        <xs:element ref="nonlinear_solver"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="mass_exchange_coefficient" type="xs:double"/>
+  <xs:element name="non_advective_form" type="xs:boolean"/>
+  <xs:element name="phasefield_model" type="xs:NCName"/>
+  <xs:element name="phasefield_parameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="residual_stiffness"/>
+        <xs:element ref="crack_resistance"/>
+        <xs:element ref="crack_length_scale"/>
+        <xs:element minOccurs="0" ref="kinetic_coefficient"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="residual_stiffness" type="xs:NCName"/>
+  <xs:element name="crack_resistance" type="xs:NCName"/>
+  <xs:element name="crack_length_scale" type="xs:NCName"/>
+  <xs:element name="kinetic_coefficient" type="xs:NCName"/>
+  <xs:element name="pressurized_crack_scheme" type="xs:NCName"/>
+  <xs:element name="secondary_variables">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="secondary_variable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="secondary_variable">
+    <xs:complexType>
+      <xs:attribute name="internal_name" use="required"/>
+      <xs:attribute name="output_name" use="required"/>
+      <xs:attribute name="type" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="softening_curve" type="xs:NCName"/>
+  <xs:element name="solid_density" type="xs:NCName"/>
+  <xs:element name="specific_body_force" type="xs:string"/>
+  <xs:element name="tabular_file" type="xs:NCName"/>
+  <xs:element name="thermal_parameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="linear_thermal_expansion_coefficient"/>
+        <xs:element ref="specific_heat_capacity"/>
+        <xs:element ref="thermal_conductivity"/>
+        <xs:element ref="residual_thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="linear_thermal_expansion_coefficient" type="xs:NCName"/>
+  <xs:element name="residual_thermal_conductivity" type="xs:NCName"/>
+  <xs:element name="use_b_bar" type="xs:boolean"/>
+  <xs:element name="numerical_stabilization">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element minOccurs="0" ref="tuning_parameter"/>
+        <xs:element minOccurs="0" ref="cutoff_velocity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tuning_parameter" type="xs:decimal"/>
+  <xs:element name="cutoff_velocity" type="xs:double"/>
+  <xs:element name="use_server_communication" type="xs:boolean"/>
+  <xs:element name="borehole_heat_exchangers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="borehole_heat_exchanger"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="borehole_heat_exchanger">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:element minOccurs="0" ref="use_bhe_pipe_network"/>
+        <xs:element ref="flow_and_temperature_control"/>
+        <xs:element ref="borehole"/>
+        <xs:element ref="grout"/>
+        <xs:element ref="pipes"/>
+        <xs:element ref="refrigerant"/>
+      </xs:sequence>
+      <xs:attribute name="id"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="use_bhe_pipe_network" type="xs:boolean"/>
+  <xs:element name="flow_and_temperature_control">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:choice>
+          <xs:element ref="flow_rate_curve"/>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element ref="flow_rate"/>
+            <xs:element ref="power_curve"/>
+          </xs:choice>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="power"/>
+          <xs:element ref="temperature_curve"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="flow_rate_curve" type="xs:NCName"/>
+  <xs:element name="flow_rate" type="xs:double"/>
+  <xs:element name="power_curve" type="xs:NCName"/>
+  <xs:element name="power" type="xs:integer"/>
+  <xs:element name="temperature_curve" type="xs:NCName"/>
+  <xs:element name="borehole">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="length"/>
+        <xs:element ref="diameter"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="grout">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="density"/>
+        <xs:element ref="porosity"/>
+        <xs:element ref="specific_heat_capacity"/>
+        <xs:element ref="thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="porosity" type="xs:decimal"/>
+  <xs:element name="pipes">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="inlet"/>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="outer"/>
+            <xs:element ref="inner"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="outlet"/>
+            <xs:element ref="distance_between_pipes"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element ref="longitudinal_dispersion_length"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="inlet">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="diameter"/>
+        <xs:element ref="wall_thickness"/>
+        <xs:element ref="wall_thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="outer">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="diameter"/>
+        <xs:element ref="wall_thickness"/>
+        <xs:element ref="wall_thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="inner">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="diameter"/>
+        <xs:element ref="wall_thickness"/>
+        <xs:element ref="wall_thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="outlet">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="diameter"/>
+        <xs:element ref="wall_thickness"/>
+        <xs:element ref="wall_thermal_conductivity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="distance_between_pipes" type="xs:decimal"/>
+  <xs:element name="longitudinal_dispersion_length" type="xs:decimal"/>
+  <xs:element name="refrigerant">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="density"/>
+        <xs:element ref="viscosity"/>
+        <xs:element ref="specific_heat_capacity"/>
+        <xs:element ref="thermal_conductivity"/>
+        <xs:element ref="reference_temperature"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="viscosity" type="xs:decimal"/>
+  <xs:element name="simplified_elasticity" type="xs:NCName"/>
+  <xs:element name="temperature_field" type="xs:NCName"/>
+  <xs:element name="aperture_size">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="parameter"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="linear" type="xs:boolean"/>
+  <xs:element name="time_discretization">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="time_stepping">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="type"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="t_initial"/>
+          <xs:element ref="t_end"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:element ref="timesteps"/>
+          <xs:element ref="n_steps"/>
+          <xs:sequence>
+            <xs:element ref="dt_guess"/>
+            <xs:element ref="dt_min"/>
+            <xs:element ref="dt_max"/>
+            <xs:element ref="rel_dt_min"/>
+            <xs:element ref="rel_dt_max"/>
+            <xs:element ref="tol"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="initial_dt"/>
+            <xs:element ref="minimum_dt"/>
+            <xs:element ref="maximum_dt"/>
+            <xs:element ref="number_iterations"/>
+            <xs:element ref="multiplier"/>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="t_initial" type="xs:decimal"/>
+  <xs:element name="t_end" type="xs:double"/>
+  <xs:element name="n_steps" type="xs:integer"/>
+  <xs:element name="dt_guess" type="xs:decimal"/>
+  <xs:element name="dt_min" type="xs:decimal"/>
+  <xs:element name="dt_max" type="xs:integer"/>
+  <xs:element name="rel_dt_min" type="xs:decimal"/>
+  <xs:element name="rel_dt_max" type="xs:integer"/>
+  <xs:element name="tol" type="xs:decimal"/>
+  <xs:element name="initial_dt" type="xs:double"/>
+  <xs:element name="minimum_dt" type="xs:double"/>
+  <xs:element name="maximum_dt" type="xs:double"/>
+  <xs:element name="number_iterations" type="xs:string"/>
+  <xs:element name="multiplier" type="xs:string"/>
+  <xs:element name="wellbore">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="length"/>
+        <xs:element ref="diameter"/>
+        <xs:element ref="casing_thickness"/>
+        <xs:element ref="pipe_thickness"/>
+        <xs:element ref="roughness"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="casing_thickness" type="xs:NCName"/>
+  <xs:element name="pipe_thickness" type="xs:NCName"/>
+  <xs:element name="roughness" type="xs:NCName"/>
+  <xs:element name="wellbore_ref_pressure" type="xs:NCName"/>
+  <xs:element name="wellbore_ref_enthalpy" type="xs:NCName"/>
+  <xs:element name="heat_exchange_with_formation" type="xs:boolean"/>
+  <xs:element name="reservoir_properties">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="temperature"/>
+        <xs:element ref="thermal_conductivity"/>
+        <xs:element ref="density"/>
+        <xs:element ref="specific_heat_capacity"/>
+        <xs:element ref="pressure"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="productivity_index" type="xs:NCName"/>
+  <xs:element name="output">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="meshes"/>
+          <xs:element ref="prefix"/>
+          <xs:element ref="suffix"/>
+          <xs:element ref="timesteps"/>
+          <xs:element ref="type"/>
+          <xs:element ref="variables"/>
+          <xs:element ref="compress_output"/>
+          <xs:element ref="data_mode"/>
+          <xs:element ref="fixed_output_times"/>
+          <xs:element ref="geometrical_sets"/>
+          <xs:element ref="hdf"/>
+          <xs:element ref="output_iteration_results"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="output_extrapolation_residuals"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="compress_output" type="xs:boolean"/>
+  <xs:element name="data_mode" type="xs:NCName"/>
+  <xs:element name="fixed_output_times" type="xs:string"/>
+  <xs:element name="geometrical_sets">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="geometrical_set"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="hdf">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="chunk_size_bytes"/>
+        <xs:element ref="number_of_files"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="chunk_size_bytes" type="xs:integer"/>
+  <xs:element name="number_of_files" type="xs:integer"/>
+  <xs:element name="output_iteration_results" type="xs:boolean"/>
+  <xs:element name="output_extrapolation_residuals" type="xs:boolean"/>
+  <xs:element name="prefix" type="xs:string"/>
+  <xs:element name="timesteps">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="pair"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="variables">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="variable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="suffix" type="xs:string"/>
+  <xs:element name="linear_solver">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="name"/>
+        <xs:element ref="eigen"/>
+        <xs:element ref="lis"/>
+        <xs:element ref="petsc"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="eigen">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="scaling"/>
+          <xs:element ref="error_tolerance"/>
+          <xs:element ref="max_iteration_step"/>
+          <xs:element ref="precon_type"/>
+          <xs:element ref="solver_type"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="restart"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="error_tolerance" type="xs:double"/>
+  <xs:element name="max_iteration_step" type="xs:integer"/>
+  <xs:element name="precon_type" type="xs:NCName"/>
+  <xs:element name="solver_type" type="xs:NCName"/>
+  <xs:element name="restart" type="xs:integer"/>
+  <xs:element name="lis" type="xs:string"/>
+  <xs:element name="petsc">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="prefix"/>
+        <xs:element ref="parameters"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="temperature" type="xs:NMTOKEN"/>
+  <xs:element name="pressure" type="xs:NMTOKEN"/>
+  <xs:element name="components">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="component"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="name" type="xs:string"/>
+  <xs:element name="initial_amount" type="xs:double"/>
+  <xs:element name="kinetic_reactant">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="initial_amount"/>
+        <xs:element ref="name"/>
+        <xs:element ref="parameters"/>
+        <xs:element ref="chemical_formula"/>
+        <xs:element ref="fix_amount"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="chemical_formula" type="xs:string"/>
+  <xs:element name="fix_amount" type="xs:boolean"/>
+  <xs:element name="expression">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="statement"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="statement" type="xs:string"/>
+  <xs:element name="scaling" type="xs:boolean"/>
+  <xs:element name="parameters">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="include"/>
+        <xs:element ref="parameter"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="curve">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="name"/>
+        <xs:element ref="values"/>
+        <xs:element ref="coords"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="coords" type="xs:string"/>
+  <xs:element name="process_variables">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="process_variable"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="capillary_pressure"/>
+          <xs:element ref="gas_pressure"/>
+        </xs:choice>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="pressure"/>
+          <xs:element ref="temperature"/>
+          <xs:element ref="concentration"/>
+          <xs:element ref="displacement"/>
+          <xs:element ref="phasefield"/>
+          <xs:element ref="total_molar_fraction_contaminant"/>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="velocity"/>
+          <xs:element ref="specific_enthalpy"/>
+        </xs:sequence>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="process_variable">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="components"/>
+        <xs:element ref="mesh"/>
+        <xs:element ref="name"/>
+        <xs:element ref="boundary_conditions"/>
+        <xs:element ref="compensate_non_equilibrium_initial_residuum"/>
+        <xs:element ref="deactivated_subdomains"/>
+        <xs:element ref="initial_condition"/>
+        <xs:element ref="order"/>
+        <xs:element ref="source_terms"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="boundary_conditions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="boundary_condition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="boundary_condition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="geometrical_set"/>
+          <xs:element ref="geometry"/>
+        </xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="component"/>
+          <xs:element ref="mesh"/>
+          <xs:element ref="parameter"/>
+          <xs:element ref="type"/>
+          <xs:element ref="area_parameter"/>
+          <xs:element ref="constraining_process_variable"/>
+          <xs:element ref="constraint_direction"/>
+          <xs:element ref="constraint_threshold"/>
+          <xs:element ref="constraint_type"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="threshold_parameter"/>
+            <xs:element ref="comparison_operator"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="coefficient_pressure"/>
+            <xs:element ref="coefficient_velocity"/>
+            <xs:element ref="coefficient_enthalpy"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="bc_object"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="flush_stdout"/>
+          <xs:element ref="time_interval"/>
+          <xs:sequence>
+            <xs:element ref="constant_name"/>
+            <xs:element ref="coefficient_current_variable_name"/>
+            <xs:element ref="coefficient_other_variable_name"/>
+            <xs:element ref="coefficient_mixed_variables_name"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="alpha"/>
+            <xs:element ref="u_0"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="property_name"/>
+            <xs:element ref="initial_value_parameter"/>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="area_parameter" type="xs:NCName"/>
+  <xs:element name="constraining_process_variable" type="xs:NCName"/>
+  <xs:element name="constraint_direction" type="xs:NCName"/>
+  <xs:element name="constraint_threshold" type="xs:decimal"/>
+  <xs:element name="constraint_type" type="xs:NCName"/>
+  <xs:element name="threshold_parameter" type="xs:NCName"/>
+  <xs:element name="comparison_operator" type="xs:NCName"/>
+  <xs:element name="coefficient_pressure" type="xs:integer"/>
+  <xs:element name="coefficient_velocity" type="xs:integer"/>
+  <xs:element name="coefficient_enthalpy" type="xs:integer"/>
+  <xs:element name="bc_object" type="xs:NCName"/>
+  <xs:element name="constant_name" type="xs:NCName"/>
+  <xs:element name="coefficient_current_variable_name" type="xs:NCName"/>
+  <xs:element name="coefficient_other_variable_name" type="xs:NCName"/>
+  <xs:element name="coefficient_mixed_variables_name" type="xs:NCName"/>
+  <xs:element name="u_0" type="xs:NCName"/>
+  <xs:element name="initial_value_parameter" type="xs:NCName"/>
+  <xs:element name="compensate_non_equilibrium_initial_residuum" type="xs:boolean"/>
+  <xs:element name="deactivated_subdomains">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="deactivated_subdomain"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="deactivated_subdomain">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="time_interval"/>
+          <xs:sequence>
+            <xs:element ref="time_curve"/>
+            <xs:element ref="line_segment"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element ref="material_ids"/>
+        <xs:element minOccurs="0" ref="boundary_parameter"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="time_curve" type="xs:NCName"/>
+  <xs:element name="line_segment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="start"/>
+        <xs:element ref="end"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="material_ids" type="xs:string"/>
+  <xs:element name="boundary_parameter" type="xs:NCName"/>
+  <xs:element name="initial_condition" type="xs:string"/>
+  <xs:element name="order" type="xs:integer"/>
+  <xs:element name="source_terms">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="source_term"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="source_term">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="geometrical_set"/>
+          <xs:element ref="geometry"/>
+        </xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="mesh"/>
+          <xs:element ref="type"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="source_term_object"/>
+        <xs:element minOccurs="0" ref="flush_stdout"/>
+        <xs:element minOccurs="0" ref="component"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="parameter"/>
+          <xs:element ref="anchor_force_constant"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="source_term_object" type="xs:NCName"/>
+  <xs:element name="anchor_force_constant" type="xs:NCName"/>
+  <xs:element name="capillary_pressure" type="xs:NCName"/>
+  <xs:element name="gas_pressure" type="xs:NCName"/>
+  <xs:element name="concentration" type="xs:string"/>
+  <xs:element name="displacement" type="xs:NCName"/>
+  <xs:element name="phasefield" type="xs:NCName"/>
+  <xs:element name="total_molar_fraction_contaminant" type="xs:NCName"/>
+  <xs:element name="velocity" type="xs:NCName"/>
+  <xs:element name="specific_enthalpy" type="xs:NCName"/>
+  <xs:element name="nonlinear_solver">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="linear_solver"/>
+        <xs:element ref="max_iter"/>
+        <xs:element ref="name"/>
+        <xs:element ref="type"/>
+        <xs:element ref="damping"/>
+        <xs:element ref="increment_tolerance"/>
+        <xs:element ref="maximum_iterations"/>
+        <xs:element ref="residuum_tolerance"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="damping" type="xs:decimal"/>
+  <xs:element name="increment_tolerance" type="xs:double"/>
+  <xs:element name="maximum_iterations" type="xs:integer"/>
+  <xs:element name="residuum_tolerance" type="xs:double"/>
+  <xs:element name="properties">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="property"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="property">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="name"/>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="type"/>
+          <xs:element ref="value"/>
+          <xs:element ref="initial_permeability"/>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="b1"/>
+          <xs:element ref="b2"/>
+          <xs:element ref="b3"/>
+          <xs:element ref="minimum_permeability"/>
+        </xs:sequence>
+        <xs:choice>
+          <xs:element ref="specific_latent_heat"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="dvalue"/>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="triple_temperature"/>
+          <xs:element ref="triple_pressure"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="intrinsic_permeabilities"/>
+        <xs:element minOccurs="0" ref="intrinsic_permeability"/>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="mean_frac_distances"/>
+            <xs:element ref="threshold_strains"/>
+            <xs:element ref="fracture_normals"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="initial_aperture"/>
+            <xs:element ref="mean_frac_distance"/>
+            <xs:element ref="threshold_strain"/>
+            <xs:element ref="fracture_normal"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="fracture_rotation_xy"/>
+          <xs:element ref="fracture_rotation_yz"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:element ref="jacobian_factor"/>
+          <xs:sequence>
+            <xs:element ref="mean_type"/>
+            <xs:element ref="dry_thermal_conductivity"/>
+            <xs:element ref="wet_thermal_conductivity"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="initial_porosity"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="minimal_porosity"/>
+          <xs:element ref="maximal_porosity"/>
+        </xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="reference_permeability"/>
+          <xs:element ref="fitting_factor"/>
+          <xs:element ref="cohesion"/>
+          <xs:element ref="friction_angle"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="maximum_permeability"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="parameter_name"/>
+          <xs:element ref="tensile_strength_parameter"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="swelling_pressures"/>
+        <xs:element minOccurs="0" ref="exponents"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="cutoff_value"/>
+          <xs:sequence>
+            <xs:element ref="lower_saturation_limit"/>
+            <xs:element ref="upper_saturation_limit"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="residual_liquid_saturation"/>
+          <xs:element ref="residual_gas_saturation"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="fracture_aperture"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="exponent"/>
+          <xs:element ref="minimum_relative_permeability_liquid"/>
+          <xs:element ref="offset"/>
+          <xs:element ref="p_b"/>
+          <xs:element ref="reference_value"/>
+        </xs:choice>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="lambda"/>
+          <xs:element ref="min_relative_permeability"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:element ref="entry_pressure"/>
+          <xs:element ref="maximum_capillary_pressure"/>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="curve"/>
+            <xs:element ref="independent_variable"/>
+          </xs:choice>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="critical_temperature"/>
+          <xs:element ref="critical_pressure"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:element ref="acentric_factor"/>
+          <xs:sequence>
+            <xs:element ref="steepness"/>
+            <xs:element ref="characteristic_temperature"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="reference_diffusion"/>
+          <xs:element ref="activation_energy"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="reference_temperature"/>
+        <xs:element minOccurs="0" ref="reference_pressure"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="initial_permeability" type="xs:NCName"/>
+  <xs:element name="b1" type="xs:decimal"/>
+  <xs:element name="b2" type="xs:decimal"/>
+  <xs:element name="b3" type="xs:decimal"/>
+  <xs:element name="minimum_permeability" type="xs:double"/>
+  <xs:element name="specific_latent_heat" type="xs:decimal"/>
+  <xs:element name="dvalue">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="variable_name"/>
+        <xs:element ref="expression"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="triple_temperature" type="xs:decimal"/>
+  <xs:element name="triple_pressure" type="xs:decimal"/>
+  <xs:element name="intrinsic_permeabilities" type="xs:string"/>
+  <xs:element name="intrinsic_permeability" type="xs:NMTOKEN"/>
+  <xs:element name="mean_frac_distances" type="xs:string"/>
+  <xs:element name="threshold_strains" type="xs:string"/>
+  <xs:element name="fracture_normals" type="xs:string"/>
+  <xs:element name="mean_frac_distance" type="xs:decimal"/>
+  <xs:element name="threshold_strain" type="xs:double"/>
+  <xs:element name="fracture_normal" type="xs:string"/>
+  <xs:element name="fracture_rotation_xy" type="xs:NCName"/>
+  <xs:element name="fracture_rotation_yz" type="xs:NCName"/>
+  <xs:element name="jacobian_factor" type="xs:integer"/>
+  <xs:element name="mean_type" type="xs:NCName"/>
+  <xs:element name="dry_thermal_conductivity" type="xs:NCName"/>
+  <xs:element name="wet_thermal_conductivity" type="xs:NCName"/>
+  <xs:element name="initial_porosity" type="xs:NCName"/>
+  <xs:element name="minimal_porosity" type="xs:integer"/>
+  <xs:element name="maximal_porosity" type="xs:integer"/>
+  <xs:element name="reference_permeability" type="xs:double"/>
+  <xs:element name="fitting_factor" type="xs:decimal"/>
+  <xs:element name="maximum_permeability" type="xs:double"/>
+  <xs:element name="tensile_strength_parameter" type="xs:double"/>
+  <xs:element name="swelling_pressures" type="xs:string"/>
+  <xs:element name="exponents" type="xs:string"/>
+  <xs:element name="cutoff_value" type="xs:decimal"/>
+  <xs:element name="lower_saturation_limit" type="xs:decimal"/>
+  <xs:element name="upper_saturation_limit" type="xs:decimal"/>
+  <xs:element name="residual_liquid_saturation" type="xs:decimal"/>
+  <xs:element name="residual_gas_saturation" type="xs:decimal"/>
+  <xs:element name="fracture_aperture" type="xs:NCName"/>
+  <xs:element name="exponent">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="reference_condition"/>
+        <xs:element ref="variable_name"/>
+        <xs:element ref="factor"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="factor" type="xs:double"/>
+  <xs:element name="minimum_relative_permeability_liquid" type="xs:double"/>
+  <xs:element name="offset" type="xs:decimal"/>
+  <xs:element name="p_b" type="xs:double"/>
+  <xs:element name="reference_value" type="xs:double"/>
+  <xs:element name="lambda" type="xs:decimal"/>
+  <xs:element name="min_relative_permeability" type="xs:double"/>
+  <xs:element name="entry_pressure" type="xs:decimal"/>
+  <xs:element name="maximum_capillary_pressure" type="xs:decimal"/>
+  <xs:element name="independent_variable">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="reference_condition"/>
+        <xs:element ref="variable_name"/>
+        <xs:element ref="slope"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="slope" type="xs:double"/>
+  <xs:element name="critical_temperature" type="xs:double"/>
+  <xs:element name="critical_pressure" type="xs:double"/>
+  <xs:element name="acentric_factor" type="xs:decimal"/>
+  <xs:element name="steepness" type="xs:decimal"/>
+  <xs:element name="characteristic_temperature" type="xs:decimal"/>
+  <xs:element name="reference_diffusion" type="xs:NCName"/>
+  <xs:element name="activation_energy" type="xs:double"/>
+  <xs:element name="reference_pressure" type="xs:integer"/>
+  <xs:element name="reference_temperature" type="xs:NMTOKEN"/>
+  <xs:element name="property_name" type="xs:NCName"/>
+  <xs:element name="youngs_modulus" type="xs:NCName"/>
+  <xs:element name="poissons_ratio" type="xs:NCName"/>
+  <xs:element name="alpha" type="xs:NCName"/>
+  <xs:element name="friction_angle" type="xs:NMTOKEN"/>
+  <xs:element name="cohesion" type="xs:string"/>
+  <xs:element name="initial_aperture" type="xs:NMTOKEN"/>
+  <xs:element name="specific_heat_capacity" type="xs:NMTOKEN"/>
+  <xs:element name="thermal_conductivity" type="xs:NMTOKEN"/>
+  <xs:element name="length" type="xs:decimal"/>
+  <xs:element name="diameter" type="xs:NMTOKEN"/>
+  <xs:element name="density" type="xs:NMTOKEN"/>
+  <xs:element name="wall_thickness" type="xs:decimal"/>
+  <xs:element name="wall_thermal_conductivity" type="xs:decimal"/>
+  <xs:element name="parameter">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="curve"/>
+        <xs:element ref="expression"/>
+        <xs:element ref="mesh"/>
+        <xs:element ref="name"/>
+        <xs:element ref="parameter"/>
+        <xs:element ref="type"/>
+        <xs:element ref="value"/>
+        <xs:element ref="values"/>
+        <xs:element ref="field_name"/>
+        <xs:element ref="group_id_property"/>
+        <xs:element ref="index_values"/>
+        <xs:element ref="range"/>
+        <xs:element ref="seed"/>
+        <xs:element ref="time_series"/>
+        <xs:element ref="use_local_coordinate_system"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="field_name" type="xs:NCName"/>
+  <xs:element name="group_id_property" type="xs:NCName"/>
+  <xs:element name="index_values">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="index"/>
+        <xs:choice>
+          <xs:element ref="value"/>
+          <xs:element ref="values"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="index" type="xs:integer"/>
+  <xs:element name="range" type="xs:string"/>
+  <xs:element name="seed" type="xs:integer"/>
+  <xs:element name="time_series">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="pair"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="use_local_coordinate_system" type="xs:boolean"/>
+  <xs:element name="geometrical_set">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="geometry"/>
+        <xs:element ref="name"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="pair">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="delta_t"/>
+          <xs:element ref="repeat"/>
+        </xs:choice>
+        <xs:choice minOccurs="0">
+          <xs:element ref="each_steps"/>
+          <xs:sequence>
+            <xs:element ref="time"/>
+            <xs:element ref="parameter_name"/>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="delta_t" type="xs:double"/>
+  <xs:element name="repeat" type="xs:integer"/>
+  <xs:element name="each_steps" type="xs:integer"/>
+  <xs:element name="time" type="xs:integer"/>
+  <xs:element name="component">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="name"/>
+        <xs:element ref="properties"/>
+      </xs:choice>
+      <xs:attribute name="chemical_formula" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="values" type="xs:string"/>
+  <xs:element name="time_interval">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="start"/>
+        <xs:element ref="end"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="flush_stdout" type="xs:boolean"/>
+  <xs:element name="start" type="xs:string"/>
+  <xs:element name="end" type="xs:string"/>
+  <xs:element name="variable_name" type="xs:NCName"/>
+  <xs:element name="parameter_name" type="xs:NCName"/>
+  <xs:element name="reference_condition" type="xs:double"/>
+</xs:schema>
