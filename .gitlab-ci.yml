@@ -74,7 +74,7 @@ tests (XSD) [R]:
     - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
-    - pytest
+    - pytest tests/xsd/test_xsd.py
 
 
 code_quality_ruff [R]:
