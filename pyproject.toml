@@ -37,7 +37,6 @@ dependencies = [
   "scipy>=1.10.1",
   "Pint>=0.22",
   "papermill>=2.4.0",
-  "pandamesh>=0.2.1",
   # meshing algorithm changed with this version
   "typeguard>=4.0.0",
   "lxml>=4.6.0",
@@ -62,7 +61,6 @@ fallback_version = "0.1.0.post0+no-scm" # Manually increment on release!
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 feflow2ogs = 'ogstools.feflowlib._cli:cli'
-shp2msh = 'ogstools.meshlib.shp2msh_cli:cli'
 
 [project.optional-dependencies]
 

@@ -19,7 +19,6 @@ from .region import (
     to_region_tetraeder,
     to_region_voxel,
 )
-from .shape_meshing import read_shape
 
 __all__ = [
     "Boundary",
@@ -36,7 +35,6 @@ __all__ = [
     "difference_matrix",
     "difference_pairwise",
     "meshes_from_gmsh",
-    "read_shape",
     "rect",
     "to_ip_mesh",
     "to_ip_point_cloud",

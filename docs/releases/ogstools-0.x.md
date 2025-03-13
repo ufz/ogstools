@@ -17,6 +17,12 @@ This is not released yet!
   (plot.animate) and can take any plotting function - see the updated example or
   the API reference
 
+- mesh.read_shape (removed function, functionality is not covered anymore)
+
+### Examples
+
+- removed all example with shape files
+
 ## Bugfixes
 
 ## Features
