@@ -196,6 +196,19 @@ tests (win - pip) [R]:
   script:
     - pytest
 
+tests (mac - pip) [R]:
+  stage: test
+  tags: [mac, arm64]
+  rules:
+    - *regression-rules
+  needs: []
+  before_script:
+    - python() { python3.10 "$@"; } # alias don't work in non-interactive shells
+    - *pip-setup-activate
+    - pip install -e ".[pinned,test]"
+  script:
+    - pytest
+
 # Remove -j 1 when this is resolved:
 # https://github.com/pydata/pydata-sphinx-theme/issues/1643
 .docs-script: &docs-script
