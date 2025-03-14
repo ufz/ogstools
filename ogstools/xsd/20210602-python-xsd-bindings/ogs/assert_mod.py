@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import Optional
 
 
 @dataclass
@@ -7,28 +7,28 @@ class ConstantParameter:
     class Meta:
         name = "constantParameter"
 
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
-    value: Optional[str] = field(
+    value: str | None = field(
         default=None,
         metadata={
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
     type: str = field(
         init=False,
         default="Constant",
         metadata={
             "type": "Attribute",
-        }
+        },
     )
 
 
@@ -37,36 +37,36 @@ class CurveParameter:
     class Meta:
         name = "curveParameter"
 
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
-    curve: Optional[str] = field(
+    curve: str | None = field(
         default=None,
         metadata={
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
-    parameter: Optional[str] = field(
+    parameter: str | None = field(
         default=None,
         metadata={
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
     type: str = field(
         init=False,
         default="CurveScaled",
         metadata={
             "type": "Attribute",
-        }
+        },
     )
 
 
@@ -78,25 +78,25 @@ class OpenGeoSysProjectType:
             "type": "Element",
             "namespace": "",
             "required": True,
-        }
+        },
     )
-    any_element: List[object] = field(
+    any_element: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
             "namespace": "##any",
-        }
+        },
     )
 
     @dataclass
     class Parameters:
-        parameter: List[Union[ConstantParameter, CurveParameter]] = field(
+        parameter: list[ConstantParameter | CurveParameter] = field(
             default_factory=list,
             metadata={
                 "type": "Element",
                 "namespace": "",
                 "min_occurs": 1,
-            }
+            },
         )
 
 

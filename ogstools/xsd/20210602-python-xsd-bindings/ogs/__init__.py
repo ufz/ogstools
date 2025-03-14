@@ -1,8 +1,8 @@
 from ogs.open_geo_sys_project import (
-    OpenGeoSysProject,
-    OpenGeoSysProjectType,
     ConstantParameter,
     CurveParameter,
+    OpenGeoSysProject,
+    OpenGeoSysProjectType,
 )
 
 __all__ = [
