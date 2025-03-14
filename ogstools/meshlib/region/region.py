@@ -126,7 +126,7 @@ def to_region_prism(layer_set: LayerSet, resolution: float) -> RegionSet:
 
     from ogstools._find_ogs import cli
 
-    ret = cli.createLayeredMeshFromRasters(  # type: ignore[union-attr]
+    ret = cli().createLayeredMeshFromRasters(  # type: ignore[union-attr]
         i=raster_vtu, r=rastered_layers_txt, o=outfile
     )
     if ret:
@@ -288,7 +288,7 @@ def to_region_tetraeder(layer_set: LayerSet, resolution: int) -> RegionSet:
 
     from ogstools._find_ogs import cli
 
-    ret_smesh = cli.createTetgenSmeshFromRasters(  # type: ignore[union-attr]
+    ret_smesh = cli().createTetgenSmeshFromRasters(  # type: ignore[union-attr]
         i=raster_vtu, r=rastered_layers_txt1, o=smesh_file
     )
     if ret_smesh:
@@ -378,7 +378,7 @@ def to_region_voxel(layer_set: LayerSet, resolution: list) -> RegionSet:
 
     from ogstools._find_ogs import cli
 
-    ret = cli.Layers2Grid(  # type: ignore[union-attr]
+    ret = cli().Layers2Grid(  # type: ignore[union-attr]
         i=layers_txt,
         o=outfile,
         x=resolution[0],

@@ -117,9 +117,14 @@ def status(verbose: bool = False) -> bool:
     return not msg
 
 
-def _get_cli() -> Any:
+def cli() -> Any:
     """
-    Check if OGS is installed correctly.
+    Allows access to ogs binary tools via python and performs checks to see if OGS is installed correctly.
+
+    Example
+    cli().vtkdiff("file1.vtu", "file2.vtu")
+
+    :returns: A CLI object that supports ogs command line tools.
     """
 
     has_ogs_bin_path = read_ogs_path() is not None
@@ -147,6 +152,3 @@ def _get_cli() -> Any:
         return CLI_ON_PATH(parent)
 
     return None
-
-
-cli = _get_cli()
