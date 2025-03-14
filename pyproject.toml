@@ -40,7 +40,6 @@ dependencies = [
   # meshing algorithm changed with this version
   "typeguard>=4.0.0",
   "lxml>=4.6.0",
-  "ogs>=6.5.4",
   "pandas>=2.2.3",
 ]
 
@@ -211,7 +210,7 @@ pinned = [
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
-test = ["coverage", "parameterized","pytest", "pytest-xdist", "pytest-dependency",]
+test = ["coverage", "parameterized","pytest", "pytest-xdist", "pytest-dependency"]
 docs = [
   "livereload",
   "myst-parser",
@@ -229,6 +228,7 @@ docs = [
 feflow = [
   "ifm_contrib>=0.2.4",
 ]
+ogs = ["ogs>=6.5.4"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
