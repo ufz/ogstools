@@ -57,7 +57,7 @@ class Surface:
 
         from ogstools._find_ogs import cli
 
-        ret = cli.Mesh2Raster(  # type: ignore[union-attr]
+        ret = cli().Mesh2Raster(  # type: ignore[union-attr]
             i=str(self.filename), o=str(outfile), c=resolution
         )
 

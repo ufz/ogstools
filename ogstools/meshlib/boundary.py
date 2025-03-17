@@ -76,7 +76,7 @@ class Layer(Boundary):
 
         from ogstools._find_ogs import cli
 
-        ret = cli.createIntermediateRasters(  # type: ignore[union-attr]
+        ret = cli().createIntermediateRasters(  # type: ignore[union-attr]
             file1=top_raster,
             file2=bottom_raster,
             o=outfile,
@@ -115,7 +115,7 @@ class LocationFrame:
         """
         from ogstools._find_ogs import cli
 
-        cli.generateGeometry(  # type: ignore[union-attr]
+        cli().generateGeometry(  # type: ignore[union-attr]
             geometry_name="SceneRectangle",
             x0=str(self.xmin),
             x1=str(self.xmax),

@@ -2,6 +2,10 @@
 
 This is not released yet!
 
+# Breaking changes
+
+- OGS Wheel (`pip install ogs`) is now an optional (before mandatory) dependency of OGSTools. OGSTools requests either a OGS wheel OR a custom OGS made available on PATH or OGS_BIN_PATH.
+
 ## API breaking changes
 
 - meshseries.probe now squeezes the returned array: it seems more intuitive
@@ -22,6 +26,8 @@ This is not released yet!
 ### Examples
 
 - removed all example with shape files
+
+# Changes (non API-breaking)
 
 ## Bugfixes
 
@@ -44,6 +50,7 @@ This is not released yet!
 - OGS_BIN_PATH is read, this allows to specify a location of a custom OGS (ogs wheel not needed)
 - Improved errors and warnings when system has multiple or no OGS on PATH
 - ogstools.status(verbose=True) prints status of OGS installation
+- ogstools.cli() return an object for access to OGS command line tools (e.g. vtkdiff via `cli().vtkdiff(...)`)
 
 ## Infrastructure
 
