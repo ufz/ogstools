@@ -51,6 +51,7 @@ This is not released yet!
 - Improved errors and warnings when system has multiple or no OGS on PATH
 - ogstools.status(verbose=True) prints status of OGS installation
 - ogstools.cli() return an object for access to OGS command line tools (e.g. vtkdiff via `cli().vtkdiff(...)`)
+- Enable saving mesh to ASCII
 
 ## Infrastructure
 
