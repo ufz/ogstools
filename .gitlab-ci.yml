@@ -179,6 +179,20 @@ tests (arch - conda - ogs custom latest) [M]:
 
 
 
+
+tests (arch - pip - no OGS) [R]:
+  stage: test
+  tags: [shell, envinf]
+  needs: []
+  before_script:
+    - *pip-setup-activate
+    - pip install -e .[pinned,test]
+    - *pip-setup-extra-headless
+  script:
+    - python -c "import ogstools as ot; ot.status(verbose=True)"
+    - pytest -m "not (tools or system)"
+
+
 tests coverage (arch - container) [R]:
   stage: test
   script:
