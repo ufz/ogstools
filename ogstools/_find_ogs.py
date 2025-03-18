@@ -9,7 +9,7 @@ from typing import Any, cast
 def find_all_executables(cmd: str) -> list[str]:
     """Find all occurrences of an executable in PATH (cross-platform)."""
     if platform.system() == "Windows":
-        command = ["where", cmd]
+        command = ["where.exe", cmd]
     else:
         command = ["which", "-a", cmd]
 
