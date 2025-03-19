@@ -9,6 +9,8 @@ from importlib import metadata
 
 from . import logparser, plot, variables
 from ._find_ogs import cli, status
+from .materiallib.core.material_manager import MaterialManager  # noqa: F401
+from .materiallib.core.media import MediaSet  # noqa: F401
 from .meshlib import (
     Mesh,  # noqa: F401
     Meshes,  # noqa: F401
