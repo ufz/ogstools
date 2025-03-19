@@ -11,6 +11,8 @@ from . import logparser, plot, variables
 from ._find_ogs import cli, status
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
+from .materiallib import MaterialLib
+
 
 with suppress(ImportError):
     from .feflowlib import FeflowModel  # noqa: F401
@@ -21,4 +23,4 @@ __authors__ = metadata.metadata(__package__)["Author-email"]
 
 del metadata  # optional, avoids polluting the results of dir(__package__)
 
-__all__ = ["cli", "logparser", "plot", "status", "variables"]
+__all__ = ["cli", "logparser", "plot", "status", "variables" ,"MaterialLib"]
