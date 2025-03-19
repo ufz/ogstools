@@ -68,7 +68,9 @@ def cli() -> int:
         filename=args.filename, dim=args.dim, reindex=args.reindex, log=args.log
     )
 
-    output_basename = args.filename.stem if args.prefix == "" else args.prefix
+    output_basename = (
+        Path(args.filename).stem if args.prefix == "" else args.prefix
+    )
 
     for name, mesh in meshes.items():
         if args.delz:
