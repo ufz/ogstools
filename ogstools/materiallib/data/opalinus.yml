@@ -1,0 +1,32 @@
+name: Opalinuston
+group: medium
+#type: Solid
+solid_properties:
+  density:
+    value: 2500
+    unit: kg/m³
+  specific_heat_capacity:
+    value: 800
+    unit: J/(kg·K)
+  thermal_conductivity:
+    value: 2.0
+    unit: W/(m·K)
+  thermal_expansivity:
+    value: 3.0e-6
+    unit: 1/K
+medium_properties:
+  porosity:
+    value: 0.15
+    unit: 1
+  permeability:
+    value: 1.0e-18
+    unit: m²
+  tortuosity:
+    value: 1.0
+    unit: 1
+  saturation:
+    type: VanGenuchten
+    residual_liquid_saturation: 0.01
+    residual_gas_saturation: 1e-15
+    exponent: 0.45
+    p_b: 1.8e6
