@@ -14,19 +14,21 @@ from .common_ogs_analyses import (
     analysis_simulation_termination,
     analysis_time_step,
     fill_ogs_context,
+    model_and_clock_time,
     time_step_vs_iterations,
 )
 from .log_parser import parse_file
 from .regexes import ogs_regexes
 
 __all__ = [
-    "parse_file",
     "analysis_convergence_coupling_iteration",
-    "analysis_simulation",
     "analysis_convergence_newton_iteration",
+    "analysis_simulation",
     "analysis_simulation_termination",
     "analysis_time_step",
     "fill_ogs_context",
-    "time_step_vs_iterations",
+    "model_and_clock_time",
     "ogs_regexes",
+    "parse_file",
+    "time_step_vs_iterations",
 ]

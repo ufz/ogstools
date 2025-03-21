@@ -7,7 +7,7 @@
 from contextlib import suppress
 from importlib import metadata
 
-from . import plot, variables
+from . import logparser, plot, variables
 from ._find_ogs import cli, status
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
@@ -21,4 +21,4 @@ __authors__ = metadata.metadata(__package__)["Author-email"]
 
 del metadata  # optional, avoids polluting the results of dir(__package__)
 
-__all__ = ["plot", "variables", "status", "cli"]
+__all__ = ["cli", "logparser", "plot", "status", "variables"]

@@ -185,6 +185,40 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     return pt
 
 
+def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
+    """Process the dataframe of an OGS log for inspection of data over time.
+
+    The resulting dataframe's index is 'model_time'. The remaining columns
+    consist of: 'time_step', 'step_size', 'iterations' and 'clock_time'.
+
+    :param df:  The dataframe of an OGS log
+
+    :returns:   The processed dataframe.
+
+    """
+    interest, context = (["time_step", "step_size"], ["step_start_time"])
+    _check_input(df, interest, context)
+    df_time = df.pivot_table(interest, context, sort=False)
+    _check_output(df_time, interest, context)
+    # NOTE: iteration_number may contain some faulty offset, but the
+    # following aggregation works anyway, as we take the max value.
+    interest, context = (["iteration_number"], ["time_step", "step_start_time"])
+    _check_input(df, interest, context)
+    df["step_start_time"] = df["step_start_time"].ffill()
+    df_iter = df.pivot_table(interest, context, aggfunc=np.max, sort=False)
+    # this trick handles the case when the data is one element short
+    # which might be the case if the simulation is still running.
+    iterations = np.zeros(len(df_time))
+    iterations[-len(df_iter) :] = df_iter["iteration_number"].to_numpy()
+    df_time["iterations"] = iterations
+    # TODO: output_times + something else is still missing here
+    sol_times = df["time_step_finished_time"].dropna().to_numpy()
+    clock_time = np.zeros(len(df_time))
+    clock_time[-len(sol_times) :] = np.cumsum(sol_times)
+    df_time["clock_time"] = clock_time
+    return df_time.rename_axis("model_time")
+
+
 def analysis_simulation_termination(df: pd.DataFrame) -> pd.DataFrame:
     # For full print of messages consider setup jupyter notebook:
     # pd.set_option('display.max_colwidth', None)

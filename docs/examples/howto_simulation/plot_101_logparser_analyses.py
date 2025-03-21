@@ -12,20 +12,20 @@ and for the **staggered scheme** we use a prj from
 
 """
 
+# sphinx_gallery_start_ignore
+
+# sphinx_gallery_thumbnail_number = -1
+
+# sphinx_gallery_end_ignore
+
 # %%
 import pandas as pd
 
+import ogstools as ot
 from ogstools.examples import (
+    log_adaptive_timestepping,
     log_const_viscosity_thermal_convection,
     log_staggered,
-)
-from ogstools.logparser import (
-    analysis_convergence_coupling_iteration,
-    analysis_convergence_newton_iteration,
-    analysis_time_step,
-    fill_ogs_context,
-    parse_file,
-    time_step_vs_iterations,
 )
 
 pd.set_option("display.max_rows", 8)  # for visualization only
@@ -35,10 +35,9 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 # thoroughly explained in
 # :ref:`sphx_glr_auto_examples_howto_simulation_plot_102_logparser_advanced.py`.
 
-log = log_const_viscosity_thermal_convection
-records = parse_file(log)
+records = ot.logparser.parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
-df_log = fill_ogs_context(df_records)
+df_log = ot.logparser.fill_ogs_context(df_records)
 
 # %%
 # Analysis of iterations per time step
@@ -48,7 +47,7 @@ df_log = fill_ogs_context(df_records)
 # (Section: Use predefined analyses)
 #
 # :py:mod:`ogstools.logparser.analysis_time_step`
-df_ts_it = time_step_vs_iterations(df_log)
+df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
 df_ts_it
 
 
@@ -61,7 +60,7 @@ df_ts_it
 # as output time [s], step size [s], time step solution time [s], assembly time [s],
 # Dirichlet time [s], and linear solver time [s].
 
-df_ts = analysis_time_step(df_log)
+df_ts = ot.logparser.analysis_time_step(df_log)
 df_ts = df_ts.loc[0]
 # Removing MPI_process (index=0) from result (all are 0) for serial log.
 df_ts
@@ -101,7 +100,7 @@ df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
 
 # %%
 
-analysis_convergence_newton_iteration(df_log)
+ot.logparser.analysis_convergence_newton_iteration(df_log)
 
 
 # %%
@@ -113,10 +112,24 @@ analysis_convergence_newton_iteration(df_log)
 # `ogs benchmark: HeatTransportInStationaryFlow
 # <https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj>`_
 #
-log = log_staggered
-records = parse_file(log)
+records = ot.logparser.parse_file(log_staggered)
 df_records = pd.DataFrame(records)
-df_log = fill_ogs_context(df_records)
+df_log = ot.logparser.fill_ogs_context(df_records)
 
 # Only for staggered coupled processes !
-analysis_convergence_coupling_iteration(df_log)
+ot.logparser.analysis_convergence_coupling_iteration(df_log)
+
+# %% [markdown]
+# Analysis of model time and clock time
+# -------------------------------------
+# The :py:mod:`ogstools.logparser.model_and_clock_time` function allows to
+# examine needed iterations, clock time, and step size over model time per
+# attempted time step. This is especially useful to analyze the runtime
+# behaviour of a simulation which employs adaptive time stepping.
+
+# %%
+records = ot.logparser.parse_file(log_adaptive_timestepping)
+df_records = pd.DataFrame(records)
+df_log = ot.logparser.fill_ogs_context(df_records)
+df_t = ot.logparser.model_and_clock_time(df_log)
+df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)

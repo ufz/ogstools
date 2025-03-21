@@ -1,11 +1,14 @@
 from collections import defaultdict, namedtuple
 
+import numpy as np
 import pandas as pd
 import pytest
+from dateutil import parser
 
 from ogstools.examples import (
     debug_parallel_3,
     info_parallel_1,
+    log_adaptive_timestepping,
     serial_convergence_long,
     serial_critical,
     serial_info,
@@ -17,6 +20,7 @@ from ogstools.logparser import (
     analysis_simulation_termination,
     analysis_time_step,
     fill_ogs_context,
+    model_and_clock_time,
     parse_file,
     time_step_vs_iterations,
 )
@@ -121,7 +125,7 @@ class TestLogparser:
         records = parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
         df_st = analysis_simulation_termination(df_records)
-        status = df_st.empty  # No errors assumed
+        status = len(df_st) == 2  # No errors assumed
         assert status  #
         if not (status):
             print(df_st)
@@ -156,9 +160,9 @@ class TestLogparser:
 
     def test_serial_critical(self):
         records = parse_file(serial_critical)
-        assert len(records) == 4
+        assert len(records) == 6
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 4
+        assert len(df_records) == 6
         df_st = analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -167,9 +171,9 @@ class TestLogparser:
 
     def test_serial_warning_only(self):
         records = parse_file(serial_warning_only)
-        assert len(records) == 1
+        assert len(records) == 3
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 1
+        assert len(df_records) == 3
         df_st = analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -185,3 +189,37 @@ class TestLogparser:
         assert df_tsi.loc[0, "iteration_number"] == 1
         assert df_tsi.loc[1, "iteration_number"] == 6
         assert df_tsi.loc[10, "iteration_number"] == 5
+
+    def test_model_and_clock_time(self):
+        records = parse_file(log_adaptive_timestepping)
+        df_log = fill_ogs_context(pd.DataFrame(records))
+        df_time = model_and_clock_time(df_log)
+
+        assert np.isclose(np.max(df_time["step_size"]), 0.48490317342720013), (
+            f"Maximum step_size {np.max(df_time['step_size'])} does not match "
+            "the value in the log."
+        )
+        assert (np.min(df_time["step_size"])) == 0.0001, (
+            f"Minimum step_size {np.min(df_time['step_size'])} does not match "
+            "the value in the log."
+        )
+        assert (np.max(df_time["iterations"])) == 17, (
+            f"Maximum iterations {np.max(df_time['iterations'])} does not "
+            "match the value in the log."
+        )
+        assert np.isclose(np.mean(df_time["iterations"]), 5.476190476190476), (
+            f"Mean number of iterations {np.mean(df_time['iterations'])} does "
+            "not add up to the expected value. Some data might be missing."
+        )
+        t_start, t_end = map(
+            parser.parse, df_log["message"].to_numpy()[[0, -2]]
+        )
+        assert np.any(
+            np.diff(df_time.index) < 0
+        ), "No reduction in model_time measured, contrary to the example data."
+        final_clock_time = df_time["clock_time"].to_numpy()[-1]
+        run_time = (t_end - t_start).seconds
+        assert np.isclose(final_clock_time, run_time, rtol=0.02), (
+            f"Difference between final clock_time {final_clock_time} and "
+            f"total_runtime {run_time} from timestamps is to large."
+        )
