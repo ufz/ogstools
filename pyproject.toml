@@ -47,6 +47,9 @@ dependencies = [
 "Bug Tracker" = 'https://discourse.opengeosys.org'
 "Source Code" = 'https://gitlab.opengeosys.org/ogs/tools/ogstools'
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ogstools*"]
