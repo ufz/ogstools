@@ -1,0 +1,50 @@
+name: concrete
+group: medium
+solid_properties:
+  density:
+    - type: Constant
+      value: 2400
+      unit: kg/m³
+  specific_heat_capacity:
+    - type: Constant
+      value: 880
+      unit: J/(kg·K)
+  thermal_conductivity:
+    - type: Constant
+      value: 1.4
+      unit: W/(m·K)
+  thermal_expansivity:
+    - type: Constant
+      value: 1.0e-5
+      unit: 1/K
+medium_properties:
+  porosity:
+    - type: Constant
+      value: 0.12
+      unit: 1
+  permeability:
+    - type: Constant
+      value: 1.0e-18
+      unit: m²
+  saturation:
+    - type: VanGenuchten
+      residual_liquid_saturation: 0.05
+      residual_gas_saturation: 1e-15
+      exponent: 0.6
+      p_b: 2.0e6
+  bishops_effective_stress:
+    - type: function
+      value: 1.0
+      unit: 1
+  biot_coefficient:
+    - type: Constant
+      value: 0.6
+      unit: 1
+  youngs_modulus:
+    - type: Constant
+      value: 3.e10
+      unit: Pa
+  poisson_ratio:
+    - type: Constant
+      value: 0.2
+      unit: 1
