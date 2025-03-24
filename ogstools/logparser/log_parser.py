@@ -10,50 +10,21 @@
 #              http://www.opengeosys.org/project/license
 
 import re
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from ogstools.logparser.regexes import Log, ogs_regexes
+from ogstools.logparser.regexes import Log, MPIProcess, ogs_regexes
 
 
-def _try_match_parallel_line(
-    line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
+def _try_match_line(
+    line: str, line_nr: int, regex: re.Pattern, log_type: type[Log], mpi: bool
 ) -> Any | None:
     if match := regex.match(line):
         # Line , Process, Type specific
-        ts = pattern_class.type_str()
-        types = (
-            str,
-            int,
-            int,
-        ) + tuple(pattern_class.__annotations__.values())
-        match_with_line = (
-            ts,
-            line_nr,
-        ) + match.groups()
-        return [
-            ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
-        ]
-    return None
-
-
-def _try_match_serial_line(
-    line: str, line_nr: int, regex: re.Pattern, pattern_class: type[Log]
-) -> list[tuple[str, Log]] | None:
-    if match := regex.match(line):
-        # Line , Process, Type specific
-        ts = pattern_class.type_str()
-        types = (
-            str,
-            int,
-            int,
-        ) + tuple(pattern_class.__annotations__.values())
-        match_with_line = (
-            ts,
-            line_nr,
-            0,
-        ) + match.groups()
+        ts = log_type.type_str()
+        types = (str, int, int) + tuple(log_type.__annotations__.values())
+        optional_mpi_id = () if mpi else (0,)
+        match_with_line = (ts, line_nr) + optional_mpi_id + match.groups()
         return [
             ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
         ]
@@ -113,21 +84,13 @@ def parse_file(
     file_name = Path(file_name)
     parallel_log = force_parallel or mpi_processes(file_name) > 1
 
-    if parallel_log:
-        process_regex = "\\[(\\d+)\\]\\ "
-        try_match = _try_match_parallel_line
-    else:
-        process_regex = ""
-        try_match = _try_match_serial_line
-
-    def compile_re_fn(mpi_process_regex: str) -> Callable[[str], re.Pattern]:
-        return lambda regex: re.compile(mpi_process_regex + regex)
-
-    compile_re = compile_re_fn(process_regex)
-
     if ogs_res is None:
         ogs_res = ogs_regexes()
-    patterns = [(compile_re(k), v) for k, v in ogs_res]
+    patterns = []
+    for regex, log_type in ogs_res:
+        mpi_condition = parallel_log and issubclass(log_type, MPIProcess)
+        mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
+        patterns.append((re.compile(mpi_process_regex + regex), log_type))
 
     number_of_lines_read = 0
     with file_name.open() as file:
@@ -141,9 +104,12 @@ def parse_file(
             ):
                 break
 
-            for key, value in patterns:
-                if r := try_match(line, number_of_lines_read, key, value):
-                    records.append(value(*r))
+            for regex, log_type in patterns:
+                mpi_line = parallel_log and issubclass(log_type, MPIProcess)
+                if r := _try_match_line(
+                    line, number_of_lines_read, regex, log_type, mpi_line
+                ):
+                    records.append(log_type(*r))
                     break
 
     return records

@@ -117,6 +117,7 @@ log_const_viscosity_thermal_convection = (
 )
 log_staggered = _logs_dir / "staggered_heat_transport_in_stationary_flow.log"
 log_parallel = _logs_dir / "steady_state_diffusion_parallel.log"
+log_adaptive_timestepping = _logs_dir / "serial_adaptive_timestepping.log"
 info_parallel_1 = _logs_dir / "parallel_1_info.txt"
 debug_parallel_3 = _logs_dir / "parallel_3_debug.txt"
 serial_convergence_long = _logs_dir / "serial_convergence_long.txt"

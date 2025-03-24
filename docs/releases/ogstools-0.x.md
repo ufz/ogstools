@@ -20,6 +20,8 @@ This is not released yet!
 
 ## Features
 
+- new logparser analysis to inspect simulation behaviour over clock time and model time
+
 ## Infrastructure
 
 ### Tests

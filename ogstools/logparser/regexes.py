@@ -47,6 +47,11 @@ class MPIProcess(Info):
 
 
 @dataclass
+class GlobalProcess(Info):
+    mpi_process: int
+
+
+@dataclass
 class AssemblyTime(MPIProcess, Info):
     assembly_time: float
 
@@ -169,6 +174,16 @@ class WarningMessage(MPIProcess, WarningType):
     message: str
 
 
+@dataclass
+class SimulationStartTime(GlobalProcess, Info):
+    message: str
+
+
+@dataclass
+class SimulationEndTime(MPIProcess, Info):
+    message: str
+
+
 def ogs_regexes() -> list[tuple[str, type[Log]]]:
     """
     Defines regular expressions for parsing OpenGeoSys log messages.
@@ -238,4 +253,12 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
         ("critical: (.*)", CriticalMessage),
         ("error: (.*)", ErrorMessage),
         ("warning: (.*)", WarningMessage),
+        (
+            r"info: OGS started on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            SimulationStartTime,
+        ),
+        (
+            r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            SimulationEndTime,
+        ),
     ]

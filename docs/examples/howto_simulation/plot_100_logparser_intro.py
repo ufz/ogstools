@@ -18,19 +18,13 @@ Here we utilize the project file from the benchmark titled:
 # For detailed explanation see all sections below.
 import pandas as pd
 
-from ogstools.examples import (
-    log_const_viscosity_thermal_convection,
-)
-from ogstools.logparser import (
-    fill_ogs_context,
-    parse_file,
-    time_step_vs_iterations,
-)
+import ogstools as ot
+from ogstools.examples import log_const_viscosity_thermal_convection
 
-records = parse_file(log_const_viscosity_thermal_convection)
+records = ot.logparser.parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
-df_log = fill_ogs_context(df_records)
-df_ts_it = time_step_vs_iterations(df_log)
+df_log = ot.logparser.fill_ogs_context(df_records)
+df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
 df_ts_it
 
 # %%
@@ -68,9 +62,9 @@ df_ts_it
 # location of the ogs log file.
 print(log_const_viscosity_thermal_convection)
 # %%
-records = parse_file(log_const_viscosity_thermal_convection)
+records = ot.logparser.parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
-df_log = fill_ogs_context(df_records)
+df_log = ot.logparser.fill_ogs_context(df_records)
 
 # %%
 # Use predefined analyses
@@ -86,7 +80,7 @@ df_log = fill_ogs_context(df_records)
 # `OGS Developer Guide - log and debug output
 # <https://www.opengeosys.org/docs/devguide/advanced/log-and-debug-output>`_
 
-df_ts_it = time_step_vs_iterations(df_log)
+df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
 # The result is a pandas.DataFrame. You may manipulate the dataframe to your
 # needs with pandas functionality.
 pd.set_option("display.max_rows", 8)  # for visualization only
