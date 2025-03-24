@@ -1545,182 +1545,128 @@ class TestiOGS:
             else:
                 assert line == lines_ref[i]
 
-    def test_model_run(self) -> NoReturn:
-        prjfile = prj_tunnel_trm
-        # dummy *.SIF file
-        sif_file = tempfile.NamedTemporaryFile(suffix=".sif")
-        # dummy *.notSIF file
-        x_file = tempfile.NamedTemporaryFile(suffix=".x")
-        # dummy directory
-        sing_dir = tempfile.TemporaryDirectory()
+    @pytest.mark.parametrize(
+        ("path", "container", "err"),
+        [
+            ("no/dir", None, r"The specified path is not a directory.*"),
+            (None, "dummy", r"The specific container-path is not a file.*"),
+            (None, ".x", r"The specific file is not a Singularity container.*"),
+        ],
+    )
+    def test_wrong_run_args(
+        self, tmp_path: Path, path: str | None, container: str | None, err: str
+    ) -> NoReturn:
+        model = Project(input_file=prj_tunnel_trm, output_file=prj_tunnel_trm)
+        (tmp_path / str(container)).touch()
+        with tempfile.NamedTemporaryFile(suffix=container, dir=tmp_path) as sif:
+            is_suffix = isinstance(container, str) and container[0] == "."
+            container_path = sif.name if is_suffix else container
+            with pytest.raises(RuntimeError, match=err):
+                model.run_model(path=path, container_path=container_path)
 
-        # case: path is not a dir
-        model = Project(input_file=prjfile, output_file=prjfile)
-        with pytest.raises(
-            RuntimeError, match=r"The specified path is not a directory.*"
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason="Singularity is not available on Windows.",
+    )
+    def test_singularity_not_found(self) -> NoReturn:
+        model = Project(input_file=prj_tunnel_trm, output_file=prj_tunnel_trm)
+        singularity_not_found = r"The Singularity executable was not found.*"
+        with (
+            tempfile.TemporaryDirectory() as sing_dir,
+            tempfile.NamedTemporaryFile(suffix=".sif") as sif,
         ):
-            model.run_model(path="not/a/dir", container_path=sif_file.name)
+            # Singularity executable not found without path:
+            if shutil.which("singularity") is None:
+                with pytest.raises(RuntimeError, match=singularity_not_found):
+                    model.run_model(container_path=sif.name)
 
-        # case: container_path is not a file:
-        with pytest.raises(
-            RuntimeError, match=r"The specific container-path is not a file.*"
-        ):
-            model.run_model(container_path="not/a/file")
+            # Singularity executable not found in path:
+            with pytest.raises(RuntimeError, match=singularity_not_found):
+                model.run_model(path=sing_dir, container_path=sif.name)
 
-        # case: container_path is not a *.sif file
-        with pytest.raises(
-            RuntimeError,
-            match=r"The specific file is not a Singularity container.*",
-        ):
-            model.run_model(container_path=x_file.name)
+    @pytest.fixture()
+    def temp_dir(self, tmp_path: Path) -> Path:
+        return tmp_path
 
-        # case Singularity executable not found without path
-        if (
-            shutil.which("singularity") is None
-            and platform.system() != "Windows"
-        ):
-            with pytest.raises(
-                RuntimeError,
-                match=r"The Singularity executable was not found.*",
-            ):
-                model.run_model(container_path=sif_file.name)
+    @pytest.fixture(params=[1, 2, 4, 8])
+    def num_threads(self, request: pytest.FixtureRequest) -> int:
+        return request.param
 
-        # case Singularity executable not found in path
-        if platform.system() != "Windows":
-            with pytest.raises(
-                RuntimeError,
-                match=r"The Singularity executable was not found.*",
-            ):
-                model.run_model(
-                    path=sing_dir.name, container_path=sif_file.name
-                )
+    @pytest.fixture(params=["OMP_NUM_THREADS", "OGS_ASM_THREADS"])
+    def thread_type(self, request: pytest.FixtureRequest) -> int:
+        return request.param
 
-        # clean up the temporary dir
-        sing_dir.cleanup()
-
-    @pytest.mark.system()
-    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
-    def test_OMP_NUM_THREADS(self, num_threads) -> NoReturn:
-        temp = Path(tempfile.mkdtemp())
-
-        vtu_file = temp / "bhe_simple.vtu"
-        gen_bhe_mesh(
-            length=5,
-            width=5,
-            layer=[20],
-            groundwater=[],
-            BHE_Array=[
-                BHE(x=2.5, y=2.5, z_begin=0, z_end=-18, borehole_radius=0.076)
-            ],
-            meshing_type="prism",
-            out_name=vtu_file,
-            target_z_size_coarse=2,
-            target_z_size_fine=1,
-            inner_mesh_size=1,
-            outer_mesh_size=2.5,
-            n_refinement_layers=1,
-            dist_box_x=1.5,
-            dist_box_y=1.5,
-        )
-
-        log_OMP_NUM_THREADS = temp / "log_OMP_NUM_THREADS.txt"
-        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
-
-        model = Project(
-            input_file=prj_heat_transport_bhe_simple,
-            output_file=temp / "test_Threads.prj",
-            OMP_NUM_THREADS=num_threads,
-        )
-
-        wrapper = (
-            f"echo %OMP_NUM_THREADS% > {log_OMP_NUM_THREADS.resolve()} && echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
-            if sys.platform == "win32"
-            else f"echo $OMP_NUM_THREADS > {log_OMP_NUM_THREADS.resolve()} && echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
-        )
-
-        model.write_input()
-        model.run_model(
-            write_logs=True,
-            wrapper=wrapper,
-            write_prj_to_pvd=False,
-            args=f"-o {temp.resolve()}",
-        )
-
-        assert (
-            log_OMP_NUM_THREADS.exists()
-        ), f"Log file {log_OMP_NUM_THREADS} was not created."
-        assert (
-            log_OGS_ASM_THREADS.exists()
-        ), f"Log file {log_OGS_ASM_THREADS} was not created."
-
-        with log_OMP_NUM_THREADS.open("r") as log_file:
-            omp_num_threads = log_file.readline().strip()
-            assert (
-                omp_num_threads.isdigit()
-            ), f"Invalid OMP_NUM_THREADS value: {omp_num_threads}"
-            assert (
-                int(omp_num_threads) == num_threads
-            ), f"Expected OMP_NUM_THREADS={num_threads}"
-
-        with log_OGS_ASM_THREADS.open("r") as log_file:
-            omp_num_threads = log_file.readline().strip()
-            assert (
-                omp_num_threads.isdigit()
-            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
-            assert (
-                int(omp_num_threads) == num_threads
-            ), f"Expected OGS_ASM_THREADS={num_threads}"
-
-    @pytest.mark.system()
-    @pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
-    def test_OGS_ASM_THREADS(self, num_threads) -> NoReturn:
-        temp = Path(tempfile.mkdtemp())
-        meshname = temp / "cuboid.msh"
-
-        cuboid(
-            lengths=1.0,
-            n_edge_cells=1,
-            n_layers=1,
-            structured_grid=True,
-            out_name=meshname,
-            msh_version=None,
-        )
-
+    @pytest.fixture()
+    def cuboid_model(
+        self, temp_dir: Path, num_threads: int, thread_type: str
+    ) -> Project:
+        meshname = temp_dir / "cuboid.msh"
+        cuboid(lengths=1.0, n_edge_cells=1, n_layers=1, out_name=meshname)
         meshes = meshes_from_gmsh(meshname, dim=[1, 3], log=False)
         for name, mesh in meshes.items():
             pv.save_meshio(Path(meshname.parents[0], name + ".vtu"), mesh)
 
-        log_OGS_ASM_THREADS = temp / "log_OGS_ASM_THREADS.txt"
-
-        model = Project(
+        kwargs = {thread_type: num_threads}
+        return Project(
             input_file=prj_aniso_expansion,
-            output_file=temp / "test_asm_threads.prj",
-            OGS_ASM_THREADS=num_threads,
+            output_file=temp_dir / "test_asm_threads.prj",
+            **kwargs,
         )
 
-        wrapper = (
-            f"echo %OGS_ASM_THREADS% > {log_OGS_ASM_THREADS.resolve()} &&"
-            if sys.platform == "win32"
-            else f"echo $OGS_ASM_THREADS > {log_OGS_ASM_THREADS.resolve()} &&"
+    @pytest.fixture()
+    def bhe_model(
+        self, temp_dir: Path, num_threads: int, thread_type: str
+    ) -> Project:
+        vtu_file = temp_dir / "bhe_simple.vtu"
+        gen_bhe_mesh(
+            length=5, width=5, layer=[20], groundwater=[],
+            BHE_Array=[
+                BHE(x=2.5, y=2.5, z_begin=0, z_end=-18, borehole_radius=0.076)
+            ],
+            meshing_type="prism", out_name=vtu_file,
+            target_z_size_coarse=2, target_z_size_fine=1,
+            inner_mesh_size=1, outer_mesh_size=2.5,
+            n_refinement_layers=1, dist_box_x=1.5, dist_box_y=1.5,
+        )  # fmt: skip
+        kwargs = {thread_type: num_threads}
+        return Project(
+            input_file=prj_heat_transport_bhe_simple,
+            output_file=temp_dir / "test_Threads.prj",
+            **kwargs,
+        )
+
+    @pytest.fixture(params=["cuboid_model", "bhe_model"])
+    def model(self, request: pytest.FixtureRequest) -> Project:
+        return request.getfixturevalue(request.param)
+
+    @pytest.mark.system()
+    def test_threads(
+        self, temp_dir: Path, num_threads: int, thread_type: str, model: Project
+    ) -> NoReturn:
+
+        types = [thread_type]
+        if thread_type == "OMP_NUM_THREADS":
+            types.append("OGS_ASM_THREADS")
+        logs = {key: temp_dir / f"log_{key}.txt" for key in types}
+        guard = ["%", "%"] if sys.platform == "win32" else ["$", ""]
+        wrapper = " ".join(
+            f"echo {key.join(guard)} > {log.resolve()} && "
+            for key, log in logs.items()
         )
 
         model.write_input()
+        args = f"-o {temp_dir.resolve()}"
         model.run_model(
-            write_logs=True,
-            wrapper=wrapper,
-            write_prj_to_pvd=False,
-            args=f"-o {temp.resolve()}",
+            write_logs=True, wrapper=wrapper, write_prj_to_pvd=False, args=args
         )
 
-        assert (
-            log_OGS_ASM_THREADS.exists()
-        ), f"Log file {log_OGS_ASM_THREADS} was not created."
-
-        with log_OGS_ASM_THREADS.open("r") as log_file:
-            omp_num_threads = log_file.readline().strip()
-            assert (
-                omp_num_threads.isdigit()
-            ), f"Invalid OGS_ASM_THREADS value: {omp_num_threads}"
-            assert (
-                int(omp_num_threads) == num_threads
-            ), f"Expected OGS_ASM_THREADS={num_threads}"
+        for var, log in logs.items():
+            assert log.exists(), f"Log file {log} was not created."
+            with log.open("r") as log_file:
+                omp_num_threads = log_file.readline().strip()
+                assert (
+                    omp_num_threads.isdigit()
+                ), f"Invalid {var} value: {omp_num_threads}"
+                assert (
+                    int(omp_num_threads) == num_threads
+                ), f"Expected {var}={num_threads}"
