@@ -11,7 +11,7 @@ from . import logparser, plot, variables
 from ._find_ogs import cli, status
 from .meshlib import Mesh, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
-from .materiallib import MaterialLib
+from .materiallib import MaterialLib, validate_medium
 
 
 with suppress(ImportError):
