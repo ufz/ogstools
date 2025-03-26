@@ -1,6 +1,7 @@
 from pathlib import Path
 import yaml
 
+from ogstools.definitions import MATERIALS_DIR
 
 class Property:
     def __init__(self, name: str, type_: str, value=None, **extra):
@@ -72,23 +73,41 @@ class Material:
 
     from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 from ogstools.materiallib.validation import validate_medium
+
+class MaterialDB:
+    """
+    Loads all material YAML files from the specified directory
+    and converts them into `Material` objects.
+    """
+
+    def __init__(self, data_dir: Path = None):
+        self.data_dir = data_dir or Path(MATERIALS_DIR)
+        print(f"Loading materials from: {self.data_dir}")
+        self.materials_db = {}
         self._load_materials()
 
     def _load_materials(self):
         yaml_files = list(self.data_dir.glob("*.yml")) + list(self.data_dir.glob("*.yaml"))
         if not yaml_files:
             raise FileNotFoundError(f"No YAML files found in {self.data_dir}")
+
         for file_path in yaml_files:
             with open(file_path, "r", encoding="utf-8") as file:
-                data = yaml.safe_load(file)
-                name = data.get("name", file_path.stem)
-                self.materials[name] = data
+                raw_data = yaml.safe_load(file)
+                name = raw_data.get("name", file_path.stem)
+                material = Material(name=name, raw_data=raw_data)
+                self.materials_db[name] = material
 
-    def get_material(self, name: str) -> dict | None:
-        return self.materials.get(name)
+    def get_material(self, name: str) -> Material | None:
+        """Returns a `Material` object by name."""
+        return self.materials_db.get(name)
 
     def list_materials(self) -> list[str]:
-        return list(self.materials.keys())
+        """Returns a list of all material names."""
+        return list(self.materials_db.keys())
+
+    def __repr__(self):
+        return f"<MaterialDB with {len(self.materials_db)} materials from '{self.data_dir}'>"
 
     def create_medium(self, name: str, id_: int, overrides: dict = None) -> Medium:
         data = self.get_material(name)
