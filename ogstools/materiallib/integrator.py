@@ -1,6 +1,7 @@
 # ogstools/materiallib/integrator.py
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
+from ogstools.materiallib.core.core import Property
 
 class MaterialIntegrator:
     def __init__(self, project, process: str = "TH2M"):
@@ -11,18 +12,18 @@ class MaterialIntegrator:
             raise ValueError(f"Process '{process}' is not defined in PROCESS_SCHEMAS.")
 
     def add_medium(self, medium):
-        for prop in medium.properties:
-            self._add_property(medium, prop)
+        for phase_type, props in medium.phases.items():
+            for prop in props:
+                self._add_property(medium, prop, phase_type=phase_type)
 
-    def _add_property(self, medium, prop):
-        # Neues Schema ist flach: { "property_name": "medium" / "solid" }
-        allowed = self.schema  # z. B. PROCESS_SCHEMAS["TH2M"]
+        # for phase_type, comps in medium.components.items():
+        #     for comp_name, comp_props in comps.items():
+        #         for prop in comp_props:
+        #             self._add_property(medium, prop, phase_type=phase_type, component_name=comp_name)
 
-        if prop.name not in allowed:
-            print(f"⚠️  Skipping property '{prop.name}' (not used by {self.process})")
-            return
 
-        location = allowed[prop.name]
+
+    def _add_property(self, medium, prop, phase_type: str, component_name: str = None):
         args = {
             "medium_id": str(medium.id),
             "name": prop.name,
@@ -31,7 +32,28 @@ class MaterialIntegrator:
         }
         if prop.value is not None:
             args["value"] = prop.value
-        if location == "solid":
-            args["phase_type"] = "Solid"
+        args["phase_type"] = phase_type
+        if component_name:
+            args["component_name"] = component_name
 
         self.prj.media.add_property(**args)
+
+        
+    # def _add_property(self, medium, prop, phase_type=None, component_name=None):
+    #     location = self.schema.get(prop.name, "medium")
+    #     args = {
+    #         "medium_id": str(medium.id),
+    #         "name": prop.name,
+    #         "type": prop.type,
+    #         **prop.extra
+    #     }
+    #     if prop.value is not None:
+    #         args["value"] = prop.value
+    #     if location == "solid":
+    #         args["phase_type"] = "Solid"
+    #     if phase_type:
+    #         args["phase_type"] = phase_type
+    #     if component_name:
+    #         args["component_name"] = component_name
+
+    #     self.prj.media.add_property(**args)

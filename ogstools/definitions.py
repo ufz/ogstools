@@ -8,3 +8,4 @@ import pathlib
 
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
 EXAMPLES_DIR = ROOT_DIR / "examples"
+MATERIALS_DIR = ROOT_DIR / "materiallib/data"
