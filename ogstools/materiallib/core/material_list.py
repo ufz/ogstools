@@ -38,9 +38,10 @@ class MaterialList:
     [5] matID="4", name="water", properties: ["Density", "Viscosity", ...]
     """
 
-    def __init__(self, material_db, subdomains: list[dict], process: str = "TH2M"):
+    def __init__(self, material_db, subdomains: list[dict], fluids: dict[str, str] = None, process: str = "TH2M"):
         self.material_db = material_db
         self.subdomains = subdomains
+        self.fluids = fluids or {}
         self.process = process
         self.schema = PROCESS_SCHEMAS.get(process)
 
@@ -48,6 +49,8 @@ class MaterialList:
             raise ValueError(f"No process schema found for '{process}'")
 
         self.materials: dict[int, Material] = {}  # {material_id: Material}
+        self.fluid_materials: dict[str, Material] = {}  # {"AqueousLiquid": Material(...)}
+
         self._build_material_list()
 
     def _build_material_list(self):
@@ -62,6 +65,7 @@ class MaterialList:
             if not isinstance(raw, RawMaterial):
                 raise TypeError(f"Expected RawMaterial from MaterialDB, got {type(raw)}")
 
+            # Solid materials
             for mat_id in ids:
                 if mat_id in self.materials:
                     continue
@@ -72,6 +76,38 @@ class MaterialList:
                 material = Material(name=name, properties=filtered_props)
 
                 self.materials[mat_id] = material
+
+        # Fluid materials (they have no MaterialID)
+        for phase_type, mat_name in self.fluids.items():
+            raw = self.material_db.get_material(mat_name)
+
+            if raw is None:
+                raise ValueError(f"Fluid material '{mat_name}' not found in database.")
+            if not isinstance(raw, RawMaterial):
+                raise TypeError(f"Expected RawMaterial, got {type(raw)}")
+
+            required_names = self.get_required_property_names()
+            filtered_props = [p for p in raw.get_properties() if p.name in required_names]
+            mat = Material(name=mat_name, properties=filtered_props)
+            self.fluid_materials[phase_type] = mat
+    
+    def get_required_property_names(self) -> set[str]:
+        """
+        Returns a set of all property names required by the current process schema.
+        This includes medium, solid, phase and component properties.
+        """
+        required = set()
+
+        for key, value in self.schema.items():
+            if key == "_fluids":
+                for fluid_def in value.values():
+                    required.update(fluid_def.get("phase_properties", []))
+                    required.update(fluid_def.get("component_properties", []))
+            else:
+                required.add(key)
+
+        return required
+
 
     def get_material(self, material_id: int):
         return self.materials.get(material_id)
