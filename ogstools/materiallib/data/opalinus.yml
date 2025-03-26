@@ -1,6 +1,6 @@
 name: opalinus_clay
 group: medium
-solid_properties:
+properties:
   density:
     - type: Constant
       value: 2500
@@ -9,7 +9,6 @@ solid_properties:
     - type: Constant
       value: 2.0
       unit: W/(m·K)
-medium_properties:
   porosity:
     - type: Constant
       value: 0.15

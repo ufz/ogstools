@@ -22,11 +22,6 @@ properties:
       value: 7850
       unit: kg/m³
       source:
-  diffusion:
-    - type: Constant
-      value: 1.0e-11
-      unit: m²/s
-      source:
   youngs_modulus:
     - type: Constant
       value: 2.0e11

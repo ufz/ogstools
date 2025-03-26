@@ -1,6 +1,6 @@
 name: bentonite
 group: medium
-solid_properties:
+properties:
   density:
     - type: Constant
       value: 2500
@@ -17,7 +17,6 @@ solid_properties:
     - type: Constant
       value: 2.0e-5
       unit: 1/K
-medium_properties:
   porosity:
     - type: Constant
       value: 0.4
