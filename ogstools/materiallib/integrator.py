@@ -3,13 +3,16 @@
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 from ogstools.materiallib.core.core import Property
 
+
 class MaterialIntegrator:
     def __init__(self, project, process: str = "TH2M"):
         self.prj = project
         self.process = process
         self.schema = PROCESS_SCHEMAS.get(process)
         if self.schema is None:
-            raise ValueError(f"Process '{process}' is not defined in PROCESS_SCHEMAS.")
+            raise ValueError(
+                f"Process '{process}' is not defined in PROCESS_SCHEMAS."
+            )
 
     def add_medium(self, medium):
         for phase_type, props in medium.phases.items():
@@ -21,14 +24,14 @@ class MaterialIntegrator:
         #         for prop in comp_props:
         #             self._add_property(medium, prop, phase_type=phase_type, component_name=comp_name)
 
-
-
-    def _add_property(self, medium, prop, phase_type: str, component_name: str = None):
+    def _add_property(
+        self, medium, prop, phase_type: str, component_name: str = None
+    ):
         args = {
             "medium_id": str(medium.id),
             "name": prop.name,
             "type": prop.type,
-            **prop.extra
+            **prop.extra,
         }
         if prop.value is not None:
             args["value"] = prop.value
@@ -38,7 +41,6 @@ class MaterialIntegrator:
 
         self.prj.media.add_property(**args)
 
-        
     # def _add_property(self, medium, prop, phase_type=None, component_name=None):
     #     location = self.schema.get(prop.name, "medium")
     #     args = {

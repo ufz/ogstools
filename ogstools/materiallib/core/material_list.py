@@ -1,6 +1,7 @@
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 from .material import RawMaterial, Material
 
+
 class MaterialList:
     """
     Represents a filtered material set, tailored to a specific OGS process
@@ -38,7 +39,13 @@ class MaterialList:
     [5] matID="4", name="water", properties: ["Density", "Viscosity", ...]
     """
 
-    def __init__(self, material_db, subdomains: list[dict], fluids: dict[str, str] = None, process: str = "TH2M"):
+    def __init__(
+        self,
+        material_db,
+        subdomains: list[dict],
+        fluids: dict[str, str] = None,
+        process: str = "TH2M",
+    ):
         self.material_db = material_db
         self.subdomains = subdomains
         self.fluids = fluids or {}
@@ -49,7 +56,9 @@ class MaterialList:
             raise ValueError(f"No process schema found for '{process}'")
 
         self.materials: dict[int, Material] = {}  # {material_id: Material}
-        self.fluid_materials: dict[str, Material] = {}  # {"AqueousLiquid": Material(...)}
+        self.fluid_materials: dict[str, Material] = (
+            {}
+        )  # {"AqueousLiquid": Material(...)}
 
         self._build_material_list()
 
@@ -62,7 +71,9 @@ class MaterialList:
             if raw is None:
                 raise ValueError(f"Material '{name}' not found in database.")
             if not isinstance(raw, RawMaterial):
-                raise TypeError(f"Expected RawMaterial from MaterialDB, got {type(raw)}")
+                raise TypeError(
+                    f"Expected RawMaterial from MaterialDB, got {type(raw)}"
+                )
 
             # For now, we collect all required properties from the process schema, independent of material type
             required_names = self.get_required_property_names()
@@ -72,7 +83,9 @@ class MaterialList:
                 if mat_id in self.materials:
                     continue
 
-                filtered_props = [p for p in raw.get_properties() if p.name in required_names]
+                filtered_props = [
+                    p for p in raw.get_properties() if p.name in required_names
+                ]
                 material = Material(name=name, properties=filtered_props)
                 # print(f"Solids: {filtered_props}")
                 print(f"MaterialID: {mat_id}")
@@ -86,17 +99,21 @@ class MaterialList:
             raw = self.material_db.get_material(mat_name)
 
             if raw is None:
-                raise ValueError(f"Fluid material '{mat_name}' not found in database.")
+                raise ValueError(
+                    f"Fluid material '{mat_name}' not found in database."
+                )
             if not isinstance(raw, RawMaterial):
                 raise TypeError(f"Expected RawMaterial, got {type(raw)}")
 
-            filtered_props = [p for p in raw.get_properties() if p.name in required_names]
+            filtered_props = [
+                p for p in raw.get_properties() if p.name in required_names
+            ]
             material = Material(name=mat_name, properties=filtered_props)
             # print(f"Fluids: {filtered_props}")
             for p in filtered_props:
                 print("Fluids:", p.name, p.type, p.value)
             self.fluid_materials[phase_type] = material
-    
+
     def get_required_property_names(self) -> set[str]:
         """
         Returns a set of all property names required by the current process schema.
@@ -113,7 +130,6 @@ class MaterialList:
                 required.add(key)
 
         return required
-
 
     def get_material(self, material_id: int):
         return self.materials.get(material_id)

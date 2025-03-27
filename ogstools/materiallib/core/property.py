@@ -1,6 +1,6 @@
 class Property:
     def __init__(self, name: str, type_: str, value=None, **extra):
-    #def __init__(self, name: str, type_: str, value: float | None = None, **extra):
+        # def __init__(self, name: str, type_: str, value: float | None = None, **extra):
         self.name = name
         self.type = type_
         self.value = value

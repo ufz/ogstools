@@ -3,16 +3,26 @@ from .component import Component
 
 
 class Phase:
-    def __init__(self, type_: str, material: Material = None, properties=None, components=None):
+    def __init__(
+        self,
+        type_: str,
+        material: Material = None,
+        properties=None,
+        components=None,
+    ):
         self.type = type_
         self.properties = properties or []
         self.components = components or []
 
         if material:
             if isinstance(material, RawMaterial):
-                raise TypeError("Cannot build Phase from RawMaterial. Use a filtered Material from MaterialList.")
+                raise TypeError(
+                    "Cannot build Phase from RawMaterial. Use a filtered Material from MaterialList."
+                )
             if not isinstance(material, Material):
-                raise TypeError(f"Expected a Material instance, got {type(material)}")
+                raise TypeError(
+                    f"Expected a Material instance, got {type(material)}"
+                )
 
             self._load_from_material(material)
 

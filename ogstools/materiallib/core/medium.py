@@ -1,5 +1,6 @@
 from .phase import Phase
 
+
 class Medium:
     """
     A Medium is a hierarchical structure of physical properties used in
@@ -22,11 +23,16 @@ class Medium:
 
     Use `get_phases()` to retrieve a list of all assigned phases in canonical order.
     """
-    def __init__(self, material_id: int, properties=None,
-                 solid: Phase = None,
-                 gas: Phase = None,
-                 aqueous: Phase = None,
-                 nonaqueous: Phase = None):
+
+    def __init__(
+        self,
+        material_id: int,
+        properties=None,
+        solid: Phase = None,
+        gas: Phase = None,
+        aqueous: Phase = None,
+        nonaqueous: Phase = None,
+    ):
         self.material_id = material_id
         self.properties = properties or []
 
@@ -42,15 +48,24 @@ class Medium:
     def set_phase(self, phase: Phase):
         """Assigns a Phase to the correct slot based on its type."""
         match phase.type:
-            case "Solid": self.solid = phase
-            case "Gas": self.gas = phase
-            case "AqueousLiquid": self.aqueous = phase
-            case "NonAqueousLiquid": self.nonaqueous = phase
-            case other: raise ValueError(f"Unknown phase type: {other}")
+            case "Solid":
+                self.solid = phase
+            case "Gas":
+                self.gas = phase
+            case "AqueousLiquid":
+                self.aqueous = phase
+            case "NonAqueousLiquid":
+                self.nonaqueous = phase
+            case other:
+                raise ValueError(f"Unknown phase type: {other}")
 
     def get_phases(self) -> list[Phase]:
         """Returns all defined phases in order."""
-        return [p for p in [self.solid, self.aqueous, self.nonaqueous, self.gas] if p]
+        return [
+            p
+            for p in [self.solid, self.aqueous, self.nonaqueous, self.gas]
+            if p
+        ]
 
     def __repr__(self):
         lines = [f"<Medium ID={self.material_id}>"]
@@ -68,9 +83,13 @@ class Medium:
         if phases:
             lines.append(f"  ├─ {len(phases)} phase(s):")
             for phase in phases:
-                lines.append(f"  │   └─ Phase '{phase.type}' with {len(phase.properties)} properties and {len(phase.components)} components")
+                lines.append(
+                    f"  │   └─ Phase '{phase.type}' with {len(phase.properties)} properties and {len(phase.components)} components"
+                )
                 for comp in phase.components:
-                    lines.append(f"  │       └─ Component '{comp.name}' with {len(comp.properties)} properties")
+                    lines.append(
+                        f"  │       └─ Component '{comp.name}' with {len(comp.properties)} properties"
+                    )
         else:
             lines.append("  └─ no phases defined")
 

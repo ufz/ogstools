@@ -3,22 +3,19 @@ PROCESS_SCHEMAS = {
         "thermal_conductivity": "medium",
         "density": "medium",
         "specific_heat_capacity": "medium",
-        "_fluids": {}
+        "_fluids": {},
     },
-
     "TH2M": {
         # Solid phase
         "density": "solid",
         "specific_heat_capacity": "solid",
         "thermal_conductivity": "solid",
         "thermal_expansivity": "solid",
-
         # Medium properties
         "porosity": "medium",
         "permeability": "medium",
         "saturation": "medium",
         "bishops_effective_stress": "medium",
-
         # Fluid properties (without phase transition)
         "_fluids": {
             "AqueousLiquid": {
@@ -26,32 +23,29 @@ PROCESS_SCHEMAS = {
                     "density",
                     "viscosity",
                     "thermal_conductivity",
-                    "specific_heat_capacity"
+                    "specific_heat_capacity",
                 ]
             },
             "Gas": {
                 "phase_properties": [
                     "density",
                     "viscosity",
-                    "thermal_conductivity"
+                    "thermal_conductivity",
                 ]
-            }
-        }
+            },
+        },
     },
-
     "TH2M_PT": {
         # Solid phase
         "density": "solid",
         "specific_heat_capacity": "solid",
         "thermal_conductivity": "solid",
         "thermal_expansivity": "solid",
-
         # Medium properties
         "porosity": "medium",
         "permeability": "medium",
         "saturation": "medium",
         "bishops_effective_stress": "medium",
-
         # Fluid properties with phase transitions - component properties
         "_fluids": {
             "AqueousLiquid": {
@@ -60,14 +54,14 @@ PROCESS_SCHEMAS = {
                     "specific_heat_capacity",
                     "diffusion",
                     "henry_coefficient",
-                    "specific_latent_heat"
+                    "specific_latent_heat",
                 ],
                 "phase_properties": [
                     "density",
                     "viscosity",
                     "thermal_conductivity",
-                    "specific_heat_capacity"
-                ]
+                    "specific_heat_capacity",
+                ],
             },
             "Gas": {
                 "component_properties": [
@@ -75,14 +69,14 @@ PROCESS_SCHEMAS = {
                     "specific_heat_capacity",
                     "specific_latent_heat",
                     "vapour_pressure",
-                    "diffusion"
+                    "diffusion",
                 ],
                 "phase_properties": [
                     "density",
                     "viscosity",
-                    "thermal_conductivity"
-                ]
-            }
-        }
-    }
+                    "thermal_conductivity",
+                ],
+            },
+        },
+    },
 }

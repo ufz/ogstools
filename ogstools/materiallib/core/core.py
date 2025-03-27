@@ -54,7 +54,7 @@ class MaterialLib:
         self.materials = {}
         self.data_dir = data_dir or Path(__file__).parents[1] / "data"
         self.process = process  # save OGS-process
-        #self._load_materials()
+        # self._load_materials()
 
     # def _load_materials(self):
     #     yaml_files = list(self.data_dir.glob("*.yml")) + list(self.data_dir.glob("*.yaml"))
@@ -66,7 +66,13 @@ class MaterialLib:
     #             name = data.get("name", file_path.stem)
     #             self.materials[name] = data
 
-    def create_medium(self, name: str, id_: int, overrides: dict = None, fluids: dict[str, str] = None) -> Medium:
+    def create_medium(
+        self,
+        name: str,
+        id_: int,
+        overrides: dict = None,
+        fluids: dict[str, str] = None,
+    ) -> Medium:
         data = self.get_material(name)
         if data is None:
             raise ValueError(f"Material '{name}' not found in database.")
@@ -78,7 +84,7 @@ class MaterialLib:
             raise ValueError(f"No schema defined for process '{self.process}'")
 
         solid_props, medium_props = [], []
-        #medium = Medium(id_=id_, name=name, properties=[], process=self.process)
+        # medium = Medium(id_=id_, name=name, properties=[], process=self.process)
 
         for pname, plist in data.get("properties", {}).items():
             print(type(plist))
@@ -89,7 +95,9 @@ class MaterialLib:
                 name=pname,
                 type_=entry.get("type", "Constant"),
                 value=entry.get("value"),
-                **{k: v for k, v in entry.items() if k not in ["type", "value"]}
+                **{
+                    k: v for k, v in entry.items() if k not in ["type", "value"]
+                },
             )
             location = schema.get(pname)
             if location == "solid":
@@ -97,15 +105,19 @@ class MaterialLib:
             elif location == "medium":
                 medium_props.append(prop)
             else:
-                print(f"⚠️  Property '{pname}' not recognized in schema – ignored.")
+                print(
+                    f"⚠️  Property '{pname}' not recognized in schema – ignored."
+                )
 
-        #medium.add_phase("Solid", solid_props)
-        #medium.add_phase("Medium", medium_props)
+        # medium.add_phase("Solid", solid_props)
+        # medium.add_phase("Medium", medium_props)
 
         # 🔽 Fluide ergänzen (optional)
         if fluids:
             fluidschema = schema.get("_fluids", {})
-            use_components = "component_properties" in next(iter(fluidschema.values()), {})
+            use_components = "component_properties" in next(
+                iter(fluidschema.values()), {}
+            )
 
             for phase_type, fluid_name in fluids.items():
                 fdata = self.get_material(fluid_name)
@@ -120,19 +132,29 @@ class MaterialLib:
 
                 for pname, plist in all_props.items():
                     entry = plist[0]
-                    prop = Property(name=pname, type_=entry.get("type", "Constant"), value=entry.get("value"),
-                                    **{k: v for k, v in entry.items() if k not in ["type", "value"]})
+                    prop = Property(
+                        name=pname,
+                        type_=entry.get("type", "Constant"),
+                        value=entry.get("value"),
+                        **{
+                            k: v
+                            for k, v in entry.items()
+                            if k not in ["type", "value"]
+                        },
+                    )
 
-                    if use_components and pname in required.get("component_properties", []):
+                    if use_components and pname in required.get(
+                        "component_properties", []
+                    ):
                         props_comp.append(prop)
                     elif pname in required.get("phase_properties", []):
                         props_phase.append(prop)
 
                 if use_components:
                     pass
-                    #medium.add_phase(phase_type, props_phase, components={fluid_name: props_comp})
+                    # medium.add_phase(phase_type, props_phase, components={fluid_name: props_comp})
                 else:
                     pass
-                    #medium.add_phase(phase_type, props_phase)
+                    # medium.add_phase(phase_type, props_phase)
 
-        return #medium
+        return  # medium

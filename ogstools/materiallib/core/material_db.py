@@ -3,6 +3,7 @@ from pathlib import Path
 from .material import RawMaterial
 from ogstools.definitions import MATERIALS_DIR
 
+
 class MaterialDB:
     """
     Loads all material YAML files from the specified directory
@@ -16,7 +17,9 @@ class MaterialDB:
         self._load_materials()
 
     def _load_materials(self):
-        yaml_files = list(self.data_dir.glob("*.yml")) + list(self.data_dir.glob("*.yaml"))
+        yaml_files = list(self.data_dir.glob("*.yml")) + list(
+            self.data_dir.glob("*.yaml")
+        )
         if not yaml_files:
             raise FileNotFoundError(f"No YAML files found in {self.data_dir}")
 

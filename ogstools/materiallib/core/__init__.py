@@ -14,6 +14,7 @@ from .medium import Medium
 from .phase import Phase
 from .component import Component
 from .property import Property
+
 # from .material_lib import MaterialLib  # Wrapperklasse
 
 __all__ = [
@@ -24,5 +25,5 @@ __all__ = [
     "Phase",
     "Component",
     "Property",
-    "MaterialLib"
+    "MaterialLib",
 ]

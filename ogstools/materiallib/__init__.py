@@ -6,24 +6,24 @@
 # ogstools/materiallib/__init__.py
 
 from .core import (
-    #MaterialLib,
+    # MaterialLib,
     MaterialList,
     MaterialDB,
     Medium,
     Phase,
     Component,
-    Property
+    Property,
 )
 
 from .validation import validate_medium
 
 __all__ = [
-    #"MaterialLib",
+    # "MaterialLib",
     "MaterialList",
     "MaterialDB",
     "Medium",
     "Phase",
     "Component",
     "Property",
-    "validate_medium"
+    "validate_medium",
 ]

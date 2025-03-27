@@ -1,5 +1,6 @@
 from .property import Property
 
+
 class RawMaterial:
     """
     Represents a single material, parsed from YAML data.
@@ -20,8 +21,12 @@ class RawMaterial:
             for entry in entries:
                 type_ = entry.get("type", "Constant")
                 value = entry.get("value", None)
-                extra = {k: v for k, v in entry.items() if k not in ("type", "value")}
-                prop = Property(name=prop_name, type_=type_, value=value, **extra)
+                extra = {
+                    k: v for k, v in entry.items() if k not in ("type", "value")
+                }
+                prop = Property(
+                    name=prop_name, type_=type_, value=value, **extra
+                )
                 self.properties.append(prop)
 
     def get_property_names(self) -> list[str]:
@@ -32,6 +37,7 @@ class RawMaterial:
 
     def __repr__(self):
         return f"<RawMaterial '{self.name}' with {len(self.properties)} properties>"
+
 
 class Material:
     """
@@ -50,4 +56,6 @@ class Material:
         return [p.name for p in self.properties]
 
     def __repr__(self):
-        return f"<Material '{self.name}' with {len(self.properties)} properties>"
+        return (
+            f"<Material '{self.name}' with {len(self.properties)} properties>"
+        )
