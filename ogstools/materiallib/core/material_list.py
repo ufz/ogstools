@@ -61,20 +61,24 @@ class MaterialList:
 
             if raw is None:
                 raise ValueError(f"Material '{name}' not found in database.")
-
             if not isinstance(raw, RawMaterial):
                 raise TypeError(f"Expected RawMaterial from MaterialDB, got {type(raw)}")
+
+            # For now, we collect all required properties from the process schema, independent of material type
+            required_names = self.get_required_property_names()
 
             # Solid materials
             for mat_id in ids:
                 if mat_id in self.materials:
                     continue
 
-                # Here we should filter raw.properties according to the process schema
-                # For now, take all properties
-                filtered_props = raw.get_properties()  # Replace with actual filtering later
+                filtered_props = [p for p in raw.get_properties() if p.name in required_names]
                 material = Material(name=name, properties=filtered_props)
-
+                # print(f"Solids: {filtered_props}")
+                print(f"MaterialID: {mat_id}")
+                for p in filtered_props:
+                    print("Solids:", p.name, p.type, p.value)
+                print("....")
                 self.materials[mat_id] = material
 
         # Fluid materials (they have no MaterialID)
@@ -86,10 +90,12 @@ class MaterialList:
             if not isinstance(raw, RawMaterial):
                 raise TypeError(f"Expected RawMaterial, got {type(raw)}")
 
-            required_names = self.get_required_property_names()
             filtered_props = [p for p in raw.get_properties() if p.name in required_names]
-            mat = Material(name=mat_name, properties=filtered_props)
-            self.fluid_materials[phase_type] = mat
+            material = Material(name=mat_name, properties=filtered_props)
+            # print(f"Fluids: {filtered_props}")
+            for p in filtered_props:
+                print("Fluids:", p.name, p.type, p.value)
+            self.fluid_materials[phase_type] = material
     
     def get_required_property_names(self) -> set[str]:
         """
