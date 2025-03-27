@@ -90,10 +90,6 @@ class MaterialList:
                 ]
                 material = Material(name=name, properties=filtered_props)
                 # print(f"Solids: {filtered_props}")
-                print(f"MaterialID: {mat_id}")
-                for p in filtered_props:
-                    print("Solids:", p.name, p.type, p.value)
-                print("....")
                 self.materials[mat_id] = material
 
         # Fluid materials (they have no MaterialID)
@@ -108,9 +104,6 @@ class MaterialList:
                 p for p in raw.get_properties() if p.name in required_names
             ]
             material = Material(name=mat_name, properties=filtered_props)
-            # print(f"Fluids: {filtered_props}")
-            for p in filtered_props:
-                print("Fluids:", p.name, p.type, p.value)
             self.fluid_materials[phase_type] = material
 
     def get_required_property_names(self) -> set[str]:
@@ -147,10 +140,22 @@ class MaterialList:
         return [mat.name for mat in self.materials.values()]
 
     def __repr__(self) -> str:
-        lines = [
-            f"<MaterialList for process '{self.process}'>",
-            f"  ├─ {len(self.materials)} materials mapped to material_ids:",
-        ]
-        for mid, mat in sorted(self.materials.items()):
-            lines.append(f"  │   [{mid}] → {mat.name}")
+        lines = [f"<MaterialList for process '{self.process}'>"]
+
+        if self.materials:
+            lines.append(
+                f"  ├─ {len(self.materials)} solid material entries mapped to material_ids:"
+            )
+            for mid, mat in sorted(self.materials.items()):
+                lines.append(f"  │   [{mid}] → {mat.name}")
+        else:
+            lines.append("  ├─ No solid or medium materials defined")
+
+        if hasattr(self, "fluid_materials") and self.fluid_materials:
+            lines.append(f"  ├─ {len(self.fluid_materials)} fluid materials:")
+            for phase_type, mat in self.fluid_materials.items():
+                lines.append(f"  │   {phase_type}: {mat.name}")
+        else:
+            lines.append("  └─ No fluid materials assigned")
+
         return "\n".join(lines)
