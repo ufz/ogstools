@@ -1,8 +1,6 @@
 from pathlib import Path
-import yaml
-from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
-from ogstools.definitions import MATERIALS_DIR
 
+from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 # class Medium:
 #     """

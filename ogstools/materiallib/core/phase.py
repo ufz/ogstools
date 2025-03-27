@@ -1,5 +1,5 @@
-from .material import Material, RawMaterial
 from .component import Component
+from .material import Material, RawMaterial
 
 
 class Phase:
@@ -16,13 +16,11 @@ class Phase:
 
         if material:
             if isinstance(material, RawMaterial):
-                raise TypeError(
-                    "Cannot build Phase from RawMaterial. Use a filtered Material from MaterialList."
-                )
+                msg = "Cannot build Phase from RawMaterial. Use a filtered Material from MaterialList."
+                raise TypeError(msg)
             if not isinstance(material, Material):
-                raise TypeError(
-                    f"Expected a Material instance, got {type(material)}"
-                )
+                msg = f"Expected a Material instance, got {type(material)}"
+                raise TypeError(msg)
 
             self._load_from_material(material)
 

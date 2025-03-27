@@ -36,7 +36,7 @@ class Medium:
         self.material_id = material_id
         self.properties = properties or []
 
-        # benannte Phasen – max. eine pro Typ
+        # specific phases - max. one per type
         self.solid = solid
         self.gas = gas
         self.aqueous = aqueous
@@ -57,7 +57,8 @@ class Medium:
             case "NonAqueousLiquid":
                 self.nonaqueous = phase
             case other:
-                raise ValueError(f"Unknown phase type: {other}")
+                msg = f"Unknown phase type: {other}"
+                raise ValueError(msg)
 
     def get_phases(self) -> list[Phase]:
         """Returns all defined phases in order."""
@@ -76,7 +77,7 @@ class Medium:
             for prop in self.properties:
                 lines.append(f"  │   • {prop.name} ({prop.type})")
         else:
-            lines.append(f"  ├─ no medium-level properties")
+            lines.append("  ├─ no medium-level properties")
 
         # Phases
         phases = self.get_phases()

@@ -16,9 +16,7 @@ class RawMaterial:
     def _parse_properties(self):
         block = self.raw.get("properties", {})
         for prop_name, entries in block.items():
-            if not isinstance(entries, list):
-                entries = [entries]
-            for entry in entries:
+            for entry in entries if isinstance(entries, list) else [entries]:
                 type_ = entry.get("type", "Constant")
                 value = entry.get("value", None)
                 extra = {

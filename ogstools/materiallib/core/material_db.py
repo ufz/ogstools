@@ -1,7 +1,10 @@
-import yaml
 from pathlib import Path
-from .material import RawMaterial
+
+import yaml
+
 from ogstools.definitions import MATERIALS_DIR
+
+from .material import RawMaterial
 
 
 class MaterialDB:
@@ -10,7 +13,7 @@ class MaterialDB:
     and converts them into `RawMaterial` objects.
     """
 
-    def __init__(self, data_dir: Path = None):
+    def __init__(self, data_dir: Path | None = None):
         self.data_dir = data_dir or Path(MATERIALS_DIR)
         print(f"Loading materials from: {self.data_dir}")
         self.materials_db = {}
@@ -21,10 +24,11 @@ class MaterialDB:
             self.data_dir.glob("*.yaml")
         )
         if not yaml_files:
-            raise FileNotFoundError(f"No YAML files found in {self.data_dir}")
+            msg = f"No YAML files found in {self.data_dir}"
+            raise FileNotFoundError(msg)
 
         for file_path in yaml_files:
-            with open(file_path, "r", encoding="utf-8") as file:
+            with file_path.open(encoding="utf-8") as file:
                 raw_data = yaml.safe_load(file)
                 name = raw_data.get("name", file_path.stem)
                 material = RawMaterial(name=name, raw_data=raw_data)

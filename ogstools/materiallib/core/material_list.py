@@ -1,5 +1,6 @@
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
-from .material import RawMaterial, Material
+
+from .material import Material, RawMaterial
 
 
 class MaterialList:
@@ -43,7 +44,7 @@ class MaterialList:
         self,
         material_db,
         subdomains: list[dict],
-        fluids: dict[str, str] = None,
+        fluids: dict[str, str] | None = None,
         process: str = "TH2M",
     ):
         self.material_db = material_db
@@ -53,7 +54,8 @@ class MaterialList:
         self.schema = PROCESS_SCHEMAS.get(process)
 
         if self.schema is None:
-            raise ValueError(f"No process schema found for '{process}'")
+            msg = f"No process schema found for '{process}'."
+            raise ValueError(msg)
 
         self.materials: dict[int, Material] = {}  # {material_id: Material}
         self.fluid_materials: dict[str, Material] = (
@@ -69,11 +71,11 @@ class MaterialList:
             raw = self.material_db.get_material(name)
 
             if raw is None:
-                raise ValueError(f"Material '{name}' not found in database.")
+                msg = f"Material '{name}' not found in database."
+                raise ValueError(msg)
             if not isinstance(raw, RawMaterial):
-                raise TypeError(
-                    f"Expected RawMaterial from MaterialDB, got {type(raw)}"
-                )
+                msg = f"Expected RawMaterial from MaterialDB, got {type(raw)}"
+                raise TypeError(msg)
 
             # For now, we collect all required properties from the process schema, independent of material type
             required_names = self.get_required_property_names()
@@ -99,11 +101,11 @@ class MaterialList:
             raw = self.material_db.get_material(mat_name)
 
             if raw is None:
-                raise ValueError(
-                    f"Fluid material '{mat_name}' not found in database."
-                )
+                msg = f"Fluid material '{mat_name}' not found in database."
+                raise ValueError(msg)
             if not isinstance(raw, RawMaterial):
-                raise TypeError(f"Expected RawMaterial, got {type(raw)}")
+                msg = f"Expected RawMaterial from MaterialDB, got {type(raw)}"
+                raise TypeError(msg)
 
             filtered_props = [
                 p for p in raw.get_properties() if p.name in required_names

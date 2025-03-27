@@ -9,7 +9,7 @@ def validate_medium(medium) -> list[str]:
         return [f"❌ No schema defined for process '{medium.process}'"]
 
     required = set(schema.keys())
-    provided = set([p.name for p in medium.properties])
+    provided = {p.name for p in medium.properties}
 
     missing = required - provided
     unused = provided - required
