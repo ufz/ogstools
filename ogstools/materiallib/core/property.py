@@ -12,3 +12,6 @@ class Property:
             d["value"] = self.value
         d.update(self.extra)
         return d
+
+    def __repr__(self):
+        return f"<Property '{self.name}' type={self.type} value={self.value}>"
