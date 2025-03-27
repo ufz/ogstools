@@ -2,11 +2,13 @@
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
+from .core.medium import Medium
 
-def validate_medium(medium) -> list[str]:
-    schema = PROCESS_SCHEMAS.get(medium.process)
+
+def validate_medium(medium: Medium, process: str) -> list[str]:
+    schema = PROCESS_SCHEMAS.get(process)
     if schema is None:
-        return [f"❌ No schema defined for process '{medium.process}'"]
+        return [f"❌ No schema defined for process '{process}'"]
 
     required = set(schema.keys())
     provided = {p.name for p in medium.properties}
@@ -25,7 +27,7 @@ def validate_medium(medium) -> list[str]:
 
     if unused:
         messages.append(
-            f"⚠️  Unused properties (ignored for process '{medium.process}'): {', '.join(sorted(unused))}"
+            f"⚠️  Unused properties (ignored for process '{process}'): {', '.join(sorted(unused))}"
         )
 
     return messages

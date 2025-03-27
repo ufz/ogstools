@@ -9,11 +9,11 @@ class RawMaterial:
     def __init__(self, name: str, raw_data: dict):
         self.name = name
         self.raw = raw_data  # full YAML (e.g. for debugging or export)
-        self.properties = []
+        self.properties: list[Property] = []
 
         self._parse_properties()
 
-    def _parse_properties(self):
+    def _parse_properties(self) -> None:
         block = self.raw.get("properties", {})
         for prop_name, entries in block.items():
             for entry in entries if isinstance(entries, list) else [entries]:
@@ -33,7 +33,7 @@ class RawMaterial:
     def get_properties(self) -> list:
         return self.properties
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<RawMaterial '{self.name}' with {len(self.properties)} properties>"
 
 
@@ -47,13 +47,13 @@ class Material:
         self.name = name
         self.properties = properties
 
-    def get_properties(self):
+    def get_properties(self) -> list[Property]:
         return self.properties
 
-    def get_property_names(self):
+    def get_property_names(self) -> list[str]:
         return [p.name for p in self.properties]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<Material '{self.name}' with {len(self.properties)} properties>"
         )

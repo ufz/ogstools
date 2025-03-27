@@ -1,3 +1,5 @@
+from typing import Any
+
 from .phase import Phase
 
 
@@ -27,11 +29,11 @@ class Medium:
     def __init__(
         self,
         material_id: int,
-        properties=None,
-        solid: Phase = None,
-        gas: Phase = None,
-        aqueous: Phase = None,
-        nonaqueous: Phase = None,
+        properties: Any = None,
+        solid: Phase | None = None,
+        gas: Phase | None = None,
+        aqueous: Phase | None = None,
+        nonaqueous: Phase | None = None,
     ):
         self.material_id = material_id
         self.properties = properties or []
@@ -42,10 +44,10 @@ class Medium:
         self.aqueous = aqueous
         self.nonaqueous = nonaqueous
 
-    def add_property(self, prop):
+    def add_property(self, prop: Any) -> None:
         self.properties.append(prop)
 
-    def set_phase(self, phase: Phase):
+    def set_phase(self, phase: Phase) -> None:
         """Assigns a Phase to the correct slot based on its type."""
         match phase.type:
             case "Solid":
@@ -68,7 +70,7 @@ class Medium:
             if p
         ]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         lines = [f"<Medium ID={self.material_id}>"]
 
         # Medium-level properties

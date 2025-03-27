@@ -1,6 +1,9 @@
+from typing import cast
+
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
-from .material import Material, RawMaterial
+from .material import Material
+from .material_db import MaterialDB
 
 
 class MaterialList:
@@ -42,7 +45,7 @@ class MaterialList:
 
     def __init__(
         self,
-        material_db,
+        material_db: MaterialDB,
         subdomains: list[dict],
         fluids: dict[str, str] | None = None,
         process: str = "TH2M",
@@ -64,7 +67,7 @@ class MaterialList:
 
         self._build_material_list()
 
-    def _build_material_list(self):
+    def _build_material_list(self) -> None:
         for entry in self.subdomains:
             name = entry["material"]
             ids = entry["material_id"]
@@ -73,9 +76,6 @@ class MaterialList:
             if raw is None:
                 msg = f"Material '{name}' not found in database."
                 raise ValueError(msg)
-            if not isinstance(raw, RawMaterial):
-                msg = f"Expected RawMaterial from MaterialDB, got {type(raw)}"
-                raise TypeError(msg)
 
             # For now, we collect all required properties from the process schema, independent of material type
             required_names = self.get_required_property_names()
@@ -103,9 +103,6 @@ class MaterialList:
             if raw is None:
                 msg = f"Fluid material '{mat_name}' not found in database."
                 raise ValueError(msg)
-            if not isinstance(raw, RawMaterial):
-                msg = f"Expected RawMaterial from MaterialDB, got {type(raw)}"
-                raise TypeError(msg)
 
             filtered_props = [
                 p for p in raw.get_properties() if p.name in required_names
@@ -121,11 +118,18 @@ class MaterialList:
         Returns a set of all property names required by the current process schema.
         This includes medium, solid, phase and component properties.
         """
+        if self.schema is None:
+            msg = (
+                "Process schema not set. Cannot determine required properties."
+            )
+            raise ValueError(msg)
+
         required = set()
 
         for key, value in self.schema.items():
             if key == "_fluids":
-                for fluid_def in value.values():
+                fluid_defs = cast(dict[str, dict[str, list[str]]], value)
+                for fluid_def in fluid_defs.values():
                     required.update(fluid_def.get("phase_properties", []))
                     required.update(fluid_def.get("component_properties", []))
             else:
@@ -133,7 +137,7 @@ class MaterialList:
 
         return required
 
-    def get_material(self, material_id: int):
+    def get_material(self, material_id: int) -> Material | None:
         return self.materials.get(material_id)
 
     def list_ids(self) -> list[int]:
@@ -142,7 +146,7 @@ class MaterialList:
     def list_materials(self) -> list[str]:
         return [mat.name for mat in self.materials.values()]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         lines = [
             f"<MaterialList for process '{self.process}'>",
             f"  ├─ {len(self.materials)} materials mapped to material_ids:",

@@ -16,10 +16,10 @@ class MaterialDB:
     def __init__(self, data_dir: Path | None = None):
         self.data_dir = data_dir or Path(MATERIALS_DIR)
         print(f"Loading materials from: {self.data_dir}")
-        self.materials_db = {}
+        self.materials_db: dict[str, RawMaterial] = {}
         self._load_materials()
 
-    def _load_materials(self):
+    def _load_materials(self) -> None:
         yaml_files = list(self.data_dir.glob("*.yml")) + list(
             self.data_dir.glob("*.yaml")
         )
@@ -42,5 +42,5 @@ class MaterialDB:
         """Returns a list of all material names."""
         return list(self.materials_db.keys())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<MaterialDB with {len(self.materials_db)} materials from '{self.data_dir}'>"

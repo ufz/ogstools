@@ -1,17 +1,20 @@
+from typing import Any
+
+
 class Property:
-    def __init__(self, name: str, type_: str, value=None, **extra):
+    def __init__(self, name: str, type_: str, value: Any = None, **extra: Any):
         # def __init__(self, name: str, type_: str, value: float | None = None, **extra):
         self.name = name
         self.type = type_
         self.value = value
         self.extra = extra  # e.g. unit, slope, source, ...
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         d = {"name": self.name, "type": self.type}
         if self.value is not None:
             d["value"] = self.value
         d.update(self.extra)
         return d
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Property '{self.name}' type={self.type} value={self.value}>"
