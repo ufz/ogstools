@@ -7,6 +7,7 @@
 
 from .core import (
     Component,
+    Components,
     MaterialDB,
     # MaterialLib,
     MaterialList,
@@ -23,6 +24,7 @@ __all__ = [
     "Medium",
     "Phase",
     "Component",
+    "Components",
     "Property",
     "validate_medium",
 ]

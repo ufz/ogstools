@@ -13,6 +13,7 @@ from ._find_ogs import cli, status
 # from .materiallib import MaterialList, MaterialDB, MaterialLib, validate_medium
 from .materiallib import (
     Component,
+    Components,
     MaterialDB,
     # MaterialLib,
     MaterialList,
@@ -46,6 +47,7 @@ __all__ = [
     "Medium",
     "Phase",
     "Component",
+    "Components",
     "Property",
     "validate_medium",
 ]

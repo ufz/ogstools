@@ -1,4 +1,16 @@
 PROCESS_SCHEMAS = {
+    "SMALL_DEFORMATION": {
+        "phases": [{"type": "Solid", "properties": ["density"]}],
+        "properties": [],
+    },
+    "HEAT_CONDUCTION": {
+        "phases": [],
+        "properties": [
+            "thermal_conductivity",
+            "density",
+            "specific_heat_capacity",
+        ],
+    },
     "TH2M_PT": {
         "phases": [
             {
@@ -54,7 +66,7 @@ PROCESS_SCHEMAS = {
             "thermal_conductivity",
             "bishops_effective_stress",
         ],
-    }
+    },
 }
 
 

@@ -8,6 +8,7 @@
 
 
 from .component import Component
+from .components import Components
 from .material import Material
 from .material_db import MaterialDB
 from .material_list import MaterialList
@@ -24,6 +25,7 @@ __all__ = [
     "Medium",
     "Phase",
     "Component",
+    "Components",
     "Property",
     "MaterialLib",
 ]
