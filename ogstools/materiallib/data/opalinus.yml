@@ -9,6 +9,14 @@ properties:
     - type: Constant
       value: 2.0
       unit: W/(m·K)
+  specific_heat_capacity:
+    - type: Constant
+      value: 900
+      unit: J/(kg·K)
+  thermal_expansivity:
+    - type: Constant
+      value: 1.0e-5
+      unit: 1/K
   porosity:
     - type: Constant
       value: 0.15
