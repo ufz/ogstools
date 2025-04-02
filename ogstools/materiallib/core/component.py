@@ -15,6 +15,7 @@ class Component:
         phase_type: str,
         role: str,  # This materials role in the phase, e.g. 'solute' or 'solvent, etc.
         process: str,
+        diffusion_coefficient: float,
     ):
         self.material = material
         self.phase_type = phase_type
@@ -27,6 +28,12 @@ class Component:
             raise ValueError(msg)
 
         self.properties: list[Property] = self._get_filtered_properties()
+
+        if self.phase_type == "Gas" and self.role == "Vapour":
+            self.D = diffusion_coefficient
+            print(f"Binary diffusion coefficient (Component): {self.D}")
+        else:
+            self.D = 0.0
 
     def _get_filtered_properties(self) -> list[Property]:
         """
