@@ -1,4 +1,6 @@
-PROCESS_SCHEMAS = {
+from typing import Any
+
+PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
     "SMALL_DEFORMATION": {
         "phases": [{"type": "Solid", "properties": ["density"]}],
         "properties": [],
