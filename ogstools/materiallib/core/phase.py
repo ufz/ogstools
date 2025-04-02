@@ -103,9 +103,19 @@ class Phase:
             msg = f"Don't know how to load properties for phase type '{self.type}'"
             raise ValueError(msg)
 
+        print(f"Source material: {source.name}")
+
         self.properties = [
             prop for prop in source.get_properties() if prop.name in required
         ]
+
+        loaded = {prop.name for prop in self.properties}
+        missing = required - loaded
+
+        if missing:
+            msg = f"Missing required properties for phase type '{self.type}', material '{source.name}': {missing}"
+            raise ValueError(msg)
+
         print(
             f"Loaded {len(self.properties)} properties for phase type '{self.type}'"
         )

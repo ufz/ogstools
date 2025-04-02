@@ -60,7 +60,11 @@ class MaterialList:
             msg = f"No process schema found for '{process}'."
             raise ValueError(msg)
 
-        self.materials: dict[int, Material] = {}  # {material_id: Material}
+        self.materials: dict[str, Material] = (
+            {}
+        )  # e.g. {"host_rock": <Material "opalinus_clay">}
+        self.material_ids: dict[str, int] = {}  # e.g. {"host_rock": 2}
+
         self.fluid_materials: dict[str, Material] = (
             {}
         )  # {"AqueousLiquid": Material(...)}
@@ -68,31 +72,32 @@ class MaterialList:
         self._build_material_list()
 
     def _build_material_list(self) -> None:
+        # Solid materials (subdomain-based)
         for entry in self.subdomains:
             name = entry["material"]
             ids = entry["material_id"]
+            subdomain_names = entry.get("subdomain", [])
             raw = self.material_db.get_material(name)
 
             if raw is None:
                 msg = f"Material '{name}' not found in database."
                 raise ValueError(msg)
 
-            # For now, we collect all required properties from the process schema, independent of material type
             required_names = self.get_required_property_names()
 
-            # Solid materials
-            for mat_id in ids:
-                if mat_id in self.materials:
-                    continue
+            filtered_props = [
+                p for p in raw.get_properties() if p.name in required_names
+            ]
+            material = Material(name=name, properties=filtered_props)
 
-                filtered_props = [
-                    p for p in raw.get_properties() if p.name in required_names
-                ]
-                material = Material(name=name, properties=filtered_props)
-                # print(f"Solids: {filtered_props}")
-                self.materials[mat_id] = material
+            for subdomain_name, mat_id in zip(
+                subdomain_names, ids, strict=False
+            ):
+                if subdomain_name not in self.materials:
+                    self.materials[subdomain_name] = material
+                    self.material_ids[subdomain_name] = mat_id
 
-        # Fluid materials (they have no MaterialID)
+        # Fluid materials (they have no material_id)
         for phase_type, mat_name in self.fluids.items():
             raw = self.material_db.get_material(mat_name)
 
@@ -189,11 +194,11 @@ class MaterialList:
 
         return required
 
-    def get_material(self, material_id: int) -> Material | None:
-        return self.materials.get(material_id)
+    def get_material(self, name: str) -> Material | None:
+        return self.materials.get(name)
 
     def list_ids(self) -> list[int]:
-        return list(self.materials.keys())
+        return list(self.material_ids.values())
 
     def list_materials(self) -> list[str]:
         return [mat.name for mat in self.materials.values()]
