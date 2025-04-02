@@ -154,7 +154,7 @@ sphinx_gallery_conf = {
             "examples/howto_quickstart",
             "examples/howto_preprocessing",
             "examples/howto_prjfile",
-            "examples/howto_simulation",
+            "examples/howto_logparser",
             "examples/howto_postprocessing",
             "examples/howto_plot",
             "examples/howto_conversions",
