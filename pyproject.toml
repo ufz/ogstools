@@ -40,6 +40,7 @@ dependencies = [
   "typeguard>=4.0.0",
   "lxml>=4.6.0",
   "pandas>=2.2.3",
+  "psutil>=6.0.0"
 ]
 
 [project.urls]

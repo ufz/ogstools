@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import psutil
 from lxml import etree as ET
 
 from ogstools.ogs6py import (
@@ -51,44 +52,52 @@ class Project:
     """Class for handling an OGS6 project.
 
     In this class everything for an OGS6 project can be specified.
-
-    Parameters
-    ----------
-    output_file : `str`, optional
-        Filename of the output project file
-        Default: default.prj
-    input_file : `str`, optional
-        Filename of the input project file
-    xml_string : `str`,optional
-        String containing the XML tree
-    OMP_NUM_THREADS : `int`, optional
-        Sets the environmentvariable before OGS execution to restrict number of OMP Threads
-    verbose : `bool`, optional
-        Default: False
-
     """
 
-    def __init__(self, **args: Any) -> None:
+    def __init__(
+        self,
+        input_file: str | Path | None = None,
+        output_file: str | Path = "default.prj",
+        output_dir: str | Path = Path(),
+        logfile: str | Path = "out.log",
+        verbose: bool = False,
+        xml_string: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Create a new Project instance.
+
+        :param input_file:  Filename of the input project file
+        :param output_file: Filename of the output project file
+        :param output_dir:  Directory of the simulation output
+        :param logfile:     Filename into which the log is written
+        :param xml_string:  String containing the XML tree
+        :param verbose:     If True, show verbose output
+
+        Optional Keyword Arguments:
+            - OMP_NUM_THREADS: int, sets the environment variable before OGS
+                execution to restrict number of OMP Threads
+            - OGS_ASM_THREADS: int, sets the environment variable before OGS
+                execution to restrict number of OMP Threads
+        """
         sys.setrecursionlimit(10000)
-        self.logfile: Path = Path("out.log")
+        self.logfile = Path(logfile)
+        self.process: None | subprocess.Popen = None
+        self.runtime_start: float = 0.0
+        self.runtime_end: float = 0.0
         self.tree = None
         self.include_elements: list[ET.Element] = []
         self.include_files: list[Path] = []
         self.add_includes: list[dict[str, str]] = []
-        self.output_dir: Path = Path()  # default -> current dir
-        self.verbose: bool = args.get("verbose", False)
-        self.threads: int = args.get("OMP_NUM_THREADS", None)
-        self.asm_threads: int = args.get("OGS_ASM_THREADS", self.threads)
+        self.output_dir = Path(output_dir)  # default -> current dir
+        self.verbose = verbose
+        self.threads: int | None = kwargs.get("OMP_NUM_THREADS")
+        self.asm_threads: int = kwargs.get("OGS_ASM_THREADS", self.threads)
         self.inputfile: Path | None = None
         self.folder: Path = Path()
-
-        if "output_file" in args:
-            self.prjfile = Path(args["output_file"])
-        else:
-            print("output_file not given. Calling it default.prj.")
-            self.prjfile = Path("default.prj")
-        if "input_file" in args:
-            input_file = Path(args["input_file"])
+        self.prjfile = Path(output_file)
+        if input_file is not None:
+            input_file = Path(input_file)
             if input_file.is_file():
                 self.inputfile = input_file
                 self.folder = input_file.parent
@@ -96,7 +105,7 @@ class Project:
                 if self.verbose is True:
                     display.Display(self.tree)
             else:
-                msg = f"Input project file {args['input_file']} not found."
+                msg = f"Input project file {input_file} not found."
                 raise FileNotFoundError(msg)
         else:
             self.inputfile = None
@@ -104,8 +113,8 @@ class Project:
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
             self.tree = ET.ElementTree(ET.fromstring(tree_string, parser=parse))
-        if "xml_string" in args:
-            root = ET.fromstring(args["xml_string"])
+        if xml_string is not None:
+            root = ET.fromstring(xml_string)
             self.tree = ET.ElementTree(root)
         self.geometry = geo.Geo(self.tree)
         self.mesh = mesh.Mesh(self.tree)
@@ -700,7 +709,7 @@ class Project:
                 )
         self.remove_element("./processes/process/initial_stress")
 
-    def _post_run_0(self) -> None:
+    def _write_prj_to_pvd(self) -> None:
         self.inputfile = self.prjfile
         root = self._get_root(remove_blank_text=True, remove_comments=True)
         prjstring = ET.tostring(root, pretty_print=True)
@@ -741,17 +750,16 @@ class Project:
             )
             print("Project file written to output.")
 
-    def _post_run_1(self, write_logs: bool) -> None:
-        if write_logs is False:
-            msg = "OGS execution was not successful. Please set write_logs to True to obtain more information."
-            raise RuntimeError(msg)
-        with self.logfile.open() as lf:
-            num_lines = len(lf.readlines())
-        with self.logfile.open() as file:
-            for i, line in enumerate(file):
-                if i > num_lines - 10:
-                    print(line)
+    def _failed_run_print_log_tail(
+        self, write_logs: bool, tail_len: int = 10
+    ) -> None:
         msg = "OGS execution was not successful."
+        if write_logs is False:
+            msg += " Please set write_logs to True to obtain more information."
+        else:
+            print(f"Last {tail_len} line of the log:")
+            with self.logfile.open() as lf:
+                print("".join(lf.readlines()[-tail_len:]))
         raise RuntimeError(msg)
 
     def run_model(
@@ -763,6 +771,7 @@ class Project:
         wrapper: Any | None = None,
         write_logs: bool = True,
         write_prj_to_pvd: bool = True,
+        background: bool = False,
     ) -> None:
         """Command to run OGS.
 
@@ -777,6 +786,7 @@ class Project:
         :param wrapper:          add a wrapper command. E.g. mpirun
         :param write_logs:       set False to omit logging
         :param write_prj_to_pvd: write the prj file as a comment in the pvd
+        :param background:       Run the simulation in a background process
         """
 
         ogs_path: Path = Path()
@@ -814,6 +824,9 @@ class Project:
                         Please provide a directory containing the OGS executable."""
                 raise RuntimeError(msg)
             ogs_path = ogs_path / path
+        # TODO: logfile should also be written in self.output_path by default
+        # or path provided via "-o"
+        # Fix this, when argparse is used to read the args
         if logfile is not None:
             self.logfile = Path(logfile)
         if container_path is not None:
@@ -835,7 +848,7 @@ class Project:
                 ogs_path = ogs_path / "ogs"
             if shutil.which(str(ogs_path)) is None:
                 msg = """The OGS executable was not found.\
-                        ee https://www.opengeosys.org/docs/userguide/basics/introduction/\
+                        See https://www.opengeosys.org/docs/userguide/basics/introduction/\
                         for installation instructions."""
                 raise RuntimeError(msg)
         cmd = " "
@@ -847,6 +860,11 @@ class Project:
                 cmd = "singularity exec " + f"{container_path} " + wrapper + " "
             else:
                 cmd = "singularity exec " + f"{container_path} " + "ogs "
+        # TODO: use argparse here
+        if args is None:
+            args = f" -o {self.output_dir}"
+        elif args is not None and "-o" not in args:
+            args += f" -o {self.output_dir}"
         if args is not None:
             argslist = args.split(" ")
             output_dir_flag = False
@@ -861,37 +879,72 @@ class Project:
             cmd += f"{self.prjfile} > {self.logfile}"
         else:
             cmd += f"{self.prjfile}"
-        startt = time.time()
         if sys.platform == "win32":
-            returncode = subprocess.run(
-                cmd,
-                shell=True,
-                executable="C:\\Windows\\System32\\cmd.exe",
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT,
-                check=False,
-                env=env,
-            )
+            executable = "C:\\Windows\\System32\\cmd.exe"
         else:
-            returncode = subprocess.run(
-                cmd,
-                shell=True,
-                executable="bash",
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT,
-                check=False,
-                env=env,
-            )
-        stopt = time.time()
-        self.exec_time = stopt - startt
-        if returncode.returncode == 0:
-            print(f"OGS finished with project file {self.prjfile}.")
-            print(f"Execution took {self.exec_time} s")
-            if write_prj_to_pvd is True:
-                self._post_run_0()
+            executable = "bash"
+
+        self.runtime_start = time.time()
+        self.process = subprocess.Popen(
+            cmd,
+            shell=True,
+            executable=executable,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            env=env,
+        )
+        if background:
+            return
+        self.process.wait()
+        self.runtime_end = time.time()
+        if self.process.returncode == 0 and not background and write_prj_to_pvd:
+            self._write_prj_to_pvd()
+        print(self.status)
+        if self.process.returncode != 0:
+            self._failed_run_print_log_tail(write_logs)
+
+    @property
+    def status(self) -> str:
+        ":returns string: describes the status of the model execution."
+        message = f"Simulation: {self.prjfile}"
+        if self.process is None:
+            stat_str = "not yet started."
         else:
-            print(f"Error code: {returncode.returncode}")
-            self._post_run_1(write_logs)
+            match self.process.poll():
+                case None:
+                    runtime = time.time() - self.runtime_start
+                    stat_str = f"running for {runtime} s."
+                case 0:
+                    runtime = self.runtime_end - self.runtime_start
+                    stat_str = "finished successfully."
+                    # no way of getting the runtime for background runs
+                    if runtime > 0:
+                        stat_str += f"\nExecution took {runtime} s"
+                case code:
+                    stat_str = f"terminated with error code {code}."
+        return "\n".join([message, "Status: " + stat_str])
+
+    def terminate_run(self) -> bool:
+        """Aborts simulation if it is running.
+
+        :returns bool:  True if the run was terminated successfully,
+                        False otherwise.
+
+        """
+        if self.process is None:
+            print("Simulation has not been started.")
+            return False
+        try:
+            parent = psutil.Process(self.process.pid)
+            for child in parent.children(recursive=True):
+                child.kill()
+            parent.kill()
+            # Wait shortly, so the process is actually killed before continuing
+            time.sleep(0.01)
+            return True
+        except psutil.NoSuchProcess:
+            print("Simulation has already finished.")
+            return False
 
     def write_input(
         self, prjfile_path: None | Path = None, keep_includes: bool = False

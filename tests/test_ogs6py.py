@@ -2,9 +2,6 @@ import platform
 import shutil
 import sys
 import tempfile
-
-# this needs to be replaced with regexes from specific ogs version
-from collections import defaultdict
 from pathlib import Path
 from typing import NoReturn
 
@@ -39,39 +36,42 @@ from ogstools.meshlib.gmsh_BHE import BHE, gen_bhe_mesh
 from ogstools.meshlib.gmsh_meshing import cuboid
 from ogstools.ogs6py import Project
 
-
-def log_types(records):
-    d = defaultdict(list)
-    for record in records:
-        d[type(record)].append(record)
-    return d
-
-
 mapping = dict.fromkeys(range(32))
 
 
 class TestiOGS:
+
+    def compare(self, file1: str | Path, file2: str | Path) -> None:
+        "Check equality of files, ignoring line endings."
+        WINDOWS_LINE_ENDING = b"\r\n"
+        UNIX_LINE_ENDING = b"\n"
+
+        def to_unix(data: bytes) -> bytes:
+            return data.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
+
+        bytes_1 = Path(file1).read_bytes()
+        bytes_2 = Path(file2).read_bytes()
+        if to_unix(bytes_1) == to_unix(bytes_2):
+            return
+        with Path(file1).open("rb") as f1, Path(file2).open("rb") as f2:
+            for line1, line2 in zip(
+                f1.readlines(), f2.readlines(), strict=True
+            ):
+                assert to_unix(line1) == to_unix(line2)
+
+    @pytest.fixture(scope="session")
+    def shared_prj(self, tmpdir_factory: pytest.TempdirFactory) -> str:
+        return Path(tmpdir_factory.mktemp("test_ogs6py")) / "shared.prj"
+
     @pytest.mark.dependency(name="tunnel_ogs6py_prj_file")
-    def test_buildfromscratch(self) -> NoReturn:
-        model = Project(output_file="tunnel_ogs6py.prj", OMP_NUM_THREADS=4)
-        model.mesh.add_mesh(
-            filename="Decovalex-0-simplified-plain-with-p0-plain.vtu"
-        )
-        model.mesh.add_mesh(
-            filename="Decovalex-0-Boundary-Top-mapped-plain.vtu"
-        )
-        model.mesh.add_mesh(
-            filename="Decovalex-0-Boundary-Left-mapped-plain.vtu"
-        )
-        model.mesh.add_mesh(
-            filename="Decovalex-0-Boundary-Bottom-mapped-plain.vtu"
-        )
-        model.mesh.add_mesh(
-            filename="Decovalex-0-Boundary-Right-mapped-plain.vtu"
-        )
-        model.mesh.add_mesh(
-            filename="Decovalex-0-Boundary-Heater-mapped-plain.vtu"
-        )
+    def test_buildfromscratch(self, shared_prj: str) -> str:
+        model = Project(output_file=shared_prj, OMP_NUM_THREADS=4)
+        model.mesh.add_mesh("Decovalex-0-simplified-plain-with-p0-plain.vtu")
+        model.mesh.add_mesh("Decovalex-0-Boundary-Top-mapped-plain.vtu")
+        model.mesh.add_mesh("Decovalex-0-Boundary-Left-mapped-plain.vtu")
+        model.mesh.add_mesh("Decovalex-0-Boundary-Bottom-mapped-plain.vtu")
+        model.mesh.add_mesh("Decovalex-0-Boundary-Right-mapped-plain.vtu")
+        model.mesh.add_mesh("Decovalex-0-Boundary-Heater-mapped-plain.vtu")
         model.processes.set_process(
             name="Decovalex-0",
             type="THERMO_RICHARDS_MECHANICS",
@@ -802,21 +802,11 @@ class TestiOGS:
             ],
         )
         model.write_input()
-        with Path("tunnel_ogs6py.prj").open("rb") as f:
-            lines = f.readlines()
-        with prj_trm_from_scratch.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(shared_prj, prj_trm_from_scratch)
 
-    def test_buildfromscratch_bhe(self) -> NoReturn:
-        model = Project(output_file="HeatTransportBHE_ogs6py.prj")
+    def test_buildfromscratch_bhe(self, tmp_path: Path) -> NoReturn:
+        outfile = tmp_path / "HeatTransportBHE_ogs6py.prj"
+        model = Project(output_file=outfile)
         model.mesh.add_mesh(filename="mesh.vtu")
         model.mesh.add_mesh(filename="mesh_inflowsf.vtu")
         model.mesh.add_mesh(filename="mesh_bottomsf.vtu")
@@ -1104,21 +1094,10 @@ class TestiOGS:
             error_tolerance="1e-16",
         )
         model.write_input()
-        with Path("HeatTransportBHE_ogs6py.prj").open("rb") as f:
-            lines = f.readlines()
-        with prj_heat_transport.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(outfile, prj_heat_transport)
 
-    def test_replace_text(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace_text.prj"
+    def test_replace_text(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_replace_text.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_text("tunnel_replace", xpath="./time_loop/output/prefix")
         model.write_input()
@@ -1126,12 +1105,10 @@ class TestiOGS:
         find = root.findall("./time_loop/output/prefix")
         assert find[0].text == "tunnel_replace"
 
-    def test_timedependenthet_param(self) -> NoReturn:
-        prjfile = "timedephetparam.prj"
+    def test_timedependenthet_param(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "timedephetparam.prj"
         model = Project(
-            input_file=prj_time_dep_het_param,
-            output_file=prjfile,
-            verbose=True,
+            input_file=prj_time_dep_het_param, output_file=prjfile, verbose=True
         )
         model.parameters.add_parameter(
             name="kappa1", type="Function", expression="1.e-12"
@@ -1161,40 +1138,18 @@ class TestiOGS:
             multiplier=[1.2, 1.0, 0.9, 0.8],
         )
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_time_dep_het_param_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_time_dep_het_param_ref)
 
-    def test_python_st(self) -> NoReturn:
-        prjfile = "python_st.prj"
+    def test_python_st(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "python_st.prj"
         model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.geometry.add_geometry("beier_sandbox.gml")
         model.python_script.set_pyscript("simulationX_test.py")
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_beier_sandbox_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_beier_sandbox_ref)
 
-    def test_robin_bc(self) -> NoReturn:
-        prjfile = "robin_bc.prj"
+    def test_robin_bc(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "robin_bc.prj"
         model = Project(input_file=prj_square_1e4_robin, output_file=prjfile)
         model.process_variables.add_bc(
             process_variable_name="temperature",
@@ -1205,21 +1160,10 @@ class TestiOGS:
             u_0="ambient_temperature",
         )
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_square_1e4_robin_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_square_1e4_robin_ref)
 
-    def test_staggered(self) -> NoReturn:
-        prjfile = "staggered.prj"
+    def test_staggered(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "staggered.prj"
         model = Project(input_file=prj_staggered, output_file=prjfile)
         model.processes.set_process(
             name="HM",
@@ -1272,21 +1216,10 @@ class TestiOGS:
         )
 
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_staggered_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_staggered_ref)
 
-    def test_PID_controller(self) -> NoReturn:
-        prjfile = "pid_timestepping.prj"
+    def test_PID_controller(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "pid_timestepping.prj"
         model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.media.add_property(
             medium_id="0",
@@ -1308,21 +1241,10 @@ class TestiOGS:
             tol=1.0,
         )
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_pid_timestepping_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_pid_timestepping_ref)
 
-    def test_deactivate_replace(self) -> NoReturn:
-        prjfile = "deactivate_replace.prj"
+    def test_deactivate_replace(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "deactivate_replace.prj"
         model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.deactivate_property("viscosity", phase="AqueousLiquid")
         model.deactivate_parameter("p0")
@@ -1333,39 +1255,17 @@ class TestiOGS:
             textlist=["0.012"],
         )
         model.write_input()
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_deactivate_replace.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(prjfile, prj_deactivate_replace)
 
-    def test_empty_replace(self) -> NoReturn:
-        inputfile = Path(prj_tunnel_trm)
-        prjfile = Path("tunnel_ogs6py_empty_replace.prj")
+    def test_empty_replace(self, tmp_path: Path) -> NoReturn:
+        inputfile = prj_tunnel_trm
+        prjfile = Path(tmp_path / "tunnel_ogs6py_empty_replace.prj")
         model = Project(input_file=inputfile, output_file=prjfile)
         model.write_input()
-        with inputfile.open("rb") as f:
-            lines = f.readlines()
-        with Path(prjfile).open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        self.compare(inputfile, prjfile)
 
-    def test_replace_phase_property(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace_phase_property.prj"
+    def test_replace_phase_property(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_replace_phase_property.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_phase_property_value(
             mediumid=0, phase="Solid", name="thermal_expansivity", value=5
@@ -1377,8 +1277,8 @@ class TestiOGS:
         )
         assert find[0].text == "5"
 
-    def test_replace_medium_property(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace_medium_property.prj"
+    def test_replace_medium_property(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_replace_medium_property.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_medium_property_value(
             mediumid=0, name="porosity", value=42
@@ -1390,8 +1290,8 @@ class TestiOGS:
         )
         assert find[0].text == "42"
 
-    def test_replace_parameter(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace_parameter.prj"
+    def test_replace_parameter(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_replace_parameter.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_parameter_value(name="E", value=32)
         model.write_input()
@@ -1399,8 +1299,8 @@ class TestiOGS:
         find = root.findall("./parameters/parameter[name='E']/value")
         assert find[0].text == "32"
 
-    def test_replace_mesh(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_replace_mesh.prj"
+    def test_replace_mesh(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_replace_mesh.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_mesh(
             oldmesh="tunnel_inner.vtu", newmesh="tunnel_inner_new.vtu"
@@ -1427,8 +1327,8 @@ class TestiOGS:
         assert find[8].text == "tunnel_inner_new"
         assert find[13].text == "tunnel_inner_new"
 
-    def test_add_entry(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_add_entry.prj"
+    def test_add_entry(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_add_entry.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.add_element(tag="geometry", parent_xpath=".", text="geometry.gml")
         model.write_input()
@@ -1437,9 +1337,9 @@ class TestiOGS:
         assert find[0].text == "geometry.gml"
 
     @pytest.mark.dependency(depends=["tunnel_ogs6py_prj_file"])
-    def test_add_block(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_add_block.prj"
-        model = Project(input_file="tunnel_ogs6py.prj", output_file=prjfile)
+    def test_add_block(self, shared_prj: str) -> NoReturn:
+        prjfile = Path(shared_prj).parent / "tunnel_ogs6py_add_block.prj"
+        model = Project(input_file=shared_prj, output_file=prjfile)
         model.add_block(
             "parameter",
             parent_xpath="./parameters",
@@ -1451,8 +1351,8 @@ class TestiOGS:
         find = root.findall("./parameters/parameter[name='mu']/value")
         assert find[0].text == "0.001"
 
-    def test_remove_element(self) -> NoReturn:
-        prjfile = "tunnel_ogs6py_remove_element.prj"
+    def test_remove_element(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "tunnel_ogs6py_remove_element.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.remove_element(xpath="./parameters/parameter[name='E']")
         model.write_input()
@@ -1460,38 +1360,22 @@ class TestiOGS:
         find = root.findall("./parameters/parameter[name='E']/value")
         assert len(find) == 0
 
-    def test_replace_block_by_include(self) -> NoReturn:
+    def test_replace_block_by_include(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> NoReturn:
+        monkeypatch.chdir(tmp_path)
         prjfile = "tunnel_ogs6py_solid_inc.prj"
         model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_block_by_include(
             xpath="./media/medium/phases/phase[type='Solid']",
             filename="solid.xml",
         )
-        model.write_input(keep_includes=True)
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with Path(prj_solid_inc_ref).open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
-        with Path("solid.xml").open("rb") as f:
-            lines = f.readlines()
-        with prj_include_solid_ref.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        model.write_input(prjfile, keep_includes=True)
+        for file, ref_file in [
+            (prjfile, prj_solid_inc_ref),
+            ("solid.xml", prj_include_solid_ref),
+        ]:
+            self.compare(file, ref_file)
 
     def test_property_dataframe(self) -> NoReturn:
         model = Project(input_file=prj_tunnel_trm)
@@ -1511,7 +1395,10 @@ class TestiOGS:
         for entry in p_df["medium 1"]:
             assert entry is None
 
-    def test_replace_property_in_include(self) -> NoReturn:
+    def test_replace_property_in_include(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> NoReturn:
+        monkeypatch.chdir(tmp_path)
         prjfile = "tunnel_ogs6py_includetest.prj"
         model = Project(
             input_file=prj_tunnel_trm_withincludes, output_file=prjfile
@@ -1520,30 +1407,11 @@ class TestiOGS:
             mediumid=0, phase="Solid", name="thermal_expansivity", value=1e-3
         )
         model.write_input(keep_includes=True)
-        with Path(prjfile).open("rb") as f:
-            lines = f.readlines()
-        with prj_tunnel_trm_withincludes.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
-        with Path("solid_inc.xml").open("rb") as f:
-            lines = f.readlines()
-        with prj_include_solid.open("rb") as f:
-            lines_ref = f.readlines()
-        assert len(lines) == len(lines_ref)
-        for i, line in enumerate(lines):
-            if sys.platform == "win32":
-                assert line.decode().translate(mapping) == lines_ref[
-                    i
-                ].decode().translate(mapping)
-            else:
-                assert line == lines_ref[i]
+        for file, ref_file in [
+            (prjfile, prj_tunnel_trm_withincludes),
+            ("solid_inc.xml", prj_include_solid),
+        ]:
+            self.compare(file, ref_file)
 
     @pytest.mark.parametrize(
         ("path", "container", "err"),
@@ -1670,3 +1538,37 @@ class TestiOGS:
                 assert (
                     int(omp_num_threads) == num_threads
                 ), f"Expected {var}={num_threads}"
+
+    @pytest.mark.system()
+    @pytest.mark.parametrize("kill", [True, False])
+    def test_abort_run_and_status(
+        self, temp_dir: Path, cuboid_model: Project, kill: bool
+    ) -> NoReturn:
+        assert "not yet started." in cuboid_model.status
+        cuboid_model.write_input()
+        cuboid_model.run_model(
+            write_logs=False,
+            write_prj_to_pvd=False,
+            background=kill,
+            args=f"-o {temp_dir.resolve()}",
+        )
+        if kill:
+            assert "running" in cuboid_model.status, "should still be running"
+            assert cuboid_model.terminate_run(), "aborting the run failed."
+            assert (
+                "terminated with error code" in cuboid_model.status
+            ), "Simulation status should indicate failure after abort."
+            for write_logs in [True, False]:
+                with pytest.raises(RuntimeError):
+                    cuboid_model._failed_run_print_log_tail(
+                        write_logs
+                    )  # pylint: disable=protected-access
+        else:
+            assert (
+                "finished successfully." in cuboid_model.status
+            ), "Simulation has not finished successfully"
+            assert not cuboid_model.terminate_run()
+            assert "finished successfully." in cuboid_model.status, (
+                "Aborting the simulation after it has finished has changed the "
+                "status, although it should not change."
+            )

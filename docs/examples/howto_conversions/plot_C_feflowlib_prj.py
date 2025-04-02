@@ -35,7 +35,8 @@ ogs_sim_res = ms.mesh(ms.timesteps[-1])
 ot.plot.contourf(ogs_sim_res, "single_species")
 # %%
 # 4. Replace the scalar pore diffusion constant by a tensor to introducec anisotropy.
-# How to manipulate a prj file also is explained in this example: :ref:`sphx_glr_auto_examples_howto_prjfile_plot_manipulation.py`.
+# How to manipulate a prj file also is explained in this example:
+# # :ref:`sphx_glr_auto_user-guide_plot_simulate.py`.
 tensor = """
         1e-9 1e-12
         """
