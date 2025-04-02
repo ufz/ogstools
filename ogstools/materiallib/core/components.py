@@ -4,6 +4,7 @@ from .property import Property
 
 
 class Components:
+
     def __init__(
         self,
         phase_type: str,
@@ -21,9 +22,21 @@ class Components:
         self.gas_component = gas_component
         self.liquid_component = liquid_component
 
-        self.gas_component_obj = self._create_component(self.gas_component, "A")
+        if self.phase_type == "AqueousLiquid":
+            gas_role = "Solute"
+            liquid_role = "Solvent"
+        elif self.phase_type == "Gas":
+            gas_role = "Carrier"
+            liquid_role = "Vapour"
+        else:
+            msg = f"Unsupported phase_type: {self.phase_type}"
+            raise ValueError(msg)
+
+        self.gas_component_obj = self._create_component(
+            self.gas_component, gas_role
+        )
         self.liquid_component_obj = self._create_component(
-            self.liquid_component, "W"
+            self.liquid_component, liquid_role
         )
 
     def _create_component(self, material: Material, role: str) -> Component:

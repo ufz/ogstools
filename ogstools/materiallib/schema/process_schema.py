@@ -16,13 +16,13 @@ PROCESS_SCHEMAS = {
             {
                 "type": "AqueousLiquid",
                 "components": {
-                    "A": [
+                    "Solute": [
                         "specific_heat_capacity",
                         "henry_coefficient",
                         "diffusion",
                         "specific_latent_heat",
                     ],
-                    "W": ["specific_heat_capacity"],
+                    "Solvent": ["specific_heat_capacity"],
                 },
                 "properties": [
                     "thermal_conductivity",
@@ -34,8 +34,8 @@ PROCESS_SCHEMAS = {
             {
                 "type": "Gas",
                 "components": {
-                    "A": ["molar_mass", "specific_heat_capacity"],
-                    "W": [
+                    "Carrier": ["molar_mass", "specific_heat_capacity"],
+                    "Vapour": [
                         "molar_mass",
                         "specific_heat_capacity",
                         "specific_latent_heat",
