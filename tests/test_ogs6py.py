@@ -2,6 +2,7 @@ import platform
 import shutil
 import sys
 import tempfile
+import time
 
 # this needs to be replaced with regexes from specific ogs version
 from collections import defaultdict
@@ -1670,3 +1671,37 @@ class TestiOGS:
                 assert (
                     int(omp_num_threads) == num_threads
                 ), f"Expected {var}={num_threads}"
+
+    @pytest.mark.system()
+    @pytest.mark.parametrize("kill", [True, False])
+    def test_abort_run_and_status(
+        self, temp_dir: Path, cuboid_model: Project, kill: bool
+    ) -> NoReturn:
+        assert "not yet started." in cuboid_model.status
+        cuboid_model.write_input()
+        cuboid_model.run_model(
+            write_logs=False,
+            write_prj_to_pvd=False,
+            background=kill,
+            args=f"-o {temp_dir.resolve()}",
+        )
+        if kill:
+            assert "running" in cuboid_model.status, "should still be running"
+            assert cuboid_model.kill_run(), "aborting the simulation failed."
+            assert (
+                "terminated with error code" in cuboid_model.status
+            ), "Simulation status should indicate failure after abort."
+            for write_logs in [True, False]:
+                with pytest.raises(RuntimeError):
+                    cuboid_model._failed_run_print_log_tail(
+                        write_logs
+                    )  # pylint: disable=protected-access
+        else:
+            assert (
+                "finished successfully." in cuboid_model.status
+            ), "Simulation has not finished successfully"
+            assert not cuboid_model.kill_run()
+            assert "finished successfully." in cuboid_model.status, (
+                "Aborting the simulation after it has finished has changed the "
+                "status, although it should not change."
+            )

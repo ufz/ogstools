@@ -12,7 +12,7 @@ This is not released yet!
 
 ### Examples
 
-- removed all example with shape files
+- removed all examples with shape files
 
 # Changes (non API-breaking)
 
@@ -21,6 +21,7 @@ This is not released yet!
 ## Features
 
 - new logparser analysis to inspect simulation behaviour over clock time and model time
+- OGS simulation can be run in a background process via ot.Project.run_model(..., background=True)
 
 ## Infrastructure
 
