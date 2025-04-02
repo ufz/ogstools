@@ -54,10 +54,6 @@ class Component:
                 if phase_def.get("type") == self.phase_type:
                     print(f"Found phase definition for {self.phase_type}")
 
-                    # Add general phase properties
-                    required_properties.update(phase_def.get("properties", []))
-
-                    # Optional: add component-specific properties
                     components = phase_def.get("components", {})
                     if self.role in components:
                         print(
