@@ -52,26 +52,36 @@ class Project:
     """Class for handling an OGS6 project.
 
     In this class everything for an OGS6 project can be specified.
-
-    Parameters
-    ----------
-    output_file : `str`, optional
-        Filename of the output project file
-        Default: default.prj
-    input_file : `str`, optional
-        Filename of the input project file
-    xml_string : `str`,optional
-        String containing the XML tree
-    OMP_NUM_THREADS : `int`, optional
-        Sets the environmentvariable before OGS execution to restrict number of OMP Threads
-    verbose : `bool`, optional
-        Default: False
-
     """
 
-    def __init__(self, **args: Any) -> None:
+    def __init__(
+        self,
+        input_file: str | Path | None = None,
+        output_file: str | Path = "default.prj",
+        output_dir: str | Path = Path(),
+        logfile: str | Path = "out.log",
+        verbose: bool = False,
+        xml_string: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Create a new Project instance.
+
+        :param input_file:  Filename of the input project file
+        :param output_file: Filename of the output project file
+        :param output_dir:  Directory of the simulation output
+        :param logfile:     Filename into which the log is written
+        :param xml_string:  String containing the XML tree
+        :param verbose:     If True, show verbose output
+
+        Optional Keyword Arguments:
+            - OMP_NUM_THREADS: int, sets the environment variable before OGS
+                execution to restrict number of OMP Threads
+            - OGS_ASM_THREADS: int, sets the environment variable before OGS
+                execution to restrict number of OMP Threads
+        """
         sys.setrecursionlimit(10000)
-        self.logfile: Path = Path("out.log")
+        self.logfile = Path(logfile)
         self.process: None | subprocess.Popen = None
         self.runtime_start: float = 0.0
         self.runtime_end: float = 0.0
@@ -79,20 +89,15 @@ class Project:
         self.include_elements: list[ET.Element] = []
         self.include_files: list[Path] = []
         self.add_includes: list[dict[str, str]] = []
-        self.output_dir: Path = Path()  # default -> current dir
-        self.verbose: bool = args.get("verbose", False)
-        self.threads: int | None = args.get("OMP_NUM_THREADS")
-        self.asm_threads: int = args.get("OGS_ASM_THREADS", self.threads)
+        self.output_dir = Path(output_dir)  # default -> current dir
+        self.verbose = verbose
+        self.threads: int | None = kwargs.get("OMP_NUM_THREADS")
+        self.asm_threads: int = kwargs.get("OGS_ASM_THREADS", self.threads)
         self.inputfile: Path | None = None
         self.folder: Path = Path()
-
-        if "output_file" in args:
-            self.prjfile = Path(args["output_file"])
-        else:
-            print("output_file not given. Calling it default.prj.")
-            self.prjfile = Path("default.prj")
-        if "input_file" in args:
-            input_file = Path(args["input_file"])
+        self.prjfile = Path(output_file)
+        if input_file is not None:
+            input_file = Path(input_file)
             if input_file.is_file():
                 self.inputfile = input_file
                 self.folder = input_file.parent
@@ -100,7 +105,7 @@ class Project:
                 if self.verbose is True:
                     display.Display(self.tree)
             else:
-                msg = f"Input project file {args['input_file']} not found."
+                msg = f"Input project file {input_file} not found."
                 raise FileNotFoundError(msg)
         else:
             self.inputfile = None
@@ -108,8 +113,8 @@ class Project:
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
             self.tree = ET.ElementTree(ET.fromstring(tree_string, parser=parse))
-        if "xml_string" in args:
-            root = ET.fromstring(args["xml_string"])
+        if xml_string is not None:
+            root = ET.fromstring(xml_string)
             self.tree = ET.ElementTree(root)
         self.geometry = geo.Geo(self.tree)
         self.mesh = mesh.Mesh(self.tree)
