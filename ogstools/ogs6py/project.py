@@ -905,7 +905,7 @@ class Project:
 
     @property
     def status(self) -> str:
-        "Get a string describing the status of the model execution."
+        ":returns string: describes the status of the model execution."
         message = f"Simulation: {self.prjfile}"
         if self.process is None:
             stat_str = "not yet started."
@@ -924,8 +924,13 @@ class Project:
                     stat_str = f"terminated with error code {code}."
         return "\n".join([message, "Status: " + stat_str])
 
-    def kill_run(self) -> bool:
-        "Aborts simulation if it is running."
+    def terminate_run(self) -> bool:
+        """Aborts simulation if it is running.
+
+        :returns bool:  True if the run was terminated successfully,
+                        False otherwise.
+
+        """
         if self.process is None:
             print("Simulation has not been started.")
             return False

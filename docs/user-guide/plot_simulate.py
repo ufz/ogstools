@@ -86,7 +86,7 @@ print(prj.status)
 # If you want to abort the simulation for any reason, use the following command:
 
 # %%
-prj.kill_run()
+prj.terminate_run()
 print(prj.status)
 
 # %% [markdown]

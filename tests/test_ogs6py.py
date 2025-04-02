@@ -1554,7 +1554,7 @@ class TestiOGS:
         )
         if kill:
             assert "running" in cuboid_model.status, "should still be running"
-            assert cuboid_model.kill_run(), "aborting the simulation failed."
+            assert cuboid_model.terminate_run(), "aborting the run failed."
             assert (
                 "terminated with error code" in cuboid_model.status
             ), "Simulation status should indicate failure after abort."
@@ -1567,7 +1567,7 @@ class TestiOGS:
             assert (
                 "finished successfully." in cuboid_model.status
             ), "Simulation has not finished successfully"
-            assert not cuboid_model.kill_run()
+            assert not cuboid_model.terminate_run()
             assert "finished successfully." in cuboid_model.status, (
                 "Aborting the simulation after it has finished has changed the "
                 "status, although it should not change."
