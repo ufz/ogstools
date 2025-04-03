@@ -47,3 +47,7 @@ properties:
       value: 1.0e-6
       unit: m²/s
       source: "Handbook of Fluid Dynamics for People in a Hurry, J. Swift, 2019, Pocket Science Press, pp. 88-90"
+  specific_latent_heat:
+    - type: Constant
+      value: 2268000.0
+      unit: J/kg

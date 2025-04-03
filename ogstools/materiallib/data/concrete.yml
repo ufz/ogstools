@@ -47,3 +47,15 @@ properties:
     - type: Constant
       value: 0.2
       unit: 1
+  tortuosity:
+    - type: Constant
+      value: 0.8
+      unit: 1
+  relative_permeability:
+    - type: Constant
+      value: 1.0
+      unit: 1
+  relative_permeability_nonwetting_phase:
+    - type: Constant
+      value: 1.0
+      unit: 1

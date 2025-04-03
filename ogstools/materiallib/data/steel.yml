@@ -37,8 +37,40 @@ properties:
       value: 250e6
       unit: Pa
       source:
-  thermal_expansion:
+  thermal_expansivity:
     - type: Constant
       value: 1.2e-5
       unit: 1/K
       source:
+  permeability:
+    - type: Constant
+      value: 1.0e-99
+      unit: m²
+  relative_permeability:
+    - type: Constant
+      value: 1.0
+      unit: 1
+  relative_permeability_nonwetting_phase:
+    - type: Constant
+      value: 1.0
+      unit: 1
+  saturation:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  tortuosity:
+    - type: Constant
+      value: 1.0e+99
+      unit: 1
+  porosity:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  bishops_effective_stress:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  biot_coefficient:
+    - type: Constant
+      value: 0.0
+      unit: 1

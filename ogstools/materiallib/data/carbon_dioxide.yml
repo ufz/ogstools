@@ -42,8 +42,12 @@ properties:
       reference_temperature: 373.15
       reference_pressure: 101325
       source: "Thermodynamics 101: Understanding Vapour Pressure, E. Dew Point, 2016, Physics Insights Publishing, Chapter 5, Section 4"
-  diffusion:
+  henry_coefficient:
     - type: Constant
-      value: 1.0e-6
-      unit: m²/s
-      source: "Handbook of Fluid Dynamics for People in a Hurry, J. Swift, 2019, Pocket Science Press, pp. 88-90"
+      value: 1.0
+      unit: mol/m^3
+      source: "The Perfect Cup of Coffee: A Study on Water Viscosity, L. M. Brewster, 2020, Caffeine Press, pp. 15-19"
+  specific_latent_heat:
+    - type: Constant
+      value: 100.0
+      unit: J/kg

@@ -111,61 +111,6 @@ class MaterialList:
             material = Material(name=mat_name, properties=filtered_props)
             self.fluid_materials[phase_type] = material
 
-    # def get_required_property_names(self) -> set[str]:
-    #     """
-    #     Returns a set of all property names required by the current process schema.
-
-    #     Prints a structured overview of the required properties, grouped by hierarchy level):
-    #     - Medium-level properties
-    #     - Phase-level properties
-    #     - Component-level properties (if fluid)
-
-    #     """
-    #     if self.schema is None:
-    #         raise ValueError("Process schema not set. Cannot determine required properties.")
-
-    #     required = set()
-
-    #     # Print an overview of the required property structure
-    #     print("=== Required Property Structure ===")
-    #     print("===-----------------------------===")
-
-    #     # Medium-level properties
-    #     medium_props = self.schema.get("properties", [])
-    #     if medium_props:
-    #         print("Medium-level properties:")
-    #         for prop in medium_props:
-    #             print(f"  - {prop}")
-    #         print()
-    #         required.update(medium_props)
-
-    #     # Phases and their properties
-    #     for phase in self.schema.get("phases", []):
-    #         phase_type = phase.get("type")
-
-    #         # Phase-level
-    #         phase_props = phase.get("properties", [])
-    #         if phase_props:
-    #             print(f"Phase-level properties for '{phase_type}':")
-    #             for prop in phase_props:
-    #                 print(f"  - {prop}")
-    #             print()
-    #             required.update(phase_props)
-
-    #         # Component-level (if fluid)
-    #         if phase_type in ["AqueousLiquid", "Gas"]:
-    #             components = phase.get("components", {})
-    #             for comp_name, comp_props in components.items():
-    #                 if comp_props:
-    #                     print(f"Component-level properties for '{comp_name}' in phase '{phase_type}':")
-    #                     for prop in comp_props:
-    #                         print(f"  - {prop}")
-    #                     print()
-    #                     required.update(comp_props)
-    #     print("===-----------------------------===")
-
-    #     return required
-
     def get_required_property_names(self) -> set[str]:
         """
         Returns a set of all property names required by the current process schema.
@@ -210,8 +155,12 @@ class MaterialList:
             lines.append(
                 f"  ├─ {len(self.materials)} solid material entries mapped to material_ids:"
             )
-            for mid, mat in sorted(self.materials.items()):
-                lines.append(f"  │   [{mid}] → {mat.name}")
+            for name in sorted(
+                self.materials, key=lambda n: self.material_ids.get(n, 999)
+            ):
+                mat = self.materials[name]
+                mid = self.material_ids.get(name, "?")
+                lines.append(f"  │   [{mid}] {name}: '{mat.name}'")
         else:
             lines.append("  ├─ No solid or medium materials defined")
 

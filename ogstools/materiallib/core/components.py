@@ -43,7 +43,6 @@ class Components:
             if self.phase_type == "Gas"
             else 0.0
         )
-        print(f"Binary diffusion coefficient: {D}")
 
         self.gas_component_obj = self._create_component(
             self.gas_component, gas_role, D

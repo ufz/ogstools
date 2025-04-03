@@ -1,6 +1,5 @@
+import logging
 from typing import Any
-
-from rich import print
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
@@ -8,6 +7,8 @@ from .component import Component
 from .components import Components
 from .material import Material
 from .property import Property
+
+logger = logging.getLogger(__name__)
 
 
 class Phase:
@@ -73,7 +74,7 @@ class Phase:
             self._load_components(gas_material, liquid_material)
 
     def _load_phase_properties(self) -> None:
-        print(f"Loading properties for phase type: {self.type}")
+        logger.debug("Loading properties for phase type: %s", self.type)
         assert self.schema is not None
 
         phase_def = next(
@@ -89,9 +90,9 @@ class Phase:
             msg = f"No phase definition found for type '{self.type}'"
             raise ValueError(msg)
 
-        print(f"Found phase definition for {self.type}")
+        logger.debug("Found phase definition for %s", self.type)
         required = set(phase_def.get("properties", []))
-        print(f"Required properties: {required}")
+        logger.debug("Required properties: %s", required)
 
         source = {
             "AqueousLiquid": self.liquid_material,
@@ -103,7 +104,7 @@ class Phase:
             msg = f"Don't know how to load properties for phase type '{self.type}'"
             raise ValueError(msg)
 
-        print(f"Source material: {source.name}")
+        logger.debug("Source material: %s", source.name)
 
         self.properties = [
             prop for prop in source.get_properties() if prop.name in required
@@ -116,10 +117,12 @@ class Phase:
             msg = f"Missing required properties for phase type '{self.type}', material '{source.name}': {missing}"
             raise ValueError(msg)
 
-        print(
-            f"Loaded {len(self.properties)} properties for phase type '{self.type}'"
+        logger.debug(
+            "Loaded %s properties for phase type '%s'",
+            len(self.properties),
+            self.type,
         )
-        print(self.properties)
+        logger.debug(self.properties)
 
     def _load_components(
         self, gas_material: Material, liquid_material: Material
