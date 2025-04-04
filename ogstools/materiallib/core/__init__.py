@@ -12,6 +12,7 @@ from .components import Components
 from .material import Material
 from .material_db import MaterialDB
 from .material_list import MaterialList
+from .media import Media
 from .medium import Medium
 from .phase import Phase
 from .property import Property
@@ -22,6 +23,7 @@ __all__ = [
     "Material",
     "MaterialDB",
     "MaterialList",
+    "Media",
     "Medium",
     "Phase",
     "Component",
