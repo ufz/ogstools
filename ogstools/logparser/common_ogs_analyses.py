@@ -11,10 +11,11 @@
 
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
+from typeguard import typechecked
 
 
 # Helper functions
@@ -183,6 +184,42 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc=np.max)
     _check_output(pt, interest, context)
     return pt
+
+
+@typechecked
+def errors_per_ts_iteration(
+    df: pd.DataFrame, metric: Literal["dx", "x", "dx_x"] = "dx"
+) -> np.ndarray:
+    return (
+        analysis_convergence_newton_iteration(df)
+        .pivot_table(
+            index="iteration_number",
+            columns="time_step",
+            values=metric,
+            fill_value=np.nan,
+        )
+        .to_numpy()
+    )
+
+
+@typechecked
+def convergence_order_per_ts_iteration(
+    df: pd.DataFrame,
+    n: Literal[3, 4] = 3,
+) -> np.ndarray:
+    """Compute the convergence order of iterative solver errors.
+
+    :math:`q(n=3) = \\frac{\\log | \\frac{x_{k-1}}{x_{k}} |}{\\log | \\frac{x_{k-2}}{x_{k-1}} |}`
+    :math:`q(n=4) = \\frac{\\log | \\frac{x_{k+1}-x_{k}}{x_{k}-x_{k-1}} |}{\\log | \\frac{x_{k}-x_{k-1}}{x_{k-1}-x_{k-2}} |}`
+    """
+    errors = errors_per_ts_iteration(df)
+    values = errors[1:] - errors[:-1] if n == 4 else errors
+    log_ratios = np.log10(np.abs(values[1:] / values[:-1]))
+    orders = log_ratios[1:] / log_ratios[:-1]
+    orders = np.vstack((np.full((2, orders.shape[1]), np.nan), orders))
+    if n == 4:
+        orders = np.vstack((orders, np.full((1, orders.shape[1]), np.nan)))
+    return orders
 
 
 def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
