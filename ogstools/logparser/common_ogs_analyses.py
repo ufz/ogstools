@@ -321,6 +321,10 @@ def fill(df_raw_log: pd.DataFrame) -> pd.DataFrame:
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
 
+    df_raw_log["process"] = (
+        df_raw_log.groupby("mpi_process")[["process"]].ffill().fillna(value=0)
+    )
+
     return df_raw_log
 
 

@@ -107,6 +107,11 @@ class TimeStepOutputTime(MPIProcess, Info):
 
 
 @dataclass
+class SolvingProcessStart(MPIProcess, Info):
+    process: int
+
+
+@dataclass
 class TimeStepSolutionTime(MPIProcess, Info):
     process: int
     time_step_solution_time: float
@@ -297,7 +302,6 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             TimeStepStart,
         ),
         (
-            #
             r"info: \[time\] Time step #(\d+) took",
             TimeStepEnd,
         ),
@@ -314,11 +318,17 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Global coupling iteration #(\d+) took",
             CouplingIterationEnd,
         ),
-        #        (
-        #            r"info: \[time\] Solving process #(\d+) at time step #(\d+) and time ([\d\.e+-]+) with step size ([\d\.e+-]+) started.",
-        #            TimeStepStart,
-        #        ),
+        (r"info: Solving process #(\d+) started", SolvingProcessStart),
+        (
+            r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
+            TimeStepSolutionTime,
+        ),
     ]
+
+    #        (
+    #            r"info: \[time\] Solving process #(\d+) at time step #(\d+) and time ([\d\.e+-]+) with step size ([\d\.e+-]+) started.",
+    #            TimeStepStart,
+    #        ),
 
 
 # +    INFO("Time stepping at step #0 and time {} started.", time_value);

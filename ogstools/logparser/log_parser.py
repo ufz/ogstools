@@ -68,6 +68,25 @@ def mpi_processes(file_name: str | Path) -> int:
         return int(occurrences / 2)
 
 
+def _normalize_regex(
+    parallel_log: bool = False,
+    ogs_res: list | None = None,
+) -> Any:  # ToDo
+
+    if ogs_res is None:
+        ogs_res = new_regexes()
+    patterns = []
+    for regex, log_type in ogs_res:
+        mpi_condition = (
+            parallel_log
+            and issubclass(log_type, MPIProcess)
+            and not issubclass(log_type, NoRankOutput)
+        )
+        mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
+        patterns.append((re.compile(mpi_process_regex + regex), log_type))
+    return patterns
+
+
 def parse_file(
     file_name: str | Path,
     maximum_lines: int | None = None,
@@ -92,19 +111,9 @@ def parse_file(
     if isinstance(file_name, str):
         file_name = Path(file_name)
     file_name = Path(file_name)
-    parallel_log = force_parallel or mpi_processes(file_name) > 1
 
-    if ogs_res is None:
-        ogs_res = new_regexes()
-    patterns = []
-    for regex, log_type in ogs_res:
-        mpi_condition = (
-            parallel_log
-            and issubclass(log_type, MPIProcess)
-            and not issubclass(log_type, NoRankOutput)
-        )
-        mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
-        patterns.append((re.compile(mpi_process_regex + regex), log_type))
+    parallel_log = force_parallel or mpi_processes(file_name) > 1
+    patterns = _normalize_regex(parallel_log, ogs_res)
 
     number_of_lines_read = 0
     with file_name.open() as file:
