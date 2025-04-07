@@ -125,7 +125,7 @@ def meshes_from_gmsh(
         ):
             subdomain = pv_mesh.threshold([0, 0], "gmsh:physical")
         if subdomain.number_of_cells == 0:
-            msg = "Unexpectedly got an empty mesh."
+            msg = f"Unexpectedly got an empty mesh in physical group: {name}."
             raise RuntimeError(msg)
 
         sub_cell_dims = np.array([cell.dimension for cell in subdomain.cell])
