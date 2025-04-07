@@ -11,10 +11,11 @@
 
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
+from typeguard import typechecked
 
 
 # Helper functions
@@ -185,6 +186,42 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     return pt
 
 
+@typechecked
+def errors_per_ts_iteration(
+    df: pd.DataFrame, metric: Literal["dx", "x", "dx_x"] = "dx"
+) -> np.ndarray:
+    return (
+        analysis_convergence_newton_iteration(df)
+        .pivot_table(
+            index="iteration_number",
+            columns="time_step",
+            values=metric,
+            fill_value=np.nan,
+        )
+        .to_numpy()
+    )
+
+
+@typechecked
+def convergence_order_per_ts_iteration(
+    df: pd.DataFrame,
+    n: Literal[3, 4] = 3,
+) -> np.ndarray:
+    """Compute the convergence order of iterative solver errors.
+
+    :math:`q(n=3) = \\frac{\\log | \\frac{x_{k-1}}{x_{k}} |}{\\log | \\frac{x_{k-2}}{x_{k-1}} |}`
+    :math:`q(n=4) = \\frac{\\log | \\frac{x_{k+1}-x_{k}}{x_{k}-x_{k-1}} |}{\\log | \\frac{x_{k}-x_{k-1}}{x_{k-1}-x_{k-2}} |}`
+    """
+    errors = errors_per_ts_iteration(df)
+    values = errors[1:] - errors[:-1] if n == 4 else errors
+    log_ratios = np.log10(np.abs(values[1:] / values[:-1]))
+    orders = log_ratios[1:] / log_ratios[:-1]
+    orders = np.vstack((np.full((2, orders.shape[1]), np.nan), orders))
+    if n == 4:
+        orders = np.vstack((orders, np.full((1, orders.shape[1]), np.nan)))
+    return orders
+
+
 def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     """Process the dataframe of an OGS log for inspection of data over time.
 
@@ -198,21 +235,22 @@ def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     """
     interest, context = (["time_step", "step_size"], ["step_start_time"])
     _check_input(df, interest, context)
-    df_time = df.pivot_table(interest, context, sort=False)
+    df_new = df.copy()
+    df_time = df_new.pivot_table(interest, context, sort=False)
     _check_output(df_time, interest, context)
     # NOTE: iteration_number may contain some faulty offset, but the
     # following aggregation works anyway, as we take the max value.
     interest, context = (["iteration_number"], ["time_step", "step_start_time"])
-    _check_input(df, interest, context)
-    df["step_start_time"] = df["step_start_time"].ffill()
-    df_iter = df.pivot_table(interest, context, aggfunc=np.max, sort=False)
+    _check_input(df_new, interest, context)
+    df_new["step_start_time"] = df_new["step_start_time"].ffill()
+    df_iter = df_new.pivot_table(interest, context, aggfunc=np.max, sort=False)
     # this trick handles the case when the data is one element short
     # which might be the case if the simulation is still running.
     iterations = np.zeros(len(df_time))
     iterations[-len(df_iter) :] = df_iter["iteration_number"].to_numpy()
     df_time["iterations"] = iterations
     # TODO: output_times + something else is still missing here
-    sol_times = df["time_step_finished_time"].dropna().to_numpy()
+    sol_times = df_new["time_step_finished_time"].dropna().to_numpy()
     clock_time = np.zeros(len(df_time))
     clock_time[-len(sol_times) :] = np.cumsum(sol_times)
     df_time["clock_time"] = clock_time

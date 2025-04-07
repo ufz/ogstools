@@ -21,6 +21,8 @@ This is not released yet!
 ## Features
 
 - new logparser analysis to inspect simulation behaviour over clock time and model time
+- new logparser plot to create an overview of the convergence behavior for the
+  entire simulation (ot.logparser.plot_error, ot.logparser.plot_convergence_order)
 - OGS simulation can be run in a background process via ot.Project.run_model(..., background=True)
 
 ## Infrastructure

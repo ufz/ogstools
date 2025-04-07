@@ -1,10 +1,12 @@
 from collections import defaultdict, namedtuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
 from dateutil import parser
 
+from ogstools import logparser as lp
 from ogstools.examples import (
     debug_parallel_3,
     info_parallel_1,
@@ -13,16 +15,6 @@ from ogstools.examples import (
     serial_critical,
     serial_info,
     serial_warning_only,
-)
-from ogstools.logparser import (
-    analysis_convergence_coupling_iteration,
-    analysis_convergence_newton_iteration,
-    analysis_simulation_termination,
-    analysis_time_step,
-    fill_ogs_context,
-    model_and_clock_time,
-    parse_file,
-    time_step_vs_iterations,
 )
 
 
@@ -38,10 +30,10 @@ class TestLogparser:
 
     def test_parallel_1_compare_serial_info(self):
         # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
-        records_p = parse_file(info_parallel_1, force_parallel=True)
+        records_p = lp.parse_file(info_parallel_1, force_parallel=True)
         num_of_record_type_p = [len(i) for i in log_types(records_p).values()]
 
-        records_s = parse_file(serial_info)
+        records_s = lp.parse_file(serial_info)
         num_of_record_type_s = [len(i) for i in log_types(records_s).values()]
 
         assert (
@@ -49,7 +41,7 @@ class TestLogparser:
         ), "The number of logs for each type must be equal for parallel log and serial log"
 
     def test_parallel_3_debug(self):
-        records = parse_file(debug_parallel_3)
+        records = lp.parse_file(debug_parallel_3)
         mpi_processes = 3
 
         assert (
@@ -62,8 +54,8 @@ class TestLogparser:
         ), "The number of logs of each type should be a multiple of the number of processes"
 
         df_records = pd.DataFrame(records)
-        df_records = fill_ogs_context(df_records)
-        df_ts = analysis_time_step(df_records)
+        df_records = lp.fill_ogs_context(df_records)
+        df_ts = lp.analysis_time_step(df_records)
 
         # some specific values
         record_id = namedtuple("id", "mpi_process time_step")
@@ -89,10 +81,10 @@ class TestLogparser:
         ] == pytest.approx(0.008504, digits)
 
     def test_serial_convergence_newton_iteration_long(self):
-        records = parse_file(serial_convergence_long)
+        records = lp.parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
-        df_records = fill_ogs_context(df_records)
-        df_cni = analysis_convergence_newton_iteration(df_records)
+        df_records = lp.fill_ogs_context(df_records)
+        df_cni = lp.analysis_convergence_newton_iteration(df_records)
 
         # some specific values
         record_id = namedtuple(
@@ -122,16 +114,16 @@ class TestLogparser:
         ] == pytest.approx(1.066500e00, digits)
 
     def test_serial_convergence_coupling_iteration_long(self):
-        records = parse_file(serial_convergence_long)
+        records = lp.parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
-        df_st = analysis_simulation_termination(df_records)
+        df_st = lp.analysis_simulation_termination(df_records)
         status = len(df_st) == 2  # No errors assumed
         assert status  #
         if not (status):
             print(df_st)
         assert status  #
-        df_records = fill_ogs_context(df_records)
-        df_st = analysis_convergence_coupling_iteration(df_records)
+        df_records = lp.fill_ogs_context(df_records)
+        df_st = lp.analysis_convergence_coupling_iteration(df_records)
 
         # some specific values
         record_id = namedtuple(
@@ -159,41 +151,43 @@ class TestLogparser:
         ] == pytest.approx(1.066500e00, digits)
 
     def test_serial_critical(self):
-        records = parse_file(serial_critical)
+        records = lp.parse_file(serial_critical)
         assert len(records) == 6
         df_records = pd.DataFrame(records)
         assert len(df_records) == 6
-        df_st = analysis_simulation_termination(df_records)
+        df_st = lp.analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
         if has_errors:
             print(df_st)
 
     def test_serial_warning_only(self):
-        records = parse_file(serial_warning_only)
+        records = lp.parse_file(serial_warning_only)
         assert len(records) == 3
         df_records = pd.DataFrame(records)
         assert len(df_records) == 3
-        df_st = analysis_simulation_termination(df_records)
+        df_st = lp.analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
         if has_errors:
             print(df_st)
 
     def test_serial_time_vs_iterations(self):
-        records = parse_file(serial_convergence_long)
+        records = lp.parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
-        df_records = fill_ogs_context(df_records)
-        df_tsi = time_step_vs_iterations(df_records)
+        df_records = lp.fill_ogs_context(df_records)
+        df_tsi = lp.time_step_vs_iterations(df_records)
         # some specific values
         assert df_tsi.loc[0, "iteration_number"] == 1
         assert df_tsi.loc[1, "iteration_number"] == 6
         assert df_tsi.loc[10, "iteration_number"] == 5
 
     def test_model_and_clock_time(self):
-        records = parse_file(log_adaptive_timestepping)
-        df_log = fill_ogs_context(pd.DataFrame(records))
-        df_time = model_and_clock_time(df_log)
+        records = lp.parse_file(log_adaptive_timestepping)
+        df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
+        df_time = lp.model_and_clock_time(df_log)
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
 
         assert np.isclose(np.max(df_time["step_size"]), 0.48490317342720013), (
             f"Maximum step_size {np.max(df_time['step_size'])} does not match "
@@ -223,3 +217,26 @@ class TestLogparser:
             f"Difference between final clock_time {final_clock_time} and "
             f"total_runtime {run_time} from timestamps is to large."
         )
+
+    # TODO: graphical output is not yet tested
+    def test_plot_error(self):
+        records = lp.parse_file(log_adaptive_timestepping)
+        df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
+        fig, axes = plt.subplots(3, figsize=(20, 30))
+        lp.plot_convergence(df_log, "dx", fig=fig, ax=axes[0])
+        lp.plot_convergence(df_log, "dx_x", fig=fig, ax=axes[1])
+        lp.plot_convergence(df_log, "x", fig=fig, ax=axes[2])
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
+        assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
+
+    # TODO: graphical output is not yet tested
+    def test_plot_convergence_order(self):
+        records = lp.parse_file(log_adaptive_timestepping)
+        df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
+        fig = lp.plot_convergence_order(df_log, n=3, x_metric="time_step")
+        fig = lp.plot_convergence_order(df_log, n=4, x_metric="model_time")
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
+        assert len(fig.axes) == 2
+        assert fig.axes[1].get_ylabel() == "convergence order $q$"

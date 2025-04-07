@@ -14,7 +14,7 @@ and for the **staggered scheme** we use a prj from
 
 # sphinx_gallery_start_ignore
 
-# sphinx_gallery_thumbnail_number = -1
+# sphinx_gallery_thumbnail_number = -3
 
 # sphinx_gallery_end_ignore
 
@@ -125,7 +125,8 @@ ot.logparser.analysis_convergence_coupling_iteration(df_log)
 # The :py:mod:`ogstools.logparser.model_and_clock_time` function allows to
 # examine needed iterations, clock time, and step size over model time per
 # attempted time step. This is especially useful to analyze the runtime
-# behaviour of a simulation which employs adaptive time stepping.
+# behaviour of a simulation which employs adaptive time stepping. The following
+# example failed as the simulation reached the minimal allowed time step size.
 
 # %%
 records = ot.logparser.parse_file(log_adaptive_timestepping)
@@ -133,3 +134,28 @@ df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 df_t = ot.logparser.model_and_clock_time(df_log)
 df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)
+
+# %% [markdown]
+# To get an overview of the convergence behavior of the nonlinear solver over
+# the entire simulation we can plot the relative error as a heatmap.
+
+# %%
+fig = ot.logparser.plot_convergence(df_log, "dx_x")
+
+# %% [markdown]
+# We can also plot this data over the model time. Note, that the last timesteps
+# are so small, that they are not visible anymore here:
+
+# %%
+fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
+
+# %% [markdown]
+# Further we can calculate the convergence order and plot it in the same manner.
+# In order to estimate the convergence order we need to take into account
+# multiple values and thus cannot assign each iteration a convergence order.
+# Only for iterations `i` of `i  >= n` an order is calculated and plotted.
+# See: :py:func:`~ogstools.logparser.common_ogs_analyses.convergence_order_per_ts_iteration`
+# for more info.
+
+# %%
+fig = ot.logparser.plot_convergence_order(df_log)
