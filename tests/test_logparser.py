@@ -185,7 +185,9 @@ class TestLogparser:
     def test_model_and_clock_time(self):
         records = lp.parse_file(log_adaptive_timestepping)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
         df_time = lp.model_and_clock_time(df_log)
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
 
         assert np.isclose(np.max(df_time["step_size"]), 0.48490317342720013), (
             f"Maximum step_size {np.max(df_time['step_size'])} does not match "
@@ -220,17 +222,21 @@ class TestLogparser:
     def test_plot_error(self):
         records = lp.parse_file(log_adaptive_timestepping)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
         fig, axes = plt.subplots(3, figsize=(20, 30))
         lp.plot_convergence(df_log, "dx", fig=fig, ax=axes[0])
         lp.plot_convergence(df_log, "dx_x", fig=fig, ax=axes[1])
         lp.plot_convergence(df_log, "x", fig=fig, ax=axes[2])
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
 
     # TODO: graphical output is not yet tested
     def test_plot_convergence_order(self):
         records = lp.parse_file(log_adaptive_timestepping)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
+        df_log_copy = df_log.copy()
         fig = lp.plot_convergence_order(df_log, n=3, x_metric="time_step")
         fig = lp.plot_convergence_order(df_log, n=4, x_metric="model_time")
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 2
         assert fig.axes[1].get_ylabel() == "convergence order $q$"

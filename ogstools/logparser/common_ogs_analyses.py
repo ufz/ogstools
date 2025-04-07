@@ -235,21 +235,22 @@ def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     """
     interest, context = (["time_step", "step_size"], ["step_start_time"])
     _check_input(df, interest, context)
-    df_time = df.pivot_table(interest, context, sort=False)
+    df_new = df.copy()
+    df_time = df_new.pivot_table(interest, context, sort=False)
     _check_output(df_time, interest, context)
     # NOTE: iteration_number may contain some faulty offset, but the
     # following aggregation works anyway, as we take the max value.
     interest, context = (["iteration_number"], ["time_step", "step_start_time"])
-    _check_input(df, interest, context)
-    df["step_start_time"] = df["step_start_time"].ffill()
-    df_iter = df.pivot_table(interest, context, aggfunc=np.max, sort=False)
+    _check_input(df_new, interest, context)
+    df_new["step_start_time"] = df_new["step_start_time"].ffill()
+    df_iter = df_new.pivot_table(interest, context, aggfunc=np.max, sort=False)
     # this trick handles the case when the data is one element short
     # which might be the case if the simulation is still running.
     iterations = np.zeros(len(df_time))
     iterations[-len(df_iter) :] = df_iter["iteration_number"].to_numpy()
     df_time["iterations"] = iterations
     # TODO: output_times + something else is still missing here
-    sol_times = df["time_step_finished_time"].dropna().to_numpy()
+    sol_times = df_new["time_step_finished_time"].dropna().to_numpy()
     clock_time = np.zeros(len(df_time))
     clock_time[-len(sol_times) :] = np.cumsum(sol_times)
     df_time["clock_time"] = clock_time
