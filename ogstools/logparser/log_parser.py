@@ -10,7 +10,9 @@
 #              http://www.opengeosys.org/project/license
 
 import re
+from collections.abc import Callable
 from pathlib import Path
+from queue import Empty, Queue
 from typing import Any
 
 from watchdog.events import (
@@ -24,6 +26,7 @@ from ogstools.logparser.regexes import (
     Log,
     MPIProcess,
     NoRankOutput,
+    Termination,
     #    ogs_regexes,
     new_regexes,
 )
@@ -94,17 +97,38 @@ def _normalize_regex(
     return patterns
 
 
+def simple_consumer(queue: Queue) -> None:
+    print("[Consumer] Started")
+    try:
+        while True:
+            try:
+                item = queue.get(timeout=1)  # wait for a log item
+                print(f"[Consumer] → {item}")
+            except Empty:
+                continue  # no data yet, just keep looping
+    except KeyboardInterrupt:
+        print("[Consumer] Interrupted, exiting...")
+
+
 class LogFileHandler(FileSystemEventHandler):
     def __init__(
-        self, file_name: str | Path, patterns: Any, force_parallel: bool = False
+        self,
+        file_name: str | Path,
+        patterns: Any,
+        queue: Queue,
+        stop_callback: Callable[[], tuple[None, Any]],
+        force_parallel: bool = False,
+        line_limit: int = 0,
     ):
 
         self.file_name = Path(file_name)
 
         self._file = self.file_name.open("r")
         self._file.seek(0, 0)
-        self.records: list = []
+        self.queue = queue
+        self.stop_callback = stop_callback
         self.line_num = 0
+        self.line_limit = line_limit
         self.force_parallel = force_parallel
         self.patterns = patterns
 
@@ -119,27 +143,47 @@ class LogFileHandler(FileSystemEventHandler):
                     # print(line)
                     break  # Wait for complete line before processing
 
-                if parse_line(
+                log_entry = parse_line(
                     self.patterns,
                     line,
                     parallel_log=False,
                     number_of_lines_read=self.line_num,
-                ):
-                    self.records.append(line)
+                )
+
+                if log_entry:
+                    self.queue.put(log_entry)
                     print(f"{line}")
 
+                if isinstance(log_entry, Termination):
+                    print("===== Termination =====")
+                    self.stop_callback()
+                    break
 
-def start_observer(file_name: str | Path) -> ObserverType:
-    handler = LogFileHandler(file_name, patterns=_normalize_regex())
-    observer = Observer()
+                if self.line_limit > 0 and self.line_num > self.line_limit:
+                    self.stop_callback()
+                    break
+
+
+def start_log(file_name: str | Path) -> ObserverType:
+    queue: Queue = Queue()
+    observer: ObserverType = Observer()
+    handler = LogFileHandler(
+        file_name,
+        patterns=_normalize_regex(),
+        queue=queue,
+        stop_callback=lambda: (print("Stop Observer"), observer.stop()),
+    )
+
     observer.schedule(handler, path=str(file_name), recursive=False)
     observer.start()
+
+    # simple_consumer(queue)  # Start the consumer in the main thread
     return observer
 
 
 def parse_line(
     patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
-) -> Log | None:
+) -> Log | None | Termination:
 
     for regex, log_type in patterns:
         has_mpi_process = parallel_log and issubclass(log_type, MPIProcess)

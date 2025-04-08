@@ -1,5 +1,5 @@
 info: This is OpenGeoSys-6 version 6.5.4-221-g59413d1d.dirty.
-info: OGS started on 2025-04-08 09:51:50+0200.
+info: OGS started on 2025-04-08 11:45:59+0200.
 warning: OMP_NUM_THREADS is not set, falling back to: 8
 info: Eigen use 8 threads
 info: Reading project file /home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj.
@@ -98,15 +98,15 @@ debug:   process variable pressure
 debug:   secondary variable darcy_velocity
 debug: Computing new singular value decomposition
 debug: Writing output to 'HeatTransportInStationaryFlow_ts_0_t_0.000000.vtu'.
-info: [time] Output of timestep 0 took 0.0241228 s.
+info: [time] Output of timestep 0 took 0.0232451 s.
 info: Time step #0 took TODO.
 info: Solve processes.
 info: === Time stepping at step #1 and time 1000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0943242 s.
-info: [time] Applying Dirichlet BCs took 0.00194699 s.
+info: [time] Assembly took 0.0708341 s.
+info: [time] Applying Dirichlet BCs took 0.0020318 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -122,14 +122,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 3.133737e-32
 
-info: [time] Linear solver took 0.0160581 s.
+info: [time] Linear solver took 0.0171979 s.
 info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=2.6647e+00, |dx|/|x|=1.0000e+00
 info: Convergence criterion, component 1: |dx|=7.3496e+03, |x|=1.2712e+06, |dx|/|x|=5.7815e-03
-info: [time] Iteration #1 took 0.113309 s.
+info: [time] Iteration #1 took 0.0907999 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0787976 s.
-info: [time] Applying Dirichlet BCs took 0.00155905 s.
+info: [time] Assembly took 0.0695084 s.
+info: [time] Applying Dirichlet BCs took 0.00164218 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -145,14 +145,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 2.489567e-32
 
-info: [time] Linear solver took 0.013247 s.
+info: [time] Linear solver took 0.0148752 s.
 info: Convergence criterion, component 0: |dx|=1.3244e+00, |x|=2.0490e+00, |dx|/|x|=6.4637e-01
 info: Convergence criterion, component 1: |dx|=1.8307e-09, |x|=1.2712e+06, |dx|/|x|=1.4401e-15
-info: [time] Iteration #2 took 0.0943507 s.
+info: [time] Iteration #2 took 0.0866068 s.
 info: Iteration #3 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0923746 s.
-info: [time] Applying Dirichlet BCs took 0.00153836 s.
+info: [time] Assembly took 0.0950834 s.
+info: [time] Applying Dirichlet BCs took 0.00162828 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -168,19 +168,19 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 5.450235e-45
 
-info: [time] Linear solver took 0.0166658 s.
+info: [time] Linear solver took 0.0140921 s.
 info: Convergence criterion, component 0: |dx|=2.4925e-13, |x|=2.0490e+00, |dx|/|x|=1.2165e-13
 info: Convergence criterion, component 1: |dx|=1.7697e-09, |x|=1.2712e+06, |dx|/|x|=1.3921e-15
-info: [time] Iteration #3 took 0.111519 s.
-info: [time] Solving process #0 took 0.319536 s in time step #1
-info: [time] Time step #1 took 0.319754 s.
+info: [time] Iteration #3 took 0.111597 s.
+info: [time] Solving process #0 took 0.289321 s in time step #1
+info: [time] Time step #1 took 0.28953 s.
 debug: The time stepping is stabilized with the step size of 1000.
 info: === Time stepping at step #2 and time 2000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.087631 s.
-info: [time] Applying Dirichlet BCs took 0.00110303 s.
+info: [time] Assembly took 0.131816 s.
+info: [time] Applying Dirichlet BCs took 0.00197827 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -196,14 +196,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 2.906449e-32
 
-info: [time] Linear solver took 0.0130096 s.
+info: [time] Linear solver took 0.0182226 s.
 info: Convergence criterion, component 0: |dx|=6.0324e-01, |x|=2.2555e+00, |dx|/|x|=2.6745e-01
 info: Convergence criterion, component 1: |dx|=5.0682e-10, |x|=1.2712e+06, |dx|/|x|=3.9868e-16
-info: [time] Iteration #1 took 0.10246 s.
+info: [time] Iteration #1 took 0.152838 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.101369 s.
-info: [time] Applying Dirichlet BCs took 0.00156242 s.
+info: [time] Assembly took 0.11586 s.
+info: [time] Applying Dirichlet BCs took 0.001595 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -219,19 +219,19 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 7.893867e-45
 
-info: [time] Linear solver took 0.0132494 s.
+info: [time] Linear solver took 0.0213364 s.
 info: Convergence criterion, component 0: |dx|=4.5003e-13, |x|=2.2555e+00, |dx|/|x|=1.9953e-13
 info: Convergence criterion, component 1: |dx|=1.8039e-09, |x|=1.2712e+06, |dx|/|x|=1.4190e-15
-info: [time] Iteration #2 took 0.116879 s.
-info: [time] Solving process #0 took 0.219509 s in time step #2
-info: [time] Time step #2 took 0.21959 s.
+info: [time] Iteration #2 took 0.139733 s.
+info: [time] Solving process #0 took 0.292734 s in time step #2
+info: [time] Time step #2 took 0.292835 s.
 debug: The time stepping is stabilized with the step size of 1000.
 info: === Time stepping at step #3 and time 3000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0977695 s.
-info: [time] Applying Dirichlet BCs took 0.00157878 s.
+info: [time] Assembly took 0.102386 s.
+info: [time] Applying Dirichlet BCs took 0.00120759 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -247,14 +247,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 6.033512e-33
 
-info: [time] Linear solver took 0.0149691 s.
+info: [time] Linear solver took 0.0122218 s.
 info: Convergence criterion, component 0: |dx|=4.6784e-01, |x|=2.4860e+00, |dx|/|x|=1.8819e-01
 info: Convergence criterion, component 1: |dx|=1.2694e-09, |x|=1.2712e+06, |dx|/|x|=9.9858e-16
-info: [time] Iteration #1 took 0.115026 s.
+info: [time] Iteration #1 took 0.116524 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0780329 s.
-info: [time] Applying Dirichlet BCs took 0.00152786 s.
+info: [time] Assembly took 0.0923371 s.
+info: [time] Applying Dirichlet BCs took 0.00180672 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -270,19 +270,19 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 1.852520e-45
 
-info: [time] Linear solver took 0.0149627 s.
+info: [time] Linear solver took 0.0159126 s.
 info: Convergence criterion, component 0: |dx|=2.9137e-13, |x|=2.4860e+00, |dx|/|x|=1.1720e-13
 info: Convergence criterion, component 1: |dx|=7.6463e-10, |x|=1.2712e+06, |dx|/|x|=6.0149e-16
-info: [time] Iteration #2 took 0.095228 s.
-info: [time] Solving process #0 took 0.210439 s in time step #3
-info: [time] Time step #3 took 0.210522 s.
+info: [time] Iteration #2 took 0.11097 s.
+info: [time] Solving process #0 took 0.227707 s in time step #3
+info: [time] Time step #3 took 0.227786 s.
 debug: The time stepping is stabilized with the step size of 1000.
 info: === Time stepping at step #4 and time 4000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0858182 s.
-info: [time] Applying Dirichlet BCs took 0.00148806 s.
+info: [time] Assembly took 0.0752877 s.
+info: [time] Applying Dirichlet BCs took 0.00185208 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -298,14 +298,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 6.142452e-33
 
-info: [time] Linear solver took 0.0156486 s.
+info: [time] Linear solver took 0.0206601 s.
 info: Convergence criterion, component 0: |dx|=4.0389e-01, |x|=2.7089e+00, |dx|/|x|=1.4910e-01
 info: Convergence criterion, component 1: |dx|=2.5476e-09, |x|=1.2712e+06, |dx|/|x|=2.0040e-15
-info: [time] Iteration #1 took 0.103681 s.
+info: [time] Iteration #1 took 0.0986438 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0805399 s.
-info: [time] Applying Dirichlet BCs took 0.00144774 s.
+info: [time] Assembly took 0.0794453 s.
+info: [time] Applying Dirichlet BCs took 0.00202555 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -321,19 +321,19 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 7.092369e-45
 
-info: [time] Linear solver took 0.0146872 s.
+info: [time] Linear solver took 0.0188161 s.
 info: Convergence criterion, component 0: |dx|=4.5060e-13, |x|=2.7089e+00, |dx|/|x|=1.6634e-13
 info: Convergence criterion, component 1: |dx|=7.8940e-09, |x|=1.2712e+06, |dx|/|x|=6.2097e-15
-info: [time] Iteration #2 took 0.0973128 s.
-info: [time] Solving process #0 took 0.201176 s in time step #4
-info: [time] Time step #4 took 0.201269 s.
+info: [time] Iteration #2 took 0.101087 s.
+info: [time] Solving process #0 took 0.199877 s in time step #4
+info: [time] Time step #4 took 0.199958 s.
 debug: The time stepping is stabilized with the step size of 1000.
 info: === Time stepping at step #5 and time 5000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0780489 s.
-info: [time] Applying Dirichlet BCs took 0.00207215 s.
+info: [time] Assembly took 0.08292 s.
+info: [time] Applying Dirichlet BCs took 0.00158697 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -349,14 +349,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 8.824260e-33
 
-info: [time] Linear solver took 0.0197796 s.
+info: [time] Linear solver took 0.0137168 s.
 info: Convergence criterion, component 0: |dx|=3.6613e-01, |x|=2.9205e+00, |dx|/|x|=1.2536e-01
 info: Convergence criterion, component 1: |dx|=7.8016e-09, |x|=1.2712e+06, |dx|/|x|=6.1370e-15
-info: [time] Iteration #1 took 0.100756 s.
+info: [time] Iteration #1 took 0.0988541 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0889281 s.
-info: [time] Applying Dirichlet BCs took 0.00198875 s.
+info: [time] Assembly took 0.0745898 s.
+info: [time] Applying Dirichlet BCs took 0.0017078 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -372,12 +372,12 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 2.446203e-44
 
-info: [time] Linear solver took 0.0210702 s.
+info: [time] Linear solver took 0.0144786 s.
 info: Convergence criterion, component 0: |dx|=1.3595e-12, |x|=2.9205e+00, |dx|/|x|=4.6551e-13
 info: Convergence criterion, component 1: |dx|=2.6206e-09, |x|=1.2712e+06, |dx|/|x|=2.0614e-15
-info: [time] Iteration #2 took 0.112787 s.
-info: [time] Solving process #0 took 0.213715 s in time step #5
-info: [time] Time step #5 took 0.213797 s.
+info: [time] Iteration #2 took 0.0916041 s.
+info: [time] Solving process #0 took 0.190618 s in time step #5
+info: [time] Time step #5 took 0.190704 s.
 info: The whole computation of the time stepping took 5 steps, in which
 	 the accepted steps are 5, and the rejected steps are 0.
 
@@ -386,8 +386,8 @@ debug:   process variable temperature
 debug:   process variable pressure
 debug:   secondary variable darcy_velocity
 debug: Writing output to 'HeatTransportInStationaryFlow_ts_5_t_5000.000000.vtu'.
-info: [time] Output of timestep 5 took 0.027888 s.
-info: [time] Execution took 1.28489 s.
+info: [time] Output of timestep 5 took 0.0212393 s.
+info: [time] Execution took 1.33049 s.
 debug: Property is used: 'property 'thermal_transversal_dispersivity' defined for medium 0'
 debug: Property is used: 'property 'thermal_longitudinal_dispersivity' defined for medium 0'
 warning: Property is not used: 'property 'thermal_conductivity' defined for medium 0'
@@ -401,4 +401,4 @@ debug: Property is used: 'property 'thermal_conductivity' defined for phase 'Sol
 debug: Property is used: 'property 'storage' defined for phase 'Solid''
 debug: Property is used: 'property 'specific_heat_capacity' defined for phase 'Solid''
 debug: Property is used: 'property 'density' defined for phase 'Solid''
-info: OGS terminated on 2025-04-08 09:51:52+0200.
+info: OGS terminated on 2025-04-08 11:46:01+0200.

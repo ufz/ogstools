@@ -206,7 +206,12 @@ class SimulationStartTime(MPIProcess, Info, NoRankOutput):
 
 
 @dataclass
-class SimulationEndTime(MPIProcess, Info):
+class Termination:
+    pass
+
+
+@dataclass
+class SimulationEndTime(MPIProcess, Info, Termination):
     message: str
 
 
@@ -310,6 +315,11 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
             IterationEnd,
         ),
+        (r"info: Solving process #(\d+) started\.", SolvingProcessStart),
+        (
+            r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
+            TimeStepSolutionTime,
+        ),
         (
             r"info: Global coupling iteration #(\d+) started",
             CouplingIterationStart,
@@ -318,29 +328,8 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Global coupling iteration #(\d+) took",
             CouplingIterationEnd,
         ),
-        (r"info: Solving process #(\d+) started", SolvingProcessStart),
         (
-            r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
-            TimeStepSolutionTime,
+            r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            SimulationEndTime,
         ),
     ]
-
-    #        (
-    #            r"info: \[time\] Solving process #(\d+) at time step #(\d+) and time ([\d\.e+-]+) with step size ([\d\.e+-]+) started.",
-    #            TimeStepStart,
-    #        ),
-
-
-# +    INFO("Time stepping at step #0 and time {} started.", time_value);
-# +    INFO("Time step #0 took TODO.");
-# +    INFO("Global coupling iteration #{:d} started",
-# +             global_coupling_iteration);
-# +    INFO("Global coupling iteration #{:d} took TODO",
-# +             global_coupling_iteration);
-# +    //    INFO(
-# +    //        "Solving process #{:d} at time step #{:d} and time {:f} with step
-# +    //        size {:f} started.", process_data.process_id, timestep_id, t(),
-# +    //        dt);
-# +    //
-# +
-# +    INFO("Solving process #{:d} started.", process_data.process_id);
