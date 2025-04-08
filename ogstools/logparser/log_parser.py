@@ -13,6 +13,13 @@ import re
 from pathlib import Path
 from typing import Any
 
+from watchdog.events import (
+    DirModifiedEvent,
+    FileModifiedEvent,
+    FileSystemEventHandler,
+)
+from watchdog.observers import Observer
+
 from ogstools.logparser.regexes import (
     Log,
     MPIProcess,
@@ -87,6 +94,67 @@ def _normalize_regex(
     return patterns
 
 
+class LogFileHandler(FileSystemEventHandler):
+    def __init__(
+        self, file_name: str | Path, patterns: Any, force_parallel: bool = False
+    ):
+
+        self.file_name = Path(file_name)
+
+        self._file = self.file_name.open("r")
+        self._file.seek(0, 0)
+        self.records: list = []
+        self.line_num = 0
+        self.force_parallel = force_parallel
+        self.patterns = patterns
+
+    def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
+        if event.src_path == str(self.file_name):
+            # print(f"{self.file_name} has been modified.")
+            while True:
+                self.line_num = self.line_num + 1
+                # print("l:", self.line_num)
+                line = self._file.readline()
+                if not line or not line.endswith("\n"):
+                    print(line)
+                    break  # Wait for complete line before processing
+
+                if parse_line(
+                    self.patterns,
+                    line,
+                    parallel_log=False,
+                    number_of_lines_read=self.line_num,
+                ):
+                    self.records.append(line)
+                    print(f"{line}")
+
+
+def start_observer(file_name: str | Path) -> Observer:
+    handler = LogFileHandler(file_name, patterns=_normalize_regex())
+    observer = Observer()
+    observer.schedule(handler, path=str(file_name), recursive=False)
+    observer.start()
+    return observer
+
+
+def parse_line(
+    patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
+) -> Log | None:
+
+    for regex, log_type in patterns:
+        has_mpi_process = parallel_log and issubclass(log_type, MPIProcess)
+        fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
+        if r := _try_match_line(
+            line,
+            number_of_lines_read,
+            regex,
+            log_type,
+            fill_mpi=fill_mpi,
+        ):
+            return log_type(*r)
+    return None
+
+
 def parse_file(
     file_name: str | Path,
     maximum_lines: int | None = None,
@@ -127,21 +195,11 @@ def parse_file(
             ):
                 break
 
-            for regex, log_type in patterns:
-                has_mpi_process = parallel_log and issubclass(
-                    log_type, MPIProcess
-                )
-                fill_mpi = not has_mpi_process or issubclass(
-                    log_type, NoRankOutput
-                )
-                if r := _try_match_line(
-                    line,
-                    number_of_lines_read,
-                    regex,
-                    log_type,
-                    fill_mpi=fill_mpi,
-                ):
-                    records.append(log_type(*r))
-                    break
+            entry = parse_line(
+                patterns, line, parallel_log, number_of_lines_read
+            )
+
+            if entry:
+                records.append(entry)
 
     return records
