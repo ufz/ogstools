@@ -1,5 +1,5 @@
 info: This is OpenGeoSys-6 version 6.5.4-223-gf4e7b6e6.dirty.
-info: OGS started on 2025-04-08 15:08:54+0200.
+info: OGS started on 2025-04-08 15:26:45+0200.
 warning: OMP_NUM_THREADS is not set, falling back to: 8
 info: Eigen use 8 threads
 info: Reading project file /home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj.
@@ -96,15 +96,15 @@ debug:   process variable pressure
 debug:   secondary variable darcy_velocity
 debug: Computing new singular value decomposition
 debug: Writing output to 'HeatTransportInStationaryFlow_ts_0_t_0.000000.vtu'.
-info: [time] Output of timestep 0 took 0.0207089 s.
+info: [time] Output of timestep 0 took 0.0226894 s.
 info: Time step #0 took TODO.
 info: Solve processes.
 info: Time stepping at step #1 and time 1000 with step size 1000 started.
 info: Solving process #0 started.
 info: Iteration #1 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0665532 s.
-info: [time] Applying Dirichlet BCs took 0.00121629 s.
+info: [time] Assembly took 0.0698024 s.
+info: [time] Applying Dirichlet BCs took 0.00132077 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)

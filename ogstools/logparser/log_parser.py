@@ -164,20 +164,30 @@ class LogFileHandler(FileSystemEventHandler):
                     break
 
 
+def consume(records: Queue) -> None:
+    while True:
+        item = records.get()
+        if isinstance(item, Termination):
+            print("Consumer: Termination signal received. Exiting.")
+            break
+        print(f"Consumed: {item}")
+
+
 def start_log(file_name: str | Path) -> ObserverType:
-    queue: Queue = Queue()
+    records: Queue = Queue()
     observer: ObserverType = Observer()
     handler = LogFileHandler(
         file_name,
         patterns=_normalize_regex(),
-        queue=queue,
+        queue=records,
         stop_callback=lambda: (print("Stop Observer"), observer.stop()),
     )
 
     observer.schedule(handler, path=str(file_name), recursive=False)
+    print("Starting observer...")
     observer.start()
-
-    # simple_consumer(queue)  # Start the consumer in the main thread
+    consume(records)
+    print("Done.")
     return observer
 
 
