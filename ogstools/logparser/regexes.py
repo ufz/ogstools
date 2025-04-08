@@ -329,7 +329,11 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             CouplingIterationEnd,
         ),
         (
-            r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            r"info: Simulation completed on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
+            SimulationEndTime,
+        ),
+        (
+            r"error: Simulation aborted on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTime,
         ),
     ]
