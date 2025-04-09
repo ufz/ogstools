@@ -24,8 +24,49 @@ from ogstools.feflowlib import (  # noqa: E402 / because of ifm-skip
 )
 
 
-def test_cli():
+def test_cli_help():
     subprocess.run(["feflow2ogs", "--help"], check=True)
+
+
+def test_cli_OGS():
+    subprocess.run(
+        [
+            "feflow2ogs",
+            "-i",
+            str(examples.feflow_model_box_Neumann),
+            "-o",
+            tempfile.mkdtemp("feflow_cli_test_OGS"),
+            "OGS",
+        ],
+        check=False,
+    )
+
+
+def test_cli_bulk_mesh():
+    subprocess.run(
+        [
+            "feflow2ogs",
+            "-i",
+            str(examples.feflow_model_box_Neumann),
+            "-o",
+            tempfile.mkdtemp("feflow_cli_test_bulk_mesh"),
+            "bulk_mesh",
+        ],
+        check=False,
+    )
+
+
+def test_cli():
+    subprocess.run(
+        [
+            "feflow2ogs",
+            "-i",
+            str(examples.feflow_model_box_Neumann),
+            "-o",
+            tempfile.mkdtemp("feflow_cli_test"),
+        ],
+        check=False,
+    )
 
 
 class TestSimulation_Neumann:
