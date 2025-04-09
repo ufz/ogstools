@@ -173,7 +173,11 @@ def extract_cell_boundary_conditions(
     if mesh.volume != 0:
         # get the topsurface since there are the cells of interest
         topsurf = get_specific_surface(
-            mesh.extract_surface(), lambda normals: normals[:, 2] > 0
+            mesh.extract_surface(),
+            lambda normals: np.arccos(
+                normals[:, 2] / np.linalg.norm(normals, axis=1)
+            )
+            < np.pi / 4,
         )
     else:
         topsurf = mesh.copy()
