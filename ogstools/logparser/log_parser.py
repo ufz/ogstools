@@ -110,6 +110,11 @@ def simple_consumer(queue: Queue) -> None:
         print("[Consumer] Interrupted, exiting...")
 
 
+class Contexter():
+    self.timestep = 0
+    self.process = 0
+    self.
+
 class LogFileHandler(FileSystemEventHandler):
     def __init__(
         self,
@@ -193,14 +198,14 @@ def start_log(file_name: str | Path) -> ObserverType:
 
 def parse_line(
     patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
-) -> Log | None | Termination:
+) -> Log | Termination | None:
 
     for regex, log_type in patterns:
         has_mpi_process = parallel_log and issubclass(log_type, MPIProcess)
         fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
         if r := _try_match_line(
             line,
-            number_of_lines_read,
+            number_of_lines_read, # ToDo should not be here
             regex,
             log_type,
             fill_mpi=fill_mpi,

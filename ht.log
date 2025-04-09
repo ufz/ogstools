@@ -120,14 +120,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 3.133737e-32
 
-info: [time] Linear solver took 0.0132816 s.
+info: [time] Linear solver took 0.0143741 s.
 info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=2.6647e+00, |dx|/|x|=1.0000e+00
 info: Convergence criterion, component 1: |dx|=7.3496e+03, |x|=1.2712e+06, |dx|/|x|=5.7815e-03
-info: [time] Iteration #1 took 0.0816688 s.
+info: [time] Iteration #1 took 0.0862194 s.
 info: Iteration #2 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.0661737 s.
-info: [time] Applying Dirichlet BCs took 0.000964859 s.
+info: [time] Assembly took 0.0773366 s.
+info: [time] Applying Dirichlet BCs took 0.00117746 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -143,14 +143,14 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 2.489567e-32
 
-info: [time] Linear solver took 0.0112827 s.
+info: [time] Linear solver took 0.0134548 s.
 info: Convergence criterion, component 0: |dx|=1.3244e+00, |x|=2.0490e+00, |dx|/|x|=6.4637e-01
 info: Convergence criterion, component 1: |dx|=1.8307e-09, |x|=1.2712e+06, |dx|/|x|=1.4401e-15
-info: [time] Iteration #2 took 0.078901 s.
+info: [time] Iteration #2 took 0.0924659 s.
 info: Iteration #3 started.
 debug: Assemble HTProcess.
-info: [time] Assembly took 0.074296 s.
-info: [time] Applying Dirichlet BCs took 0.000992898 s.
+info: [time] Assembly took 0.072027 s.
+info: [time] Applying Dirichlet BCs took 0.000945364 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
@@ -166,12 +166,12 @@ info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
 info: 	 iteration: 1/10000
 info: 	 residual: 5.450235e-45
 
-info: [time] Linear solver took 0.013895 s.
+info: [time] Linear solver took 0.0112313 s.
 info: Convergence criterion, component 0: |dx|=2.4925e-13, |x|=2.0490e+00, |dx|/|x|=1.2165e-13
 info: Convergence criterion, component 1: |dx|=1.7697e-09, |x|=1.2712e+06, |dx|/|x|=1.3921e-15
-info: [time] Iteration #3 took 0.0897735 s.
-info: [time] Solving process #0 took 0.250644 s in time step #1
-info: [time] Time step #1 took 0.250837 s.
+info: [time] Iteration #3 took 0.084688 s.
+info: [time] Solving process #0 took 0.263638 s in time step #1
+info: [time] Time step #1 took 0.263806 s.
 info: The whole computation of the time stepping took 1 steps, in which
 	 the accepted steps are 1, and the rejected steps are 0.
 
@@ -180,8 +180,8 @@ debug:   process variable temperature
 debug:   process variable pressure
 debug:   secondary variable darcy_velocity
 debug: Writing output to 'HeatTransportInStationaryFlow_ts_1_t_1000.000000.vtu'.
-info: [time] Output of timestep 1 took 0.018296 s.
-info: [time] Execution took 0.351776 s.
+info: [time] Output of timestep 1 took 0.0173047 s.
+info: [time] Execution took 0.37542 s.
 debug: Property is used: 'property 'thermal_transversal_dispersivity' defined for medium 0'
 debug: Property is used: 'property 'thermal_longitudinal_dispersivity' defined for medium 0'
 warning: Property is not used: 'property 'thermal_conductivity' defined for medium 0'
@@ -195,4 +195,4 @@ debug: Property is used: 'property 'thermal_conductivity' defined for phase 'Sol
 debug: Property is used: 'property 'storage' defined for phase 'Solid''
 debug: Property is used: 'property 'specific_heat_capacity' defined for phase 'Solid''
 debug: Property is used: 'property 'density' defined for phase 'Solid''
-info: Simulation completed on 2025-04-08 15:08:55+0200.
+info: Simulation completed on 2025-04-08 15:26:46+0200.
