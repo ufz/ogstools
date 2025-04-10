@@ -11,6 +11,7 @@
 
 import re
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any
@@ -110,10 +111,12 @@ def simple_consumer(queue: Queue) -> None:
         print("[Consumer] Interrupted, exiting...")
 
 
-class Contexter():
-    self.timestep = 0
-    self.process = 0
-    self.
+@dataclass
+class Context:
+    time_step = 0
+    process = 0
+    iteration = 0
+
 
 class LogFileHandler(FileSystemEventHandler):
     def __init__(
@@ -173,7 +176,7 @@ def consume(records: Queue) -> None:
     while True:
         item = records.get()
         if isinstance(item, Termination):
-            print("Consumer: Termination signal received. Exiting.")
+            print(f"Consumer: Termination signal ({item}) received. Exiting.")
             break
         print(f"Consumed: {item}")
 
@@ -205,7 +208,7 @@ def parse_line(
         fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
         if r := _try_match_line(
             line,
-            number_of_lines_read, # ToDo should not be here
+            number_of_lines_read,  # ToDo should not be here
             regex,
             log_type,
             fill_mpi=fill_mpi,
