@@ -24,10 +24,11 @@ class Component:
         self.role = role
         self.name = material.name
 
-        self.schema: dict[str, Any] | None = PROCESS_SCHEMAS.get(process)
-        if not self.schema:
+        schema = PROCESS_SCHEMAS.get(process)
+        if not schema:
             msg = f"No process schema found for '{process}'."
             raise ValueError(msg)
+        self.schema: dict[str, Any] = schema
 
         if self.phase_type == "Gas" and self.role == "Vapour":
             self.D = diffusion_coefficient
@@ -116,6 +117,42 @@ class Component:
                 phase_type=phase_type,
                 component_name=self.name,
             )
+
+    def validate(self) -> bool:
+        # Relevant für diese Komponente sind die Schema-Daten zur passenden Phase
+        schema_phases = self.schema.get("phases", [])
+        matching_phase = next(
+            (p for p in schema_phases if p.get("type") == self.phase_type),
+            None,
+        )
+
+        if not matching_phase:
+            msg = f"Component '{self.name}' is in a phase '{self.phase_type}' not allowed for process."
+            raise ValueError(msg)
+
+        component_schema = matching_phase.get("components", {}).get(
+            self.role, []
+        )
+        if not component_schema:
+            msg = f"Component '{self.name}' with role '{self.role}' not allowed in phase '{self.phase_type}'."
+            raise ValueError(msg)
+
+        actual_props = {p.name for p in self.properties}
+        allowed_props = set(component_schema)
+
+        # Check for missing or extra props
+        missing = allowed_props - actual_props
+        extra = actual_props - allowed_props
+
+        if missing or extra:
+            msg = f"Component '{self.name}' in phase '{self.phase_type}' (role '{self.role}') is invalid.\n"
+            if missing:
+                msg += f"  Missing properties: {sorted(missing)}\n"
+            if extra:
+                msg += f"  Unexpected properties: {sorted(extra)}"
+            raise ValueError(msg)
+
+        return True
 
     def __repr__(self) -> str:
         # Sammle die Namen der Eigenschaften

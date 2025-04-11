@@ -42,7 +42,18 @@ class Medium:
         self.material_id = material_id
         self.material = material
         self.name = name
-        self.fluids = fluids or {}
+
+        if fluids is not None:
+            checked_fluids = {}
+            for key, val in fluids.items():
+                if not isinstance(val, Material):
+                    msg = f"Fluid '{key}' must be a Material, got {type(val).__name__}"  # type: ignore[unreachable]
+                    raise TypeError(msg)
+                checked_fluids[key] = val
+            self.fluids = checked_fluids
+        else:
+            self.fluids = {}
+
         self.process = process
         self.schema: dict[str, Any] = PROCESS_SCHEMAS.get(process, {})
 
@@ -168,6 +179,50 @@ class Medium:
         for phase in [self.solid, self.aqueous, self.gas, self.nonaqueous]:
             if phase:
                 phase.to_prj(prj, medium_id=mid)
+
+    def validate(self) -> bool:
+        required_phase_types = [p["type"] for p in self.schema["phases"]]
+        found_phases = {
+            phase.type: phase
+            for phase in [self.solid, self.aqueous, self.gas, self.nonaqueous]
+            if phase is not None
+        }
+
+        # Fehlende Phasen prüfen
+        missing = [
+            ptype for ptype in required_phase_types if ptype not in found_phases
+        ]
+        if missing:
+            msg = f"Medium '{self.name}' is missing required phases: {missing}"
+            raise ValueError(msg)
+
+        # Unerwartete Phasen prüfen
+        extra = [
+            ptype for ptype in found_phases if ptype not in required_phase_types
+        ]
+        if extra:
+            msg = f"Medium '{self.name}' has unsupported phases: {extra}"
+            raise ValueError(msg)
+
+        # Phasen validieren
+        for phase in found_phases.values():
+            phase.validate()
+
+        # Eigenschaften auf Medium-Ebene prüfen
+        required_props = self.schema.get("properties", [])
+        found_props = [p.name for p in self.properties]
+
+        missing_props = [p for p in required_props if p not in found_props]
+        if missing_props:
+            msg = f"Medium '{self.name}' is missing required properties: {missing_props}"
+            raise ValueError(msg)
+
+        extra_props = [p for p in found_props if p not in required_props]
+        if extra_props:
+            msg = f"Medium '{self.name}' has unknown/unsupported properties: {extra_props}"
+            raise ValueError(msg)
+
+        return True
 
     def __repr__(self) -> str:
         lines = [f"<Medium '{self.name}' (ID={self.material_id})>"]

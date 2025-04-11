@@ -31,6 +31,10 @@ class Media:
                 process=self.process,
             )
 
+            if not self.validate_medium(medium):
+                msg = f"Medium '{name}' (ID={mat_id}) is invalid."
+                raise ValueError(msg)
+
             self._media.append(medium)
             self._name_map[name] = medium
 
@@ -80,10 +84,31 @@ class Media:
         msg = "from_prj() not implemented yet."
         raise NotImplementedError(msg)
 
+    # def validate(self) -> bool:
+    #     for medium in self._media:
+    #         for phase in medium.get_phases():
+    #             # Regeln aus dem Prozess-Schema extrahieren
+    #             expected_phase_schemas = [
+    #                 p for p in PROCESS_SCHEMAS[self.process]["phases"]
+    #                 if p["type"] == phase.type
+    #             ]
+    #             if not expected_phase_schemas:
+    #                 raise ValueError(f"Phase '{phase.type}' not allowed in process '{self.process}'")
+
+    #             expected = expected_phase_schemas[0]
+    #             # Komponenten validieren
+    #             for component in phase.components:
+    #                 allowed_props = expected.get("components", {}).get(component.role, [])
+    #                 component.validate(allowed_props)
+    #     return True
+
     def validate(self) -> bool:
-        # TODO: check against PROCESS_SCHEMAS[self.process]
-        msg = "validate() not implemented yet."
-        raise NotImplementedError(msg)
+        for medium in self._media:
+            medium.validate()
+        return True
+
+    def validate_medium(self, medium: Medium) -> bool:
+        return medium.validate()
 
     def __repr__(self) -> str:
         lines = [f"<Media with {len(self)} entries>"]

@@ -26,7 +26,12 @@ class Phase:
         self.gas_material = gas_material
         self.liquid_material = liquid_material
         self.solid_material = solid_material
-        self.schema: dict[str, Any] | None = PROCESS_SCHEMAS.get(process)
+
+        schema = PROCESS_SCHEMAS.get(process)
+        if not schema:
+            msg = f"No process schema found for '{process}'."
+            raise ValueError(msg)
+        self.schema: dict[str, Any] = schema
 
         # Check for material consistency
         match phase_type:
@@ -151,6 +156,41 @@ class Phase:
         # Components
         for comp in self.components:
             comp.to_prj(prj, medium_id=medium_id, phase_type=self.type)
+
+    def validate(self) -> bool:
+        # Diese Phase muss im Schema existieren
+        phase_schema = next(
+            (p for p in self.schema["phases"] if p["type"] == self.type), None
+        )
+        if phase_schema is None:
+            msg = f"Phase '{self.type}' is not defined for this process."
+            raise ValueError(msg)
+
+        # Geforderte Eigenschaften laut Schema
+        required_props = phase_schema.get("properties", [])
+        found_props = [p.name for p in self.properties]
+
+        # Fehlende Eigenschaften melden
+        missing = [p for p in required_props if p not in found_props]
+        if missing:
+            msg = (
+                f"Phase '{self.type}' is missing required properties: {missing}"
+            )
+            raise ValueError(msg)
+
+        # Unerlaubte Eigenschaften melden
+        extra = [p for p in found_props if p not in required_props]
+        if extra:
+            msg = f"Phase '{self.type}' has unknown/unsupported properties: {extra}"
+            raise ValueError(msg)
+
+        # Komponenten validieren
+        for component in self.components:
+            if not component.validate():
+                msg = f"Component '{component.name}' in phase '{self.type}' is invalid."
+                raise ValueError(msg)
+
+        return True
 
     def __repr__(self) -> str:
         return (
