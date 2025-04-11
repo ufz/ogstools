@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
+from ogstools.ogs6py import Project
 
 from .material import Material
 from .phase import Phase
@@ -155,6 +156,18 @@ class Medium:
 
     def add_property(self, prop: Property) -> None:
         self.properties.append(prop)
+
+    def to_prj(self, prj: Project) -> None:
+        mid = str(self.material_id)
+        # Properties auf Medium-Ebene
+        for prop in self.properties:
+            prop.to_prj(
+                prj, medium_id=mid, phase_type=None, component_name=None
+            )
+
+        for phase in [self.solid, self.aqueous, self.gas, self.nonaqueous]:
+            if phase:
+                phase.to_prj(prj, medium_id=mid)
 
     def __repr__(self) -> str:
         lines = [f"<Medium '{self.name}' (ID={self.material_id})>"]

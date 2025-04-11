@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
+from ogstools.ogs6py import Project
 
 from .component import Component
 from .components import Components
@@ -140,6 +141,16 @@ class Phase:
 
     def add_component(self, component: Component) -> None:
         self.components.append(component)
+
+    def to_prj(self, prj: Project, medium_id: str) -> None:
+
+        # Properties
+        for prop in self.properties:
+            prop.to_prj(prj, medium_id=medium_id, phase_type=self.type)
+
+        # Components
+        for comp in self.components:
+            comp.to_prj(prj, medium_id=medium_id, phase_type=self.type)
 
     def __repr__(self) -> str:
         return (

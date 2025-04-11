@@ -4,6 +4,10 @@ from collections.abc import Iterator
 
 from ogstools.materiallib.core.material_list import MaterialList
 from ogstools.materiallib.core.medium import Medium
+from ogstools.ogs6py import Project
+from ogstools.ogs6py.media import (
+    Media as OGS6pyMedia,
+)
 
 
 class Media:
@@ -58,6 +62,28 @@ class Media:
         return next(
             (m for m in self._media if m.material_id == material_id), None
         )
+
+    def to_prj(self, prj: Project) -> None:
+
+        prj.remove_element("./media")
+        prj.add_block("media", parent_xpath=".")
+
+        prj.media = OGS6pyMedia(prj.tree)
+
+        for medium in self._media:
+            medium.to_prj(prj)
+
+    @classmethod
+    def from_prj(cls, prj: Project, process: str) -> "Media":
+        # TODO: parse all <media><medium> entries and reconstruct Medium/Phase/Component/Property
+        _ = prj, process  # prevent unused arg warnings
+        msg = "from_prj() not implemented yet."
+        raise NotImplementedError(msg)
+
+    def validate(self) -> bool:
+        # TODO: check against PROCESS_SCHEMAS[self.process]
+        msg = "validate() not implemented yet."
+        raise NotImplementedError(msg)
 
     def __repr__(self) -> str:
         lines = [f"<Media with {len(self)} entries>"]

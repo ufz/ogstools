@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
+from ogstools.ogs6py import Project
 
 from .material import Material
 from .property import Property
@@ -105,6 +106,16 @@ class Component:
         logger.debug("===============================================\n")
 
         return filtered_properties
+
+    def to_prj(self, prj: Project, medium_id: str, phase_type: str) -> None:
+
+        for prop in self.properties:
+            prop.to_prj(
+                prj,
+                medium_id=medium_id,
+                phase_type=phase_type,
+                component_name=self.name,
+            )
 
     def __repr__(self) -> str:
         # Sammle die Namen der Eigenschaften
