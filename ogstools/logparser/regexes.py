@@ -303,6 +303,10 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
 def new_regexes() -> list[tuple[str, type[Log]]]:
     return [
         (
+            r"info: This is OpenGeoSys-6 version (\d+)\.(\d+)\.(\d+)(?:-(\d+))?(?:-g([0-9a-f]+))?(?:\.dirty)?",
+            OGSVersionLog,
+        ),
+        (
             r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
             TimeStepStart,
         ),

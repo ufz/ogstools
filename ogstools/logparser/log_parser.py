@@ -28,8 +28,7 @@ from ogstools.logparser.regexes import (
     MPIProcess,
     NoRankOutput,
     Termination,
-    #    ogs_regexes,
-    new_regexes,
+    ogs_regexes,
 )
 
 
@@ -85,7 +84,7 @@ def _normalize_regex(
 ) -> Any:  # ToDo
 
     if ogs_res is None:
-        ogs_res = new_regexes()
+        ogs_res = ogs_regexes()
     patterns = []
     for regex, log_type in ogs_res:
         mpi_condition = (
