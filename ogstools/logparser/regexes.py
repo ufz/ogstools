@@ -249,7 +249,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             TimeStepSolutionTime,
         ),
         (
-            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
+            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (.*)",
             TimeStepStart,
         ),
         (r"info: \[time\] Assembly took ([\d\.e+-]+) s", AssemblyTime),
