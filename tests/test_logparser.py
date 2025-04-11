@@ -36,6 +36,12 @@ def log_types(records):
 class TestLogparser:
     """Test cases for logparser."""
 
+    def test_new(self):
+        records = parse_file("/home/meisel/gitlabrepos/ogstools/htstat.log")
+        df_records = pd.DataFrame(records)
+        df_filled_records = fill_ogs_context(df_records)
+        df_filled_records.to_csv("test_new.csv")
+
     def test_parallel_1_compare_serial_info(self):
         # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
         records_p = parse_file(info_parallel_1, force_parallel=True)

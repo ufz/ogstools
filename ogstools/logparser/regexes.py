@@ -67,23 +67,34 @@ class AssemblyTime(MPIProcess, Info):
 
 
 @dataclass
-class TimeStep(MPIProcess, Info):
+class TimeStepEnd(MPIProcess, Info):
     time_step: int
 
 
 @dataclass
-class Iteration(TimeStep, Info):
+class IterationStart(MPIProcess, Info):
     iteration_number: int
 
 
 @dataclass
-class IterationTime(MPIProcess, Info):
+class IterationEnd(MPIProcess, Info):
     iteration_number: int
     iteration_time: float
 
 
 @dataclass
-class TimeStepStartTime(MPIProcess, Info):
+class CouplingIterationStart(MPIProcess, Info):
+    coupling_iteration_number: int
+
+
+@dataclass
+class CouplingIterationEnd(MPIProcess, Info):
+    coupling_iteration_number: int
+    # coupling_iteration_time: float
+
+
+@dataclass
+class TimeStepStart(MPIProcess, Info):
     time_step: int
     step_start_time: float
     step_size: float
@@ -228,8 +239,8 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             TimeStepSolutionTime,
         ),
         (
-            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (.*)",
-            TimeStepStartTime,
+            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
+            TimeStepStart,
         ),
         (r"info: \[time\] Assembly took ([\d\.e+-]+) s", AssemblyTime),
         (
@@ -240,10 +251,10 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Linear solver took ([\d\.e+-]+) s",
             LinearSolverTime,
         ),
-        (r"info: Iteration #(\d+) started", Iteration),
+        (r"info: Iteration #(\d+) started", IterationStart),
         (
             r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
-            IterationTime,
+            IterationEnd,
         ),
         (
             r"info: Convergence criterion: \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)$",
@@ -277,3 +288,49 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             SimulationEndTime,
         ),
     ]
+
+
+def new_regexes() -> list[tuple[str, type[Log]]]:
+    return [
+        (
+            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
+            TimeStepStart,
+        ),
+        (
+            #
+            r"info: \[time\] Time step #(\d+) took",
+            TimeStepEnd,
+        ),
+        (r"info: Iteration #(\d+) started", IterationStart),
+        (
+            r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
+            IterationEnd,
+        ),
+        (
+            r"info: Global coupling iteration #(\d+) started",
+            CouplingIterationStart,
+        ),
+        (
+            r"info: \[time\] Global coupling iteration #(\d+) took",
+            CouplingIterationEnd,
+        ),
+        #        (
+        #            r"info: \[time\] Solving process #(\d+) at time step #(\d+) and time ([\d\.e+-]+) with step size ([\d\.e+-]+) started.",
+        #            TimeStepStart,
+        #        ),
+    ]
+
+
+# +    INFO("Time stepping at step #0 and time {} started.", time_value);
+# +    INFO("Time step #0 took TODO.");
+# +    INFO("Global coupling iteration #{:d} started",
+# +             global_coupling_iteration);
+# +    INFO("Global coupling iteration #{:d} took TODO",
+# +             global_coupling_iteration);
+# +    //    INFO(
+# +    //        "Solving process #{:d} at time step #{:d} and time {:f} with step
+# +    //        size {:f} started.", process_data.process_id, timestep_id, t(),
+# +    //        dt);
+# +    //
+# +
+# +    INFO("Solving process #{:d} started.", process_data.process_id);

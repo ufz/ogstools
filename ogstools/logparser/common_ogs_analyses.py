@@ -272,6 +272,58 @@ def analysis_simulation_termination(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+def _types(df_raw_log: pd.DataFrame) -> pd.DataFrame:
+    int_columns = [
+        "line",
+        "mpi_process",
+        "time_step",
+        "iteration_number",
+        "coupling_iteration",
+        "coupling_iteration_process",
+        "component",
+        "process",
+    ]
+
+    for column in df_raw_log.columns:
+        if column in int_columns:
+            try:
+                df_raw_log[column] = df_raw_log[column].astype("Int64")
+            except ValueError:
+                print(
+                    f"Could not convert column '{column}' to integer due to value error"
+                )
+            except TypeError:
+                print(
+                    f"Could not convert column '{column}' to integer due to type error"
+                )
+    return df_raw_log
+
+
+def read_version(df_raw_log: pd.DataFrame) -> OGSVersion:
+
+    row = df_raw_log.iloc[0]
+
+    return OGSVersion(
+        major=row["major"],
+        minor=row["minor"],
+        patch=row["patch"],
+        temporary=row.get("temporary", 0),
+        commit=row.get("commit", ""),
+        dirty=row.get("dirty", False) == "True",
+    )  # Ensure dirty is a boolean
+
+
+def fill(df_raw_log: pd.DataFrame) -> pd.DataFrame:
+    df_raw_log = _types(df_raw_log)
+    # version = read_version(df_raw_log)
+
+    df_raw_log["time_step"] = (
+        df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
+    )
+
+    return df_raw_log
+
+
 def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     """
     Fill missing values in OpenGeoSys (OGS) log DataFrame by context.
@@ -296,39 +348,8 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     ToDo list of columns with integer values are known from regular expression
 
     """
-    int_columns = [
-        "line",
-        "mpi_process",
-        "time_step",
-        "iteration_number",
-        "coupling_iteration",
-        "coupling_iteration_process",
-        "component",
-        "process",
-    ]
-    for column in df_raw_log.columns:
-        if column in int_columns:
-            try:
-                df_raw_log[column] = df_raw_log[column].astype("Int64")
-            except ValueError:
-                print(
-                    f"Could not convert column '{column}' to integer due to value error"
-                )
-            except TypeError:
-                print(
-                    f"Could not convert column '{column}' to integer due to type error"
-                )
-
-    row = df_raw_log.iloc[0]
-
-    version = OGSVersion(
-        major=row["major"],
-        minor=row["minor"],
-        patch=row["patch"],
-        temporary=row.get("temporary", 0),
-        commit=row.get("commit", ""),
-        dirty=row.get("dirty", False) == "True",
-    )  # Ensure dirty is a boolean
+    df_raw_log = _types(df_raw_log)
+    version = read_version(df_raw_log)
 
     df_raw_log["time_step"] = (
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
