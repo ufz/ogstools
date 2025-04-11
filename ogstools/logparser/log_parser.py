@@ -18,7 +18,7 @@ from watchdog.events import (
     FileModifiedEvent,
     FileSystemEventHandler,
 )
-from watchdog.observers import Observer
+from watchdog.observers import Observer, ObserverType
 
 from ogstools.logparser.regexes import (
     Log,
@@ -116,7 +116,7 @@ class LogFileHandler(FileSystemEventHandler):
                 # print("l:", self.line_num)
                 line = self._file.readline()
                 if not line or not line.endswith("\n"):
-                    print(line)
+                    # print(line)
                     break  # Wait for complete line before processing
 
                 if parse_line(
@@ -129,7 +129,7 @@ class LogFileHandler(FileSystemEventHandler):
                     print(f"{line}")
 
 
-def start_observer(file_name: str | Path) -> Observer:
+def start_observer(file_name: str | Path) -> ObserverType:
     handler = LogFileHandler(file_name, patterns=_normalize_regex())
     observer = Observer()
     observer.schedule(handler, path=str(file_name), recursive=False)

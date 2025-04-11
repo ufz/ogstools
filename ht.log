@@ -1,0 +1,404 @@
+info: This is OpenGeoSys-6 version 6.5.4-221-g59413d1d.dirty.
+info: OGS started on 2025-04-08 09:51:50+0200.
+warning: OMP_NUM_THREADS is not set, falling back to: 8
+info: Eigen use 8 threads
+info: Reading project file /home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj.
+info: Project configuration from file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj' read.
+debug: Reading multiple meshes.
+debug: Reading mesh file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/mesh.vtu'.
+debug: Reading mesh file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/geometry_left.vtu'.
+debug: Reading mesh file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/geometry_right.vtu'.
+debug: Reading mesh file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/geometry_top.vtu'.
+debug: Reading mesh file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/geometry_bottom.vtu'.
+debug: The search length for mesh 'mesh' is 1.000000e-09.
+info: readRasters ...
+info: readRasters done
+debug: Reading parameters:
+info: ConstantParameter: T0
+debug: Using value 0 for constant parameter.
+info: ConstantParameter: P0
+debug: Using value 100000 for constant parameter.
+info: ConstantParameter: p_left
+debug: Using value 101000 for constant parameter.
+info: ConstantParameter: p_right
+debug: Using value 100000 for constant parameter.
+info: ConstantParameter: T_left
+debug: Using value 1 for constant parameter.
+debug: Parse process variables:
+debug: Found parameter `T0'.
+debug: Constructing process variable temperature
+debug: Found mesh 'geometry_left' with id 1.
+info: No source terms for process variable 'temperature' found.
+debug: Found parameter `P0'.
+debug: Constructing process variable pressure
+debug: Found mesh 'geometry_left' with id 1.
+debug: Found mesh 'geometry_right' with id 2.
+info: No source terms for process variable 'pressure' found.
+debug: Reading media:
+debug: Create Constant property specific_heat_capacity.
+debug: Create Constant property thermal_conductivity.
+debug: Create Constant property density.
+debug: Create Constant property viscosity.
+debug: Create Constant property storage.
+debug: Create Constant property density.
+debug: Create Constant property thermal_conductivity.
+debug: Create Constant property specific_heat_capacity.
+debug: Create Constant property thermal_longitudinal_dispersivity.
+debug: Create Constant property thermal_transversal_dispersivity.
+debug: Create Constant property permeability.
+debug: Create Constant property porosity.
+debug: Create effective thermal_conductivity property from porosity mixing thermal_conductivity.
+debug: Reading linear solver configuration.
+debug: Reading processes:
+debug: Create HTProcess.
+debug: Found process variable 'temperature' for config tag <temperature>.
+debug: Found process variable 'pressure' for config tag <pressure>.
+debug: Check the media properties of HT process ...
+debug: Media properties verified.
+debug: Found parameter `constant_one'.
+debug: Reading non-linear solver configuration.
+debug: Reading time loop configuration.
+debug: adding output variable `temperature'
+debug: adding output variable `pressure'
+debug: adding output variable `velocity'
+debug: Default implementation of initializeSubmeshAssembly(). Doing nothing.
+warning: Request for output at times 50000, 500000, 5000000, but simulation's end time is 5000. Output will be skipped.
+warning: Did not find interval for fixed output time 500000
+warning: Did not find interval for fixed output time 5000000
+info: Initialize processes.
+debug: Initialize process.
+debug: Construct dof mappings.
+debug: Compute sparsity pattern
+debug: Initialize the extrapolator
+debug: Create local assemblers.
+debug: Create local assemblers.
+debug: Calling local assembler builder for all mesh elements.
+debug: Initialize boundary conditions.
+debug: Constructing DirichletBoundaryCondition from config.
+debug: Using parameter T_left
+debug: Found parameter `T_left'.
+debug: Found 4 nodes for Dirichlet BCs for the variable 0 and component 0
+debug: Construct reduced local to global index map.
+debug: Constructing DirichletBoundaryCondition from config.
+debug: Using parameter p_left
+debug: Found parameter `p_left'.
+debug: Found 4 nodes for Dirichlet BCs for the variable 1 and component 0
+debug: Construct reduced local to global index map.
+debug: Constructing DirichletBoundaryCondition from config.
+debug: Using parameter p_right
+debug: Found parameter `p_right'.
+debug: Found 4 nodes for Dirichlet BCs for the variable 1 and component 0
+debug: Construct reduced local to global index map.
+info: === Time stepping at step #0 and time 0 started.
+debug: Set the initial condition of variable temperature of process 0.
+debug: Set the initial condition of variable pressure of process 0.
+debug: Process output data.
+debug:   process variable temperature
+debug:   process variable pressure
+debug:   secondary variable darcy_velocity
+debug: Computing new singular value decomposition
+debug: Writing output to 'HeatTransportInStationaryFlow_ts_0_t_0.000000.vtu'.
+info: [time] Output of timestep 0 took 0.0241228 s.
+info: Time step #0 took TODO.
+info: Solve processes.
+info: === Time stepping at step #1 and time 1000 with step size 1000 started.
+info: Solving process #0 started.
+info: Iteration #1 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0943242 s.
+info: [time] Applying Dirichlet BCs took 0.00194699 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 3.133737e-32
+
+info: [time] Linear solver took 0.0160581 s.
+info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=2.6647e+00, |dx|/|x|=1.0000e+00
+info: Convergence criterion, component 1: |dx|=7.3496e+03, |x|=1.2712e+06, |dx|/|x|=5.7815e-03
+info: [time] Iteration #1 took 0.113309 s.
+info: Iteration #2 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0787976 s.
+info: [time] Applying Dirichlet BCs took 0.00155905 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 2.489567e-32
+
+info: [time] Linear solver took 0.013247 s.
+info: Convergence criterion, component 0: |dx|=1.3244e+00, |x|=2.0490e+00, |dx|/|x|=6.4637e-01
+info: Convergence criterion, component 1: |dx|=1.8307e-09, |x|=1.2712e+06, |dx|/|x|=1.4401e-15
+info: [time] Iteration #2 took 0.0943507 s.
+info: Iteration #3 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0923746 s.
+info: [time] Applying Dirichlet BCs took 0.00153836 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 5.450235e-45
+
+info: [time] Linear solver took 0.0166658 s.
+info: Convergence criterion, component 0: |dx|=2.4925e-13, |x|=2.0490e+00, |dx|/|x|=1.2165e-13
+info: Convergence criterion, component 1: |dx|=1.7697e-09, |x|=1.2712e+06, |dx|/|x|=1.3921e-15
+info: [time] Iteration #3 took 0.111519 s.
+info: [time] Solving process #0 took 0.319536 s in time step #1
+info: [time] Time step #1 took 0.319754 s.
+debug: The time stepping is stabilized with the step size of 1000.
+info: === Time stepping at step #2 and time 2000 with step size 1000 started.
+info: Solving process #0 started.
+info: Iteration #1 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.087631 s.
+info: [time] Applying Dirichlet BCs took 0.00110303 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 2.906449e-32
+
+info: [time] Linear solver took 0.0130096 s.
+info: Convergence criterion, component 0: |dx|=6.0324e-01, |x|=2.2555e+00, |dx|/|x|=2.6745e-01
+info: Convergence criterion, component 1: |dx|=5.0682e-10, |x|=1.2712e+06, |dx|/|x|=3.9868e-16
+info: [time] Iteration #1 took 0.10246 s.
+info: Iteration #2 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.101369 s.
+info: [time] Applying Dirichlet BCs took 0.00156242 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 7.893867e-45
+
+info: [time] Linear solver took 0.0132494 s.
+info: Convergence criterion, component 0: |dx|=4.5003e-13, |x|=2.2555e+00, |dx|/|x|=1.9953e-13
+info: Convergence criterion, component 1: |dx|=1.8039e-09, |x|=1.2712e+06, |dx|/|x|=1.4190e-15
+info: [time] Iteration #2 took 0.116879 s.
+info: [time] Solving process #0 took 0.219509 s in time step #2
+info: [time] Time step #2 took 0.21959 s.
+debug: The time stepping is stabilized with the step size of 1000.
+info: === Time stepping at step #3 and time 3000 with step size 1000 started.
+info: Solving process #0 started.
+info: Iteration #1 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0977695 s.
+info: [time] Applying Dirichlet BCs took 0.00157878 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 6.033512e-33
+
+info: [time] Linear solver took 0.0149691 s.
+info: Convergence criterion, component 0: |dx|=4.6784e-01, |x|=2.4860e+00, |dx|/|x|=1.8819e-01
+info: Convergence criterion, component 1: |dx|=1.2694e-09, |x|=1.2712e+06, |dx|/|x|=9.9858e-16
+info: [time] Iteration #1 took 0.115026 s.
+info: Iteration #2 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0780329 s.
+info: [time] Applying Dirichlet BCs took 0.00152786 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 1.852520e-45
+
+info: [time] Linear solver took 0.0149627 s.
+info: Convergence criterion, component 0: |dx|=2.9137e-13, |x|=2.4860e+00, |dx|/|x|=1.1720e-13
+info: Convergence criterion, component 1: |dx|=7.6463e-10, |x|=1.2712e+06, |dx|/|x|=6.0149e-16
+info: [time] Iteration #2 took 0.095228 s.
+info: [time] Solving process #0 took 0.210439 s in time step #3
+info: [time] Time step #3 took 0.210522 s.
+debug: The time stepping is stabilized with the step size of 1000.
+info: === Time stepping at step #4 and time 4000 with step size 1000 started.
+info: Solving process #0 started.
+info: Iteration #1 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0858182 s.
+info: [time] Applying Dirichlet BCs took 0.00148806 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 6.142452e-33
+
+info: [time] Linear solver took 0.0156486 s.
+info: Convergence criterion, component 0: |dx|=4.0389e-01, |x|=2.7089e+00, |dx|/|x|=1.4910e-01
+info: Convergence criterion, component 1: |dx|=2.5476e-09, |x|=1.2712e+06, |dx|/|x|=2.0040e-15
+info: [time] Iteration #1 took 0.103681 s.
+info: Iteration #2 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0805399 s.
+info: [time] Applying Dirichlet BCs took 0.00144774 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 7.092369e-45
+
+info: [time] Linear solver took 0.0146872 s.
+info: Convergence criterion, component 0: |dx|=4.5060e-13, |x|=2.7089e+00, |dx|/|x|=1.6634e-13
+info: Convergence criterion, component 1: |dx|=7.8940e-09, |x|=1.2712e+06, |dx|/|x|=6.2097e-15
+info: [time] Iteration #2 took 0.0973128 s.
+info: [time] Solving process #0 took 0.201176 s in time step #4
+info: [time] Time step #4 took 0.201269 s.
+debug: The time stepping is stabilized with the step size of 1000.
+info: === Time stepping at step #5 and time 5000 with step size 1000 started.
+info: Solving process #0 started.
+info: Iteration #1 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0780489 s.
+info: [time] Applying Dirichlet BCs took 0.00207215 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 8.824260e-33
+
+info: [time] Linear solver took 0.0197796 s.
+info: Convergence criterion, component 0: |dx|=3.6613e-01, |x|=2.9205e+00, |dx|/|x|=1.2536e-01
+info: Convergence criterion, component 1: |dx|=7.8016e-09, |x|=1.2712e+06, |dx|/|x|=6.1370e-15
+info: [time] Iteration #1 took 0.100756 s.
+info: Iteration #2 started.
+debug: Assemble HTProcess.
+info: [time] Assembly took 0.0889281 s.
+info: [time] Applying Dirichlet BCs took 0.00198875 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+debug: -> restart is not implemented for this linear solver.
+debug: -> setL() is not implemented for this linear solver.
+debug: -> setS() is not implemented for this linear solver.
+debug: -> setSmoothing() is not implemented for this linear solver.
+debug: -> setAngle() is not implemented for this linear solver.
+debug: -> setResidualUpdate() is not implemented for this linear solver.
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 2.446203e-44
+
+info: [time] Linear solver took 0.0210702 s.
+info: Convergence criterion, component 0: |dx|=1.3595e-12, |x|=2.9205e+00, |dx|/|x|=4.6551e-13
+info: Convergence criterion, component 1: |dx|=2.6206e-09, |x|=1.2712e+06, |dx|/|x|=2.0614e-15
+info: [time] Iteration #2 took 0.112787 s.
+info: [time] Solving process #0 took 0.213715 s in time step #5
+info: [time] Time step #5 took 0.213797 s.
+info: The whole computation of the time stepping took 5 steps, in which
+	 the accepted steps are 5, and the rejected steps are 0.
+
+debug: Process output data.
+debug:   process variable temperature
+debug:   process variable pressure
+debug:   secondary variable darcy_velocity
+debug: Writing output to 'HeatTransportInStationaryFlow_ts_5_t_5000.000000.vtu'.
+info: [time] Output of timestep 5 took 0.027888 s.
+info: [time] Execution took 1.28489 s.
+debug: Property is used: 'property 'thermal_transversal_dispersivity' defined for medium 0'
+debug: Property is used: 'property 'thermal_longitudinal_dispersivity' defined for medium 0'
+warning: Property is not used: 'property 'thermal_conductivity' defined for medium 0'
+debug: Property is used: 'property 'porosity' defined for medium 0'
+debug: Property is used: 'property 'permeability' defined for medium 0'
+debug: Property is used: 'property 'viscosity' defined for phase 'AqueousLiquid''
+debug: Property is used: 'property 'thermal_conductivity' defined for phase 'AqueousLiquid''
+debug: Property is used: 'property 'specific_heat_capacity' defined for phase 'AqueousLiquid''
+debug: Property is used: 'property 'density' defined for phase 'AqueousLiquid''
+debug: Property is used: 'property 'thermal_conductivity' defined for phase 'Solid''
+debug: Property is used: 'property 'storage' defined for phase 'Solid''
+debug: Property is used: 'property 'specific_heat_capacity' defined for phase 'Solid''
+debug: Property is used: 'property 'density' defined for phase 'Solid''
+info: OGS terminated on 2025-04-08 09:51:52+0200.
