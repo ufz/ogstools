@@ -319,6 +319,17 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
                     f"Could not convert column '{column}' to integer due to type error"
                 )
 
+    row = df_raw_log.iloc[0]
+
+    version = OGSVersion(
+        major=row["major"],
+        minor=row["minor"],
+        patch=row["patch"],
+        temporary=row.get("temporary", 0),
+        commit=row.get("commit", ""),
+        dirty=row.get("dirty", False) == "True",
+    )  # Ensure dirty is a boolean
+
     df_raw_log["time_step"] = (
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
