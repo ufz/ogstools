@@ -47,8 +47,18 @@ class MPIProcess(Info):
 
 
 @dataclass
-class GlobalProcess(Info):
-    mpi_process: int
+class NoRankOutput:
+    pass
+
+
+@dataclass
+class OGSVersionLog(MPIProcess, NoRankOutput):
+    major: int = 0
+    minor: int = 0
+    patch: int = 0
+    temporary: int = 0
+    commit: str = ""
+    dirty: bool = False
 
 
 @dataclass

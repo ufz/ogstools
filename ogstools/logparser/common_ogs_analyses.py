@@ -11,10 +11,48 @@
 
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 import pandas as pd
+
+
+@dataclass
+class OGSVersion:
+    major: int
+    minor: int
+    patch: int
+    temporary: int = 0
+    commit: str = ""
+    dirty: bool = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, OGSVersion):
+            return NotImplemented
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+        )
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, OGSVersion):
+            return NotImplemented
+        if self.major != other.major:
+            return self.major < other.major
+        if self.minor != other.minor:
+            return self.minor < other.minor
+        return self.patch < other.patch
+
+    def __le__(self, other: object) -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other: object) -> bool:
+        return not self <= other
+
+    def __ge__(self, other: object) -> bool:
+        return not self < other
 
 
 # Helper functions
