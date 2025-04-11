@@ -17,7 +17,8 @@ from ogstools.logparser.regexes import (
     Log,
     MPIProcess,
     NoRankOutput,
-    ogs_regexes,
+    #    ogs_regexes,
+    new_regexes,
 )
 
 
@@ -94,7 +95,7 @@ def parse_file(
     parallel_log = force_parallel or mpi_processes(file_name) > 1
 
     if ogs_res is None:
-        ogs_res = ogs_regexes()
+        ogs_res = new_regexes()
     patterns = []
     for regex, log_type in ogs_res:
         mpi_condition = (
