@@ -197,7 +197,9 @@ class TestLogparser:
     def test_serial_time_vs_iterations(self):
         records = parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
+        df_records.to_csv("test_serial_time_vs_iterations_records.csv")
         df_records = fill_ogs_context(df_records)
+        df_records.to_csv("test_serial_time_vs_iterations_filled.csv")
         df_tsi = time_step_vs_iterations(df_records)
         # some specific values
         assert (

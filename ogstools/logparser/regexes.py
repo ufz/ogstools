@@ -240,6 +240,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Linear solver took ([\d\.e+-]+) s",
             LinearSolverTime,
         ),
+        (r"info: Iteration #(\d+) started", Iteration),
         (
             r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
             IterationTime,

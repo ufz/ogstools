@@ -218,7 +218,7 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     interest = ["iteration_number"]
     context = ["time_step"]
     _check_input(df, interest, context)
-    pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc=np.max)
+    pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc="max")
     _check_output(pt, interest, context)
     return pt
 
@@ -334,15 +334,25 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
 
-    # Back fill, because iteration number can be found in logs at the END of the iteration
-    df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
-        ["iteration_number"]
-    ].bfill()
+    if version < OGSVersion(6, 4, 4):
+
+        print("-------------------------", version)
+        # Back fill, because iteration number can be found in logs at the END of the iteration
+        df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
+            ["iteration_number"]
+        ].bfill()
+
+    else:
+        df_raw_log["iteration_number"] = (
+            df_raw_log.groupby("mpi_process")[["iteration_number"]]
+            .ffill()
+            .fillna(value=1)
+        )
 
     if "component" in df_raw_log:
         df_raw_log["component"] = df_raw_log.groupby("mpi_process")[
             ["component"]
-        ].fillna(value=-1)
+        ].transform(lambda x: x.fillna(-1))
     # Forward fill because process will be printed in the beginning - applied to all subsequent
     if "process" in df_raw_log:
         df_raw_log["process"] = df_raw_log.groupby("mpi_process")[
