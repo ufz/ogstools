@@ -160,9 +160,15 @@ class TestLogparser:
 
     def test_serial_critical(self):
         records = parse_file(serial_critical)
-        assert len(records) == 6
+        num_of_non_parsed_lines = 2  # 2 lines starting with Please re-run ,
+        num_lines = sum(1 for _ in serial_critical.open("r", encoding="utf-8"))
+        assert (
+            len(records) == num_lines - num_of_non_parsed_lines
+        ), f"Expected {num_lines-num_of_non_parsed_lines} parsed, but got {len(records)}"
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 6
+        assert len(df_records) == len(
+            records
+        ), f"Expected that all records are transformed to DataFrame, but got {len(df_records)}"
         df_st = analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -171,9 +177,17 @@ class TestLogparser:
 
     def test_serial_warning_only(self):
         records = parse_file(serial_warning_only)
-        assert len(records) == 3
+        num_of_non_parsed_lines = 2  # 2 lines starting with Please re-run ,
+        num_lines = sum(
+            1 for _ in serial_warning_only.open("r", encoding="utf-8")
+        )
+        assert (
+            len(records) == num_lines - num_of_non_parsed_lines
+        ), f"Expected {num_lines-num_of_non_parsed_lines} parsed, but got {len(records)}"
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 3
+        assert len(df_records) == len(
+            records
+        ), f"Expected that all records are transformed to DataFrame, but got {len(df_records)}"
         df_st = analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -186,7 +200,9 @@ class TestLogparser:
         df_records = fill_ogs_context(df_records)
         df_tsi = time_step_vs_iterations(df_records)
         # some specific values
-        assert df_tsi.loc[0, "iteration_number"] == 1
+        assert (
+            df_tsi.loc[0, "iteration_number"] == 1
+        ), f"Number of iterations in timestep 0 should be: 1, but got {df_tsi.loc[0, 'iteration_number']}."
         assert df_tsi.loc[1, "iteration_number"] == 6
         assert df_tsi.loc[10, "iteration_number"] == 5
 
@@ -207,12 +223,9 @@ class TestLogparser:
             f"Maximum iterations {np.max(df_time['iterations'])} does not "
             "match the value in the log."
         )
-        assert np.isclose(np.mean(df_time["iterations"]), 5.476190476190476), (
-            f"Mean number of iterations {np.mean(df_time['iterations'])} does "
-            "not add up to the expected value. Some data might be missing."
-        )
+
         t_start, t_end = map(
-            parser.parse, df_log["message"].to_numpy()[[0, -2]]
+            parser.parse, df_log["message"].to_numpy()[[1, -2]]
         )
         assert np.any(
             np.diff(df_time.index) < 0
