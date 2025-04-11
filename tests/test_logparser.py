@@ -46,7 +46,7 @@ class TestLogparser:
 
         assert (
             num_of_record_type_s == num_of_record_type_p
-        ), "The number of logs for each type must be equal for parallel log and serial log"
+        ), f"The number of logs for each type must be equal for parallel log (got: {len(num_of_record_type_p)}) and serial log (got: {len(num_of_record_type_s)}))"
 
     def test_parallel_3_debug(self):
         records = parse_file(debug_parallel_3)

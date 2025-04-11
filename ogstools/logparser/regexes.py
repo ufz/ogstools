@@ -185,7 +185,7 @@ class WarningMessage(MPIProcess, WarningType):
 
 
 @dataclass
-class SimulationStartTime(GlobalProcess, Info):
+class SimulationStartTime(MPIProcess, Info, NoRankOutput):
     message: str
 
 
@@ -202,6 +202,10 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
               and the corresponding message class.
     """
     return [
+        (
+            r"info: This is OpenGeoSys-6 version (\d+)\.(\d+)\.(\d+)(?:-(\d+))?(?:-g([0-9a-f]+))?(?:\.dirty)?",
+            OGSVersionLog,
+        ),
         (
             r"info: \[time\] Output of timestep (\d+) took ([\d\.e+-]+) s",
             TimeStepOutputTime,

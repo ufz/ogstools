@@ -13,17 +13,26 @@ import re
 from pathlib import Path
 from typing import Any
 
-from ogstools.logparser.regexes import Log, MPIProcess, ogs_regexes
+from ogstools.logparser.regexes import (
+    Log,
+    MPIProcess,
+    NoRankOutput,
+    ogs_regexes,
+)
 
 
 def _try_match_line(
-    line: str, line_nr: int, regex: re.Pattern, log_type: type[Log], mpi: bool
+    line: str,
+    line_nr: int,
+    regex: re.Pattern,
+    log_type: type[Log],
+    fill_mpi: bool,
 ) -> Any | None:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = log_type.type_str()
         types = (str, int, int) + tuple(log_type.__annotations__.values())
-        optional_mpi_id = () if mpi else (0,)
+        optional_mpi_id = (0,) if fill_mpi else ()
         match_with_line = (ts, line_nr) + optional_mpi_id + match.groups()
         return [
             ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
@@ -88,7 +97,11 @@ def parse_file(
         ogs_res = ogs_regexes()
     patterns = []
     for regex, log_type in ogs_res:
-        mpi_condition = parallel_log and issubclass(log_type, MPIProcess)
+        mpi_condition = (
+            parallel_log
+            and issubclass(log_type, MPIProcess)
+            and not issubclass(log_type, NoRankOutput)
+        )
         mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
         patterns.append((re.compile(mpi_process_regex + regex), log_type))
 
@@ -105,9 +118,18 @@ def parse_file(
                 break
 
             for regex, log_type in patterns:
-                mpi_line = parallel_log and issubclass(log_type, MPIProcess)
+                has_mpi_process = parallel_log and issubclass(
+                    log_type, MPIProcess
+                )
+                fill_mpi = not has_mpi_process or issubclass(
+                    log_type, NoRankOutput
+                )
                 if r := _try_match_line(
-                    line, number_of_lines_read, regex, log_type, mpi_line
+                    line,
+                    number_of_lines_read,
+                    regex,
+                    log_type,
+                    fill_mpi=fill_mpi,
                 ):
                     records.append(log_type(*r))
                     break
