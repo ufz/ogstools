@@ -3,14 +3,13 @@ import tempfile
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from queue import Queue
+from time import sleep
 
 import numpy as np
 import pandas as pd
 import pytest
 from dateutil import parser
 from watchdog.observers import Observer, ObserverType
-from time import sleep
-
 
 from ogstools.examples import (
     debug_parallel_3,
@@ -268,62 +267,34 @@ def consume(records: Queue) -> None:
         print(f"Consumed: {item}")
 
 
-import os
-
-
-def split_file(input_file: str, n: int):
-    file_size = os.path.getsize(input_file)
-    chunk_size = file_size // n
-    output_files = []
-
-    with open(input_file, "rb") as infile:
-        for i in range(n):
-            output_file = f"{input_file}_part_{i+1}"
-            chunk_data = infile.read(chunk_size)
-            if i == n - 1:
-                chunk_data = infile.read()
-            with open(output_file, "wb") as outfile:
-                outfile.write(chunk_data)
-
-            output_files.append(output_file)
-            print(f"Created: {output_file} with size {len(chunk_data)} bytes")
-
-    return output_files
-
-
-def concatenate_files(output_file: str, input_files: list):
-    with open(output_file, "wb") as outfile:
-        for input_file in input_files:
-            with open(input_file, "rb") as infile:
-                shutil.copyfileobj(infile, outfile)
-
-
 def write_in_pieces(
-    input_file: str, output_file: str, chunk_size: int, delay: float
+    input_file: Path, output_file: Path, chunk_size: int, delay: float
 ):
     # Get the size of the input file
-    input_file_size = os.path.getsize(input_file)
+    input_file_size = input_file.stat().st_size
 
     # If chunk_size is larger than or equal to the input file size, copy the whole file
     if chunk_size >= input_file_size:
         shutil.copy(input_file, output_file)
         return
-    with open(input_file) as infile:
-        with open(output_file, "a") as outfile:
-            while chunk := infile.read(chunk_size):
-                outfile.write(chunk)
-                sleep(delay)
-
+    with input_file.open("r") as infile, output_file.open("a") as outfile:
+        while chunk := infile.read(chunk_size):
+            outfile.write(chunk)
+            sleep(delay)
 
 
 class TestLogparser_Version2:
     """Test cases for logparser. Until version TODO"""
 
-    @pytest.mark.parametrize("chunk_size", [2000,50000,2000000])
-    @pytest.mark.parametrize("delay", [0., 0.01, 0.05 ])
+    @pytest.mark.parametrize("chunk_size", [2000, 50000, 2000000])
+    @pytest.mark.parametrize("delay", [0.0, 0.01, 0.05])
     def test_v2_coupled_with_producer(self, chunk_size, delay):
-        original_file = "/home/meisel/gitlabrepos/ogstools/ht2.log"
-        temp_dir = Path(tempfile.mkdtemp(f"test_v2_coupled_with_producer_{chunk_size}_{delay}"))
+        original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
+        temp_dir = Path(
+            tempfile.mkdtemp(
+                f"test_v2_coupled_with_producer_{chunk_size}_{delay}"
+            )
+        )
         temp_dir.mkdir(parents=True, exist_ok=True)
 
         new_file = temp_dir / "ht.log"
@@ -341,18 +312,17 @@ class TestLogparser_Version2:
         observer.start()
 
         # emulating simulation run
-        #shutil.copyfile(original_file, new_file)
+        # shutil.copyfile(original_file, new_file)
         write_in_pieces(
             original_file, new_file, chunk_size=chunk_size, delay=delay
         )
 
         observer.join()
-        #consume(records)
+        # consume(records)
         assert (
             records.qsize() == 353
         ), f"Expected 353 records, got {records.qsize()} with {records}"
 
     def test_staggered_with_producer(self):
         # observer = start_log("/home/meisel/gitlabrepos/ogstools/ht2_staggered.log")
-        # observer.join()
         pass
