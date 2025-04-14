@@ -1,9 +1,12 @@
 from collections import defaultdict, namedtuple
+from pathlib import Path
+from queue import Queue
 
 import numpy as np
 import pandas as pd
 import pytest
 from dateutil import parser
+from watchdog.observers import Observer, ObserverType
 
 from ogstools.examples import (
     debug_parallel_3,
@@ -15,14 +18,19 @@ from ogstools.examples import (
     serial_warning_only,
 )
 from ogstools.logparser import (
+    LogFileHandler,
     analysis_convergence_coupling_iteration,
     analysis_convergence_newton_iteration,
     analysis_simulation_termination,
     analysis_time_step,
     fill_ogs_context,
     model_and_clock_time,
+    normalize_regex,
     parse_file,
     time_step_vs_iterations,
+)
+from ogstools.logparser.regexes import (
+    Termination,
 )
 
 
@@ -34,7 +42,7 @@ def log_types(records):
 
 
 class TestLogparser:
-    """Test cases for logparser."""
+    """Test cases for logparser. Until version TODO"""
 
     #    def test_new(self):
     #        records = parse_file("/home/meisel/gitlabrepos/ogstools/htstat.log")
@@ -244,3 +252,37 @@ class TestLogparser:
             f"Difference between final clock_time {final_clock_time} and "
             f"total_runtime {run_time} from timestamps is to large."
         )
+
+
+def consume(records: Queue) -> None:
+    while True:
+        item = records.get()
+        if isinstance(item, Termination):
+            print(f"Consumer: Termination signal ({item}) received. Exiting.")
+            break
+        print(f"Consumed: {item}")
+
+
+def start_log(file_name: str | Path) -> ObserverType:
+    records: Queue = Queue()
+    observer: ObserverType = Observer()
+    handler = LogFileHandler(
+        file_name,
+        patterns=normalize_regex(),
+        queue=records,
+        stop_callback=lambda: (print("Stop Observer"), observer.stop()),
+    )
+
+    observer.schedule(handler, path=str(file_name), recursive=False)
+    print("Starting observer...")
+    observer.start()
+    consume(records)
+    print("Done.")
+    return observer
+
+
+class TestLogparser_Version2:
+    """Test cases for logparser. Until version TODO"""
+
+    def test_v2_with_producer(self):
+        pass

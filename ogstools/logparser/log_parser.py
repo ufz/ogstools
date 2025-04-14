@@ -10,18 +10,10 @@
 #              http://www.opengeosys.org/project/license
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any
-
-from watchdog.events import (
-    DirModifiedEvent,
-    FileModifiedEvent,
-    FileSystemEventHandler,
-)
-from watchdog.observers import Observer, ObserverType
 
 from ogstools.logparser.regexes import (
     Log,
@@ -78,7 +70,7 @@ def mpi_processes(file_name: str | Path) -> int:
         return int(occurrences / 2)
 
 
-def _normalize_regex(
+def normalize_regex(
     parallel_log: bool = False,
     ogs_res: list | None = None,
 ) -> Any:  # ToDo
@@ -115,87 +107,6 @@ class Context:
     time_step = 0
     process = 0
     iteration = 0
-
-
-class LogFileHandler(FileSystemEventHandler):
-    def __init__(
-        self,
-        file_name: str | Path,
-        patterns: Any,
-        queue: Queue,
-        stop_callback: Callable[[], tuple[None, Any]],
-        force_parallel: bool = False,
-        line_limit: int = 0,
-    ):
-
-        self.file_name = Path(file_name)
-
-        self._file = self.file_name.open("r")
-        self._file.seek(0, 0)
-        self.queue = queue
-        self.stop_callback = stop_callback
-        self.line_num = 0
-        self.line_limit = line_limit
-        self.force_parallel = force_parallel
-        self.patterns = patterns
-
-    def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
-        if event.src_path == str(self.file_name):
-            # print(f"{self.file_name} has been modified.")
-            while True:
-                self.line_num = self.line_num + 1
-                # print("l:", self.line_num)
-                line = self._file.readline()
-                if not line or not line.endswith("\n"):
-                    # print(line)
-                    break  # Wait for complete line before processing
-
-                log_entry = parse_line(
-                    self.patterns,
-                    line,
-                    parallel_log=False,
-                    number_of_lines_read=self.line_num,
-                )
-
-                if log_entry:
-                    self.queue.put(log_entry)
-                    print(f"{line}")
-
-                if isinstance(log_entry, Termination):
-                    print("===== Termination =====")
-                    self.stop_callback()
-                    break
-
-                if self.line_limit > 0 and self.line_num > self.line_limit:
-                    self.stop_callback()
-                    break
-
-
-def consume(records: Queue) -> None:
-    while True:
-        item = records.get()
-        if isinstance(item, Termination):
-            print(f"Consumer: Termination signal ({item}) received. Exiting.")
-            break
-        print(f"Consumed: {item}")
-
-
-def start_log(file_name: str | Path) -> ObserverType:
-    records: Queue = Queue()
-    observer: ObserverType = Observer()
-    handler = LogFileHandler(
-        file_name,
-        patterns=_normalize_regex(),
-        queue=records,
-        stop_callback=lambda: (print("Stop Observer"), observer.stop()),
-    )
-
-    observer.schedule(handler, path=str(file_name), recursive=False)
-    print("Starting observer...")
-    observer.start()
-    consume(records)
-    print("Done.")
-    return observer
 
 
 def parse_line(
@@ -242,7 +153,7 @@ def parse_file(
     file_name = Path(file_name)
 
     parallel_log = force_parallel or mpi_processes(file_name) > 1
-    patterns = _normalize_regex(parallel_log, ogs_res)
+    patterns = normalize_regex(parallel_log, ogs_res)
 
     number_of_lines_read = 0
     with file_name.open() as file:
