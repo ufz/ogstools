@@ -69,9 +69,11 @@ class LogFileHandler(FileSystemEventHandler):
             if isinstance(log_entry, Termination):
                 print("===== Termination =====")
                 self.stop_callback()
+                self._file.close()
                 break
 
             if self.line_limit > 0 and self.line_num > self.line_limit:
                 self.stop_callback()
+                self._file.close()
                 break
-        self._file.close()
+        

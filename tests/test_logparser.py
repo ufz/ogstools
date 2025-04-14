@@ -9,6 +9,8 @@ import pandas as pd
 import pytest
 from dateutil import parser
 from watchdog.observers import Observer, ObserverType
+from time import sleep
+
 
 from ogstools.examples import (
     debug_parallel_3,
@@ -304,41 +306,25 @@ def write_in_pieces(
 
     # If chunk_size is larger than or equal to the input file size, copy the whole file
     if chunk_size >= input_file_size:
-        print(
-            "Chunk size is larger than or equal to the file size. Copying the entire file."
-        )
         shutil.copy(input_file, output_file)
-        print(f"Finished copying the entire file to {output_file}")
         return
     with open(input_file) as infile:
-        # Open the output file in write-binary mode
         with open(output_file, "a") as outfile:
             while chunk := infile.read(chunk_size):
-                # Write the chunk to the output file
                 outfile.write(chunk)
-
-                # Print the progress (optional)
-                print(f"Wrote chunk of size {len(chunk)} bytes.")
-                from time import sleep
-
-                # Sleep for the specified delay between chunks
                 sleep(delay)
 
-    print(f"Finished writing to {output_file}")
 
 
 class TestLogparser_Version2:
     """Test cases for logparser. Until version TODO"""
 
-    #    @pytest.mark.parametrize("chunk_size", [5000, 10000,2000000])
-    #    @pytest.mark.parametrize("delay", [0., 0.01, 0.1])
-    #    def test_v2_coupled_with_producer(self, chunk_size, delay):
-    def test_v2_coupled_with_producer(self):
+    @pytest.mark.parametrize("chunk_size", [2000,50000,2000000])
+    @pytest.mark.parametrize("delay", [0., 0.01, 0.05 ])
+    def test_v2_coupled_with_producer(self, chunk_size, delay):
         original_file = "/home/meisel/gitlabrepos/ogstools/ht2.log"
-        temp_dir = Path(tempfile.mkdtemp("TestLogparser_Version2"))
-        temp_dir = Path(f"xyz_{chunk_size}_{delay})")
+        temp_dir = Path(tempfile.mkdtemp(f"test_v2_coupled_with_producer_{chunk_size}_{delay}"))
         temp_dir.mkdir(parents=True, exist_ok=True)
-        # split_file(original_file, 10)
 
         new_file = temp_dir / "ht.log"
         records: Queue = Queue()
@@ -355,12 +341,13 @@ class TestLogparser_Version2:
         observer.start()
 
         # emulating simulation run
-        # shutil.copyfile(original_file, new_file)
-        chunk_size = 10000
-        delay = 0.01
+        #shutil.copyfile(original_file, new_file)
         write_in_pieces(
             original_file, new_file, chunk_size=chunk_size, delay=delay
         )
+
+        observer.join()
+        #consume(records)
         assert (
             records.qsize() == 353
         ), f"Expected 353 records, got {records.qsize()} with {records}"
