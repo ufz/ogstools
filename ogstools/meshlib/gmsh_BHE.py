@@ -607,8 +607,21 @@ def gen_bhe_mesh_gmsh(
     BHE_array = np.asarray(BHE_Array)
 
     i = 0
-    # [:,0] - index of BHE; Array, in welcher Schicht die jeweilige BHE anfängt [:,1] endet [:,3] und wo ein kritischer Übergang folgt [:,2] für BHE_Begin und [:,4] für BHE_End mit 0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
-    BHE_to_soil = np.zeros(shape=(len(BHE_array), 5), dtype=np.int8)
+
+    BHE_to_soil = np.zeros(
+        shape=(len(BHE_array),),
+        dtype=[
+            ("BHE_index", np.uint16),
+            ("BHE_start_layer", np.uint8),
+            # Soil layer, in which the respective BHE starts
+            ("BHE_start_critical", np.float16),
+            # define, where is a critical transition for BHE start with  0 - not critical, 1 - top critical, 2 - bottom critical, 3 - bhe at layer transition
+            ("BHE_end_layer", np.uint8),
+            # Soil layer, in which the respective BHE ends
+            ("BHE_end_critical", np.float16),
+            # define, where is a critical transition for BHE end with see BHE_start_critical plus 1.2 - top and bottom critical
+        ],
+    )
 
     # detect the soil layer, in which the BHE ends
     for j, BHE_j in enumerate(BHE_array):
@@ -623,8 +636,8 @@ def gen_bhe_mesh_gmsh(
             if np.abs(BHE_j.z_begin) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_begin
             ) >= np.sum(layer[:i]):
-                BHE_to_soil[j, 0] = j
-                BHE_to_soil[j, 1] = i
+                BHE_to_soil[j]["BHE_index"] = j
+                BHE_to_soil[j]["BHE_start_layer"] = i
                 if (
                     np.abs(BHE_j.z_end) - np.abs(BHE_j.z_begin)
                     <= n_refinement_layers * target_z_size_fine
@@ -637,47 +650,47 @@ def gen_bhe_mesh_gmsh(
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
                     # beginning a transition of two soil layers - special case
-                    BHE_to_soil[j, 2] = 1
+                    BHE_to_soil[j]["BHE_start_critical"] = 1
                     if np.abs(BHE_j.z_begin) == np.sum(layer[:i]):
-                        BHE_to_soil[j, 2] = 3
+                        BHE_to_soil[j]["BHE_start_critical"] = 3
                 elif (
                     np.sum(layer[: i + 1]) - np.abs(BHE_j.z_begin)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
-                    BHE_to_soil[j, 2] = 2
+                    BHE_to_soil[j]["BHE_start_critical"] = 2
                 else:
-                    BHE_to_soil[j, 2] = 0
+                    BHE_to_soil[j]["BHE_start_critical"] = 0
 
             # detect the soil layer, in which the BHE ends
             if np.abs(BHE_j.z_end) < np.sum(layer[: i + 1]) and np.abs(
                 BHE_j.z_end
             ) >= np.sum(layer[:i]):
-                BHE_to_soil[j, 3] = i
+                BHE_to_soil[j]["BHE_end_layer"] = i
                 if (
                     np.abs(BHE_j.z_end) - np.sum(layer[:i])
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('difficult meshing at the top of the soil layer - BHE  %d'%j)
-                    BHE_to_soil[j, 4] = 1
+                    BHE_to_soil[j]["BHE_end_critical"] = 1
                     # beginning at a transition of two soil layers - special case
                     if np.abs(BHE_j.z_end) == np.sum(layer[:i]):
-                        BHE_to_soil[j, 4] = 3
+                        BHE_to_soil[j]["BHE_end_critical"] = 3
 
                     elif (
                         np.sum(layer[: i + 1]) - np.abs(BHE_j.z_end)
                         < n_refinement_layers * target_z_size_fine
                     ):
                         # for layers, which are top and bottom critical
-                        BHE_to_soil[j, 4] = 1.2
+                        BHE_to_soil[j]["BHE_end_critical"] = 1.2
                 elif (
                     np.sum(layer[: i + 1]) - np.abs(BHE_j.z_end)
                     < n_refinement_layers * target_z_size_fine
                 ):
                     # print('critical at the bottom of the soil layer - BHE %d'%j)
-                    BHE_to_soil[j, 4] = 2
+                    BHE_to_soil[j]["BHE_end_critical"] = 2
                 else:
-                    BHE_to_soil[j, 4] = 0
+                    BHE_to_soil[j]["BHE_end_critical"] = 0
             elif np.abs(BHE_j.z_end) >= np.sum(layer):  # pragma: no cover
                 msg = f"BHE {j} ends at bottom boundary or outside of the model"
                 raise ValueError(msg)
@@ -689,16 +702,20 @@ def gen_bhe_mesh_gmsh(
         BHE_end_depths = []
 
         # filter, which BHE's ends in this layer
-        BHE_end_in_Layer = BHE_to_soil[BHE_to_soil[:, 3] == i]
+        BHE_end_in_Layer = BHE_to_soil[BHE_to_soil["BHE_end_layer"] == i]
 
-        for k in BHE_end_in_Layer[:, 0]:
-            BHE_end_depths.append([BHE_array[k].z_end, BHE_to_soil[k, 4]])
+        for k in BHE_end_in_Layer["BHE_index"]:
+            BHE_end_depths.append(
+                [BHE_array[k].z_end, BHE_to_soil[k]["BHE_end_critical"]]
+            )
 
         # filter, which BHE's starts in this layer
-        BHE_starts_in_Layer = BHE_to_soil[BHE_to_soil[:, 1] == i]
+        BHE_starts_in_Layer = BHE_to_soil[BHE_to_soil["BHE_start_layer"] == i]
 
-        for k in BHE_starts_in_Layer[:, 0]:
-            BHE_end_depths.append([BHE_array[k].z_begin, BHE_to_soil[k, 2]])
+        for k in BHE_starts_in_Layer["BHE_index"]:
+            BHE_end_depths.append(
+                [BHE_array[k].z_begin, BHE_to_soil[k]["BHE_start_critical"]]
+            )
 
         groundwater_list_0 = np.array(
             [inner_list[0] for inner_list in groundwater_list]
