@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from queue import Queue
@@ -18,19 +20,20 @@ from ogstools.examples import (
     serial_warning_only,
 )
 from ogstools.logparser import (
-    LogFileHandler,
     analysis_convergence_coupling_iteration,
     analysis_convergence_newton_iteration,
     analysis_simulation_termination,
     analysis_time_step,
     fill_ogs_context,
     model_and_clock_time,
-    normalize_regex,
     parse_file,
     time_step_vs_iterations,
 )
+from ogstools.logparser.log_file_handler import LogFileHandler
+from ogstools.logparser.log_parser import normalize_regex
 from ogstools.logparser.regexes import (
     Termination,
+    new_regexes,
 )
 
 
@@ -263,26 +266,106 @@ def consume(records: Queue) -> None:
         print(f"Consumed: {item}")
 
 
-def start_log(file_name: str | Path) -> ObserverType:
-    records: Queue = Queue()
-    observer: ObserverType = Observer()
-    handler = LogFileHandler(
-        file_name,
-        patterns=normalize_regex(),
-        queue=records,
-        stop_callback=lambda: (print("Stop Observer"), observer.stop()),
-    )
+import os
 
-    observer.schedule(handler, path=str(file_name), recursive=False)
-    print("Starting observer...")
-    observer.start()
-    consume(records)
-    print("Done.")
-    return observer
+
+def split_file(input_file: str, n: int):
+    file_size = os.path.getsize(input_file)
+    chunk_size = file_size // n
+    output_files = []
+
+    with open(input_file, "rb") as infile:
+        for i in range(n):
+            output_file = f"{input_file}_part_{i+1}"
+            chunk_data = infile.read(chunk_size)
+            if i == n - 1:
+                chunk_data = infile.read()
+            with open(output_file, "wb") as outfile:
+                outfile.write(chunk_data)
+
+            output_files.append(output_file)
+            print(f"Created: {output_file} with size {len(chunk_data)} bytes")
+
+    return output_files
+
+
+def concatenate_files(output_file: str, input_files: list):
+    with open(output_file, "wb") as outfile:
+        for input_file in input_files:
+            with open(input_file, "rb") as infile:
+                shutil.copyfileobj(infile, outfile)
+
+
+def write_in_pieces(
+    input_file: str, output_file: str, chunk_size: int, delay: float
+):
+    # Get the size of the input file
+    input_file_size = os.path.getsize(input_file)
+
+    # If chunk_size is larger than or equal to the input file size, copy the whole file
+    if chunk_size >= input_file_size:
+        print(
+            "Chunk size is larger than or equal to the file size. Copying the entire file."
+        )
+        shutil.copy(input_file, output_file)
+        print(f"Finished copying the entire file to {output_file}")
+        return
+    with open(input_file) as infile:
+        # Open the output file in write-binary mode
+        with open(output_file, "a") as outfile:
+            while chunk := infile.read(chunk_size):
+                # Write the chunk to the output file
+                outfile.write(chunk)
+
+                # Print the progress (optional)
+                print(f"Wrote chunk of size {len(chunk)} bytes.")
+                from time import sleep
+
+                # Sleep for the specified delay between chunks
+                sleep(delay)
+
+    print(f"Finished writing to {output_file}")
 
 
 class TestLogparser_Version2:
     """Test cases for logparser. Until version TODO"""
 
-    def test_v2_with_producer(self):
+    #    @pytest.mark.parametrize("chunk_size", [5000, 10000,2000000])
+    #    @pytest.mark.parametrize("delay", [0., 0.01, 0.1])
+    #    def test_v2_coupled_with_producer(self, chunk_size, delay):
+    def test_v2_coupled_with_producer(self):
+        original_file = "/home/meisel/gitlabrepos/ogstools/ht2.log"
+        temp_dir = Path(tempfile.mkdtemp("TestLogparser_Version2"))
+        temp_dir = Path(f"xyz_{chunk_size}_{delay})")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        # split_file(original_file, 10)
+
+        new_file = temp_dir / "ht.log"
+        records: Queue = Queue()
+        observer: ObserverType = Observer()
+        handler = LogFileHandler(
+            new_file,
+            patterns=normalize_regex(ogs_res=new_regexes()),
+            queue=records,
+            stop_callback=lambda: (print("Stop Observer"), observer.stop()),
+        )
+
+        observer.schedule(handler, path=str(new_file.parent), recursive=False)
+        print("Starting observer...")
+        observer.start()
+
+        # emulating simulation run
+        # shutil.copyfile(original_file, new_file)
+        chunk_size = 10000
+        delay = 0.01
+        write_in_pieces(
+            original_file, new_file, chunk_size=chunk_size, delay=delay
+        )
+        assert (
+            records.qsize() == 353
+        ), f"Expected 353 records, got {records.qsize()} with {records}"
+
+    def test_staggered_with_producer(self):
+        # observer = start_log("/home/meisel/gitlabrepos/ogstools/ht2_staggered.log")
+        # observer.join()
         pass

@@ -20,7 +20,6 @@ from ogstools.logparser.regexes import (
     MPIProcess,
     NoRankOutput,
     Termination,
-    ogs_regexes,
 )
 
 
@@ -43,7 +42,48 @@ def _try_match_line(
     return None
 
 
-def mpi_processes(file_name: str | Path) -> int:
+@dataclass
+class OGSVersion:
+    major: int
+    minor: int
+    patch: int
+    temporary: int = 0
+    commit: str = ""
+    dirty: bool = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, OGSVersion):
+            return NotImplemented
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+        )
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, OGSVersion):
+            return NotImplemented
+        if self.major != other.major:
+            return self.major < other.major
+        if self.minor != other.minor:
+            return self.minor < other.minor
+        return self.patch < other.patch
+
+    def __le__(self, other: object) -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other: object) -> bool:
+        return not self <= other
+
+    def __ge__(self, other: object) -> bool:
+        return not self < other
+
+
+def read_version(file_name: str | Path) -> OGSVersion:
+    return OGSVersion(6, 4, 4, 0)
+
+
+def read_mpi_processes(file_name: str | Path) -> int:
     """
     Counts the number of MPI processes started by OpenGeoSys-6 by detecting
     specific log entries in a given file. It assumes that each MPI process
@@ -71,12 +111,10 @@ def mpi_processes(file_name: str | Path) -> int:
 
 
 def normalize_regex(
+    ogs_res: list,
     parallel_log: bool = False,
-    ogs_res: list | None = None,
 ) -> Any:  # ToDo
 
-    if ogs_res is None:
-        ogs_res = ogs_regexes()
     patterns = []
     for regex, log_type in ogs_res:
         mpi_condition = (
@@ -131,7 +169,6 @@ def parse_file(
     file_name: str | Path,
     maximum_lines: int | None = None,
     force_parallel: bool = False,
-    ogs_res: list | None = None,
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,
@@ -152,8 +189,18 @@ def parse_file(
         file_name = Path(file_name)
     file_name = Path(file_name)
 
-    parallel_log = force_parallel or mpi_processes(file_name) > 1
-    patterns = normalize_regex(parallel_log, ogs_res)
+    parallel_log = force_parallel or read_mpi_processes(file_name) > 1
+    version = read_version(file_name)
+    if version < OGSVersion(6, 5, 4, 220):
+        from ogstools.logparser.regexes import ogs_regexes
+
+        regexes = ogs_regexes()
+    else:
+        from ogstools.logparser.regexes import new_regexes
+
+        regexes = new_regexes()
+
+    patterns = normalize_regex(regexes, parallel_log)
 
     number_of_lines_read = 0
     with file_name.open() as file:

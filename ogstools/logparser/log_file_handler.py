@@ -26,8 +26,7 @@ class LogFileHandler(FileSystemEventHandler):
 
         self.file_name = Path(file_name)
 
-        self._file = self.file_name.open("r")
-        self._file.seek(0, 0)
+        self._file = None
         self.queue = queue
         self.stop_callback = stop_callback
         self.line_num = 0
@@ -36,32 +35,43 @@ class LogFileHandler(FileSystemEventHandler):
         self.patterns = patterns
 
     def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
-        if event.src_path == str(self.file_name):
-            # print(f"{self.file_name} has been modified.")
-            while True:
-                self.line_num = self.line_num + 1
-                # print("l:", self.line_num)
-                line = self._file.readline()
-                if not line or not line.endswith("\n"):
-                    # print(line)
-                    break  # Wait for complete line before processing
+        if event.src_path != str(self.file_name):
+            return
 
-                log_entry = parse_line(
-                    self.patterns,
-                    line,
-                    parallel_log=False,
-                    number_of_lines_read=self.line_num,
-                )
+        if self._file is None:
+            try:
+                self._file = self.file_name.open("r")
+                self._file.seek(0, 0)
+            except FileNotFoundError:
+                print(f"File not found yet: {self.file_name}")
+                return
 
-                if log_entry:
-                    self.queue.put(log_entry)
-                    print(f"{line}")
+        print(f"{self.file_name} has been modified.")
+        while True:
+            self.line_num = self.line_num + 1
+            # print("l:", self.line_num)
+            line = self._file.readline()
+            if not line or not line.endswith("\n"):
+                # print(line)
+                break  # Wait for complete line before processing
 
-                if isinstance(log_entry, Termination):
-                    print("===== Termination =====")
-                    self.stop_callback()
-                    break
+            log_entry = parse_line(
+                self.patterns,
+                line,
+                parallel_log=False,
+                number_of_lines_read=self.line_num,
+            )
 
-                if self.line_limit > 0 and self.line_num > self.line_limit:
-                    self.stop_callback()
-                    break
+            if log_entry:
+                self.queue.put(log_entry)
+                # print(f"{line}")
+
+            if isinstance(log_entry, Termination):
+                print("===== Termination =====")
+                self.stop_callback()
+                break
+
+            if self.line_limit > 0 and self.line_num > self.line_limit:
+                self.stop_callback()
+                break
+        self._file.close()
