@@ -448,23 +448,10 @@ def gen_bhe_mesh_gmsh(
         gmsh.model.geo.addLine(3, 4)
         gmsh.model.geo.addLine(4, 1)
 
-        # inner points
-        gmsh.model.geo.addPoint(x_min, y_min, 0.0, inner_mesh_size)
-        gmsh.model.geo.addPoint(x_max, y_min, 0.0, inner_mesh_size)
-        gmsh.model.geo.addPoint(x_max, y_max, 0.0, inner_mesh_size)
-        gmsh.model.geo.addPoint(x_min, y_max, 0.0, inner_mesh_size)
-
-        gmsh.model.geo.addLine(5, 6)
-        gmsh.model.geo.addLine(6, 7)
-        gmsh.model.geo.addLine(7, 8)
-        gmsh.model.geo.addLine(8, 5)
-
         gmsh.model.geo.addCurveLoop([1, 2, 3, 4], 1)
         gmsh.model.geo.addPlaneSurface([1], 1)
         gmsh.model.geo.synchronize()
 
-        # embed the four lines of the inner sizing box
-        gmsh.model.mesh.embed(1, [5, 6, 7, 8], 2, 1)
         bhe_top_nodes = _insert_BHE(inTag=1)
 
         # Extrude the surface mesh according to the previously evaluated structure
@@ -538,6 +525,17 @@ def gen_bhe_mesh_gmsh(
                 name=f"Groundwater_Inflow_{i}",
             )
             k += 1
+
+        # Add refinement box around the BHE
+        refinement_box = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(refinement_box, "VIn", inner_mesh_size)
+        gmsh.model.mesh.field.setNumber(refinement_box, "VOut", outer_mesh_size)
+        gmsh.model.mesh.field.setNumber(refinement_box, "XMin", x_min)
+        gmsh.model.mesh.field.setNumber(refinement_box, "XMax", x_max)
+        gmsh.model.mesh.field.setNumber(refinement_box, "YMin", y_min)
+        gmsh.model.mesh.field.setNumber(refinement_box, "YMax", y_max)
+
+        gmsh.model.mesh.field.setAsBackgroundMesh(refinement_box)
 
     layer = layer if isinstance(layer, list) else [layer]
 
