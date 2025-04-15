@@ -499,7 +499,10 @@ class MeshSeries(Sequence[Mesh]):
             result = self._xdmf_values(variable_name)
         else:
             result = np.asarray(
-                [mesh[variable_name] for mesh in tqdm(self, disable=all_cached)]
+                [
+                    mesh[variable_name]
+                    for mesh in (self if all_cached else tqdm(self))
+                ]
             )
         if isinstance(variable, Variable) and do_transform:
             return variable.transform(result)
