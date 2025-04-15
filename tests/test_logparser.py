@@ -31,7 +31,6 @@ from ogstools.logparser import (
     time_step_vs_iterations,
 )
 from ogstools.logparser.log_file_handler import LogFileHandler
-
 from ogstools.logparser.regexes import Termination
 
 
@@ -284,21 +283,17 @@ class TestLogparser_Version2:
     """Test cases for logparser. From OGS version 6.4.4"""
 
     @pytest.mark.parametrize(
-         "chunk_size",
-         [
-             2000, 20000, 200000
-         ],
-     )
+        "chunk_size",
+        [2000, 20000, 200000],
+    )
     @pytest.mark.parametrize(
-         "delay",
-         [
-             0, 0.001, 0.05
-         ],
-     )
+        "delay",
+        [0, 0.001, 0.05],
+    )
     def test_v2_coupled_with_producer(self, chunk_size, delay):
-#    def test_v2_coupled_with_producer(self):
-#        chunk_size = 5000000
-#        delay = 0.001
+        #    def test_v2_coupled_with_producer(self):
+        #        chunk_size = 5000000
+        #        delay = 0.001
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
         temp_dir = Path(
             tempfile.mkdtemp(
@@ -331,5 +326,3 @@ class TestLogparser_Version2:
         assert (
             records.qsize() == 353
         ), f"Expected 353 records, got {records.qsize()} with {records}"
-
-
