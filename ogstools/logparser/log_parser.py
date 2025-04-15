@@ -113,7 +113,11 @@ def read_mpi_processes(file_name: str | Path) -> int:
 def normalize_regex(
     ogs_res: list,
     parallel_log: bool = False,
-) -> Any:  # ToDo
+) -> list:
+    """
+    Takes regex patterns for serial computation and modify them for parallel
+    Parallel log lines are prepended with the process id, e.g. [0] or [1]
+    """
 
     patterns = []
     for regex, log_type in ogs_res:
@@ -190,17 +194,9 @@ def parse_file(
     file_name = Path(file_name)
 
     parallel_log = force_parallel or read_mpi_processes(file_name) > 1
-    version = read_version(file_name)
-    if version < OGSVersion(6, 5, 4, 220):
-        from ogstools.logparser.regexes import ogs_regexes
-
-        regexes = ogs_regexes()
-    else:
-        from ogstools.logparser.regexes import new_regexes
-
-        regexes = new_regexes()
-
-    patterns = normalize_regex(regexes, parallel_log)
+    patterns = normalize_regex(
+        select_regex(read_version(file_name)), parallel_log
+    )
 
     number_of_lines_read = 0
     with file_name.open() as file:
@@ -222,3 +218,15 @@ def parse_file(
                 records.append(entry)
 
     return records
+
+
+def select_regex(version):
+    if version < OGSVersion(6, 5, 4, 220):
+        from ogstools.logparser.regexes import ogs_regexes
+
+        regexes = ogs_regexes()
+    else:
+        from ogstools.logparser.regexes import new_regexes
+
+        regexes = new_regexes()
+    return regexes

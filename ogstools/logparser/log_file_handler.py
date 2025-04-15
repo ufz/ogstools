@@ -9,7 +9,13 @@ from watchdog.events import (
     FileSystemEventHandler,
 )
 
-from ogstools.logparser.log_parser import parse_line
+from ogstools.logparser.log_parser import (
+    normalize_regex,
+    parse_line,
+    read_mpi_processes,
+    read_version,
+    select_regex,
+)
 from ogstools.logparser.regexes import Termination
 
 
@@ -17,7 +23,6 @@ class LogFileHandler(FileSystemEventHandler):
     def __init__(
         self,
         file_name: str | Path,
-        patterns: Any,
         queue: Queue,
         stop_callback: Callable[[], tuple[None, Any]],
         force_parallel: bool = False,
@@ -25,22 +30,30 @@ class LogFileHandler(FileSystemEventHandler):
     ):
 
         self.file_name = Path(file_name)
-
-        self._file = None
+        self._file_read = False
+        self.patterns = None
         self.queue = queue
         self.stop_callback = stop_callback
         self.line_num = 0
         self.line_limit = line_limit
         self.force_parallel = force_parallel
-        self.patterns = patterns
+
+        if self.patterns is None:
+            # parallel_log = (
+            #     self.force_parallel or read_mpi_processes(self.file_name) > 1
+            # )
+            parallel_log = False
+            self.patterns = normalize_regex(
+                select_regex(read_version(self.file_name)), parallel_log
+            )
 
     def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
         if event.src_path != str(self.file_name):
             return
 
-        if self._file is None:
+        if not self._file_read:
             try:
-                self._file = self.file_name.open("r")
+                self._file: Any = self.file_name.open("r")
                 self._file.seek(0, 0)
             except FileNotFoundError:
                 print(f"File not found yet: {self.file_name}")
@@ -76,4 +89,3 @@ class LogFileHandler(FileSystemEventHandler):
                 self.stop_callback()
                 self._file.close()
                 break
-        

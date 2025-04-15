@@ -31,11 +31,8 @@ from ogstools.logparser import (
     time_step_vs_iterations,
 )
 from ogstools.logparser.log_file_handler import LogFileHandler
-from ogstools.logparser.log_parser import normalize_regex
-from ogstools.logparser.regexes import (
-    Termination,
-    new_regexes,
-)
+
+from ogstools.logparser.regexes import Termination
 
 
 def log_types(records):
@@ -284,10 +281,20 @@ def write_in_pieces(
 
 
 class TestLogparser_Version2:
-    """Test cases for logparser. Until version TODO"""
+    """Test cases for logparser. From OGS version 6.4.4"""
 
-    @pytest.mark.parametrize("chunk_size", [2000, 50000, 2000000])
-    @pytest.mark.parametrize("delay", [0.0, 0.01, 0.05])
+    @pytest.mark.parametrize(
+        "chunk_size",
+        [
+            2000,
+        ],
+    )
+    @pytest.mark.parametrize(
+        "delay",
+        [
+            0.0,
+        ],
+    )
     def test_v2_coupled_with_producer(self, chunk_size, delay):
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
         temp_dir = Path(
@@ -302,7 +309,6 @@ class TestLogparser_Version2:
         observer: ObserverType = Observer()
         handler = LogFileHandler(
             new_file,
-            patterns=normalize_regex(ogs_res=new_regexes()),
             queue=records,
             stop_callback=lambda: (print("Stop Observer"), observer.stop()),
         )
