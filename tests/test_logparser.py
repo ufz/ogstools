@@ -283,19 +283,22 @@ def write_in_pieces(
 class TestLogparser_Version2:
     """Test cases for logparser. From OGS version 6.4.4"""
 
-    @pytest.mark.parametrize(
-        "chunk_size",
-        [
-            2000,
-        ],
-    )
-    @pytest.mark.parametrize(
-        "delay",
-        [
-            0.0,
-        ],
-    )
-    def test_v2_coupled_with_producer(self, chunk_size, delay):
+#     @pytest.mark.parametrize(
+#         "chunk_size",
+#         [
+#             2000,
+#         ],
+#     )
+#     @pytest.mark.parametrize(
+#         "delay",
+#         [
+#             0.001,
+#         ],
+#     )
+#    def test_v2_coupled_with_producer(self, chunk_size, delay):
+    def test_v2_coupled_with_producer(self):
+        chunk_size = 2000
+        delay = 0.001
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
         temp_dir = Path(
             tempfile.mkdtemp(
@@ -329,6 +332,4 @@ class TestLogparser_Version2:
             records.qsize() == 353
         ), f"Expected 353 records, got {records.qsize()} with {records}"
 
-    def test_staggered_with_producer(self):
-        # observer = start_log("/home/meisel/gitlabrepos/ogstools/ht2_staggered.log")
-        pass
+

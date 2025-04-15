@@ -12,7 +12,6 @@ from watchdog.events import (
 from ogstools.logparser.log_parser import (
     normalize_regex,
     parse_line,
-    read_mpi_processes,
     read_version,
     select_regex,
 )
@@ -34,7 +33,7 @@ class LogFileHandler(FileSystemEventHandler):
         self.patterns = None
         self.queue = queue
         self.stop_callback = stop_callback
-        self.line_num = 0
+        self.num_lines_read = 0
         self.line_limit = line_limit
         self.force_parallel = force_parallel
 
@@ -55,29 +54,30 @@ class LogFileHandler(FileSystemEventHandler):
             try:
                 self._file: Any = self.file_name.open("r")
                 self._file.seek(0, 0)
+                self._file_read = True
             except FileNotFoundError:
                 print(f"File not found yet: {self.file_name}")
                 return
 
         print(f"{self.file_name} has been modified.")
         while True:
-            self.line_num = self.line_num + 1
-            # print("l:", self.line_num)
+            #print("l:", self.line_num)
             line = self._file.readline()
+            num_lines_current = self.num_lines_read + 1
             if not line or not line.endswith("\n"):
-                # print(line)
+                print(line)
                 break  # Wait for complete line before processing
 
             log_entry = parse_line(
                 self.patterns,
                 line,
                 parallel_log=False,
-                number_of_lines_read=self.line_num,
+                number_of_lines_read=num_lines_current,
             )
 
             if log_entry:
                 self.queue.put(log_entry)
-                # print(f"{line}")
+                print(f"added {line} in nr: {num_lines_current}")
 
             if isinstance(log_entry, Termination):
                 print("===== Termination =====")
@@ -85,7 +85,8 @@ class LogFileHandler(FileSystemEventHandler):
                 self._file.close()
                 break
 
-            if self.line_limit > 0 and self.line_num > self.line_limit:
+            if self.line_limit > 0 and self.num_lines_read > self.line_limit:
                 self.stop_callback()
                 self._file.close()
                 break
+            self.num_lines_read = self.num_lines_read + 1
