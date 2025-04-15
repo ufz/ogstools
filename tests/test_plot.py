@@ -6,8 +6,8 @@ from tempfile import mkstemp
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from matplotlib.animation import FFMpegWriter, ImageMagickWriter
-from parameterized import parameterized
+from matplotlib.animation import FFMpegWriter
+from matplotlib.animation import ImageMagickWriter as IMWriter
 from pyvista import examples as pv_examples
 
 import ogstools as ot
@@ -206,13 +206,14 @@ class TestPlotting:
         mesh.plot_contourf("Si_var")
         plt.close()
 
-    @parameterized.expand(
-        (
+    @pytest.mark.parametrize(
+        ("save", "ext", "writer", "err"),
+        [
             (None, "", "", None),
             (FFMpegWriter.isAvailable(), ".mp4", "ffmpeg", None),
-            (ImageMagickWriter.isAvailable(), ".gif", "ImageMagick", None),
+            (IMWriter.isAvailable(), ".gif", "ImageMagick", RuntimeWarning),
             (True, ".cpp", "", RuntimeError),
-        )
+        ],
     )
     def test_animation(
         self, save: bool | None, ext: str, writer: str, err: Exception | None
@@ -234,8 +235,12 @@ class TestPlotting:
         if save is None:
             anim.to_jshtml()
         elif save:
-            if err:
+            if err is RuntimeError:
                 with pytest.raises(err):
+                    utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+                anim.to_jshtml()
+            elif err is RuntimeWarning:
+                with pytest.warns(err):
                     utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
             else:
                 utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)

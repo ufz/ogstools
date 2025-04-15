@@ -8,12 +8,11 @@ import sys
 from itertools import product
 from pathlib import Path
 from tempfile import mkdtemp
-from unittest.mock import patch
 
 import gmsh
 import meshio
 import numpy as np
-from parameterized import parameterized
+import pytest
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -97,14 +96,15 @@ class TestPhysGroups:
     # By default, the gmsh physical group tags translate directly to MaterialIDs
     # With reindex=True, we want to map these tags to incrementing integers
     # starting at 0
-    PHYS_GROUPS_TEST_ARGS = (
+
+    @pytest.mark.parametrize(
+        ("reindex", "layer_ids", "mat_ids"), [
         (False, [0], [0]),          (False, [999], [999]),
         (False, [0, 2], [0, 2]),    (False, [4, 8], [4, 8]),
         (True, [0], [0]),           (True, [999], [0]),
         (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1])
-    )  # fmt:skip
-
-    @parameterized.expand(PHYS_GROUPS_TEST_ARGS)
+      ]  # fmt:skip
+    )
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
         msh_file = Path(self.tmp_path, "rect.msh")
@@ -143,26 +143,30 @@ def test_cuboid(tmp_path: Path):
 
 def run_cli(cmd: str) -> int:
     "Execute the given command in CLI."
-    with patch.object(sys, "argv", cmd.split(" ")):
+    with pytest.MonkeyPatch.context() as context:
+        context.setattr(sys, "argv", cmd.split(" "))
         return cli()
 
 
-def test_gmsh(tmp_path: Path):
-    os.chdir(tmp_path)
-    for script, num_meshes, version in [
+@pytest.mark.parametrize(
+    ("script", "num_meshes", "version"),
+    [
         ("cube_mixed.py", 1, None),
         ("quarter_rectangle_with_hole.py", 11, 2.2),
         ("quarter_rectangle_with_hole.py", 11, 4.1),
         ("line.py", 4, None),
-    ]:
-        if version is not None:
-            gmsh.initialize()
-            gmsh.option.setNumber("Mesh.MshFileVersion", version)
-        runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
-        prefix = str(Path(script).stem)
-        msh_file = Path(tmp_path, prefix + ".msh")
-        assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes
-        assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
+    ],
+)
+def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
+    os.chdir(tmp_path)
+    if version is not None:
+        gmsh.initialize()
+        gmsh.option.setNumber("Mesh.MshFileVersion", version)
+    runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    prefix = str(Path(script).stem)
+    msh_file = Path(tmp_path, prefix + ".msh")
+    assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes
+    assert run_cli(f"msh2vtu {msh_file} -o {tmp_path} -p {prefix}") == 0
 
     for vtu_file in tmp_path.glob("*.vtu"):
         try:

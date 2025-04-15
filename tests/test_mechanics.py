@@ -1,7 +1,7 @@
 """Unit tests for solid mechanics."""
 
 import numpy as np
-from parameterized import parameterized
+import pytest
 
 from ogstools.variables import tensor_math
 
@@ -11,17 +11,17 @@ def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
     np.testing.assert_allclose(vals1, vals2, verbose=True, rtol=rtol, atol=atol)
 
 
+@pytest.mark.parametrize("symten_len", [4, 6])
 class TestMechanics:
     """Test case for mechanical variables."""
 
+    # TODO: use hypothesis testing here
     rng = np.random.default_rng()
-    TEST_ARGS = ((4,), (6,))
 
     def generate_random_sig(self, symten_len: int):
         """Generate random stress matrix."""
         return self.rng.random((100000, symten_len)) * 1e6
 
-    @parameterized.expand(TEST_ARGS)
     def test_frobenius_norm(self, symten_len: int):
         """Test Frobenius norm."""
         sig = self.generate_random_sig(symten_len)
@@ -33,7 +33,6 @@ class TestMechanics:
         )
         assert_allclose(tensor_math.frobenius_norm(sig), frob2)
 
-    @parameterized.expand(TEST_ARGS)
     def test_invariant_1(self, symten_len: int):
         """Test first invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -42,7 +41,6 @@ class TestMechanics:
             tensor_math.trace(tensor_math.eigenvalues(sig)),
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_invariant_2(self, symten_len: int):
         """Test second invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -53,7 +51,6 @@ class TestMechanics:
             rtol=5e-5,
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_invariant_3(self, symten_len: int):
         """Test third invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -62,14 +59,12 @@ class TestMechanics:
             tensor_math.invariant_3(sig), np.prod(eig_vals, axis=-1)
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_1(self, symten_len: int):
         """Test first deviator invariant."""
         sig = self.generate_random_sig(symten_len)
         j1 = tensor_math.deviator_invariant_1(sig)
         assert_allclose(j1, np.zeros(j1.shape))
 
-    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_2(self, symten_len: int):
         """Test second deviator invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -83,7 +78,6 @@ class TestMechanics:
             ),
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_deviator_invariant_3(self, symten_len: int):
         """Test third deviator invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -99,7 +93,6 @@ class TestMechanics:
             ),
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_von_mises(self, symten_len: int):
         """Test von Mises invariant."""
         sig = self.generate_random_sig(symten_len)
@@ -109,7 +102,6 @@ class TestMechanics:
             np.sqrt(0.5 * np.sum(np.square(ev - np.roll(ev, 1, -1)), -1)),
         )
 
-    @parameterized.expand(TEST_ARGS)
     def test_octahedral_shear_stress(self, symten_len: int):
         """Test octahedral shear stress invariant."""
         sig = self.generate_random_sig(symten_len)
