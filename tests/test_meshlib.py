@@ -427,20 +427,20 @@ class TestUtils:
         )
         meshes_diff = ot.meshlib.difference_matrix(meshes1, meshes2)
 
-    def test_depth_2D(self):
+    @pytest.mark.parametrize(
+        "mesh",
+        [
+            examples.load_mesh_mechanics_2D(),
+            ot.Mesh(pv.SolidSphere(100, center=(0, 0, -101))),
+        ],
+    )
+    def test_depth(self, mesh: ot.Mesh):
         mesh = examples.load_mesh_mechanics_2D()
         mesh["depth"] = mesh.depth(use_coords=True)
-        # y Axis is vertical axis
-        assert np.all(mesh["depth"] == -mesh.points[..., 1])
+        depth_idx = 2 if mesh.volume != 0.0 else 1
+        assert np.all(mesh["depth"] == -mesh.points[..., depth_idx])
         mesh["depth"] = mesh.depth()
-        assert np.all(mesh["depth"] < -mesh.points[..., 1])
-
-    def test_depth_3D(self):
-        mesh = ot.Mesh(pv.SolidSphere(100, center=(0, 0, -101)))
-        mesh["depth"] = mesh.depth(use_coords=True)
-        assert np.all(mesh["depth"] == -mesh.points[..., -1])
-        mesh["depth"] = mesh.depth()
-        assert np.all(mesh["depth"] < -mesh.points[..., -1])
+        assert np.all(mesh["depth"] < -mesh.points[..., depth_idx])
 
     @pytest.mark.parametrize(
         ("elem_order", "quads", "intpt_order", "mixed"),

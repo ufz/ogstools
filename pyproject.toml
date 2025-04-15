@@ -205,7 +205,7 @@ pinned = [
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
-test = ["coverage", "parameterized","pytest", "pytest-xdist", "pytest-dependency"]
+test = ["coverage", "pytest", "pytest-xdist", "pytest-dependency"]
 docs = [
   "livereload",
   "myst-parser",
