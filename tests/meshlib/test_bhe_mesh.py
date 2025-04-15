@@ -1,9 +1,10 @@
+from collections.abc import Callable
+from itertools import product
 from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
+import pytest
 import pyvista as pv
-from parameterized import parameterized
 
 from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
@@ -70,32 +71,51 @@ def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
 
+def case_5(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+    # test a 12x12 bhe array
+    n_bhe_per_row = 12
+    dist_bhe = 2.5
+    border_distance = 2.5 * dist_bhe
+    spacing_bhe = (
+        np.linspace(0, (n_bhe_per_row - 1) * dist_bhe, n_bhe_per_row)
+        + border_distance
+    )
+
+    bhe_array = [
+        BHE(bhe_x, bhe_y, 0, -10, 0.076)
+        for bhe_x, bhe_y in product(spacing_bhe, repeat=2)
+    ]
+    return gen_bhe_mesh(
+        length=np.max(spacing_bhe) + 2 * border_distance,
+        width=np.max(spacing_bhe) + 2 * border_distance,
+        layer=[15],
+        groundwater=[],
+        BHE_Array=bhe_array,
+        meshing_type=mesh_type,
+        out_name=vtu_out_file_path,
+        inner_mesh_size=10,
+        outer_mesh_size=20,
+        dist_box_x=4,
+        dist_box_y=4,
+        n_refinement_layers=0,
+        target_z_size_coarse=10,
+    )
+
+
 class TestBHE:
-    tmp_dir = Path(mkdtemp())
-
-    @parameterized.expand(((0, 4), (1, 5), (2, 7), (3, 7)))
-    def test_bhe_mesh_structured(self, index: int, max_id: int):
-        vtu_file = self.tmp_dir / f"bhe_structured_{index}.vtu"
-        model = [case_1, case_2, case_3, case_4][index]
-        meshes = model(vtu_out_file_path=vtu_file, mesh_type="structured")
+    @pytest.mark.parametrize("mesh_type", ["structured", "prism"])
+    @pytest.mark.parametrize(
+        ("model", "max_id"),
+        [(case_1, 4), (case_2, 5), (case_3, 7), (case_4, 7), (case_5, 144)],
+    )
+    def test_bhe_mesh(
+        self, tmp_path, mesh_type: str, model: Callable, max_id: int
+    ):
+        vtu_file = tmp_path / "bhe_mesh.vtu"
+        meshes = model(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
         for mesh in meshes:
-            assert Path(self.tmp_dir / mesh).is_file()
-        mesh = pv.read(self.tmp_dir / meshes[0])
-        assert max(mesh.cell_data["MaterialIDs"]) == max_id
-        bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-        soil = mesh.extract_cells_by_type(
-            [pv.CellType.HEXAHEDRON, pv.CellType.WEDGE]
-        )
-        assert np.isin(bhe_line.points, soil.points).all()
-
-    @parameterized.expand(((0, 4), (1, 5), (2, 7)))
-    def test_bhe_mesh_prism(self, index: int, max_id: int):
-        vtu_file = self.tmp_dir / f"bhe_prism_{index}.vtu"
-        model = [case_1, case_2, case_3][index]
-        meshes = model(vtu_out_file_path=vtu_file, mesh_type="prism")
-        for mesh in meshes:
-            assert Path(self.tmp_dir / mesh).is_file()
-        mesh = pv.read(self.tmp_dir / meshes[0])
+            assert Path(tmp_path / mesh).is_file()
+        mesh = pv.read(tmp_path / meshes[0])
         assert max(mesh.cell_data["MaterialIDs"]) == max_id
         bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
         soil = mesh.extract_cells_by_type(
