@@ -80,7 +80,7 @@ class OGSVersion:
 
 
 def read_version(file_name: str | Path) -> OGSVersion:
-    return OGSVersion(6, 4, 4, 0)
+    return OGSVersion(6, 5, 5, 0)
 
 
 def read_mpi_processes(file_name: str | Path) -> int:

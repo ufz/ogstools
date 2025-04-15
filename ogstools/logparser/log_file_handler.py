@@ -65,7 +65,7 @@ class LogFileHandler(FileSystemEventHandler):
             line = self._file.readline()
             num_lines_current = self.num_lines_read + 1
             if not line or not line.endswith("\n"):
-                print(line)
+                #print(line)
                 break  # Wait for complete line before processing
 
             log_entry = parse_line(
@@ -77,7 +77,7 @@ class LogFileHandler(FileSystemEventHandler):
 
             if log_entry:
                 self.queue.put(log_entry)
-                print(f"added {line} in nr: {num_lines_current}")
+                #print(f"added {line} in nr: {num_lines_current}")
 
             if isinstance(log_entry, Termination):
                 print("===== Termination =====")
