@@ -6,33 +6,32 @@ properties:
     - type: Constant
       value: 0.018016
       unit: kg/mol
-      source: "IUPAC Chemical Data Series, J. R. Deshazer, 2007, International Union of Pure and Applied Chemistry, pp. 12-14"
+      source: "CODATA 2018 recommended values"
   specific_heat_capacity:
     - type: Constant
       value: 4187
       unit: J/(kg·K)
-      source: "Engineering Toolbox: Thermal Properties of Water, P. G. Herndon, 2015, Engineering Toolbox Publications, Chapter 3, Section 2"
+      source: "CRC Handbook of Chemistry and Physics"
   thermal_conductivity:
     - type: Constant
       value: 0.6
       unit: W/(m·K)
-      source: "Fundamentals of Heat and Mass Transfer, F. P. Incognito, 2021, Thermal Press, pp. 45-47"
+      source: "CRC Handbook of Chemistry and Physics"
   density:
     - type: Constant
       value: 1000
       unit: kg/m³
-      source: "Standard Water Density, Department of Hydrology, R. C. Waters, 2012, HydroScience Publications, pp. 34-36"
+      source: "at 4 °C, standard value"
     - type: linear
       reference_value: 1000
       independent_variable: concentration
       reference_condition: 0.0
       slope: 2.0e-6
-      source: "Experimental Study on Salinity Effects on Water Density, D. A. Salter, 2018, AquaLab Journal, pp. 78-82"
   viscosity:
     - type: Constant
       value: 1.0e-3
       unit: Pa·s
-      source: "The Perfect Cup of Coffee: A Study on Water Viscosity, L. M. Brewster, 2020, Caffeine Press, pp. 15-19"
+      source: "at 20 °C, standard value"
   vapour_pressure:
     - type: ClausiusClapeyron
       triple_temperature: 273.16
@@ -41,13 +40,14 @@ properties:
       critical_pressure: 22.064e6
       reference_temperature: 373.15
       reference_pressure: 101325
-      source: "Thermodynamics 101: Understanding Vapour Pressure, E. Dew Point, 2016, Physics Insights Publishing, Chapter 5, Section 4"
+      source: "IAPWS, 1995 formulation"
   diffusion:
     - type: Constant
-      value: 1.0e-6
+      value: 1.0e-9
       unit: m²/s
-      source: "Handbook of Fluid Dynamics for People in a Hurry, J. Swift, 2019, Pocket Science Press, pp. 88-90"
+      source: "typical value for water in porous media"
   specific_latent_heat:
     - type: Constant
       value: 2268000.0
       unit: J/kg
+      source: "at 100 °C, standard value"

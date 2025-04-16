@@ -1,61 +1,83 @@
-name: opalinus_clay
+---
 group: medium
+name: opalinus_clay
 properties:
-  density:
-    - type: Constant
-      value: 2500
-      unit: kg/m³
-  thermal_conductivity:
-    - type: Constant
-      value: 2.0
-      unit: W/(m·K)
-  specific_heat_capacity:
-    - type: Constant
-      value: 900
-      unit: J/(kg·K)
-  thermal_expansivity:
-    - type: Constant
-      value: 1.0e-5
-      unit: 1/K
-  porosity:
-    - type: Constant
-      value: 0.15
-      unit: 1
-  saturation:
-    - type: VanGenuchten
-      residual_liquid_saturation: 0.01
-      residual_gas_saturation: 1e-15
-      exponent: 0.45
-      p_b: 1.8e6
-  youngs_modulus:
-    - type: Constant
-      value: 6.5e9
-      unit: Pa
-  poisson_ratio:
-    - type: Constant
-      value: 0.23
-      unit: 1
   biot_coefficient:
     - type: Constant
-      value: 1.0
-      unit: 1
-  tortuosity:
-    - type: Constant
-      value: 1.0
-      unit: 1
+      unit: 0.6
+      value: 1
   bishops_effective_stress:
-    - type: Constant
-      value: 1.0
+    - type: BishopsPowerLaw
       unit: 1
-  relative_permeability:
+      exponent: 1
+  density:
     - type: Constant
-      value: 1.0
-      unit: 1
-  relative_permeability_nonwetting_phase:
-    - type: Constant
-      value: 1.0
-      unit: 1
+      unit: kg/m³
+      value: 2600
   permeability:
     - type: Constant
-      value: 1.0e-21
       unit: m²
+      value: 1.e-21
+  poisson_ratio:
+    - type: Constant
+      unit: 1
+      value: 0.23
+  porosity:
+    - type: Constant
+      unit: 1
+      value: 0.15
+  saturation:
+    - type: SaturationVanGenuchten
+      exponent: 0.2
+      p_b: 48000000
+      residual_gas_saturation: 0.01
+      residual_liquid_saturation: 0.01
+  specific_heat_capacity:
+    - type: Constant
+      unit: J/(kg·K)
+      value: 995
+  thermal_conductivity:
+    # Thermal conductivity of the individual phase (e.g. solid or fluid),
+    # used in local energy balance equations of that phase.
+    - type: Constant
+      scope: phase
+      unit: W/(m·K)
+      value: 1.7
+    # Effective thermal conductivity of the full medium,
+    # typically calculated from the phase conductivities using
+    # porosity-weighted mixing models.
+    - type: SaturationWeightedThermalConductivity
+      mean_type: arithmetic_squareroot
+      dry_thermal_conductivity: 1.36
+      wet_thermal_conductivity: 1.7
+      scope: medium
+      unit: W/(m·K)
+    - type: EffectiveThermalConductivityPorosityMixing
+      scope: medium
+      unit: W/(m·K)
+  thermal_expansivity:
+    - type: Constant
+      unit: 1/K
+      value: 1.7e-5
+  tortuosity:
+    - type: Constant
+      unit: 1
+      value: 1
+  youngs_modulus:
+    - type: Constant
+      unit: Pa
+      value: 6500000000
+  relative_permeability:
+    - type: RelativePermeabilityVanGenuchten
+      residual_liquid_saturation: 0.01
+      residual_gas_saturation: 0.01
+      exponent: 0.2
+      minimum_relative_permeability_liquid: 1e-12
+      unit: 1
+  relative_permeability_nonwetting_phase:
+    - type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
+      residual_liquid_saturation: 0.01
+      residual_gas_saturation: 0.01
+      exponent: 0.2
+      min_relative_permeability: 1e-5
+      unit: 1
