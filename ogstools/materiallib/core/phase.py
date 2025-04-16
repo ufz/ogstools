@@ -113,7 +113,12 @@ class Phase:
         logger.debug("Source material: %s", source.name)
 
         self.properties = [
-            prop for prop in source.get_properties() if prop.name in required
+            prop
+            for prop in source.get_properties()
+            if prop.name in required
+            and (
+                prop.extra.get("scope") == "phase" or "scope" not in prop.extra
+            )
         ]
 
         loaded = {prop.name for prop in self.properties}
