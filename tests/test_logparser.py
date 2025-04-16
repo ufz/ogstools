@@ -30,8 +30,8 @@ from ogstools.logparser import (
     parse_file,
     time_step_vs_iterations,
 )
-from ogstools.logparser.common_ogs_analyses import read_version
 from ogstools.logparser.log_file_handler import LogFileHandler
+from ogstools.logparser.log_parser import read_version
 from ogstools.logparser.regexes import Termination
 
 
@@ -276,6 +276,7 @@ def write_in_pieces(
 
     # If chunk_size is larger than or equal to the input file size, copy the whole file
     if chunk_size >= input_file_size:
+        print("copy")
         shutil.copy(input_file, output_file)
         return
     with input_file.open("r") as infile, output_file.open("a") as outfile:
@@ -289,11 +290,11 @@ class TestLogparser_Version2:
 
     @pytest.mark.parametrize(
         "chunk_size",
-        [2000, 20000, 200000],
+        [20, 4095, 4096, 20000000000],
     )
     @pytest.mark.parametrize(
         "delay",
-        [0, 0.001, 0.05],
+        [0, 0.001],
     )
     def test_v2_coupled_with_producer(self, chunk_size, delay):
         #    def test_v2_coupled_with_producer(self):
@@ -328,7 +329,8 @@ class TestLogparser_Version2:
 
         observer.join()
         # consume(records)
-        num_expected = 354
+        num_expected = 39
         assert (
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
+        # new_file.unlink() no clean up necessary

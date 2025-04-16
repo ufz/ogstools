@@ -30,21 +30,12 @@ class LogFileHandler(FileSystemEventHandler):
 
         self.file_name = Path(file_name)
         self._file_read = False
-        self.patterns = None
+        self.patterns: None | list = None
         self.queue = queue
         self.stop_callback = stop_callback
         self.num_lines_read = 0
         self.line_limit = line_limit
         self.force_parallel = force_parallel
-
-        if self.patterns is None:
-            # parallel_log = (
-            #     self.force_parallel or read_mpi_processes(self.file_name) > 1
-            # )
-            parallel_log = False
-            self.patterns = normalize_regex(
-                select_regex(read_version(self.file_name)), parallel_log
-            )
 
     def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
         if event.src_path != str(self.file_name):
@@ -58,6 +49,16 @@ class LogFileHandler(FileSystemEventHandler):
             except FileNotFoundError:
                 print(f"File not found yet: {self.file_name}")
                 return
+
+        if self.patterns is None:
+            # parallel_log = (
+            #     self.force_parallel or read_mpi_processes(self.file_name) > 1
+            # )
+            parallel_log = False
+            self.patterns = normalize_regex(
+                select_regex(read_version(self.file_name)), parallel_log
+            )
+            return
 
         print(f"{self.file_name} has been modified.")
         while True:
