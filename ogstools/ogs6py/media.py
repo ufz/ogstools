@@ -140,6 +140,12 @@ class Media(build_tree.BuildTree):
                 "residual_gas_saturation",
                 "residual_liquid_saturation",
             ],
+            "RelativePermeabilityNonWettingPhaseVanGenuchtenMualem": [
+                "exponent",
+                "min_relative_permeability",
+                "residual_gas_saturation",
+                "residual_liquid_saturation",
+            ],
             "SaturationBrooksCorey": [
                 "entry_pressure",
                 "lambda",
