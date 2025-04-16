@@ -16,8 +16,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ogstools.logparser.log_parser import OGSVersion
-
 
 # Helper functions
 def _check_input(
@@ -263,24 +261,8 @@ def _types(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     return df_raw_log
 
 
-def read_version(df_raw_log: pd.DataFrame) -> OGSVersion:
-
-    row = df_raw_log.iloc[0]
-
-    return OGSVersion(
-        major=row["major"],
-        minor=row["minor"],
-        patch=row["patch"],
-        temporary=row.get("temporary", 0),
-        commit=row.get("commit", ""),
-        dirty=row.get("dirty", False) == "True",
-    )  # Ensure dirty is a boolean
-
-
 def fill(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     df_raw_log = _types(df_raw_log)
-    # version = read_version(df_raw_log)
-
     df_raw_log["time_step"] = (
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
@@ -317,26 +299,15 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
 
     """
     df_raw_log = _types(df_raw_log)
-    version = read_version(df_raw_log)
 
     df_raw_log["time_step"] = (
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
     )
 
-    if version < OGSVersion(6, 4, 4):
-
-        print("-------------------------", version)
-        # Back fill, because iteration number can be found in logs at the END of the iteration
-        df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
-            ["iteration_number"]
-        ].bfill()
-
-    else:
-        df_raw_log["iteration_number"] = (
-            df_raw_log.groupby("mpi_process")[["iteration_number"]]
-            .ffill()
-            .fillna(value=1)
-        )
+    # Back fill, because iteration number can be found in logs at the END of the iteration
+    df_raw_log["iteration_number"] = df_raw_log.groupby("mpi_process")[
+        ["iteration_number"]
+    ].bfill()
 
     if "component" in df_raw_log:
         df_raw_log["component"] = df_raw_log.groupby("mpi_process")[

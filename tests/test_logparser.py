@@ -30,6 +30,7 @@ from ogstools.logparser import (
     parse_file,
     time_step_vs_iterations,
 )
+from ogstools.logparser.common_ogs_analyses import read_version
 from ogstools.logparser.log_file_handler import LogFileHandler
 from ogstools.logparser.regexes import Termination
 
@@ -253,6 +254,10 @@ class TestLogparser:
             f"total_runtime {run_time} from timestamps is to large."
         )
 
+    def test_read_version(self):
+        file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
+        assert read_version(file) == 2
+
 
 def consume(records: Queue) -> None:
     while True:
@@ -323,6 +328,7 @@ class TestLogparser_Version2:
 
         observer.join()
         # consume(records)
+        num_expected = 354
         assert (
-            records.qsize() == 353
-        ), f"Expected 353 records, got {records.qsize()} with {records}"
+            records.qsize() == num_expected
+        ), f"Expected {num_expected} records, got {records.qsize()} with {records}"

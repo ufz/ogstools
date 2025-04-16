@@ -53,12 +53,14 @@ class NoRankOutput:
 
 @dataclass
 class OGSVersionLog(MPIProcess, NoRankOutput):
-    major: int = 0
-    minor: int = 0
-    patch: int = 0
-    temporary: int = 0
-    commit: str = ""
-    dirty: bool = False
+    version: str
+
+
+@dataclass
+class OGSVersionLog2(MPIProcess, NoRankOutput):
+    ogs_version: str
+    log_version: int = 0
+    log_level: str = ""
 
 
 @dataclass
@@ -303,8 +305,8 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
 def new_regexes() -> list[tuple[str, type[Log]]]:
     return [
         (
-            r"info: This is OpenGeoSys-6 version (\d+)\.(\d+)\.(\d+)(?:-(\d+))?(?:-g([0-9a-f]+))?(?:\.dirty)?",
-            OGSVersionLog,
+            r"info: This is OpenGeoSys-6 version ([\w\-\.]+)\. Log version: (\d+), Log level: (\w+)\.",
+            OGSVersionLog2,
         ),
         (
             r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",

@@ -79,10 +79,6 @@ class OGSVersion:
         return not self < other
 
 
-def read_version(file_name: str | Path) -> OGSVersion:
-    return OGSVersion(6, 5, 5, 0)
-
-
 def read_mpi_processes(file_name: str | Path) -> int:
     """
     Counts the number of MPI processes started by OpenGeoSys-6 by detecting
@@ -169,6 +165,22 @@ def parse_line(
     return None
 
 
+def read_version(file: Path) -> int:
+    """
+    Read the version of the OGS log file.
+
+    :param file: Path to the OGS log file.
+
+    :returns: The version number as an integer.
+    """
+    with file.open() as f:
+        line = f.readline()
+        match = re.search(r"Log version: (\d+)", line)
+        if match:
+            return int(match.group(1))
+        return 1
+
+
 def parse_file(
     file_name: str | Path,
     maximum_lines: int | None = None,
@@ -220,13 +232,15 @@ def parse_file(
     return records
 
 
-def select_regex(version):
-    if version < OGSVersion(6, 5, 4, 220):
+def select_regex(version: int) -> list[tuple[str, type[Log]]]:
+    if version == 1:
         from ogstools.logparser.regexes import ogs_regexes
 
-        regexes = ogs_regexes()
-    else:
+        return ogs_regexes()
+    if version == 2:
         from ogstools.logparser.regexes import new_regexes
 
-        regexes = new_regexes()
-    return regexes
+        return new_regexes()
+
+    msg = f"Not supported log version (got: {version})"
+    raise ValueError(msg)
