@@ -12,6 +12,7 @@ from watchdog.events import (
 from ogstools.logparser.log_parser import (
     normalize_regex,
     parse_line,
+    read_mpi_processes,
     read_version,
     select_regex,
 )
@@ -51,10 +52,10 @@ class LogFileHandler(FileSystemEventHandler):
                 return
 
         if self.patterns is None:
-            # parallel_log = (
-            #     self.force_parallel or read_mpi_processes(self.file_name) > 1
-            # )
-            parallel_log = False
+            parallel_log = (
+                self.force_parallel or read_mpi_processes(self.file_name) > 1
+            )
+
             self.patterns = normalize_regex(
                 select_regex(read_version(self.file_name)), parallel_log
             )
