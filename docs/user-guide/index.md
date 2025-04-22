@@ -59,7 +59,7 @@ pip install ogstools[ogs]
 You can also install the latest development version with `pip` (requires also [`git`](https://git-scm.com)):
 
 ```bash
-pip install git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git[ogs]
+pip install "ogstools[ogs] @ git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git"
 ```
 
 :::
