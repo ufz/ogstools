@@ -316,6 +316,30 @@ class TestUtils:
         points = np.linspace(pt_min, pt_max, num=10)
         self._check_probe(ms_1D, points)
 
+    def test_probe_multiple(self):
+        """Test probe with mixed scalar, vector point and cell data.
+
+        Checks that extracting all vars at once produces the same data fields as
+        you would get by extract the different data fields individually.
+        """
+        ms = examples.load_meshseries_THM_2D_PVD()
+        pt_min, pt_max = np.reshape(ms[0].bounds, (3, 2)).T
+        points = np.linspace(pt_min, pt_max, num=10, endpoint=False)
+        custom_keys = [
+            ot.variables.stress["xx"],
+            ot.variables.stress.von_Mises,
+            "displacement",
+            "MaterialIDs",
+        ]
+        all_keys = set().union(ms.point_data.keys(), ms.cell_data.keys())
+        for arg, keys in [(custom_keys, custom_keys), (None, all_keys)]:
+            ms_pts = ot.MeshSeries.extract_probe(ms, points, arg)
+            for key in keys:
+                ms_ref = ot.MeshSeries.extract_probe(ms, points, key)
+                np.testing.assert_array_equal(
+                    ms_pts.values(key), ms_ref.values(key)
+                )
+
     def test_plot_probe(self):
         """Test creation of probe plots."""
         meshseries = examples.load_meshseries_THM_2D_PVD()

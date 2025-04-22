@@ -24,6 +24,7 @@ This is not released yet!
 - new logparser plot to create an overview of the convergence behavior for the
   entire simulation (ot.logparser.plot_error, ot.logparser.plot_convergence_order)
 - OGS simulation can be run in a background process via ot.Project.run_model(..., background=True)
+- MeshSeries.extract_probe/probe/values accept str/Variables and lists of them as arguments (with improved performance)
 
 ## Infrastructure
 

@@ -93,6 +93,11 @@ class MeshSeries(Sequence[Mesh]):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
+        self.dim = MeshSeries._max_dim(self.mesh(0))
+
+    @staticmethod
+    def _max_dim(mesh: Mesh) -> int:
+        return int(np.max([cell.dimension for cell in mesh.cell]))
 
     @classmethod
     def from_data(
@@ -104,6 +109,7 @@ class MeshSeries(Sequence[Mesh]):
         new_ms._mesh_cache.update(
             dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
         )
+        new_ms.dim = MeshSeries._max_dim(meshes[0])
         return new_ms
 
     def extend(self, mesh_series: MeshSeries) -> None:
@@ -149,7 +155,7 @@ class MeshSeries(Sequence[Mesh]):
         cls,
         original: MeshSeries,
         points: np.ndarray,
-        data_name: str | list[str] | None = None,
+        data_name: str | Variable | list[str | Variable] | None = None,
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> MeshSeries:
         """Create a new MeshSeries by probing points on an existing MeshSeries.
@@ -162,17 +168,29 @@ class MeshSeries(Sequence[Mesh]):
         """
         pointset = pv.PolyData(points)
         if data_name is None:
-            data_names = original[0].point_data.keys()
-        elif isinstance(data_name, str):
-            data_names = [data_name]
+            variables = list(
+                set().union(original[0].point_data, original[0].cell_data)
+            )
+        elif isinstance(data_name, list):
+            variables = data_name
         else:
-            data_names = data_name
+            variables = [data_name]
         meshes = [pointset.copy() for _ in original.timevalues]
         probe_ms = cls.from_data(meshes, original.timevalues)
-        for name in data_names:
-            probe_ms.point_data[name] = original.probe(
-                points, name, interp_method
-            )
+        point_data_keys = [
+            key for key in variables if key in original.point_data
+        ]
+        cell_data_keys = [key for key in variables if key in original.cell_data]
+        for keys, data in [
+            (point_data_keys, probe_ms.point_data),
+            (cell_data_keys, probe_ms.cell_data),
+        ]:
+            if len(keys) == 0:
+                continue
+            values = original.probe(points, keys, interp_method)
+            for var, vals in zip(keys, values, strict=True):
+                name = var.output_name if isinstance(var, Variable) else var
+                data[name] = vals
         return probe_ms
 
     def __deepcopy__(self, memo: dict) -> MeshSeries:
@@ -216,7 +234,7 @@ class MeshSeries(Sequence[Mesh]):
     def __getitem__(self, index: slice | Sequence) -> MeshSeries: ...
 
     @overload
-    def __getitem__(self, index: str | Variable) -> np.ndarray: ...
+    def __getitem__(self, index: str) -> np.ndarray: ...
 
     def __getitem__(self, index: Any) -> Any:
         if isinstance(index, int):
@@ -427,7 +445,15 @@ class MeshSeries(Sequence[Mesh]):
             result = np.asarray([mesh[variable_name] for mesh in meshes])
         return result
 
-    def values(self, variable: str | Variable) -> np.ndarray:
+    @overload
+    def values(self, variable: str | Variable) -> np.ndarray: ...
+
+    @overload
+    def values(self, variable: list[str | Variable]) -> list[np.ndarray]: ...
+
+    def values(
+        self, variable: str | Variable | list[str | Variable]
+    ) -> np.ndarray | list[np.ndarray]:
         """
         Get the data in the MeshSeries for all timesteps.
 
@@ -436,16 +462,31 @@ class MeshSeries(Sequence[Mesh]):
         'vtkOriginalCellIds' (e.g. `clip(..., crinkle=True)`,
         `extract_cells(...)`, `threshold(...)`.)
 
-        :param variable: Variable to read/process from the MeshSeries.
+        :param variable:    Data to read/process from the MeshSeries. Can also
+                            be a list of str or Variable.
 
         :returns:   A numpy array of shape (n_timesteps, n_points/c_cells).
                     If given an argument of type Variable is given, its
-                    transform function is applied on the data.
+                    transform function is applied on the data. If a list of
+                    str or Variable is given, a list of the individual values
+                    is returned.
         """
+        if isinstance(variable, list):
+            return [self._values(var) for var in variable]
+        return self._values(variable)
+
+    def _values(self, variable: str | Variable) -> np.ndarray:
         if isinstance(variable, Variable):
             if variable.mesh_dependent:
                 return np.asarray([variable.transform(mesh) for mesh in self])
-            variable_name = variable.data_name
+            if variable.output_name in set().union(
+                self.point_data, self.cell_data
+            ):
+                variable_name = variable.output_name
+                do_transform = False
+            else:
+                variable_name = variable.data_name
+                do_transform = True
         else:
             variable_name = variable
 
@@ -458,9 +499,12 @@ class MeshSeries(Sequence[Mesh]):
             result = self._xdmf_values(variable_name)
         else:
             result = np.asarray(
-                [mesh[variable_name] for mesh in tqdm(self, disable=all_cached)]
+                [
+                    mesh[variable_name]
+                    for mesh in (self if all_cached else tqdm(self))
+                ]
             )
-        if isinstance(variable, Variable):
+        if isinstance(variable, Variable) and do_transform:
             return variable.transform(result)
         return result
 
@@ -587,27 +631,63 @@ class MeshSeries(Sequence[Mesh]):
         ax.minorticks_on()
         return fig
 
+    def _flatten_vectors(self, data: list[np.ndarray]) -> list[np.ndarray]:
+        return [
+            vals[..., i] if vals.ndim > 2 else vals
+            for vals in data
+            for i in range(vals.shape[-1] if vals.ndim > 2 else 1)
+        ]
+
+    def _restore_vectors(
+        self, data: list[np.ndarray], components: list[int]
+    ) -> list[np.ndarray]:
+        original_list = []
+        idx = 0
+        for comp in components:
+            stacked_array = np.stack(data[idx : idx + comp], axis=-1)
+            original_list.append(np.squeeze(stacked_array))
+            idx += comp
+        return original_list
+
     def probe(
         self,
         points: np.ndarray,
-        data_name: str,
+        data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
-    ) -> np.ndarray:
+    ) -> np.ndarray | list[np.ndarray]:
         """
         Probe the MeshSeries at observation points.
 
         :param points:          The observation points to sample at.
-        :param data_name:       Name of the data to sample.
+        :param data_name:       Data to sample. If provided as a Variable, the
+                                output will transformed accordingly. Can also be
+                                a list of str or Variable.
         :param interp_method:   Interpolation method, defaults to `linear`
 
-        :returns:   `numpy` array of interpolated data at observation points
+        :returns:   `numpy` array/s of interpolated data at observation points
                     with the following shape:
 
                     - multiple points: (n_timesteps, n_points, [n_components])
                     - single points: (n_timesteps, [n_components])
+
+                    If `data_name` is a list, a corresponding list of arrays is
+                    returned.
         """
+        if (
+            isinstance(data_name, list)
+            and any(key in self.point_data for key in data_name)
+            and any(key in self.cell_data for key in data_name)
+        ):
+            msg = "Cannot probe point and cell data together."
+            raise TypeError(msg)
         pts = np.asarray(points).reshape((-1, 3))
-        values = np.swapaxes(self.values(data_name), 0, 1)
+        values = self.values(data_name)
+        if isinstance(data_name, list):
+            components = [
+                1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
+            ]
+            values = np.moveaxis(self._flatten_vectors(values), 0, -1)
+        values = np.swapaxes(values, 0, 1)
         geom = self.mesh(0).points
 
         if values.shape[0] != geom.shape[0]:
@@ -619,8 +699,7 @@ class MeshSeries(Sequence[Mesh]):
         geom = np.delete(geom, flat_axis, 1)
         pts = np.delete(pts, flat_axis, 1)
 
-        dim = int(np.max([cell.dimension for cell in self.mesh(0).cell]))
-        match dim > 1, interp_method:
+        match self.dim > 1, interp_method:
             case True, "nearest":
                 result = np.swapaxes(
                     NearestNDInterpolator(geom, values)(pts), 0, 1
@@ -636,12 +715,15 @@ class MeshSeries(Sequence[Mesh]):
             case _, _:
                 msg = (
                     "No interpolation method implemented for mesh of "
-                    f"{dim=} and {interp_method=}"
+                    f"{self.dim=} and {interp_method=}"
                 )
                 raise TypeError(msg)
 
         if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
             result = np.squeeze(result, axis=1)
+        if isinstance(data_name, list):
+            result = np.moveaxis(result, -1, 0)
+            result = self._restore_vectors(result, components)
         return result
 
     def plot_probe(
@@ -843,6 +925,7 @@ class MeshSeries(Sequence[Mesh]):
         for cache_timevalue, cache_mesh in self._mesh_cache.items():
             ms_copy._mesh_cache[cache_timevalue] = Mesh(mesh_func(cache_mesh))
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
+        ms_copy.dim = MeshSeries._max_dim(ms_copy.mesh(0))
         return ms_copy
 
     def scale(

@@ -3,6 +3,8 @@ from typing import Any
 
 import numpy as np
 
+from ogstools.variables import Variable
+
 from .mesh import Mesh
 
 
@@ -25,10 +27,18 @@ class DataDict(MutableMapping):
         for mesh, value_t in zip(self.ms, value, strict=True):
             self.get_data(mesh)[key] = value_t
 
-    def __getitem__(self, key: str) -> np.ndarray:
+    def __getitem__(self, key: str | Variable) -> np.ndarray:
+        if isinstance(key, Variable):
+            if key.output_name in self:
+                return np.asarray(
+                    [self.get_data(mesh)[key.output_name] for mesh in self.ms]
+                )
+            return key.transform(self.ms)
         return np.asarray([self.get_data(mesh)[key] for mesh in self.ms])
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key: str | Variable) -> None:
+        if isinstance(key, Variable):
+            key = key.output_name if key.output_name in self else key.data_name
         for mesh in self.ms:
             del self.get_data(mesh)[key]
 
@@ -37,3 +47,9 @@ class DataDict(MutableMapping):
 
     def __len__(self) -> int:
         return len(self.get_data(self.ms[0]))
+
+    def __contains__(self, key: object) -> bool:
+        data = self.get_data(self.ms[0])
+        if isinstance(key, Variable):
+            return key.output_name in data or key.data_name in data
+        return key in self.get_data(self.ms[0])
