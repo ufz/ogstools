@@ -12,10 +12,14 @@ class DataDict(MutableMapping):
     "Mapping that works like both a dict and a mutable object."
 
     def __init__(
-        self, ms: Sequence[Mesh], get_data: Callable[[Mesh], dict]
+        self,
+        ms: Sequence[Mesh],
+        get_data: Callable[[Mesh], dict],
+        array_len: int | None,
     ) -> None:
         self.ms = ms
         self.get_data = get_data
+        self.array_len = array_len
 
     def __setitem__(self, key: str, value: Any) -> None:
         if isinstance(value, float | int):
@@ -24,6 +28,8 @@ class DataDict(MutableMapping):
             else:
                 len_vals = -1
             value = np.tile(value, (len(self.ms), len_vals))
+        if self.array_len is not None:
+            value = np.reshape(value, (len(self.ms), self.array_len, -1))
         for mesh, value_t in zip(self.ms, value, strict=True):
             self.get_data(mesh)[key] = value_t
 

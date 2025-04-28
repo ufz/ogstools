@@ -342,7 +342,6 @@ class TestUtils:
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
-        # TODO: wait for Feliks' MR and see if this is already solved then
         ms = examples.load_meshseries_THM_2D_PVD()
         ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).center)
         _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)

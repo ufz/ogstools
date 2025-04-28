@@ -519,17 +519,17 @@ class MeshSeries(Sequence[Mesh]):
     @property
     def point_data(self) -> DataDict:
         "Useful for reading or setting point_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.point_data)
+        return DataDict(self, lambda mesh: mesh.point_data, self[0].n_points)
 
     @property
     def cell_data(self) -> DataDict:
         "Useful for reading or setting cell_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.cell_data)
+        return DataDict(self, lambda mesh: mesh.cell_data, self[0].n_cells)
 
     @property
     def field_data(self) -> DataDict:
         "Useful for reading or setting field_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.field_data)
+        return DataDict(self, lambda mesh: mesh.field_data, None)
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
