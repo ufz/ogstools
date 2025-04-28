@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from .mesh import Mesh
+
 
 def layer_names(folder: str) -> Callable[[dict], Path]:
     def layer_names_folder(row: dict) -> Path:
@@ -60,3 +62,43 @@ def centered_range(min_val: float, max_val: float, step: float) -> np.ndarray:
     left = np.arange(center, l_bound - step, -step)
     right = np.arange(center, r_bound + step, step)
     return np.unique(np.concatenate((left, np.asarray([center]), right)))
+
+
+def reshape_obs_points(
+    points: np.ndarray | list, mesh: Mesh | None = None
+) -> np.ndarray:
+    points = np.asarray(points)
+
+    pts = points.reshape((-1, points.shape[-1]))
+
+    # Add missing columns to comply with pyvista expectations
+    if pts.shape[1] == 3:
+        pts_pyvista = pts
+    elif mesh is None:
+        pts_pyvista = np.hstack(
+            (pts, np.zeros((pts.shape[0], 3 - pts.shape[1])))
+        )
+    elif isinstance(mesh, Mesh):
+        # Detect and handle flat dimensions
+        geom = mesh.points
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        flat_axis = flat_axis.flatten()
+        if pts.shape[1] + len(flat_axis) < 3:
+            err_msg = (
+                "Number of flat axis and number of coordinates"
+                " in provided points doesn't add up to 3."
+                " Please ensure that the provided points match"
+                " the plane of the mesh."
+            )
+            raise RuntimeError(err_msg)
+        pts_pyvista = np.empty((pts.shape[0], 3))
+        pts_id = 0
+        for col_id in range(3):
+            if col_id in flat_axis:
+                pts_pyvista[:, col_id] = (
+                    np.ones((pts.shape[0],)) * geom[0, col_id]
+                )
+            else:
+                pts_pyvista[:, col_id] = pts[:, pts_id]
+                pts_id = pts_id + 1
+    return pts_pyvista

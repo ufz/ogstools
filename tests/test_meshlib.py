@@ -705,3 +705,17 @@ class TestUtils:
         ms1.extend(ms2)
         assert len(ms1) == 2 * len_orig_ms1
         assert ms1.timevalues[-1] == ms1_orig_tv[-1] * 2 + 0.1
+
+    def test_reshape_obs_points(self):
+        points_x = (1,)
+        pts_x = ot.meshlib._utils.reshape_obs_points(points_x)
+        assert pts_x.shape == (1, 3)
+
+    def test_reshape_obs_points_mesh(self):
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        mesh = ms.mesh(0)
+        points = ((-150.0, 75.0), (-147.65625, 72.65625))
+        pts = ot.meshlib._utils.reshape_obs_points(points, mesh)
+        np.testing.assert_equal(
+            pts, np.asarray([[-150, 0, 75], [-147.65625, 0, 72.65625]])
+        )
