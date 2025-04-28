@@ -727,6 +727,13 @@ class MeshSeries(Sequence[Mesh]):
             result = self._restore_vectors(result, components)
         return result
 
+    @deprecated(
+        """
+    Please use the following code instead:
+        ms_pts = ot.MeshSeries.extract_probe(mesh_series, pts)
+        fig = ot.plot.line(ms_pts, "time", variable_of_interest)
+    """
+    )
     def plot_probe(
         self,
         points: np.ndarray | list,

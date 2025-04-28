@@ -342,18 +342,19 @@ class TestUtils:
 
     def test_plot_probe(self):
         """Test creation of probe plots."""
-        meshseries = examples.load_meshseries_THM_2D_PVD()
-        points = meshseries.mesh(0).center
-        _ = meshseries.plot_probe(points, ot.variables.temperature)
-        points = meshseries.mesh(0).points[[0, -1]]
-        _ = meshseries.plot_probe(points, ot.variables.temperature)
-        _ = meshseries.plot_probe(points, ot.variables.velocity)
-        _ = meshseries.plot_probe(points, ot.variables.stress)
-        _ = meshseries.plot_probe(points, ot.variables.stress.von_Mises)
-        mesh_series = examples.load_meshseries_HT_2D_XDMF()
-        points = mesh_series.mesh(0).center
-        _ = meshseries.plot_probe(points, ot.variables.temperature)
-        _ = meshseries.plot_probe(points, ot.variables.velocity)
+        # TODO: wait for Feliks' MR and see if this is already solved then
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).center)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
+        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).points[[0, -1]])
+        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.velocity)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.stress)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.stress.von_Mises)
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).center)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
+        _ = ot.plot.line(ms_pts, "time", ot.variables.velocity)
         plt.close()
 
     def test_extract_probe(self):
