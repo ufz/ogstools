@@ -30,6 +30,7 @@ from typeguard import typechecked
 from ogstools import plot
 from ogstools.variables import Variable, normalize_vars, u_reg
 
+from ._utils import reshape_obs_points
 from .data_dict import DataDict
 from .mesh import Mesh
 from .xdmf_reader import XDMFReader
@@ -680,7 +681,7 @@ class MeshSeries(Sequence[Mesh]):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
-        pts = np.asarray(points).reshape((-1, 3))
+        pts = reshape_obs_points(points, self.mesh(0))
         values = self.values(data_name)
         if isinstance(data_name, list):
             components = [
@@ -728,7 +729,7 @@ class MeshSeries(Sequence[Mesh]):
 
     def plot_probe(
         self,
-        points: np.ndarray,
+        points: np.ndarray | list,
         variable: Variable | str,
         variable_abscissa: Variable | str | None = None,
         labels: list[str] | None = None,
@@ -752,7 +753,7 @@ class MeshSeries(Sequence[Mesh]):
 
         Keyword Arguments get passed to `matplotlib.pyplot.plot`
         """
-        points = np.asarray(points).reshape((-1, 3))
+        points = reshape_obs_points(points, self.mesh(0))
         variable = Variable.find(variable, self.mesh(0))
         values = variable.magnitude.transform(
             self.probe(points, variable.data_name, interp_method)
