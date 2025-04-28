@@ -1,6 +1,7 @@
 # source: https://github.com/python/typing/issues/270#issuecomment-1344537820
 
 import functools
+import warnings
 from collections.abc import Callable
 from typing import Concatenate, ParamSpec, TypeVar
 
@@ -25,7 +26,9 @@ T = TypeVar("T")
 def copy_method_signature(
     source: Callable[Concatenate[S, P], T],
 ) -> Callable[[Callable], Callable[Concatenate[S, P], T]]:
+
     def wrapper(target: Callable) -> Callable[Concatenate[S, P], T]:
+
         @functools.wraps(source)
         def wrapped(self: S, *args: P.args, **kwargs: P.kwargs) -> T:
             return target(self, *args, **kwargs)
@@ -38,5 +41,26 @@ def copy_method_signature(
             wrapped.__doc__ = doc[:param1_start] + doc[param1_end:]
 
         return wrapped
+
+    return wrapper
+
+
+def deprecated(
+    msg: str = "",
+) -> Callable[[Callable], Callable[P, T]]:
+    "Use this decorator to mark functions as deprecated."
+
+    def wrapper(func: Callable) -> Callable[P, T]:
+
+        @functools.wraps(func)
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> T:
+            warnings.warn(
+                f"Call to a deprecated function {func.__name__}. {msg}",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            return func(*args, **kwargs)
+
+        return new_func
 
     return wrapper

@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable, Iterator, Sequence
 from copy import copy as shallowcopy
 from copy import deepcopy
@@ -28,6 +27,7 @@ from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
+from ogstools._internal import deprecated
 from ogstools.variables import Variable, normalize_vars, u_reg
 
 from ._utils import reshape_obs_points
@@ -1087,6 +1087,12 @@ class MeshSeries(Sequence[Mesh]):
             s = "Currently the save method is implemented for PVD/VTU only."
             raise RuntimeError(s)
 
+    @deprecated(
+        """
+    Please use `del meshseries.field_data[key]` or, if you want to keep the
+    data in the last timestep: `del meshseries[:-1].field_data[key]`.
+    """
+    )
     def remove_array(
         self, name: str, data_type: str = "field", skip_last: bool = False
     ) -> None:
@@ -1098,12 +1104,6 @@ class MeshSeries(Sequence[Mesh]):
                           field, cell or point
         :param skip_last: Skips the last time slice (e.g. for restart purposes).
         """
-        depr_msg = (
-            "Please use `del meshseries.field_data[key]` or "
-            "`del meshseries[:-1].field_data[key]` if you want to keep the "
-            "data in the last timestep"
-        )
-        warnings.warn(depr_msg, DeprecationWarning, stacklevel=1)
         for i, mesh in enumerate(self):
             if ((skip_last) is False) or (i < len(self) - 1):
                 if data_type == "field":
