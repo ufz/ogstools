@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable, Iterator, Sequence
 from copy import copy as shallowcopy
 from copy import deepcopy
@@ -28,6 +27,7 @@ from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
+from ogstools._internal import deprecated
 from ogstools.variables import Variable, normalize_vars, u_reg
 
 from ._utils import reshape_obs_points
@@ -519,17 +519,17 @@ class MeshSeries(Sequence[Mesh]):
     @property
     def point_data(self) -> DataDict:
         "Useful for reading or setting point_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.point_data)
+        return DataDict(self, lambda mesh: mesh.point_data, self[0].n_points)
 
     @property
     def cell_data(self) -> DataDict:
         "Useful for reading or setting cell_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.cell_data)
+        return DataDict(self, lambda mesh: mesh.cell_data, self[0].n_cells)
 
     @property
     def field_data(self) -> DataDict:
         "Useful for reading or setting field_data for the entire meshseries."
-        return DataDict(self, lambda mesh: mesh.field_data)
+        return DataDict(self, lambda mesh: mesh.field_data, None)
 
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
@@ -727,6 +727,13 @@ class MeshSeries(Sequence[Mesh]):
             result = self._restore_vectors(result, components)
         return result
 
+    @deprecated(
+        """
+    Please use the following code instead:
+        ms_pts = ot.MeshSeries.extract_probe(mesh_series, pts)
+        fig = ot.plot.line(ms_pts, "time", variable_of_interest)
+    """
+    )
     def plot_probe(
         self,
         points: np.ndarray | list,
@@ -1087,6 +1094,12 @@ class MeshSeries(Sequence[Mesh]):
             s = "Currently the save method is implemented for PVD/VTU only."
             raise RuntimeError(s)
 
+    @deprecated(
+        """
+    Please use `del meshseries.field_data[key]` or, if you want to keep the
+    data in the last timestep: `del meshseries[:-1].field_data[key]`.
+    """
+    )
     def remove_array(
         self, name: str, data_type: str = "field", skip_last: bool = False
     ) -> None:
@@ -1098,12 +1111,6 @@ class MeshSeries(Sequence[Mesh]):
                           field, cell or point
         :param skip_last: Skips the last time slice (e.g. for restart purposes).
         """
-        depr_msg = (
-            "Please use `del meshseries.field_data[key]` or "
-            "`del meshseries[:-1].field_data[key]` if you want to keep the "
-            "data in the last timestep"
-        )
-        warnings.warn(depr_msg, DeprecationWarning, stacklevel=1)
         for i, mesh in enumerate(self):
             if ((skip_last) is False) or (i < len(self) - 1):
                 if data_type == "field":

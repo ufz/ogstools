@@ -68,6 +68,7 @@ def line(
         - linestyle:    style of the line
         - label:        label in the legend
         - grid:         if True, show grid
+        - monospace:    if True, the legend uses a monospace font
         - all other kwargs get passed to matplotlib's plot function
     """
     if isinstance(var1, plt.Axes) or isinstance(var2, plt.Axes):
@@ -80,13 +81,13 @@ def line(
     mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
     x_var, y_var = normalize_vars(var1, var2, mesh)
 
-    if isinstance(dataset, Sequence):
-        color = kwargs.pop("colors", kwargs.pop("color", "tab10"))
+    if isinstance(dataset, Sequence) and "color" not in kwargs:
+        color = kwargs.pop("colors", "tab10")
         colorlist = utils.colors_from_cmap(color, len(dataset))
         ax_.set_prop_cycle(color=colorlist)
     else:
         kwargs.setdefault("color", y_var.color)
-
+        ax_.set_prop_cycle(linestyle=["-", "--", ":", "-."])
     pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
     lw_scale = 4 if pure_spatial else 2.5
     kwargs.setdefault("linewidth", kwargs.pop("lw", None) or setup.linewidth)
@@ -108,8 +109,12 @@ def line(
         kwargs["label"] = labels
     _format_ax(ax_, x_var, y_var, pure_spatial, kwargs)
     fontsize = kwargs.pop("fontsize", setup.fontsize)
+    monospace = kwargs.pop("monospace", False)
     ax_.plot(x, y, **kwargs)
     if labels:
-        ax_.legend(fontsize=fontsize)
+        prop = {"size": fontsize}
+        if monospace:
+            prop["family"] = "monospace"
+        ax_.legend(prop=prop)
     utils.update_font_sizes(axes=ax_, fontsize=fontsize)
     return ax_.figure if ax is None else None

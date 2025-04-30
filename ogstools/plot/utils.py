@@ -26,6 +26,7 @@ from ogstools.variables import Variable
 from .shared import setup
 
 
+# TODO: remove when plot_probe gets removed (@deprecated)
 def get_style_cycler(
     min_number_of_styles: int,
     colors: list | None | None = None,

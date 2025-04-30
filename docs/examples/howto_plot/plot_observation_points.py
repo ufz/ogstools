@@ -45,42 +45,38 @@ si = ot.variables.saturation
 # Let's define 4 observation points and plot them on the mesh.
 
 # %%
-points = np.asarray([[x, 0, z] for z in [60, 40] for x in [0, 40, 80, 120]])
+rows = np.array([np.linspace([0, 0, z], [120, 0, z], 4) for z in [60, 40]])
 fig = mesh_series.mesh(0).plot_contourf(si)
-fig.axes[0].scatter(points[:, 0], points[:, 2], s=50, fc="none", ec="r", lw=3)
-for i, pt in enumerate(points):
+fig.axes[0].scatter(rows[..., 0], rows[..., 2], s=50, fc="none", ec="r", lw=3)
+for i, pt in enumerate(rows.reshape(-1, 3)):
     fig.axes[0].annotate(str(i), (pt[0], pt[2] - 5), va="top", fontsize=32)
 
 # %% [markdown]
-# And now probe the points and the values over time:
+# And now probe the points and plot the values over time.
 
-# %%,
+# %%
 labels = [
-    f"{i}: {label}"
-    for i, label in enumerate(ot.plot.utils.justified_labels(points))
+    [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
+    for pts in rows
 ]
-fig = mesh_series.plot_probe(points=points[:4], variable=si, labels=labels[:4])
+ms_pts = [ot.MeshSeries.extract_probe(mesh_series, pts) for pts in rows]
+fig = ot.plot.line(ms_pts[0], "time", si, labels=labels[0], monospace=True)
+
 # %% [markdown]
 # You can also pass create your own matplotlib figure and pass the axes object.
 # Additionally, you can pass any keyword arguments which are known by
 # matplotlibs plot function to further customize the curves.
-# In this case ``marker`` and ``linewidth`` are not part of the API of `plot_probe`
-# but get processed correctly anyway.
-# If you want to have more freedom with the data you can just do the probing,
-# adapt to your needs and then do the plotting yourself:
+# To show, how to customize a plot afterwards, we add the mean saturation of the
+# 4 observation points per row to each subplot.
 
 # %%
-fig, axs = plt.subplots(nrows=2, figsize=[10, 5])
-mesh_series.plot_probe(
-    points[:4], si, ax=axs[0], colors=["k"], labels=labels[:4], marker="."
-)
-mesh_series.plot_probe(
-    points[4:], si, ax=axs[1], linestyles=["-"], labels=labels[4:], linewidth=1
-)
+fig, axs = plt.subplots(nrows=2, figsize=[16, 10], sharey=True)
+ot.plot.line(ms_pts[0], "time", si, ax=axs[0], color="k", fontsize=20)
+ot.plot.line(ms_pts[1], "time", si, ax=axs[1], marker="o", fontsize=20)
 # add the mean of the observation point timeseries
-values = si.transform(mesh_series.probe(points, data_name=si.data_name))
-mean_values = np.mean(values.reshape((-1, 2, 4)), axis=-1)
-ts = mesh_series.timevalues
 for index in range(2):
-    fig.axes[index].plot(ts, mean_values[:, index], "rk"[index], label="mean")
-    fig.axes[index].legend()
+    values = si.transform(ms_pts[index])
+    mean_values = np.mean((values), axis=-1)
+    ts = ms_pts[index].timevalues
+    fig.axes[index].plot(ts, mean_values, "rk"[index], lw=4)
+    fig.axes[index].legend(labels[index] + ["mean"], fontsize=20)

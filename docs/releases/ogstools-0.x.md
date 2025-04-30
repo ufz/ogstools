@@ -10,6 +10,10 @@ This is not released yet!
 
 - mesh.read_shape (removed function, functionality is not covered anymore)
 
+## Deprecations
+
+- meshseries.plot_probe (instead use MeshSeries.extract_probe and plot.line)
+
 ### Examples
 
 - removed all examples with shape files
