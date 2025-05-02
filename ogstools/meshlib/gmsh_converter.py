@@ -53,7 +53,18 @@ def meshes_from_gmsh(
 
     meshes: dict[str, meshio.Mesh] = {}
     mesh: meshio.Mesh = meshio.read(str(filename))
+
+    # Workaround for pyvista 0.45
+    # pv.from_meshio operates on mesh_cells, which
+    # from 0.45 from_meshio expects (wrongly?) that physical groups are disjunct data sets
+    # Workaround: cell_sets is temporary removed from data for from_meshio
+    read_cells = mesh.cell_sets.copy()
+    mesh.cell_sets = None
     pv_mesh = pv.from_meshio(mesh).clean()
+    mesh.cell_sets = read_cells
+
+    # Code without workaround:
+    # pv_mesh = pv.read(str(filename))
     if "gmsh:physical" not in pv_mesh.cell_data:
         pv_mesh.cell_data["gmsh:physical"] = np.zeros(pv_mesh.number_of_cells)
 
