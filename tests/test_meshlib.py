@@ -343,7 +343,7 @@ class TestUtils:
     def test_plot_probe(self):
         """Test creation of probe plots."""
         ms = examples.load_meshseries_THM_2D_PVD()
-        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).center)
+        ms_pts = ot.MeshSeries.extract_probe(ms, np.array(ms.mesh(0).center))
         _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
         ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).points[[0, -1]])
         _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
@@ -351,7 +351,7 @@ class TestUtils:
         _ = ot.plot.line(ms_pts, "time", ot.variables.stress)
         _ = ot.plot.line(ms_pts, "time", ot.variables.stress.von_Mises)
         ms = examples.load_meshseries_HT_2D_XDMF()
-        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).center)
+        ms_pts = ot.MeshSeries.extract_probe(ms, np.array(ms.mesh(0).center))
         _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
         _ = ot.plot.line(ms_pts, "time", ot.variables.velocity)
         plt.close()
