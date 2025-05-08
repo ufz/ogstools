@@ -58,7 +58,7 @@ def rect(
         )
     ):
         msg = f"All n_edge_cells must be >= 1: {n_edge_cells}"
-        # raise ValueError(msg)
+        raise ValueError(msg)
 
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
