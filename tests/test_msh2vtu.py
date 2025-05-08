@@ -16,7 +16,6 @@ import pytest
 from hypothesis import (
     HealthCheck,
     Verbosity,
-    assume,
     given,
     settings,
 )
@@ -80,7 +79,9 @@ def test_multiple_groups_per_element(tmp_path: Path):
 
 # @seed(1)
 @given(
-    edge_length=floats(allow_nan=False, allow_infinity=False),
+    edge_length=floats(
+        allow_nan=False, allow_infinity=False, min_value=0.1, max_value=2
+    ),
     n_edge_cells=sampled_from([1, 2]),
     n_layers=sampled_from([1, 2]),
     structured=booleans(),
@@ -105,8 +106,6 @@ def test_rect(
     mixed_elements,
 ):
     """Create different setups of a rectangular mesh."""
-    assume(0.1 < edge_length < 2)
-
     msh_file = (
         tmp_path
         / f"rect_{edge_length}_{n_edge_cells}_{n_layers}_{structured}_{order}_{version}_{mixed_elements}.msh"
