@@ -89,7 +89,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     mixed_elements=booleans(),
 )
 @settings(
-    max_examples=10,
+    max_examples=100,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
     deadline=250,
@@ -105,7 +105,7 @@ def test_rect(
     mixed_elements,
 ):
     """Create different setups of a rectangular mesh."""
-    assume(0 < edge_length <= 2)  # filters out values, not used so far
+    assume(-2 < edge_length < 0)  # filters out values, not used so far
 
     msh_file = (
         tmp_path
