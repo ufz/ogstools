@@ -5,6 +5,7 @@ Tests (pytest) for msh2vtu and meshes_from_gmsh
 import os
 import runpy
 import sys
+from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 from tempfile import mkdtemp
@@ -85,6 +86,17 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
+@dataclass
+class RectCase:
+    edge_length: float = 1.0
+    n_edge_cells: int = 1
+    n_layers: int = 1
+    structured: bool = False
+    order: int = 1
+    version: float | None = None
+    mixed_elements: bool = False
+
+
 # @seed(1)
 @given(
     edge_length=floats(
@@ -97,33 +109,15 @@ def test_multiple_groups_per_element(tmp_path: Path):
     version=one_of(none(), sampled_from([2.2])),
     mixed_elements=booleans(),
 )
-@example(
-    edge_length=9e-8,  # below the minimum
-    n_edge_cells=1,
-    n_layers=1,
-    structured=False,
-    order=1,
-    version=None,
-    mixed_elements=False,
-).xfail(raises=ValueError)
-@example(
-    edge_length=2e9,  # beyond the maximum
-    n_edge_cells=1,
-    n_layers=1,
-    structured=False,
-    order=1,
-    version=None,
-    mixed_elements=False,
-).xfail(raises=ValueError)
-@example(
-    edge_length=1,  # beyond the maximum
-    n_edge_cells=0,
-    n_layers=1,
-    structured=False,
-    order=1,
-    version=None,
-    mixed_elements=False,
-).xfail(raises=ValueError)
+@example(**RectCase(edge_length=9e-8).__dict__).xfail(
+    raises=ValueError
+)  # below the minimum
+@example(**RectCase(edge_length=2e9).__dict__).xfail(
+    raises=ValueError
+)  # beyond the maximum
+@example(**RectCase(n_edge_cells=0).__dict__).xfail(
+    raises=ValueError
+)  # below the minimum
 @settings(
     max_examples=1000,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
