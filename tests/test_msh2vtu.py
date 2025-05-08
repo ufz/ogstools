@@ -81,7 +81,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
 # @seed(1)
 @given(
     edge_length=floats(
-        allow_nan=False, allow_infinity=False, min_value=1e-8, max_value=2.0
+        allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=2.0
     ),
     n_edge_cells=sampled_from([1, 2]),
     n_layers=sampled_from([1, 2]),

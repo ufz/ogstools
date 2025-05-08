@@ -39,6 +39,9 @@ def rect(
     msh_version: float | None = None,
     layer_ids: list | None = None,
 ) -> None:
+    """
+    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 0.
+    """
 
     if not all(
         length > 0
