@@ -13,6 +13,8 @@ import gmsh
 import meshio
 import numpy as np
 import pytest
+from hypothesis import HealthCheck, Verbosity, given, settings
+from hypothesis.strategies import booleans, none, one_of, sampled_from
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -70,20 +72,20 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
-@pytest.mark.parametrize(
-    "edge_length, n_edge_cells, n_layers, structured, order, version, mixed_elements",
-    list(
-        product(
-            [1.0, 2.0],  # edge_length
-            [1, 2],  # n_edge_cells
-            [1, 2],  # n_layers
-            [True, False],  # structured
-            [1, 2],  # order
-            [None, 2.2],  # version
-            [True, False],  # mixed_elements
-        )
-    ),
+@given(
+    edge_length=sampled_from([1.0, 2.0]),
+    n_edge_cells=sampled_from([1, 2]),
+    n_layers=sampled_from([1, 2]),
+    structured=booleans(),
+    order=sampled_from([1, 2]),
+    version=one_of(none(), sampled_from([2.2])),
+    mixed_elements=booleans(),
 )
+@settings(
+    max_examples=200,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    verbosity=Verbosity.debug,
+)  #
 def test_rect(
     tmp_path: Path,
     edge_length,
