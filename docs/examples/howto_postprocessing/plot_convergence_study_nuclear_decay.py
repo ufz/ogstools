@@ -65,7 +65,7 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %%
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
-    ot.meshlib.rect(lengths=100.0, n_edge_cells=[n_cells, 1], out_name=msh_path)
+    ot.meshlib.rect(lengths=100.0, n_edge_cells=(n_cells, 1), out_name=msh_path)
     for name, mesh in ot.meshes_from_gmsh(msh_path, log=False).items():
         pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
 

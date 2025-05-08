@@ -764,7 +764,7 @@ class Project:
 
     def run_model(
         self,
-        logfile: Path = Path("out.log"),
+        logfile: Path | None = Path("out.log"),
         path: Path | None = None,
         args: Any | None = None,
         container_path: Path | str | None = None,
@@ -875,24 +875,33 @@ class Project:
                 if "-o" in entry:
                     output_dir_flag = True
             cmd += f"{args} "
-        if write_logs is True:
-            cmd += f"{self.prjfile} > {self.logfile}"
-        else:
-            cmd += f"{self.prjfile}"
+        #        if write_logs is True:
+        #            cmd += f"{self.prjfile} > {self.logfile}"
+        #        else:
+        cmd += f"{self.prjfile}"
         if sys.platform == "win32":
             executable = "C:\\Windows\\System32\\cmd.exe"
         else:
             executable = "bash"
 
         self.runtime_start = time.time()
-        self.process = subprocess.Popen(
-            cmd,
-            shell=True,
-            executable=executable,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            env=env,
-        )
+        if write_logs is True:
+            with self.logfile.open("w") as logf:
+                self.process = subprocess.Popen(
+                    cmd.split(),
+                    stdout=logf,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                )
+        else:
+            self.process = subprocess.Popen(
+                cmd,
+                shell=True,
+                executable=executable,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+                env=env,
+            )
         if background:
             return
         self.process.wait()
