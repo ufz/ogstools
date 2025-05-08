@@ -41,6 +41,7 @@ def rect(
 ) -> None:
     """
     :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 1e-7 and < 1e7.
+    :param n_edge_cells: Number of edge cells in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 1.
     """
 
     if not all(
@@ -49,6 +50,15 @@ def rect(
     ):
         msg = f"All lengths must be >= 1e-7 and <= 1e7, got: {lengths}"
         raise ValueError(msg)
+
+    if not all(
+        n_cell >= 1
+        for n_cell in (
+            n_edge_cells if isinstance(n_edge_cells, tuple) else (n_edge_cells,)
+        )
+    ):
+        msg = f"All n_edge_cells must be >= 1: {n_edge_cells}"
+        # raise ValueError(msg)
 
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)

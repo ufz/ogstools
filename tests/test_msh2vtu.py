@@ -20,7 +20,14 @@ from hypothesis import (
     given,
     settings,
 )
-from hypothesis.strategies import booleans, floats, none, one_of, sampled_from
+from hypothesis.strategies import (
+    booleans,
+    floats,
+    integers,
+    none,
+    one_of,
+    sampled_from,
+)
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -83,7 +90,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     edge_length=floats(
         allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e7
     ),
-    n_edge_cells=sampled_from([1, 2]),
+    n_edge_cells=integers(min_value=0, max_value=30),
     n_layers=sampled_from([1, 2]),
     structured=booleans(),
     order=sampled_from([1, 2]),
