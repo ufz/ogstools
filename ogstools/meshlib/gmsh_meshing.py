@@ -41,7 +41,7 @@ def rect(
 ) -> None:
 
     if not all(
-        length >= 0
+        length > 0
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
         msg = f"All lengths must be > 0, got: {lengths}"

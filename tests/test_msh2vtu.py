@@ -16,6 +16,7 @@ import pytest
 from hypothesis import (
     HealthCheck,
     Verbosity,
+    example,
     given,
     settings,
 )
@@ -80,7 +81,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
 # @seed(1)
 @given(
     edge_length=floats(
-        allow_nan=False, allow_infinity=False, min_value=0.1, max_value=2
+        allow_nan=False, allow_infinity=False, min_value=1e-8, max_value=2.0
     ),
     n_edge_cells=sampled_from([1, 2]),
     n_layers=sampled_from([1, 2]),
@@ -89,6 +90,15 @@ def test_multiple_groups_per_element(tmp_path: Path):
     version=one_of(none(), sampled_from([2.2])),
     mixed_elements=booleans(),
 )
+@example(
+    edge_length=0.0,
+    n_edge_cells=1,
+    n_layers=1,
+    structured=False,
+    order=1,
+    version=None,
+    mixed_elements=False,
+).xfail(raises=ValueError)
 @settings(
     max_examples=100,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
