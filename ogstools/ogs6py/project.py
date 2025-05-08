@@ -764,7 +764,7 @@ class Project:
 
     def run_model(
         self,
-        logfile: Path = Path("out.log"),
+        logfile: Path | None = Path("out.log"),
         path: Path | None = None,
         args: Any | None = None,
         container_path: Path | str | None = None,

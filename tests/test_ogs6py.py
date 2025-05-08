@@ -1547,7 +1547,8 @@ class TestiOGS:
         assert "not yet started." in cuboid_model.status
         cuboid_model.write_input()
         cuboid_model.run_model(
-            write_logs=False,
+            logfile=temp_dir / "cuboid.log",
+            write_logs=True,
             write_prj_to_pvd=False,
             background=kill,
             args=f"-o {temp_dir.resolve()}",
