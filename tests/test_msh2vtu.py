@@ -70,24 +70,45 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
-def test_rect(tmp_path: Path):
+@pytest.mark.parametrize(
+    "edge_length, n_edge_cells, n_layers, structured, order, version, mixed_elements",
+    list(
+        product(
+            [1.0, 2.0],  # edge_length
+            [1, 2],  # n_edge_cells
+            [1, 2],  # n_layers
+            [True, False],  # structured
+            [1, 2],  # order
+            [None, 2.2],  # version
+            [True, False],  # mixed_elements
+        )
+    ),
+)
+def test_rect(
+    tmp_path: Path,
+    edge_length,
+    n_edge_cells,
+    n_layers,
+    structured,
+    order,
+    version,
+    mixed_elements,
+):
     """Create different setups of a rectangular mesh."""
-    msh_file = Path(tmp_path, "rect.msh")
-    permutations = product(
-        [1.0, 2.0], [1, 2], [1, 2], [True, False],
-        [1, 2], [None, 2.2], [True, False],
-    )  # fmt: skip
-    for (edge_length, n_edge_cells, n_layers, structured,
-        order, version, mixed_elements) in permutations:  # fmt: skip
-        rect(
-            lengths=edge_length, n_edge_cells=n_edge_cells,
-            n_layers=n_layers, structured_grid=structured,
-            order=order, mixed_elements=mixed_elements,
-            out_name=msh_file, msh_version=version,
-        )  # fmt: skip
-        n_meshes = len(meshes_from_gmsh(msh_file, log=False))
-        msg = f"Expecting {4 + n_layers} meshes, got {n_meshes=}."
-        assert n_meshes == 4 + n_layers, msg
+    msh_file = tmp_path / "rect.msh"
+    rect(
+        lengths=edge_length,
+        n_edge_cells=n_edge_cells,
+        n_layers=n_layers,
+        structured_grid=structured,
+        order=order,
+        mixed_elements=mixed_elements,
+        out_name=msh_file,
+        msh_version=version,
+    )
+    n_meshes = len(meshes_from_gmsh(msh_file, log=False))
+    msg = f"Expecting {4 + n_layers} meshes, got {n_meshes=}."
+    assert n_meshes == 4 + n_layers, msg
 
 
 class TestPhysGroups:
@@ -107,7 +128,7 @@ class TestPhysGroups:
     )
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
-        msh_file = Path(self.tmp_path, "rect.msh")
+        msh_file = self.tmp_path / "rect.msh"
         rect(
             n_layers=len(layer_ids),
             out_name=msh_file,
