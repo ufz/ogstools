@@ -81,7 +81,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
 # @seed(1)
 @given(
     edge_length=floats(
-        allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=2.0
+        allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e9
     ),
     n_edge_cells=sampled_from([1, 2]),
     n_layers=sampled_from([1, 2]),
@@ -91,7 +91,16 @@ def test_multiple_groups_per_element(tmp_path: Path):
     mixed_elements=booleans(),
 )
 @example(
-    edge_length=0.0,
+    edge_length=9e-8,  # below the minimum
+    n_edge_cells=1,
+    n_layers=1,
+    structured=False,
+    order=1,
+    version=None,
+    mixed_elements=False,
+).xfail(raises=ValueError)
+@example(
+    edge_length=2e9,  # beyond the maximum
     n_edge_cells=1,
     n_layers=1,
     structured=False,
@@ -100,7 +109,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     mixed_elements=False,
 ).xfail(raises=ValueError)
 @settings(
-    max_examples=100,
+    max_examples=1000,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
     deadline=250,

@@ -40,14 +40,14 @@ def rect(
     layer_ids: list | None = None,
 ) -> None:
     """
-    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 0.
+    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 1e-7 and < 1e7.
     """
 
     if not all(
-        length > 0
+        1e-7 < length < 1e7
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
-        msg = f"All lengths must be > 0, got: {lengths}"
+        msg = f"All lengths must be > 1e-7 and < 1e7, got: {lengths}"
         raise ValueError(msg)
 
     gmsh.initialize()
