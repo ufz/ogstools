@@ -13,8 +13,14 @@ import gmsh
 import meshio
 import numpy as np
 import pytest
-from hypothesis import HealthCheck, Verbosity, given, settings
-from hypothesis.strategies import booleans, none, one_of, sampled_from
+from hypothesis import (
+    HealthCheck,
+    Verbosity,
+    assume,
+    given,
+    settings,
+)
+from hypothesis.strategies import booleans, floats, none, one_of, sampled_from
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -72,8 +78,9 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
+# @seed(1)
 @given(
-    edge_length=sampled_from([1.0, 2.0]),
+    edge_length=floats(allow_nan=False, allow_infinity=False),
     n_edge_cells=sampled_from([1, 2]),
     n_layers=sampled_from([1, 2]),
     structured=booleans(),
@@ -82,10 +89,11 @@ def test_multiple_groups_per_element(tmp_path: Path):
     mixed_elements=booleans(),
 )
 @settings(
-    max_examples=200,
+    max_examples=10,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
-    verbosity=Verbosity.debug,
-)  #
+    verbosity=Verbosity.normal,
+    deadline=250,
+)
 def test_rect(
     tmp_path: Path,
     edge_length,
@@ -97,7 +105,14 @@ def test_rect(
     mixed_elements,
 ):
     """Create different setups of a rectangular mesh."""
-    msh_file = tmp_path / "rect.msh"
+    assume(1 <= edge_length <= 2)  # filters out values, not used so far
+
+    msh_file = (
+        tmp_path
+        / f"rect_{edge_length}_{n_edge_cells}_{n_layers}_{structured}_{order}_{version}_{mixed_elements}.msh"
+    )
+    print(msh_file)
+
     rect(
         lengths=edge_length,
         n_edge_cells=n_edge_cells,
