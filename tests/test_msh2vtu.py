@@ -90,7 +90,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     edge_length=floats(
         allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e7
     ),
-    n_edge_cells=integers(min_value=0, max_value=30),
+    n_edge_cells=integers(min_value=1, max_value=30),
     n_layers=sampled_from([1, 2]),
     structured=booleans(),
     order=sampled_from([1, 2]),
@@ -109,6 +109,15 @@ def test_multiple_groups_per_element(tmp_path: Path):
 @example(
     edge_length=2e9,  # beyond the maximum
     n_edge_cells=1,
+    n_layers=1,
+    structured=False,
+    order=1,
+    version=None,
+    mixed_elements=False,
+).xfail(raises=ValueError)
+@example(
+    edge_length=1,  # beyond the maximum
+    n_edge_cells=0,
     n_layers=1,
     structured=False,
     order=1,
