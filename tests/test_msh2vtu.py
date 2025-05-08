@@ -105,7 +105,7 @@ def test_rect(
     mixed_elements,
 ):
     """Create different setups of a rectangular mesh."""
-    assume(1 <= edge_length <= 2)  # filters out values, not used so far
+    assume(0 < edge_length <= 2)  # filters out values, not used so far
 
     msh_file = (
         tmp_path
