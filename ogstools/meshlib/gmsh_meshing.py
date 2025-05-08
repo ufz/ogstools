@@ -40,8 +40,18 @@ def rect(
     layer_ids: list | None = None,
 ) -> None:
     """
-    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 1e-7 and < 1e7.
-    :param n_edge_cells: Number of edge cells in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be > 1.
+    Generates a rectangular mesh using gmsh.
+
+    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1e-7 and <= 1e7.
+    :param n_edge_cells: Number of edge cells in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1.
+    :param n_layers: Number of layers in y direction. Must be >= 1.
+    :param structured_grid: If True, the mesh will be structured. If False, the mesh will be unstructured.
+    :param order: Order of the mesh elements. 1 for linear, 2 for quadratic.
+    :param mixed_elements: If True, the mesh will be mixed elements. If False, the mesh will be structured.
+    :param jiggle: Amount of random displacement to apply to the mesh nodes. Default is 0.0 (no displacement).
+    :param out_name: Name of the output mesh file. Default is "rect.msh".
+    :param msh_version: Version of the GMSH mesh file format. Default is None (use the default version).
+    :param layer_ids: List of layer IDs for the physical groups. If None, the IDs will be generated automatically.
     """
 
     if not all(
@@ -59,6 +69,12 @@ def rect(
     ):
         msg = f"All n_edge_cells must be >= 1: {n_edge_cells}"
         raise ValueError(msg)
+
+    if not n_layers >= 1:
+        msg = f"n_layers must be >= 1: {n_layers}"
+        raise ValueError(msg)
+
+    # ToDo check other parameters
 
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)

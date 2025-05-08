@@ -103,7 +103,7 @@ class RectCase:
         allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e7
     ),
     n_edge_cells=integers(min_value=1, max_value=30),
-    n_layers=sampled_from([1, 2]),
+    n_layers=integers(min_value=1, max_value=10),
     structured=booleans(),
     order=sampled_from([1, 2]),
     version=one_of(none(), sampled_from([2.2])),
@@ -116,6 +116,9 @@ class RectCase:
     raises=ValueError
 )  # beyond the maximum
 @example(**RectCase(n_edge_cells=0).__dict__).xfail(
+    raises=ValueError
+)  # below the minimum
+@example(**RectCase(n_layers=0).__dict__).xfail(
     raises=ValueError
 )  # below the minimum
 @settings(
@@ -134,12 +137,11 @@ def test_rect(
     version,
     mixed_elements,
 ):
-    """Create different setups of a rectangular mesh."""
+    """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
     msh_file = (
         tmp_path
         / f"rect_{edge_length}_{n_edge_cells}_{n_layers}_{structured}_{order}_{version}_{mixed_elements}.msh"
     )
-    print(msh_file)
 
     rect(
         lengths=edge_length,
@@ -151,6 +153,7 @@ def test_rect(
         out_name=msh_file,
         msh_version=version,
     )
+
     n_meshes = len(meshes_from_gmsh(msh_file, log=False))
     msg = f"Expecting {4 + n_layers} meshes, got {n_meshes=}."
     assert n_meshes == 4 + n_layers, msg
