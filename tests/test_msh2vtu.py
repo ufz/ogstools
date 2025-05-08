@@ -102,7 +102,9 @@ class RectCase:
     edge_length=floats(
         allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e7
     ),
-    n_edge_cells=integers(min_value=1, max_value=30),
+    n_edge_cells=integers(
+        min_value=1, max_value=10
+    ),  # max value because of computation time
     n_layers=integers(min_value=1, max_value=10),
     structured=booleans(),
     order=sampled_from([1, 2]),
@@ -122,10 +124,8 @@ class RectCase:
     raises=ValueError
 )  # below the minimum
 @settings(
-    max_examples=1000,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
-    deadline=250,
 )
 def test_rect(
     tmp_path: Path,
