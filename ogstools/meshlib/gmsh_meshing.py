@@ -39,6 +39,14 @@ def rect(
     msh_version: float | None = None,
     layer_ids: list | None = None,
 ) -> None:
+
+    if not all(
+        length >= 0
+        for length in (lengths if isinstance(lengths, tuple) else (lengths,))
+    ):
+        msg = f"All lengths must be > 0, got: {lengths}"
+        raise ValueError(msg)
+
     gmsh.initialize()
     gmsh.option.set_number("General.Verbosity", 0)
     if msh_version is not None:
