@@ -100,11 +100,14 @@ class RectCase:
 # @seed(1)
 @given(
     edge_length=floats(
-        allow_nan=False, allow_infinity=False, min_value=1e-7, max_value=1e7
+        allow_nan=False,
+        allow_infinity=False,
+        min_value=1e-3,
+        max_value=1e7,  # e.g. lab to ocean scale if interpreted as m
     ),
     n_edge_cells=integers(
         min_value=1, max_value=10
-    ),  # max value because of computation time
+    ),  # max value because of computation time, actual max 10.000 (100e6 cells)
     n_layers=integers(min_value=1, max_value=10),
     structured=booleans(),
     order=sampled_from([1, 2]),

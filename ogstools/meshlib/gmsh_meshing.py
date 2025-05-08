@@ -42,7 +42,7 @@ def rect(
     """
     Generates a rectangular mesh using gmsh.
 
-    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1e-7 and <= 1e7.
+    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1e-3 and <= 1e7.
     :param n_edge_cells: Number of edge cells in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1.
     :param n_layers: Number of layers in y direction. Must be >= 1.
     :param structured_grid: If True, the mesh will be structured. If False, the mesh will be unstructured.
@@ -55,7 +55,7 @@ def rect(
     """
 
     if not all(
-        1e-7 <= length <= 1e7
+        1e-3 <= length <= 1e7
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
         msg = f"All lengths must be >= 1e-7 and <= 1e7, got: {lengths}"
