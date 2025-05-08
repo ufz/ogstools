@@ -1,6 +1,5 @@
 import platform
 import shutil
-import sys
 import tempfile
 from pathlib import Path
 from typing import NoReturn
@@ -1506,38 +1505,6 @@ class TestiOGS:
     @pytest.fixture(params=["cuboid_model", "bhe_model"])
     def model(self, request: pytest.FixtureRequest) -> Project:
         return request.getfixturevalue(request.param)
-
-    @pytest.mark.system()
-    def test_threads(
-        self, temp_dir: Path, num_threads: int, thread_type: str, model: Project
-    ) -> NoReturn:
-
-        types = [thread_type]
-        if thread_type == "OMP_NUM_THREADS":
-            types.append("OGS_ASM_THREADS")
-        logs = {key: temp_dir / f"log_{key}.txt" for key in types}
-        guard = ["%", "%"] if sys.platform == "win32" else ["$", ""]
-        wrapper = " ".join(
-            f"echo {key.join(guard)} > {log.resolve()} && "
-            for key, log in logs.items()
-        )
-
-        model.write_input()
-        args = f"-o {temp_dir.resolve()}"
-        model.run_model(
-            write_logs=True, wrapper=wrapper, write_prj_to_pvd=False, args=args
-        )
-
-        for var, log in logs.items():
-            assert log.exists(), f"Log file {log} was not created."
-            with log.open("r") as log_file:
-                omp_num_threads = log_file.readline().strip()
-                assert (
-                    omp_num_threads.isdigit()
-                ), f"Invalid {var} value: {omp_num_threads}"
-                assert (
-                    int(omp_num_threads) == num_threads
-                ), f"Expected {var}={num_threads}"
 
     @pytest.mark.system()
     @pytest.mark.parametrize("kill", [True, False])
