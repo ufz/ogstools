@@ -17,6 +17,7 @@ import pytest
 from hypothesis import (
     HealthCheck,
     Verbosity,
+    assume,
     example,
     given,
     settings,
@@ -92,17 +93,27 @@ class RectCase:
     mixed_elements: bool = False
 
 
-# @seed(1)
+valid_edge_length = st.floats(
+    allow_nan=False,
+    allow_infinity=False,
+    min_value=1e-7,
+    max_value=1e7,  # e.g. pore to ocean scale if interpreted as m
+)
+
+valid_edge_number = st.integers(
+    min_value=1, max_value=10
+)  # max value because of computation time, actual max 10.000 (100e6 cells)
+
+
 @given(
-    edge_length=st.floats(
-        allow_nan=False,
-        allow_infinity=False,
-        min_value=1e-3,
-        max_value=1e7,  # e.g. lab to ocean scale if interpreted as m
+    edge_length=st.one_of(
+        valid_edge_length,
+        st.tuples(valid_edge_length, valid_edge_length),
     ),
-    n_edge_cells=st.integers(
-        min_value=1, max_value=10
-    ),  # max value because of computation time, actual max 10.000 (100e6 cells)
+    n_edge_cells=st.one_of(
+        valid_edge_number,
+        st.tuples(valid_edge_number, valid_edge_number),
+    ),
     n_layers=st.integers(min_value=1, max_value=10),
     structured=st.booleans(),
     order=st.sampled_from([1, 2]),
@@ -140,6 +151,8 @@ def test_rect(
         tmp_path
         / f"rect_{edge_length}_{n_edge_cells}_{n_layers}_{structured}_{order}_{version}_{mixed_elements}.msh"
     )
+    if np.all(n_edge_cells) > 0:
+        assume(np.min(edge_length) / np.max(n_edge_cells) >= 1e-7)
 
     rect(
         lengths=edge_length,
