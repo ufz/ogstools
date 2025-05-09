@@ -21,13 +21,8 @@ from hypothesis import (
     given,
     settings,
 )
-from hypothesis.strategies import (
-    booleans,
-    floats,
-    integers,
-    none,
-    one_of,
-    sampled_from,
+from hypothesis import (
+    strategies as st,
 )
 
 from ogstools import meshes_from_gmsh
@@ -99,20 +94,20 @@ class RectCase:
 
 # @seed(1)
 @given(
-    edge_length=floats(
+    edge_length=st.floats(
         allow_nan=False,
         allow_infinity=False,
         min_value=1e-3,
         max_value=1e7,  # e.g. lab to ocean scale if interpreted as m
     ),
-    n_edge_cells=integers(
+    n_edge_cells=st.integers(
         min_value=1, max_value=10
     ),  # max value because of computation time, actual max 10.000 (100e6 cells)
-    n_layers=integers(min_value=1, max_value=10),
-    structured=booleans(),
-    order=sampled_from([1, 2]),
-    version=one_of(none(), sampled_from([2.2])),
-    mixed_elements=booleans(),
+    n_layers=st.integers(min_value=1, max_value=10),
+    structured=st.booleans(),
+    order=st.sampled_from([1, 2]),
+    version=st.one_of(st.none(), st.sampled_from([2.2])),
+    mixed_elements=st.booleans(),
 )
 @example(**RectCase(edge_length=9e-8).__dict__).xfail(
     raises=ValueError
