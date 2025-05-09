@@ -138,13 +138,13 @@ valid_edge_number = st.integers(
 )
 def test_rect(
     tmp_path: Path,
-    edge_length,
-    n_edge_cells,
-    n_layers,
-    structured,
-    order,
-    version,
-    mixed_elements,
+    edge_length: float | tuple[float, float],
+    n_edge_cells: int | tuple[int, int],
+    n_layers: int,
+    structured: bool,
+    order: int,
+    version: float | None,
+    mixed_elements: bool,
 ):
     """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
     msh_file = (
