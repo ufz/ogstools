@@ -151,8 +151,9 @@ def test_rect(
         tmp_path
         / f"rect_{edge_length}_{n_edge_cells}_{n_layers}_{structured}_{order}_{version}_{mixed_elements}.msh"
     )
-    if np.all(n_edge_cells) > 0:
-        assume(np.min(edge_length) / np.max(n_edge_cells) >= 1e-7)
+
+    # size of cell is determined by the smaller component, number of cell increases too much with the larger component
+    assume(np.max(edge_length) / np.min(edge_length) <= 1e5)
 
     rect(
         lengths=edge_length,
