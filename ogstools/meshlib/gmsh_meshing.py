@@ -58,7 +58,7 @@ def rect(
         1e-3 <= length <= 1e7
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
-        msg = f"All lengths must be >= 1e-7 and <= 1e7, got: {lengths}"
+        msg = f"All lengths must be >= 1e-3 and <= 1e7, got: {lengths}"
         raise ValueError(msg)
 
     if not all(
