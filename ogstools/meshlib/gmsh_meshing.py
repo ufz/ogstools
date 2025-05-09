@@ -42,7 +42,7 @@ def rect(
     """
     Generates a rectangular mesh using gmsh.
 
-    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1e-7 and <= 1e7.
+    :param lengths: Length of the rectangle in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1e-7 and <= 1e12.
     :param n_edge_cells: Number of edge cells in x and y direction. Provide a tuple (x, y) or a scalar for a square. All values must be >= 1.
     :param n_layers: Number of layers in y direction. Must be >= 1.
     :param structured_grid: If True, the mesh will be structured. If False, the mesh will be unstructured.
@@ -55,11 +55,11 @@ def rect(
     """
 
     if not all(
-        1e-7 <= length <= 1e7
+        1e-7 <= length <= 1e12
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
         # Numerical restriction for gmsh (discovered by testing)
-        msg = f"All lengths must be >= 1e-7 and <= 1e7, got: {lengths}"
+        msg = f"All lengths must be >= 1e-7 and <= 1e12, got: {lengths}"
         raise ValueError(msg)
 
     if not all(
@@ -76,11 +76,11 @@ def rect(
         raise ValueError(msg)
 
     if not all(
-        length / np.max(n_edge_cells) >= 1e-7
+        length / np.max(n_edge_cells) >= 1e-10
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
         print(
-            "Warning: The length of the rectangle divided by the number of edge cells is smaller than 1e-7. This may lead to unexpected results."
+            "Warning: The length of the rectangle divided by the number of edge cells is smaller than 1e-10. This may lead to unexpected results."
         )
 
     gmsh.initialize()

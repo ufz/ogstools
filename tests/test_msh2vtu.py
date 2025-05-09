@@ -97,7 +97,7 @@ valid_edge_length = st.floats(
     allow_nan=False,
     allow_infinity=False,
     min_value=1e-7,
-    max_value=1e7,  # e.g. pore to ocean scale if interpreted as m
+    max_value=1e12,  # e.g. pore to ocean scale if interpreted as m
 )
 
 valid_edge_number = st.integers(
@@ -123,7 +123,7 @@ valid_edge_number = st.integers(
 @example(**RectCase(edge_length=9e-8).__dict__).xfail(
     raises=ValueError
 )  # below the minimum
-@example(**RectCase(edge_length=2e9).__dict__).xfail(
+@example(**RectCase(edge_length=2e12).__dict__).xfail(
     raises=ValueError
 )  # beyond the maximum
 @example(**RectCase(n_edge_cells=0).__dict__).xfail(
