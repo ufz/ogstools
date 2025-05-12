@@ -120,18 +120,14 @@ valid_edge_number = st.integers(
     version=st.one_of(st.none(), st.sampled_from([2.2])),
     mixed_elements=st.booleans(),
 )
-@example(**RectCase(edge_length=9e-8).__dict__).xfail(
-    raises=ValueError
-)  # below the minimum
-@example(**RectCase(edge_length=2e12).__dict__).xfail(
-    raises=ValueError
-)  # beyond the maximum
-@example(**RectCase(n_edge_cells=0).__dict__).xfail(
-    raises=ValueError
-)  # below the minimum
-@example(**RectCase(n_layers=0).__dict__).xfail(
-    raises=ValueError
-)  # below the minimum
+# below the minimum
+@example(**RectCase(edge_length=9e-8).__dict__).xfail(raises=ValueError)
+# beyond the maximum
+@example(**RectCase(edge_length=2e12).__dict__).xfail(raises=ValueError)
+# below the minimum
+@example(**RectCase(n_edge_cells=0).__dict__).xfail(raises=ValueError)
+# below the minimum
+@example(**RectCase(n_layers=0).__dict__).xfail(raises=ValueError)
 @settings(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
