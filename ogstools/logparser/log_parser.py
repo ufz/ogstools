@@ -156,7 +156,7 @@ def parse_line(
         fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
         if r := _try_match_line(
             line,
-            number_of_lines_read + 1,  # ToDo should not be here
+            number_of_lines_read,  # ToDo should not be here
             regex,
             log_type,
             fill_mpi=fill_mpi,

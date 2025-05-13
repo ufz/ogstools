@@ -31,7 +31,7 @@ from ogstools.logparser import (
     time_step_vs_iterations,
 )
 from ogstools.logparser.log_file_handler import LogFileHandler
-from ogstools.logparser.log_parser import read_version
+from ogstools.logparser.log_parser import read_version, select_regex
 from ogstools.logparser.regexes import Termination
 
 
@@ -296,7 +296,7 @@ class TestLogparser_Version2:
         "delay",
         [0, 0.001],
     )
-    def test_v2_coupled_with_producer(self, chunk_size, delay):
+    def test_coupled_with_producer(self, chunk_size, delay):
         #    def test_v2_coupled_with_producer(self):
         #        chunk_size = 5000000
         #        delay = 0.001
@@ -334,3 +334,16 @@ class TestLogparser_Version2:
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
         # new_file.unlink() no clean up necessary
+
+    def test_version_select(self):
+        original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
+        ver = read_version(original_file)
+        assert ver == 2, f"Expected version 2, but got {ver}"
+        l_regexes = len(select_regex(ver))
+        assert (
+            l_regexes == 11
+        ), f"Expected regexes version {ver},this is of length 11 but got {l_regexes}."
+
+    def test_parse_version(self):
+        original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
+        p = parse_file(original_file)
