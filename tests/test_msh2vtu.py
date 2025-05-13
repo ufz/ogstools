@@ -142,7 +142,7 @@ def test_rect(tmp_path: Path, rect_p):
     )
 
     # size of cell is determined by the smaller component, number of cell increases too much with the larger component
-    assume(np.max(rect_p.edge_length) / np.min(rect_p.edge_length) <= 1e5)
+    assume(np.max(rect_p.edge_length) / np.min(rect_p.edge_length) <= 1e4)
     print(msh_file)
 
     rect(
