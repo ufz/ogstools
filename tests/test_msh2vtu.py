@@ -5,6 +5,7 @@ Tests (pytest) for msh2vtu and meshes_from_gmsh
 import os
 import runpy
 import sys
+from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 from tempfile import mkdtemp
@@ -13,6 +14,17 @@ import gmsh
 import meshio
 import numpy as np
 import pytest
+from hypothesis import (
+    HealthCheck,
+    Verbosity,
+    assume,
+    example,
+    given,
+    settings,
+)
+from hypothesis import (
+    strategies as st,
+)
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -70,24 +82,83 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
 
 
-def test_rect(tmp_path: Path):
-    """Create different setups of a rectangular mesh."""
-    msh_file = Path(tmp_path, "rect.msh")
-    permutations = product(
-        [1.0, 2.0], [1, 2], [1, 2], [True, False],
-        [1, 2], [None, 2.2], [True, False],
-    )  # fmt: skip
-    for (edge_length, n_edge_cells, n_layers, structured,
-        order, version, mixed_elements) in permutations:  # fmt: skip
-        rect(
-            lengths=edge_length, n_edge_cells=n_edge_cells,
-            n_layers=n_layers, structured_grid=structured,
-            order=order, mixed_elements=mixed_elements,
-            out_name=msh_file, msh_version=version,
-        )  # fmt: skip
-        n_meshes = len(meshes_from_gmsh(msh_file, log=False))
-        msg = f"Expecting {4 + n_layers} meshes, got {n_meshes=}."
-        assert n_meshes == 4 + n_layers, msg
+valid_edge_length = st.floats(
+    allow_nan=False,
+    allow_infinity=False,
+    min_value=1e-7,
+    max_value=1e12,  # e.g. pore to ocean scale if interpreted as m
+)
+
+valid_edge_number = st.integers(
+    min_value=1, max_value=10
+)  # max value because of computation time, actual max 10.000 (100e6 cells)
+
+
+@dataclass
+class RectInput:
+    edge_length: float = 2.0
+    n_edge_cells: int = 1
+    n_layers: int = 1
+    structured: bool = False
+    order: int = 1
+    version: float | None = None
+    mixed_elements: bool = False
+
+
+rect_strategy = st.builds(
+    RectInput,
+    edge_length=st.one_of(
+        valid_edge_length, st.tuples(valid_edge_length, valid_edge_length)
+    ),
+    n_edge_cells=st.one_of(
+        valid_edge_number, st.tuples(valid_edge_number, valid_edge_number)
+    ),
+    n_layers=st.integers(min_value=1, max_value=10),
+    structured=st.booleans(),
+    order=st.sampled_from([1, 2]),
+    version=st.one_of(st.none(), st.sampled_from([2.2])),
+    mixed_elements=st.booleans(),
+)
+
+
+# below the minimum
+@example(rect_p=RectInput(edge_length=9e-8)).xfail(raises=ValueError)
+# above the maximum
+@example(rect_p=RectInput(edge_length=2e12)).xfail(raises=ValueError)
+# below the minimum
+@example(rect_p=RectInput(n_edge_cells=0)).xfail(raises=ValueError)
+# below the minimum
+@example(rect_p=RectInput(n_layers=0)).xfail(raises=ValueError)
+@given(rect_p=rect_strategy)
+@settings(
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    verbosity=Verbosity.normal,
+)
+def test_rect(tmp_path: Path, rect_p):
+    """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
+    msh_file = (
+        tmp_path
+        / f"rect_{rect_p.edge_length}_{rect_p.n_edge_cells}_{rect_p.n_layers}_{rect_p.structured}_{rect_p.order}_{rect_p.version}_{rect_p.mixed_elements}.msh"
+    )
+
+    # size of cell is determined by the smaller component, number of cell increases too much with the larger component
+    assume(np.max(rect_p.edge_length) / np.min(rect_p.edge_length) <= 1e4)
+    print(msh_file)
+
+    rect(
+        lengths=rect_p.edge_length,
+        n_edge_cells=rect_p.n_edge_cells,
+        n_layers=rect_p.n_layers,
+        structured_grid=rect_p.structured,
+        order=rect_p.order,
+        mixed_elements=rect_p.mixed_elements,
+        out_name=msh_file,
+        msh_version=rect_p.version,
+    )
+
+    n_meshes = len(meshes_from_gmsh(msh_file, log=False))
+    msg = f"Expecting {4 + rect_p.n_layers} meshes, got {n_meshes=}."
+    assert n_meshes == 4 + rect_p.n_layers, msg
 
 
 class TestPhysGroups:
@@ -107,7 +178,7 @@ class TestPhysGroups:
     )
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
-        msh_file = Path(self.tmp_path, "rect.msh")
+        msh_file = self.tmp_path / "rect.msh"
         rect(
             n_layers=len(layer_ids),
             out_name=msh_file,

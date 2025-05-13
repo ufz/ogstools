@@ -73,7 +73,7 @@ tests (arch - conda) [R]:
     - pip install -e ".[ogs,pinned,test]"
     - *pip-setup-extra-headless
   script:
-    - pytest
+    - pytest -n auto
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -93,7 +93,7 @@ tests (arch - conda - ogs wheel release) [M]:
     - pip install -e ".[ogs,test]"
     - *pip-setup-extra-headless
   script:
-    - pytest
+    - pytest -n auto --hypothesis-profile ci
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -114,7 +114,7 @@ tests (arch - pip - ogs latest) [M]:
     - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
-    - pytest
+    - pytest -n auto --hypothesis-profile ci
 
 
 tests (arch - pip - no OGS) [M]:
@@ -129,7 +129,7 @@ tests (arch - pip - no OGS) [M]:
     - *pip-setup-extra-headless
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
-    - pytest -m "not (tools or system)"
+    - pytest -n auto -m "not (tools or system)"
 
 # tests (arch - pip - with OGS_IN_PATH) [M]:
 # Actually a test with OGS in path was planned (just another export -> export PATH=$PWD/.venv_only_ogs/bin:$PATH )
@@ -153,8 +153,7 @@ tests (arch - pip - with OGS_BIN_PATH) [M]:
     - *pip-setup-extra-headless
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
-    - pytest -m "tools"
-    - pytest -m "system"
+    - pytest -n auto -m "tools or system"
 
 
 tests (arch - conda - ogs custom latest) [M]:
@@ -169,7 +168,7 @@ tests (arch - conda - ogs custom latest) [M]:
     - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
-    - pytest
+    - pytest -n auto
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -190,7 +189,7 @@ tests (arch - pip - no OGS) [R]:
     - *pip-setup-extra-headless
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
-    - pytest -m "not (tools or system)"
+    - pytest -n auto -m "not (tools or system)"
 
 
 tests coverage (arch - container) [R]:

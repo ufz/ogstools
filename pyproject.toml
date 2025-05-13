@@ -206,7 +206,7 @@ pinned = [
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
-test = ["coverage", "pytest", "pytest-xdist", "pytest-dependency"]
+test = ["coverage", "hypothesis", "pytest", "pytest-xdist", "pytest-dependency"]
 docs = [
   "livereload",
   "myst-parser",
@@ -244,6 +244,7 @@ xfail_strict = true
 #filterwarnings = ["error"]
 log_cli_level = "info"
 testpaths = ["tests"]
+
 
 [tool.black]
 line-length = 80
