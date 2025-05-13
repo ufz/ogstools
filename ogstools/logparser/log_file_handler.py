@@ -5,6 +5,7 @@ from typing import Any
 
 from watchdog.events import (
     DirModifiedEvent,
+    FileCreatedEvent,
     FileModifiedEvent,
     FileSystemEventHandler,
 )
@@ -16,7 +17,7 @@ from ogstools.logparser.log_parser import (
     read_version,
     select_regex,
 )
-from ogstools.logparser.regexes import Termination
+from ogstools.logparser.regexes import Context, Log, Termination
 
 
 class LogFileHandler(FileSystemEventHandler):
@@ -24,6 +25,7 @@ class LogFileHandler(FileSystemEventHandler):
         self,
         file_name: str | Path,
         queue: Queue,
+        status: Context,
         stop_callback: Callable[[], tuple[None, Any]],
         force_parallel: bool = False,
         line_limit: int = 0,
@@ -33,15 +35,25 @@ class LogFileHandler(FileSystemEventHandler):
         self._file_read = False
         self.patterns: None | list = None
         self.queue = queue
+        self.status: Context = status
         self.stop_callback = stop_callback
         self.num_lines_read = 0
         self.line_limit = line_limit
         self.force_parallel = force_parallel
 
-    def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
+    def on_created(self, event: FileCreatedEvent) -> None:
         if event.src_path != str(self.file_name):
             return
 
+        print(f"{self.file_name} has been created.")
+        self.process()
+
+    def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
+        if event.src_path != str(self.file_name):
+            return
+        self.process()
+
+    def process(self) -> None:
         if not self._file_read:
             try:
                 self._file: Any = self.file_name.open("r")
@@ -70,7 +82,7 @@ class LogFileHandler(FileSystemEventHandler):
                 # print(line)
                 break  # Wait for complete line before processing
 
-            log_entry = parse_line(
+            log_entry: Log | Termination | None = parse_line(
                 self.patterns,
                 line,
                 parallel_log=False,
@@ -78,7 +90,12 @@ class LogFileHandler(FileSystemEventHandler):
             )
 
             if log_entry:
+                assert isinstance(log_entry, Log)
+                assert isinstance(log_entry, Termination)
+
                 self.queue.put(log_entry)
+                self.status.update(log_entry)
+                # status update
                 # print(f"added {line} in nr: {num_lines_current}")
 
             if isinstance(log_entry, Termination):

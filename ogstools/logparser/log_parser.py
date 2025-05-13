@@ -140,13 +140,6 @@ def simple_consumer(queue: Queue) -> None:
         print("[Consumer] Interrupted, exiting...")
 
 
-@dataclass
-class Context:
-    time_step = 0
-    process = 0
-    iteration = 0
-
-
 def parse_line(
     patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
 ) -> Log | Termination | None:

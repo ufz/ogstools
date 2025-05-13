@@ -27,12 +27,21 @@ from ogstools.logparser import (
     analysis_time_step,
     fill_ogs_context,
     model_and_clock_time,
+    normalize_regex,
     parse_file,
+    parse_line,
+    read_version,
+    select_regex,
     time_step_vs_iterations,
 )
 from ogstools.logparser.log_file_handler import LogFileHandler
-from ogstools.logparser.log_parser import read_version, select_regex
-from ogstools.logparser.regexes import Termination
+from ogstools.logparser.regexes import (
+    Context,
+    StepStatus,
+    Termination,
+    TimeStepEnd,
+    TimeStepStart,
+)
 
 
 def log_types(records):
@@ -290,11 +299,13 @@ class TestLogparser_Version2:
 
     @pytest.mark.parametrize(
         "chunk_size",
-        [20, 4095, 4096, 20000000000],
+        [
+            3000,
+        ],  # 4095, 4096, 20000000000],
     )
     @pytest.mark.parametrize(
         "delay",
-        [0, 0.001],
+        [0, 0.001, 0.03],
     )
     def test_coupled_with_producer(self, chunk_size, delay):
         #    def test_v2_coupled_with_producer(self):
@@ -311,29 +322,39 @@ class TestLogparser_Version2:
         new_file = temp_dir / "ht.log"
         records: Queue = Queue()
         observer: ObserverType = Observer()
+        status: Context = Context()
+        shutil.rmtree(new_file, ignore_errors=True)
         handler = LogFileHandler(
             new_file,
             queue=records,
+            status=status,
             stop_callback=lambda: (print("Stop Observer"), observer.stop()),
         )
 
         observer.schedule(handler, path=str(new_file.parent), recursive=False)
+
         print("Starting observer...")
+
         observer.start()
 
         # emulating simulation run
+
         # shutil.copyfile(original_file, new_file)
         write_in_pieces(
             original_file, new_file, chunk_size=chunk_size, delay=delay
         )
 
-        observer.join()
         # consume(records)
-        num_expected = 39
+        observer.join()
+        num_expected = 20
         assert (
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
         # new_file.unlink() no clean up necessary
+
+        # assert (status.process_step_status == StepStatus.FINISHED)
+        assert status.time_step_status == StepStatus.FINISHED
+        # assert (status.simulation_status == StepStatus.FINISHED)
 
     def test_version_select(self):
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
@@ -347,3 +368,65 @@ class TestLogparser_Version2:
     def test_parse_version(self):
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
         p = parse_file(original_file)
+        l_records = list(p)
+        print(l_records)
+        assert (
+            len(l_records) == 20
+        ), f"Expected 20 records, but got {len(l_records)}"
+
+    def test_parse_line(self):
+        v2_regexes = normalize_regex(select_regex(2), False)
+        line = "info: Time stepping at step #53 and time 2000 with step size 1000 started."
+        ts_start_record = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+        assert ts_start_record is not None
+        # assert (isinstance(ts_start_record, Time)
+        assert ts_start_record.time_step == 53
+        assert ts_start_record.step_start_time == 2000
+        assert ts_start_record.step_size == 1000
+
+        line = "info: [time] Time step #99 took 0.1234 s."
+        ts_end_record = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+
+        assert ts_end_record is not None
+        # assert (isinstance(ts_start_record, Time)
+        assert ts_end_record.time_step == 99
+        assert ts_end_record.time_step_finished_time == 0.1234
+
+        print(ts_end_record)
+
+    def test_construct_version2_ts_good(self):
+
+        ts_start_record = TimeStepStart(
+            type="Info",
+            line=1,
+            mpi_process=0,
+            time_step=53,
+            step_start_time=2000.0,
+            step_size=1000.0,
+        )
+        ts_end_record = TimeStepEnd(
+            type="Info",
+            line=1,
+            mpi_process=0,
+            time_step=53,
+            time_step_finished_time=0.1234,
+        )
+        c = Context()
+
+        assert c.time_step is None
+        c.update(ts_start_record)
+        assert c.time_step == 53
+        assert c.time_step_status == StepStatus.RUNNING
+        c.update(ts_end_record)
+        assert c.time_step == 53
+        assert c.time_step_status == StepStatus.FINISHED

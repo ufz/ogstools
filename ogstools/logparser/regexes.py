@@ -5,6 +5,7 @@
 #
 
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -71,6 +72,7 @@ class AssemblyTime(MPIProcess, Info):
 @dataclass
 class TimeStepEnd(MPIProcess, Info):
     time_step: int
+    time_step_finished_time: float
 
 
 @dataclass
@@ -121,10 +123,7 @@ class TimeStepSolutionTime(MPIProcess, Info):
 
 
 @dataclass
-class TimeStepSolutionTimeCoupledScheme(MPIProcess, Info):
-    process: int
-    time_step_solution_time: float
-    time_step: int
+class TimeStepSolutionTimeCoupledScheme(TimeStepSolutionTime):
     coupling_iteration: int
 
 
@@ -215,6 +214,60 @@ class Termination:
 @dataclass
 class SimulationEndTime(MPIProcess, Info, Termination):
     message: str
+
+
+class StepStatus(Enum):
+    NOT_STARTED = "Not started"
+    RUNNING = "Running"
+    FINISHED = "Finished"
+
+    def __str__(self) -> str:
+        return self.value  # Ensures printing gives "Running", etc.
+
+
+class Context:
+    time_step: None | int = None
+    time_step_status: StepStatus = StepStatus.NOT_STARTED
+    process: None | int = None
+    process_step_status: StepStatus = StepStatus.NOT_STARTED
+    iteration: None | int = None
+    iteration_step_status: StepStatus = StepStatus.NOT_STARTED
+    simulation_status: StepStatus = StepStatus.NOT_STARTED
+
+    def __str__(self) -> str:
+        return (
+            f"Context(\n"
+            f"  time_step={self.time_step}, status={self.time_step_status}\n"
+            f"  process={self.process}, status={self.process_step_status}\n"
+            f"  iteration={self.iteration}, status={self.iteration_step_status}\n"
+            f"  simulation_status={self.simulation_status}\n"
+            f")"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"Context(time_step={self.time_step!r}, time_step_status={self.time_step_status!r}, "
+            f"process={self.process!r}, process_step_status={self.process_step_status!r}, "
+            f"iteration={self.iteration!r}, iteration_step_status={self.iteration_step_status!r}, "
+            f"simulation_status={self.simulation_status!r})"
+        )
+
+    def update(self, x: Log | Termination) -> None:
+        # if x contains "time_step"
+        if isinstance(x, TimeStepStart):
+            assert not self.time_step or x.time_step > self.time_step
+            self.time_step = x.time_step
+            self.time_step_status = StepStatus.RUNNING
+        if isinstance(x, TimeStepEnd):
+            assert x.time_step == self.time_step
+            self.time_step_status = StepStatus.FINISHED
+        if isinstance(x, SolvingProcessStart):
+            assert not self.process or x.process > self.process
+            self.process = x.process
+            self.process_step_status = StepStatus.RUNNING
+        if isinstance(x, TimeStepSolutionTime):
+            assert x.process == self.process
+            self.process_step_status = StepStatus.FINISHED
 
 
 def ogs_regexes() -> list[tuple[str, type[Log]]]:
@@ -309,11 +362,11 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             OGSVersionLog2,
         ),
         (
-            r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
+            r"info: Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
             TimeStepStart,
         ),
         (
-            r"info: \[time\] Time step #(\d+) took",
+            r"info: \[time\] Time step #(\d+) took ([\d\.e+-]+) s",
             TimeStepEnd,
         ),
         (r"info: Iteration #(\d+) started", IterationStart),
