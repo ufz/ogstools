@@ -123,7 +123,10 @@ class TimeStepSolutionTime(MPIProcess, Info):
 
 
 @dataclass
-class TimeStepSolutionTimeCoupledScheme(TimeStepSolutionTime):
+class TimeStepSolutionTimeCoupledScheme(MPIProcess, Info):
+    process: int
+    time_step_solution_time: float
+    time_step: int
     coupling_iteration: int
 
 
@@ -255,7 +258,7 @@ class Context:
     def update(self, x: Log | Termination) -> None:
         # if x contains "time_step"
         if isinstance(x, SimulationStartTime):
-            # assert self.simulation_status == StepStatus.NOT_STARTED
+            assert self.simulation_status == StepStatus.NOT_STARTED
             self.simulation_status = StepStatus.RUNNING
         if isinstance(x, SimulationEndTime):
             # assert self.simulation_status == StepStatus.RUNNING, "Simulation not running"
