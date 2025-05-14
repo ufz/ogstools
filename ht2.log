@@ -1,11 +1,8 @@
 info: This is OpenGeoSys-6 version xsd_base-135-g56cc4d10.dirty. Log version: 2, Log level: all.
 info: OGS started on 2025-04-16 15:22:08+0200.
-warning: OMP_NUM_THREADS is not set, falling back to: 8
-info: Eigen use 8 threads
-info: Reading project file /home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj.
-info: Project configuration from file '/home/meisel/o/s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj' read.
+info: Time stepping at step #0 and time 0 with step size 0 started.
 info: [time] Output of timestep 0 took 0.0203049 s.
-info: Time step #0 took 0.0214601 s.
+info: [time] Time step #0 took 0.0214601 s.
 info: Solve processes.
 info: Time stepping at step #1 and time 1000 with step size 1000 started.
 info: Solving process #0 started.

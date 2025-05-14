@@ -254,13 +254,23 @@ class Context:
 
     def update(self, x: Log | Termination) -> None:
         # if x contains "time_step"
+        if isinstance(x, SimulationStartTime):
+            # assert self.simulation_status == StepStatus.NOT_STARTED
+            self.simulation_status = StepStatus.RUNNING
+        if isinstance(x, SimulationEndTime):
+            # assert self.simulation_status == StepStatus.RUNNING, "Simulation not running"
+            self.simulation_status = StepStatus.FINISHED  # ToDo
+
         if isinstance(x, TimeStepStart):
-            assert not self.time_step or x.time_step > self.time_step
+            assert (
+                not self.time_step or x.time_step > self.time_step
+            ), "Time step not increasing"
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
         if isinstance(x, TimeStepEnd):
             assert x.time_step == self.time_step
             self.time_step_status = StepStatus.FINISHED
+
         if isinstance(x, SolvingProcessStart):
             assert not self.process or x.process > self.process
             self.process = x.process
@@ -268,6 +278,14 @@ class Context:
         if isinstance(x, TimeStepSolutionTime):
             assert x.process == self.process
             self.process_step_status = StepStatus.FINISHED
+
+        if isinstance(x, IterationStart):
+            assert not self.iteration or x.iteration_number > self.iteration
+            self.iteration = x.iteration_number
+            self.iteration_step_status = StepStatus.RUNNING
+        if isinstance(x, IterationEnd):
+            assert x.iteration_number == self.iteration
+            self.iteration_step_status = StepStatus.FINISHED
 
 
 def ogs_regexes() -> list[tuple[str, type[Log]]]:
@@ -358,7 +376,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
 def new_regexes() -> list[tuple[str, type[Log]]]:
     return [
         (
-            r"info: This is OpenGeoSys-6 version ([\w\-\.]+)\. Log version: (\d+), Log level: (\w+)\.",
+            r"info: This is OpenGeoSys-6 version: ([\w\-\.]+)\. Log version: (\d+), Log level: (\w+)\.",
             OGSVersionLog2,
         ),
         (
@@ -374,7 +392,7 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
             IterationEnd,
         ),
-        (r"info: Solving process #(\d+) started\.", SolvingProcessStart),
+        (r"info: Solving process #(\d+) started", SolvingProcessStart),
         (
             r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
             TimeStepSolutionTime,

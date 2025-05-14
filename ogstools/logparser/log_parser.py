@@ -171,6 +171,10 @@ def read_version(file: Path) -> int:
         match = re.search(r"Log version: (\d+)", line)
         if match:
             return int(match.group(1))
+        match = re.search("This is OpenGeoSys-6 version ", line)
+        if match:
+            return 1
+        print("Log version could not be deduced. Please specify it.")
         return 1
 
 

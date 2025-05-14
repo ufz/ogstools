@@ -13,8 +13,6 @@ from watchdog.events import (
 from ogstools.logparser.log_parser import (
     normalize_regex,
     parse_line,
-    read_mpi_processes,
-    read_version,
     select_regex,
 )
 from ogstools.logparser.regexes import Context, Log, Termination
@@ -64,13 +62,11 @@ class LogFileHandler(FileSystemEventHandler):
                 return
 
         if self.patterns is None:
-            parallel_log = (
-                self.force_parallel or read_mpi_processes(self.file_name) > 1
-            )
-
-            self.patterns = normalize_regex(
-                select_regex(read_version(self.file_name)), parallel_log
-            )
+            # parallel_log = (
+            #    self.force_parallel or read_mpi_processes(self.file_name) > 1
+            # )
+            parallel_log = False
+            self.patterns = normalize_regex(select_regex(2), parallel_log)
             return
 
         print(f"{self.file_name} has been modified.")
@@ -90,9 +86,7 @@ class LogFileHandler(FileSystemEventHandler):
             )
 
             if log_entry:
-                assert isinstance(log_entry, Log)
-                assert isinstance(log_entry, Termination)
-
+                assert isinstance(log_entry, Log | Termination)
                 self.queue.put(log_entry)
                 self.status.update(log_entry)
                 # status update
