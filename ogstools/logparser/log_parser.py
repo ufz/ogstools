@@ -16,6 +16,7 @@ from queue import Empty, Queue
 from typing import Any
 
 from ogstools.logparser.regexes import (
+    Context,
     Log,
     MPIProcess,
     NoRankOutput,
@@ -198,6 +199,9 @@ def parse_file(
              The exact type and structure of these records depend on the regex
              patterns and their associated processing functions.
     """
+
+    context = Context()
+
     if isinstance(file_name, str):
         file_name = Path(file_name)
     file_name = Path(file_name)
@@ -224,6 +228,7 @@ def parse_file(
             )
 
             if entry:
+                context.update(entry)
                 records.append(entry)
 
     return records

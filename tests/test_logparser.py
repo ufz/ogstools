@@ -438,3 +438,8 @@ class TestLogparser_Version2:
         c.update(ts_end_record)
         assert c.time_step == 53
         assert c.time_step_status == StepStatus.FINISHED
+
+    def test_parse_v2_good(self):
+        original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
+        records = parse_file(original_file)
+        print(records)

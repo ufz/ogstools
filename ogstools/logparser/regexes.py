@@ -17,11 +17,19 @@ class Log:
     def type_str() -> str:
         return "Log"
 
+    def fill(self, status: "Context") -> None:
+        pass
+
 
 class Info(Log):
     @staticmethod
     def type_str() -> str:
         return "Info"
+
+
+@dataclass
+class Termination:
+    pass
 
 
 class WarningType(Log):
@@ -62,6 +70,78 @@ class OGSVersionLog2(MPIProcess, NoRankOutput):
     ogs_version: str
     log_version: int = 0
     log_level: str = ""
+
+
+class StepStatus(Enum):
+    NOT_STARTED = "Not started"
+    RUNNING = "Running"
+    FINISHED = "Finished"
+
+    def __str__(self) -> str:
+        return self.value  # Ensures printing gives "Running", etc.
+
+
+class Context:
+    time_step: None | int = None
+    time_step_status: StepStatus = StepStatus.NOT_STARTED
+    process: None | int = None
+    process_step_status: StepStatus = StepStatus.NOT_STARTED
+    iteration: None | int = None
+    iteration_step_status: StepStatus = StepStatus.NOT_STARTED
+    simulation_status: StepStatus = StepStatus.NOT_STARTED
+
+    def __str__(self) -> str:
+        return (
+            f"Context(\n"
+            f"  time_step={self.time_step}, status={self.time_step_status}\n"
+            f"  process={self.process}, status={self.process_step_status}\n"
+            f"  iteration={self.iteration}, status={self.iteration_step_status}\n"
+            f"  simulation_status={self.simulation_status}\n"
+            f")"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"Context(time_step={self.time_step!r}, time_step_status={self.time_step_status!r}, "
+            f"process={self.process!r}, process_step_status={self.process_step_status!r}, "
+            f"iteration={self.iteration!r}, iteration_step_status={self.iteration_step_status!r}, "
+            f"simulation_status={self.simulation_status!r})"
+        )
+
+    def update(self, x: Log | Termination) -> None:
+        # if x contains "time_step"
+        if isinstance(x, SimulationStartTime):
+            assert self.simulation_status == StepStatus.NOT_STARTED
+            self.simulation_status = StepStatus.RUNNING
+        if isinstance(x, SimulationEndTime):
+            # assert self.simulation_status == StepStatus.RUNNING, "Simulation not running"
+            self.simulation_status = StepStatus.FINISHED  # ToDo
+
+        if isinstance(x, TimeStepStart):
+            assert (
+                not self.time_step or x.time_step > self.time_step
+            ), "Time step not increasing"
+            self.time_step = x.time_step
+            self.time_step_status = StepStatus.RUNNING
+        if isinstance(x, TimeStepEnd):
+            assert x.time_step == self.time_step
+            self.time_step_status = StepStatus.FINISHED
+
+        if isinstance(x, SolvingProcessStart):
+            assert not self.process or x.process > self.process
+            self.process = x.process
+            self.process_step_status = StepStatus.RUNNING
+        if isinstance(x, SolvingProcessEnd):
+            assert x.process == self.process
+            self.process_step_status = StepStatus.FINISHED
+
+        if isinstance(x, IterationStart):
+            assert not self.iteration or x.iteration_number > self.iteration
+            self.iteration = x.iteration_number
+            self.iteration_step_status = StepStatus.RUNNING
+        if isinstance(x, IterationEnd):
+            assert x.iteration_number == self.iteration
+            self.iteration_step_status = StepStatus.FINISHED
 
 
 @dataclass
@@ -110,13 +190,19 @@ class TimeStepOutputTime(MPIProcess, Info):
     output_time: float
 
 
+class TimeStepContext:
+
+    def fill(self, status: Context) -> None:
+        self.time_step = status.time_step
+
+
 @dataclass
-class SolvingProcessStart(MPIProcess, Info):
+class SolvingProcessStart(MPIProcess, Info, TimeStepContext):
     process: int
 
 
 @dataclass
-class TimeStepSolutionTime(MPIProcess, Info):
+class SolvingProcessEnd(MPIProcess, Info, TimeStepContext):
     process: int
     time_step_solution_time: float
     time_step: int
@@ -210,85 +296,8 @@ class SimulationStartTime(MPIProcess, Info, NoRankOutput):
 
 
 @dataclass
-class Termination:
-    pass
-
-
-@dataclass
 class SimulationEndTime(MPIProcess, Info, Termination):
     message: str
-
-
-class StepStatus(Enum):
-    NOT_STARTED = "Not started"
-    RUNNING = "Running"
-    FINISHED = "Finished"
-
-    def __str__(self) -> str:
-        return self.value  # Ensures printing gives "Running", etc.
-
-
-class Context:
-    time_step: None | int = None
-    time_step_status: StepStatus = StepStatus.NOT_STARTED
-    process: None | int = None
-    process_step_status: StepStatus = StepStatus.NOT_STARTED
-    iteration: None | int = None
-    iteration_step_status: StepStatus = StepStatus.NOT_STARTED
-    simulation_status: StepStatus = StepStatus.NOT_STARTED
-
-    def __str__(self) -> str:
-        return (
-            f"Context(\n"
-            f"  time_step={self.time_step}, status={self.time_step_status}\n"
-            f"  process={self.process}, status={self.process_step_status}\n"
-            f"  iteration={self.iteration}, status={self.iteration_step_status}\n"
-            f"  simulation_status={self.simulation_status}\n"
-            f")"
-        )
-
-    def __repr__(self) -> str:
-        return (
-            f"Context(time_step={self.time_step!r}, time_step_status={self.time_step_status!r}, "
-            f"process={self.process!r}, process_step_status={self.process_step_status!r}, "
-            f"iteration={self.iteration!r}, iteration_step_status={self.iteration_step_status!r}, "
-            f"simulation_status={self.simulation_status!r})"
-        )
-
-    def update(self, x: Log | Termination) -> None:
-        # if x contains "time_step"
-        if isinstance(x, SimulationStartTime):
-            assert self.simulation_status == StepStatus.NOT_STARTED
-            self.simulation_status = StepStatus.RUNNING
-        if isinstance(x, SimulationEndTime):
-            # assert self.simulation_status == StepStatus.RUNNING, "Simulation not running"
-            self.simulation_status = StepStatus.FINISHED  # ToDo
-
-        if isinstance(x, TimeStepStart):
-            assert (
-                not self.time_step or x.time_step > self.time_step
-            ), "Time step not increasing"
-            self.time_step = x.time_step
-            self.time_step_status = StepStatus.RUNNING
-        if isinstance(x, TimeStepEnd):
-            assert x.time_step == self.time_step
-            self.time_step_status = StepStatus.FINISHED
-
-        if isinstance(x, SolvingProcessStart):
-            assert not self.process or x.process > self.process
-            self.process = x.process
-            self.process_step_status = StepStatus.RUNNING
-        if isinstance(x, TimeStepSolutionTime):
-            assert x.process == self.process
-            self.process_step_status = StepStatus.FINISHED
-
-        if isinstance(x, IterationStart):
-            assert not self.iteration or x.iteration_number > self.iteration
-            self.iteration = x.iteration_number
-            self.iteration_step_status = StepStatus.RUNNING
-        if isinstance(x, IterationEnd):
-            assert x.iteration_number == self.iteration
-            self.iteration_step_status = StepStatus.FINISHED
 
 
 def ogs_regexes() -> list[tuple[str, type[Log]]]:
@@ -322,7 +331,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
         ),
         (
             r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
-            TimeStepSolutionTime,
+            SolvingProcessEnd,
         ),
         (
             r"info: === Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (.*)",
@@ -398,7 +407,7 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
         (r"info: Solving process #(\d+) started", SolvingProcessStart),
         (
             r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
-            TimeStepSolutionTime,
+            SolvingProcessEnd,
         ),
         (
             r"info: Global coupling iteration #(\d+) started",
