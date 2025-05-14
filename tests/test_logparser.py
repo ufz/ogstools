@@ -27,14 +27,16 @@ from ogstools.logparser import (
     analysis_time_step,
     fill_ogs_context,
     model_and_clock_time,
-    normalize_regex,
     parse_file,
+    time_step_vs_iterations,
+)
+from ogstools.logparser.log_file_handler import (
+    LogFileHandler,
+    normalize_regex,
     parse_line,
     read_version,
     select_regex,
-    time_step_vs_iterations,
 )
-from ogstools.logparser.log_file_handler import LogFileHandler
 from ogstools.logparser.regexes import (
     Context,
     StepStatus,
