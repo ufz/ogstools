@@ -207,9 +207,8 @@ def parse_file(
     file_name = Path(file_name)
 
     parallel_log = force_parallel or read_mpi_processes(file_name) > 1
-    patterns = normalize_regex(
-        select_regex(read_version(file_name)), parallel_log
-    )
+    version = read_version(file_name)
+    patterns = normalize_regex(select_regex(version), parallel_log)
 
     number_of_lines_read = 0
     with file_name.open() as file:
@@ -228,9 +227,13 @@ def parse_file(
             )
 
             if entry:
-                context.update(entry)
-                r = entry.as_dict(context)
-                records.append(r)
+                if version == 2:  # version one need to call ogs_context
+                    # here addinng context right away
+                    context.update(entry)
+                    r = entry.as_dict(context)
+                    records.append(r)
+                else:
+                    records.append(entry)
 
     return records
 

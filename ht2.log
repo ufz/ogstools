@@ -19,7 +19,6 @@ info: Convergence criterion, component 0: |dx|=1.3244e+00, |x|=2.0490e+00, |dx|/
 info: Convergence criterion, component 1: |dx|=1.8307e-09, |x|=1.2712e+06, |dx|/|x|=1.4401e-15
 info: [time] Iteration #2 took 0.0763721 s.
 info: Iteration #3 started.
-debug: Assemble HTProcess.
 info: [time] Assembly took 0.0618679 s.
 info: [time] Applying Dirichlet BCs took 0.000854936 s.
 info: [time] Linear solver took 0.010967 s.

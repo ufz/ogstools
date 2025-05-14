@@ -29,7 +29,8 @@ class Info(Log):
 
 @dataclass
 class Termination:
-    pass
+    def as_dict(self, status: "Context") -> dict:
+        return asdict(self)
 
 
 class WarningType(Log):
@@ -161,6 +162,16 @@ class TimeStepProcessContext:
         return d
 
 
+class TimeStepProcessIterationContext:
+
+    def as_dict(self, status: Context) -> None:
+        d = asdict(self)
+        d.update({"time_step": status.time_step})
+        d.update({"process": status.process})
+        d.update({"iteration_number": status.iteration})
+        return d
+
+
 @dataclass
 class AssemblyTime(TimeStepProcessContext, MPIProcess, Info):
     assembly_time: float
@@ -254,7 +265,9 @@ class SimulationExecutionTime(MPIProcess, Info):
 
 
 @dataclass
-class ComponentConvergenceCriterion(MPIProcess, Info):
+class ComponentConvergenceCriterion(
+    TimeStepProcessIterationContext, MPIProcess, Info
+):
     component: int
     dx: float
     x: float
@@ -263,7 +276,6 @@ class ComponentConvergenceCriterion(MPIProcess, Info):
 
 @dataclass
 class TimeStepConvergenceCriterion(MPIProcess, Info):
-    component: int
     dx: float
     x: float
     dx_x: float
@@ -364,7 +376,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             IterationEnd,
         ),
         (
-            r"info: Convergence criterion, component (\d+): \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)",
+            r"info: Convergence criterion \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)",
             TimeStepConvergenceCriterion,
         ),
         (
