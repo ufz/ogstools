@@ -28,13 +28,13 @@ from ogstools.logparser import (
     fill_ogs_context,
     model_and_clock_time,
     parse_file,
+    read_version,
     time_step_vs_iterations,
 )
 from ogstools.logparser.log_file_handler import (
     LogFileHandler,
     normalize_regex,
     parse_line,
-    read_version,
     select_regex,
 )
 from ogstools.logparser.regexes import (
@@ -371,8 +371,8 @@ class TestLogparser_Version2:
         l_records = list(p)
         print(l_records)
         assert (
-            len(l_records) == 20
-        ), f"Expected 20 records, but got {len(l_records)}"
+            len(l_records) == 21
+        ), f"Expected 21 records, but got {len(l_records)}"
 
     def test_parse_line(self):
         v2_regexes = normalize_regex(select_regex(2), False)

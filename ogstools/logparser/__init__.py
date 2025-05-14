@@ -17,7 +17,7 @@ from .common_ogs_analyses import (
     model_and_clock_time,
     time_step_vs_iterations,
 )
-from .log_parser import parse_file
+from .log_parser import parse_file, read_version
 from .regexes import ogs_regexes
 
 __all__ = [
@@ -30,5 +30,6 @@ __all__ = [
     "model_and_clock_time",
     "ogs_regexes",
     "parse_file",
+    "read_version",
     "time_step_vs_iterations",
 ]
