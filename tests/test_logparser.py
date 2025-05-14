@@ -305,7 +305,7 @@ class TestLogparser_Version2:
     )
     @pytest.mark.parametrize(
         "delay",
-        [0, 0.001, 0.03],
+        [0, 0.001, 0.003],
     )
     def test_coupled_with_producer(self, chunk_size, delay):
         #    def test_v2_coupled_with_producer(self):
@@ -460,3 +460,4 @@ class TestLogparser_Version2:
 
         df_acni = analysis_convergence_newton_iteration(df_records)
         df_acni.to_csv("test_parse_v2_good_acni.csv")
+

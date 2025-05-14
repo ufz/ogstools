@@ -168,15 +168,14 @@ def read_version(file: Path) -> int:
     :returns: The version number as an integer.
     """
     with file.open() as f:
-        line = f.readline()
-        match = re.search(r"Log version: (\d+)", line)
-        if match:
-            return int(match.group(1))
-        match = re.search("This is OpenGeoSys-6 version ", line)
-        if match:
-            return 1
-        print("Log version could not be deduced. Please specify it.")
-        return 1
+        for line in f:
+            match = re.search(r"Log version: (\d+)", line)
+            if match:
+                return int(match.group(1))
+            if "This is OpenGeoSys-6 version " in line and "Log version" not in line:
+                return 1
+    print("Log version could not be deduced. Please specify it.")
+    return 1
 
 
 def parse_file(
