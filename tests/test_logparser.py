@@ -346,7 +346,7 @@ class TestLogparser_Version2:
 
         # consume(records)
         observer.join()
-        num_expected = 15
+        num_expected = 45
         assert (
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
@@ -362,8 +362,8 @@ class TestLogparser_Version2:
         assert ver == 2, f"Expected version 2, but got {ver}"
         l_regexes = len(select_regex(ver))
         assert (
-            l_regexes == 11
-        ), f"Expected regexes version {ver},this is of length 11 but got {l_regexes}."
+            l_regexes == 16
+        ), f"Expected regexes version {ver},this is of length 16 but got {l_regexes}."
 
     def test_parse_version(self):
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
@@ -371,8 +371,8 @@ class TestLogparser_Version2:
         l_records = list(p)
         print(l_records)
         assert (
-            len(l_records) == 21
-        ), f"Expected 21 records, but got {len(l_records)}"
+            len(l_records) == 45
+        ), f"Expected 45 records, but got {len(l_records)}"
 
     def test_parse_line(self):
         v2_regexes = normalize_regex(select_regex(2), False)
@@ -412,6 +412,16 @@ class TestLogparser_Version2:
         assert p_started is not None
         assert p_started.process == 123
 
+        line = "info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=1.1234e-01, |dx|/|x|=1.0000e+00"
+        conv = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+        assert conv is not None
+        assert conv.dx == 2.6647e00
+
     def test_construct_version2_ts_good(self):
 
         ts_start_record = TimeStepStart(
@@ -442,4 +452,11 @@ class TestLogparser_Version2:
     def test_parse_v2_good(self):
         original_file = Path("/home/meisel/gitlabrepos/ogstools/ht2.log")
         records = parse_file(original_file)
-        print(records)
+        df_records = pd.DataFrame(records)
+        df_tsit = time_step_vs_iterations(df_records)
+        df_tsit.to_csv("test_parse_v2_good.csv")
+        df_ats = analysis_time_step(df_records)
+        df_ats.to_csv("test_parse_v2_good_ats.csv")
+
+        df_acni = analysis_convergence_newton_iteration(df_records)
+        df_acni.to_csv("test_parse_v2_good_acni.csv")

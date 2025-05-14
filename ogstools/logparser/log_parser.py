@@ -229,7 +229,8 @@ def parse_file(
 
             if entry:
                 context.update(entry)
-                records.append(entry)
+                r = entry.as_dict(context)
+                records.append(r)
 
     return records
 

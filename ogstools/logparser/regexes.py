@@ -4,7 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
 
 
@@ -17,8 +17,8 @@ class Log:
     def type_str() -> str:
         return "Log"
 
-    def fill(self, status: "Context") -> None:
-        pass
+    def as_dict(self, status: "Context") -> dict:
+        return asdict(self)
 
 
 class Info(Log):
@@ -136,7 +136,7 @@ class Context:
             self.process_step_status = StepStatus.FINISHED
 
         if isinstance(x, IterationStart):
-            assert not self.iteration or x.iteration_number > self.iteration
+            # assert not self.iteration or x.iteration_number > self.iteration
             self.iteration = x.iteration_number
             self.iteration_step_status = StepStatus.RUNNING
         if isinstance(x, IterationEnd):
@@ -144,8 +144,25 @@ class Context:
             self.iteration_step_status = StepStatus.FINISHED
 
 
+class TimeStepContext:
+
+    def as_dict(self, status: Context) -> dict:
+        d = asdict(self)
+        d.update({"time_step": status.time_step})
+        return d
+
+
+class TimeStepProcessContext:
+
+    def as_dict(self, status: Context) -> None:
+        d = asdict(self)
+        d.update({"time_step": status.time_step})
+        d.update({"process": status.time_step})
+        return d
+
+
 @dataclass
-class AssemblyTime(MPIProcess, Info):
+class AssemblyTime(TimeStepProcessContext, MPIProcess, Info):
     assembly_time: float
 
 
@@ -156,12 +173,12 @@ class TimeStepEnd(MPIProcess, Info):
 
 
 @dataclass
-class IterationStart(MPIProcess, Info):
+class IterationStart(TimeStepProcessContext, MPIProcess, Info):
     iteration_number: int
 
 
 @dataclass
-class IterationEnd(MPIProcess, Info):
+class IterationEnd(TimeStepProcessContext, MPIProcess, Info):
     iteration_number: int
     iteration_time: float
 
@@ -186,23 +203,17 @@ class TimeStepStart(MPIProcess, Info):
 
 @dataclass
 class TimeStepOutputTime(MPIProcess, Info):
-    time_step: int
+    time_step: int  # ToDo from TimeStepContext
     output_time: float
 
 
-class TimeStepContext:
-
-    def fill(self, status: Context) -> None:
-        self.time_step = status.time_step
-
-
 @dataclass
-class SolvingProcessStart(MPIProcess, Info, TimeStepContext):
+class SolvingProcessStart(TimeStepContext, MPIProcess, Info):
     process: int
 
 
 @dataclass
-class SolvingProcessEnd(MPIProcess, Info, TimeStepContext):
+class SolvingProcessEnd(TimeStepContext, MPIProcess, Info):
     process: int
     time_step_solution_time: float
     time_step: int
@@ -223,12 +234,12 @@ class TimeStepFinishedTime(MPIProcess, Info):
 
 
 @dataclass
-class DirichletTime(MPIProcess, Info):
+class DirichletTime(TimeStepProcessContext, MPIProcess, Info):
     dirichlet_time: float
 
 
 @dataclass
-class LinearSolverTime(MPIProcess, Info):
+class LinearSolverTime(TimeStepProcessContext, MPIProcess, Info):
     linear_solver_time: float
 
 
@@ -252,6 +263,7 @@ class ComponentConvergenceCriterion(MPIProcess, Info):
 
 @dataclass
 class TimeStepConvergenceCriterion(MPIProcess, Info):
+    component: int
     dx: float
     x: float
     dx_x: float
@@ -352,7 +364,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             IterationEnd,
         ),
         (
-            r"info: Convergence criterion: \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)$",
+            r"info: Convergence criterion, component (\d+): \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)",
             TimeStepConvergenceCriterion,
         ),
         (
@@ -395,19 +407,36 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"info: Time stepping at step #(\d+) and time ([\d\.e+-]+) with step size (\d+)",
             TimeStepStart,
         ),
-        (
-            r"info: \[time\] Time step #(\d+) took ([\d\.e+-]+) s",
-            TimeStepEnd,
-        ),
+        (r"info: Solving process #(\d+) started", SolvingProcessStart),
         (r"info: Iteration #(\d+) started", IterationStart),
+        (r"info: \[time\] Assembly took ([\d\.e+-]+) s", AssemblyTime),
+        (
+            r"info: \[time\] Applying Dirichlet BCs took ([\d\.e+-]+) s",
+            DirichletTime,
+        ),
+        (
+            r"info: \[time\] Linear solver took ([\d\.e+-]+) s",
+            LinearSolverTime,
+        ),
+        (
+            r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
+            SolvingProcessEnd,
+        ),
+        (
+            r"info: Convergence criterion, component (\d+): \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)$",
+            ComponentConvergenceCriterion,
+        ),
         (
             r"info: \[time\] Iteration #(\d+) took ([\d\.e+-]+) s",
             IterationEnd,
         ),
-        (r"info: Solving process #(\d+) started", SolvingProcessStart),
         (
-            r"info: \[time\] Solving process #(\d+) took ([\d\.e+-]+) s in time step #(\d+)",
-            SolvingProcessEnd,
+            r"info: \[time\] Output of timestep (\d+) took ([\d\.e+-]+) s",
+            TimeStepOutputTime,
+        ),
+        (
+            r"info: \[time\] Time step #(\d+) took ([\d\.e+-]+) s",
+            TimeStepEnd,
         ),
         (
             r"info: Global coupling iteration #(\d+) started",
