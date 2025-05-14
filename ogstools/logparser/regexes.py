@@ -376,7 +376,7 @@ def ogs_regexes() -> list[tuple[str, type[Log]]]:
             IterationEnd,
         ),
         (
-            r"info: Convergence criterion \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)",
+            r"info: Convergence criterion: \|dx\|=([\d\.e+-]+), \|x\|=([\d\.e+-]+), \|dx\|/\|x\|=([\d\.e+-]+|nan|inf)",
             TimeStepConvergenceCriterion,
         ),
         (
