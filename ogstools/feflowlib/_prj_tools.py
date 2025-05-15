@@ -164,7 +164,6 @@ def _add_permeabilty_prj(
         for mat_property, mat_value in material_properties[material_id].items()
     ):
         if "permeability_X" in material_properties[material_id]:
-            # _add_KF_tensor_from_permeability_X_Y_Z()
             _add_heterogeneous_material_property(
                 model, material_id, diffusion_or_permeability, "KF"
             )
