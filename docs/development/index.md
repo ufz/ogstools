@@ -236,4 +236,8 @@ pytest
 
 - Make sure there is a complete changelog at `docs/releases` and added to the corresponding `index.md`.
 - Create a tag.
-- Wait for the tag pipeline to complete. Copy the output of the `pages`-job to a new directory in the [ogs/tools/ogstools-docs](https://gitlab.opengeosys.org/ogs/tools/ogstools-docs)-repo.
+- Wait for the tag pipeline to complete. This will also run a pipeline in [ogs/tools/ogstools-docs](https://gitlab.opengeosys.org/ogs/tools/ogstools-docs)-repo. After finishing check if the updated docs on ogstools.opengeosys.org are shown and the version selector is working.
+- Create [GitHub release](https://github.com/ufz/ogstools/releases) -> a Zenodo release is automatically created.
+- Update authors on Zenodo release.
+- Update Zenodo badge in repo.
+- On https://github.com/conda-forge/ogstools-feedstock create a new issue with the title `@conda-forge-admin, please update version`
