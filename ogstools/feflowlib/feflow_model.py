@@ -53,7 +53,11 @@ class FeflowModel:
             self.mesh_path = Path(out_path).with_suffix(".vtu")
         ifm.forceLicense("Viewer")
         self._doc = ifm.loadDocument(str(feflow_file))
-        self.mesh = convert_properties_mesh(self._doc)
+        inital_mesh = convert_properties_mesh(self._doc)
+        self.mesh = _tools._add_heterogeneous_material_property_to_mesh(
+            inital_mesh,
+            _tools.material_properties_of_process(inital_mesh, self.process),
+        )
         self.dimension = self._doc.getNumberOfDimensions()
         self.setup_prj()  # _project object with default values is initialized here
         self._init_subdomains()
@@ -122,43 +126,7 @@ class FeflowModel:
 
     @property
     def material_properties(self) -> defaultdict:
-        """
-        Material properties of the mesh.
-
-        :return: Dictionary with properties and the corresponding value for each material.
-        """
-        process = self.process
-        if "Steady state diffusion" in process or "Liquid flow" in process:
-            material_properties = _tools.get_material_properties_of_H_model(
-                self.mesh
-            )
-
-        elif "Hydro thermal" in process:
-            material_properties = _tools.get_material_properties_of_HT_model(
-                self.mesh
-            )
-
-        elif "Component transport" in process:
-            material_properties = _tools.get_material_properties_of_CT_model(
-                self.mesh
-            )
-        else:
-            # For later functions of the converter, material properties are needed.
-            # For this reason, a defaultdict is returned with no material properties in
-            # this case.
-            # ToDo: return a dict of all possible material properties with a warning!
-            material_properties = defaultdict(str)
-            material_properties["undefined"] = (
-                f"Material properties are only saved on the mesh for this process: '{process}'",
-            )
-            logger.warning(
-                (
-                    "Material properties are not supported (at the moment) in a model using such a process:",
-                    process,
-                )
-            )
-
-        return material_properties
+        return _tools.material_properties_of_process(self.mesh, self.process)
 
     # feflow specific
     def setup_prj(

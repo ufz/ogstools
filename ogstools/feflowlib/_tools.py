@@ -230,6 +230,36 @@ def get_material_properties(mesh: pv.UnstructuredGrid, property: str) -> dict:
     return material_properties
 
 
+def _add_heterogeneous_material_property_to_mesh(
+    mesh: pv.UnstructuredGrid, material_properties: defaultdict
+) -> pv.UnstructuredGrid:
+    """
+    For the case where there are heterogeneous material properties in the permeability
+    this function is called. It should be made generic for other cases, as soon as corresponding
+    data exist.
+
+    """
+    if "undefined" not in material_properties:
+        inhomo_permeabilities = set()
+        for properties in material_properties.values():
+            if isinstance(properties, tuple):
+                print(properties)
+            for prop_name, value in properties.items():
+                if isinstance(value, str) and "permeability" in prop_name:
+                    inhomo_permeabilities.add(
+                        value.replace("inhomogeneous_", "")
+                    )
+        if inhomo_permeabilities:
+            zipped = list(
+                zip(
+                    *[mesh[prop] for prop in list(inhomo_permeabilities)],
+                    strict=False,
+                )
+            )
+            mesh.cell_data["KF"] = zipped
+    return mesh
+
+
 def get_material_properties_of_H_model(
     mesh: pv.UnstructuredGrid,
 ) -> defaultdict:
@@ -356,6 +386,37 @@ def get_material_properties_of_CT_model(
                 property_value[0]
             )
 
+    return material_properties
+
+
+def material_properties_of_process(
+    mesh: pv.UnstructuredGrid, process: str
+) -> defaultdict:
+    """
+    Material properties of the mesh.
+    :return: Dictionary with properties and the corresponding value for each material.
+    """
+    if "Steady state diffusion" in process or "Liquid flow" in process:
+        material_properties = get_material_properties_of_H_model(mesh)
+    elif "Hydro thermal" in process:
+        material_properties = get_material_properties_of_HT_model(mesh)
+    elif "Component transport" in process:
+        material_properties = get_material_properties_of_CT_model(mesh)
+    else:
+        # For later functions of the converter, material properties are needed.
+        # For this reason, a defaultdict is returned with no material properties in
+        # this case.
+        # ToDo: return a dict of all possible material properties with a warning!
+        material_properties = defaultdict(str)
+        material_properties["undefined"] = (
+            f"Material properties are only saved on the mesh for this process: '{process}'",
+        )
+        logger.warning(
+            (
+                "Material properties are not supported (at the moment) in a model using such a process:",
+                process,
+            )
+        )
     return material_properties
 
 
