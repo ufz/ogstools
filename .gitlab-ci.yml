@@ -245,10 +245,12 @@ tests (mac - pip) [R]:
   - make setup_devcontainer
   - source .venv-devcontainer/bin/activate
   - make docs SPHINXOPTS="-W --keep-going -n -j 4"
+  - make indexdocs
   - mv docs/_build/html public
 
 docs preview [R]:
   stage: test
+  needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:

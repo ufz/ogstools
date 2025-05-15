@@ -82,6 +82,9 @@ cleandocs:  ## Cleans up temporary documentation files
 	rm -r docs/auto_user-guide
 	rm -r docs/reference/*.rst
 
+indexdocs:  ## Creates the pagefind index
+	python3 -m pagefind --site "docs/_build/html"
+
 preview:  ## Runs an auto-updating web server for the documentation
 	make docs
 	python docs/server.py

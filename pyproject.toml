@@ -221,6 +221,7 @@ docs = [
   "sphinxcontrib-programoutput",
   "snowballstemmer<3.0.0",
   "trame-vtk>=2.6.0",
+  "pagefind[extended]",
 ]
 feflow = [
   "ifm_contrib>=0.2.4",
