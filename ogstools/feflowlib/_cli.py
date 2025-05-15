@@ -96,8 +96,8 @@ def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
             "The conversion of the bulk mesh was successful.",
         )
         return 0
-    for path, boundary_mesh in feflow_model.subdomains.items():
-        boundary_mesh.save(path)
+    for name, boundary_mesh in feflow_model.subdomains.items():
+        boundary_mesh.save(feflow_model.mesh_path.parent / (name + ".vtu"))
 
     logger.info(
         "Boundary conditions have been written to separate mesh vtu-files."
