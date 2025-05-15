@@ -347,7 +347,9 @@ def _deactivate_cells(mesh: pv.UnstructuredGrid) -> int:
     if len(inactive_cells[0]) == 0:
         return_int = 0
     else:
-        mesh.cell_data["MaterialIDs"][inactive_cells] *= -1
+        mesh.cell_data["MaterialIDs"][inactive_cells] = -(
+            mesh.cell_data["MaterialIDs"][inactive_cells] + 1
+        )
         return_int = 1
         log.info(
             "There are inactive cells in FEFLOW, which are assigned to a MaterialID multiplied by -1 in the converted bulk mesh."
