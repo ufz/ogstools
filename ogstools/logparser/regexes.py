@@ -459,6 +459,10 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             CouplingIterationEnd,
         ),
         (
+            r"info: \[time\] Simulation completed. It took ([\d\.e+-]+) s",
+            SimulationExecutionTime,
+        ),
+        (
             r"info: OGS completed on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTime,
         ),
