@@ -238,9 +238,12 @@ class MeshSeries(Sequence[Mesh]):
     def __getitem__(self, index: str) -> np.ndarray: ...
 
     def __getitem__(self, index: Any) -> Any:
-        if isinstance(index, int):
+        if isinstance(
+            index,
+            int | np.unsignedinteger | np.signedinteger,
+        ):
             return self.mesh(index)
-        if isinstance(index, str):
+        if isinstance(index, str):  # type: ignore[unreachable]
             return self.values(index)
         if isinstance(index, slice | Sequence):
             ms_copy = self.copy(deep=False)
@@ -249,7 +252,12 @@ class MeshSeries(Sequence[Mesh]):
             else:
                 ms_copy._time_indices += [index]
             return ms_copy
-        raise ValueError
+        msg = (
+            "Index type not supported.\n "
+            "It has to be one of following: "
+            "int, np.int, str, slice or sequence."
+        )
+        raise ValueError(msg)
 
     def __len__(self) -> int:
         return len(self.timesteps)
