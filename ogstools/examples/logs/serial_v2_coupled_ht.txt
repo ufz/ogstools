@@ -1,0 +1,116 @@
+info: OGS started on 2025-05-20 16:05:01+0200 in serial mode.
+info: This is OpenGeoSys-6 version xsd_base-223-gce913084. Log version: 2, Log level: info.
+warning: OMP_NUM_THREADS is not set, falling back to: 8
+info: Eigen use 8 threads
+info: Reading project file ../../s/Tests/Data/Parabolic/HT/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj.
+info: readRasters ...
+info: readRasters done
+info: ConstantParameter: T0
+info: ConstantParameter: P0
+info: ConstantParameter: p_left
+info: ConstantParameter: p_right
+info: ConstantParameter: T_left
+info: No source terms for process variable 'temperature' found.
+info: No source terms for process variable 'pressure' found.
+warning: Request for output at times 50000, 500000, 5000000, but simulation's end time is 2000. Output will be skipped.
+warning: Did not find interval for fixed output time 500000
+warning: Did not find interval for fixed output time 5000000
+info: Initialize processes.
+info: Time step #0 started. Time: 0. Step size: 0.
+info: [time] Output of timestep 0 took 0.00227911 s.
+info: Time step #0 took 0.0024192 s.
+info: Solve processes.
+info: Time step #1 started. Time: 1000. Step size: 1000.
+info: Solving process #0 started.
+info: Iteration #1 started.
+info: [time] Assembly took 0.00110181 s.
+info: [time] Applying Dirichlet BCs took 0.000103044 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 8.257238e-35
+
+info: [time] Linear solver took 0.000479192 s.
+info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=2.6647e+00, |dx|/|x|=1.0000e+00
+info: Convergence criterion, component 1: |dx|=7.3496e+03, |x|=1.2712e+06, |dx|/|x|=5.7815e-03
+info: [time] Iteration #1 took 0.00176327 s.
+info: Iteration #2 started.
+info: [time] Assembly took 0.000391785 s.
+info: [time] Applying Dirichlet BCs took 3.3044e-05 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 4.840934e-32
+
+info: [time] Linear solver took 0.000315119 s.
+info: Convergence criterion, component 0: |dx|=1.3244e+00, |x|=2.0490e+00, |dx|/|x|=6.4637e-01
+info: Convergence criterion, component 1: |dx|=1.3534e-09, |x|=1.2712e+06, |dx|/|x|=1.0646e-15
+info: [time] Iteration #2 took 0.000827907 s.
+info: Iteration #3 started.
+info: [time] Assembly took 0.000449851 s.
+info: [time] Applying Dirichlet BCs took 3.1769e-05 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 5.740835e-45
+
+info: [time] Linear solver took 0.000320211 s.
+info: Convergence criterion, component 0: |dx|=1.2383e-13, |x|=2.0490e+00, |dx|/|x|=6.0435e-14
+info: Convergence criterion, component 1: |dx|=7.4840e-10, |x|=1.2712e+06, |dx|/|x|=5.8871e-16
+info: [time] Iteration #3 took 0.000849379 s.
+info: [time] Solving process #0 took 0.0034883 s in time step #1
+info: [time] Time step #1 took 0.00351637 s.
+info: Time step #2 started. Time: 2000. Step size: 1000.
+info: Solving process #0 started.
+info: Iteration #1 started.
+info: [time] Assembly took 0.000368178 s.
+info: [time] Applying Dirichlet BCs took 4.6521e-05 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 1.073860e-32
+
+info: [time] Linear solver took 0.000314994 s.
+info: Convergence criterion, component 0: |dx|=6.0324e-01, |x|=2.2555e+00, |dx|/|x|=2.6745e-01
+info: Convergence criterion, component 1: |dx|=2.8081e-09, |x|=1.2712e+06, |dx|/|x|=2.2089e-15
+info: [time] Iteration #1 took 0.000790096 s.
+info: Iteration #2 started.
+info: [time] Assembly took 0.000356263 s.
+info: [time] Applying Dirichlet BCs took 2.5983e-05 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen iterative linear solver BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 1.714484e-44
+
+info: [time] Linear solver took 0.00029799 s.
+info: Convergence criterion, component 0: |dx|=7.5229e-13, |x|=2.2555e+00, |dx|/|x|=3.3353e-13
+info: Convergence criterion, component 1: |dx|=3.1843e-09, |x|=1.2712e+06, |dx|/|x|=2.5049e-15
+info: [time] Iteration #2 took 0.00072026 s.
+info: [time] Solving process #0 took 0.0015264 s in time step #2
+info: [time] Time step #2 took 0.00153939 s.
+info: The whole computation of the time stepping took 2 steps, in which
+	 the accepted steps are 2, and the rejected steps are 0.
+
+info: [time] Output of timestep 2 took 0.00175284 s.
+info: [time] Simulation completed. It took 0.0132152 s.
+info: OGS completed on 2025-05-20 16:05:01+0200.
