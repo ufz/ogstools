@@ -10,20 +10,32 @@
 #              http://www.opengeosys.org/project/license
 
 import re
+from dataclasses import asdict
 from pathlib import Path
+from queue import Empty, Queue
 from typing import Any
 
-from ogstools.logparser.regexes import Log, MPIProcess, ogs_regexes
+from ogstools.logparser.regexes import (
+    Context,
+    Log,
+    MPIProcess,
+    NoRankOutput,
+    Termination,
+)
 
 
 def _try_match_line(
-    line: str, line_nr: int, regex: re.Pattern, log_type: type[Log], mpi: bool
+    line: str,
+    line_nr: int,
+    regex: re.Pattern,
+    log_type: type[Log],
+    fill_mpi: bool,
 ) -> Any | None:
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = log_type.type_str()
         types = (str, int, int) + tuple(log_type.__annotations__.values())
-        optional_mpi_id = () if mpi else (0,)
+        optional_mpi_id = (0,) if fill_mpi else ()
         match_with_line = (ts, line_nr) + optional_mpi_id + match.groups()
         return [
             ctor(s) for ctor, s in zip(types, match_with_line, strict=False)
@@ -31,7 +43,7 @@ def _try_match_line(
     return None
 
 
-def mpi_processes(file_name: str | Path) -> int:
+def read_mpi_processes(file_name: str | Path) -> int:
     """
     Counts the number of MPI processes started by OpenGeoSys-6 by detecting
     specific log entries in a given file. It assumes that each MPI process
@@ -45,8 +57,7 @@ def mpi_processes(file_name: str | Path) -> int:
 
     """
     occurrences = 0
-    if isinstance(file_name, str):
-        file_name = Path(file_name)
+    file_name = Path(file_name)
     with file_name.open() as file:
         lines = iter(file)
         # There is no synchronisation barrier between both info, we count both and divide
@@ -58,11 +69,84 @@ def mpi_processes(file_name: str | Path) -> int:
         return int(occurrences / 2)
 
 
+def normalize_regex(
+    ogs_res: list,
+    parallel_log: bool = False,
+) -> list:
+    """
+    Takes regex patterns for serial computation and modify them for parallel
+    Parallel log lines are prepended with the process id, e.g. [0] or [1]
+    """
+
+    patterns = []
+    for regex, log_type in ogs_res:
+        mpi_condition = (
+            parallel_log
+            and issubclass(log_type, MPIProcess)
+            and not issubclass(log_type, NoRankOutput)
+        )
+        mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
+        patterns.append((re.compile(mpi_process_regex + regex), log_type))
+    return patterns
+
+
+def simple_consumer(queue: Queue) -> None:
+    print("[Consumer] Started")
+    try:
+        while True:
+            try:
+                item = queue.get(timeout=1)  # wait for a log item
+                print(f"[Consumer] → {item}")
+            except Empty:
+                continue  # no data yet, just keep looping
+    except KeyboardInterrupt:
+        print("[Consumer] Interrupted, exiting...")
+
+
+def parse_line(
+    patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
+) -> Log | Termination | None:
+
+    for regex, log_type in patterns:
+        has_mpi_process = parallel_log and issubclass(log_type, MPIProcess)
+        fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
+        if r := _try_match_line(
+            line,
+            number_of_lines_read,  # ToDo should not be here
+            regex,
+            log_type,
+            fill_mpi=fill_mpi,
+        ):
+            return log_type(*r)
+    return None
+
+
+def read_version(file: Path) -> int:
+    """
+    Read the version of the OGS log file.
+
+    :param file: Path to the OGS log file.
+
+    :returns: The version number as an integer.
+    """
+    with file.open() as f:
+        for line in f:
+            match = re.search(r"Log version: (\d+)", line)
+            if match:
+                return int(match.group(1))
+            if (
+                "This is OpenGeoSys-6 version " in line
+                and "Log version" not in line
+            ):
+                return 1
+    print("Log version could not be deduced. Please specify it.")
+    return 1
+
+
 def parse_file(
     file_name: str | Path,
     maximum_lines: int | None = None,
     force_parallel: bool = False,
-    ogs_res: list | None = None,
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,
@@ -79,18 +163,13 @@ def parse_file(
              The exact type and structure of these records depend on the regex
              patterns and their associated processing functions.
     """
-    if isinstance(file_name, str):
-        file_name = Path(file_name)
-    file_name = Path(file_name)
-    parallel_log = force_parallel or mpi_processes(file_name) > 1
 
-    if ogs_res is None:
-        ogs_res = ogs_regexes()
-    patterns = []
-    for regex, log_type in ogs_res:
-        mpi_condition = parallel_log and issubclass(log_type, MPIProcess)
-        mpi_process_regex = "\\[(\\d+)\\]\\ " if mpi_condition else ""
-        patterns.append((re.compile(mpi_process_regex + regex), log_type))
+    context = Context()
+    file_name = Path(file_name)
+
+    parallel_log = force_parallel or read_mpi_processes(file_name) > 1
+    version = read_version(file_name)
+    patterns = normalize_regex(select_regex(version), parallel_log)
 
     number_of_lines_read = 0
     with file_name.open() as file:
@@ -104,12 +183,44 @@ def parse_file(
             ):
                 break
 
-            for regex, log_type in patterns:
-                mpi_line = parallel_log and issubclass(log_type, MPIProcess)
-                if r := _try_match_line(
-                    line, number_of_lines_read, regex, log_type, mpi_line
-                ):
-                    records.append(log_type(*r))
-                    break
+            entry = parse_line(
+                patterns, line, parallel_log, number_of_lines_read
+            )
+
+            if entry:
+
+                if version == 2:  # version one need to call ogs_context
+                    # here adding context right away
+                    if not isinstance(entry, Termination):
+                        valid_log: Log = entry
+                        context.update(valid_log)
+                        entry_d = asdict(valid_log)
+                        context_d = asdict(context)
+                        fields_of_interest = valid_log.context_filter()
+                        filtered_context = {
+                            k: v
+                            for k, v in context_d.items()
+                            if k in fields_of_interest
+                        }
+                        records.append(entry_d | filtered_context)
+                    elif isinstance(entry, Termination):
+                        records.append(entry_d)
+                else:
+                    valid_entry: Log = entry  # type: ignore[assignment]
+                    records.append(asdict(valid_entry))
 
     return records
+
+
+def select_regex(version: int) -> list[tuple[str, type[Log]]]:
+    if version == 1:
+        from ogstools.logparser.regexes import ogs_regexes
+
+        return ogs_regexes()
+    if version == 2:
+        from ogstools.logparser.regexes import new_regexes
+
+        return new_regexes()
+
+    msg = f"Not supported log version (got: {version})"
+    raise ValueError(msg)
