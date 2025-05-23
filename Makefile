@@ -110,8 +110,8 @@ requirement:
 	echo "Creating virtual environment in $$venv_dir"; \
 	python -m venv $$venv_dir; \
 	echo "Activating virtual environment and installing packages"; \
-	. $$venv_dir/bin/activate && pip install . && pip freeze -l > requirements/requirements_py$$version.txt && \
+	. $$venv_dir/bin/activate && pip install .[ogs] && pip freeze -l > requirements/requirements_py$$version.txt && \
 	echo "Activating virtual environment and installing packages"; \
-	. $$venv_dir/bin/activate && pip install .[dev,tests,doc] && pip freeze -l > requirements/requirements_allextras_py$$version.txt && \
+	. $$venv_dir/bin/activate && pip install .[dev,tests,doc,ogs] && pip freeze -l > requirements/requirements_allextras_py$$version.txt && \
 	echo "Deleting virtual environment"; \
 	rm -r $$venv_dir
