@@ -1,8 +1,8 @@
 '''
 read VM's fortran results (3D) and add interpolations (w_c) to cells of a given mesh
 
-runfile('/home/dominik/projects/python/vm_data/src/appendCellData.py',
-        wdir='/home/dominik/projects/python/vm_data/src',
+runfile('/home/Dominik Kern/projects/python/vm_data/src/appendCellData.py',
+        wdir='/home/Dominik Kern/projects/python/vm_data/src',
         args='ys11_normal_domain_volume_only.vtu ys11_normal_domain_appended_cell_data.vtu')
 
 '''

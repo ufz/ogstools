@@ -1,3 +1,10 @@
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
+
 import ogstools as ot
 
 prj = ot.Project(output_file="thm_test.prj", OMP_NUM_THREADS=4)

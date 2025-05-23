@@ -1,3 +1,10 @@
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
+
 # mesh two connected unit cubes with different elements:
 # tetra, pyramid, wedge (vtu name "wedge" in gmsh named "prism")
 # tetra10, pyramid14 (pyramid13 fails, meshio bug?), wedge18 (wedge 15)

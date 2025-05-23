@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """
 Created on Thu Sep 23 10:22:22 2021
 
-@author: dominik
+@author: Dominik Kern
 
 This script is derived from the gmsh-demo   terrain_stl.py
 Requirements: relief.stl (possibly converted from relief.grd)
