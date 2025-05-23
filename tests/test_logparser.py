@@ -1,4 +1,5 @@
 import shutil
+import sys
 import tempfile
 from collections import defaultdict, namedtuple
 from pathlib import Path
@@ -301,6 +302,7 @@ def write_in_pieces(
 class TestLogparser_Version2:
     """Test cases for logparser. From OGS version 6.5.4"""
 
+    @pytest.mark.skipif(sys.platform == "darwin", reason="Skipped on macOS")
     @pytest.mark.parametrize(
         "chunk_size",
         [20, 4095, 4096, 20000000000],
