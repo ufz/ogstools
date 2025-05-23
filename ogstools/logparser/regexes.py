@@ -118,9 +118,6 @@ class Context:
         if isinstance(x, SimulationEndTime):
             self.simulation_status = StepStatus.FINISHED  # ToDo
         if isinstance(x, TimeStepStart):
-            assert (
-                not self.time_step or x.time_step > self.time_step
-            ), "Time step not increasing"
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
         if isinstance(x, TimeStepEnd):
