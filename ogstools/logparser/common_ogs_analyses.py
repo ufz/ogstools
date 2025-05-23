@@ -181,7 +181,7 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     interest = ["iteration_number"]
     context = ["time_step"]
     _check_input(df, interest, context)
-    pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc=np.max)
+    pt = df.pivot_table(["iteration_number"], ["time_step"], aggfunc="max")
     _check_output(pt, interest, context)
     return pt
 
@@ -272,8 +272,49 @@ def analysis_simulation_termination(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+def _types(df_raw_log: pd.DataFrame) -> pd.DataFrame:
+    int_columns = [
+        "line",
+        "mpi_process",
+        "time_step",
+        "iteration_number",
+        "coupling_iteration",
+        "coupling_iteration_process",
+        "component",
+        "process",
+    ]
+
+    for column in df_raw_log.columns:
+        if column in int_columns:
+            try:
+                df_raw_log[column] = df_raw_log[column].astype("Int64")
+            except ValueError:
+                print(
+                    f"Could not convert column '{column}' to integer due to value error"
+                )
+            except TypeError:
+                print(
+                    f"Could not convert column '{column}' to integer due to type error"
+                )
+    return df_raw_log
+
+
+def fill(df_raw_log: pd.DataFrame) -> pd.DataFrame:
+    df_raw_log = _types(df_raw_log)
+    df_raw_log["time_step"] = (
+        df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
+    )
+
+    df_raw_log["process"] = (
+        df_raw_log.groupby("mpi_process")[["process"]].ffill().fillna(value=0)
+    )
+
+    return df_raw_log
+
+
 def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     """
+    Only needed for logs of Version 1.
     Fill missing values in OpenGeoSys (OGS) log DataFrame by context.
     This function fills missing values in an OpenGeoSys (OGS) log DataFrame by context.
 
@@ -296,28 +337,7 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     ToDo list of columns with integer values are known from regular expression
 
     """
-    int_columns = [
-        "line",
-        "mpi_process",
-        "time_step",
-        "iteration_number",
-        "coupling_iteration",
-        "coupling_iteration_process",
-        "component",
-        "process",
-    ]
-    for column in df_raw_log.columns:
-        if column in int_columns:
-            try:
-                df_raw_log[column] = df_raw_log[column].astype("Int64")
-            except ValueError:
-                print(
-                    f"Could not convert column '{column}' to integer due to value error"
-                )
-            except TypeError:
-                print(
-                    f"Could not convert column '{column}' to integer due to type error"
-                )
+    df_raw_log = _types(df_raw_log)
 
     df_raw_log["time_step"] = (
         df_raw_log.groupby("mpi_process")[["time_step"]].ffill().fillna(value=0)
@@ -331,7 +351,7 @@ def fill_ogs_context(df_raw_log: pd.DataFrame) -> pd.DataFrame:
     if "component" in df_raw_log:
         df_raw_log["component"] = df_raw_log.groupby("mpi_process")[
             ["component"]
-        ].fillna(value=-1)
+        ].transform(lambda x: x.fillna(-1))
     # Forward fill because process will be printed in the beginning - applied to all subsequent
     if "process" in df_raw_log:
         df_raw_log["process"] = df_raw_log.groupby("mpi_process")[

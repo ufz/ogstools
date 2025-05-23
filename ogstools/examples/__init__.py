@@ -126,6 +126,8 @@ serial_critical = _logs_dir / "serial_critical.txt"
 serial_info = _logs_dir / "serial_info.txt"
 serial_time_step_rejected = _logs_dir / "serial_time_step_rejected.txt"
 serial_warning_only = _logs_dir / "serial_warning_only.txt"
+serial_v2_coupled_ht = _logs_dir / "serial_v2_coupled_ht.txt"
+serial_v2_staggered_ht = _logs_dir / "serial_v2_staggered_ht.txt"
 
 ##
 

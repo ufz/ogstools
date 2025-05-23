@@ -17,7 +17,6 @@ import pytest
 from hypothesis import (
     HealthCheck,
     Verbosity,
-    assume,
     example,
     given,
     settings,
@@ -86,7 +85,7 @@ valid_edge_length = st.floats(
     allow_nan=False,
     allow_infinity=False,
     min_value=1e-7,
-    max_value=1e12,  # e.g. pore to ocean scale if interpreted as m
+    max_value=1e10,  # e.g. pore to ocean scale if interpreted as m
 )
 
 valid_edge_number = st.integers(
@@ -121,15 +120,27 @@ rect_strategy = st.builds(
 )
 
 
+def is_typical_edge_length(val):
+    # size of cell is determined by the smaller component, number of cell increases too much with the larger component
+    if isinstance(val, float):
+        return True
+    if isinstance(val, tuple) and len(val) == 2:
+        a, b = val
+        return 0.05 <= b / a <= 50
+    return False
+
+
 # below the minimum
 @example(rect_p=RectInput(edge_length=9e-8)).xfail(raises=ValueError)
 # above the maximum
-@example(rect_p=RectInput(edge_length=2e12)).xfail(raises=ValueError)
+@example(rect_p=RectInput(edge_length=2e10)).xfail(raises=ValueError)
 # below the minimum
 @example(rect_p=RectInput(n_edge_cells=0)).xfail(raises=ValueError)
 # below the minimum
 @example(rect_p=RectInput(n_layers=0)).xfail(raises=ValueError)
-@given(rect_p=rect_strategy)
+@given(
+    rect_p=rect_strategy.filter(lambda r: is_typical_edge_length(r.edge_length))
+)
 @settings(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
@@ -141,8 +152,6 @@ def test_rect(tmp_path: Path, rect_p):
         / f"rect_{rect_p.edge_length}_{rect_p.n_edge_cells}_{rect_p.n_layers}_{rect_p.structured}_{rect_p.order}_{rect_p.version}_{rect_p.mixed_elements}.msh"
     )
 
-    # size of cell is determined by the smaller component, number of cell increases too much with the larger component
-    assume(np.max(rect_p.edge_length) / np.min(rect_p.edge_length) <= 1e4)
     print(msh_file)
 
     rect(

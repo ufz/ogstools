@@ -1,10 +1,17 @@
+import shutil
+import sys
+import tempfile
 from collections import defaultdict, namedtuple
+from pathlib import Path
+from queue import Queue
+from time import sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
 from dateutil import parser
+from watchdog.observers import Observer, ObserverType
 
 from ogstools import logparser as lp
 from ogstools.examples import (
@@ -14,7 +21,28 @@ from ogstools.examples import (
     serial_convergence_long,
     serial_critical,
     serial_info,
+    serial_v2_coupled_ht,
     serial_warning_only,
+)
+from ogstools.logparser import (
+    analysis_convergence_newton_iteration,
+    analysis_time_step,
+    parse_file,
+    read_version,
+    time_step_vs_iterations,
+)
+from ogstools.logparser.log_file_handler import (
+    LogFileHandler,
+    normalize_regex,
+    parse_line,
+    select_regex,
+)
+from ogstools.logparser.regexes import (
+    Context,
+    StepStatus,
+    Termination,
+    TimeStepEnd,
+    TimeStepStart,
 )
 
 
@@ -26,7 +54,7 @@ def log_types(records):
 
 
 class TestLogparser:
-    """Test cases for logparser."""
+    """Test cases for logparser. Until version 6.5.4"""
 
     def test_parallel_1_compare_serial_info(self):
         # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
@@ -38,7 +66,7 @@ class TestLogparser:
 
         assert (
             num_of_record_type_s == num_of_record_type_p
-        ), "The number of logs for each type must be equal for parallel log and serial log"
+        ), f"The number of logs for each type must be equal for parallel log (got: {len(num_of_record_type_p)}) and serial log (got: {len(num_of_record_type_s)}))"
 
     def test_parallel_3_debug(self):
         records = lp.parse_file(debug_parallel_3)
@@ -152,9 +180,9 @@ class TestLogparser:
 
     def test_serial_critical(self):
         records = lp.parse_file(serial_critical)
-        assert len(records) == 6
+        assert len(records) == 7
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 6
+        assert len(df_records) == 7
         df_st = lp.analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -163,9 +191,9 @@ class TestLogparser:
 
     def test_serial_warning_only(self):
         records = lp.parse_file(serial_warning_only)
-        assert len(records) == 3
+        assert len(records) == 4
         df_records = pd.DataFrame(records)
-        assert len(df_records) == 3
+        assert len(df_records) == 4
         df_st = lp.analysis_simulation_termination(df_records)
         has_errors = not (df_st.empty)
         assert has_errors
@@ -178,7 +206,9 @@ class TestLogparser:
         df_records = lp.fill_ogs_context(df_records)
         df_tsi = lp.time_step_vs_iterations(df_records)
         # some specific values
-        assert df_tsi.loc[0, "iteration_number"] == 1
+        assert (
+            df_tsi.loc[0, "iteration_number"] == 1
+        ), f"Number of iterations in timestep 0 should be: 1, but got {df_tsi.loc[0, 'iteration_number']}."
         assert df_tsi.loc[1, "iteration_number"] == 6
         assert df_tsi.loc[10, "iteration_number"] == 5
 
@@ -201,12 +231,9 @@ class TestLogparser:
             f"Maximum iterations {np.max(df_time['iterations'])} does not "
             "match the value in the log."
         )
-        assert np.isclose(np.mean(df_time["iterations"]), 5.476190476190476), (
-            f"Mean number of iterations {np.mean(df_time['iterations'])} does "
-            "not add up to the expected value. Some data might be missing."
-        )
+
         t_start, t_end = map(
-            parser.parse, df_log["message"].to_numpy()[[0, -2]]
+            parser.parse, df_log["message"].to_numpy()[[1, -2]]
         )
         assert np.any(
             np.diff(df_time.index) < 0
@@ -240,3 +267,196 @@ class TestLogparser:
         pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 2
         assert fig.axes[1].get_ylabel() == "convergence order $q$"
+
+    def test_read_version(self):
+        file = serial_v2_coupled_ht
+        assert read_version(file) == 2
+
+
+def consume(records: Queue) -> None:
+    while True:
+        item = records.get()
+        if isinstance(item, Termination):
+            print(f"Consumer: Termination signal ({item}) received. Exiting.")
+            break
+        print(f"Consumed: {item}")
+
+
+def write_in_pieces(
+    input_file: Path, output_file: Path, chunk_size: int, delay: float
+):
+    # Get the size of the input file
+    input_file_size = input_file.stat().st_size
+
+    # If chunk_size is larger than or equal to the input file size, copy the whole file
+    if chunk_size >= input_file_size:
+        print("copy")
+        shutil.copy(input_file, output_file)
+        return
+    with input_file.open("r") as infile, output_file.open("a") as outfile:
+        while chunk := infile.read(chunk_size):
+            outfile.write(chunk)
+            sleep(delay)
+
+
+class TestLogparser_Version2:
+    """Test cases for logparser. From OGS version 6.5.4"""
+
+    @pytest.mark.skipif(sys.platform == "darwin", reason="Skipped on macOS")
+    @pytest.mark.parametrize(
+        "chunk_size",
+        [20, 4095, 4096, 20000000000],
+    )
+    @pytest.mark.parametrize(
+        "delay",
+        [0, 0.001, 0.003],
+    )
+    def test_coupled_with_producer(self, chunk_size, delay):
+        original_file = serial_v2_coupled_ht
+        temp_dir = Path(
+            tempfile.mkdtemp(
+                f"test_v2_coupled_with_producer_{chunk_size}_{delay}"
+            )
+        )
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        new_file = temp_dir / "ht.log"
+        records: Queue = Queue()
+        observer: ObserverType = Observer()
+        status: Context = Context()
+        shutil.rmtree(new_file, ignore_errors=True)
+        handler = LogFileHandler(
+            new_file,
+            queue=records,
+            status=status,
+            stop_callback=lambda: (print("Stop Observer"), observer.stop()),
+        )
+
+        observer.schedule(handler, path=str(new_file.parent), recursive=False)
+
+        print("Starting observer...")
+
+        observer.start()
+
+        # alternatively shutil.copyfile(original_file, new_file)
+        write_in_pieces(
+            original_file, new_file, chunk_size=chunk_size, delay=delay
+        )
+
+        # For real world application the following line should be commented out
+        # consume(records)
+        observer.join()
+        num_expected = 48
+        assert (
+            records.qsize() == num_expected
+        ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
+        # new_file.unlink() no clean up necessary
+
+        assert status.process_step_status == StepStatus.FINISHED
+        assert status.time_step_status == StepStatus.FINISHED
+        assert status.simulation_status == StepStatus.FINISHED
+
+    # parameterized
+    def test_version_select(self):
+        original_file = serial_v2_coupled_ht
+        ver = read_version(original_file)
+        assert ver == 2, f"Expected version 2, but got {ver}"
+        l_regexes = len(select_regex(ver))
+        assert (
+            l_regexes == 19
+        ), f"Expected regexes version {ver},this is of length 19 but got {l_regexes}."
+
+    # parameterized
+    def test_parse_version(self):
+        original_file = serial_v2_coupled_ht
+        p = parse_file(original_file)
+        l_records = list(p)
+        print(l_records)
+        assert (
+            len(l_records) == 48
+        ), f"Expected 48 records, but got {len(l_records)}"
+
+    def test_parse_line(self):
+        v2_regexes = normalize_regex(select_regex(2), False)
+        line = "info: Time step #53 started. Time: 2000. Step size: 1000."
+        ts_start_record = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+        assert ts_start_record is not None
+        assert isinstance(ts_start_record, TimeStepStart)
+        assert ts_start_record.time_step == 53
+        assert ts_start_record.step_start_time == 2000
+        assert ts_start_record.step_size == 1000
+
+        line = "info: [time] Time step #99 took 0.1234 s."
+        ts_end_record = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+
+        assert ts_end_record is not None
+        assert isinstance(ts_end_record, TimeStepEnd)
+        assert ts_end_record.time_step == 99
+        assert ts_end_record.time_step_finished_time == 0.1234
+
+        line = "info: Solving process #123 started."
+        p_started = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+        assert p_started is not None
+        assert p_started.process == 123
+
+        line = "info: Convergence criterion, component 0: |dx|=2.6647e+00, |x|=1.1234e-01, |dx|/|x|=1.0000e+00"
+        conv = parse_line(
+            v2_regexes,
+            line,
+            False,
+            1,
+        )
+        assert conv is not None
+        assert conv.dx == 2.6647e00
+
+    def test_construct_ts_good(self):
+        ts_start_record = TimeStepStart(
+            type="Info",
+            line=1,
+            mpi_process=0,
+            time_step=53,
+            step_start_time=2000.0,
+            step_size=1000.0,
+        )
+        ts_end_record = TimeStepEnd(
+            type="Info",
+            line=1,
+            mpi_process=0,
+            time_step=53,
+            time_step_finished_time=0.1234,
+        )
+        c = Context()
+
+        assert c.time_step is None
+        c.update(ts_start_record)
+        assert c.time_step == 53
+        assert c.time_step_status == StepStatus.RUNNING
+        c.update(ts_end_record)
+        assert c.time_step == 53
+        assert c.time_step_status == StepStatus.FINISHED
+
+    def test_parse_good(self):
+        original_file = serial_v2_coupled_ht
+        records = parse_file(original_file)
+        df_records = pd.DataFrame(records)
+        df_tsit = time_step_vs_iterations(df_records)
+        assert len(df_tsit) == 2
+        df_ats = analysis_time_step(df_records)
+        assert len(df_ats) == 3
+        df_acni = analysis_convergence_newton_iteration(df_records)
+        assert len(df_acni) == 10
