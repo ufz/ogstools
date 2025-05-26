@@ -1,4 +1,5 @@
 import re
+import shutil
 import tempfile
 from itertools import pairwise
 from pathlib import Path
@@ -45,6 +46,9 @@ class TestLayer:
         ), "Expected 1 top + 1 bottom + 1 intermediate = 3 surfaces to be created."
         assert all(Path(subraster).exists() for subraster in all_subrasters)
 
+    @pytest.mark.xfail(
+        shutil.which("tetgen") is None, reason="Tetgen not installed"
+    )
     def test_plane_surfaces(self):
         """
         Create a layer from pyvista input
