@@ -33,7 +33,7 @@ cache:
 .conda-setup-activate: &conda-setup-activate
   - conda --version
   - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
-  - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} font-ttf-dejavu-sans-mono -c conda-forge
+  - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} font-ttf-dejavu-sans-mono tetgen -c conda-forge
   - conda activate $CONDA_ENV_NAME
 
 .pip-install-ogs-latest: &pip-install-ogs-latest
