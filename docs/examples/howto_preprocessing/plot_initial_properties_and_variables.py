@@ -84,8 +84,34 @@ p0 = np.where(mat_ids.astype(int) == 0, -1.2e8, -1e6 * mesh.points[:, 1])
 # saved to disc using pyvista/meshio.
 mesh.point_data.set_array(p0, "initial_pressure")
 
+# %%
+# It is important to note that at the interface we have to deal with the
+# ambiguity of setting initial pressures / material data. Therefore, it might
+# be useful to have an alternative approach to set the initial pressures.
+# In the following we assume that all nodes connected to bentonite cells
+# have bentonite pressure:
+
+p0_new = np.zeros(len(mesh.points))
+mat_ids = mesh.cell_data.get_array("MaterialIDs")
+for i, cell in enumerate(mesh.cell):
+    if mat_ids[i] == 0:
+        for id_ in cell.point_ids:
+            p0_new[id_] = -1.2e8
+    else:
+        for id_ in cell.point_ids:
+            p0_new[id_] = -1e6 * mesh.points[id_, 1]
+# %%
+# reset all bentonite elements:
+for i, cell in enumerate(mesh.cell):
+    if mat_ids[i] == 0:
+        for id_ in cell.point_ids:
+            p0_new[id_] = -1.2e8
+
+mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
 # import pyvista as pv
 #
 # pv.save_meshio("bulk_mesh.vtu", mesh)
 
 fig = mesh.plot_contourf("initial_pressure")
+
+fig = mesh.plot_contourf("initial_pressure_second-variant")
