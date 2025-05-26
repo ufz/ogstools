@@ -31,6 +31,60 @@ from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.msh2vtu._cli import cli
 
 
+def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
+    gmsh.initialize()
+    gmsh.model.add("multiple_groups_per_element_2")
+
+    block = gmsh.model.occ.addRectangle(0, 0, 0, 25, 50)
+    tunnel = gmsh.model.occ.addRectangle(0, 0, 0, 3, 20)
+    gmsh.model.occ.cut([(2, block)], [(2, tunnel)], removeTool=False)
+    gmsh.model.occ.synchronize()
+    gmsh.model.addPhysicalGroup(1, [8, 9], name="left")
+    gmsh.model.addPhysicalGroup(1, [8], name="left_1")
+    gmsh.model.addPhysicalGroup(1, [9], name="left_2")
+    gmsh.model.addPhysicalGroup(1, [5], name="bottom_1")
+    gmsh.model.addPhysicalGroup(1, [12], name="bottom_2")
+    gmsh.model.addPhysicalGroup(1, [5, 12], name="bottom")
+
+    distance = gmsh.model.mesh.field.add("Distance")
+    gmsh.model.mesh.field.setNumbers(distance, "CurvesList", [6, 7])
+    threshold = gmsh.model.mesh.field.add("Threshold")
+    gmsh.model.mesh.field.setNumber(threshold, "IField", distance)
+    gmsh.model.mesh.field.setNumber(threshold, "LcMin", 3 / 12)
+    gmsh.model.mesh.field.setNumber(threshold, "LcMax", 50 / 4)
+    gmsh.model.mesh.field.setNumber(threshold, "DistMin", 3 / 6)
+    gmsh.model.mesh.field.setNumber(threshold, "DistMax", 50)
+    gmsh.model.mesh.field.add("Min", 99)
+    gmsh.model.mesh.field.setNumbers(99, "FieldsList", [threshold])
+    gmsh.model.mesh.field.setAsBackgroundMesh(99)
+    gmsh.model.occ.synchronize()
+    gmsh.model.occ.removeAllDuplicates()
+
+    gmsh.model.mesh.generate(2)
+    msh_file = Path(tmp_path, "multiple_groups_per_element_2.msh")
+    gmsh.write(str(msh_file))
+    # gmsh.fltk.run()
+    gmsh.finalize()
+
+    meshes = meshes_from_gmsh(msh_file)
+    ncells_per_group = {
+        "physical_group_bottom": [19, 6, 13],
+        "physical_group_left": [43, 27, 16],
+    }
+    for group, n_cells in ncells_per_group.items():
+        for index, suffix in enumerate(["", "_1", "_2"]):
+            if group + suffix in meshes:
+                assert n_cells[index] == meshes[group + suffix].n_cells
+    assert meshes["physical_group_bottom_1"].bounds[0] == 0
+    assert meshes["physical_group_bottom_1"].bounds[1] == 3
+    assert meshes["physical_group_bottom_2"].bounds[0] == 3
+    assert meshes["physical_group_bottom_2"].bounds[1] == 25
+    assert meshes["physical_group_left_1"].bounds[2] == 0
+    assert meshes["physical_group_left_1"].bounds[3] == 20
+    assert meshes["physical_group_left_2"].bounds[2] == 20
+    assert meshes["physical_group_left_2"].bounds[3] == 50
+
+
 def test_multiple_groups_per_element(tmp_path: Path):
     """Test correct conversion, if element are assigned to multiple groups."""
     gmsh.initialize()

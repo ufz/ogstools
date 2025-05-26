@@ -13,6 +13,7 @@ from pathlib import Path
 import meshio
 import numpy as np
 import pyvista as pv
+from meshio._vtk_common import meshio_to_vtk_type
 
 from .mesh import Mesh
 
@@ -60,7 +61,7 @@ def meshes_from_gmsh(
     # Workaround: cell_sets is temporary removed from data for from_meshio
     read_cells = mesh.cell_sets.copy()
     mesh.cell_sets = None
-    pv_mesh = pv.from_meshio(mesh).clean()
+    pv_mesh: pv.UnstructuredGrid = pv.from_meshio(mesh).clean()
     mesh.cell_sets = read_cells
 
     # Code without workaround:
@@ -93,7 +94,6 @@ def meshes_from_gmsh(
     meshes["domain"] = domain_mesh
     logger.info("%s: %s", "domain", domain_mesh)
 
-    group_ids = np.unique(pv_mesh["gmsh:physical"])
     for name, (group_index, group_dim) in mesh.field_data.items():
         # skip iteration for domain mesh
         if name == filename.stem:
@@ -106,25 +106,11 @@ def meshes_from_gmsh(
             ).threshold([group_index, group_index], "gmsh:physical")
         # for recent gmsh versions (allows cells belonging to multiple groups)
         else:
-            # Gmsh may store element of the same physical id in different
-            # blocks. To mark all those elements correctly for extraction in the
-            # pyvista mesh, we need to add an offset of the running total of
-            # counted cells, as we don't have these blocks in the pyvista mesh.
-            group_offsets = {index: 0 for index in group_ids}
             group_cells = np.full(pv_mesh.number_of_cells, False)
-            for index, cell_ids in enumerate(mesh.cell_sets[name]):
-                if len(cell_ids) == 0:
-                    continue
-                # assert all in this array are the same
-                group_id = mesh.cell_data["gmsh:physical"][index][0]
-                select = np.argwhere(
-                    (pv_mesh["gmsh:physical"] == group_id)
-                    & (pv_cell_dims == group_dim)
-                )[:, 0]
-                group_cells[select[cell_ids + group_offsets[group_id]]] = True
-                group_offsets[group_id] += len(
-                    mesh.cell_data["gmsh:physical"][index]
-                )
+            for type_name, type_subset in mesh.cell_sets_dict[name].items():
+                celltype = meshio_to_vtk_type[type_name]
+                type_index = np.nonzero(pv_mesh.celltypes == celltype)[0]
+                group_cells[type_index[type_subset]] = True
             subdomain = pv_mesh.extract_cells(group_cells)
 
         # Workaround for gmsh python api bug
