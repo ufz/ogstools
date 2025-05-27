@@ -55,11 +55,11 @@ def rect(
     """
 
     if not all(
-        1e-7 <= length <= 1e10
+        1e-5 <= length <= 1e9
         for length in (lengths if isinstance(lengths, tuple) else (lengths,))
     ):
         # Numerical restriction for gmsh (discovered by testing)
-        msg = f"All lengths must be >= 1e-7 and <= 1e10, got: {lengths}"
+        msg = f"All lengths must be >= 1e-5 and <= 1e9, got: {lengths}"
         raise ValueError(msg)
 
     if not all(
