@@ -23,7 +23,6 @@ cache:
     - .cache
 
 .pip-setup-extra-headless: &pip-setup-extra-headless
-  - pip install --extra-index-url https://wheels.vtk.org --upgrade --force-reinstall vtk-osmesa
   - pip install -i https://gmsh.info/python-packages-dev-nox --upgrade --force-reinstall gmsh
 
 .pip-setup-activate: &pip-setup-activate
