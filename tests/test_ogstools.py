@@ -19,7 +19,7 @@ def get_py_files_missing_keyword(
             if file.endswith(".py"):
                 full_filename_path = folder / Path(root) / file
                 try:
-                    with full_filename_path.open("r") as f:
+                    with full_filename_path.open("r", encoding="utf-8") as f:
                         lines = [f.readline().lower() for _ in range(max_lines)]
                         joined = "".join(lines).strip()
                         if joined == "":
