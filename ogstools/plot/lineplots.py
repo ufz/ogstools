@@ -39,6 +39,18 @@ def _format_ax(
         ax.figure.tight_layout()
 
 
+def _separate_by_empty_cells(
+    mesh: pv.DataSet, *arrays: list[np.ndarray]
+) -> None:
+    mask = mesh.ctp().point_data["vtkGhostType"] != 0
+    if not all(len(mask) == len(arr) for arr in arrays):
+        return
+    # it seems that in doing ctp on PolyLines the direction of points
+    # is inverted or something similar, thus the reverse slicing
+    for array in arrays:
+        array[mask[::-1]] = np.nan
+
+
 def line(
     dataset: pv.DataSet | Sequence[pv.DataSet],
     var1: str | Variable | None = None,
@@ -86,6 +98,7 @@ def line(
     ax_ = plt.subplots(figsize=figsize)[1] if ax is None else ax
 
     mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
+    region_mesh = mesh.connectivity("all")
     x_var, y_var = normalize_vars(var1, var2, mesh)
 
     if isinstance(dataset, Sequence) and "color" not in kwargs:
@@ -100,6 +113,7 @@ def line(
     kwargs.setdefault("linewidth", kwargs.pop("lw", None) or setup.linewidth)
     kwargs["linewidth"] *= lw_scale
     labels = kwargs.pop("labels", kwargs.pop("label", None))
+    loc = kwargs.pop("loc", "best")
 
     if sort and "time" not in [var1, var2]:
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
@@ -108,6 +122,8 @@ def line(
         sort_ids = slice(None)
     x = x_var.transform(dataset)[..., sort_ids]
     y = y_var.transform(dataset)[..., sort_ids]
+    if "vtkGhostType" in mesh.cell_data:
+        _separate_by_empty_cells(mesh, x, y)
     if len(x.shape) < len(y.shape) and x.shape[0] != y.shape[0]:
         y = y.T
     if len(x.shape) > len(y.shape) and x.shape[0] != y.shape[0]:
@@ -117,11 +133,22 @@ def line(
     _format_ax(ax_, x_var, y_var, pure_spatial, kwargs)
     fontsize = kwargs.pop("fontsize", setup.fontsize)
     monospace = kwargs.pop("monospace", False)
-    ax_.plot(x, y, **kwargs)
+    cell_types = np.unique([cell.type for cell in mesh.cell])
+    only_points = (cell_types == [0]) or (cell_types == [1])
+    reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
+    if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
+        ax_.plot(x, y, **kwargs)
+    else:
+        kwargs.setdefault("linestyle", kwargs.pop("ls", "-"))
+        pt_regions = region_mesh.ctp().point_data["RegionId"]
+        for reg_id in reg_ids:
+            idx = pt_regions == reg_id
+            label = kwargs.get("label") if reg_id == reg_ids[0] else None
+            ax_.plot(x[idx], y[idx], **{**kwargs, "label": label})
     if labels:
         prop = {"size": fontsize}
         if monospace:
             prop["family"] = "monospace"
-        ax_.legend(prop=prop)
+        ax_.legend(prop=prop, loc=loc)
     utils.update_font_sizes(axes=ax_, fontsize=fontsize)
     return ax_.figure if ax is None else None
