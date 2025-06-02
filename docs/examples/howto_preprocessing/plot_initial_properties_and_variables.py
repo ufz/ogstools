@@ -91,22 +91,9 @@ mesh.point_data.set_array(p0, "initial_pressure")
 # In the following we assume that all nodes connected to bentonite cells
 # have bentonite pressure:
 
-p0_new = np.zeros(len(mesh.points))
-mat_ids = mesh.cell_data.get_array("MaterialIDs")
-for i, cell in enumerate(mesh.cell):
-    if mat_ids[i] == 0:
-        for id_ in cell.point_ids:
-            p0_new[id_] = -1.2e8
-    else:
-        for id_ in cell.point_ids:
-            p0_new[id_] = -1e6 * mesh.points[id_, 1]
-# %%
-# reset all bentonite elements:
-for i, cell in enumerate(mesh.cell):
-    if mat_ids[i] == 0:
-        for id_ in cell.point_ids:
-            p0_new[id_] = -1.2e8
-
+bentonite = mesh.extract_cells(mesh["MaterialIDs"] == 0)
+p0_new = -1e6 * mesh.points[:, 1]
+p0_new[bentonite["vtkOriginalPointIds"]] = -1.2e8
 mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
 # import pyvista as pv
 #
