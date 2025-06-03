@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="3.0">
+<Domain>
+<Information Name="OGS_VERSION" Value="6.5.5"/>
+<Grid CollectionType="Temporal" GridType="Collection" Name="Collection">
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="0"/>
+
+	<Geometry Origin="" Type="XYZ">
+		<DataItem DataType="Float" Dimensions="4944 3" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/geometry|0 0 0:1 1 1:1 4944 3:2 4944 3</DataItem>
+	</Geometry>
+
+	<Topology Type="Mixed">
+		<DataItem DataType="UInt" Dimensions="62700" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/topology|0 0:1 1:1 62700:2 62700</DataItem>
+	</Topology>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE1" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 4" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE1|0 0 0:1 1 1:1 4944 4:2 4944 4</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE2" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 8" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE2|0 0 0:1 1 1:1 4944 8:2 4944 8</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE3" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 4" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE3|0 0 0:1 1 1:1 4944 4:2 4944 4</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_soil" Type="None">
+		<DataItem DataType="Float" Dimensions="4944" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_soil|0 0:1 1:1 4944:2 4944</DataItem>
+	</Attribute>
+</Grid>
+<Grid Name="Grid" GridType="Uniform">
+    <Time Value="600"/>
+
+	<xi:include xpointer="element(/1/1/2/1/2)"/>
+
+	<xi:include xpointer="element(/1/1/2/1/3)"/>
+
+
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE1" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 4" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE1|1 0 0:1 1 1:1 4944 4:2 4944 4</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE2" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 8" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE2|1 0 0:1 1 1:1 4944 8:2 4944 8</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_BHE3" Type="None">
+		<DataItem DataType="Float" Dimensions="4944 4" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_BHE3|1 0 0:1 1 1:1 4944 4:2 4944 4</DataItem>
+	</Attribute>
+	<Attribute Center="Node" ElementCell="" ElementDegree="0" ElementFamily="" ItemType="" Name="temperature_soil" Type="None">
+		<DataItem DataType="Float" Dimensions="4944" Format="HDF" Precision="8">3bhes.h5:/meshes/3bhes/temperature_soil|1 0:1 1:1 4944:2 4944</DataItem>
+	</Attribute>
+</Grid>
+</Grid>
+</Domain>
+</Xdmf>
