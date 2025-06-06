@@ -1,11 +1,11 @@
 """Unit tests for plotting."""
 
-from functools import partial
 from tempfile import mkstemp
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import pyvista as pv
 from matplotlib.animation import FFMpegWriter
 from matplotlib.animation import ImageMagickWriter as IMWriter
 from pyvista import examples as pv_examples
@@ -14,52 +14,43 @@ import ogstools as ot
 from ogstools import examples
 from ogstools.plot import utils
 
-assert_allclose = partial(
-    np.testing.assert_allclose, rtol=1e-7, atol=1e-100, verbose=True
-)
-
 
 class TestPlotting:
     """Test case for plotting."""
 
     # TODO: Most of these tests only test for no-throw, currently.
 
-    def test_pyvista_offscreen(self):
-        import pyvista as pv
-
-        sphere = pv.Sphere()
+    @pytest.fixture()
+    def pv_plotter(self):
         plotter = pv.Plotter(off_screen=True)
-        plotter.add_mesh(sphere)
-        plotter.screenshot(filename=None)
+        yield plotter
+        plotter.close()
+
+    def test_pyvista_offscreen(self, pv_plotter: pv.Plotter):
+        pv_plotter.add_mesh(pv.Sphere())
+        pv_plotter.screenshot(filename=None)
 
     def test_levels(self):
         """Test levels calculation."""
-        assert_allclose(
-            ot.plot.compute_levels(0.5, 10.1, 10), [0.5, *range(1, 11), 10.1]
-        )
-        assert_allclose(
-            ot.plot.compute_levels(293, 350, 10), [293, *range(295, 355, 5)]
-        )
-        assert_allclose(
-            ot.plot.compute_levels(1e-3, 1.2, 5),
-            [1e-3, *np.arange(0.2, 1.4, 0.2)],
-        )
-        assert_allclose(
-            ot.plot.compute_levels(1e5, 9e6, 20),
-            [1e5, *np.arange(5e5, 9.5e6, 5e5)],
-        )
-        assert_allclose(
-            ot.plot.compute_levels(1, 40, 20), [1, *range(2, 42, 2)]
-        )
-        assert_allclose(ot.plot.compute_levels(0.0, 0.0, 10), [0.0, 0.0])
-        assert_allclose(ot.plot.compute_levels(1e9, 1e9, 10), [1e9, 1e9])
+
+        def assert_allclose(desired: list, *args) -> None:
+            actual = ot.plot.compute_levels(*args)
+            np.testing.assert_allclose(
+                actual, desired, rtol=1e-7, atol=1e-100, verbose=True
+            )
+
+        assert_allclose([0.5, *range(1, 11), 10.1], 0.5, 10.1, 10)
+        assert_allclose([293, *range(295, 355, 5)], 293, 350, 10)
+        assert_allclose([1e-3, *np.arange(0.2, 1.4, 0.2)], 1e-3, 1.2, 5)
+        assert_allclose([1e5, *np.arange(5e5, 9.5e6, 5e5)], 1e5, 9e6, 20)
+        assert_allclose([1, *range(2, 42, 2)], 1, 40, 20)
+        assert_allclose([0.0, 0.0], 0.0, 0.0, 10)
+        assert_allclose([1e9, 1e9], 1e9, 1e9, 10)
 
     def test_ticklabels(self):
         def compare(lower, upper, precision, ref_labels, ref_offset=None):
             labels, offset = ot.plot.contourplots.get_ticklabels(
-                np.asarray(
-                    ot.plot.compute_levels(lower, upper, n_ticks=precision)
-                )
+                ot.plot.compute_levels(lower, upper, n_ticks=precision)
             )
             assert np.all(labels == ref_labels)
             assert offset == ref_offset
@@ -89,9 +80,7 @@ class TestPlotting:
             ["1.1e+05", "4.0e+05", "8.0e+05", "1.2e+06", "1.6e+06", "1.9e+06"],
         )
         compare(
-            *[1e6, 1e6 + 12, 6],
-            ["0", "2", "4", "6", "8", "10", "12"],
-            "1e+06",
+            *[1e6, 1e6 + 12, 6], ["0", "2", "4", "6", "8", "10", "12"], "1e+06"
         )
 
     def test_justified_labels(self):

@@ -123,6 +123,7 @@ def combined_levels(
         all(val.is_integer() for val in unique_vals)
         and VMIN is None
         and VMAX is None
+        and len(unique_vals) <= setup.num_levels
     ):
         return unique_vals[(vmin <= unique_vals) & (unique_vals <= vmax)]
     return compute_levels(

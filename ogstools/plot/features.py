@@ -43,7 +43,7 @@ def element_edges(
     ax: plt.Axes, mesh: pv.UnstructuredGrid, projection: int
 ) -> None:
     """Plot the element edges of a surface on a matplotlib axis."""
-    lin_mesh = mesh.linear_copy()
+    lin_mesh = mesh.linear_copy() if hasattr(mesh, "linear_copy") else mesh
     cell_points = [lin_mesh.get_cell(i).points for i in range(lin_mesh.n_cells)]
     cell_types = [lin_mesh.get_cell(i).type for i in range(lin_mesh.n_cells)]
     for cell_type in np.unique(cell_types):
@@ -71,8 +71,8 @@ def shape_on_top(
     df_pts = pd.DataFrame(
         np.delete(XYZ, projection, axis=1), columns=["x", "y"]
     )
-    x_vals = df_pts.groupby("x")["x"].agg(np.mean).to_numpy()
-    y_vals = df_pts.groupby("x")["y"].agg(np.max).to_numpy()
+    x_vals = df_pts.groupby("x")["x"].agg("mean").to_numpy()
+    y_vals = df_pts.groupby("x")["y"].agg("max").to_numpy()
     contour_vals = [
         y + scaling * contour(x) for y, x in zip(y_vals, x_vals, strict=False)
     ]

@@ -488,8 +488,10 @@ class MeshSeries(Sequence[Mesh]):
         if isinstance(variable, Variable):
             if variable.mesh_dependent:
                 return np.asarray([variable.transform(mesh) for mesh in self])
-            if variable.output_name in set().union(
-                self.point_data, self.cell_data
+            if (
+                variable.data_name != variable.output_name
+                and variable.output_name
+                in set().union(self.point_data, self.cell_data)
             ):
                 variable_name = variable.output_name
                 do_transform = False

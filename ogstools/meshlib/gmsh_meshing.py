@@ -14,7 +14,10 @@ import pyvista as pv
 
 
 def _line(
-    geo: gmsh.model.geo, length: float, n_edge_cells: int, structured: bool
+    geo: type[gmsh.model.geo],
+    length: float,
+    n_edge_cells: int,
+    structured: bool,
 ) -> int:
     geo.addPoint(0, 0, 0, tag=1)
     geo.addPoint(length, 0, 0, tag=2)
@@ -146,7 +149,7 @@ def rect(
 
 
 def _square(
-    geo: gmsh.model.geo,
+    geo: type[gmsh.model.geo],
     lengths: tuple[float, float],
     n_edge_cells: tuple[int, int],
     structured: bool,
@@ -218,7 +221,7 @@ def cuboid(
             dx=0,
             dy=0,
             dz=dz / n_layers,
-            numElements=[nz] if structured_grid else [],
+            numElements=[nz],
             recombine=recombine,  # fmt: skip
         )
         top_tag = abs(newEntities[0][1])
