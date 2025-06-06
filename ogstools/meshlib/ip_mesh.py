@@ -183,11 +183,7 @@ def tessellate(
     points = _compute_points(mesh, cell_type, integration_order)
     connectivity = _connectivity(mesh, points, subcell_ids)
 
-    return pv.PolyData(
-        np.reshape(points, (-1, 3)),
-        faces=connectivity,
-        n_faces=len(subcell_ids) * points.shape[0],
-    )
+    return pv.PolyData(np.reshape(points, (-1, 3)), faces=connectivity)
 
 
 def to_ip_point_cloud(mesh: Mesh) -> pv.UnstructuredGrid:

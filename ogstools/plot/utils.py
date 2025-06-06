@@ -18,6 +18,7 @@ from cycler import Cycler
 from matplotlib import colormaps
 from matplotlib import colors as mcolors
 from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
+from matplotlib.typing import ColorType
 from typeguard import typechecked
 
 from ogstools.plot.levels import level_boundaries
@@ -296,13 +297,12 @@ def get_cmap_norm(
     if nextafter(levels[0], np.inf) == levels[-1]:
         return cmap, None
     norm = mcolors.BoundaryNorm(
-        boundaries=boundaries, ncolors=len(boundaries) - 1, clip=False
+        boundaries=boundaries, ncolors=len(boundaries), clip=False
     )
     return cmap, norm
 
 
-# TODO: use ColorType when matplotlib can be upgraded to 3.8
-def contrast_color(color: Any) -> Any:
+def contrast_color(color: ColorType) -> ColorType:
     """Return black or white - whichever has more contrast to color.
 
     https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
