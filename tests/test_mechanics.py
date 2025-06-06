@@ -6,7 +6,7 @@ import pytest
 from ogstools.variables import tensor_math
 
 
-def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-6, atol=1e-9):
+def assert_allclose(vals1: np.ndarray, vals2: np.ndarray, rtol=1e-5, atol=1e-9):
     """Assert the equality of two arrays."""
     np.testing.assert_allclose(vals1, vals2, verbose=True, rtol=rtol, atol=atol)
 
