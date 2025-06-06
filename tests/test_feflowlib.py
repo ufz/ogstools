@@ -1,3 +1,4 @@
+import gc
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
@@ -84,6 +85,10 @@ class TestSimulation_Neumann:
         )
         topsurface.save(path_topsurface + ".vtu")
 
+    def teardown_method(self):
+        del self.doc
+        gc.collect()
+
     def test_neumann_ogs_steady_state_diffusion(self):
         """
         Test if OGS simulation results for steady state diffusion
@@ -160,6 +165,10 @@ class TestSimulation_Robin:
             self.pv_mesh
         )
         topsurface.save(path_topsurface + ".vtu")
+
+    def teardown_method(self):
+        del self.doc
+        gc.collect()
 
     def test_robin_ogs_steady_state_diffusion(self):
         """
@@ -239,6 +248,10 @@ class TestSimulation_Well:
         )
         topsurface.save(path_topsurface + ".vtu")
 
+    def teardown_method(self):
+        del self.doc
+        gc.collect()
+
     def test_well_ogs_steady_state_diffusion(self):
         """
         Test if OGS simulation results for steady state diffusion
@@ -309,6 +322,10 @@ class TestConverter:
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
+
+    def teardown_method(self):
+        del self.doc
+        gc.collect()
 
     def test_mesh_class(self):
         "Test if ogstools-mesh class can read FEFLOW model."
@@ -441,6 +458,10 @@ class TestSimulation_HT:
         self.pv_mesh.save(self.vtu_path)
         _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh)
 
+    def teardown_method(self):
+        del self.doc
+        gc.collect()
+
     def test_mesh_preservation_2D(self):
         "Test if converted properties mesh preserves unchanged after extraction of BC."
         testing_mesh = self.pv_mesh.copy()
@@ -492,15 +513,20 @@ class TestSimulation_HT:
 class TestSimulation_CT:
     def setup_method(self):
         self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
-        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
-        self.pv_mesh_560 = _feflowlib.convert_properties_mesh(self.doc)
+        doc_560 = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
+        self.pv_mesh_560 = _feflowlib.convert_properties_mesh(doc_560)
         self.pv_mesh_560.save(self.temp_dir / "CT_2D_line.vtu")
-        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_168))
-        self.pv_mesh_168 = _feflowlib.convert_properties_mesh(self.doc)
+        del doc_560
+
+        doc_168 = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_168))
+        self.pv_mesh_168 = _feflowlib.convert_properties_mesh(doc_168)
         self.pv_mesh_168.save(self.temp_dir / "CT_2D_line_168.vtu")
-        self.doc = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_28))
-        self.pv_mesh_28 = _feflowlib.convert_properties_mesh(self.doc)
+        del doc_168
+
+        doc_28 = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_28))
+        self.pv_mesh_28 = _feflowlib.convert_properties_mesh(doc_28)
         self.pv_mesh_28.save(self.temp_dir / "CT_2D_line_28.vtu")
+        del doc_28
         _tools.write_point_boundary_conditions(self.temp_dir, self.pv_mesh_560)
 
     def test_2_d_line_ct(self):
@@ -594,6 +620,15 @@ class TestFeflowModel:
             examples.feflow_model_box_Neumann, self.temp_dir / "boxNeumann"
         )
         self.feflow_H_box_IOFLOW = FeflowModel(examples.feflow_model_box_IOFLOW)
+
+    def teardown_method(self):
+        del self.feflow_model_HT
+        del self.feflow_model_HT_hetero
+        del self.feflow_model_HTC
+        del self.feflow_model_H
+        del self.feflow_H_box_IOFLOW
+        print("collect")
+        gc.collect()
 
     def test_H_model_LQF_SSD(self):
         """
@@ -864,6 +899,9 @@ class TestFeflowModel:
             self.feflow_model_HT.mesh.cell_data["P_COND"][0]
         )  # cell_data["P_COND"][0] refers to the first value of the "P_COND" array,
         # as the values are homogeneous they are all the same.
+
+        del model
+        gc.collect()
 
     def test_prj_file_HTC(self):
         """

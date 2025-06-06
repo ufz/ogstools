@@ -3,7 +3,7 @@
 """
 Created on Fri Feb 18 08:58:34 2022
 
-@author: dominik
+@author: Dominik Kern
 
    Currently evaluate friction law F_t < F_n tan(p) + c on faults (point_data: faultID)
    Faults are volumes (3D) this makes permeability changes easy

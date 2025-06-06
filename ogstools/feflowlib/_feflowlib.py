@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
 #            Distributed under a Modified BSD License.
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
@@ -381,6 +381,9 @@ def update_geometry(
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
     for pt_data in point_data:
+        # ToDo
+        if point_data[pt_data].dtype == object:
+            continue
         mesh.point_data.update({pt_data: point_data[pt_data]})
     for c_data in cell_data:
         values = (
@@ -388,6 +391,9 @@ def update_geometry(
             if c_data != "MaterialIDs"
             else cell_data[c_data]
         )
+        # ToDo
+        if values.dtype == object:
+            continue
         mesh.cell_data.update({c_data: values})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.

@@ -1,3 +1,4 @@
+import shutil
 from collections import Counter
 
 import pytest
@@ -17,6 +18,9 @@ meshpath = EXAMPLES_DIR / "meshlib"
 
 
 @pytest.mark.tools()  # multiple tools
+@pytest.mark.xfail(
+    shutil.which("tetgen") is None, reason="Tetgen not installed"
+)
 class TestDemo:
     def test_allcompare(self):
         # To define a mesh with 3 layers from example input, create 4 surfaces (3 bottom surface + 1 top surface)

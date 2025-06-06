@@ -3,7 +3,7 @@
 """
 Created on Mon Oct 11 14:34:11 2021
 
-@author: dominik
+@author: Dominik Kern
 
 reading w_c_distr in addition to VMWARE to access original VMdata
 without possible periodicity due to BBS pseudorandom generator

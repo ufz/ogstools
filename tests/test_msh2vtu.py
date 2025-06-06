@@ -84,8 +84,8 @@ def test_multiple_groups_per_element(tmp_path: Path):
 valid_edge_length = st.floats(
     allow_nan=False,
     allow_infinity=False,
-    min_value=1e-7,
-    max_value=1e10,  # e.g. pore to ocean scale if interpreted as m
+    min_value=1e-5,
+    max_value=1e9,  # e.g. pore to ocean scale if interpreted as m
 )
 
 valid_edge_number = st.integers(
@@ -131,9 +131,9 @@ def is_typical_edge_length(val):
 
 
 # below the minimum
-@example(rect_p=RectInput(edge_length=9e-8)).xfail(raises=ValueError)
+@example(rect_p=RectInput(edge_length=9e-6)).xfail(raises=ValueError)
 # above the maximum
-@example(rect_p=RectInput(edge_length=2e10)).xfail(raises=ValueError)
+@example(rect_p=RectInput(edge_length=2e9)).xfail(raises=ValueError)
 # below the minimum
 @example(rect_p=RectInput(n_edge_cells=0)).xfail(raises=ValueError)
 # below the minimum

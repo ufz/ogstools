@@ -1,10 +1,8 @@
-"""
-Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
-            Distributed under a Modified BSD License.
-              See accompanying file LICENSE or
-              http://www.opengeosys.org/project/license
-
-"""
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
 
 from lxml import etree as ET
 

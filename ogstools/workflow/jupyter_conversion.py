@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
 #            Distributed under a Modified BSD License.
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
@@ -70,6 +70,15 @@ def jupytext_to_jupyter(
     :returns: None, but generates the Jupyter notebook.
     """
     nb = jupytext.read(template_path)
+
+    # Inject kernel metadata if missing
+    if "kernelspec" not in nb.metadata:
+        nb.metadata.kernelspec = {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",  # Make sure this matches your actual kernel name
+        }
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb") as temp:
         jupytext.write(nb, temp.name)
         pm.execute_notebook(

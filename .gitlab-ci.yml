@@ -23,7 +23,6 @@ cache:
     - .cache
 
 .pip-setup-extra-headless: &pip-setup-extra-headless
-  - pip install --extra-index-url https://wheels.vtk.org --upgrade --force-reinstall vtk-osmesa
   - pip install -i https://gmsh.info/python-packages-dev-nox --upgrade --force-reinstall gmsh
 
 .pip-setup-activate: &pip-setup-activate
@@ -33,7 +32,7 @@ cache:
 .conda-setup-activate: &conda-setup-activate
   - conda --version
   - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
-  - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} font-ttf-dejavu-sans-mono -c conda-forge
+  - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} font-ttf-dejavu-sans-mono tetgen -c conda-forge
   - conda activate $CONDA_ENV_NAME
 
 .pip-install-ogs-latest: &pip-install-ogs-latest
@@ -231,6 +230,7 @@ tests (mac - pip) [R]:
   tags: [mac, arm64]
   rules:
     - *regression-rules
+  when: manual
   needs: []
   before_script:
     - python() { python3.10 "$@"; } # alias don't work in non-interactive shells

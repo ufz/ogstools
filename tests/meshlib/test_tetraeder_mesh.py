@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 
 from ogstools.definitions import EXAMPLES_DIR
@@ -14,7 +16,10 @@ class TestTetraeder:
     surfacedata = meshpath / "mesh1/surface_data/"
 
     @pytest.mark.tools()  # createTetgenSmeshFromRasters
-    def test_mesh_coarse_xyz(self):
+    @pytest.mark.xfail(
+        shutil.which("tetgen") is None, reason="Tetgen not installed"
+    )
+    def yz(self):
         mesh1_df = dataframe_from_csv(
             1,
             self.layerset,

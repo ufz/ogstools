@@ -9,7 +9,7 @@ with incompressible grains, and incompressible fluid (alpha=1).
 BC-H: pressure on top (atmospheric), no flux elsewhere
 BC-M: stress on top (atmospheric), roller elsewhere
 
-@author: dominik kern
+@author: Dominik Kern kern
 """
 
 # PARAMETERS (average values, constant)

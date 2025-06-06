@@ -12,8 +12,8 @@ A prebuilt [Docker](https://www.docker.com) image with the latest (nightly build
 :::{tab-item} Linux/macOS
 :sync: unix
 
-```bash
-docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/main-3.10
+````bash
+docker run -v $PWD:$PWD -it registry.opengeosys.org/ogs/tools/ogstools/main-3.10-feflow-10.0 /bin/bash
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -31,7 +31,7 @@ import ogstools as ot
 This command works only in the powershell.
 
 ```powershell
-docker run --rm -it -v ${PWD}:/working_dir -w /working_dir registry.opengeosys.org/ogs/tools/ogstools/main-3.10
+docker run --rm -it -v ${PWD}:/working_dir -w /working_dir  registry.opengeosys.org/ogs/tools/ogstools/main-3.10-feflow-10.0
 # Now in the container:
 ogs --version
 # test if feflow2ogs is available:
@@ -63,6 +63,8 @@ The container is based on the [devcontainer](../development/index.md#container-s
 
 ::::
 
+All available containers are located in the [OGSTools container registry](https://gitlab.opengeosys.org/ogs/tools/ogstools/container_registry/).
+
 ______________________________________________________________________
 
 ## Running with Apptainer / Singularity
@@ -74,3 +76,4 @@ apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/main-3.10
 ```
 
 The above command will open a shell in the container. Your home-directory is automatically mounted and you are the same user as outside the container. There will be no file permission issues as with Docker.
+````

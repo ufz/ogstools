@@ -3,7 +3,7 @@
 """
 Created on Fri Feb 18 08:58:34 2022
 
-@author: dominik
+@author: Dominik Kern
 
    Evaluate friction law F_t < F_n tan(p) + c on given faults (point_data: faultIDs)
    Faults are lower-dimensional (2D) so no thickness is required and it is easier to mesh than thin layers

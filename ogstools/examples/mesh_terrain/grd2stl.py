@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
+
 """
 Created on Thu Sep 23 13:54:03 2021
 
-@author: dominik
+@author: Dominik Kern
 """
 import pyvista as pv
 from PVGeo.grids import SurferGridReader

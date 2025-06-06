@@ -1,11 +1,12 @@
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """
 ogs6py is a python-API for the OpenGeoSys finite element software.
 Its main functionalities include creating and altering OGS6 input files as well as executing OGS.
-
-Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
-            Distributed under a Modified BSD License.
-              See accompanying file LICENSE or
-              http://www.opengeosys.org/project/license
 
 """
 

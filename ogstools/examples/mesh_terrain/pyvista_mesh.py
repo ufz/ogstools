@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
 """
 Created on Wed Sep 22 11:31:50 2021
 
-@author: dominik
+@author: Dominik Kern
 
 generate structured grid
 

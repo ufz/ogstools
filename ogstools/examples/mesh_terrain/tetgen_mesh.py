@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
+#            Distributed under a Modified BSD License.
+#            See accompanying file LICENSE.txt or
+#            http://www.opengeosys.org/project/license
+#
+
+
 """
 Created on Thu Sep 23 09:29:51 2021
 
-@author: dominik
+@author: Dominik Kern
 
 TetGen starts from a closed triangulated surface mesh.
 So one needs to find a way to create such a surface (pyvista).

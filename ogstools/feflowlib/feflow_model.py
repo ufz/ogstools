@@ -1,9 +1,10 @@
-# Copyright (c) 2012-2024, OpenGeoSys Community (http://www.opengeosys.org)
+# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
 #            Distributed under a Modified BSD License.
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
 
+import gc
 import logging as log
 from collections import defaultdict
 from pathlib import Path
@@ -34,6 +35,11 @@ class FeflowModel:
 
     :no-index:
     """
+
+    def __del__(self) -> None:
+        print("delete")
+        del self._doc
+        gc.collect()
 
     def __init__(
         self,
