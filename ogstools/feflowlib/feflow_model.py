@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import gc
 import logging as log
 from collections import defaultdict
 from pathlib import Path
@@ -34,6 +35,11 @@ class FeflowModel:
 
     :no-index:
     """
+
+    def __del__(self) -> None:
+        print("delete")
+        del self._doc
+        gc.collect()
 
     def __init__(
         self,
