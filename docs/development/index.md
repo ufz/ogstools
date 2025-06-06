@@ -240,6 +240,7 @@ pytest
 # Release procedure
 
 - Make sure there is a complete changelog at `docs/releases` and added to the corresponding `index.md`.
+- Update pinned dependencies in `pyproject.toml`
 - Create a tag.
 - Wait for the tag pipeline to complete. This will also run a pipeline in [ogs/tools/ogstools-docs](https://gitlab.opengeosys.org/ogs/tools/ogstools-docs)-repo. After finishing check if the updated docs on ogstools.opengeosys.org are shown and the version selector is working.
 - Create [GitHub release](https://github.com/ufz/ogstools/releases) -> a Zenodo release is automatically created.
