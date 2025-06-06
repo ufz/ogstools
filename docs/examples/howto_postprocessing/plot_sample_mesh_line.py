@@ -81,7 +81,7 @@ fig.tight_layout()
 # This basically does the same as the ``pyvista`` function `sample_over_line`.
 
 # %%
-pts = np.linspace([50, -460, 0], [50, -800, 0], 100)
+pts = np.linspace([120, -460, 0], [120, -800, 0], 100)
 sample_1 = pv.PolyData(pts).sample(mesh)
 
 # %% [markdown]
