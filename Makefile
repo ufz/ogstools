@@ -60,7 +60,7 @@ test:  ## Runs the unit tests
 	pytest
 
 coverage:  ## Runs the unit tests generating code coverage reports
-	coverage run -m pytest
+	coverage run -m pytest --hypothesis-profile ci
 	coverage report --no-skip-covered
 	coverage html
 	coverage xml
