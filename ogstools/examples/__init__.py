@@ -4,6 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from typing import Literal
+
 import numpy as np
 import pyvista as pv
 
@@ -70,6 +72,14 @@ def load_meshseries_BHE_3D_CXA():
 
 def load_meshseries_BHE_3D_CXC():
     return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd")
+
+
+def load_meshseries_BHEs_3D(kind: Literal["full", "line", "lines"], ext: str):
+    name = {"full": "3bhes", "line": "3bhes_1", "lines": "3bhes_1_2_3"}[kind]
+    if ext == ".xdmf":
+        name = "3bhes_" + name
+
+    return MeshSeries((_meshseries_dir / "3D_BHEs" / name).with_suffix(ext))
 
 
 def load_meshseries_HT_2D_paraview_XMF():

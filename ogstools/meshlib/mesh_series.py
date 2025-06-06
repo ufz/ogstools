@@ -709,8 +709,9 @@ class MeshSeries(Sequence[Mesh]):
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
         pts = np.delete(pts, flat_axis, 1)
+        more_then_1d = self.dim > 1 or len(flat_axis) < 2
 
-        match self.dim > 1, interp_method:
+        match more_then_1d, interp_method:
             case True, "nearest":
                 result = np.swapaxes(
                     NearestNDInterpolator(geom, values)(pts), 0, 1

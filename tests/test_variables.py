@@ -249,6 +249,23 @@ class TestPhysicalVariable:
         # initial vector is +1 for every component
         assert np.all(np.diff(temp) == 1)
 
+    @pytest.mark.parametrize("ext", [".pvd", ".xdmf"])
+    @pytest.mark.parametrize("kind", ["full", "line", "lines"])
+    def test_BHE_probe(self, kind, ext):
+        ms = examples.load_meshseries_BHEs_3D(kind, ext)
+        lines = ms[0].extract_cells(
+            [cell.dimension == 1 for cell in ms[0].cell]
+        )
+        pts = [
+            lines.extract_points(lines.points[:, 0] == x).center
+            for x in np.unique(lines.points[:, 0])
+        ]
+        for bhe_idx, pt in enumerate(pts):
+            vals = ms.probe(pt, ov.temperature_BHE[bhe_idx + 1, 0])
+            # model symmetric: first and last BHE have the same temperature
+            last_val = [21.998526268, 22.10904857, 21.998526268][bhe_idx]
+            np.testing.assert_almost_equal(vals, [21.85, last_val])
+
     def test_shorthand_ctor(self):
         var_full = ov.Scalar(data_name="test", data_unit="unit",
                              output_unit="unit", output_name="test")  # fmt:skip
