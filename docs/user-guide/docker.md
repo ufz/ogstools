@@ -74,3 +74,4 @@ apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/main-3.10
 ```
 
 The above command will open a shell in the container. Your home-directory is automatically mounted and you are the same user as outside the container. There will be no file permission issues as with Docker.
+````

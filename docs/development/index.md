@@ -212,12 +212,16 @@ If you are familiar with [Docker](https://www.docker.com), you can also start th
 
 ```bash
 docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10 /bin/bash
+# Other container are available! e.g. registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
 # Inside the container:
-make setup_devcontainer
+make setup_devcontainer # creates a virtual env and install ogstools
+source .venv-devcontainer/bin/activate
 pytest
 ```
 
 Please also be aware of [file permission issues](../user-guide/docker.md#running-with-docker) when mounting your working directory.
+
+All available containers are located in the [OGSTools container registry](https://gitlab.opengeosys.org/ogs/tools/ogstools/container_registry/).
 
 ______________________________________________________________________
 
@@ -227,6 +231,7 @@ To prevent these issues we recommend running via [Apptainer](https://apptainer.o
 apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10
 # Inside the container:
 make setup_devcontainer
+source .venv-devcontainer/bin/activate
 pytest
 ```
 
