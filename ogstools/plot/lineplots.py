@@ -42,6 +42,8 @@ def _format_ax(
 def _separate_by_empty_cells(
     mesh: pv.DataSet, *arrays: list[np.ndarray]
 ) -> None:
+    if "vtkGhostType" not in mesh.cell_data:
+        return
     mask = mesh.ctp().point_data["vtkGhostType"] != 0
     if not all(len(mask) == len(arr) for arr in arrays):
         return
