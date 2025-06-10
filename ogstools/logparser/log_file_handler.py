@@ -53,14 +53,12 @@ class LogFileHandler(FileSystemEventHandler):
         )
 
     def on_created(self, event: FileCreatedEvent) -> None:
-        if event.src_path != str(self.file_name):
+        if Path(event.src_path).resolve() != self.file_name.resolve():
             return
-
-        print(f"{self.file_name} has been created.")
         self.process()
 
     def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
-        if event.src_path != str(self.file_name):
+        if Path(event.src_path).resolve() != self.file_name.resolve():
             return
         self.process()
 
@@ -74,7 +72,7 @@ class LogFileHandler(FileSystemEventHandler):
                 print(f"File not found yet: {self.file_name}")
                 return
 
-        print(f"{self.file_name} has been modified.")
+        # print(f"{self.file_name} has been modified.")
         while True:
             line = self._file.readline()
             num_lines_current = self.num_lines_read + 1
