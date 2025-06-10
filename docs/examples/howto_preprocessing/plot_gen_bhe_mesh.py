@@ -153,6 +153,9 @@ p.show()
 # Generate a customizable structured BHE mesh with advanced mesh
 # sizing options (using gmsh). To understand the specific
 # behaviour of every mesh parameter, test each one after another.
+#
+# .. image:: ../../examples/howto_preprocessing/gen_bhe_mesh.svg
+
 
 # %%
 vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
