@@ -1,6 +1,7 @@
-# OGSTools 0.x Release Notes (upcoming release)
+# OGSTools 0.7.0 Release Notes
 
-This is not released yet!
+OGS version: 6.5.4
+Python: 3.10 - 3.13
 
 # Breaking changes
 
@@ -22,19 +23,41 @@ This is not released yet!
 
 ## Bugfixes
 
+- meshes_from_gmsh (msh2vtu): Physical groups, which include other physical groups need to be defined after the subgroups otherwise group will be comprised of the wrong elements
+- MeshSeries: probe() failed with output meshes only consisting of multiple lines representing BHEs, this is for example the case by using the output option by material id
+- MeshSeries: indexing failed with numpy data types
+- Feflow converter: Heterogeneous material for properties fixed (for KF only)
+- Feflow converter: In CLI extraction of topsurface domain fixed
+- BHE: Fix for huge BHE arrays
+- plot: Fix for plots from parallel computation (vtkGhostType)
+
 ## Features
 
-- new logparser analysis to inspect simulation behaviour over clock time and model time
-- new logparser plot to create an overview of the convergence behavior for the
+- Logparser: analysis to inspect simulation behaviour over clock time and model time
+- Logparser: plot to create an overview of the convergence behavior for the
   entire simulation (ot.logparser.plot_error, ot.logparser.plot_convergence_order)
+- Logparser: Functionality for real time monitoring
+- Logparser: Can consume new version (2) of OGS log files (can still consume version 1)
 - OGS simulation can be run in a background process via ot.Project.run_model(..., background=True)
 - MeshSeries.extract_probe/probe/values accept str/Variables and lists of them as arguments (with improved performance)
+- plot: handle gaps in sampling lines and disjoined line meshes, such that each individual region is drawn separately.
+- Project: Run simulations in background
+- Project: Add second variant of setting well defined initial pressures
 
 ## Infrastructure
 
+- Several fixes for pyvista>=0.45
+- Pagefind index generation
+
 ### Tests
 
-### Imports
+- Hypothesis testing introduction
+- More parallel and parameterized tests
+
+### Usability
+
+- Clarify what is expected from the user-provided list of observation points in plot_probe.
+- Some improved error messages
 
 ## Maintainer TODOs
 
