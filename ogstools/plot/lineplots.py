@@ -44,7 +44,9 @@ def _separate_by_empty_cells(
 ) -> None:
     if "vtkGhostType" not in mesh.cell_data:
         return
-    mask = mesh.ctp().point_data["vtkGhostType"] != 0
+    mask = (
+        mesh.ctp().point_data.get("vtkGhostType", np.zeros(mesh.n_points)) != 0
+    )
     if not all(len(mask) == len(arr) for arr in arrays):
         return
     # it seems that in doing ctp on PolyLines the direction of points
