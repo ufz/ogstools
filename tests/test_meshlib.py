@@ -301,6 +301,20 @@ class TestUtils:
                 np.testing.assert_allclose(values, ref_values[:, slicing])
                 assert not np.any(np.isnan(values))
 
+    def test_probe_2D_mesh_PETSC(self):
+        ms = examples.load_meshseries_PETSc_2D()
+        ms.scale(time=("s", "a"))
+        points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
+        labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
+        ms_pts = ot.MeshSeries.extract_probe(ms, points_coords)
+        ot.plot.line(
+            ms_pts,
+            "time",
+            ot.variables.pressure,
+            labels=labels,
+            colors=["b", "r"],
+        )
+
     def test_probe_2D_mesh(self):
         "Test point probing on a 2D meshseries."
         ms = examples.load_meshseries_HT_2D_XDMF()
