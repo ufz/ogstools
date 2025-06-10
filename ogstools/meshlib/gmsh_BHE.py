@@ -82,6 +82,8 @@ def gen_bhe_mesh_gmsh(
     :param out_name: name of the exported mesh, must end with .msh
 
     :returns: a gmsh .msh file
+
+    # .. image:: ../../examples/howto_preprocessing/gen_bhe_mesh.png
     """
 
     def _compute_layer_spacing(
