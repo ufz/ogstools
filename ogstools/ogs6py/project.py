@@ -23,6 +23,7 @@ from lxml import etree as ET
 from typing_extensions import Self
 
 from ogstools.core.storage import StorageBase
+from ogstools.logparser.monitor import Monitor
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
     curves,
@@ -165,6 +166,7 @@ class Project(StorageBase):
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
+        self.monitor = Monitor()
 
     @property
     def prjfile(self) -> Path:
@@ -1155,7 +1157,11 @@ class Project(StorageBase):
         wrapper: Any | None = None,
         write_logs: bool = True,
         background: bool = False,
+<<<<<<< HEAD
     ) -> subprocess.Popen:
+=======
+    ) -> Monitor:
+>>>>>>> 885ca06d (add bokeh log plotting functionality)
         """Command to run OGS.
 
         Runs OGS with the project file specified as output_file.
@@ -1272,6 +1278,8 @@ class Project(StorageBase):
 
         self.runtime_start = time.time()
         if write_logs is True:
+            print(cmd)
+            print(cmd.split())
             with self.logfile.open("w") as logf:
                 self.process = subprocess.Popen(
                     cmd,
@@ -1289,10 +1297,20 @@ class Project(StorageBase):
                 stderr=subprocess.STDOUT,
                 env=env,
             )
-        if not background:
-            self.process.wait()
-
-        return self.process
+        if background:
+            print(
+                f"Simulation started in background with PID {self.process.pid}."
+            )
+            self.monitor.start_log_file_handler(self.logfile)
+            return self.monitor
+        self.process.wait()
+        self.runtime_end = time.time()
+        if self.process.returncode == 0 and not background and write_prj_to_pvd:
+            self._write_prj_to_pvd()
+        print(self.monitor._status)
+        if self.process.returncode != 0:
+            self._failed_run_print_log_tail(write_logs)
+        return self.monitor
 
     def _propagate_target(self) -> None:
         """Propagate save target to geometry and python_script files."""

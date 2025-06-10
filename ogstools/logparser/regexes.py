@@ -499,4 +499,8 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             r"error: OGS aborted on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTimeFailed,
         ),
+        (
+            r"error: OGS terminated with error on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
+            SimulationEndTimeFailed,
+        ),
     ]
