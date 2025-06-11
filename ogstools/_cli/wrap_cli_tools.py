@@ -13,6 +13,7 @@ from .provide_ogs_cli_tools_via_wheel import binaries_list, ogs_with_args
 
 
 class CLI_ON_PATH:
+
     def __init__(self, ogs_bin_dir: Path):
         self.ogs_bin_dir = ogs_bin_dir
         for b in binaries_list:
@@ -84,11 +85,19 @@ class CLI_ON_PATH:
 
     @staticmethod
     def _get_run_cmd(ogs_bin_dir: Path, attr: str) -> Callable:
+
         def run_cmd(*args: Any, **kwargs: Any) -> int:
             cmd = str(ogs_bin_dir / attr)
-            print("CMD:", cmd)
+            stdout = kwargs.pop("stdout", None)
+            stderr = kwargs.pop("stderr", None)
+            if stdout is False:
+                stdout = subprocess.DEVNULL
+            else:
+                print("CMD:", cmd)
+            if stderr is False:
+                stderr = subprocess.DEVNULL
             cmdline = CLI_ON_PATH._get_cmdline(cmd, *args, **kwargs)
-            return subprocess.call(cmdline)
+            return subprocess.call(cmdline, stdout=stdout, stderr=stderr)
 
         # TODO: Only arguments with underscores work. Arguments with dashes not.
         run_cmd.__doc__ = f"""
