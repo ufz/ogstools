@@ -346,7 +346,7 @@ class TestLogparser_Version2:
         # For real world application the following line should be commented out
         # consume(records)
         observer.join()
-        num_expected = 48
+        num_expected = 49
         assert (
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
@@ -363,8 +363,8 @@ class TestLogparser_Version2:
         assert ver == 2, f"Expected version 2, but got {ver}"
         l_regexes = len(select_regex(ver))
         assert (
-            l_regexes == 19
-        ), f"Expected regexes version {ver},this is of length 19 but got {l_regexes}."
+            l_regexes == 22
+        ), f"Expected regexes version {ver},this is of length 22 but got {l_regexes}."
 
     # parameterized
     def test_parse_version(self):
