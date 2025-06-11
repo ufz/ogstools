@@ -352,9 +352,9 @@ class TestLogparser_Version2:
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
         # new_file.unlink() no clean up necessary
 
-        assert status.process_step_status == StepStatus.FINISHED
-        assert status.time_step_status == StepStatus.FINISHED
-        assert status.simulation_status == StepStatus.FINISHED
+        assert status.process_step_status == StepStatus.TERMINATED
+        assert status.time_step_status == StepStatus.TERMINATED
+        assert status.simulation_status == StepStatus.TERMINATED
 
     # parameterized
     def test_version_select(self):
@@ -448,7 +448,7 @@ class TestLogparser_Version2:
         assert c.time_step_status == StepStatus.RUNNING
         c.update(ts_end_record)
         assert c.time_step == 53
-        assert c.time_step_status == StepStatus.FINISHED
+        assert c.time_step_status == StepStatus.TERMINATED
 
     def test_parse_good(self):
         original_file = serial_v2_coupled_ht
