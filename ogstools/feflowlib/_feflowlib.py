@@ -381,7 +381,7 @@ def update_geometry(
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
     for pt_data in point_data:
-        # ToDo
+        # ToDo Issue 135
         if point_data[pt_data].dtype == object:
             continue
         mesh.point_data.update({pt_data: point_data[pt_data]})
@@ -391,7 +391,7 @@ def update_geometry(
             if c_data != "MaterialIDs"
             else cell_data[c_data]
         )
-        # ToDo
+        # ToDo Issue 135
         if values.dtype == object:
             continue
         mesh.cell_data.update({c_data: values})
