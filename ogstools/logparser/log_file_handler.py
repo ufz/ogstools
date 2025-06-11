@@ -101,6 +101,8 @@ class LogFileHandler(FileSystemEventHandler):
 
             if isinstance(log_entry, Termination):
                 print("===== Termination =====")
+                self.queue.put(log_entry)
+                self.status.update(log_entry)
                 self.stop_callback()
                 self._file.close()
                 break

@@ -13,7 +13,7 @@ import re
 from dataclasses import asdict
 from pathlib import Path
 from queue import Empty, Queue
-from typing import Any
+from typing import Any, cast
 
 from ogstools.logparser.regexes import (
     Context,
@@ -203,10 +203,12 @@ def parse_file(
                             if k in fields_of_interest
                         }
                         records.append(entry_d | filtered_context)
-                    elif isinstance(entry, Termination):
-                        records.append(entry_d)
+                    else:
+                        log_entry: Log = cast(Log, entry)
+                        context.update(log_entry)
+                        records.append(asdict(log_entry))
                 else:
-                    valid_entry: Log = entry  # type: ignore[assignment]
+                    valid_entry: Log = cast(Log, entry)
                     records.append(asdict(valid_entry))
 
     return records
