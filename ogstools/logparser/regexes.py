@@ -427,6 +427,10 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             OGSVersionLog2,
         ),
         (
+            r"info: OGS started on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            SimulationStartTime,
+        ),
+        (
             r"info: Time step #(\d+) started. Time: ([\d\.e+-]+). Step size: (\d+)",
             TimeStepStart,
         ),
@@ -479,11 +483,19 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             SimulationExecutionTime,
         ),
         (
-            r"info: OGS completed on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
+            r"info: \[time\] Simulation failed. It took ([\d\.e+-]+) s",
+            SimulationExecutionTime,
+        ),
+        (
+            r"info: \[time\] Simulation aborted. Received signal: (\d+).",
+            SimulationAbort,
+        ),
+        (
+            r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTime,
         ),
         (
             r"error: OGS aborted on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
-            SimulationEndTime,
+            SimulationEndTimeFailed,
         ),
     ]
