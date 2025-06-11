@@ -114,7 +114,6 @@ class Context:
 
     def update(self, x: Log | Termination) -> None:
         if isinstance(x, SimulationStartTime):
-            assert self.simulation_status == StepStatus.NOT_STARTED
             self.simulation_status = StepStatus.RUNNING
         if isinstance(x, SimulationEndTime | SimulationExecutionTime):
             self.simulation_status = StepStatus.TERMINATED
