@@ -61,6 +61,8 @@ labels = [
 ]
 ms_pts = [ot.MeshSeries.extract_probe(mesh_series, pts) for pts in rows]
 fig = ot.plot.line(ms_pts[0], "time", si, labels=labels[0], monospace=True)
+fig.tight_layout()
+
 
 # %% [markdown]
 # You can also pass create your own matplotlib figure and pass the axes object.
