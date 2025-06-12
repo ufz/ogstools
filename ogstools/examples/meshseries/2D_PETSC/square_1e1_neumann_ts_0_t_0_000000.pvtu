@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<VTKFile type="PUnstructuredGrid" version="1.0" byte_order="LittleEndian" header_type="UInt64" compressor="vtkZLibDataCompressor">
+  <PUnstructuredGrid GhostLevel="1">
+    <FieldData>
+      <DataArray type="Int8" Name="OGS_VERSION" NumberOfTuples="18" format="binary" RangeMin="45" RangeMax="103">
+        AQAAAAAAAAAAgAAAAAAAABIAAAAAAAAAGgAAAAAAAAA=eF4z0zPVM9U1MdRNNzU1tLQwSEwEACP6BCE=
+      </DataArray>
+    </FieldData>
+    <PPointData>
+      <PDataArray type="Float64" Name="pressure"/>
+      <PDataArray type="Float64" Name="v" NumberOfComponents="2"/>
+    </PPointData>
+    <PCellData>
+      <PDataArray type="UInt8" Name="vtkGhostType"/>
+    </PCellData>
+    <PPoints>
+      <PDataArray type="Float64" Name="Points" NumberOfComponents="3"/>
+    </PPoints>
+    <Piece Source="square_1e1_neumann_ts_0_t_0_000000_0.vtu"/>
+    <Piece Source="square_1e1_neumann_ts_0_t_0_000000_1.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>

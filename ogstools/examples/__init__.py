@@ -103,6 +103,12 @@ def load_meshseries_diffusion_3D(Tb=373.15, Ta=293.15, alpha=1e-6):
     return MeshSeries.from_data(meshes, timevalues)
 
 
+def load_meshseries_PETSc_2D():
+    return MeshSeries(
+        str(_meshseries_dir / "2D_PETSC" / "square_1e1_neumann.pvd")
+    )
+
+
 def load_mesh_mechanics_2D():
     return Mesh.read(_meshseries_dir / "mechanics_example.vtu")
 

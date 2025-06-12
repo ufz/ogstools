@@ -77,7 +77,8 @@ class OGSVersionLog2(MPIProcess, NoRankOutput):
 class StepStatus(Enum):
     NOT_STARTED = "Not started"
     RUNNING = "Running"
-    FINISHED = "Finished"
+    TERMINATED = "Terminated"
+    TERMINATED_WITH_ERROR = "Terminated with error"
 
     def __str__(self) -> str:
         return self.value  # Ensures printing gives "Running", etc.
@@ -113,31 +114,38 @@ class Context:
 
     def update(self, x: Log | Termination) -> None:
         if isinstance(x, SimulationStartTime):
-            assert self.simulation_status == StepStatus.NOT_STARTED
             self.simulation_status = StepStatus.RUNNING
-        if isinstance(x, SimulationEndTime):
-            self.simulation_status = StepStatus.FINISHED  # ToDo
+        if isinstance(x, SimulationEndTime | SimulationExecutionTime):
+            self.simulation_status = StepStatus.TERMINATED
+        if isinstance(
+            x,
+            SimulationEndTimeFailed
+            | SimulationAbort
+            | SimulationExecutionTimeFailed,
+        ):
+            self.simulation_status = StepStatus.TERMINATED_WITH_ERROR
         if isinstance(x, TimeStepStart):
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
         if isinstance(x, TimeStepEnd):
-            assert x.time_step == self.time_step
-            self.time_step_status = StepStatus.FINISHED
-
+            assert (
+                x.time_step == self.time_step
+            ), f"Time step: {x}. Current status: {self.time_step}, {self}"
+            self.time_step_status = StepStatus.TERMINATED
         if isinstance(x, SolvingProcessStart):
             assert not self.process or x.process > self.process
             self.process = x.process
             self.process_step_status = StepStatus.RUNNING
         if isinstance(x, SolvingProcessEnd):
             assert x.process == self.process
-            self.process_step_status = StepStatus.FINISHED
+            self.process_step_status = StepStatus.TERMINATED
 
         if isinstance(x, IterationStart):
             self.iteration_number = x.iteration_number
             self.iteration_step_status = StepStatus.RUNNING
         if isinstance(x, IterationEnd):
             assert x.iteration_number == self.iteration_number
-            self.iteration_step_status = StepStatus.FINISHED
+            self.iteration_step_status = StepStatus.TERMINATED
 
 
 class TimeStepContext:
@@ -246,8 +254,18 @@ class MeshReadTime(MPIProcess, Info):
 
 
 @dataclass
-class SimulationExecutionTime(MPIProcess, Info):
+class SimulationExecutionTime(MPIProcess, Info, Termination):
     execution_time: float
+
+
+@dataclass
+class SimulationExecutionTimeFailed(SimulationExecutionTime):
+    pass
+
+
+@dataclass
+class SimulationAbort(Info, Termination):
+    signal: int
 
 
 @dataclass
@@ -309,6 +327,11 @@ class SimulationStartTime(MPIProcess, Info, NoRankOutput):
 
 @dataclass
 class SimulationEndTime(MPIProcess, Info, Termination):
+    message: str
+
+
+@dataclass
+class SimulationEndTimeFailed(MPIProcess, Info, Termination):
     message: str
 
 
@@ -403,6 +426,10 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             OGSVersionLog2,
         ),
         (
+            r"info: OGS started on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}).",
+            SimulationStartTime,
+        ),
+        (
             r"info: Time step #(\d+) started. Time: ([\d\.e+-]+). Step size: (\d+)",
             TimeStepStart,
         ),
@@ -455,11 +482,19 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             SimulationExecutionTime,
         ),
         (
-            r"info: OGS completed on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
+            r"info: \[time\] Simulation failed. It took ([\d\.e+-]+) s",
+            SimulationExecutionTime,
+        ),
+        (
+            r"info: \[time\] Simulation aborted. Received signal: (\d+).",
+            SimulationAbort,
+        ),
+        (
+            r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTime,
         ),
         (
             r"error: OGS aborted on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
-            SimulationEndTime,
+            SimulationEndTimeFailed,
         ),
     ]
