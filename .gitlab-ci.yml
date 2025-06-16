@@ -230,7 +230,6 @@ tests (mac - pip) [R]:
   tags: [mac, arm64]
   rules:
     - *regression-rules
-  when: manual
   needs: []
   before_script:
     - python() { python3.10 "$@"; } # alias don't work in non-interactive shells
