@@ -9,7 +9,13 @@ from importlib import metadata
 
 from . import logparser, plot, variables
 from ._find_ogs import cli, status
-from .meshlib import Mesh, Meshes, MeshSeries, meshes_from_gmsh  # noqa: F401
+from .meshlib import (
+    Mesh,  # noqa: F401
+    Meshes,  # noqa: F401
+    MeshSeries,  # noqa: F401
+    meshes_from_gmsh,
+    meshes_from_yaml,  # noqa: F401
+)
 from .ogs6py import Project  # noqa: F401
 
 with suppress(ImportError):
