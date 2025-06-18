@@ -1,5 +1,6 @@
 # ogstools/materiallib/core/media.py
 
+from collections import defaultdict
 from collections.abc import Iterator
 
 from ogstools.materiallib.core.material_list import MaterialList
@@ -37,6 +38,8 @@ class Media:
 
             self._media.append(medium)
             self._name_map[name] = medium
+
+            # self.validate()
 
     def __iter__(self) -> Iterator[Medium]:
         return iter(self._media)
@@ -102,13 +105,49 @@ class Media:
     #                 component.validate(allowed_props)
     #     return True
 
+    # def validate(self) -> bool:
+    #     for medium in self._media:
+    #         medium.validate()
+    #     return True
+
     def validate(self) -> bool:
+        ambiguous = self.find_ambiguous_properties()
+        if ambiguous:
+            lines = ["Found ambiguous properties:"]
+            for medium_name, props in ambiguous.items():
+                lines.append(f"  - Medium: {medium_name}")
+                for prop_name, variants in props.items():
+                    lines.append(f"    • Property: {prop_name}")
+                    for i, prop in enumerate(variants, 1):
+                        desc = f"type: {prop.type}"
+                        if prop.extra:
+                            desc += " | " + ", ".join(
+                                f"{k}={v}" for k, v in prop.extra.items()
+                            )
+                        lines.append(f"      [{i}] {desc}")
+            raise ValueError("\n".join(lines))
+
         for medium in self._media:
             medium.validate()
         return True
 
     def validate_medium(self, medium: Medium) -> bool:
         return medium.validate()
+
+    def find_ambiguous_properties(self) -> dict[str, dict[str, list[str]]]:
+        """Finds properties that are defined multiple times for the same medium."""
+
+        issues = defaultdict(lambda: defaultdict(list))
+
+        for medium in self._media:
+            props_by_name = defaultdict(list)
+            for prop in medium.properties:
+                props_by_name[prop.name].append(prop)
+            for name, variants in props_by_name.items():
+                if len(variants) > 1:
+                    issues[medium.name][name] = variants
+
+        return dict(issues)
 
     def __repr__(self) -> str:
         lines = [f"<Media with {len(self)} entries>"]

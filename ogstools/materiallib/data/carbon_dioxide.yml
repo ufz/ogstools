@@ -22,11 +22,15 @@ properties:
       value: 1000
       unit: kg/m³
       source: "Standard Water Density, Department of Hydrology, R. C. Waters, 2012, HydroScience Publications, pp. 34-36"
-    - type: linear
+    - type: Linear
       reference_value: 1000
-      independent_variable: concentration
-      reference_condition: 0.0
-      slope: 2.0e-6
+      independent_variables:
+        concentration:
+          reference_condition: 0.0
+          slope: 2.0e-6
+        temperature:
+          reference_condition: 293.15
+          slope: 1.5e-5
       source: "Experimental Study on Salinity Effects on Water Density, D. A. Salter, 2018, AquaLab Journal, pp. 78-82"
   viscosity:
     - type: Constant

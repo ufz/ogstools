@@ -26,14 +26,14 @@ properties:
       value: 1.0e-20
       unit: m²
   saturation:
-    - type: VanGenuchten
+    - type: SaturationVanGenuchten
       residual_liquid_saturation: 0.05
       residual_gas_saturation: 1e-15
       exponent: 0.6
       p_b: 2.0e6
   bishops_effective_stress:
-    - type: function
-      value: 1.0
+    - type: BishopsPowerLaw
+      exponent: 1
       unit: 1
   biot_coefficient:
     - type: Constant
@@ -52,10 +52,16 @@ properties:
       value: 1.0
       unit: 1
   relative_permeability_nonwetting_phase:
-    - type: Constant
-      value: 1.0
+    - type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
+      exponent: 2.0
+      min_relative_permeability: 1e-5
+      residual_gas_saturation: 1e-15
+      residual_liquid_saturation: 0.05
       unit: 1
   relative_permeability:
-    - type: Constant
-      value: 1.0e-19
-      unit: m²
+    - type: RelativePermeabilityVanGenuchten
+      exponent: 2.0
+      minimum_relative_permeability_liquid: 1e-12
+      residual_liquid_saturation: 0.05
+      residual_gas_saturation: 1e-15
+      unit: 1

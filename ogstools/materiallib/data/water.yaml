@@ -22,11 +22,16 @@ properties:
       value: 1000
       unit: kg/m³
       source: "at 4 °C, standard value"
-    - type: linear
+    - type: Linear
       reference_value: 1000
-      independent_variable: concentration
-      reference_condition: 0.0
-      slope: 2.0e-6
+      independent_variables:
+        concentration:
+          reference_condition: 0.0
+          slope: 2.0e-6
+        temperature:
+          reference_condition: 293.15
+          slope: 1.5e-5
+      source: "CRC Handbook of Chemistry and Physics"
   viscosity:
     - type: Constant
       value: 1.0e-3
