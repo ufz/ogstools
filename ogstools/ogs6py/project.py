@@ -889,7 +889,8 @@ class Project:
         if write_logs is True:
             with self.logfile.open("w") as logf:
                 self.process = subprocess.Popen(
-                    cmd.split(),
+                    cmd,
+                    shell=True,
                     stdout=logf,
                     stderr=subprocess.STDOUT,
                     env=env,
