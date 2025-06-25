@@ -121,6 +121,25 @@ OpenWorkFlow \[@Kolditz\], is a project for an open-source, modular synthesis pl
 
 The OGS benchmarks are a collection of web documents (mostly generated from Jupyter Notebooks) that demonstrate, how users can set up, adjust, execute, and analyse simulations. They can be downloaded, executed, and adapted in an interactive environment for further exploration. With OGSTools code complexity and code duplication could be reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
+## OGS-GIScape
+
+OGS-GIScape is a snakemake workflow for creating, simulating and analysing
+numerical groundwater models (NGM). OGS-GIScape enables scientists to
+investigate complex environmental models to study the groundwater flow and the
+associated environmental impact or conduct scenario analyses. The models could
+be used to estimate the impact due to changes in groundwater resources.
+Furthermore, the outcome of the models could be used for the management of
+groundwater resources.
+
+An important part of the NGM creation is the geometric model (mesh). It is build
+using geographic information system (GIS) tools at the landscape scale and
+combining various meshing tools. The
+workflow also comprises the parametrisation of the geometric model with physical
+parameters as well as defining boundary conditions, for instance groundwater
+recharge on the top of the computational domain or the integration of rivers.
+For these workflow steps it is mainly necessary to change parts of the OGS
+project file which is done with OGSTools.
+
 # Acknowledgements
 
 This work has been supported by multiple funding sources, including AREHS under grant \[Grant Number\], \[Other Funding Agency Name\] (grant \[Grant Number\]), and OpenWorkflow \[Additional Funding Agency Name\] (grant \[Grant Number\]). The authors also acknowledge ongoing support from SUTOGS (grant \[Grant Number\]).
