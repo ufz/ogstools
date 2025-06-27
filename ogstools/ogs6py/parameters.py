@@ -30,16 +30,32 @@ class Parameters(build_tree.BuildTree):
         Parameters
         ----------
         name : `str`
+            name of the parameter
         type : `str`
+            type of the parameter, one of `Constant`, `CurveScaled`, `Function`,
+            `Group`, `MeshElement`, `MeshNode`, `RandomFieldMeshElement`,
+            `Raster`, or `TimeDependentHeterogeneousParameter`
         value : `float` or `str`
+            value for a constant parameter
         values : `float` or `str`
+            values for a constant parameter
         expression : `str`
+            expression describing a function (valid for function parameter)
         curve : `str`
+            name of the curve (used in CurveScaled parameter)
         parameter : `str`
+            used in CurveScaled parameter, name of the parameter scaled by the
+            curve
         mesh : `str`
+            used in MeshElement or MeshNode parameter; specification of the mesh
+            the parameter is defined on
         field_name : `str`
+            used in MeshElement or MeshNode parameter; reference to the
+            PropertyVector / DataArray given in the mesh
         time : `list`
+            used in TimeDependentHeterogeneousParameter
         parameter_name : `list`
+            used in `CurveScaled` to specify the parameter that shall be scaled
         use_local_coordinate_system : `bool` or `str`
         """
         self._convertargs(args)
