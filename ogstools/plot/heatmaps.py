@@ -74,8 +74,8 @@ def heatmap(
     levels = compute_levels(vmin, vmax, kwargs.get("num_levels", 11))
     cmap, norm = get_cmap_norm(levels, variable)
 
-    x_vals = np.arange(0.5, vals.shape[1] + 0.5) if x_vals is None else x_vals
-    y_vals = np.arange(0.5, vals.shape[0] + 0.5) if y_vals is None else y_vals
+    x_vals = np.arange(vals.shape[1] + 1) if x_vals is None else x_vals
+    y_vals = np.arange(vals.shape[0] + 1) if y_vals is None else y_vals
     ax.pcolormesh(x_vals, y_vals, vals, cmap=cmap, norm=norm, zorder=100)
     add_colorbars(fig, ax, variable, levels, cb_pad=0.02)
     if log_scale:

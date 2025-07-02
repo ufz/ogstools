@@ -45,6 +45,12 @@ def _x_data(
     ).reset_index()
     x_vals = df_time[x_metric].to_numpy()
     x_ticks = 0.5 * (x_vals[1:] + x_vals[:-1])
+    if len(x_vals) == default_len_x:
+        # TODO: Not sure why, but sometimes the required length of the x_vals
+        # is off by 1 compared to the required length to plot a heatmap with
+        # errors or orders. The following fixes this but the underlying problem
+        # is not yet understood.
+        x_vals = np.append(0.0, x_vals)
     return x_vals, x_ticks
 
 
