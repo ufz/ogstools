@@ -115,7 +115,6 @@ tests (arch - pip - ogs latest) [M]:
   script:
     - pytest -n auto --hypothesis-profile ci
 
-
 tests (arch - pip - no OGS) [M]:
   stage: maintenance
   rules:
@@ -154,7 +153,6 @@ tests (arch - pip - with OGS_BIN_PATH) [M]:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
     - pytest -n auto -m "tools or system"
 
-
 tests (arch - conda - ogs custom latest) [M]:
   stage: maintenance
   tags: [shell, envinf]
@@ -175,9 +173,6 @@ tests (arch - conda - ogs custom latest) [M]:
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
 
-
-
-
 tests (arch - pip - no OGS) [R]:
   stage: test
   tags: [shell, envinf]
@@ -189,7 +184,6 @@ tests (arch - pip - no OGS) [R]:
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
     - pytest -n auto -m "not (tools or system)"
-
 
 tests coverage (arch - container) [R]:
   stage: test
@@ -379,9 +373,7 @@ publish:
 
 devcontainer image:
   stage: .pre
-  tags:
-    - envinf
-    - shell
+  tags: [shell, envinf]
   rules:
     - when: manual
       allow_failure: true
@@ -393,9 +385,7 @@ devcontainer image:
 user container image:
   stage: .pre
   needs: []
-  tags:
-    - envinf
-    - shell
+  tags: [shell, envinf]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       allow_failure: true
