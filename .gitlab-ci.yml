@@ -59,6 +59,7 @@ pre-commit:
     - pre-commit run --from-ref ${CI_MERGE_REQUEST_DIFF_BASE_SHA} --to-ref HEAD
 
 build:
+  needs: []
   script:
     - pip install build
     - pyproject-build
@@ -187,6 +188,7 @@ tests (arch - pip - no OGS) [R]:
 
 tests coverage (arch - container) [R]:
   stage: test
+  needs: []
   script:
     - make setup_devcontainer
     - source .venv-devcontainer/bin/activate
@@ -306,6 +308,7 @@ setup maintainer [M]:
 setup developer [R]:
   stage: test
   tags: [shell, envinf]
+  needs: []
   rules:
     - *regression-rules
   before_script:
