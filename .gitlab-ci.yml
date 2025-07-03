@@ -410,29 +410,25 @@ user container image:
     - docker push $DOCKER_USER_IMAGE
 
 code_quality_ruff [R]:
-  image: python:3.10-slim
+  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
   needs: []
   script:
     # Use same ruff as in .pre-commit-config.yaml
-    - pip install ruff==0.0.277
-    - ruff . --format gitlab > ruff-code-quality-report.json || true
+    - uvx ruff==0.4.5 check --output-format=gitlab --exit-zero > ruff-code-quality-report.json
   artifacts:
     reports:
       codequality: ruff-code-quality-report.json
 
 code_quality_mypy [R]:
-  image: python:3.10-slim
+  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
   needs: []
   script:
     # Use same mypy as in .pre-commit-config.yaml
-    - pip install mypy==1.4.1 mypy-to-codeclimate
-    - mypy ogstools > mypy-output.txt || true
-    - mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
+    - uvx mypy==1.4.1 ogstools > mypy-output.txt || true
+    - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json
   artifacts:
     reports:
       codequality: mypy-code-quality-report.json
-
-
 
 ogs/tools/feflow-converter-tests:
   stage: test
