@@ -18,6 +18,8 @@ from ogstools.examples import (
     debug_parallel_3,
     info_parallel_1,
     log_adaptive_timestepping,
+    log_petsc_mpi_1,
+    log_petsc_mpi_2,
     serial_convergence_long,
     serial_critical,
     serial_info,
@@ -246,14 +248,18 @@ class TestLogparser:
         )
 
     # TODO: graphical output is not yet tested
-    def test_plot_error(self):
-        records = lp.parse_file(log_adaptive_timestepping)
+    @pytest.mark.parametrize("x_metric", ["time_step", "model_time"])
+    @pytest.mark.parametrize(
+        "log", [log_adaptive_timestepping, log_petsc_mpi_1, log_petsc_mpi_2]
+    )
+    def test_plot_error(self, x_metric: str, log: Path):
+        records = lp.parse_file(log)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
         df_log_copy = df_log.copy()
         fig, axes = plt.subplots(3, figsize=(20, 30))
-        lp.plot_convergence(df_log, "dx", fig=fig, ax=axes[0])
-        lp.plot_convergence(df_log, "dx_x", fig=fig, ax=axes[1])
-        lp.plot_convergence(df_log, "x", fig=fig, ax=axes[2])
+        lp.plot_convergence(df_log, "dx", x_metric, fig=fig, ax=axes[0])
+        lp.plot_convergence(df_log, "dx_x", x_metric, fig=fig, ax=axes[1])
+        lp.plot_convergence(df_log, "x", x_metric, fig=fig, ax=axes[2])
         pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
 

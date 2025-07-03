@@ -430,7 +430,7 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
             SimulationStartTime,
         ),
         (
-            r"info: Time step #(\d+) started. Time: ([\d\.e+-]+). Step size: (\d+)",
+            r"info: Time step #(\d+) started. Time: ([\d\.e+-]+). Step size: ([\d\.e+-]+)\.",
             TimeStepStart,
         ),
         (r"info: \[time\] Reading the mesh took ([\d\.e+-]+) s", MeshReadTime),

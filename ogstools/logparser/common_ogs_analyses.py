@@ -233,11 +233,12 @@ def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     :returns:   The processed dataframe.
 
     """
-    interest, context = (["time_step", "step_size"], ["step_start_time"])
+    interest, context = (["step_start_time"], ["time_step", "step_size"])
     _check_input(df, interest, context)
     df_new = df.copy()
     df_time = df_new.pivot_table(interest, context, sort=False)
     _check_output(df_time, interest, context)
+    df_time = df_time.reset_index().set_index("step_start_time")
     # NOTE: iteration_number may contain some faulty offset, but the
     # following aggregation works anyway, as we take the max value.
     interest, context = (["iteration_number"], ["time_step", "step_start_time"])
