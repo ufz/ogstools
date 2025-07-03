@@ -64,7 +64,7 @@ build:
     - pip install build
     - pyproject-build
 
-tests (arch - conda) [R]:
+tests (arch - conda) (R):
   stage: test
   tags: [shell, envinf]
   needs: []
@@ -82,7 +82,7 @@ tests (arch - conda) [R]:
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
 
-tests (arch - conda - ogs wheel release) [M]:
+tests (arch - conda - ogs wheel release) (M):
   stage: maintenance
   tags: [shell, envinf]
   rules:
@@ -102,7 +102,7 @@ tests (arch - conda - ogs wheel release) [M]:
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
 
-tests (arch - pip - ogs latest) [M]:
+tests (arch - pip - ogs latest) (M):
   stage: maintenance
   tags: [shell, envinf]
   rules:
@@ -116,7 +116,7 @@ tests (arch - pip - ogs latest) [M]:
   script:
     - pytest -n auto --hypothesis-profile ci
 
-tests (arch - pip - no OGS) [M]:
+tests (arch - pip - no OGS) (M):
   stage: maintenance
   rules:
     - *maintenance-rules
@@ -130,12 +130,12 @@ tests (arch - pip - no OGS) [M]:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
     - pytest -n auto -m "not (tools or system)"
 
-# tests (arch - pip - with OGS_IN_PATH) [M]:
+# tests (arch - pip - with OGS_IN_PATH) (M):
 # Actually a test with OGS in path was planned (just another export -> export PATH=$PWD/.venv_only_ogs/bin:$PATH )
 # It will not work easily -> https://stackoverflow.com/questions/46242623/modify-path-for-gitlab-runner
 # So we will skip this test for now, and remove the option to have OGS in path in the future, anyway
 
-tests (arch - pip - with OGS_BIN_PATH) [M]:
+tests (arch - pip - with OGS_BIN_PATH) (M):
   stage: maintenance
   tags: [shell, envinf]
   rules:
@@ -154,7 +154,7 @@ tests (arch - pip - with OGS_BIN_PATH) [M]:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
     - pytest -n auto -m "tools or system"
 
-tests (arch - conda - ogs custom latest) [M]:
+tests (arch - conda - ogs custom latest) (M):
   stage: maintenance
   tags: [shell, envinf]
   rules:
@@ -174,7 +174,7 @@ tests (arch - conda - ogs custom latest) [M]:
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
 
-tests (arch - pip - no OGS) [R]:
+tests (arch - pip - no OGS) (R):
   stage: test
   tags: [shell, envinf]
   needs: []
@@ -186,7 +186,7 @@ tests (arch - pip - no OGS) [R]:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
     - pytest -n auto -m "not (tools or system)"
 
-tests coverage (arch - container) [R]:
+tests coverage (arch - container) (R):
   stage: test
   needs: []
   script:
@@ -206,7 +206,7 @@ tests coverage (arch - container) [R]:
     name: code coverage $CI_MERGE_REQUEST_IID
     url: ${ARTIFACTS_PAGES_URL}/htmlcov/index.html
 
-tests (win - pip) [R]:
+tests (win - pip) (R):
   stage: test
   tags: [windows]
   rules:
@@ -221,7 +221,7 @@ tests (win - pip) [R]:
   script:
     - pytest
 
-tests (mac - pip) [R]:
+tests (mac - pip) (R):
   stage: test
   tags: [mac, arm64]
   rules:
@@ -243,7 +243,7 @@ tests (mac - pip) [R]:
   - make indexdocs
   - mv docs/_build/html public
 
-docs preview [R]:
+docs preview (R):
   stage: test
   needs: []
   rules:
@@ -257,7 +257,7 @@ docs preview [R]:
     name: docs preview $CI_MERGE_REQUEST_IID $CI_PROJECT_ROOT_NAMESPACE
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
-docs preview [M]:
+docs preview (M):
   stage: maintenance
   needs: []
   tags: [shell, envinf]
@@ -292,7 +292,7 @@ docs preview [M]:
     name: docs preview $CI_COMMIT_REF_SLUG
     url: "${ARTIFACTS_PAGES_URL}/public/index.html"
 
-setup maintainer [M]:
+setup maintainer (M):
   stage: maintenance
   needs: []
   tags: [shell, envinf]
@@ -305,7 +305,7 @@ setup maintainer [M]:
     - pip install -e .[dev,test,docs,feflow,ogs]
     - *pip-setup-extra-headless
 
-setup developer [R]:
+setup developer (R):
   stage: test
   tags: [shell, envinf]
   needs: []
@@ -402,7 +402,7 @@ user container image:
     - docker build -t $DOCKER_USER_IMAGE .
     - docker push $DOCKER_USER_IMAGE
 
-code_quality_ruff [R]:
+code_quality_ruff (R):
   image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
   needs: []
   script:
@@ -412,7 +412,7 @@ code_quality_ruff [R]:
     reports:
       codequality: ruff-code-quality-report.json
 
-code_quality_mypy [R]:
+code_quality_mypy (R):
   image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
   needs: []
   script:
