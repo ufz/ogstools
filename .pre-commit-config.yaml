@@ -43,7 +43,7 @@ repos:
         additional_dependencies:
           - black==23.3.0 # keep in sync with black hook
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.4.5"
+    rev: "v0.4.5" # keep in sync with code_quality_ruff-job
     hooks:
       - id: ruff
         args: ["--show-fixes", "--fix"]
@@ -58,7 +58,7 @@ repos:
       - id: nbqa-ruff
         additional_dependencies: [ruff==v0.0.277]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.4.1"
+    rev: "v1.4.1" # keep in sync with code_quality_mypy-job
     hooks:
       - id: mypy
         files: ogstools
