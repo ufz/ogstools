@@ -30,7 +30,13 @@ class Processes(build_tree.BuildTree):
         self.secondvars = None
         self.process_baseentries: dict[str, ET.Element] = {}
         self.borehole_heat_exchangers = None
-        self.borehole_heat_exchanger: list[ET.Element] = []
+        self.borehole_heat_exchanger: dict[str, ET.Element] = {}
+        for i, entry in enumerate(
+            self.process.findall(
+                ".borehole_heat_exchangers/borehole_heat_exchanger"
+            )
+        ):
+            self.borehole_heat_exchanger[entry.get("id", str(i))] = entry
 
     def add_process_variable(
         self, process_variable: str = "", process_variable_name: str = ""
@@ -168,39 +174,59 @@ class Processes(build_tree.BuildTree):
             if key not in ["id"]:
                 self.populate_tree(const_rel, key, text=value, overwrite=True)
 
-    def add_bhe_type(self, bhe_type: str) -> None:
+    def set_bhe_type(self, bhe_type: str, bhe_id: int | str = 0) -> None:
         """
-        Adds a BHE type-
+        Set a BHE type
         """
         self.borehole_heat_exchangers = self.populate_tree(
             self.process, "borehole_heat_exchangers", overwrite=True
         )
-        self.borehole_heat_exchanger.append(
-            self.populate_tree(
-                self.borehole_heat_exchangers, "borehole_heat_exchanger"
+
+        bhe_id_str = str(bhe_id)
+        if bhe_id_str not in self.borehole_heat_exchanger:
+            self.borehole_heat_exchanger[bhe_id_str] = self.populate_tree(
+                self.borehole_heat_exchangers,
+                "borehole_heat_exchanger",
+                attr={"id": bhe_id_str},
             )
-        )
+        if (
+            "*" in self.borehole_heat_exchanger
+            and len(self.borehole_heat_exchanger) != 1
+        ):
+            msg = "One bhe_id is specified as * meaning a catch for all BHEs, but more than one BHE definition is in the project."
+            raise ValueError(msg)
         self.populate_tree(
-            self.borehole_heat_exchanger[-1], "type", text=bhe_type
+            self.borehole_heat_exchanger[bhe_id_str],
+            "type",
+            text=bhe_type,
+            overwrite=True,
         )
 
-    def add_bhe_component(self, index: int = 0, **args: Any) -> None:
+    def set_bhe_component(self, bhe_id: int | str = 0, **args: Any) -> None:
         """
-        Adds a BHE component.
+        Set a BHE component.
         """
         self._convertargs(args)
         bhe_type = ""
+        bhe_id_str = str(bhe_id)
         if "comp_type" not in args:
             msg = "No BHE component name specified."
             raise KeyError(msg)
+        bhecomponent = self.get_child_tag(
+            self.borehole_heat_exchanger[bhe_id_str], args["comp_type"]
+        )
+        if bhecomponent is not None:
+            # remove, for secure handling setting a different bhecomponent setup
+            bhecomponent.getparent().remove(bhecomponent)
+
         bhecomponent = self.populate_tree(
-            self.borehole_heat_exchanger[index], args["comp_type"]
+            self.borehole_heat_exchanger[bhe_id_str], args["comp_type"]
         )
         if bhecomponent.tag == "borehole":
             self.populate_tree(bhecomponent, "length", text=args["length"])
             self.populate_tree(bhecomponent, "diameter", text=args["diameter"])
         elif bhecomponent.tag == "pipes":
-            for element in self.borehole_heat_exchanger[index]:
+            for element in self.borehole_heat_exchanger[bhe_id_str]:
                 if element.tag == "type":
                     bhe_type = element.text
             inlet_text = "inlet"

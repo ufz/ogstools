@@ -12,7 +12,7 @@
             </process_variables>
             <use_server_communication>true</use_server_communication>
             <borehole_heat_exchangers>
-                <borehole_heat_exchanger>
+                <borehole_heat_exchanger id="0">
                     <type>1U</type>
                     <use_bhe_pipe_network>false</use_bhe_pipe_network>
                     <flow_and_temperature_control>

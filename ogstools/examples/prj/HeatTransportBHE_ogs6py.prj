@@ -16,7 +16,7 @@
                 <process_variable>temperature_BHE1</process_variable>
             </process_variables>
             <borehole_heat_exchangers>
-                <borehole_heat_exchanger>
+                <borehole_heat_exchanger id="0">
                     <type>2U</type>
                     <borehole>
                         <length>90</length>
