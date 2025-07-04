@@ -699,22 +699,29 @@ class TestUtils:
                 expected_num_arrays = num_arrays - int(not skip_last)
                 assert len(datafield.keys()) == expected_num_arrays
 
-    def test_extend(self):
-        ms1 = examples.load_meshseries_HT_2D_PVD()
+    @pytest.mark.parametrize(
+        "load_example_ms",
+        [
+            examples.load_meshseries_HT_2D_PVD,
+            examples.load_meshseries_HT_2D_XDMF,
+        ],
+    )
+    def test_extend(self, load_example_ms):
+        ms1 = load_example_ms()
         len_orig_ms1 = len(ms1)
         ms1_orig_tv = ms1.timevalues
         ms1.extend(ms1)
         print(ms1)  # check if representable
         assert len(ms1) == 2 * len_orig_ms1 - 1
         assert ms1.timevalues[-1] == ms1_orig_tv[-1] * 2
-        ms1 = examples.load_meshseries_HT_2D_PVD()
-        ms2 = examples.load_meshseries_HT_2D_PVD()
+        ms1 = load_example_ms()
+        ms2 = load_example_ms()
         ms2._timevalues = ms1.timevalues[-1] + ms2.timevalues
         ms1.extend(ms2)
         assert len(ms1) == 2 * len_orig_ms1 - 1
         assert ms1.timevalues[-1] == ms1_orig_tv[-1] * 2
-        ms1 = examples.load_meshseries_HT_2D_PVD()
-        ms2 = examples.load_meshseries_HT_2D_PVD()
+        ms1 = load_example_ms()
+        ms2 = load_example_ms()
         ms2._timevalues = ms1_orig_tv[-1] + ms1_orig_tv + 0.1
         ms1.extend(ms2)
         assert len(ms1) == 2 * len_orig_ms1
