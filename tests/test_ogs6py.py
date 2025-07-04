@@ -10,8 +10,11 @@ from lxml import etree as ET
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import (
+    prj_3bhes_id_1U_2U_1U,
+    prj_3bhes_id_1U_2U_1U_ref,
     prj_aniso_expansion,
     prj_beier_sandbox,
+    prj_beier_sandbox_power_ref,
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
     prj_heat_transport,
@@ -823,11 +826,11 @@ class TestiOGS:
             process_variable="process_variable",
             process_variable_name="temperature_BHE1",
         )
-        model.processes.add_bhe_type(bhe_type="2U")
-        model.processes.add_bhe_component(
+        model.processes.set_bhe_type(bhe_type="2U", bhe_id=0)
+        model.processes.set_bhe_component(
             comp_type="borehole", length="90", diameter="0.152"
         )
-        model.processes.add_bhe_component(
+        model.processes.set_bhe_component(
             comp_type="pipes",
             inlet_diameter="0.0262",
             inlet_wall_thickness="0.0029",
@@ -838,20 +841,20 @@ class TestiOGS:
             distance_between_pipes="0.06",
             longitudinal_dispersion_length="0.001",
         )
-        model.processes.add_bhe_component(
+        model.processes.set_bhe_component(
             comp_type="flow_and_temperature_control",
             type="PowerCurveConstantFlow",
             power_curve="scaled_power_curve",
             flow_rate="0.00037",
         )
-        model.processes.add_bhe_component(
+        model.processes.set_bhe_component(
             comp_type="grout",
             density="1",
             porosity="0",
             specific_heat_capacity="1910000",
             thermal_conductivity="0.6",
         )
-        model.processes.add_bhe_component(
+        model.processes.set_bhe_component(
             comp_type="refrigerant",
             density="1052",
             viscosity="0.0052",
@@ -1146,6 +1149,32 @@ class TestiOGS:
         model.python_script.set_pyscript("simulationX_test.py")
         model.write_input()
         self.compare(prjfile, prj_beier_sandbox_ref)
+
+    def test_bhe_modify(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "modify_bhe.prj"
+        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model.processes.set_bhe_type(bhe_id=0, bhe_type="2U")
+        model.processes.set_bhe_component(
+            bhe_id=0,
+            comp_type="flow_and_temperature_control",
+            type="FixedPowerConstantFlow",
+            power="100",
+            flow_rate="2e-4",
+        )
+        model.write_input()
+        self.compare(prjfile, prj_beier_sandbox_power_ref)
+
+    def test_bhe_ids(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "bhe_ids.prj"
+        model = Project(input_file=prj_3bhes_id_1U_2U_1U, output_file=prjfile)
+        model.processes.set_bhe_component(
+            bhe_id="0,2",
+            comp_type="borehole",
+            length="100.0",
+            diameter="0.15",
+        )
+        model.write_input()
+        self.compare(prjfile, prj_3bhes_id_1U_2U_1U_ref)
 
     def test_robin_bc(self, tmp_path: Path) -> NoReturn:
         prjfile = tmp_path / "robin_bc.prj"
