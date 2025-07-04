@@ -72,7 +72,9 @@ class Mesh(pv.UnstructuredGrid):
         """
         Initialize a Mesh object
 
-            :param pv_mesh:     Underlying pyvista mesh.
+        :param pv_mesh: Underlying pyvista mesh. If None, the constructor
+                        assumes it is being used as a copy constructor, and
+                        kwargs are passed to the superclass constructor.
         """
         if not pv_mesh:
             # for copy constructor
