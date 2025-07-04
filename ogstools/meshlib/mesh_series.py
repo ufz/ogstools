@@ -123,6 +123,14 @@ class MeshSeries(Sequence[Mesh]):
         ms2_list = list(mesh_series)
         ms1_timevalues = self.timevalues
         ms2_timevalues = mesh_series.timevalues
+        if hasattr(self, "timestep_files"):
+            ms1_timestep_files = self.timestep_files
+        else:
+            ms1_timestep_files = [""] * len(ms1_list)
+        if hasattr(mesh_series, "timestep_files"):
+            ms2_timestep_files = mesh_series.timestep_files
+        else:
+            ms2_timestep_files = [""] * len(ms2_list)
         offset = 0.0
         delta = ms2_timevalues[0] - ms1_timevalues[-1]
         offset = 0.0 if delta >= 0 else ms1_timevalues[-1]
@@ -131,6 +139,8 @@ class MeshSeries(Sequence[Mesh]):
         ):
             ms1_timevalues = ms1_timevalues[:-1]
             ms1_list = ms1_list[:-1]
+            ms1_timestep_files = ms1_timestep_files[:-1]
+
         ms2_timevalues = ms2_timevalues + offset
         self._timevalues = np.append(ms1_timevalues, ms2_timevalues, axis=0)
         self._mesh_cache.update(
@@ -142,6 +152,13 @@ class MeshSeries(Sequence[Mesh]):
                 )
             )
         )
+        if hasattr(self, "timestep_files") or hasattr(
+            mesh_series, "timestep_files"
+        ):
+            self.timestep_files = ms1_timestep_files + ms2_timestep_files
+            assert len(self.timestep_files) == len(
+                self._timevalues
+            ), "Timestep files and timevalues do not match."
 
     @classmethod
     def resample(
