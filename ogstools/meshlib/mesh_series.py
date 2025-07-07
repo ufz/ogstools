@@ -993,8 +993,10 @@ class MeshSeries(Sequence[Mesh]):
         new_ms._spatial_factor *= spatial_factor
         new_ms._time_factor *= time_factor
 
+        for _, mesh in new_ms._mesh_cache.items():
+            mesh.scale(spatial_factor, inplace=True)
         scaled_cache = {
-            timevalue * time_factor: Mesh(mesh.scale(spatial_factor))
+            timevalue * time_factor: mesh
             for timevalue, mesh in new_ms._mesh_cache.items()
         }
         new_ms.clear_cache()
