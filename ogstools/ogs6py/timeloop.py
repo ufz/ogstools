@@ -28,8 +28,11 @@ class TimeLoop(build_tree.BuildTree):
         self.processes = self.populate_tree(
             self.time_loop, "processes", overwrite=True
         )
-        self.output = self.populate_tree(
-            self.time_loop, "output", overwrite=True
+        self.output = self.time_loop.findall(".output")
+        self.outputs = (
+            None
+            if self.time_loop.findall(".outputs") == []
+            else self.time_loop.findall(".outputs")[0]
         )
 
     def add_process(self, **args: Any) -> None:
@@ -257,57 +260,75 @@ class TimeLoop(build_tree.BuildTree):
         each_steps : `list` or `str`
         fixed_output_times : `list` or `str`
         """
+
+        if self.output == []:
+            self.output.append(self.populate_tree(self.time_loop, "output"))
+        else:
+            if self.outputs is None:
+                self.outputs = self.populate_tree(self.time_loop, "outputs")
+            for output in self.output:
+                self.time_loop.remove(output)
+                self.outputs.append(output)
+
+            self.output.append(self.populate_tree(self.outputs, "output"))
+
         if "type" not in args:
             msg = """If you want to specify an output method, \
                         you need to provide type, \
                         prefix and a list of variables."""
             raise KeyError(msg)
-        self.populate_tree(self.output, "type", text=args["type"])
+        self.populate_tree(self.output[-1], "type", text=args["type"])
         if "prefix" in args:
-            self.populate_tree(self.output, "prefix", text=args["prefix"])
+            self.populate_tree(self.output[-1], "prefix", text=args["prefix"])
         if "suffix" in args:
-            self.populate_tree(self.output, "suffix", text=args["suffix"])
+            self.populate_tree(self.output[-1], "suffix", text=args["suffix"])
         if "data_mode" in args:
-            self.populate_tree(self.output, "data_mode", text=args["data_mode"])
+            self.populate_tree(
+                self.output[-1], "data_mode", text=args["data_mode"]
+            )
         if "compress_output" in args:
             if isinstance(args["compress_output"], bool):
                 if args["compress_output"] is True:
                     self.populate_tree(
-                        self.output, "compress_output", text="true"
+                        self.output[-1], "compress_output", text="true"
                     )
                 else:
                     self.populate_tree(
-                        self.output, "compress_output", text="false"
+                        self.output[-1], "compress_output", text="false"
                     )
             else:
                 self.populate_tree(
-                    self.output, "compress_output", text=args["compress_output"]
+                    self.output[-1],
+                    "compress_output",
+                    text=args["compress_output"],
                 )
         if "output_iteration_results" in args:
             if isinstance(args["output_iteration_results"], bool):
                 if args["output_iteration_results"] is True:
                     self.populate_tree(
-                        self.output, "output_iteration_results", text="true"
+                        self.output[-1], "output_iteration_results", text="true"
                     )
                 else:
                     self.populate_tree(
-                        self.output, "output_iteration_results", text="false"
+                        self.output[-1],
+                        "output_iteration_results",
+                        text="false",
                     )
             else:
                 self.populate_tree(
-                    self.output,
+                    self.output[-1],
                     "output_iteration_results",
                     text=args["output_iteration_results"],
                 )
         if "meshes" in args:
-            meshes = self.populate_tree(self.output, "meshes")
+            meshes = self.populate_tree(self.output[-1], "meshes")
             if isinstance(args["meshes"], str):
                 self.populate_tree(meshes, "mesh", text=args["meshes"])
             else:
                 for mesh in args["meshes"]:
                     self.populate_tree(meshes, "mesh", text=mesh)
         if "repeat" in args:
-            timesteps = self.populate_tree(self.output, "timesteps")
+            timesteps = self.populate_tree(self.output[-1], "timesteps")
             if "each_steps" not in args:
                 msg = "each_steps is a required tag if repeat is given."
                 raise KeyError(msg)
@@ -324,7 +345,7 @@ class TimeLoop(build_tree.BuildTree):
                 pair = self.populate_tree(timesteps, "pair")
                 self.populate_tree(pair, "repeat", text=args["repeat"])
                 self.populate_tree(pair, "each_steps", text=args["each_steps"])
-        variables = self.populate_tree(self.output, "variables")
+        variables = self.populate_tree(self.output[-1], "variables")
         if "variables" in args:
             if isinstance(args["variables"], list):
                 for var in args["variables"]:
@@ -335,13 +356,13 @@ class TimeLoop(build_tree.BuildTree):
         if "fixed_output_times" in args:
             if isinstance(args["fixed_output_times"], list):
                 self.populate_tree(
-                    self.output,
+                    self.output[-1],
                     "fixed_output_times",
                     text=" ".join(str(x) for x in args["fixed_output_times"]),
                 )
             else:
                 self.populate_tree(
-                    self.output,
+                    self.output[-1],
                     "fixed_output_times",
                     text=args["fixed_output_times"],
                 )
@@ -414,7 +435,9 @@ class TimeLoop(build_tree.BuildTree):
         each_steps : `int` or `str` or `list`
         """
         self._convertargs(args)
-        timesteps = self.populate_tree(self.output, "timesteps", overwrite=True)
+        timesteps = self.populate_tree(
+            self.output[-1], "timesteps", overwrite=True
+        )
         if "repeat" in args and "each_steps" in args:
             if isinstance(args["repeat"], list) and isinstance(
                 args["each_steps"], list

@@ -174,6 +174,7 @@ prj_time_dep_het_param_ref = (
 )
 prj_beier_sandbox = _prj_dir / "beier_sandbox.prj"
 prj_beier_sandbox_ref = _prj_dir / "beier_sandbox_ref.prj"
+prj_beier_sandbox_add_output_ref = _prj_dir / "beier_sandbox_add_output_ref.prj"
 prj_3bhes_id_1U_2U_1U = _prj_dir / "3bhes_id_1U_2U_1U.prj"
 prj_3bhes_id_1U_2U_1U_ref = _prj_dir / "3bhes_id_1U_2U_1U_ref.prj"
 prj_beier_sandbox_power_ref = _prj_dir / "beier_sandbox_power_ref.prj"

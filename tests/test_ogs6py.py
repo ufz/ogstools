@@ -14,6 +14,7 @@ from ogstools.examples import (
     prj_3bhes_id_1U_2U_1U_ref,
     prj_aniso_expansion,
     prj_beier_sandbox,
+    prj_beier_sandbox_add_output_ref,
     prj_beier_sandbox_power_ref,
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
@@ -1270,6 +1271,26 @@ class TestiOGS:
         )
         model.write_input()
         self.compare(prjfile, prj_pid_timestepping_ref)
+
+    def test_add_output(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "beier_sandbox_add_output.prj"
+        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model.time_loop.add_output(
+            type="VTK",
+            prefix="new_output",
+            repeat="1",
+            each_steps="10",
+            variables=["temperature_soil", "temperature_BHE1"],
+            suffix="_ts_{:timestep}_t_{:time}",
+        )
+        model.write_input()
+        self.compare(prjfile, prj_beier_sandbox_add_output_ref)
+
+    def test_output_init(self, tmp_path: Path) -> NoReturn:
+        prjfile = tmp_path / "beier_sandbox_output.prj"
+        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model.write_input()
+        self.compare(prjfile, prj_beier_sandbox)
 
     def test_deactivate_replace(self, tmp_path: Path) -> NoReturn:
         prjfile = tmp_path / "deactivate_replace.prj"
