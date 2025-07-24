@@ -69,7 +69,7 @@ ______________________________________________________________________
 
 # Summary
 
-OGSTools (OpenGeoSys Tools) is an open source (3-Clause BSD) Python library for streamlined usage of OpenGeoSys 6 (OGS), also an open-source software \[@ogs:6.5.4\] for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@kolditz2012opengeosys\]. OGSTools provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. The libraries' functionalities have been proven to be useful in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
+OGSTools (OpenGeoSys Tools) is an open source (3-Clause BSD) Python library for streamlined usage of OpenGeoSys 6 (OGS), also an open-source software \[@ogs:6.5.4\] for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@kolditz2012opengeosys\]. OGSTools provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
 
 # Statement of need
 
