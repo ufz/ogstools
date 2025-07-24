@@ -62,7 +62,7 @@ affiliations:
 date: 17 March 2025
 bibliography: paper.bib
 
-______________________________________________________________________
+---
 
 ## Summary
 
@@ -114,7 +114,7 @@ The AREHS-Project (effects of changing boundary conditions on the development of
 
 ### OpenWorkflow
 
-`OpenWorkFlow` \[@Kolditz\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany.  Automated workflows as a piece of the planned scientific computational basis for investigating repository-induced physical and chemical processes in different geological setting are essential for transparent and reproducible simulation results. OGS together with `OGSTools` has been used in a study of thermal repository dimensioning (`ThEDi` - German: "Thermische Endlager Dimensionierung"), that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded. The fully automated workflow generates the simulation models based on geometric and material data, runs and analyses the simulations. For scalability and parallelization the workflow is embedded optionally within the workflow management `Snakemake`. The workflow components are implemented reusing `OGSTools` functionalities.
+`OpenWorkFlow` \[@Kolditz\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany.  Automated workflows as a piece of the planned scientific computational basis for investigating repository-induced physical and chemical processes in different geological setting are essential for transparent and reproducible simulation results. OGS together with `OGSTools` has been used in a study of thermal repository dimensioning (`ThEDi` - German: Thermische Endlager Dimensionierung), that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded. The fully automated workflow generates the simulation models based on geometric and material data, runs and analyses the simulations. For scalability and parallelization the workflow is embedded optionally within the workflow management `Snakemake`. The workflow components are implemented reusing `OGSTools` functionalities.
 
 ### OpenGeoSys benchmarks
 
