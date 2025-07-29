@@ -1,6 +1,6 @@
 """
-Workflow: Hydraulic model - conversion, simulation and post-processing
-======================================================================
+Workflow with Feflowlib: Hydraulic model - conversion, simulation and post-processing
+=====================================================================================
 
 .. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
