@@ -1,4 +1,4 @@
-Anaylzing OGS logs
+Analyzing OGS logs
 ==================
 
 This section covers the usage of the logparser, which can be used to analyze OGS
