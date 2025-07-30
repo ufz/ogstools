@@ -169,18 +169,35 @@ def _point_and_cell_data(
 
     # 3. get all the nodal and elemental properties of the mesh as pandas
     # Dataframe and drop nans if a column is full of nans for all the properties
-    pt_prop = doc.c.mesh.df.nodes(
+    pt_prop_all = doc.c.mesh.df.nodes(
         global_cos=True,
         par=pts_dict,
         distr=fetch_user_data(user_data, "NODAL", "DISTRIBUTION"),
         expr=fetch_user_data(user_data, "NODAL", "EXPRESSION"),
-    ).dropna(axis=1, how="all")
+    )
+    pt_prop = pt_prop_all.dropna(axis=1, how="all")
+    pt_prop_objects = pt_prop.select_dtypes(include="object")
+    for column in pt_prop_objects:
+        is_dropable = all(
+            np.isnan(sublist).any() for sublist in pt_prop_objects[column]
+        )
+        if is_dropable:
+            pt_prop = pt_prop.drop(labels=column, axis=1)
+
     cell_prop = doc.c.mesh.df.elements(
         global_cos=True,
         par=cell_dict,
         distr=fetch_user_data(user_data, "ELEMENTAL", "DISTRIBUTION"),
         expr=fetch_user_data(user_data, "ELEMENTAL", "EXPRESSION"),
     ).dropna(axis=1, how="all")
+    cell_prop_objects = cell_prop.select_dtypes(include="object")
+
+    for column in cell_prop_objects:
+        is_dropable = all(
+            np.isnan(sublist).any() for sublist in cell_prop_objects[column]
+        )
+        if is_dropable:
+            cell_prop = cell_prop.drop(labels=column, axis=1)
 
     # 4. write the pandas Dataframe of nodal and elemental properties to
     #  a dictionary
@@ -381,20 +398,15 @@ def update_geometry(
     MaterialIDs = _material_ids_from_selections(doc)
     (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
     for pt_data in point_data:
-        # ToDo Issue 135
-        if point_data[pt_data].dtype == object:
-            continue
-        mesh.point_data.update({pt_data: point_data[pt_data]})
+        arr = point_data[pt_data].tolist()
+        mesh.point_data.update({pt_data: arr})
     for c_data in cell_data:
         values = (
             cell_data[c_data][0]
             if c_data != "MaterialIDs"
             else cell_data[c_data]
         )
-        # ToDo Issue 135
-        if values.dtype == object:
-            continue
-        mesh.cell_data.update({c_data: values})
+        mesh.cell_data.update({c_data: values.tolist()})
     # If the FEFLOW problem class refers to a mass problem,
     # the following if statement will be true.
     if doc.getProblemClass() in [1, 3, 5, 7]:

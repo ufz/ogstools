@@ -359,7 +359,7 @@ class TestConverter:
         assert celltypes[0] == pv.CellType.WEDGE
 
         # 2. Test data arrays
-        assert len(self.pv_mesh.cell_data) == 12
+        assert len(self.pv_mesh.cell_data) == 13
         assert len(self.pv_mesh.point_data) == 11
 
     def test_toymodel_point_boundary_condition(self):
