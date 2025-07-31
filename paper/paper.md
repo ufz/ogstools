@@ -152,6 +152,45 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 They can be downloaded, executed, and adapted in an interactive environment for further exploration.
 With `OGSTools` code complexity and code duplication could be reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
+The code transformation of Mandel-Cryer effect benchmark, based on a simplified merge request[^2], demonstrates that using predefined plotting utilities reduces technical overhead.
+
+Sections of the benchmark without OGSTools :
+
+```python
+# Mandel-Cryer effect benchmark
+# Load the result
+pvdfile = vtuIO.PVDIO("results_MandelCryerStaggered.pvd", dim=3)
+fields = pvdfile.get_point_field_names()
+time = pvdfile.timesteps
+
+# Define observation points
+observation_points = {"center": (0, 0, 0)}
+pressure = pvdfile.read_time_series("pressure", observation_points)
+
+# Plot soil temperature
+fig, ax1 = plt.subplots(figsize=(10, 8))
+ax1.plot(time, pressure["center"], color="tab:orange")
+ax1.set_ylabel("Pressure (Pa)", fontsize=20)
+ax1.set_xlabel("Time (s)", fontsize=20)
+ax1.set_xlim(0, t_end)
+ax1.set_ylim(0, 1500)
+ax1.grid()
+fig.supxlabel("Pressure at center of sphere")
+plt.show()
+```
+
+By abstracting away lower-level plotting code, users can focus more directly on the physical interpretation of the benchmark results. Sections of the benchmark with OGSTools:
+
+```python
+# Mandel-Cryer effect benchmark without OGSTools
+import ogstools as ot
+
+ms = ot.MeshSeries("results_MandelCryerStaggered.pvd")
+# Plot soil temperature at observation points
+center_point = [0, 0, 0]
+fig = ms.plot_probe(center_point, ot.variables.pressure, labels=["Center"])
+```
+
 ### OGS-GIScape
 
 `OGS-GIScape` is a `Snakemake`-based workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models to study the groundwater flow and the associated environmental impact or conduct scenario analyses. The models could be used to estimate the impact due to changes in groundwater resources.
@@ -168,3 +207,4 @@ This work has been supported by multiple funding sources, including `AREHS` unde
 The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under (grant \[Grant Number\]) by `Deutsche Forschungsgemeinschaft` (DFG)
 
 [^1]: https://ogstools.opengeosys.org
+[^2]: https://gitlab.opengeosys.org/ogs/ogs/-/merge_requests/5171
