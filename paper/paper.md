@@ -62,11 +62,13 @@ affiliations:
 date: 17 March 2025
 bibliography: paper.bib
 
---- 
+______________________________________________________________________
 
 ## Summary
 
-`OGSTools` (`OpenGeoSys` Tools) is an open source (3-Clause BSD) Python library for streamlined usage of `OpenGeoSys 6` (OGS), also an open-source software \[@bilke_2025_14672997\] for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@kolditz2012opengeosys\]. `OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
+`OGSTools` (`OpenGeoSys` Tools) is an open source (3-Clause BSD) Python library for streamlined usage of `OpenGeoSys 6` (OGS), also an open-source software \[@bilke_2025_14672997\] for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@kolditz2012opengeosys\].
+`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers.
+The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
 
 ## Statement of need
 
@@ -112,7 +114,7 @@ The AREHS-Project (effects of changing boundary conditions on the development of
 
 ### OpenWorkflow
 
-`OpenWorkFlow` \[@openworkflow2023\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany.  Automated workflows as a piece of the planned scientific computational basis for investigating repository-induced physical and chemical processes in different geological setting are essential for transparent and reproducible simulation results. OGS together with `OGSTools` has been used in a study of thermal repository dimensioning - named `ThEDi`. `TheDi` focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded. The fully automated workflow generates the simulation models based on geometric and material data, runs and analyses the simulations. For scalability and parallelization the workflow is embedded optionally within the workflow management `Snakemake`. The workflow components are implemented reusing `OGSTools` functionalities.
+`OpenWorkFlow` \[@openworkflow2023\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. Automated workflows as a piece of the planned scientific computational basis for investigating repository-induced physical and chemical processes in different geological setting are essential for transparent and reproducible simulation results. OGS together with `OGSTools` has been used in a study of thermal repository dimensioning - named `ThEDi`. `ThEDi` focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded. The fully automated workflow generates the simulation models based on geometric and material data, runs and analyses the simulations. For scalability and parallelization the workflow is embedded optionally within the workflow management `Snakemake`. The workflow components are implemented reusing `OGSTools` functionalities.
 
 ### OpenGeoSys benchmarks
 
