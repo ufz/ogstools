@@ -1,5 +1,5 @@
 ---
-title: OGSTools: A Python package for OpenGeoSys
+title: 'OGSTools: A Python package for OpenGeoSys'
 tags:
 
 - Python
@@ -80,9 +80,9 @@ A workflow is a structured sequence of tasks, that processes data and executes c
 
 The usage of workflow managers shifts the actual development to the workflow components. Common and frequently used functionality found within workflow components are made reusable and provided in this Python library. It focuses on functionalities directly related to (1) the OGS core simulator and its specific input and output data, (2) domain-specific definitions in geo-science, (3) finite element modeling (FEM), and (4) numerical computation. Our workflow components are then built of generic Python libraries, our library and workflow manager dedicated integration code. To ensure integration of the library's functionalities with the workflow management software, a list of functional and non-functional requirements (e.g., thread safety), imposed by workflow management software, are maintained and regularly validated through continuous testing.
 
-Code example
-
 ### Test suite
+
+`OGSTools` provides functionality for (1) setting up test environments, (2) executing OGS under specified conditions, (3) evaluating results against defined test criteria, and (4) monitoring the testing process.
 
 ### Centralization of Python-related development
 
@@ -96,7 +96,7 @@ To support broad adoption within the OGS user community, the library is delibera
 
 The implemented features are covering pre-processing, setup and execution of simulations and post-processing.
 
-Preprocessing for OGS includes mesh adaptation, conversion, refinement, and creation, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[Heinze2025\].
+Preprocessing for OGS includes mesh adaptation, conversion, refinement, and creation, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\].
 
 Postprocessing includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis. `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards. It offers functionalities for the comparison of numerical simulation results with experimental data or analytical solutions. Just as preprocessing and analysis are essential for single simulations,tooling becomes critical for efficiently handling ensemble runs. Ensemble runs enable evaluation of model robustness, parameter sensitivity, numerical behavior, and computational efficiency, with spatial and temporal grid conversion currently supported.
 
