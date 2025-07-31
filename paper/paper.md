@@ -21,7 +21,7 @@ authors:
 - name: Florian Zill
   orcid: 0000-0002-5177-401X
   equal-contrib: true
-  affiliation: 1,2
+  affiliation: 2, 1
 - name: Julian Heinze
   orcid: 0009-0004-3449-8852
   equal-contrib: true
@@ -37,7 +37,7 @@ authors:
 - name: Feliks Kiszkurno
   orcid: 0000-0003-3304-4838
   equal-contrib: true
-  affiliation: 1
+  affiliation: 2, 1
 - name: Dominik Kern
   orcid: 0000-0002-1958-2982
   equal-contrib: true
@@ -62,12 +62,12 @@ affiliations:
 date: 17 March 2025
 bibliography: paper.bib
 
----
+______________________________________________________________________
 
 ## Summary
 
 `OGSTools` (`OpenGeoSys` Tools) is an open source (3-Clause BSD) Python library for streamlined usage of `OpenGeoSys 6` (OGS), also an open-source software \[@bilke_2025_14672997\] for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@kolditz2012opengeosys\].
-`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers.
+`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users with different levels of experience and expertise.
 The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
 
 ## Statement of need
@@ -75,12 +75,12 @@ The libraries' functionalities are designed to be used in complex automated work
 ### Development efficiency
 
 Modelers of OGS iteratively run simulations, analyse results, and refine their models with the goal to enhance the accuracy, efficiency and reliability of the simulation results.
-To improve efficiency, repetitive tasks in the model development cycle should be formalized and automated through computer programs.
-The Python library introduced here is needed serves a central platform to collect and improve common functionalities needed by modelers of OGS.
+To improve efficiency, repetitive steps in the model development cycle should be formalized and implemented - in case of OGSTools as a Python library.
+The Python library introduced here serves a central platform to collect and improve common functionalities needed by modelers of OGS.
 
 ### Complex workflows
 
-A workflow is a structured sequence of tasks, that processes data and executes computations to achieve a specific goal \[@diercks2022workflows\].
+A workflow is a structured sequence of steps, that processes data and executes computations to achieve a specific goal \[@diercks2022workflows\].
 In our scientific research, workflows need to integrate multiple steps—such as geological data preprocessing, ensemble simulations with OGS, domain specific analysis and visualization—into complex and fully automated and therefore reproducible sequences.
 Typically, one specific workflow is implemented to answer one specific scientific question.
 Workflow-based approaches have been proofed to adhere to the `FAIR principles` \[@goble2020fair\], \[@Wilkinson_2025\]. The typical approach is to use existing workflow management software that covers domain independent parts like dependency graph description, computational efficiency, data management, execution control, multi-user collaboration and data provenance \[@Bilke2025\].
@@ -119,7 +119,7 @@ Preprocessing (1) for OGS includes mesh adaptation, conversion, refinement, and 
 Postprocessing (3) includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
 It offers functionalities for the comparison of numerical simulation results with experimental data or analytical solutions.
-Just as preprocessing and analysis are essential for single simulations,tooling becomes critical for efficiently handling ensemble runs.
+Just as preprocessing and analysis are essential for single simulations, tooling becomes critical for efficiently handling ensemble runs.
 Ensemble runs enable evaluation of model robustness, parameter sensitivity, numerical behavior, and computational efficiency, with spatial and temporal grid conversion currently supported.
 
 A more complete list of examples covering a significant part of the features set is found in the online documentation of OGSTools [^1].
@@ -128,12 +128,11 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
 ## Applications
 
-`OGSTools` has been integral part of complex workflows.
-`OGSTools` is designed to support the implementation of such workflow components where OGS in involved.
+`OGSTools` library is designed to aid users in the implementation of complex workflows and has been an integral part of several scientific projects utilizing them.
 
 ### AREHS
 
-The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) project \[@Kahnt2021\] focused on modeling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
+The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) project \[@Kahnt2021\] is focused on modeling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
 \[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of an automated workflows to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results.
 This workflow covers all necessary steps from a structured layered model and geological parameters over the simulation with OGS to the resulting figures shown in \[@Zill2024\] and \[@Silbermann2025\].
 It is composed as Snakemake workflow and all material available on \[@arehs2024\].
