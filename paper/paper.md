@@ -99,6 +99,10 @@ To ensure integration of the library's functionalities with the workflow managem
 
 `OGSTools` provides functionality for (1) setting up test environments, (2) executing OGS under specified conditions, (3) evaluating results against defined test criteria, and (4) monitoring the testing process.
 
+### Educational Jupyter notebooks
+
+OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualize the outcomes. `OGSTools` serves as an interface between OGS and Jupyter Notebooks. It supports the creation of input data—such as easily configurable meshes or ready-to-use project files.
+
 ### Centralization of Python-related development
 
 Previously, the code base for Python-related tasks in OGS was fragmented, with components, that were often developed for specific use cases, with varying degrees of standardization and sharing.
@@ -187,6 +191,7 @@ By abstracting away lower-level plotting code, users can focus more directly on 
 ```python
 # Mandel-Cryer effect benchmark without OGSTools
 import ogstools as ot
+
 ms = ot.MeshSeries("results_MandelCryerStaggered.pvd")
 
 # Plot pressure over time
