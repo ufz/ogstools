@@ -33,7 +33,7 @@ authors:
 - name: Max Jäschke
   orcid: 0009-0005-2196-0830
   equal-contrib: true
-  affiliation: 3
+  affiliation: 3, 1, 4
 - name: Feliks Kiszkurno
   orcid: 0000-0003-3304-4838
   equal-contrib: true
@@ -58,6 +58,9 @@ affiliations:
 - name: Leipzig University of Applied Sciences, Germany
   index: 3
   ror: 03xgcq477
+- name: Technische Universität Dresden, Germany
+  index: 4
+  ror: 042aqky30
 
 date: 17 March 2025
 bibliography: paper.bib
