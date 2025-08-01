@@ -107,7 +107,7 @@ OGS is already being used in academic courses and teaching environments. With Ju
 
 Previously, the code base for Python-related tasks in OGS was fragmented, with components, that were often developed for specific use cases, with varying degrees of standardization and sharing.
 The lack of centralization led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
-With `OGSTools`, all Python-related code is now centralized under the professional maintenance of the OGS core developer team.
+With `OGSTools`, reusable Python code is now centralized under the professional maintenance of the OGS core developer team.
 It ensures better collaboration, standardized practices and improved code quality.
 Further it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
 For the centralized approach, preceding work from `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
