@@ -170,7 +170,7 @@ time = pvdfile.timesteps
 observation_points = {"center": (0, 0, 0)}
 pressure = pvdfile.read_time_series("pressure", observation_points)
 
-# Plot soil temperature
+# Plot pressure over time
 fig, ax1 = plt.subplots(figsize=(10, 8))
 ax1.plot(time, pressure["center"], color="tab:orange")
 ax1.set_ylabel("Pressure (Pa)", fontsize=20)
@@ -187,9 +187,9 @@ By abstracting away lower-level plotting code, users can focus more directly on 
 ```python
 # Mandel-Cryer effect benchmark without OGSTools
 import ogstools as ot
-
 ms = ot.MeshSeries("results_MandelCryerStaggered.pvd")
-# Plot soil temperature at observation points
+
+# Plot pressure over time
 center_point = [0, 0, 0]
 fig = ms.plot_probe(center_point, ot.variables.pressure, labels=["Center"])
 ```
