@@ -14,6 +14,7 @@ from tempfile import mkdtemp
 
 import pyvista as pv
 from pyvista.plotting import Plotter
+from shapely import Polygon
 
 from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
@@ -38,17 +39,20 @@ from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 tmp_dir = Path(mkdtemp())
 vtu_file = tmp_dir / "bhe_prism.vtu"
 bhe_meshes = gen_bhe_mesh(
-    length=150,
-    width=100,
+    model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
     groundwater=Groundwater(
-        begin=-30, isolation_layer_id=1, flow_direction="+x"
+        begin=-30,
+        isolation_layer_id=1,
+        upstream=(179, 181),
+        downstream=(359, 1),
     ),
     BHE_Array=[
         BHE(x=50, y=40, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=50, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=60, z_begin=-1, z_end=-60, borehole_radius=0.076),
     ],
+    refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="prism",
     out_name=vtu_file,
 )
@@ -97,17 +101,20 @@ p.show()
 tmp_dir = Path(mkdtemp())
 vtu_file = tmp_dir / "bhe_structured.vtu"
 bhe_meshes = gen_bhe_mesh(
-    length=150,
-    width=100,
+    model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
     groundwater=Groundwater(
-        begin=-30, isolation_layer_id=1, flow_direction="+x"
+        begin=-30,
+        isolation_layer_id=1,
+        upstream=(179, 181),
+        downstream=(359, 1),
     ),
     BHE_Array=[
         BHE(x=50, y=40, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=50, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=60, z_begin=-1, z_end=-60, borehole_radius=0.076),
     ],
+    refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="structured",
     out_name=vtu_file,
 )
@@ -160,20 +167,35 @@ p.show()
 # %%
 vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
 bhe_meshes = gen_bhe_mesh(
-    length=150,
-    width=100,
+    model_area=Polygon(
+        (
+            (0.0, 0.0),
+            (40.0, 0.0),
+            (60.0, 0.0),
+            (150.0, 0.0),
+            (150.0, 100.0),
+            (60.0, 100.0),
+            (40.0, 100.0),
+            (0.0, 100.0),
+        )
+    ),
     layer=[50, 50, 50],
-    groundwater=Groundwater(-30, 1, "+x"),
+    groundwater=Groundwater(
+        begin=-30,
+        isolation_layer_id=1,
+        upstream=(179, 181),
+        downstream=(359, 1),
+    ),
     BHE_Array=[
         BHE(50, 40, -1, -60, 0.076),
         BHE(50, 50, -1, -60, 0.076),
         BHE(50, 60, -1, -60, 0.076),
     ],
+    refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="structured",
     target_z_size_coarse=10,  # default value 7.5
     target_z_size_fine=2,  # default value 1.5
     n_refinement_layers=1,  # default value 2
-    dist_box_x=15,  # default value 10
     propagation=1.2,  # default value 1.1
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
