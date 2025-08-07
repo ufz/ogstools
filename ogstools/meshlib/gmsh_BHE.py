@@ -383,8 +383,8 @@ def gen_bhe_mesh_gmsh(
         transfinite_curves: dict[int, tuple[int, float]] = {}
         connection_line_registry: dict[frozenset[int], int] = {}
         connection_line_transfinite_rings: list[list] = [[]]
-        gw_upstream: list[list[int]] = [[]] * len(groundwaters)
-        gw_downstream: list[list[int]] = [[]] * len(groundwaters)
+        gw_upstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        gw_downstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
         ref_vec = [1, 0]  # in positive x-dir
         for i, (p1, p2) in enumerate(model_area_lines):
             # determine, if a line corresponds to the groundwater
@@ -601,8 +601,12 @@ def gen_bhe_mesh_gmsh(
         ] + model_surfaces  # list(range(1, 10))
         surface_list = [(2, tag) for tag in top_surface]
 
-        gw_downstream_tags: list[list[int]] = [[]] * len(groundwaters)
-        gw_upstream_tags: list[list[int]] = [[]] * len(groundwaters)
+        gw_downstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
+        gw_upstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
 
         for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
@@ -716,8 +720,8 @@ def gen_bhe_mesh_gmsh(
         point_ids = list(point_model_area_registry.keys())
         lines = list(zip(point_ids, point_ids[1:] + point_ids[:1], strict=True))
         line_ids = []
-        gw_upstream: list[list[int]] = [[]] * len(groundwaters)
-        gw_downstream: list[list[int]] = [[]] * len(groundwaters)
+        gw_upstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        gw_downstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
         ref_vec = [1, 0]  # in positive x-dir
         for i, (p1, p2) in enumerate(lines):
             line_ids.append(gmsh.model.geo.addLine(p1, p2))
@@ -787,8 +791,12 @@ def gen_bhe_mesh_gmsh(
         top_surface = [1]
 
         surface_list = [(2, 1)]
-        gw_downstream_tags: list[list[int]] = [[]] * len(groundwaters)
-        gw_upstream_tags: list[list[int]] = [[]] * len(groundwaters)
+        gw_downstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
+        gw_upstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
         # bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
         # boundaries_surfaces = {"+x": [5], "-x": [3], "+y": [2], "-y": [4]}
         for j, num_elements in enumerate(number_of_layers):
