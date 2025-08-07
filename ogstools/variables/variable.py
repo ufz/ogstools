@@ -346,12 +346,13 @@ class Variable:
             )
             raise KeyError(msg)
         if masked and self.mask_used(dataset):
+            mask = np.asarray(mesh.ctp(False)[self.mask] == 0)
+            output_dataset = dataset[self.data_name]  # type: ignore[call-overload]
             if isinstance(dataset, Sequence):
-                mask = np.asarray(mesh.ctp(False)[self.mask] == 1)
-                return dataset[self.data_name][:, mask]  # type: ignore[call-overload]
-            return dataset.ctp(False).threshold(
-                value=[1, 1], scalars=self.mask
-            )[self.data_name]
+                output_dataset[:, mask] = np.nan
+            else:
+                output_dataset[mask] = np.nan
+            return output_dataset
         return dataset[self.data_name]  # type: ignore[call-overload]
 
     def get_label(self, split_at: int | None = None) -> str:
