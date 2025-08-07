@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 from tempfile import mkdtemp
+from typing import Any
 
 import gmsh
 import numpy as np
@@ -261,7 +262,7 @@ def gen_bhe_mesh_gmsh(
                 target_layer.append(n_refinement_layers)
 
     # to flat a list, seems not so easy with a ready to use function --> this code is from https://realpython.com/python-flatten-list/
-    def _flatten_concatenation(matrix: list[list[float]]) -> list:
+    def _flatten_concatenation(matrix: list[list[Any]]) -> list:
         flat_list = []
         for row in matrix:
             flat_list += row
@@ -570,6 +571,14 @@ def gen_bhe_mesh_gmsh(
 
         gmsh.model.geo.synchronize()
 
+        if groundwaters:
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater upstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater downstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+
         for connection_ring in connection_line_transfinite_rings:
             mesh_sizes = []
             for connection_line in connection_ring:
@@ -758,6 +767,14 @@ def gen_bhe_mesh_gmsh(
                     and normal_vec_angle < groundwater.downstream[1]
                 ):
                     gw_downstream[i_gw].append(i)
+
+        if groundwaters:
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater upstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater downstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
 
         gmsh.model.geo.addCurveLoop(line_ids, 1)
         gmsh.model.geo.addPlaneSurface([1], 1)
