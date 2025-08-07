@@ -702,7 +702,7 @@ def gen_bhe_mesh_gmsh(
                 tag=k + 4,
                 name=f"Groundwater_upstream_{i}",
             )
-            k += 1
+            k += 2
 
     def _mesh_prism() -> None:
         # define the outer boundaries square
@@ -875,7 +875,7 @@ def gen_bhe_mesh_gmsh(
                 tag=k + 4,
                 name=f"Groundwater_upstream_{i}",
             )
-            k += 1
+            k += 2
 
         # Add refinement box around the BHE
         refinement_box = gmsh.model.mesh.field.add("Box")
