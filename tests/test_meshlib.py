@@ -740,3 +740,31 @@ class TestUtils:
         np.testing.assert_equal(
             pts, np.asarray([[-150, 0, 75], [-147.65625, 0, 72.65625]])
         )
+
+    def test_ms_active(self):
+        # This test checks if mask is applied correctly
+        # when difference is computed.
+        ms = examples.load_meshseries_THM_2D_PVD()
+        # For this test to run, loaded data set needs to
+        # contain fields: pressure, pressure_active and
+        # temperature but not temperature active
+        assert ot.variables.pressure.data_name in ms.point_data
+        assert ot.variables.pressure.mask in ms.cell_data
+        assert ot.variables.temperature.data_name in ms.point_data
+        assert ot.variables.temperature.mask not in ms.cell_data
+        m_diff_T = ms[-1].difference(ms[0], ot.variables.temperature)
+        m_diff_p = ms[-1].difference(ms[0], ot.variables.pressure)
+        assert (
+            np.count_nonzero(
+                np.isnan(
+                    m_diff_T[ot.variables.temperature.difference.data_name]
+                )
+            )
+            == 0
+        )
+        assert (
+            np.count_nonzero(
+                np.isnan(m_diff_p[ot.variables.pressure.difference.data_name])
+            )
+            != 0
+        )
