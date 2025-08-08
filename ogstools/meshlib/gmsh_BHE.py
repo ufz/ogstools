@@ -306,8 +306,6 @@ def gen_bhe_mesh_gmsh(
             msg = f"Dimension of model area is {shapely.get_coordinate_dimension(model_area)}, but refinement area is of dimension {shapely.get_coordinate_dimension(refinement_area)}"
             raise ValueError(msg)
 
-        geo = gmsh.model.geo
-        mesh = gmsh.model.mesh
         point_registry_refinement_area: dict[frozenset[float], int] = {}
         line_registry_refinement_area = {}
 
@@ -647,7 +645,7 @@ def gen_bhe_mesh_gmsh(
         k = 0
         BHE_group = []
         for i, BHE_i in enumerate(BHE_array):
-            extrusion_tags = gmsh.model.geo.extrude(
+            extrusion_tags = geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
@@ -658,16 +656,16 @@ def gen_bhe_mesh_gmsh(
             )
             BHE_group.append(extrusion_tags[1][1])
 
-        gmsh.model.geo.synchronize()
+        geo.synchronize()
 
         for i, volume_i in enumerate(volumes_list_for_layers):
-            gmsh.model.addPhysicalGroup(3, volume_i, i)
+            model.addPhysicalGroup(3, volume_i, i)
 
         for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
-            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
+            model.addPhysicalGroup(1, [BHE_group_k], k)
 
-        gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
-        gmsh.model.addPhysicalGroup(
+        model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
+        model.addPhysicalGroup(
             2,
             np.array(surface_list)[:, 1].tolist(),
             k + 2,
@@ -690,13 +688,13 @@ def gen_bhe_mesh_gmsh(
             end_id = groundwater_entry[3] + i + int(not offset) - gw_counter
             if offset:
                 gw_counter += 1
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
                 gw_downstream_tags[i][start_id:end_id],
                 tag=k + 3,
                 name=f"Groundwater_downstream_{i}",
             )
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
                 gw_upstream_tags[i][start_id:end_id],
                 tag=k + 4,
@@ -710,12 +708,12 @@ def gen_bhe_mesh_gmsh(
         if shapely.get_coordinate_dimension(model_area) == 2:
             for x, y in model_area.exterior.coords[:-1]:
                 point_model_area_registry[
-                    gmsh.model.geo.addPoint(x, y, 0, outer_mesh_size)
+                    geo.addPoint(x, y, 0, outer_mesh_size)
                 ] = (x, y, 0)
         else:
             for x, y, z in model_area.exterior.coords[:-1]:
                 point_model_area_registry[
-                    gmsh.model.geo.addPoint(x, y, z, outer_mesh_size)
+                    geo.addPoint(x, y, z, outer_mesh_size)
                 ] = (x, y, z)
         point_ids = list(point_model_area_registry.keys())
         lines = list(zip(point_ids, point_ids[1:] + point_ids[:1], strict=True))
@@ -724,7 +722,7 @@ def gen_bhe_mesh_gmsh(
         gw_downstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
         ref_vec = [1, 0]  # in positive x-dir
         for i, (p1, p2) in enumerate(lines):
-            line_ids.append(gmsh.model.geo.addLine(p1, p2))
+            line_ids.append(geo.addLine(p1, p2))
             p1_x, p1_y = point_model_area_registry[p1][:2]
             p2_x, p2_y = point_model_area_registry[p2][:2]
             dx = p2_x - p1_x
@@ -780,9 +778,9 @@ def gen_bhe_mesh_gmsh(
                 msg = "No groundwater downstream surfaces detected, please check your specified angles!"
                 raise ValueError(msg)
 
-        gmsh.model.geo.addCurveLoop(line_ids, 1)
-        gmsh.model.geo.addPlaneSurface([1], 1)
-        gmsh.model.geo.synchronize()
+        geo.addCurveLoop(line_ids, 1)
+        geo.addPlaneSurface([1], 1)
+        geo.synchronize()
 
         bhe_top_nodes = _insert_BHE(inTag=1)
 
@@ -797,8 +795,7 @@ def gen_bhe_mesh_gmsh(
         gw_upstream_tags: list[list[int]] = [
             [] for _ in range(len(groundwaters))
         ]
-        # bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
-        # boundaries_surfaces = {"+x": [5], "-x": [3], "+y": [2], "-y": [4]}
+
         for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
             extrusion_tags = gmsh.model.geo.extrude(
@@ -840,15 +837,15 @@ def gen_bhe_mesh_gmsh(
             )
             BHE_group.append(extrusion_tags[1][1])
 
-        gmsh.model.geo.synchronize()
+        geo.synchronize()
         for i, volume_i in enumerate(volumes_list_for_layers):
-            gmsh.model.addPhysicalGroup(3, volume_i, i)
+            model.addPhysicalGroup(3, volume_i, i)
 
         for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
-            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
+            model.addPhysicalGroup(1, [BHE_group_k], k)
 
-        gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
-        gmsh.model.addPhysicalGroup(
+        model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
+        model.addPhysicalGroup(
             2,
             np.array(surface_list)[:, 1].tolist(),
             k + 2,
@@ -863,13 +860,13 @@ def gen_bhe_mesh_gmsh(
             end_id = groundwater_entry[3] + i + int(not offset) - gw_counter
             if offset:
                 gw_counter += 1
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
                 gw_downstream_tags[i][start_id:end_id],
                 tag=k + 3,
                 name=f"Groundwater_downstream_{i}",
             )
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
                 gw_upstream_tags[i][start_id:end_id],
                 tag=k + 4,
@@ -877,16 +874,14 @@ def gen_bhe_mesh_gmsh(
             )
             k += 2
 
-        # Add refinement box around the BHE
-        refinement_box = gmsh.model.mesh.field.add("Box")
-        gmsh.model.mesh.field.setNumber(refinement_box, "VIn", inner_mesh_size)
-        gmsh.model.mesh.field.setNumber(refinement_box, "VOut", outer_mesh_size)
-        gmsh.model.mesh.field.setNumber(refinement_box, "XMin", x_min)
-        gmsh.model.mesh.field.setNumber(refinement_box, "XMax", x_max)
-        gmsh.model.mesh.field.setNumber(refinement_box, "YMin", y_min)
-        gmsh.model.mesh.field.setNumber(refinement_box, "YMax", y_max)
+        def mesh_size_callback(
+            _dim: int, _tag: int, x: float, y: float, z: float, lc: float
+        ) -> float:
+            if refinement_area.contains(shapely.Point(x, y, z)):
+                return min(lc, inner_mesh_size)
+            return min(lc, outer_mesh_size)
 
-        gmsh.model.mesh.field.setAsBackgroundMesh(refinement_box)
+        mesh.setSizeCallback(callback=mesh_size_callback)
 
     layer = layer if isinstance(layer, list) else [layer]
 
@@ -1269,21 +1264,15 @@ def gen_bhe_mesh_gmsh(
             / (needed_extrusion[-1, 0] - np.abs(BHE_i.z_begin))
         )
 
-    # define the inner square with BHE inside
-    # compute the box size from the BHE-Coordinates
-    x_BHE = [BHE_i.x for BHE_i in BHE_array]
-    y_BHE = [BHE_i.y for BHE_i in BHE_array]
-
-    x_min = np.min(x_BHE) - 10  # - dist_box_x
-    x_max = np.max(x_BHE) + 10  # + dist_box_x
-    y_min = np.min(y_BHE) - 10  # - dist_box_y
-    y_max = np.max(y_BHE) + 10  # + dist_box_y
-
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
     gmsh.initialize()
     gmsh.option.setNumber("General.Verbosity", 2)
-    gmsh.model.add(Path(out_name).stem)
+    model = gmsh.model
+    geo = model.geo
+    mesh = model.mesh
+
+    model.add(Path(out_name).stem)
 
     if meshing_type == "structured":
         _mesh_structured()
@@ -1294,23 +1283,21 @@ def gen_bhe_mesh_gmsh(
         msg = "Unknown meshing type! prism and structured supported"
         raise Exception(msg)
 
-    gmsh.model.mesh.generate(3)
+    mesh.generate(3)
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-    gmsh.model.mesh.setOrder(order)
-    gmsh.model.mesh.removeDuplicateNodes()
+    mesh.setOrder(order)
+    mesh.removeDuplicateNodes()
 
     # delete zero-volume elements
     # 1 for line elements --> BHE's are the reason
-    elem_tags, node_tags = gmsh.model.mesh.getElementsByType(1)
-    elem_qualities = gmsh.model.mesh.getElementQualities(
+    elem_tags, node_tags = mesh.getElementsByType(1)
+    elem_qualities = mesh.getElementQualities(
         elementTags=elem_tags, qualityName="volume"
     )
     zero_volume_elements_id = np.argwhere(elem_qualities == 0)
 
     # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
-    gmsh.model.mesh.setVisibility(
-        elem_tags[zero_volume_elements_id].ravel().tolist(), 0
-    )
+    mesh.setVisibility(elem_tags[zero_volume_elements_id].ravel().tolist(), 0)
     gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
     gmsh.plugin.run("Invisible")
 
