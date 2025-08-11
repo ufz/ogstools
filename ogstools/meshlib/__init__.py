@@ -19,6 +19,7 @@ from .region import (
     to_region_tetraeder,
     to_region_voxel,
 )
+from .subdomains import extract_boundaries
 
 __all__ = [
     "Boundary",
@@ -34,6 +35,7 @@ __all__ = [
     "difference",
     "difference_matrix",
     "difference_pairwise",
+    "extract_boundaries",
     "meshes_from_gmsh",
     "rect",
     "to_ip_mesh",

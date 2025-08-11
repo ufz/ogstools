@@ -768,3 +768,43 @@ class TestUtils:
             )
             != 0
         )
+
+    @pytest.mark.parametrize("threshold_angle", [None, 20.0])
+    def test_extract_boundaries(self, threshold_angle):
+        mesh = examples.load_meshseries_THM_2D_PVD()[0]
+        boundaries = ot.meshlib.extract_boundaries(mesh, threshold_angle)
+        assert len(boundaries) == 4
+        np.testing.assert_array_equal(
+            [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
+        )
+        assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
+        assert np.all(boundaries["left"].points[:, 0] == mesh.bounds[0])
+        assert np.all(boundaries["right"].points[:, 0] == mesh.bounds[1])
+        assert boundaries["bottom"].bounds[2] == mesh.bounds[2]
+        assert boundaries["top"].bounds[3] == mesh.bounds[3]
+
+    @pytest.mark.system()
+    def test_extract_boundaries_run(self):
+        "Test using extracted boundaries for a simulation."
+        tmp_dir = Path(mkdtemp())
+        mesh_path = tmp_dir / "mesh.msh"
+        ot.meshlib.rect(n_edge_cells=(2, 4), out_name=mesh_path)
+        domain = ot.meshes_from_gmsh(mesh_path, log=False)["domain"]
+        # this is no good practice and only done for testing purposes
+        # we recommend to define the boundaries as physical groups within gmsh
+        boundaries = ot.meshlib.extract_boundaries(domain)
+        for name, mesh in boundaries.items():
+            pv.save_meshio(Path(tmp_dir, f"physical_group_{name}.vtu"), mesh)
+        pv.save_meshio(Path(tmp_dir, "domain.vtu"), domain)
+
+        model = ot.Project(
+            input_file=examples.prj_mechanics,
+            output_file=tmp_dir / "default.prj",
+        )
+        model.write_input()
+        model.run_model(write_logs=False, args=f"-m {tmp_dir} -o {tmp_dir}")
+        # check for correct bulk id mapping during extraction
+        mesh = ot.MeshSeries(tmp_dir / "mesh.pvd")[-1]
+        top_right = mesh.find_closest_point([1.0, 1.0, 0.0])
+        max_uy = np.max(mesh["displacement"][:, 1])
+        assert max_uy == mesh["displacement"][top_right, 1]
