@@ -10,19 +10,21 @@ from scipy.spatial import KDTree as scikdtree
 
 
 def named_boundaries(
-    subdomains: list[pv.UnstructuredGrid],
+    subdomains: list[pv.UnstructuredGrid], x_id: int = 0, y_id: int = 1
 ) -> dict[str, pv.UnstructuredGrid]:
     """Name 1D meshes according to their position (top, bottom, left, right)
 
     :param subdomains: List of meshes to name
+    :param x_id:       id of the horizontal axis (0: x, 1: y, 2: z).
+    :param y_id:       id of the vertical axis   (0: x, 1: y, 2: z).
     :returns:          A dict mapping the meshes to top, bottom, left and right.
     """
     centers = np.array([mesh.center for mesh in subdomains])
     return {
-        "top": subdomains[np.argmax(centers[:, 1])],
-        "bottom": subdomains[np.argmin(centers[:, 1])],
-        "left": subdomains[np.argmin(centers[:, 0])],
-        "right": subdomains[np.argmax(centers[:, 0])],
+        "top": subdomains[np.argmax(centers[:, y_id])],
+        "bottom": subdomains[np.argmin(centers[:, y_id])],
+        "left": subdomains[np.argmin(centers[:, x_id])],
+        "right": subdomains[np.argmax(centers[:, x_id])],
     }
 
 
@@ -72,7 +74,7 @@ def split_by_threshold_angle(
 
 
 def split_by_vertical_lateral_edges(
-    mesh: pv.UnstructuredGrid,
+    mesh: pv.UnstructuredGrid, x_id: int = 0
 ) -> list[pv.UnstructuredGrid]:
     """Split a continuous 1D boundary by assumption of vertical lateral edges
 
@@ -80,6 +82,7 @@ def split_by_vertical_lateral_edges(
     very left and one at the very right of the model.
 
     :param mesh:            1D mesh to be split apart.
+    :param x_id:            id of the horizontal axis (0: x, 1: y, 2: z).
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
@@ -87,10 +90,12 @@ def split_by_vertical_lateral_edges(
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     subdomains = []
     centers = mesh.cell_centers().points
-    subdomains.append(mesh.extract_cells(centers[:, 0] == mesh.bounds[0]))
-    subdomains.append(mesh.extract_cells(centers[:, 0] == mesh.bounds[1]))
+    is_left = centers[:, x_id] == mesh.bounds[x_id * 2]
+    is_right = centers[:, x_id] == mesh.bounds[x_id * 2 + 1]
+    subdomains.append(mesh.extract_cells(is_left))
+    subdomains.append(mesh.extract_cells(is_right))
     top_bottom = mesh.extract_cells(
-        (centers[:, 0] != mesh.bounds[0]) & (centers[:, 0] != mesh.bounds[1])
+        np.invert(is_left) & np.invert(is_right)
     ).connectivity(largest=False)
     for reg_id in np.unique(top_bottom.cell_data.get("RegionId", [])):
         subdomain = top_bottom.threshold([reg_id, reg_id], "RegionId")
@@ -117,12 +122,16 @@ def extract_boundaries(
     dim = 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
     assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
     boundary = mesh.extract_feature_edges()
+    flat_axis = np.argwhere(
+        np.all(np.isclose(mesh.points, mesh.points[0]), axis=0)
+    ).flatten()[0]
+    x_id, y_id = np.delete([0, 1, 2], flat_axis)
     if threshold_angle is None:
-        subdomains = split_by_vertical_lateral_edges(boundary)
+        subdomains = split_by_vertical_lateral_edges(boundary, x_id)
     else:
         subdomains = split_by_threshold_angle(boundary, threshold_angle)
     identify_subdomains(mesh, subdomains)
-    return named_boundaries(subdomains)
+    return named_boundaries(subdomains, x_id, y_id)
 
 
 def identify_subdomains(
