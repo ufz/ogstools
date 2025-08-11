@@ -726,9 +726,9 @@ class MeshSeries(Sequence[Mesh]):
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
         pts = np.delete(pts, flat_axis, 1)
-        more_then_1d = self.dim > 1 or len(flat_axis) < 2
+        more_than_1d = self.dim > 1 or len(flat_axis) < 2
 
-        match more_then_1d, interp_method:
+        match more_than_1d, interp_method:
             case True, "nearest":
                 result = np.swapaxes(
                     NearestNDInterpolator(geom, values)(pts), 0, 1
@@ -751,7 +751,8 @@ class MeshSeries(Sequence[Mesh]):
         if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
             result = np.squeeze(result, axis=1)
         if isinstance(data_name, list):
-            result = np.moveaxis(result, -1, 0)
+            if more_than_1d:
+                result = np.moveaxis(result, -1, 0)
             result = self._restore_vectors(result, components)
         return result
 

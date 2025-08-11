@@ -328,6 +328,17 @@ class TestUtils:
         points = np.linspace(pt_min, pt_max, num=10)
         self._check_probe(ms_1D, points)
 
+    def test_extract_probe_1D_mesh_single_pt(self):
+        "Test single point probing on a 1D meshseries."
+        ms = examples.load_meshseries_HT_2D_XDMF()
+        ms_1D = ms.extract(ms[0].points[:, 1] == 0)
+        pt_min = np.reshape(ms_1D[0].bounds, (3, 2)).T[0]
+        ms_ref = ot.MeshSeries.extract_probe(ms_1D, pt_min)
+        for key in ms_ref.point_data:
+            np.testing.assert_array_equal(
+                ms_ref.values(key)[:, 0], ms_1D.values(key)[:, 0]
+            )
+
     def test_probe_multiple(self):
         """Test probe with mixed scalar, vector point and cell data.
 
