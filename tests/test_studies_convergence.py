@@ -1,8 +1,6 @@
 """Unit tests for convergence studies."""
 
-from pathlib import Path
 from shutil import rmtree
-from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,12 +16,11 @@ class TestConvergence:
     """Test case for convergent meshes."""
 
     @pytest.mark.system()
-    def test_steady_state_diffusion(self):
-        temp_dir = Path(mkdtemp(prefix="test_steady_state_diffusion"))
+    def test_steady_state_diffusion(self, tmp_path):
         sim_results = []
         edge_cells = [2**i for i in range(3, 6)]
         for n_edge_cells in edge_cells:
-            msh_path = temp_dir / "square.msh"
+            msh_path = tmp_path / "square.msh"
             ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=n_edge_cells,
                 structured_grid=True,
@@ -31,18 +28,18 @@ class TestConvergence:
             )
             meshes = ot.meshes_from_gmsh(filename=msh_path, log=False)
             for name, mesh in meshes.items():
-                pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
+                pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
             model = ot.Project(
-                output_file=temp_dir / "default.prj",
+                output_file=tmp_path / "default.prj",
                 input_file=prj_steady_state_diffusion,
             )
             prefix = "steady_state_diffusion_" + str(n_edge_cells)
             model.replace_text(prefix, ".//prefix")
             model.write_input()
-            ogs_args = f"-m {temp_dir} -o {temp_dir}"
+            ogs_args = f"-m {tmp_path} -o {tmp_path}"
             model.run_model(write_logs=False, args=ogs_args)
             sim_results += [
-                ot.MeshSeries(str(temp_dir / (prefix + ".pvd"))).mesh(-1)
+                ot.MeshSeries(str(tmp_path / (prefix + ".pvd"))).mesh(-1)
             ]
 
         topology = sim_results[-3]
@@ -78,4 +75,4 @@ class TestConvergence:
         _ = convergence.plot_convergence_errors(metrics)
         plt.close()
 
-        rmtree(temp_dir)
+        rmtree(tmp_path)

@@ -1,8 +1,5 @@
 """Unit tests for meshlib."""
 
-from pathlib import Path
-from tempfile import mkdtemp
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -30,27 +27,28 @@ class TestUtils:
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
     @pytest.mark.system()
-    def test_read_quadratic_xdmf(self):
+    def test_read_quadratic_xdmf(self, tmp_path):
         "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
-        tmp_dir = Path(mkdtemp())
-        mesh_path = tmp_dir / "mesh.msh"
+        mesh_path = tmp_path / "mesh.msh"
         for quads in [True, False]:
             ot.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
             meshes = ot.meshes_from_gmsh(mesh_path, log=False)
             for name, mesh in meshes.items():
-                pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
+                pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
 
             model = ot.Project(
-                output_file=tmp_dir / "default.prj",
+                output_file=tmp_path / "default.prj",
                 input_file=examples.prj_mechanics,
             )
             model.replace_text("XDMF", xpath="./time_loop/output/type")
             model.replace_text(4, xpath=".//integration_order")
             model.write_input()
-            model.run_model(write_logs=False, args=f"-m {tmp_dir} -o {tmp_dir}")
-            ot.MeshSeries(tmp_dir / "mesh_domain.xdmf").mesh(0)
+            model.run_model(
+                write_logs=False, args=f"-m {tmp_path} -o {tmp_path}"
+            )
+            ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",
@@ -495,11 +493,10 @@ class TestUtils:
         ],
     )
     @pytest.mark.system()
-    def test_ip_mesh(self, elem_order, quads, intpt_order, mixed):
+    def test_ip_mesh(self, tmp_path, elem_order, quads, intpt_order, mixed):
         "Test creation of integration point meshes."
 
-        tmp_path = Path(mkdtemp())
-        mesh_path = Path(tmp_path) / "mesh.msh"
+        mesh_path = tmp_path / "mesh.msh"
         sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
 
         ot.meshlib.rect(
@@ -513,7 +510,7 @@ class TestUtils:
         )
         meshes = ot.meshes_from_gmsh(mesh_path, log=False)
         for name, mesh in meshes.items():
-            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
+            pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
         model = ot.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -541,17 +538,16 @@ class TestUtils:
         assert isinstance(ot.Mesh.read(examples.mechanics_vtu), ot.Mesh)
 
     @pytest.mark.system()
-    def test_xdmf_quadratic(self):
+    def test_xdmf_quadratic(self, tmp_path):
         "Test reading of quadratic elements in xdmf."
 
-        tmp_path = Path(mkdtemp())
-        msh_path = Path(tmp_path) / "mesh.msh"
+        msh_path = tmp_path / "mesh.msh"
         ot.meshlib.rect(
             n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
         )
         meshes = ot.meshes_from_gmsh(msh_path, log=False)
         for name, mesh in meshes.items():
-            pv.save_meshio(Path(tmp_path, name + ".vtu"), mesh)
+            pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
         model = ot.Project(
             input_file=examples.prj_mechanics,
             output_file=tmp_path / "default.prj",
@@ -563,10 +559,9 @@ class TestUtils:
         mesh = ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(-1)
         assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
 
-    def test_remesh_with_tri(self):
+    def test_remesh_with_tri(self, tmp_path):
         mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
-        temp_dir = Path(mkdtemp())
-        msh_path = temp_dir / "tri_mesh.msh"
+        msh_path = tmp_path / "tri_mesh.msh"
         ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
         assert len(
             ot.meshes_from_gmsh(msh_path, reindex=False, log=False).items()
@@ -610,13 +605,12 @@ class TestUtils:
             == ms_shallowcopy.point_data["temperature"]
         )
 
-    def test_save_pvd_mesh_series(self):
-        temp = Path(mkdtemp())
+    def test_save_pvd_mesh_series(self, tmp_path):
         file_name = "test.pvd"
 
         ms = examples.load_meshseries_HT_2D_PVD()
-        ms.save(Path(temp, file_name), deep=True)
-        ms_test = ot.MeshSeries(Path(temp, file_name))
+        ms.save(tmp_path / file_name, deep=True)
+        ms_test = ot.MeshSeries(tmp_path / file_name)
         assert len(ms.timevalues) == len(ms_test.timevalues)
         assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
         for var in ["temperature", "darcy_velocity", "pressure"]:
@@ -628,10 +622,10 @@ class TestUtils:
             assert "test" in m.filepath.name
 
         # Smoke test for ascii output
-        ms.save(Path(temp, "test_ascii.pvd"), ascii=True)
+        ms.save(tmp_path / "test_ascii.pvd", ascii=True)
 
-        ms.save(Path(temp, file_name), deep=False)
-        tree = ET.parse(Path(temp, file_name))
+        ms.save(tmp_path / file_name, deep=False)
+        tree = ET.parse(tmp_path / file_name)
         num_slices = len(ms.timevalues)
         num_slices_test = len(tree.findall("./Collection/DataSet"))
         assert num_slices == num_slices_test
@@ -641,13 +635,12 @@ class TestUtils:
             ts = float(pvd_entries[i].attrib["timestep"])
             assert np.abs(ms.timevalues[i] - ts) < 1e-14
 
-    def test_save_xdmf_mesh_series(self):
-        temp = Path(mkdtemp())
+    def test_save_xdmf_mesh_series(self, tmp_path):
         file_name = "test.pvd"
 
         ms = examples.load_meshseries_CT_2D_XDMF()
-        ms.save(Path(temp, file_name), deep=True)
-        ms_test = ot.MeshSeries(Path(temp, file_name))
+        ms.save(tmp_path / file_name, deep=True)
+        ms_test = ot.MeshSeries(tmp_path / file_name)
         assert len(ms.timevalues) == len(ms_test.timevalues)
         assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
         assert (
@@ -660,8 +653,8 @@ class TestUtils:
         for m in ms_test:
             assert "test" in m.filepath.name
 
-        ms.save(Path(temp, file_name), deep=False)
-        tree = ET.parse(Path(temp, file_name))
+        ms.save(tmp_path / file_name, deep=False)
+        tree = ET.parse(tmp_path / file_name)
         num_slices = len(ms.timevalues)
         pvd_entries = tree.findall("./Collection/DataSet")
         num_slices_test = len(pvd_entries)
@@ -768,3 +761,42 @@ class TestUtils:
             )
             != 0
         )
+
+    @pytest.mark.parametrize("threshold_angle", [None, 20.0])
+    def test_extract_boundaries(self, threshold_angle):
+        mesh = examples.load_meshseries_THM_2D_PVD()[0]
+        boundaries = ot.meshlib.extract_boundaries(mesh, threshold_angle)
+        assert len(boundaries) == 4
+        np.testing.assert_array_equal(
+            [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
+        )
+        assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
+        assert np.all(boundaries["left"].points[:, 0] == mesh.bounds[0])
+        assert np.all(boundaries["right"].points[:, 0] == mesh.bounds[1])
+        assert boundaries["bottom"].bounds[2] == mesh.bounds[2]
+        assert boundaries["top"].bounds[3] == mesh.bounds[3]
+
+    @pytest.mark.system()
+    def test_extract_boundaries_run(self, tmp_path):
+        "Test using extracted boundaries for a simulation."
+        mesh_path = tmp_path / "mesh.msh"
+        ot.meshlib.rect(n_edge_cells=(2, 4), out_name=mesh_path)
+        domain = ot.meshes_from_gmsh(mesh_path, log=False)["domain"]
+        # this is no good practice and only done for testing purposes
+        # we recommend to define the boundaries as physical groups within gmsh
+        boundaries = ot.meshlib.extract_boundaries(domain)
+        for name, mesh in boundaries.items():
+            pv.save_meshio(tmp_path / f"physical_group_{name}.vtu", mesh)
+        pv.save_meshio(tmp_path / "domain.vtu", domain)
+
+        model = ot.Project(
+            input_file=examples.prj_mechanics,
+            output_file=tmp_path / "default.prj",
+        )
+        model.write_input()
+        model.run_model(write_logs=False, args=f"-m {tmp_path} -o {tmp_path}")
+        # check for correct bulk id mapping during extraction
+        mesh = ot.MeshSeries(tmp_path / "mesh.pvd")[-1]
+        top_right = mesh.find_closest_point([1.0, 1.0, 0.0])
+        max_uy = np.max(mesh["displacement"][:, 1])
+        assert max_uy == mesh["displacement"][top_right, 1]

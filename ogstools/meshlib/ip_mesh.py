@@ -217,8 +217,10 @@ def to_ip_mesh(mesh: Mesh) -> pv.UnstructuredGrid:
     )
     ip_mesh = to_ip_point_cloud(mesh)
 
-    cell_types = list({cell.type for cell in mesh.cell})
     new_meshes: list[pv.PolyData] = []
+    cell_types = np.unique(
+        getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
+    )
     for cell_type in cell_types:
         _mesh = mesh.extract_cells_by_type(cell_type)
         new_meshes += [tessellate(_mesh, cell_type, integration_order)]

@@ -44,8 +44,10 @@ def element_edges(
 ) -> None:
     """Plot the element edges of a surface on a matplotlib axis."""
     lin_mesh = mesh.linear_copy() if hasattr(mesh, "linear_copy") else mesh
-    cell_points = [lin_mesh.get_cell(i).points for i in range(lin_mesh.n_cells)]
-    cell_types = [lin_mesh.get_cell(i).type for i in range(lin_mesh.n_cells)]
+    cell_points = [cell.points for cell in lin_mesh.cell]
+    cell_types = getattr(
+        lin_mesh, "celltypes", {cell.type for cell in mesh.cell}
+    )
     for cell_type in np.unique(cell_types):
         cell_pts = [
             cp

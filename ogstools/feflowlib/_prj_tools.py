@@ -336,10 +336,10 @@ def materials_in_HT(
     :param model: model to setup prj-file
     :returns: model
     """
-    for material_id in material_properties:
+    for material_id, props in material_properties.items():
         _add_permeabilty_prj(material_properties, model, material_id)
         hetero_properties = []
-        for mat_property, mat_value in material_properties[material_id].items():
+        for mat_property, mat_value in props.items():
             hetero_properties.append(
                 _handle_heterogeneous_material_properties(
                     mat_value, mat_property, model, material_id
@@ -352,9 +352,7 @@ def materials_in_HT(
                 phase_type="AqueousLiquid",
                 name="specific_heat_capacity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "specific_heat_capacity_fluid"
-                ],
+                value=props["specific_heat_capacity_fluid"],
             )
 
         if "thermal_conductivity_fluid" not in hetero_properties:
@@ -363,9 +361,7 @@ def materials_in_HT(
                 phase_type="AqueousLiquid",
                 name="thermal_conductivity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "thermal_conductivity_fluid"
-                ],
+                value=props["thermal_conductivity_fluid"],
             )
         if "storage" not in hetero_properties:
             model.media.add_property(
@@ -373,7 +369,7 @@ def materials_in_HT(
                 phase_type="Solid",
                 name="storage",
                 type="Constant",
-                value=material_properties[material_id]["storage"],
+                value=props["storage"],
             )
         if "specific_heat_capacity_solid" not in hetero_properties:
             model.media.add_property(
@@ -381,9 +377,7 @@ def materials_in_HT(
                 phase_type="Solid",
                 name="specific_heat_capacity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "specific_heat_capacity_solid"
-                ],
+                value=props["specific_heat_capacity_solid"],
             )
         if "thermal_conductivity_solid" not in hetero_properties:
             model.media.add_property(
@@ -391,34 +385,28 @@ def materials_in_HT(
                 phase_type="Solid",
                 name="thermal_conductivity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "thermal_conductivity_solid"
-                ],
+                value=props["thermal_conductivity_solid"],
             )
         if "porosity" not in hetero_properties:
             model.media.add_property(
                 medium_id=material_id,
                 name="porosity",
                 type="Constant",
-                value=material_properties[material_id]["porosity"],
+                value=props["porosity"],
             )
         if "thermal_transversal_dispersivity" not in hetero_properties:
             model.media.add_property(
                 medium_id=material_id,
                 name="thermal_transversal_dispersivity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "thermal_transversal_dispersivity"
-                ],
+                value=props["thermal_transversal_dispersivity"],
             )
         if "thermal_longitudinal_dispersivity" not in hetero_properties:
             model.media.add_property(
                 medium_id=material_id,
                 name="thermal_longitudinal_dispersivity",
                 type="Constant",
-                value=material_properties[material_id][
-                    "thermal_longitudinal_dispersivity"
-                ],
+                value=props["thermal_longitudinal_dispersivity"],
             )
         model.media.add_property(
             medium_id=material_id,
@@ -462,7 +450,7 @@ def materials_in_CT(
     :param model: model to setup prj-file
     :returns: model
     """
-    for material_id in material_properties:
+    for material_id, props in material_properties.items():
         model.media.add_property(
             medium_id=material_id,
             phase_type="AqueousLiquid",
@@ -480,28 +468,12 @@ def materials_in_CT(
         # Get a list of properties (porosity,transversal/longitunal_dispersivity)
         # across species. If there are more than one value, independent OGS-models
         # need to be set up manually.
-        porosity_val = np.unique(
-            [
-                material_properties[material_id][prop]
-                for prop in material_properties[material_id]
-                if "porosity" in prop
-            ]
+        porosity_val = list({props[key] for key in props if "porosity" in key})
+        long_disp_val = list(
+            {props[key] for key in props if "longitudinal_dispersivity" in key}
         )
-
-        long_disp_val = np.unique(
-            [
-                material_properties[material_id][prop]
-                for prop in material_properties[material_id]
-                if "longitudinal_dispersivity" in prop
-            ]
-        )
-
-        trans_disp_val = np.unique(
-            [
-                material_properties[material_id][prop]
-                for prop in material_properties[material_id]
-                if "transversal_dispersivity" in prop
-            ]
+        trans_disp_val = list(
+            {props[key] for key in props if "transversal_dispersivity" in key}
         )
         if any(
             len(mat_prop_list) > 1
@@ -541,11 +513,9 @@ def materials_in_CT(
         )
         _add_permeabilty_prj(material_properties, model, material_id)
 
-    for material_id in material_properties:
+    for material_id, props in material_properties.items():
         xpath = "./media/medium[@id='" + str(material_id) + "']/phases/phase"
-        _add_species_to_prj_file(
-            xpath, material_properties[material_id], species_list, model
-        )
+        _add_species_to_prj_file(xpath, props, species_list, model)
 
     return model
 
@@ -586,8 +556,8 @@ def setup_prj_file(
 
     """
     # ToDo: Make sure that no non-valid arguments are chosen!
-    model = kwargs.get("model", None)
-    species_list = kwargs.get("species_list", None)
+    model = kwargs.get("model")
+    species_list = kwargs.get("species_list")
     max_iter = kwargs.get("max_iter", 1)
     rel_tol = kwargs.get("rel_tol", 1e-10)
     prjfile = bulk_mesh_path.with_suffix(".prj")

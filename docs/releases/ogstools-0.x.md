@@ -14,6 +14,8 @@
 
 ## Features
 
+- added `extract_boundaries` for simple extraction of boundary meshes from a 2D domain mesh
+
 ## Infrastructure
 
 ### Tests
