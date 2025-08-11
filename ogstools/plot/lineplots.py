@@ -137,7 +137,9 @@ def line(
     _format_ax(ax_, x_var, y_var, pure_spatial, kwargs)
     fontsize = kwargs.pop("fontsize", setup.fontsize)
     monospace = kwargs.pop("monospace", False)
-    cell_types = np.unique([cell.type for cell in mesh.cell])
+    cell_types = np.unique(
+        getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
+    )
     only_points = (cell_types == [0]) or (cell_types == [1])
     reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
     if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
