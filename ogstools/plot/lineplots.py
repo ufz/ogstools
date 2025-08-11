@@ -92,7 +92,14 @@ def line(
         - label:        label in the legend
         - grid:         if True, show grid
         - monospace:    if True, the legend uses a monospace font
+        - loc:          location of the legend (default="upper right")
+        - annotate:     string to be annotate at the center of the mesh
         - all other kwargs get passed to matplotlib's plot function
+
+    Note:
+        Using loc="best" will take a long time, if you plot lines on top of a
+        contourplot, as matplotlib is calculating the best position against all
+        the underlying cells.
     """
     if isinstance(var1, plt.Axes) or isinstance(var2, plt.Axes):
         msg = "Please provide ax as keyword argument only!"
@@ -117,7 +124,8 @@ def line(
     kwargs.setdefault("linewidth", kwargs.pop("lw", None) or setup.linewidth)
     kwargs["linewidth"] *= lw_scale
     labels = kwargs.pop("labels", kwargs.pop("label", None))
-    loc = kwargs.pop("loc", "best")
+    annotation = kwargs.pop("annotate", None)
+    loc = kwargs.pop("loc", "upper right")
 
     if sort and "time" not in [var1, var2]:
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
@@ -151,6 +159,10 @@ def line(
             idx = pt_regions == reg_id
             label = kwargs.get("label") if reg_id == reg_ids[0] else None
             ax_.plot(x[idx], y[idx], **{**kwargs, "label": label})
+    if annotation is not None:
+        style = {"size": fontsize, "backgroundcolor": "0.8", "ha": "center"}
+        label_xy = utils.padded(ax_, mesh.center[0], mesh.center[1])
+        ax_.annotate(annotation, label_xy, **style)
     if labels:
         prop = {"size": fontsize}
         if monospace:
