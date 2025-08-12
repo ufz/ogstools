@@ -774,8 +774,11 @@ class TestUtils:
         )
 
     @pytest.mark.parametrize("threshold_angle", [None, 20.0])
-    def test_extract_boundaries(self, threshold_angle):
-        mesh = examples.load_meshseries_THM_2D_PVD()[0]
+    @pytest.mark.parametrize("angle_y", [0.0, -20.0, -45.0, -70.0])
+    def test_extract_boundaries(
+        self, threshold_angle: None | float, angle_y: float
+    ):
+        mesh = examples.load_meshseries_THM_2D_PVD()[0].rotate_y(angle_y)
         boundaries = ot.meshlib.extract_boundaries(mesh, threshold_angle)
         assert len(boundaries) == 4
         np.testing.assert_array_equal(
