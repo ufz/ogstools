@@ -70,7 +70,7 @@ ______________________________________________________________________
 ## Summary
 
 `OGSTools` (`OpenGeoSys` Tools) is a Python library for streamlined usage of `OpenGeoSys 6` (OGS) - a software for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
-`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users with different levels of experience and expertise.
+`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users with different levels of expertise.
 The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
 
 ## Statement of need
@@ -121,7 +121,8 @@ To support broad adoption within the OGS user community, the library is delibera
 
 The implemented features are covering (1) pre-processing, (2) setup and execution of simulations, and (3) post-processing.
 
-Preprocessing (1) for OGS includes mesh creation, adaptation, conversion, and refinement, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\].
+Preprocessing (1) for OGS includes mesh creation, adaptation, conversion, and refinement, as well as defining boundary conditions, s
+ource terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
 
 Postprocessing (3) includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
