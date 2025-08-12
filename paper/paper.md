@@ -108,7 +108,7 @@ OGS is already being used in academic courses and teaching environments. With Ju
 Previously, the code base for Python-related tasks in OGS was fragmented, with components that were often developed for specific use cases, with varying degrees of standardization and sharing.
 The lack of centralization led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
 With `OGSTools`, reusable Python code is now centralized under the professional maintenance of the core developer team of OGS.
-It ensures better collaboration, standardized practices and improved code quality.
+It ensures better collaboration, standardized practices, and improved code quality.
 Further, it enables the transfer of years of experience in maintaining the OGS' core \[@Bilke2019\] to the pre- and post-processing code.
 For the centralized approach, preceding work from `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
 
@@ -121,7 +121,7 @@ To support broad adoption within the OGS user community, the library is delibera
 
 The implemented features are covering (1) pre-processing, (2) setup and execution of simulations, and (3) post-processing.
 
-Preprocessing (1) for OGS includes mesh adaptation, conversion, refinement, and creation, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\].
+Preprocessing (1) for OGS includes mesh creation, adaptation, conversion, and refinement, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). Building upon this, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\].
 
 Postprocessing (3) includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
@@ -142,7 +142,7 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) project \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
 \[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results.
 This workflow covers all necessary steps from a structured layered model and geological parameters over the simulation with OGS to the resulting figures shown in \[@Zill2024\] and \[@Silbermann2025\].
-It is composed as Snakemake workflow and all material available on \[@arehs2024\].
+It is composed as a Snakemake workflow and all material is available on \[@arehs2024\].
 
 ### OpenWorkflow
 
@@ -159,7 +159,7 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 They can be downloaded, executed, and adapted in an interactive environment for further exploration.
 With `OGSTools` code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
-The code transformation of Mandel-Cryer effect benchmark, based on a simplified merge request[^2], demonstrates that using predefined plotting utilities reduces technical overhead.
+The code transformation of the Mandel-Cryer effect benchmark, based on a simplified merge request[^2], demonstrates that using predefined plotting utilities reduces technical overhead.
 
 Sections of the benchmark without OGSTools :
 
@@ -201,12 +201,12 @@ fig = ms.plot_probe(center_point, ot.variables.pressure, labels=["Center"])
 
 ### OGS-GIScape
 
-`OGS-GIScape` is a `Snakemake`-based workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models to study the groundwater flow and the associated environmental impact or conduct scenario analyses. The models could be used to estimate the impact due to changes in groundwater resources.
+`OGS-GIScape` is a `Snakemake`-based workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models or conduct scenario analyses to study the groundwater flow and the associated environmental impact due to changes in groundwater resources.
 Furthermore, the outcome of the models could be used for the management of groundwater resources.
 
 An important part of the NGM creation is the geometric model (mesh).
 It is build using geographic information system (GIS) tools at the landscape scale and combining various meshing tools.
-The workflow also comprises the parametrization of the geometric model with physical parameters as well as defining boundary conditions, for instance groundwater recharge on the top of the computational domain or the integration of rivers.
+The workflow also comprises the parametrization of the geometric model with physical parameters as well as defining boundary conditions, for instance groundwater recharge at the top of the computational domain or the integration of rivers.
 For these workflow steps it is mainly necessary to change parts of the OGS project file which is done with `OGSTools`.
 
 ## Acknowledgements
