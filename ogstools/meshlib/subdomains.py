@@ -8,23 +8,24 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree as scikdtree
 
+from ogstools.plot.utils import get_projection
+
 
 def named_boundaries(
-    subdomains: list[pv.UnstructuredGrid], x_id: int = 0, y_id: int = 1
+    subdomains: list[pv.UnstructuredGrid],
 ) -> dict[str, pv.UnstructuredGrid]:
     """Name 1D meshes according to their position (top, bottom, left, right)
 
     :param subdomains: List of meshes to name
-    :param x_id:       id of the horizontal axis (0: x, 1: y, 2: z).
-    :param y_id:       id of the vertical axis   (0: x, 1: y, 2: z).
     :returns:          A dict mapping the meshes to top, bottom, left and right.
     """
+    horizontal_id, vertical_id = _axis_ids_2D(pv.merge(subdomains))
     centers = np.array([mesh.center for mesh in subdomains])
     return {
-        "top": subdomains[np.argmax(centers[:, y_id])],
-        "bottom": subdomains[np.argmin(centers[:, y_id])],
-        "left": subdomains[np.argmin(centers[:, x_id])],
-        "right": subdomains[np.argmax(centers[:, x_id])],
+        "top": subdomains[np.argmax(centers[:, vertical_id])],
+        "bottom": subdomains[np.argmin(centers[:, vertical_id])],
+        "left": subdomains[np.argmin(centers[:, horizontal_id])],
+        "right": subdomains[np.argmax(centers[:, horizontal_id])],
     }
 
 
@@ -52,7 +53,10 @@ def split_by_threshold_angle(
         current_id = next_cell_id
 
     vectors = np.diff(cell_pts[ordered_cell_ids], axis=1)[:, 0]
-    angles = np.degrees(np.arctan2(vectors[:, 1], vectors[:, 0]))
+    horizontal_id, vertical_id = _axis_ids_2D(mesh)
+    angles = np.degrees(
+        np.arctan2(vectors[:, vertical_id], vectors[:, horizontal_id])
+    )
     angles_diff_pos = np.abs(np.diff(angles))
     angles_diff = [360.0 - ang if ang > 180 else ang for ang in angles_diff_pos]
     corners = np.where(np.abs(angles_diff) > threshold_angle)[0]
@@ -74,7 +78,7 @@ def split_by_threshold_angle(
 
 
 def split_by_vertical_lateral_edges(
-    mesh: pv.UnstructuredGrid, x_id: int = 0
+    mesh: pv.UnstructuredGrid,
 ) -> list[pv.UnstructuredGrid]:
     """Split a continuous 1D boundary by assumption of vertical lateral edges
 
@@ -82,7 +86,6 @@ def split_by_vertical_lateral_edges(
     very left and one at the very right of the model.
 
     :param mesh:            1D mesh to be split apart.
-    :param x_id:            id of the horizontal axis (0: x, 1: y, 2: z).
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
@@ -90,8 +93,9 @@ def split_by_vertical_lateral_edges(
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     subdomains = []
     centers = mesh.cell_centers().points
-    is_left = centers[:, x_id] == mesh.bounds[x_id * 2]
-    is_right = centers[:, x_id] == mesh.bounds[x_id * 2 + 1]
+    axis_1, axis_2 = _axis_ids_2D(mesh)
+    is_left = centers[:, axis_1] == mesh.bounds[axis_1 * 2]
+    is_right = centers[:, axis_1] == mesh.bounds[axis_1 * 2 + 1]
     subdomains.append(mesh.extract_cells(is_left))
     subdomains.append(mesh.extract_cells(is_right))
     top_bottom = mesh.extract_cells(
@@ -122,16 +126,28 @@ def extract_boundaries(
     dim = 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
     assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
     boundary = mesh.extract_feature_edges()
-    flat_axis = np.argwhere(
-        np.all(np.isclose(mesh.points, mesh.points[0]), axis=0)
-    ).flatten()[0]
-    x_id, y_id = np.delete([0, 1, 2], flat_axis)
     if threshold_angle is None:
-        subdomains = split_by_vertical_lateral_edges(boundary, x_id)
+        subdomains = split_by_vertical_lateral_edges(boundary)
     else:
         subdomains = split_by_threshold_angle(boundary, threshold_angle)
     identify_subdomains(mesh, subdomains)
-    return named_boundaries(subdomains, x_id, y_id)
+    return named_boundaries(subdomains)
+
+
+def _axis_ids_2D(mesh: pv.DataSet) -> tuple[int, int]:
+    "Return the two axes, in which the mesh (predominantly) lives in."
+    tri = pv.Triangle(
+        [mesh.points[0], mesh.points[mesh.n_points // 2], mesh.points[-1]]
+    )
+    axis_1, axis_2, _, _ = get_projection(tri)
+    len1, len2 = (len(np.unique(mesh.points[:, ax])) for ax in [axis_1, axis_2])
+    if len1 == len2:
+        if axis_2 > axis_1:
+            return axis_1, axis_2
+        return axis_2, axis_1
+    if len1 <= len2:
+        return axis_1, axis_2
+    return axis_2, axis_1
 
 
 def identify_subdomains(
