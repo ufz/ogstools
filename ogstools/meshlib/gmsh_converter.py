@@ -134,7 +134,7 @@ def meshes_from_gmsh(
             raise AssertionError(msg)
 
         # rename vtk fields to OGS conventions and change to correct type
-        subdomain["bulk_elem_ids"] = np.uint64(
+        subdomain["bulk_element_ids"] = np.uint64(
             subdomain.cell_data.pop("vtkOriginalCellIds")
         )
         subdomain["bulk_node_ids"] = np.uint64(

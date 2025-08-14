@@ -14,16 +14,8 @@ import gmsh
 import meshio
 import numpy as np
 import pytest
-from hypothesis import (
-    HealthCheck,
-    Verbosity,
-    example,
-    given,
-    settings,
-)
-from hypothesis import (
-    strategies as st,
-)
+from hypothesis import HealthCheck, Verbosity, example, given, settings
+from hypothesis import strategies as st
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -132,7 +124,9 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert bot.number_of_cells == 25
     assert bot_center.number_of_cells == 19
     assert np.all(np.isin(bot_center["bulk_node_ids"], bot["bulk_node_ids"]))
-    assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
+    assert np.all(
+        np.isin(bot_center["bulk_element_ids"], bot["bulk_element_ids"])
+    )
 
 
 valid_edge_length = st.floats(
