@@ -4,11 +4,18 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from functools import reduce
+from itertools import chain
+
 import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree as scikdtree
 
 from ogstools.plot.utils import get_projection
+
+
+def get_dim(mesh: pv.UnstructuredGrid) -> int:
+    return 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
 
 
 def named_boundaries(
@@ -41,7 +48,7 @@ def split_by_threshold_angle(
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
-    dim = 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
+    dim = get_dim(mesh)
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     cell_pts = np.asarray([cell.points for cell in mesh.cell])
     ordered_cell_ids = [0]
@@ -89,7 +96,7 @@ def split_by_vertical_lateral_edges(
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
-    dim = 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
+    dim = get_dim(mesh)
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     subdomains = []
     centers = mesh.cell_centers().points
@@ -123,7 +130,7 @@ def extract_boundaries(
                             of the boundary mesh.
     """
 
-    dim = 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
+    dim = get_dim(mesh)
     assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
     boundary = mesh.extract_feature_edges()
     if threshold_angle is None:
@@ -150,6 +157,13 @@ def _axis_ids_2D(mesh: pv.DataSet) -> tuple[int, int]:
     return axis_2, axis_1
 
 
+def remove_data(mesh: pv.UnstructuredGrid, datanames: list[str]) -> None:
+    for dataname in datanames:
+        mesh.point_data.pop(dataname, None)
+        mesh.cell_data.pop(dataname, None)
+        mesh.field_data.pop(dataname, None)
+
+
 def identify_subdomains(
     mesh: pv.UnstructuredGrid, subdomains: list[pv.UnstructuredGrid]
 ) -> None:
@@ -158,11 +172,41 @@ def identify_subdomains(
     :param mesh:        The domain mesh
     :param subdomains:  List of subdomain meshes.
     """
+    datanames = ["bulk_element_ids", "bulk_node_ids", "number_bulk_elements"]
+    remove_data(mesh, datanames)
+    dim = get_dim(mesh)
     for subdomain in subdomains:
-        bulk_cell_ids = mesh.find_containing_cell(
-            subdomain.cell_centers().points
-        )
+        remove_data(subdomain, datanames)
         tree = scikdtree(mesh.points)
-        bulk_node_ids = tree.query(subdomain.points)[1]
-        subdomain.cell_data["bulk_elem_ids"] = np.uint64(bulk_cell_ids)
-        subdomain.point_data["bulk_node_ids"] = np.uint64(bulk_node_ids)
+        bulk_nodes = tree.query(subdomain.points)[1]
+        bulk_element_data = subdomain.cell_data
+
+        sub_dim = get_dim(subdomain)
+        if sub_dim == dim:
+            bulk_elements = mesh.find_containing_cell(
+                subdomain.cell_centers().points
+            )
+        else:
+            # special case for subdomain cells which touch multiple bulk cells
+            nodes_per_sub_cell = [cell.point_ids for cell in subdomain.cell]
+            cells_per_sub_node = {
+                sub_node_id: mesh.point_cell_ids(bulk_node_id)
+                for sub_node_id, bulk_node_id in enumerate(bulk_nodes)
+            }
+
+            cells_per_sub_cell = []
+            for nodes in nodes_per_sub_cell:
+                cells_per_node = [set(cells_per_sub_node[n]) for n in nodes]
+                cells_per_sub_cell.append(
+                    reduce(set.intersection, cells_per_node)
+                )
+
+            ncells_per_sub_cell = [len(cells) for cells in cells_per_sub_cell]
+            if set(ncells_per_sub_cell) != {1}:
+                subdomain.cell_data["number_bulk_elements"] = np.uint64(
+                    ncells_per_sub_cell
+                )
+            bulk_elements = list(chain.from_iterable(cells_per_sub_cell))
+            bulk_element_data = subdomain.field_data
+        bulk_element_data["bulk_element_ids"] = np.uint64(bulk_elements)
+        subdomain.point_data["bulk_node_ids"] = np.uint64(bulk_nodes)

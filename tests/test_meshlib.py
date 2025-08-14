@@ -1,9 +1,13 @@
 """Unit tests for meshlib."""
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
+from hypothesis import HealthCheck, Verbosity, given, settings
+from hypothesis import strategies as st
 from lxml import etree as ET
 
 import ogstools as ot
@@ -814,3 +818,63 @@ class TestUtils:
         top_right = mesh.find_closest_point([1.0, 1.0, 0.0])
         max_uy = np.max(mesh["displacement"][:, 1])
         assert max_uy == mesh["displacement"][top_right, 1]
+
+    @given(
+        n1=st.integers(min_value=1, max_value=5),
+        n2=st.integers(min_value=1, max_value=5),
+        n_layers=st.integers(min_value=1, max_value=5),
+    )
+    @settings(
+        suppress_health_check=[HealthCheck.function_scoped_fixture],
+        verbosity=Verbosity.normal,
+    )
+    def test_identify_subdomains(self, tmp_path, n1, n2, n_layers):
+
+        path = Path(tmp_path / str(n_layers) / str(n1) / str(n2))
+        path.mkdir(parents=True, exist_ok=True)
+        mesh_name = path / "rect.msh"
+        ot.meshlib.rect(
+            n_edge_cells=(n1, n2), n_layers=n_layers, out_name=mesh_name
+        )
+        meshes = ot.meshes_from_gmsh(mesh_name, log=False)
+        rand_id = np.random.default_rng().integers(0, n_layers)
+        subdomain_boundary = (
+            meshes["domain"]
+            .threshold([rand_id, rand_id], "MaterialIDs")
+            .extract_feature_edges()
+        )
+        meshes["subdomain_boundary"] = subdomain_boundary
+        for name, m in meshes.items():
+            m.point_data.pop("bulk_node_ids", None)
+            m.cell_data.pop("bulk_element_ids", None)
+            pv.save_meshio(path / f"{name}.vtu", m)
+        domain_path = path / "domain.vtu"
+        domain = meshes.pop("domain")
+        sub_paths = [path / f"{name}.vtu" for name in meshes]
+        subdomains = meshes.values()
+        ot.cli().identifySubdomains(
+            f=True, o=path / "new_", m=domain_path, *sub_paths  # noqa: B026
+        )
+        ot.meshlib.subdomains.identify_subdomains(domain, subdomains)
+
+        def check(mesh_1, mesh_2, key: str):
+            np.testing.assert_array_equal(mesh_1[key], mesh_2[key])
+
+        for name, mesh in meshes.items():
+            cli_subdomain = pv.read(path / f"new_{name}.vtu")
+            check(mesh, cli_subdomain, "bulk_node_ids")
+            if "number_bulk_elements" in mesh.cell_data:
+                check(mesh, cli_subdomain, "number_bulk_elements")
+                # order of the bulk element ids is random for multiple ids per
+                # sub cell, thus only testing for equality of the set.
+                cell_id = 0
+                for num_cells in mesh["number_bulk_elements"]:
+                    view = slice(cell_id, cell_id + num_cells)
+                    np.testing.assert_array_equal(
+                        set(mesh["bulk_element_ids"][view]),
+                        set(cli_subdomain["bulk_element_ids"][view]),
+                    )
+                    cell_id += num_cells
+
+            else:
+                check(mesh, cli_subdomain, "bulk_element_ids")
