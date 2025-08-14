@@ -38,10 +38,6 @@ authors:
   orcid: 0000-0003-3304-4838
   equal-contrib: true
   affiliation: 2, 1
-- name: Dominik Kern
-  orcid: 0000-0002-1958-2982
-  equal-contrib: true
-  affiliation: 2
 - name: Jörg Buchwald
   orcid: 0000-0001-5174-3603
   equal-contrib: true
