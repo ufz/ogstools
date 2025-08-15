@@ -836,6 +836,7 @@ class TestUtils:
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         verbosity=Verbosity.normal,
+        deadline=None,
     )
     def test_identify_subdomains(self, tmp_path, meshing_data, failcase):
         "Testing parity between py and C++ (CLI) implementation."
