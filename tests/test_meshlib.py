@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
-from hypothesis import HealthCheck, Verbosity, given, settings
+from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
 from lxml import etree as ET
 
@@ -819,31 +819,43 @@ class TestUtils:
         max_uy = np.max(mesh["displacement"][:, 1])
         assert max_uy == mesh["displacement"][top_right, 1]
 
-    @given(
-        n1=st.integers(min_value=1, max_value=5),
-        n2=st.integers(min_value=1, max_value=5),
-        n_layers=st.integers(min_value=1, max_value=5),
+    @st.composite
+    def meshing(draw: st.DrawFn):
+        dim = draw(st.integers(min_value=2, max_value=3))
+        mesh_func = ot.meshlib.rect if dim == 2 else ot.meshlib.cuboid
+        n_cells = draw(st.tuples(*([st.integers(1, 3)] * dim)))
+        n_layers = draw(st.integers(min_value=1, max_value=4))
+        rand_id = draw(st.integers(min_value=0, max_value=n_layers - 1))
+        return mesh_func, n_cells, n_layers, rand_id
+
+    @example(meshing_data=(ot.meshlib.rect, (2, 2), 2, 0), failcase=True).xfail(
+        # CLI version fails and doesn't write the new file, thus cannot be read
+        raises=FileNotFoundError
     )
+    @given(meshing_data=meshing(), failcase=st.just(False))
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         verbosity=Verbosity.normal,
     )
-    def test_identify_subdomains(self, tmp_path, n1, n2, n_layers):
+    def test_identify_subdomains(self, tmp_path, meshing_data, failcase):
+        "Testing parity between py and C++ (CLI) implementation."
 
-        path = Path(tmp_path / str(n_layers) / str(n1) / str(n2))
+        mesh_func, n_cells, n_layers, rand_id = meshing_data
+        path = Path(tmp_path / f"{mesh_func.__name__}_{n_layers}_{n_cells}")
         path.mkdir(parents=True, exist_ok=True)
         mesh_name = path / "rect.msh"
-        ot.meshlib.rect(
-            n_edge_cells=(n1, n2), n_layers=n_layers, out_name=mesh_name
-        )
+        mesh_func(n_edge_cells=n_cells, n_layers=n_layers, out_name=mesh_name)
         meshes = ot.meshes_from_gmsh(mesh_name, log=False)
-        rand_id = np.random.default_rng().integers(0, n_layers)
-        subdomain_boundary = (
-            meshes["domain"]
-            .threshold([rand_id, rand_id], "MaterialIDs")
-            .extract_feature_edges()
+        layer: pv.UnstructuredGrid
+        layer = meshes["domain"].threshold([rand_id, rand_id], "MaterialIDs")
+        if meshes["domain"].volume:
+            meshes["layer_surface"] = layer.extract_surface()
+        meshes["layer_edges"] = layer.extract_feature_edges()
+        meshes["layer_points"] = layer.extract_points(
+            range(layer.n_points), include_cells=False
         )
-        meshes["subdomain_boundary"] = subdomain_boundary
+        if failcase:
+            meshes["extra_mesh"] = meshes["layer_points"].translate([-1, 0, 0])
         for name, m in meshes.items():
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
@@ -857,14 +869,14 @@ class TestUtils:
         )
         ot.meshlib.subdomains.identify_subdomains(domain, subdomains)
 
-        def check(mesh_1, mesh_2, key: str):
+        def _check(mesh_1, mesh_2, key: str):
             np.testing.assert_array_equal(mesh_1[key], mesh_2[key])
 
         for name, mesh in meshes.items():
             cli_subdomain = pv.read(path / f"new_{name}.vtu")
-            check(mesh, cli_subdomain, "bulk_node_ids")
+            _check(mesh, cli_subdomain, "bulk_node_ids")
             if "number_bulk_elements" in mesh.cell_data:
-                check(mesh, cli_subdomain, "number_bulk_elements")
+                _check(mesh, cli_subdomain, "number_bulk_elements")
                 # order of the bulk element ids is random for multiple ids per
                 # sub cell, thus only testing for equality of the set.
                 cell_id = 0
@@ -877,4 +889,4 @@ class TestUtils:
                     cell_id += num_cells
 
             else:
-                check(mesh, cli_subdomain, "bulk_element_ids")
+                _check(mesh, cli_subdomain, "bulk_element_ids")

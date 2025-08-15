@@ -15,7 +15,7 @@ from ogstools.plot.utils import get_projection
 
 
 def get_dim(mesh: pv.UnstructuredGrid) -> int:
-    return 3 if mesh.volume else 2 if mesh.area else 1 if mesh.length else 0
+    return np.max([cell.dimension for cell in mesh.cell])
 
 
 def named_boundaries(
