@@ -26,9 +26,11 @@ class Groundwater:
     isolation_layer_id: int = 1
     """ number of the groundwater isolation layer (count starts with 0)"""
     upstream: tuple[float, float] = (160, 200)
-    """tuple defining thresholds angles of the groundwater inflow surfaces - 0° at +x direction"""
+    """tuple of length 2 defining thresholds angles of the groundwater inflow surfaces - 0° at +x direction,
+    first value is start, second upper is end. start value can be smaller than end value e.g. (359,1)"""
     downstream: tuple[float, float] = (340, 20)
-    """tuple defining thresholds angles of the groundwater outflow surfaces - 0° at +x direction"""
+    """tuple of length 2 defining thresholds angles of the groundwater outflow surfaces - 0° at +x direction,
+    first value is start, second upper is end. start value can be smaller than end value e.g. (359,1)"""
 
 
 @dataclass(frozen=True)
