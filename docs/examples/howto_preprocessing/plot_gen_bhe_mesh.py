@@ -158,8 +158,10 @@ p.show()
 # Create an advanced structured mesh
 # --------------------------------------
 # Generate a customizable structured BHE mesh with advanced mesh
-# sizing options (using gmsh). To understand the specific
-# behaviour of every mesh parameter, test each one after another.
+# sizing options (using gmsh). By adding additional points to the model_area,
+# the subdivison of the surface by the structured mesh algorithm is controlled.
+# To understand the specific behaviour of every mesh parameter,
+# test each one after another.
 #
 # .. image:: ../../examples/howto_preprocessing/gen_bhe_mesh.svg
 
