@@ -13,7 +13,7 @@ from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
-from ogs import simulator
+from ogs import mesh, simulator
 
 import ogstools as ot
 from ogstools.definitions import EXAMPLES_DIR
@@ -73,7 +73,7 @@ simulator.initialize(arguments)
 # Get access to the current state of the mesh (here left boundary mesh)
 # link to getMesh
 
-left_boundary = simulator.getMesh("physical_group_left")
+left_boundary: mesh = simulator.getMesh("physical_group_left")
 pressure = np.array(left_boundary.getPointDataArray("pressure", 1))
 
 
