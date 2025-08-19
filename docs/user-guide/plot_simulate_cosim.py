@@ -49,8 +49,8 @@ meshes["physical_group_right"].point_data["pressure"] = np.full(
     points_shape[0], 3e7
 )
 
-for name, mesh in meshes.items():
-    pv.save_meshio(Path(results_path, name + ".vtu"), mesh)
+for name, sub_mesh in meshes.items():
+    pv.save_meshio(Path(results_path, name + ".vtu"), sub_mesh)
 
 
 # %%
