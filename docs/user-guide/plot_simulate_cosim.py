@@ -2,14 +2,15 @@ import pyvista as pv
 import numpy as np
 
 from pathlib import Path
+from tempfile import mkdtemp
 
 import ogstools as ot
+from ogstools.definitions import EXAMPLES_DIR
 from ogs import mesh, simulator
 
-gmsh_mesh_name = "rect.msh"
-model_dir = Path("ogstools/examples/prj")
-prj_path = model_dir / "SimpleLF.prj"
-
+results_path = Path(mkdtemp())
+prj_path = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
+gmsh_mesh_name = results_path / "rect.msh"
 
 def generateModelMeshes():
     ot.meshlib.rect(
@@ -33,11 +34,19 @@ def generateModelMeshes():
     )
 
     for name, mesh in meshes.items():
-        pv.save_meshio(Path(model_dir, name + ".vtu"), mesh)
+        pv.save_meshio(Path(results_path, name + ".vtu"), mesh)
 
 
 def executeSimulation():
-    arguments = ["", str(prj_path), "-l debug", "-o /tmp/t/r1"]
+    arguments = [
+        "",
+        str(prj_path),
+        "-l debug",
+        "-m",
+        str(results_path),
+        "-o",
+        str(results_path),
+    ]
     simulator.initialize(arguments)
 
     left_boundary = simulator.getMesh("physical_group_left")
