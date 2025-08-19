@@ -22,7 +22,7 @@ from ogstools.meshlib import meshes_from_gmsh
 @dataclass(frozen=True)
 class Groundwater:
     begin: float = -30
-    """ depth of groundwater begin (negative) in m """
+    """ depth of groundwater begin (negative) in m from top surface """
     isolation_layer_id: int = 1
     """ number of the groundwater isolation layer (count starts with 0)"""
     upstream: tuple[float, float] = (160, 200)
