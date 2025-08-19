@@ -108,3 +108,8 @@ for i in range(15):
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
 
 simulator.finalize()
+
+
+# %%
+
+# Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
