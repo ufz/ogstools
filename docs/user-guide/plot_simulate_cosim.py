@@ -107,7 +107,7 @@ for i in range(15):
         pressure = np.full(pressure.shape, 3.01e7)
 
     # or setPointDataArray for node-centred properties
-    left_boundary.setCellDataArray("pressure", pressure, 1)
+    left_boundary.setPointDataArray("pressure", pressure, 1)
 
     # Perform a single step (step size is determined by setting in projectfile/timeloop)
     # In this example we have fixed step
