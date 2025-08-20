@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any
+from typing import Any, Literal
 
 import gmsh
 import numpy as np
@@ -58,7 +58,7 @@ def gen_bhe_mesh_gmsh(
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
-    meshing_type: str = "structured",
+    meshing_type: Literal["prism", "structured"] = "prism",
     inner_mesh_size: float = 5.0,
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
@@ -1281,10 +1281,6 @@ def gen_bhe_mesh_gmsh(
         _mesh_structured()
     elif meshing_type == "prism":
         _mesh_prism()
-    else:  # pragma: no cover
-        gmsh.finalize()
-        msg = "Unknown meshing type! prism and structured supported"
-        raise Exception(msg)
 
     mesh.generate(3)
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
@@ -1317,7 +1313,7 @@ def gen_bhe_mesh(
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
-    meshing_type: str = "structured",  # TODO: Typing to Literal to avoid mistakes
+    meshing_type: Literal["prism", "structured"] = "prism",
     inner_mesh_size: float = 5.0,
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
