@@ -27,10 +27,10 @@ class Groundwater:
     """ number of the groundwater isolation layer (count starts with 0)"""
     upstream: tuple[float, float] = (160, 200)
     """tuple of length 2 defining thresholds angles of the groundwater inflow surfaces - 0° at +x direction,
-    first value is start, second upper is end. start value can be smaller than end value e.g. (359,1)"""
+    first value is start, second is end. start value can be larger than end value e.g. (359,1)"""
     downstream: tuple[float, float] = (340, 20)
     """tuple of length 2 defining thresholds angles of the groundwater outflow surfaces - 0° at +x direction,
-    first value is start, second upper is end. start value can be smaller than end value e.g. (359,1)"""
+    first value is start, second is end. start value can be larger than end value e.g. (359,1)"""
 
 
 @dataclass(frozen=True)
@@ -68,18 +68,19 @@ def gen_bhe_mesh_gmsh(
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with meshes_from_gmsh with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
-    :param model_area: A shapely.Polygon of the model. No holes are allowed.
+    :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
-    :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+    :param groundwater: List of groundwater layers, where every is specified by a tuple
+        of three entries: [depth of groundwater begin (negative), number of the groundwater
+        isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
     :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
     :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box in m
-    :param outer_mesh_size: mesh size outside of the refinement box in m
+    :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
+    :param inner_mesh_size: mesh size inside the refinement area in m
+    :param outer_mesh_size: mesh size outside of the refinement area in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .msh
@@ -1325,15 +1326,14 @@ def gen_bhe_mesh(
 ) -> list[str]:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
-    submeshes at the top, at the bottom and the groundwater inflow, which is exported
+    submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
     in the OGS readable .vtu format. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
-    :param length: Length of the model area in m (x-dimension)
-    :param width: Width of the model area in m (y-dimension)
+    :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater inflow direction, as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+        isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
     :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
         [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
         BHE end depth (negative), borehole radius in m]
@@ -1344,10 +1344,9 @@ def gen_bhe_mesh(
     :param n_refinement_layers: number of refinement layers which are evenly set above and
         beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box in m
-    :param outer_mesh_size: mesh size outside of the refinement box in m
+    :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
+    :param inner_mesh_size: mesh size inside the refinement area in m
+    :param outer_mesh_size: mesh size outside of the refinement area in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
