@@ -67,6 +67,7 @@ for name, sub_mesh in meshes.items():
 # %%
 # Initialize the simulation
 # Use same arguments as when calling ogs from command line, --> link
+# https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
 arguments = [
     "",
@@ -78,11 +79,12 @@ arguments = [
     str(results_path),
 ]
 
-simulator.initialize(arguments)
+initialization_status = simulator.initialize(arguments)
 
 # %%
-# Get access to the current state of the mesh (here left boundary mesh)
-# link to getMesh
+# If the initialization was successful one can access to the current state of
+# the left boundary mesh via the getMesh() method
+# https://doxygen.opengeosys.org/d9/de9/classogsmesh
 
 left_boundary: mesh = simulator.getMesh("physical_group_left")
 pressure = np.array(left_boundary.getPointDataArray("pressure", 1))
