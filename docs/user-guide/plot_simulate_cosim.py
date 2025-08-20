@@ -2,7 +2,11 @@
 Co-Simulation
 =============
 
-ToDo Explanation
+OpenGeoSys offers a python interface that can be used to control some aspects of
+a simulation from outside. For example, using the python interface it is
+possible to 'step' through the simulation and analyse the intermediate results
+of a particular step. Based on the analysis, for instance, the boundary
+conditions can be adjusted.
 
 """
 
@@ -25,7 +29,10 @@ gmsh_mesh_name = results_path / "rect.msh"
 
 # %%
 # Create mesh and boundary meshes
-# boundary meshes get initial pressure value
+#
+# The domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
+# will be created in the following code section. Furthermore, the boundary
+# condition (prescribed pressure) is set on the left and right boundary meshes.
 
 ot.meshlib.rect(
     lengths=(10, 2),
@@ -40,7 +47,9 @@ ot.meshlib.rect(
 
 meshes = ot.meshes_from_gmsh(gmsh_mesh_name)
 
-# Adapt the boundary meshes
+# %%
+# Add data array 'pressure' to the left and right meshes boundary meshes
+
 points_shape = np.shape(meshes["physical_group_left"].points)
 meshes["physical_group_left"].point_data["pressure"] = np.full(
     points_shape[0], 2.99e7
@@ -49,6 +58,8 @@ meshes["physical_group_right"].point_data["pressure"] = np.full(
     points_shape[0], 3e7
 )
 
+# %%
+# save the domain and boundary meshes (in gmsh format)
 for name, sub_mesh in meshes.items():
     pv.save_meshio(Path(results_path, name + ".vtu"), sub_mesh)
 
