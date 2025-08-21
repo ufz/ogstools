@@ -88,8 +88,17 @@ initialization_status = simulator.initialize(arguments)
 # %%
 # 3.1 Interaction with OGSTools
 # =============================
-#
-#
+
+# Let us interact with the domain and the left boundary mesh
+domain_mesh = ot.Mesh.from_simulator(simulator, "domain")
+left_mesh = ot.Mesh.from_simulator(simulator, "physical_group_left")
+
+# For all points of the left boundary mesh set the pressure value
+# We recommend to use numpy for manipulation of the values.
+# Important: You can only change the values, not the shape / length of the array.
+left_mesh.point_data["pressure"] = np.full(
+    np.shape(left_mesh.number_of_points), 1e8
+)
 
 
 # %%

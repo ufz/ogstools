@@ -130,9 +130,16 @@ class Mesh(pv.UnstructuredGrid):
             return cls(convert_properties_mesh(doc))
 
     @classmethod
-    def from_simulator(cls, simulator: Any, name: str) -> Mesh:
+    def from_simulator(
+        cls,
+        simulator: Any,
+        name: str,
+        node_properties: list[str],
+        cell_properties: list[str],
+    ) -> Mesh:
         """
-        Constructs a pyvista mesh from a running simulation. It only contains points (geometry) and cells (topology).
+        Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)
+        and optionally the give node-based or cell-based properties
         Properties must be added afterwards
 
             :param simulator:   Initialized and not finalized simulator object
@@ -151,4 +158,15 @@ class Mesh(pv.UnstructuredGrid):
         cells_and_types = mesh.getCells()
         cells = construct_cells(cells_and_types[0], cells_and_types[1])
 
-        return pv.UnstructuredGrid(cells, cells_and_types[1], points)
+        mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
+
+        for node_property_name in node_properties:
+            mesh.point_data[node_property_name] = simulator.getPointDataArray(
+                node_property_name
+            )
+        for cell_property_name in cell_properties:
+            mesh.cell_data[cell_property_name] = simulator.getCellDataArray(
+                cell_property_name
+            )
+
+        return mesh
