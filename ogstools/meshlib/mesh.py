@@ -134,8 +134,8 @@ class Mesh(pv.UnstructuredGrid):
         cls,
         simulator: Any,
         name: str,
-        node_properties: list[str],
-        cell_properties: list[str],
+        node_properties: list[str] = [],
+        cell_properties: list[str] = [],
     ) -> Mesh:
         """
         Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)

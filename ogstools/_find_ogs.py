@@ -6,6 +6,7 @@
 
 import os
 import platform
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -158,3 +159,22 @@ def cli() -> Any:
         return CLI_ON_PATH(parent)
 
     return None
+
+
+_interrupted = False
+
+
+def _handler(signum, _):
+    global _interrupted
+    _interrupted = True
+    print(f"Received signal {signum}, stopping...")
+
+
+# Register signals
+signal.signal(signal.SIGINT, _handler)
+signal.signal(signal.SIGTERM, _handler)
+
+
+def interrupted():
+    """Return True if program received SIGINT or SIGTERM."""
+    return _interrupted
