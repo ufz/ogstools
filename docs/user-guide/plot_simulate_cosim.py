@@ -1,12 +1,12 @@
 """
-Co-Simulation
-=============
+Interactive OpenGeoSys execution (Co-Simulation)
+================================================
 
-OpenGeoSys offers a python interface that can be used to control some aspects of
-a simulation from outside. For example, using the python interface it is
-possible to 'step' through the simulation and analyse the intermediate results
-of a particular step. Based on the analysis, for instance, the boundary
-conditions can be adjusted.
+Interactive execution. With interactive execution, OpenGeoSys provides a Python interface that lets you
+advance a simulation one step at a time, inspect intermediate results, and react before continuing.
+This mechanism underlies what we mean by Co-simulation: the simulation can exchange information with
+external analyses or tools during runtime—for example, by dynamically adjusting boundary conditions.
+In this guide, we will show how these interactions can be carried out using OGSTools.
 
 """
 
@@ -23,15 +23,17 @@ import ogstools as ot
 from ogstools.definitions import EXAMPLES_DIR
 
 results_path = Path(mkdtemp())
+mesh_path = Path(mkdtemp())
 prj_path = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
 gmsh_mesh_name = results_path / "rect.msh"
 
 
 # %%
-# Create mesh and boundary meshes
+# 1. Create mesh and boundary meshes
+# ==================================
 #
-# The domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
-# will be created in the following code section. Furthermore, the boundary
+# For this example we create the domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
+# Furthermore, the boundary
 # condition (prescribed pressure) is set on the left and right boundary meshes.
 
 ot.meshlib.rect(
@@ -59,13 +61,14 @@ meshes["physical_group_right"].point_data["pressure"] = np.full(
 )
 
 # %%
-# save the domain and boundary meshes (in gmsh format)
+# Save the domain and boundary meshes (in gmsh format)
 for name, sub_mesh in meshes.items():
     pv.save_meshio(Path(results_path, name + ".vtu"), sub_mesh)
 
 
 # %%
-# Initialize the simulation
+# 2. Initialize the simulation and first step
+# ===========================================
 # Use same arguments as when calling ogs from command line, --> link
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
@@ -74,55 +77,69 @@ arguments = [
     str(prj_path),
     "-l debug",  # optional
     "-m",  # optional, if mesh is located on different folder then prj file
-    str(results_path),
+    str(mesh_path),
     "-o",
     str(results_path),
 ]
 
+# Initialize starts OpenGeoSys and runs time step 0
 initialization_status = simulator.initialize(arguments)
 
 # %%
-# If the initialization was successful one can access to the current state of
-# the left boundary mesh via the getMesh() method
-# https://doxygen.opengeosys.org/d9/de9/classogsmesh
-
-left_boundary: mesh = simulator.getMesh("physical_group_left")
-pressure = np.array(left_boundary.getPointDataArray("pressure", 1))
-
-
-# plot pressure
-
-# todo extract number of timesteps from project file
+# 3.1 Interaction with OGSTools
+# =============================
+#
+#
 
 
 # %%
-# Replace property values of the mesh with setCellDataArray or setPointDataArray
-#
+# 3.2 Interaction with OpenGeoSys interface
+# ========================================
+# For performance critical applications you can skip the conversion to pyvista and directly
+# use the Co-Simulation interface of OpenGeoSys.
+# Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
 
-for i in range(15):
-    # modify left boundary condition values
-    if i < 10:
+# If the initialization was successful you can access to the current state of
+# the mesh via the getMesh() method
+# https://doxygen.opengeosys.org/d9/de9/classogsmesh
+
+# getMesh
+left_boundary: mesh = simulator.getMesh("physical_group_left")
+
+
+pressure = np.array(left_boundary.getPointDataArray("pressure", 1))
+# We recommend to use numpy for manipulation of the values.
+# Important: You can only change the values, not the shape / length of the array.
+
+# %%
+# Replace property values of the mesh with setCellDataArray or setPointDataArray
+
+
+for i in range(12):
+    # Modify left boundary condition values
+    if i < 6:
+        # All points get the same pressure values
         pressure = np.full(pressure.shape, 2.99e7)
     else:
         pressure = np.full(pressure.shape, 3.01e7)
 
-    # or setPointDataArray for node-centred properties
+    # Write values back to the simulator (OpenGeoSys)
     left_boundary.setPointDataArray("pressure", pressure, 1)
+    # Use setCellDataArray for node-centred properties
 
-    # Perform a single step (step size is determined by setting in projectfile/timeloop)
+    # Now, with modified boundary conditions execute a single step
+    # The step size is determined by setting in projectfile/timeloop
     # In this example we have fixed step
     simulator.executeTimeStep()
 
-    ## ToDo getTimeStep?
-
 
 # %%
+# 4. Finalize the simulation
+# To run the simulation till the end (according to definitions in the project file)
+
+simulator.executeSimulation()
+
 
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
 
 simulator.finalize()
-
-
-# %%
-
-# Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
