@@ -112,11 +112,11 @@
     </processes>
     <output>
       <type>VTK</type>
-      <prefix>LF_</prefix>
+      <prefix>LiquidFlow_Simple</prefix>
       <timesteps>
         <pair>
-          <repeat> 1 </repeat>
-          <each_steps> 2 </each_steps>
+          <repeat> 2 </repeat>
+          <each_steps> 4 </each_steps>
         </pair>
       </timesteps>
       <variables>
