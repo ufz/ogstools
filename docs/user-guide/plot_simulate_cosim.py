@@ -22,10 +22,9 @@ from ogs import mesh, simulator
 import ogstools as ot
 from ogstools.definitions import EXAMPLES_DIR
 
-results_path = Path(mkdtemp())
 mesh_path = Path(mkdtemp())
 prj_path = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
-gmsh_mesh_name = results_path / "rect.msh"
+gmsh_mesh_name = mesh_path / "rect.msh"
 
 
 # %%
@@ -63,7 +62,7 @@ meshes["physical_group_right"].point_data["pressure"] = np.full(
 # %%
 # Save the domain and boundary meshes (in gmsh format)
 for name, sub_mesh in meshes.items():
-    pv.save_meshio(Path(results_path, name + ".vtu"), sub_mesh)
+    pv.save_meshio(Path(mesh_path, name + ".vtu"), sub_mesh)
 
 
 # %%
@@ -72,6 +71,7 @@ for name, sub_mesh in meshes.items():
 # Use same arguments as when calling ogs from command line, --> link
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
+results_path = Path(mkdtemp())
 arguments = [
     "",
     str(prj_path),
@@ -84,6 +84,22 @@ arguments = [
 
 # Initialize starts OpenGeoSys and runs time step 0
 initialization_status = simulator.initialize(arguments)
+
+# %%
+print("The current time step is:", simulator.currentTime())
+
+# In the results_path output files for this time step have been created:
+for file in results_path.iterdir():
+    print(file.name)
+
+
+# %%
+# 3. Single step
+status = simulator.executeTimeStep()
+
+# Time stepping has advanced
+print("The current time step is:", simulator.currentTime())
+
 
 # %%
 # 3.1 Interaction with OGSTools
@@ -150,5 +166,7 @@ simulator.executeSimulation()
 
 
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-
+# %%
 simulator.finalize()
+
+# %%
