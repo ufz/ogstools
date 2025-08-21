@@ -87,22 +87,34 @@ initialization_status = simulator.initialize(arguments)
 
 # %%
 print("The current time step is:", simulator.currentTime())
+print("The end time defined is:", simulator.endTime())
 
+# %%
 # In the results_path output files for this time step have been created:
 for file in results_path.iterdir():
     print(file.name)
 
 
 # %%
-# 3. Single step
+# 3. Single step operations
+# 3.1. Advance a single step
 status = simulator.executeTimeStep()
-
-# Time stepping has advanced
+# 3.2. Get currentTime()
 print("The current time step is:", simulator.currentTime())
-
+# 3.3. Force output
+# simulator.outputLastTimeStep()
+# 3.4. getMesh
+# see 5.1 or 5.2
 
 # %%
-# 3.1 Interaction with OGSTools
+# 4. Simple simulation loop (without interaction)
+
+while simulator.currentTime() < simulator.endTime():
+    simulator.executeTimeStep()
+    print(simulator.currentTime())
+
+# %%
+# 5.1 Interaction with OGSTools
 # =============================
 
 # Let us interact with the domain and the left boundary mesh
@@ -118,7 +130,7 @@ left_mesh.point_data["pressure"] = np.full(
 
 
 # %%
-# 3.2 Interaction with OpenGeoSys interface
+# 5.2 Interaction with OpenGeoSys interface
 # ========================================
 # For performance critical applications you can skip the conversion to pyvista and directly
 # use the Co-Simulation interface of OpenGeoSys.
