@@ -128,3 +128,27 @@ class Mesh(pv.UnstructuredGrid):
 
             doc = ifm.loadDocument(str(feflow_file))
             return cls(convert_properties_mesh(doc))
+
+    @classmethod
+    def from_simulator(cls, simulator: Any, name: str) -> Mesh:
+        """
+        Constructs a pyvista mesh from a running simulation. It only contains points (geometry) and cells (topology).
+        Properties must be added afterwards
+
+            :param simulator:   Initialized and not finalized simulator object
+            :param name:        Name of the submesh (e.g. domain, left, ... )
+
+            :return             A Pyvista Mesh object
+
+        """
+        from ogs import mesh
+        from vtk_pyvista import construct_cells
+
+        current_mesh = simulator.getMesh(name)
+        points_flat = current_mesh.getPointCoordinates()
+        points = np.array(points_flat, dtype=float).reshape(-1, 3)
+
+        cells_and_types = mesh.getCells()
+        cells = construct_cells(cells_and_types[0], cells_and_types[1])
+
+        return pv.UnstructuredGrid(cells, cells_and_types[1], points)
