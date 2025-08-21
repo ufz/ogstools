@@ -14,12 +14,14 @@ In this guide, we will show how these interactions can be carried out using OGST
 # Imports and definitions
 from pathlib import Path
 from tempfile import mkdtemp
+from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
 import pyvista as pv
-from ogs import mesh, simulator
+from ogs import mesh, simulator  # Python API to a running OGS
 
 import ogstools as ot
+from ogstools._find_ogs import interrupted as current_sim_interrupted
 from ogstools.definitions import EXAMPLES_DIR
 
 mesh_path = Path(mkdtemp())
@@ -59,7 +61,6 @@ meshes["physical_group_right"].point_data["pressure"] = np.full(
     points_shape[0], 3e7
 )
 
-# %%
 # Save the domain and boundary meshes (in gmsh format)
 for name, sub_mesh in meshes.items():
     pv.save_meshio(Path(mesh_path, name + ".vtu"), sub_mesh)
@@ -98,35 +99,59 @@ for file in results_path.iterdir():
 # %%
 # 3. Single step operations
 # 3.1. Advance a single step
-status = simulator.executeTimeStep()
+status = simulator.executeTimeStep()  # ToDo should not output
 # 3.2. Get currentTime()
 print("The current time step is:", simulator.currentTime())
 # 3.3. Force output
-# simulator.outputLastTimeStep()
-# 3.4. getMesh
+# simulator.outputLastTimeStep() # ToDo simulator.output()
+# 3.4. Modify In-Situ mesh
 # see 5.1 or 5.2
 
 # %%
 # 4. Simple simulation loop (without interaction)
 
-while simulator.currentTime() < simulator.endTime():
+# Main simulation loop running till defined simulation end
+# OR interrupted by user
+while (
+    simulator.currentTime()
+    < simulator.endTime()  # Stop when simulation reaches the end time
+    and not current_sim_interrupted()  # Stop if user presses Ctrl-C or SIGTERM is received (e.g. Stop Button in Jupyter Notebook)
+    # any other stopping condition based on the mesh, log, ...
+):
+    sleep(0.01)  # Must have, if you want to pause the simulation
     simulator.executeTimeStep()
     print(simulator.currentTime())
+
+# If user-stopped, you may now investigate / adapt and continue the simulation (see section 5.1 and 5.2)
+
+
+# Continue the ("paused") simulation with a single step
+simulator.executeTimeStep()
+# Or run over multiple steps (see while loop above)
+
 
 # %%
 # 5.1 Interaction with OGSTools
 # =============================
 
-# Let us interact with the domain and the left boundary mesh
-domain_mesh = ot.Mesh.from_simulator(simulator, "domain")
+# Let us interact with the left boundary mesh
 left_mesh = ot.Mesh.from_simulator(simulator, "physical_group_left")
+# and use some values from the domain mesh
+domain_mesh = ot.Mesh.from_simulator(simulator, "domain")
+#
+pressure_value = 1e8  # domain_mesh.sample
+
+new_left_boundary_value = pressure_value * 2  # just as an example
 
 # For all points of the left boundary mesh set the pressure value
 # We recommend to use numpy for manipulation of the values.
 # Important: You can only change the values, not the shape / length of the array.
+# Typical approach: Use pyvista together with numpy
 left_mesh.point_data["pressure"] = np.full(
-    np.shape(left_mesh.number_of_points), 1e8
+    np.shape(left_mesh.number_of_points), new_left_boundary_value
 )
+
+left_mesh.write(simulator)
 
 
 # %%
