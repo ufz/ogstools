@@ -69,7 +69,8 @@ for name, sub_mesh in meshes.items():
 # %%
 # 2. Initialize the simulation and first step
 # ===========================================
-# Use same arguments as when calling ogs from command line, --> link
+# Use same arguments as when calling ogs from command line, a list of
+# possible argument is documented under
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
 results_path = Path(mkdtemp())
