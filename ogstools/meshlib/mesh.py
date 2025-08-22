@@ -139,7 +139,7 @@ class Mesh(pv.UnstructuredGrid):
     ) -> Mesh:
         """
         Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)
-        and optionally the give node-based or cell-based properties
+        and optionally the given node-based or cell-based properties
         Properties must be added afterwards
 
             :param simulator:       Initialized and not finalized simulator object
