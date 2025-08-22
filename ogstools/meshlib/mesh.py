@@ -177,7 +177,7 @@ class Mesh(pv.UnstructuredGrid):
             )
 
         pv_mesh.field_data["in_situ_mesh_name"] = np.array([name])
-        return pv_mesh
+        return cls(pv_mesh)
 
     def write_to_simulator(
         self, simulator: Any, name: str | None = None
@@ -187,28 +187,30 @@ class Mesh(pv.UnstructuredGrid):
         Developer note:
         """
         name = name or self.field_data["in_situ_mesh_name"]
-        in_situ_mesh = simulator.getMesh(name)
+        name_str = str(name[0])
+        in_situ_mesh = simulator.getMesh(name_str)
         # error handling
 
-        for key, values in self.cell_data.items:
+        for key, values in self.cell_data.items():
             n_components = values.shape[1] if values.ndim > 1 else 1
-            in_situ_mesh.SetCellDataArray(key, values, n_components)
+            in_situ_mesh.setCellDataArray(key, values, n_components)
             # error handling
 
-        for key, values in self.point_data.items:
+        for key, values in self.point_data.items():
             n_components = values.shape[1] if values.ndim > 1 else 1
-            simulator.SetPointDataArray(key, values, n_components)
+            in_situ_mesh.setPointDataArray(key, values, n_components)
             # error handling
 
     def update_from_simulator(self, simulator: Any) -> None:
         """ """
         name = self.field_data["in_situ_mesh_name"]
-        in_situ_mesh = simulator.getMesh(name)
+        name_str = str(name[0])
+        in_situ_mesh = simulator.getMesh(name_str)
 
         for key in self.point_data:
-            self.point_data[key] = in_situ_mesh.getPointDataArray(key)
+            self.point_data[key] = in_situ_mesh.getPointDataArray(key, 1)
             # error handling
 
         for key in self.cell_data:
-            self.cell_data[key] = in_situ_mesh.getCellDataArray(key)
+            self.cell_data[key] = in_situ_mesh.getCellDataArray(key, 1)
             # error handling
