@@ -14,16 +14,8 @@ import gmsh
 import meshio
 import numpy as np
 import pytest
-from hypothesis import (
-    HealthCheck,
-    Verbosity,
-    example,
-    given,
-    settings,
-)
-from hypothesis import (
-    strategies as st,
-)
+from hypothesis import HealthCheck, Verbosity, example, given, settings
+from hypothesis import strategies as st
 
 from ogstools import meshes_from_gmsh
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
@@ -132,19 +124,18 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert bot.number_of_cells == 25
     assert bot_center.number_of_cells == 19
     assert np.all(np.isin(bot_center["bulk_node_ids"], bot["bulk_node_ids"]))
-    assert np.all(np.isin(bot_center["bulk_elem_ids"], bot["bulk_elem_ids"]))
+    assert np.all(
+        np.isin(bot_center["bulk_element_ids"], bot["bulk_element_ids"])
+    )
 
 
 valid_edge_length = st.floats(
-    allow_nan=False,
-    allow_infinity=False,
-    min_value=1e-5,
-    max_value=1e9,  # e.g. pore to ocean scale if interpreted as m
-)
+    allow_nan=False, allow_infinity=False, min_value=1e-5, max_value=1e9
+)  # max_value: e.g. pore to ocean scale if interpreted as m
 
-valid_edge_number = st.integers(
-    min_value=1, max_value=10
-)  # max value because of computation time, actual max 10.000 (100e6 cells)
+
+valid_edge_number = st.integers(min_value=1, max_value=5)
+# low max value for low and consistent runtime, actual max 10.000 (100e6 cells)
 
 
 @dataclass
@@ -166,7 +157,7 @@ rect_strategy = st.builds(
     n_edge_cells=st.one_of(
         valid_edge_number, st.tuples(valid_edge_number, valid_edge_number)
     ),
-    n_layers=st.integers(min_value=1, max_value=10),
+    n_layers=st.integers(min_value=1, max_value=5),
     structured=st.booleans(),
     order=st.sampled_from([1, 2]),
     version=st.one_of(st.none(), st.sampled_from([2.2])),

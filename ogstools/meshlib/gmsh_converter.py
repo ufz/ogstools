@@ -16,6 +16,7 @@ import pyvista as pv
 from meshio._vtk_common import meshio_to_vtk_type
 
 from .mesh import Mesh
+from .subdomains import identify_subdomains
 
 logging.basicConfig()  # Important, initializes root logger
 logger = logging.getLogger(__name__)
@@ -133,21 +134,13 @@ def meshes_from_gmsh(
             )
             raise AssertionError(msg)
 
-        # rename vtk fields to OGS conventions and change to correct type
-        subdomain["bulk_elem_ids"] = np.uint64(
-            subdomain.cell_data.pop("vtkOriginalCellIds")
-        )
-        subdomain["bulk_node_ids"] = np.uint64(
-            subdomain.point_data.pop("vtkOriginalPointIds")
-        )
-
-        # remove unnecessary data
-        for cell_data_key in ["gmsh:physical", "gmsh:geometrical"]:
-            if cell_data_key in subdomain.cell_data:
-                subdomain.cell_data.remove(cell_data_key)
-        if "gmsh:dim_tags" in subdomain.point_data:
-            subdomain.point_data.remove("gmsh:dim_tags")
+        subdomain.point_data.pop("vtkOriginalPointIds", None)
+        subdomain.cell_data.pop("vtkOriginalCellIds", None)
+        subdomain.point_data.pop("gmsh:dim_tags", None)
+        subdomain.cell_data.pop("gmsh:physical", None)
+        subdomain.cell_data.pop("gmsh:geometrical", None)
         subdomain.field_data.clear()
+        identify_subdomains(domain_mesh, [subdomain])
 
         meshes[f"physical_group_{name}"] = Mesh(subdomain)
         logger.info("%s: %s", f"physical_group_{name}", subdomain)
