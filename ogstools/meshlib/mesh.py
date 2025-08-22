@@ -163,12 +163,12 @@ class Mesh(pv.UnstructuredGrid):
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
         for node_property_name in node_properties:
-            pv_mesh.point_data[node_property_name] = (
-                simulator.getPointDataArray(node_property_name)
+            pv_mesh.point_data[node_property_name] = in_situ_mesh.getPointDataArray(
+                node_property_name, 1
             )
         for cell_property_name in cell_properties:
-            pv_mesh.cell_data[cell_property_name] = simulator.getCellDataArray(
-                cell_property_name
+            pv_mesh.cell_data[cell_property_name] = in_situ_mesh.getCellDataArray(
+                cell_property_name, 1
             )
 
         return pv_mesh
