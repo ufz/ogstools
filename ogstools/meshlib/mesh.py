@@ -134,8 +134,8 @@ class Mesh(pv.UnstructuredGrid):
         cls,
         simulator: Any,
         name: str,
-        node_properties: list[str] = [],
-        cell_properties: list[str] = [],
+        node_properties: list[str] | None = None,
+        cell_properties: list[str] | None = None,
     ) -> Mesh:
         """
         Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)
@@ -148,8 +148,10 @@ class Mesh(pv.UnstructuredGrid):
             :return             A Pyvista Mesh object
 
         """
-        from ogs import mesh
         from ogstools.meshlib.vtk_pyvista import construct_cells
+
+        node_properties = node_properties or []
+        cell_properties = cell_properties or []
 
         in_situ_mesh = simulator.getMesh(name)
         points_flat = in_situ_mesh.getPointCoordinates()
@@ -161,8 +163,8 @@ class Mesh(pv.UnstructuredGrid):
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
         for node_property_name in node_properties:
-            pv_mesh.point_data[node_property_name] = simulator.getPointDataArray(
-                node_property_name
+            pv_mesh.point_data[node_property_name] = (
+                simulator.getPointDataArray(node_property_name)
             )
         for cell_property_name in cell_properties:
             pv_mesh.cell_data[cell_property_name] = simulator.getCellDataArray(

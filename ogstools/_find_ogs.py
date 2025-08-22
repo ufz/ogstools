@@ -164,7 +164,7 @@ def cli() -> Any:
 _interrupted = False
 
 
-def _handler(signum, _):
+def _handler(signum: int, _: Any) -> None:
     global _interrupted
     _interrupted = True
     print(f"Received signal {signum}, stopping...")
@@ -175,6 +175,6 @@ signal.signal(signal.SIGINT, _handler)
 signal.signal(signal.SIGTERM, _handler)
 
 
-def interrupted():
+def interrupted() -> bool:
     """Return True if program received SIGINT or SIGTERM."""
     return _interrupted

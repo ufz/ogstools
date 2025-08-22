@@ -98,6 +98,7 @@ for file in results_path.iterdir():
 
 # %%
 # 3. Single step operations
+# =========================
 # 3.1. Advance a single step
 status = simulator.executeTimeStep()  # ToDo should not output
 # 3.2. Get currentTime()
@@ -109,6 +110,7 @@ print("The current time step is:", simulator.currentTime())
 
 # %%
 # 4. Simple simulation loop (without interaction)
+# ===============================================
 
 # Main simulation loop running till defined simulation end
 # OR interrupted by user
@@ -122,7 +124,7 @@ while (
     simulator.executeTimeStep()
     print(simulator.currentTime())
 
-# If user-stopped, you may now investigate / adapt and continue the simulation (see section 5.1 and 5.2)
+# If user-stopped, you may now here investigate / adapt and continue the simulation (see section 5.1 and 5.2)
 
 
 # Continue the ("paused") simulation with a single step
@@ -156,7 +158,7 @@ left_mesh.point_data["pressure"] = np.full(
 
 # %%
 # 5.2 Interaction with OpenGeoSys interface
-# ========================================
+# =========================================
 # For performance critical applications you can skip the conversion to pyvista and directly
 # use the Co-Simulation interface of OpenGeoSys.
 # Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
@@ -196,14 +198,12 @@ for i in range(12):
 
 
 # %%
-# 4. Finalize the simulation
-# To run the simulation till the end (according to definitions in the project file)
+# 6. Finalize the simulation
+# ==========================
+# To run the simulation from last executed time step till the end (according to definitions in the project file)
 
 simulator.executeSimulation()
 
-
+# %%
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-# %%
 simulator.finalize()
-
-# %%
