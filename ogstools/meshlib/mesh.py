@@ -174,4 +174,31 @@ class Mesh(pv.UnstructuredGrid):
                 cell_property_name, 1
             )
 
-        return pv_mesh
+        pv_mesh.field_data["in_situ_mesh_name"] = np.array([name])
+
+    def write_to_simulator(self, simulator: Any):
+        """
+        only property values will be written
+        Developer note:
+        """
+        name = self.field_data["in_situ_mesh_name"]
+        in_situ_mesh = simulator.getMesh(name)
+
+        for key, values in self.cell_data.items:
+            n_components = values.shape[1] if values.ndim > 1 else 1
+            in_situ_mesh.SetCellDataArray(key, values, n_components)
+
+        for key, values in self.point_data.items:
+            n_components = values.shape[1] if values.ndim > 1 else 1
+            simulator.SetPointDataArray(key, values, n_components)
+
+    def update_from_simulator(self, simulator: Any):
+        """ """
+        name = self.field_data["in_situ_mesh_name"]
+        in_situ_mesh = simulator.getMesh(name)
+
+        for key in self.point_data.keys():
+            self.point_data[key] = in_situ_mesh.getPointDataArray(key)
+
+        for key in self.cell_data.keys():
+            self.cell_data[key] = in_situ_mesh.getCellDataArray(key)
