@@ -113,7 +113,9 @@ print("The current time step is:", simulator.currentTime())
 # 4. Simple simulation loop (without interaction)
 # ===============================================
 
-domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+domain_mesh = ot.Mesh.from_simulator(
+    simulator, "domain", ["pressure", "darcy_velocity"], ["MaterialIDs"]
+)
 previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
@@ -134,7 +136,7 @@ while (
     sleep(0.01)  # Must have, if you want to pause the simulation
     previous_domain_mesh_pressure = domain_mesh_pressure
     simulator.executeTimeStep()
-    domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+
     domain_mesh_pressure = domain_mesh.point_data["pressure"]
 
     delta = np.max(
