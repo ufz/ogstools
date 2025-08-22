@@ -113,6 +113,13 @@ print("The current time step is:", simulator.currentTime())
 # 4. Simple simulation loop (without interaction)
 # ===============================================
 
+domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
+domain_mesh_pressure = previous_domain_mesh_pressure
+
+steady_state_threshold = 1e-16*len(previous_domain_mesh_pressure)
+delta = steady_state_threshold + 1e-10
+
 # Main simulation loop running till defined simulation end
 # OR interrupted by user
 while (
@@ -120,9 +127,19 @@ while (
     < simulator.endTime()  # Stop when simulation reaches the end time
     and not current_sim_interrupted()  # Stop if user presses Ctrl-C or SIGTERM is received (e.g. Stop Button in Jupyter Notebook)
     # any other stopping condition based on the mesh, log, ...
+    and delta > steady_state_threshold # assumption: steady state reached not yet reached
 ):
     sleep(0.01)  # Must have, if you want to pause the simulation
+    previous_domain_mesh_pressure = copy.copy(domain_mesh_pressure)
     simulator.executeTimeStep()
+
+    domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+    domain_mesh_pressure = domain_mesh.point_data["pressure"]
+
+    diff = domain_mesh_pressure - previous_domain_mesh_pressure
+    delta = np.max(np.absolute(diff))
+    print('*** +++ *** max pressure diff is ' + str(delta))
+
     print(simulator.currentTime())
 
 # If user-stopped, you may now here investigate / adapt and continue the simulation (see section 5.1 and 5.2)
