@@ -142,10 +142,13 @@ class Mesh(pv.UnstructuredGrid):
         and optionally the give node-based or cell-based properties
         Properties must be added afterwards
 
-            :param simulator:   Initialized and not finalized simulator object
-            :param name:        Name of the submesh (e.g. domain, left, ... )
-
-            :return             A Pyvista Mesh object
+            :param simulator:       Initialized and not finalized simulator object
+            :param name:            Name of the submesh (e.g. domain, left, ... )
+            :param node_properties  Given properties will be added to the mesh
+                                    None or [] -> no properties will be added
+            :param cell_properties  Given properties will be added to the mesh
+                                    None or [] -> no properties will be added
+            :return                 A Mesh (Pyvista Unstructured Grid) object
 
         """
         from ogstools.meshlib.vtk_pyvista import construct_cells
