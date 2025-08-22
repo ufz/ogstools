@@ -2,11 +2,11 @@
 Interactive OpenGeoSys execution (Co-Simulation)
 ================================================
 
-Interactive execution. With interactive execution, OpenGeoSys provides a Python interface that lets you
+With interactive execution, OpenGeoSys provides a Python interface that lets you
 advance a simulation one step at a time, inspect intermediate results, and react before continuing.
 This mechanism underlies what we mean by Co-simulation: the simulation can exchange information with
 external analyses or tools during runtime—for example, by dynamically adjusting boundary conditions.
-In this guide, we will show how these interactions can be carried out using OGSTools.
+In this guide, we will show how these interactions can be carried out.
 
 """
 
@@ -100,18 +100,12 @@ for file in results_path.iterdir():
 # %%
 # 3. Single step operations
 # =========================
-# 3.1. Advance a single step
-status = simulator.executeTimeStep()  # ToDo should not output
-# 3.2. Get currentTime()
-print("The current time step is:", simulator.currentTime())
-# 3.3. Force output
-# simulator.outputLastTimeStep() # ToDo simulator.output()
-# 3.4. Modify In-Situ mesh
-# see 5.1 or 5.2
-
-
+# Advance a single step and read the time of the current step.
+status = simulator.executeTimeStep()
+print(f"The current time step is: {simulator.currentTime()} s")
 # %%
 # 4. Simple simulation loop
+# =========================
 
 while (
     # Condition to Stop when simulation reaches the end time
@@ -123,7 +117,7 @@ while (
     simulator.executeTimeStep()
     sleep(0.01)  # Must have, if you want to pause the simulation
     # Here you may add custom code to interact with data of current time step
-    # See section 5.1
+    # See section 5
 
 # Or just run without any interaction from current time step till the end of the simulation
 simulator.executeSimulation()
@@ -131,12 +125,12 @@ simulator.executeSimulation()
 simulator.finalize()
 
 # %%
-# 6. Complex simulation loop example (with interaction - using OGSTools)
-# ======================================================================
+# 5. Complex simulation loop example
+# ==================================
 # This example shows how to run an OGS simulation interactively,
 # monitor convergence (steady state), and dynamically change boundary conditions during the run.
 # Use it as a template for adaptive simulation loops.
-# The get the current mesh from a running OGS simulation use ot.Mesh.from_simulator.
+# To get the current mesh from a running OGS simulation use ot.Mesh.from_simulator.
 # You can read / manipulate this mesh using pyvista functionality.
 # Send this pyvista mesh back to the simulator with mesh.write_to_simulator.
 # Use update_from_simulator as a performance tuned method, when you already have received the mesh.
@@ -186,7 +180,7 @@ while (
             "The steady state condition is reached, apply new boundary condition"
         )
         left_mesh.point_data["pressure"] = np.full(
-            np.shape(left_mesh.number_of_points), 3e8
+            np.shape(left_mesh.number_of_points), 1e8
         )
         left_mesh.write_to_simulator(simulator)
     # else: we keep the boundary conditions constant
@@ -205,14 +199,15 @@ simulator.executeSimulation()
 simulator.finalize()
 
 # %%
-# Influence of the changed boundary condition
+# The influence of the changed boundary condition can be observed by the significant increase of
+# the pressure value at half of the simulation time.
 ms = ot.MeshSeries(results_path / "LiquidFlow_Simple.pvd")
-ms.plot_time_slice("time", "x", "pressure")
+ms.plot_probe(points=ms[0].points[80], variable="pressure")
 
 
 # %%
-# 7. Advanced Interaction with OpenGeoSys interface
-# =================================================
+# 7. Advanced Interaction with the OpenGeoSys interface
+# =====================================================
 # For performance critical applications you can skip the conversion to pyvista and directly
 # use the Co-Simulation interface of OpenGeoSys.
 # Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
@@ -252,14 +247,8 @@ for i in range(12):
     # In this example we have fixed step
     simulator.executeTimeStep()
 
-
-# %%
-# 6. Finalize the simulation
-# ==========================
 # To run the simulation from last executed time step till the end (according to definitions in the project file)
-
 simulator.executeSimulation()
 
-# %%
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
 simulator.finalize()
