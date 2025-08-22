@@ -109,20 +109,52 @@ print("The current time step is:", simulator.currentTime())
 # 3.4. Modify In-Situ mesh
 # see 5.1 or 5.2
 
-# %%
-# 4. Simple simulation loop (without interaction)
-# ===============================================
 
-domain_mesh = ot.Mesh.from_simulator(
-    simulator, "domain", ["pressure", "darcy_velocity"], ["MaterialIDs"]
-)
+# %%
+# 4. Simple simulation loop
+
+while (
+    # Condition to Stop when simulation reaches the end time
+    simulator.currentTime()  # in s, value changes with invoking executeTimeStep
+    < simulator.endTime()  # in s, value stays constant (defined in prj file - timeloop)
+    and not current_sim_interrupted()  # Stop if user presses Ctrl-C or SIGTERM is received (e.g. Stop Button in Jupyter Notebook)
+):
+
+    simulator.executeTimeStep()
+    sleep(0.01)  # Must have, if you want to pause the simulation
+    # Here you may add custom code to interact with data of current time step
+    # See section 5.1
+
+# Or just run without any interaction from current time step till the end of the simulation
+simulator.executeSimulation()
+# Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
+simulator.finalize()
+
+# %%
+# 6. Complex simulation loop example (with interaction - using OGSTools)
+# ======================================================================
+# This example shows how to run an OGS simulation interactively,
+# monitor convergence (steady state), and dynamically change boundary conditions during the run.
+# Use it as a template for adaptive simulation loops.
+# The get the current mesh from a running OGS simulation use ot.Mesh.from_simulator.
+# You can read / manipulate this mesh using pyvista functionality.
+# Send this pyvista mesh back to the simulator with mesh.write_to_simulator.
+# Use update_from_simulator as a performance tuned method, when you already have received the mesh.
+
+simulator.initialize(arguments)  # we will restart the same simulation as above
+domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+
+# Let us store the mesh of a time step to compare it later
 previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
-# avg
-steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)
-delta = steady_state_threshold + 1e-10
+# We will modify the left boundary mesh later
+left_mesh = ot.Mesh.from_simulator(
+    simulator, "physical_group_left", ["pressure"]
+)
 
+steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)  # constant
+delta = steady_state_threshold + 1e-10  # to be computed for each time step
 
 # Main simulation loop running till defined simulation end
 # OR interrupted by user
@@ -133,58 +165,54 @@ while (
     # any other stopping condition based on the mesh, log, ...
     # e.g. # delta > steady_state_threshold
 ):
-    sleep(0.01)  # Must have, if you want to pause the simulation
-    previous_domain_mesh_pressure = domain_mesh_pressure
+
+    previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]  # Copy
+
     simulator.executeTimeStep()
+    # Must have, if you want to pause the simulation
+    sleep(0.01)  # directly after executeTimeStep is often a good place
 
-    domain_mesh_pressure = domain_mesh.point_data["pressure"]
-
+    # Example for an In-loop condition
+    # 1. Check, if a steady state is reached
+    # 2. Change a boundary condition
+    domain_mesh.update_from_simulator(simulator)
     delta = np.max(
-        np.absolute(domain_mesh_pressure - previous_domain_mesh_pressure)
+        np.absolute(
+            domain_mesh.point_data["pressure"] - previous_domain_mesh_pressure
+        )
     )
-    if delta < steady_state_threshold:  # now steady state is reached
-        pass
-        # left to 3.1*10e8
+    if delta < steady_state_threshold:
+        print(
+            "The steady state condition is reached, apply new boundary condition"
+        )
+        left_mesh.point_data["pressure"] = np.full(
+            np.shape(left_mesh.number_of_points), 3e8
+        )
+        left_mesh.write_to_simulator(simulator)
+    # else: we keep the boundary conditions constant
 
-    print("*** +++ *** max pressure diff is " + str(delta))
 
-    print(simulator.currentTime())
-
-# If user-stopped, you may now here investigate / adapt and continue the simulation (see section 5.1 and 5.2)
-
+# %%
+# If user-stopped(Ctrl+C or Jupytercell-Interrupt), you may now here investigate / adapt and continue the simulation as shown in while loop above
+# e.g. current pressure
+ot.plot.contourf(domain_mesh, "pressure")
 
 # Continue the ("paused") simulation with a single step
 simulator.executeTimeStep()
 # Or run over multiple steps (see while loop above)
+simulator.executeSimulation()
+# Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
+simulator.finalize()
+
+# %%
+# Influence of the changed boundary condition
+ms = ot.MeshSeries(results_path / "LiquidFlow_Simple.pvd")
+ms.plot_time_slice("time", "x", "pressure")
 
 
 # %%
-# 5.1 Interaction with OGSTools
-# =============================
-
-# Let us interact with the left boundary mesh
-left_mesh = ot.Mesh.from_simulator(simulator, "physical_group_left")
-# and use some values from the domain mesh
-domain_mesh = ot.Mesh.from_simulator(simulator, "domain")
-#
-pressure_value = 1e8  # domain_mesh.sample
-
-new_left_boundary_value = pressure_value * 2  # just as an example
-
-# For all points of the left boundary mesh set the pressure value
-# We recommend to use numpy for manipulation of the values.
-# Important: You can only change the values, not the shape / length of the array.
-# Typical approach: Use pyvista together with numpy
-left_mesh.point_data["pressure"] = np.full(
-    np.shape(left_mesh.number_of_points), new_left_boundary_value
-)
-
-# left_mesh.write(simulator) ToDo
-
-
-# %%
-# 5.2 Interaction with OpenGeoSys interface
-# =========================================
+# 7. Advanced Interaction with OpenGeoSys interface
+# =================================================
 # For performance critical applications you can skip the conversion to pyvista and directly
 # use the Co-Simulation interface of OpenGeoSys.
 # Link to complete API https://doxygen.opengeosys.org/d1/d7b/classsimulation
@@ -192,6 +220,8 @@ left_mesh.point_data["pressure"] = np.full(
 # If the initialization was successful you can access to the current state of
 # the mesh via the getMesh() method
 # https://doxygen.opengeosys.org/d9/de9/classogsmesh
+
+simulator.initialize(arguments)  # we will restart the same simulation as above
 
 # getMesh
 left_boundary: mesh = simulator.getMesh("physical_group_left")
