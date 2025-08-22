@@ -4,8 +4,6 @@
     <mesh>domain.vtu</mesh>
     <mesh>physical_group_left.vtu</mesh>
     <mesh>physical_group_right.vtu</mesh>
-    <!--mesh>physical_group_top.vtu</mesh-->
-    <!--mesh>physical_group_bottom.vtu</mesh-->
   </meshes>
   <processes>
     <process>
