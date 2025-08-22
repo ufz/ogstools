@@ -149,7 +149,7 @@ class Mesh(pv.UnstructuredGrid):
 
         """
         from ogs import mesh
-        from vtk_pyvista import construct_cells
+        from ogstools.meshlib.vtk_pyvista import construct_cells
 
         current_mesh = simulator.getMesh(name)
         points_flat = current_mesh.getPointCoordinates()
