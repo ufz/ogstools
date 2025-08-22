@@ -151,22 +151,22 @@ class Mesh(pv.UnstructuredGrid):
         from ogs import mesh
         from ogstools.meshlib.vtk_pyvista import construct_cells
 
-        current_mesh = simulator.getMesh(name)
-        points_flat = current_mesh.getPointCoordinates()
+        in_situ_mesh = simulator.getMesh(name)
+        points_flat = in_situ_mesh.getPointCoordinates()
         points = np.array(points_flat, dtype=float).reshape(-1, 3)
 
-        cells_and_types = mesh.getCells()
+        cells_and_types = in_situ_mesh.getCells()
         cells = construct_cells(cells_and_types[0], cells_and_types[1])
 
-        mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
+        pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
         for node_property_name in node_properties:
-            mesh.point_data[node_property_name] = simulator.getPointDataArray(
+            pv_mesh.point_data[node_property_name] = simulator.getPointDataArray(
                 node_property_name
             )
         for cell_property_name in cell_properties:
-            mesh.cell_data[cell_property_name] = simulator.getCellDataArray(
+            pv_mesh.cell_data[cell_property_name] = simulator.getCellDataArray(
                 cell_property_name
             )
 
-        return mesh
+        return pv_mesh
