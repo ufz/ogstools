@@ -146,8 +146,10 @@ class Mesh(pv.UnstructuredGrid):
             :param name:            Name of the submesh (e.g. domain, left, ... )
             :param node_properties  Given properties will be added to the mesh
                                     None or [] -> no properties will be added
+
             :param cell_properties  Given properties will be added to the mesh
                                     None or [] -> no properties will be added
+
             :return                 A Mesh (Pyvista Unstructured Grid) object
 
         """
