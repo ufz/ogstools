@@ -166,39 +166,47 @@ class Mesh(pv.UnstructuredGrid):
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
         for node_property_name in node_properties:
-            pv_mesh.point_data[node_property_name] = in_situ_mesh.getPointDataArray(
-                node_property_name, 1
+            pv_mesh.point_data[node_property_name] = (
+                in_situ_mesh.getPointDataArray(node_property_name, 1)
             )
         for cell_property_name in cell_properties:
-            pv_mesh.cell_data[cell_property_name] = in_situ_mesh.getCellDataArray(
-                cell_property_name, 1
+            pv_mesh.cell_data[cell_property_name] = (
+                in_situ_mesh.getCellDataArray(cell_property_name, 1)
             )
 
         pv_mesh.field_data["in_situ_mesh_name"] = np.array([name])
+        return pv_mesh
 
-    def write_to_simulator(self, simulator: Any):
+    def write_to_simulator(
+        self, simulator: Any, name: str | None = None
+    ) -> None:
         """
         only property values will be written
         Developer note:
         """
-        name = self.field_data["in_situ_mesh_name"]
+        name = name or self.field_data["in_situ_mesh_name"]
         in_situ_mesh = simulator.getMesh(name)
+        # error handling
 
         for key, values in self.cell_data.items:
             n_components = values.shape[1] if values.ndim > 1 else 1
             in_situ_mesh.SetCellDataArray(key, values, n_components)
+            # error handling
 
         for key, values in self.point_data.items:
             n_components = values.shape[1] if values.ndim > 1 else 1
             simulator.SetPointDataArray(key, values, n_components)
+            # error handling
 
-    def update_from_simulator(self, simulator: Any):
+    def update_from_simulator(self, simulator: Any) -> None:
         """ """
         name = self.field_data["in_situ_mesh_name"]
         in_situ_mesh = simulator.getMesh(name)
 
-        for key in self.point_data.keys():
+        for key in self.point_data:
             self.point_data[key] = in_situ_mesh.getPointDataArray(key)
+            # error handling
 
-        for key in self.cell_data.keys():
+        for key in self.cell_data:
             self.cell_data[key] = in_situ_mesh.getCellDataArray(key)
+            # error handling
