@@ -151,7 +151,7 @@ left_mesh.point_data["pressure"] = np.full(
     np.shape(left_mesh.number_of_points), new_left_boundary_value
 )
 
-left_mesh.write(simulator)
+# left_mesh.write(simulator) ToDo
 
 
 # %%
