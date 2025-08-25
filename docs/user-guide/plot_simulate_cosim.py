@@ -55,7 +55,7 @@ meshes = ot.meshes_from_gmsh(gmsh_mesh_name)
 
 points_shape = np.shape(meshes["physical_group_left"].points)
 meshes["physical_group_left"].point_data["pressure"] = np.full(
-    points_shape[0], 2.99e7
+    points_shape[0], 2.9e7
 )
 meshes["physical_group_right"].point_data["pressure"] = np.full(
     points_shape[0], 3e7
@@ -180,7 +180,7 @@ while (
             "The steady state condition is reached, apply new boundary condition"
         )
         left_mesh.point_data["pressure"] = np.full(
-            np.shape(left_mesh.number_of_points), 1e8
+            np.shape(left_mesh.number_of_points), 3.1e7
         )
         left_mesh.write_to_simulator(simulator)
     # else: we keep the boundary conditions constant
@@ -189,8 +189,9 @@ while (
 # %%
 # If user-stopped(Ctrl+C or Jupytercell-Interrupt), you may now here investigate / adapt and continue the simulation as shown in while loop above
 # e.g. current pressure
-ot.plot.contourf(domain_mesh, "pressure")
+fig = ot.plot.contourf(domain_mesh, "pressure")
 
+# %%
 # Continue the ("paused") simulation with a single step
 simulator.executeTimeStep()
 # Or run over multiple steps (see while loop above)
@@ -202,8 +203,18 @@ simulator.finalize()
 # The influence of the changed boundary condition can be observed by the significant increase of
 # the pressure value at half of the simulation time.
 ms = ot.MeshSeries(results_path / "LiquidFlow_Simple.pvd")
-ms.plot_probe(points=ms[0].points[80], variable="pressure")
+# !paraview {ms.filepath} for interactive exploration
+# Time slice over x
+points = np.linspace([0, 1, 0], [10, 1, 0], 100)
+ms_probe = ot.MeshSeries.extract_probe(ms, points, "pressure")
+fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
 
+# First time step
+fig = ot.plot.contourf(ms[1], "pressure")
+# Last time step
+fig = ot.plot.contourf(ms[-1], "pressure")
+
+# %%
 
 # %%
 # 7. Advanced Interaction with the OpenGeoSys interface

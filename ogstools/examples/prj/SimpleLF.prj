@@ -108,7 +108,7 @@
     <parameter>
       <name>P0</name>
       <type>Constant</type>
-      <value>2.99e7</value>
+      <value>2.9e7</value>
     </parameter>
     <parameter>
       <name>p_Dirichlet_left</name>
