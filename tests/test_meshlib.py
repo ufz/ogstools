@@ -828,6 +828,7 @@ class TestUtils:
         rand_id = draw(st.integers(min_value=0, max_value=n_layers - 1))
         return mesh_func, n_cells, n_layers, rand_id
 
+    @pytest.mark.tools()
     @example(meshing_data=(ot.meshlib.rect, (2, 2), 2, 0), failcase=True).xfail(
         # CLI version fails and doesn't write the new file, thus cannot be read
         raises=FileNotFoundError
