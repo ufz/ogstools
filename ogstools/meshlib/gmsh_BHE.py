@@ -26,11 +26,17 @@ class Groundwater:
     isolation_layer_id: int = 1
     """ number of the groundwater isolation layer (count starts with 0)"""
     upstream: tuple[float, float] = (160, 200)
-    """tuple of length 2 defining thresholds angles of the groundwater inflow surfaces - 0° at +x direction,
-    first value is start, second is end. start value can be larger than end value e.g. (359,1)"""
+    """Tuple of length 2 defining the angular range (in degrees) of groundwater inflow surfaces.
+    Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
+    values increase counterclockwise. The first value defines the start angle, the second defines
+    the end angle. If the start angle is larger than the end angle, the range wraps around 0°
+    (e.g., (359, 1) covers 359° -> 0° -> 1°)."""
     downstream: tuple[float, float] = (340, 20)
-    """tuple of length 2 defining thresholds angles of the groundwater outflow surfaces - 0° at +x direction,
-    first value is start, second is end. start value can be larger than end value e.g. (359,1)"""
+    """Tuple of length 2 defining the angular range (in degrees) of groundwater outflow surfaces.
+    Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
+    values increase counterclockwise. The first value defines the start angle, the second defines
+    the end angle. If the start angle is larger than the end angle, the range wraps around 0°
+    (e.g., (340, 20) covers 340° -> 359° -> 0° -> 20°)."""
 
 
 @dataclass(frozen=True)
