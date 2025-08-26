@@ -8,7 +8,8 @@ This mechanism underlies what we mean by Co-simulation: the simulation can excha
 external analyses or tools during runtime—for example, by dynamically adjusting boundary conditions.
 In this guide, we will show how these interactions can be carried out.
 
-Alternatively, for boundary conditions, have a look at our Python hook within OGS: https://www.opengeosys.org/docs/userguide/features/python_bc/.
+Alternatively, for boundary conditions only (no interaction), have a look at our guide about
+`Defining boundary conditions with Python <https://www.opengeosys.org/docs/userguide/features/python_bc/>`_.
 
 
 """
@@ -89,8 +90,8 @@ arguments = [
 initialization_status = simulator.initialize(arguments)
 
 # %%
-print("The current time step is:", simulator.currentTime())
-print("The end time defined is:", simulator.endTime())
+print(f"The current simulation time is: {simulator.currentTime()} s.")
+print(f"The end time defined is: {simulator.endTime()} s.")
 
 # %%
 # These output files for this time step are created in results_path:
@@ -103,7 +104,7 @@ for file in results_path.iterdir():
 # ============================================
 # Advance a single step and read the time of the current step.
 status = simulator.executeTimeStep()
-print(f"The current time step is: {simulator.currentTime()} s")
+print(f"The current simulation time is: {simulator.currentTime()} s.")
 
 # Now let us put this into a simple loop that runs until the end time is reached.
 
@@ -111,7 +112,7 @@ print(f"The current time step is: {simulator.currentTime()} s")
 # 4. Basic simulation loop
 # ========================
 #
-# The following loop runs the simulation until the end time is reached (or the user interrupts it).
+# The following loop runs the simulation step-by-step until the end time is reached (or the user interrupts it).
 while (
     # Condition to Stop when simulation reaches the end time
     simulator.currentTime()  # in s, value changes with invoking executeTimeStep
@@ -138,10 +139,10 @@ simulator.finalize()
 # monitor convergence (steady state), and dynamically change boundary conditions during the run.
 # Use it as a template for adaptive simulation loops.
 # To get the current mesh from a running OGS simulation, use
-# :py:mod:`ogstools.meshlib.Mesh.from_simulator`.
+# :py:meth:`ot.Mesh.create_from_simulator <ogstools.meshlib.Mesh.update_from_simulator>`
 # You can read / manipulate this mesh using pyvista functionality.
-# Send this pyvista mesh back to the simulator with :py:mod:`ogstools.meshlib.Mesh.write_to_simulator`.
-# Use :py:mod:`ogstools.meshlib.Mesh.update_from_simulator` as a performance tuned method, when you already have received the mesh.
+# Send this pyvista mesh back to the simulator with :py:meth:`~ogstools.meshlib.Mesh.write_to_simulator`.
+# Use :py:meth:`~ogstools.meshlib.Mesh.update_from_simulator` as a performance tuned method, when you already have received the mesh.
 
 simulator.initialize(arguments)  # we will restart the same simulation as above
 domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
@@ -186,7 +187,7 @@ while (
     )
     if delta < steady_state_threshold:
         print(
-            "The steady state condition is reached, apply new boundary condition"
+            "The steady state condition is reached. Now a new boundary condition is applied."
         )
         left_mesh.point_data["pressure"] = np.full(
             np.shape(left_mesh.number_of_points), 3.1e7
@@ -194,6 +195,8 @@ while (
         left_mesh.write_to_simulator(simulator)
     # else: we keep the boundary conditions constant
 
+# This simulation reaches the steady state condition twice
+# 1st with left boundary pressure at 2.9e7 Pa, 2nd: 3.1e7 Pa
 
 # %%
 # If user-stopped(Ctrl+C or Jupytercell-Interrupt), you may now investigate, adapt and continue the simulation as shown in while loop above
