@@ -169,6 +169,8 @@ p.show()
 # %%
 vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
 bhe_meshes = gen_bhe_mesh(
+    # add additional points for better subsidivision of the surface by structured algorithm
+    # compare with previous example, to see the difference
     model_area=Polygon(
         (
             (0.0, 0.0),
