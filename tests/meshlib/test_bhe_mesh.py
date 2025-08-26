@@ -5,66 +5,141 @@ from pathlib import Path
 import numpy as np
 import pytest
 import pyvista as pv
+from shapely import Polygon
 
 from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 
 # confinded aquifer: top level of groundwater ends at soil layer transition
 def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+    bhe = BHE(x=25, y=30, z_begin=-5, z_end=-50, borehole_radius=0.076)
+    distance_bhe_to_refinment_area_x = 10
+    distance_bhe_to_refinment_area_y = 8
     return gen_bhe_mesh(
-        length=50,
-        width=50,
+        model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=50, ymax=50),
         layer=[50, 50, 20],
-        groundwater=Groundwater(-48, 2, "-y"),
-        BHE_Array=BHE(25, 30, -5, -50, 0.076),
+        groundwater=Groundwater(
+            begin=-48,
+            isolation_layer_id=2,
+            upstream=(89, 91),
+            downstream=(269, 271),
+        ),
+        BHE_Array=bhe,
+        refinement_area=Polygon.from_bounds(
+            xmin=bhe.x - distance_bhe_to_refinment_area_x,
+            ymin=bhe.y - distance_bhe_to_refinment_area_y,
+            xmax=bhe.x + distance_bhe_to_refinment_area_x,
+            ymax=bhe.y + distance_bhe_to_refinment_area_y,
+        ),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
     )
 
 
 def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+    bhe_array = [
+        BHE(x=50, y=40, z_begin=0, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=30, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=50, z_begin=-1, z_end=-52, borehole_radius=0.076),
+    ]
+    distance_bhe_to_refinment_area_x = 10
+    distance_bhe_to_refinment_area_y = 8
     return gen_bhe_mesh(
-        length=100,
-        width=70,
+        model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=100, ymax=70),
         layer=[50, 50, 50],
-        groundwater=Groundwater(-50, 2, "+y"),
-        BHE_Array=[
-            BHE(50, 40, 0, -60, 0.076),
-            BHE(50, 30, -1, -60, 0.076),
-            BHE(50, 50, -1, -52, 0.076),
-        ],
+        groundwater=Groundwater(
+            begin=-50,
+            isolation_layer_id=2,
+            upstream=(359, 1),
+            downstream=(179, 181),
+        ),
+        BHE_Array=bhe_array,
+        refinement_area=Polygon.from_bounds(
+            xmin=min(bhe.x for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_x,
+            ymin=min(bhe.y for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_y,
+            xmax=max(bhe.x for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_x,
+            ymax=max(bhe.y for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_y,
+        ),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
     )
 
 
 def case_3(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+    bhe_array = [
+        BHE(x=50, y=25, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=30, z_begin=-1, z_end=-49, borehole_radius=0.076),
+        BHE(x=50, y=35, z_begin=-1, z_end=-60, borehole_radius=0.076),
+    ]
+    distance_bhe_to_refinment_area_x = 10
+    distance_bhe_to_refinment_area_y = 8
     return gen_bhe_mesh(
-        length=120,
-        width=60,
+        model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=120, ymax=60),
         layer=[50, 50, 40],
-        groundwater=[Groundwater(-3, 1, "-x"), Groundwater(-130, 3, "+x")],
-        BHE_Array=[
-            BHE(50, 25, -1, -60, 0.076),
-            BHE(50, 30, -1, -49, 0.076),
-            BHE(50, 35, -1, -60, 0.076),
+        groundwater=[
+            Groundwater(
+                begin=-3,
+                isolation_layer_id=1,
+                upstream=(179, 181),
+                downstream=(359, 1),
+            ),
+            Groundwater(
+                begin=-130,
+                isolation_layer_id=3,
+                upstream=(359, 1),
+                downstream=(179, 181),
+            ),
         ],
+        BHE_Array=bhe_array,
+        refinement_area=Polygon.from_bounds(
+            xmin=min(bhe.x for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_x,
+            ymin=min(bhe.y for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_y,
+            xmax=max(bhe.x for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_x,
+            ymax=max(bhe.y for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_y,
+        ),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
     )
 
 
 def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+    bhe_array = [
+        BHE(x=40, y=15, z_begin=-1, z_end=-60, borehole_radius=0.076),
+        BHE(x=50, y=15, z_begin=-1, z_end=-49, borehole_radius=0.076),
+        BHE(x=60, y=15, z_begin=-1, z_end=-60, borehole_radius=0.076),
+    ]
+    distance_bhe_to_refinment_area_x = 10
+    distance_bhe_to_refinment_area_y = 4
     return gen_bhe_mesh(
-        length=80,
-        width=30,
+        model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=80, ymax=30),
         layer=[50, 2, 48, 20],
-        groundwater=[Groundwater(-3, 1, "-x")],
-        BHE_Array=[
-            BHE(40, 15, -1, -60, 0.076),
-            BHE(50, 15, -1, -49, 0.076),
-            BHE(60, 15, -1, -60, 0.076),
+        groundwater=[
+            Groundwater(
+                begin=-3,
+                isolation_layer_id=1,
+                upstream=(179, 181),
+                downstream=(359, 1),
+            )
         ],
+        BHE_Array=bhe_array,
+        refinement_area=Polygon.from_bounds(
+            xmin=min(bhe.x for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_x,
+            ymin=min(bhe.y for bhe in bhe_array)
+            - distance_bhe_to_refinment_area_y,
+            xmax=max(bhe.x for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_x,
+            ymax=max(bhe.y for bhe in bhe_array)
+            + distance_bhe_to_refinment_area_y,
+        ),
         meshing_type=mesh_type,
         out_name=vtu_out_file_path,
         target_z_size_fine=1,
@@ -82,12 +157,17 @@ def case_5(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
     bhe_array = [
-        BHE(bhe_x, bhe_y, 0, -10, 0.076)
+        BHE(x=bhe_x, y=bhe_y, z_begin=0, z_end=-10, borehole_radius=0.076)
         for bhe_x, bhe_y in product(spacing_bhe, repeat=2)
     ]
+    distance_bhe_to_refinment_area = 4
     return gen_bhe_mesh(
-        length=np.max(spacing_bhe) + 2 * border_distance,
-        width=np.max(spacing_bhe) + 2 * border_distance,
+        model_area=Polygon.from_bounds(
+            xmin=0,
+            ymin=0,
+            xmax=np.max(spacing_bhe) + 2 * border_distance,
+            ymax=np.max(spacing_bhe) + 2 * border_distance,
+        ),
         layer=[15],
         groundwater=[],
         BHE_Array=bhe_array,
@@ -95,8 +175,16 @@ def case_5(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
         out_name=vtu_out_file_path,
         inner_mesh_size=10,
         outer_mesh_size=20,
-        dist_box_x=4,
-        dist_box_y=4,
+        refinement_area=Polygon.from_bounds(
+            xmin=min(bhe.x for bhe in bhe_array)
+            - distance_bhe_to_refinment_area,
+            ymin=min(bhe.y for bhe in bhe_array)
+            - distance_bhe_to_refinment_area,
+            xmax=max(bhe.x for bhe in bhe_array)
+            + distance_bhe_to_refinment_area,
+            ymax=max(bhe.y for bhe in bhe_array)
+            + distance_bhe_to_refinment_area,
+        ),
         n_refinement_layers=0,
         target_z_size_coarse=10,
     )

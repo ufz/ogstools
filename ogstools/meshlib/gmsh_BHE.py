@@ -9,10 +9,12 @@ from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 from tempfile import mkdtemp
+from typing import Any, Literal
 
 import gmsh
 import numpy as np
 import pyvista as pv
+import shapely
 
 from ogstools.meshlib import meshes_from_gmsh
 
@@ -20,11 +22,21 @@ from ogstools.meshlib import meshes_from_gmsh
 @dataclass(frozen=True)
 class Groundwater:
     begin: float = -30
-    """ depth of groundwater begin (negative) in m """
+    """ depth of groundwater begin (negative) in m from top surface """
     isolation_layer_id: int = 1
     """ number of the groundwater isolation layer (count starts with 0)"""
-    flow_direction: str = "+x"
-    """ groundwater inflow direction as string - supported '+x', '-x', '-y', '+y' """
+    upstream: tuple[float, float] = (160, 200)
+    """Tuple of length 2 defining the angular range (in degrees) of groundwater inflow surfaces.
+    Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
+    values increase counterclockwise. The first value defines the start angle, the second defines
+    the end angle. If the start angle is larger than the end angle, the range wraps around 0°
+    (e.g., (359, 1) covers 359° -> 0° -> 1°)."""
+    downstream: tuple[float, float] = (340, 20)
+    """Tuple of length 2 defining the angular range (in degrees) of groundwater outflow surfaces.
+    Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
+    values increase counterclockwise. The first value defines the start angle, the second defines
+    the end angle. If the start angle is larger than the end angle, the range wraps around 0°
+    (e.g., (340, 20) covers 340° -> 359° -> 0° -> 20°)."""
 
 
 @dataclass(frozen=True)
@@ -44,17 +56,15 @@ class BHE:
 
 
 def gen_bhe_mesh_gmsh(
-    length: float,
-    width: float,
+    model_area: shapely.Polygon,
     layer: float | list[float],
     groundwater: Groundwater | list[Groundwater],
     BHE_Array: BHE | list[BHE],
+    refinement_area: shapely.Polygon,
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
-    meshing_type: str = "structured",
-    dist_box_x: float = 5.0,
-    dist_box_y: float = 10.0,
+    meshing_type: Literal["prism", "structured"] = "prism",
     inner_mesh_size: float = 5.0,
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
@@ -64,19 +74,19 @@ def gen_bhe_mesh_gmsh(
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with meshes_from_gmsh with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
-    :param length: Length of the model area in m (x-dimension)
-    :param width: Width of the model area in m (y-dimension)
+    :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
-    :param groundwater: List of groundwater layers, where every is specified by a tuple of three entries: [depth of groundwater begin (negative), number of the groundwater isolation layer (count starts with 0), groundwater inflow direction as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+    :param groundwater: List of groundwater layers, where every is specified by a tuple
+        of three entries: [depth of groundwater begin (negative), number of the groundwater
+        isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
     :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
     :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
     :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
     :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box in m
-    :param outer_mesh_size: mesh size outside of the refinement box in m
+    :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
+    :param inner_mesh_size: mesh size inside the refinement area in m
+    :param outer_mesh_size: mesh size outside of the refinement area in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
     :param out_name: name of the exported mesh, must end with .msh
@@ -261,7 +271,7 @@ def gen_bhe_mesh_gmsh(
                 target_layer.append(n_refinement_layers)
 
     # to flat a list, seems not so easy with a ready to use function --> this code is from https://realpython.com/python-flatten-list/
-    def _flatten_concatenation(matrix: list[list[float]]) -> list:
+    def _flatten_concatenation(matrix: list[list[Any]]) -> list:
         flat_list = []
         for row in matrix:
             flat_list += row
@@ -299,43 +309,315 @@ def gen_bhe_mesh_gmsh(
         return bhe_top_nodes
 
     def _mesh_structured() -> None:
-        for y_value in [0.0, y_min, y_max, width]:
-            for x_value in [0.0, x_min, x_max, length]:
-                gmsh.model.geo.addPoint(x_value, y_value, 0.0)
+        if shapely.get_coordinate_dimension(
+            refinement_area
+        ) != shapely.get_coordinate_dimension(model_area):
+            msg = f"Dimension of model area is {shapely.get_coordinate_dimension(model_area)}, but refinement area is of dimension {shapely.get_coordinate_dimension(refinement_area)}"
+            raise ValueError(msg)
 
-        # x-direction
-        for i in range(14)[1::4]:
-            for j in range(3):
-                gmsh.model.geo.addLine(i + j, i + j + 1)
+        point_registry_refinement_area: dict[frozenset[float], int] = {}
+        line_registry_refinement_area = {}
 
-        # y-direction
-        for i in range(1, 13):
-            gmsh.model.geo.addLine(i, i + 4)
+        # define the refinement area
+        point_ids_refinement = []
+        if shapely.get_coordinate_dimension(refinement_area) == 2:
+            for i, (x, y) in enumerate(refinement_area.exterior.coords[:-1]):
+                point_ids_refinement.append(
+                    geo.addPoint(x, y, 0, outer_mesh_size, tag=i)
+                )
+                point_registry_refinement_area[frozenset([x, y])] = (
+                    point_ids_refinement[-1]
+                )
+        else:
+            for i, (x, y, z) in enumerate(refinement_area.exterior.coords[:-1]):
+                point_ids_refinement.append(
+                    geo.addPoint(x, y, z, outer_mesh_size, tag=i)
+                )
+                point_registry_refinement_area[frozenset([x, y, z])] = (
+                    point_ids_refinement[-1]
+                )
 
-        # add surfaces
-        for i in range(1, 10):
-            i2 = i + 13 + (i - 1) // 3
-            gmsh.model.geo.addCurveLoop([i, i2, -i - 3, -i2 + 1])
-            gmsh.model.geo.addPlaneSurface([i])
-            gmsh.model.geo.synchronize()
+        refinement_area_lines = list(
+            zip(
+                point_ids_refinement,
+                point_ids_refinement[1:] + point_ids_refinement[:1],
+                strict=True,
+            )
+        )
+        refinement_area_line_ids = []
+        for p1, p2 in refinement_area_lines:
+            refinement_area_line_ids.append(geo.addLine(p1, p2))
+            line_registry_refinement_area[frozenset([p1, p2])] = (
+                refinement_area_line_ids[-1]
+            )
 
-        bhe_top_nodes = _insert_BHE(inTag=5)
+        cl_refinement_area = geo.addCurveLoop(refinement_area_line_ids)
+        surface_refinemment_area = geo.addPlaneSurface([cl_refinement_area])
+
+        max_point_tag = geo.getMaxTag(dim=0) + 1
+        # define the model area
+        point_model_area_registry: dict[int, tuple[float, ...]] = {}
+        if shapely.get_coordinate_dimension(model_area) == 2:
+            for i, (x, y) in enumerate(model_area.exterior.coords[:-1]):
+                point_model_area_registry[
+                    geo.addPoint(
+                        x, y, 0, outer_mesh_size, tag=max_point_tag + i
+                    )
+                ] = (x, y, 0)
+        else:
+            for i, (x, y, z) in enumerate(model_area.exterior.coords[:-1]):
+                point_model_area_registry[
+                    geo.addPoint(
+                        x, y, z, outer_mesh_size, tag=max_point_tag + i
+                    )
+                ] = (x, y, z)
+
+        point_ids_model_area = list(point_model_area_registry.keys())
+        model_area_lines = list(
+            zip(
+                point_ids_model_area,
+                point_ids_model_area[1:] + point_ids_model_area[:1],
+                strict=True,
+            )
+        )
+
+        model_surfaces = []
+        model_surfaces_n_sides = [
+            len(refinement_area_lines)
+        ]  # TODO: Check this
+        connection_lines = []
+        transfinite_surfaces = []
+        transfinite_curves: dict[int, tuple[int, float]] = {}
+        connection_line_registry: dict[frozenset[int], int] = {}
+        connection_line_transfinite_rings: list[list] = [[]]
+        gw_upstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        gw_downstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        ref_vec = [1, 0]  # in positive x-dir
+        for i, (p1, p2) in enumerate(model_area_lines):
+            # determine, if a line corresponds to the groundwater
+            p1_x, p1_y = point_model_area_registry[p1][:2]
+            p2_x, p2_y = point_model_area_registry[p2][:2]
+            dx = p2_x - p1_x
+            dy = p2_y - p1_y
+            normal_vec = [dy, -dx]
+
+            # Calculate dot product
+            dot_product = np.dot(ref_vec, normal_vec)
+
+            # Calculate magnitudes (lengths of the vectors)
+            magnitude_A = np.linalg.norm(ref_vec)
+            magnitude_B = np.linalg.norm(normal_vec)
+
+            # Calculate angle in radians
+            angle_radians = np.arccos(dot_product / (magnitude_A * magnitude_B))
+
+            # Convert radians to degrees
+            normal_vec_angle = (
+                360 - np.degrees(angle_radians)
+                if normal_vec[1] < 0
+                else np.degrees(angle_radians)
+            )
+            for i_gw, groundwater in enumerate(groundwaters):
+                if groundwater.upstream[0] > groundwater.upstream[1]:
+                    if (
+                        normal_vec_angle > groundwater.upstream[0]
+                        or normal_vec_angle < groundwater.upstream[1]
+                    ):
+                        gw_upstream[i_gw].append(i)
+                elif (
+                    normal_vec_angle > groundwater.upstream[0]
+                    and normal_vec_angle < groundwater.upstream[1]
+                ):
+                    gw_upstream[i_gw].append(i)
+
+                if groundwater.downstream[0] > groundwater.downstream[1]:
+                    if (
+                        normal_vec_angle > groundwater.downstream[0]
+                        or normal_vec_angle < groundwater.downstream[1]
+                    ):
+                        gw_downstream[i_gw].append(i)
+                elif (
+                    normal_vec_angle > groundwater.downstream[0]
+                    and normal_vec_angle < groundwater.downstream[1]
+                ):
+                    gw_downstream[i_gw].append(i)
+
+            model_line = geo.addLine(p1, p2)
+
+            point1 = shapely.Point(
+                model_area.exterior.coords[p1 - max_point_tag]
+            )
+            point2 = shapely.Point(
+                model_area.exterior.coords[p2 - max_point_tag]
+            )
+            # find nearest point of the refinement area
+            nearest_to_point1 = min(
+                refinement_area.exterior.coords,
+                key=lambda p: point1.distance(shapely.Point(p)),
+            )
+            nearest_to_point2 = min(
+                refinement_area.exterior.coords,
+                key=lambda p: point2.distance(shapely.Point(p)),
+            )
+            id_nearest_to_point1 = point_registry_refinement_area[
+                frozenset(nearest_to_point1)
+            ]
+            id_nearest_to_point2 = point_registry_refinement_area[
+                frozenset(nearest_to_point2)
+            ]
+
+            if nearest_to_point1 == nearest_to_point2 and i != 0:
+                connection_line_transfinite_rings.append([])
+                triangle_surface = True
+            else:
+                triangle_surface = False
+
+            if (
+                frozenset([p2, id_nearest_to_point2])
+                in connection_line_registry
+            ):
+                connection_1 = connection_line_registry[
+                    frozenset([p2, id_nearest_to_point2])
+                ]
+                if not triangle_surface:
+                    connection_line_transfinite_rings[-1].append(connection_1)
+            else:
+                connection_lines.append(geo.addLine(p2, id_nearest_to_point2))
+                connection_line_registry[
+                    frozenset([p2, id_nearest_to_point2])
+                ] = connection_lines[-1]
+                connection_1 = connection_lines[-1]
+
+            if (
+                frozenset([p1, id_nearest_to_point1])
+                in connection_line_registry
+            ):
+                connection_2 = connection_line_registry[
+                    frozenset([p1, id_nearest_to_point1])
+                ]
+                if not triangle_surface:
+                    connection_line_transfinite_rings[-1].append(connection_2)
+            else:
+                connection_lines.append(geo.addLine(p1, id_nearest_to_point1))
+                connection_line_registry[
+                    frozenset([p1, id_nearest_to_point1])
+                ] = connection_lines[-1]
+                connection_2 = connection_lines[-1]
+
+            if nearest_to_point1 == nearest_to_point2:
+                cl_surface = geo.addCurveLoop(
+                    [model_line, connection_1, -connection_2]
+                )
+                model_surfaces.append(geo.addPlaneSurface([cl_surface]))
+                model_surfaces_n_sides.append(3)
+            else:
+                if (
+                    frozenset([id_nearest_to_point1, id_nearest_to_point2])
+                    in line_registry_refinement_area
+                ):
+                    refinement_area_line = -line_registry_refinement_area[
+                        frozenset([id_nearest_to_point1, id_nearest_to_point2])
+                    ]
+                elif (
+                    frozenset([id_nearest_to_point2, id_nearest_to_point1])
+                    in line_registry_refinement_area
+                ):
+                    refinement_area_line = line_registry_refinement_area[
+                        frozenset([id_nearest_to_point2, id_nearest_to_point1])
+                    ]
+                else:
+                    msg = "Something went wrong with building the surface line loops. Please check, that your model and refinement area defined properly."
+                    raise Exception(msg)
+
+                cl_surface = geo.addCurveLoop(
+                    [
+                        model_line,
+                        connection_1,
+                        refinement_area_line,
+                        -connection_2,
+                    ],
+                    reorient=True,
+                )
+                model_surfaces.append(geo.addPlaneSurface([cl_surface]))
+                model_surfaces_n_sides.append(4)
+                geo.synchronize()
+                dist_c1 = point1.distance(shapely.Point(nearest_to_point1))
+                dist_c2 = point2.distance(shapely.Point(nearest_to_point2))
+                dist_refinement_line = shapely.Point(
+                    nearest_to_point1
+                ).distance(shapely.Point(nearest_to_point2))
+                dist_model_line = point1.distance(point2)
+
+                n_elem_con_1 = (
+                    transfinite_curves[connection_1][0]
+                    if connection_1 in transfinite_curves
+                    else ceil(dist_c1 / outer_mesh_size_inner) + 1
+                )
+                n_elem_con_2 = (
+                    transfinite_curves[connection_2][0]
+                    if connection_2 in transfinite_curves
+                    else ceil(dist_c2 / outer_mesh_size_inner) + 1
+                )
+                max_element_n = max(n_elem_con_1, n_elem_con_2)
+                transfinite_curves[connection_1] = (max_element_n, -propagation)
+                transfinite_curves[connection_2] = (max_element_n, -propagation)
+
+                num_elements_refine_and_model = max(
+                    ceil(dist_refinement_line / inner_mesh_size) + 1,
+                    ceil(dist_model_line / outer_mesh_size) + 1,
+                )
+                transfinite_curves[model_line] = (
+                    num_elements_refine_and_model,
+                    1.0,
+                )
+                transfinite_curves[refinement_area_line] = (
+                    num_elements_refine_and_model,
+                    1.0,
+                )
+                transfinite_surfaces.append(model_surfaces[-1])
+
+        gmsh.model.geo.synchronize()
+
+        if groundwaters:
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater upstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater downstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+
+        for connection_ring in connection_line_transfinite_rings:
+            mesh_sizes = []
+            for connection_line in connection_ring:
+                mesh_sizes.append(transfinite_curves[connection_line][0])
+
+            minimum_mesh_size = max(mesh_sizes)
+            for connection_line in connection_ring:
+                transfinite_curves[connection_line] = (
+                    minimum_mesh_size,
+                    -propagation,
+                )
+
+        bhe_top_nodes = _insert_BHE(inTag=1)
 
         # Extrude the surface mesh according to the previously evaluated structure
         volumes_list_for_layers = []
-        bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
-        boundaries_surfaces = {
-            "+x": [23, 41, 5],
-            "-x": [33, 15, 51],
-            "+y": [2, 8, 14],
-            "-y": [40, 46, 52],
-        }
-        top_surface = list(range(1, 10))
+
+        top_surface = [
+            surface_refinemment_area
+        ] + model_surfaces  # list(range(1, 10))
         surface_list = [(2, tag) for tag in top_surface]
+
+        gw_downstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
+        gw_upstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
 
         for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
-            extrusion_tags = gmsh.model.geo.extrude(
+            extrusion_tags = geo.extrude(
                 surface_list,
                 0,
                 0,
@@ -344,20 +626,35 @@ def gen_bhe_mesh_gmsh(
                 cummulative_height_of_layers[j],
                 True,
             )  # soil 1
-            # list of volume numbers and new bottom surfaces, which were extruded by the five surfaces
-            volume_list = [extrusion_tags[1 + i * 6][1] for i in range(9)]
-            surface_list = [extrusion_tags[i * 6] for i in range(9)]
+            geo.synchronize()
 
-            for direction, boundary_tags in bounds_gw.items():
-                for surf in boundaries_surfaces[direction]:
-                    boundary_tags.append(extrusion_tags[surf][1])
+            # list of volume numbers and new bottom surfaces, which were extruded by the five surfaces
+            n_surfaces = (
+                -1
+            )  # the number of surfaces is number of model area lines + 1 for the refinement area
+            volume_list = []
+            surface_list = []
+            for i, (dim, tag) in enumerate(extrusion_tags):
+                if dim == 3:
+                    volume_list.append(tag)
+                    surface_list.append(extrusion_tags[i - 1])
+                    for i_gw in range(len(groundwaters)):
+                        if n_surfaces in gw_downstream[i_gw]:
+                            gw_downstream_tags[i_gw].append(
+                                extrusion_tags[i + 1][1]
+                            )
+                        if n_surfaces in gw_upstream[i_gw]:
+                            gw_upstream_tags[i_gw].append(
+                                extrusion_tags[i + 1][1]
+                            )
+                    n_surfaces += 1
 
             volumes_list_for_layers.append(volume_list)
 
         k = 0
         BHE_group = []
         for i, BHE_i in enumerate(BHE_array):
-            extrusion_tags = gmsh.model.geo.extrude(
+            extrusion_tags = geo.extrude(
                 [(0, bhe_top_nodes[i])],
                 0,
                 0,
@@ -368,98 +665,131 @@ def gen_bhe_mesh_gmsh(
             )
             BHE_group.append(extrusion_tags[1][1])
 
-        gmsh.model.geo.synchronize()
+        geo.synchronize()
 
         for i, volume_i in enumerate(volumes_list_for_layers):
-            gmsh.model.addPhysicalGroup(3, volume_i, i)
+            model.addPhysicalGroup(3, volume_i, i)
 
         for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
-            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
+            model.addPhysicalGroup(1, [BHE_group_k], k)
 
-        gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
-        gmsh.model.addPhysicalGroup(
+        model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
+        model.addPhysicalGroup(
             2,
             np.array(surface_list)[:, 1].tolist(),
             k + 2,
             name="Bottom_Surface",
         )
 
+        for key, (numNodes, prop) in transfinite_curves.items():
+            mesh.setTransfiniteCurve(key, numNodes, coef=prop)
+
+        for surface in transfinite_surfaces:
+            mesh.setTransfiniteSurface(surface)
+            mesh.setRecombine(2, surface)
+        mesh.recombine()
+
         gw_counter = 0  # counter_for_gw_start_at_soil_layer
-        for i, groundwater in enumerate(groundwater_list):
+        for i, groundwater_entry in enumerate(groundwater_list):
             # add loop for different groundwater flow directions
-            offset = np.abs(groundwater[2]) in np.cumsum(layer)
-            start_id = 3 * (groundwater[0] + i + int(not offset) - gw_counter)
-            end_id = 3 * (groundwater[3] + i + int(not offset) - gw_counter)
+            offset = np.abs(groundwater_entry[2]) in np.cumsum(layer)
+            start_id = groundwater_entry[0] + i + int(not offset) - gw_counter
+            end_id = groundwater_entry[3] + i + int(not offset) - gw_counter
             if offset:
                 gw_counter += 1
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
-                bounds_gw[groundwater[4]][start_id:end_id],
+                gw_downstream_tags[i][start_id:end_id],
                 tag=k + 3,
-                name=f"Groundwater_Inflow_{i}",
+                name=f"Groundwater_downstream_{i}",
             )
-            k += 1
-
-        mesh = gmsh.model.mesh
-        # Sizing Functions and Transfinite Algorithm for Hexahedron meshing in wanted zones
-        # inner square
-        delta_x, delta_y = (x_max - x_min, y_max - y_min)
-        mesh.setTransfiniteCurve(5, ceil(delta_x / inner_mesh_size) + 1)
-        mesh.setTransfiniteCurve(8, ceil(delta_x / inner_mesh_size) + 1)
-
-        mesh.setTransfiniteCurve(17, ceil(delta_y / inner_mesh_size) + 1)
-        mesh.setTransfiniteCurve(18, ceil(delta_y / inner_mesh_size) + 1)
-        mesh.setTransfiniteCurve(19, ceil(delta_y / inner_mesh_size) + 1)
-        mesh.setTransfiniteCurve(20, ceil(delta_y / inner_mesh_size) + 1)
-
-        mesh.setTransfiniteCurve(13, ceil(y_min / outer_mesh_size_inner) + 1)
-        mesh.setTransfiniteCurve(14, ceil(y_min / outer_mesh_size_inner) + 1)
-        mesh.setTransfiniteCurve(15, ceil(y_min / outer_mesh_size_inner) + 1)
-        mesh.setTransfiniteCurve(16, ceil(y_min / outer_mesh_size_inner) + 1)
-
-        ny = ceil((width - y_max) / outer_mesh_size_inner) + 1
-        mesh.setTransfiniteCurve(21, ny)
-        mesh.setTransfiniteCurve(22, ny)
-        mesh.setTransfiniteCurve(23, ny)
-        mesh.setTransfiniteCurve(24, ny)
-
-        mesh.setTransfiniteCurve(2, ceil(delta_x / outer_mesh_size_inner) + 1)
-        mesh.setTransfiniteCurve(11, ceil(delta_x / outer_mesh_size_inner) + 1)
-
-        # rectangular squares bgw
-        mesh.setTransfiniteCurve(1, ceil(x_min / outer_mesh_size) + 1)
-        mesh.setTransfiniteCurve(4, ceil(x_min / outer_mesh_size) + 1)
-        mesh.setTransfiniteCurve(7, ceil(x_min / outer_mesh_size) + 1)
-        mesh.setTransfiniteCurve(10, ceil(x_min / outer_mesh_size) + 1)
-
-        num_nodes = ceil((length - x_max) / outer_mesh_size) + 1
-        mesh.setTransfiniteCurve(3, num_nodes, "Progression", propagation)
-        mesh.setTransfiniteCurve(6, num_nodes, "Progression", propagation)
-        mesh.setTransfiniteCurve(9, num_nodes, "Progression", propagation)
-        mesh.setTransfiniteCurve(12, num_nodes, "Progression", propagation)
-
-        for i, surface_tag in enumerate([1, 3, 4, 6, 7, 9]):
-            j = 2 * i
-            corner_tags = [1 + j, 2 + j, 5 + j, 6 + j]
-            mesh.setTransfiniteSurface(surface_tag, cornerTags=corner_tags)
-            mesh.setRecombine(2, surface_tag)
-        mesh.recombine()
+            model.addPhysicalGroup(
+                2,
+                gw_upstream_tags[i][start_id:end_id],
+                tag=k + 4,
+                name=f"Groundwater_upstream_{i}",
+            )
+            k += 2
 
     def _mesh_prism() -> None:
         # define the outer boundaries square
-        gmsh.model.geo.addPoint(0.0, 0.0, 0.0, outer_mesh_size)
-        gmsh.model.geo.addPoint(length, 0.0, 0.0, outer_mesh_size)
-        gmsh.model.geo.addPoint(length, width, 0.0, outer_mesh_size)
-        gmsh.model.geo.addPoint(0.0, width, 0.0, outer_mesh_size)
+        point_model_area_registry: dict[int, tuple[float, ...]] = {}
+        if shapely.get_coordinate_dimension(model_area) == 2:
+            for x, y in model_area.exterior.coords[:-1]:
+                point_model_area_registry[
+                    geo.addPoint(x, y, 0, outer_mesh_size)
+                ] = (x, y, 0)
+        else:
+            for x, y, z in model_area.exterior.coords[:-1]:
+                point_model_area_registry[
+                    geo.addPoint(x, y, z, outer_mesh_size)
+                ] = (x, y, z)
+        point_ids = list(point_model_area_registry.keys())
+        lines = list(zip(point_ids, point_ids[1:] + point_ids[:1], strict=True))
+        line_ids = []
+        gw_upstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        gw_downstream: list[list[int]] = [[] for _ in range(len(groundwaters))]
+        ref_vec = [1, 0]  # in positive x-dir
+        for i, (p1, p2) in enumerate(lines):
+            line_ids.append(geo.addLine(p1, p2))
+            p1_x, p1_y = point_model_area_registry[p1][:2]
+            p2_x, p2_y = point_model_area_registry[p2][:2]
+            dx = p2_x - p1_x
+            dy = p2_y - p1_y
+            normal_vec = [dy, -dx]
 
-        gmsh.model.geo.addLine(1, 2)
-        gmsh.model.geo.addLine(2, 3)
-        gmsh.model.geo.addLine(3, 4)
-        gmsh.model.geo.addLine(4, 1)
+            # Calculate dot product
+            dot_product = np.dot(ref_vec, normal_vec)
 
-        gmsh.model.geo.addCurveLoop([1, 2, 3, 4], 1)
-        gmsh.model.geo.addPlaneSurface([1], 1)
-        gmsh.model.geo.synchronize()
+            # Calculate magnitudes (lengths of the vectors)
+            magnitude_A = np.linalg.norm(ref_vec)
+            magnitude_B = np.linalg.norm(normal_vec)
+
+            # Calculate angle in radians
+            angle_radians = np.arccos(dot_product / (magnitude_A * magnitude_B))
+
+            # Convert radians to degrees
+            normal_vec_angle = (
+                360 - np.degrees(angle_radians)
+                if normal_vec[1] < 0
+                else np.degrees(angle_radians)
+            )
+            for i_gw, groundwater in enumerate(groundwaters):
+                if groundwater.upstream[0] > groundwater.upstream[1]:
+                    if (
+                        normal_vec_angle > groundwater.upstream[0]
+                        or normal_vec_angle < groundwater.upstream[1]
+                    ):
+                        gw_upstream[i_gw].append(i)
+                elif (
+                    normal_vec_angle > groundwater.upstream[0]
+                    and normal_vec_angle < groundwater.upstream[1]
+                ):
+                    gw_upstream[i_gw].append(i)
+
+                if groundwater.downstream[0] > groundwater.downstream[1]:
+                    if (
+                        normal_vec_angle > groundwater.downstream[0]
+                        or normal_vec_angle < groundwater.downstream[1]
+                    ):
+                        gw_downstream[i_gw].append(i)
+                elif (
+                    normal_vec_angle > groundwater.downstream[0]
+                    and normal_vec_angle < groundwater.downstream[1]
+                ):
+                    gw_downstream[i_gw].append(i)
+
+        if groundwaters:
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater upstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+            if not _flatten_concatenation(gw_downstream):
+                msg = "No groundwater downstream surfaces detected, please check your specified angles!"
+                raise ValueError(msg)
+
+        geo.addCurveLoop(line_ids, 1)
+        geo.addPlaneSurface([1], 1)
+        geo.synchronize()
 
         bhe_top_nodes = _insert_BHE(inTag=1)
 
@@ -468,8 +798,13 @@ def gen_bhe_mesh_gmsh(
         top_surface = [1]
 
         surface_list = [(2, 1)]
-        bounds_gw: dict[str, list] = {"+x": [], "-x": [], "+y": [], "-y": []}
-        boundaries_surfaces = {"+x": [5], "-x": [3], "+y": [2], "-y": [4]}
+        gw_downstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
+        gw_upstream_tags: list[list[int]] = [
+            [] for _ in range(len(groundwaters))
+        ]
+
         for j, num_elements in enumerate(number_of_layers):
             # spacing of the each layer must be evaluated according to the implementation of the bhe
             extrusion_tags = gmsh.model.geo.extrude(
@@ -485,9 +820,16 @@ def gen_bhe_mesh_gmsh(
             # list of new bottom surfaces, extruded by the five surfaces
             surface_list = [extrusion_tags[0]]
 
-            for direction, boundary_tags in bounds_gw.items():
-                for surf in boundaries_surfaces[direction]:
-                    boundary_tags.append(extrusion_tags[surf][1])
+            for i_gw in range(len(groundwaters)):
+                for i_tags in range(len(gw_upstream)):
+                    for tag in gw_upstream[i_tags]:
+                        gw_upstream_tags[i_gw].append(
+                            extrusion_tags[tag + 2][1]
+                        )
+                    for tag in gw_downstream[i_tags]:
+                        gw_downstream_tags[i_gw].append(
+                            extrusion_tags[tag + 2][1]
+                        )
 
             volumes_list_for_layers.append([extrusion_tags[1][1]])
 
@@ -504,15 +846,15 @@ def gen_bhe_mesh_gmsh(
             )
             BHE_group.append(extrusion_tags[1][1])
 
-        gmsh.model.geo.synchronize()
+        geo.synchronize()
         for i, volume_i in enumerate(volumes_list_for_layers):
-            gmsh.model.addPhysicalGroup(3, volume_i, i)
+            model.addPhysicalGroup(3, volume_i, i)
 
         for k, BHE_group_k in enumerate(BHE_group, start=i + 1):
-            gmsh.model.addPhysicalGroup(1, [BHE_group_k], k)
+            model.addPhysicalGroup(1, [BHE_group_k], k)
 
-        gmsh.model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
-        gmsh.model.addPhysicalGroup(
+        model.addPhysicalGroup(2, top_surface, k + 1, name="Top_Surface")
+        model.addPhysicalGroup(
             2,
             np.array(surface_list)[:, 1].tolist(),
             k + 2,
@@ -520,31 +862,35 @@ def gen_bhe_mesh_gmsh(
         )
 
         gw_counter = 0  # counter_for_gw_start_at_soil_layer
-        for i, groundwater in enumerate(groundwater_list):
+        for i, groundwater_entry in enumerate(groundwater_list):
             # add loop for different groundwater flow directions
-            offset = np.abs(groundwater[2]) in np.cumsum(layer)
-            start_id = groundwater[0] + i + int(not offset) - gw_counter
-            end_id = groundwater[3] + i + int(not offset) - gw_counter
+            offset = np.abs(groundwater_entry[2]) in np.cumsum(layer)
+            start_id = groundwater_entry[0] + i + int(not offset) - gw_counter
+            end_id = groundwater_entry[3] + i + int(not offset) - gw_counter
             if offset:
                 gw_counter += 1
-            gmsh.model.addPhysicalGroup(
+            model.addPhysicalGroup(
                 2,
-                bounds_gw[groundwater[4]][start_id:end_id],
+                gw_downstream_tags[i][start_id:end_id],
                 tag=k + 3,
-                name=f"Groundwater_Inflow_{i}",
+                name=f"Groundwater_downstream_{i}",
             )
-            k += 1
+            model.addPhysicalGroup(
+                2,
+                gw_upstream_tags[i][start_id:end_id],
+                tag=k + 4,
+                name=f"Groundwater_upstream_{i}",
+            )
+            k += 2
 
-        # Add refinement box around the BHE
-        refinement_box = gmsh.model.mesh.field.add("Box")
-        gmsh.model.mesh.field.setNumber(refinement_box, "VIn", inner_mesh_size)
-        gmsh.model.mesh.field.setNumber(refinement_box, "VOut", outer_mesh_size)
-        gmsh.model.mesh.field.setNumber(refinement_box, "XMin", x_min)
-        gmsh.model.mesh.field.setNumber(refinement_box, "XMax", x_max)
-        gmsh.model.mesh.field.setNumber(refinement_box, "YMin", y_min)
-        gmsh.model.mesh.field.setNumber(refinement_box, "YMax", y_max)
+        def mesh_size_callback(
+            _dim: int, _tag: int, x: float, y: float, z: float, lc: float
+        ) -> float:
+            if refinement_area.contains(shapely.Point(x, y, z)):
+                return min(lc, inner_mesh_size)
+            return min(lc, outer_mesh_size)
 
-        gmsh.model.mesh.field.setAsBackgroundMesh(refinement_box)
+        mesh.setSizeCallback(callback=mesh_size_callback)
 
     layer = layer if isinstance(layer, list) else [layer]
 
@@ -554,8 +900,11 @@ def gen_bhe_mesh_gmsh(
 
     BHE_Array = [BHE_Array] if isinstance(BHE_Array, BHE) else BHE_Array
 
+    model_area = shapely.orient_polygons(model_area)
+    refinement_area = shapely.orient_polygons(refinement_area)
+
     # detect the soil layer, in which the groundwater flow starts
-    groundwater_list: list = []
+    groundwater_list: list[list] = []
     for groundwater in groundwaters:
         start_groundwater = -1000
         # Index for critical layer structure, 0: not critical, 1: top critical,
@@ -606,7 +955,8 @@ def gen_bhe_mesh_gmsh(
                 icl,
                 groundwater.begin,
                 groundwater.isolation_layer_id,
-                groundwater.flow_direction,
+                groundwater.downstream,
+                groundwater.upstream,
             ]
         )
 
@@ -923,48 +1273,36 @@ def gen_bhe_mesh_gmsh(
             / (needed_extrusion[-1, 0] - np.abs(BHE_i.z_begin))
         )
 
-    # define the inner square with BHE inside
-    # compute the box size from the BHE-Coordinates
-    x_BHE = [BHE_i.x for BHE_i in BHE_array]
-    y_BHE = [BHE_i.y for BHE_i in BHE_array]
-
-    x_min = np.min(x_BHE) - dist_box_x
-    x_max = np.max(x_BHE) + dist_box_x
-    y_min = np.min(y_BHE) - dist_box_y
-    y_max = np.max(y_BHE) + dist_box_y
-
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
     gmsh.initialize()
     gmsh.option.setNumber("General.Verbosity", 2)
-    gmsh.model.add(Path(out_name).stem)
+    model = gmsh.model
+    geo = model.geo
+    mesh = model.mesh
+
+    model.add(Path(out_name).stem)
 
     if meshing_type == "structured":
         _mesh_structured()
     elif meshing_type == "prism":
         _mesh_prism()
-    else:  # pragma: no cover
-        gmsh.finalize()
-        msg = "Unknown meshing type! prism and structured supported"
-        raise Exception(msg)
 
-    gmsh.model.mesh.generate(3)
+    mesh.generate(3)
     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-    gmsh.model.mesh.setOrder(order)
-    gmsh.model.mesh.removeDuplicateNodes()
+    mesh.setOrder(order)
+    mesh.removeDuplicateNodes()
 
     # delete zero-volume elements
     # 1 for line elements --> BHE's are the reason
-    elem_tags, node_tags = gmsh.model.mesh.getElementsByType(1)
-    elem_qualities = gmsh.model.mesh.getElementQualities(
+    elem_tags, node_tags = mesh.getElementsByType(1)
+    elem_qualities = mesh.getElementQualities(
         elementTags=elem_tags, qualityName="volume"
     )
     zero_volume_elements_id = np.argwhere(elem_qualities == 0)
 
     # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
-    gmsh.model.mesh.setVisibility(
-        elem_tags[zero_volume_elements_id].ravel().tolist(), 0
-    )
+    mesh.setVisibility(elem_tags[zero_volume_elements_id].ravel().tolist(), 0)
     gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
     gmsh.plugin.run("Invisible")
 
@@ -973,17 +1311,15 @@ def gen_bhe_mesh_gmsh(
 
 
 def gen_bhe_mesh(
-    length: float,  # e.g. 150.0
-    width: float,  # e.g. 100
+    model_area: shapely.Polygon,
     layer: float | list[float],  # e.g. 100
     groundwater: Groundwater | list[Groundwater],
     BHE_Array: BHE | list[BHE],
+    refinement_area: shapely.Polygon,
     target_z_size_coarse: float = 7.5,
     target_z_size_fine: float = 1.5,
     n_refinement_layers: int = 2,
-    meshing_type: str = "structured",
-    dist_box_x: float = 5.0,
-    dist_box_y: float = 10.0,
+    meshing_type: Literal["prism", "structured"] = "prism",
     inner_mesh_size: float = 5.0,
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
@@ -992,15 +1328,14 @@ def gen_bhe_mesh(
 ) -> list[str]:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
-    submeshes at the top, at the bottom and the groundwater inflow, which is exported
+    submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
     in the OGS readable .vtu format. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
-    :param length: Length of the model area in m (x-dimension)
-    :param width: Width of the model area in m (y-dimension)
+    :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater inflow direction, as string - supported '+x', '-x', '-y', '+y'], empty list [] for no groundwater flow
+        isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
     :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
         [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
         BHE end depth (negative), borehole radius in m]
@@ -1011,10 +1346,9 @@ def gen_bhe_mesh(
     :param n_refinement_layers: number of refinement layers which are evenly set above and
         beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
-    :param dist_box_x: distance in m in x-direction of the refinemnt box according to the BHE's
-    :param dist_box_y: distance in m in y-direction of the refinemnt box according to the BHE's
-    :param inner_mesh_size: mesh size inside the refinement box in m
-    :param outer_mesh_size: mesh size outside of the refinement box in m
+    :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
+    :param inner_mesh_size: mesh size inside the refinement area in m
+    :param outer_mesh_size: mesh size outside of the refinement area in m
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
@@ -1028,8 +1362,7 @@ def gen_bhe_mesh(
 
     # using gen_bhe_mesh_gmsh as basis function
     gen_bhe_mesh_gmsh(
-        length=length,
-        width=width,
+        model_area=model_area,
         layer=layer,
         groundwater=groundwater,
         BHE_Array=BHE_Array,
@@ -1037,8 +1370,7 @@ def gen_bhe_mesh(
         target_z_size_fine=target_z_size_fine,
         n_refinement_layers=n_refinement_layers,
         meshing_type=meshing_type,
-        dist_box_x=dist_box_x,
-        dist_box_y=dist_box_y,
+        refinement_area=refinement_area,
         inner_mesh_size=inner_mesh_size,
         outer_mesh_size=outer_mesh_size,
         propagation=propagation,
@@ -1061,6 +1393,7 @@ def gen_bhe_mesh(
     )
 
     for i, _ in enumerate(groundwater):
-        mesh_names.append(f"physical_group_Groundwater_Inflow_{i}.vtu")
+        mesh_names.append(f"physical_group_Groundwater_upstream_{i}.vtu")
+        mesh_names.append(f"physical_group_Groundwater_downstream_{i}.vtu")
 
     return mesh_names
