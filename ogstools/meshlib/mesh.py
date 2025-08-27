@@ -154,6 +154,7 @@ class Mesh(pv.UnstructuredGrid):
 
         """
         from ogstools.meshlib.vtk_pyvista import construct_cells
+        from ogs.mesh import MeshItemType
 
         node_properties = node_properties or []
         cell_properties = cell_properties or []
@@ -169,11 +170,13 @@ class Mesh(pv.UnstructuredGrid):
 
         for node_property_name in node_properties:
             pv_mesh.point_data[node_property_name] = (
-                in_situ_mesh.getPointDataArray(node_property_name, 1)
+                in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1)
             )
+            print('shape of {node_property_name} is ')
+            print(in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1).shape)
         for cell_property_name in cell_properties:
             pv_mesh.cell_data[cell_property_name] = (
-                in_situ_mesh.getCellDataArray(cell_property_name, 1)
+                in_situ_mesh.dataArray("double", ogs.mesh.Cell, cell_property_name, 1)
             )
 
         pv_mesh.field_data["in_situ_mesh_name"] = np.array([name])
@@ -198,7 +201,7 @@ class Mesh(pv.UnstructuredGrid):
 
         for key, values in self.point_data.items():
             n_components = values.shape[1] if values.ndim > 1 else 1
-            in_situ_mesh.setPointDataArray(key, values, n_components)
+            in_situ_mesh.resetPointDataArray(key, values, n_components)
             # error handling
 
     def update_from_simulator(self, simulator: Any) -> None:
@@ -207,10 +210,12 @@ class Mesh(pv.UnstructuredGrid):
         name_str = str(name[0])
         in_situ_mesh = simulator.getMesh(name_str)
 
+        from ogs.mesh import MeshItemType
+
         for key in self.point_data:
-            self.point_data[key] = in_situ_mesh.getPointDataArray(key, 1)
+            self.point_data[key] = in_situ_mesh.dataArray("double", MeshItemType.Node, key, 1)
             # error handling
 
         for key in self.cell_data:
-            self.cell_data[key] = in_situ_mesh.getCellDataArray(key, 1)
+            self.cell_data[key] = in_situ_mesh.cellDoubleDataArray(key, 1)
             # error handling

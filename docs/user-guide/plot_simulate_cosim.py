@@ -241,7 +241,7 @@ simulator.initialize(arguments)  # we will restart the same simulation as above
 left_boundary: mesh = simulator.getMesh("physical_group_left")
 
 
-pressure = np.array(left_boundary.getPointDataArray("pressure", 1))
+pressure = np.array(left_boundary.pointDoubleDataArray("pressure", 1))
 # We recommend to use numpy for manipulation of the values.
 # Note: You can only modify the values, not the size of the array.
 
@@ -258,7 +258,7 @@ for i in range(12):
         pressure = np.full(pressure.shape, 3.01e7)
 
     # Write values back to the simulator (OpenGeoSys)
-    left_boundary.setPointDataArray("pressure", pressure, 1)
+    left_boundary.resetPointDataArray("pressure", pressure, 1)
     # Use setCellDataArray for node-centred properties
 
     # Now, with modified boundary conditions execute a single step
@@ -268,6 +268,22 @@ for i in range(12):
 
 # To run the simulation from last executed time step till the end (according to definitions in the project file)
 simulator.executeSimulation()
+
+print("available meshes:")
+for name in simulator.getMeshNames():
+    print(name)
+
+print("data arrays in mesh:")
+for name in simulator.getMesh("domain").getDataArrayNames():
+    number_of_components = simulator.getMesh("domain").getNumberOfComponentsForDataArray(name)
+    if simulator.getMesh("domain").isNodeBasedDataArray(name):
+        print('node based data array ' + name + ' has ' + str(number_of_components) + ' components')
+    if simulator.getMesh("domain").isCellBasedDataArray(name):
+        print('cell based data array ' + name + ' has ' + str(number_of_components) + ' components')
+
+# print("access MaterialIDs")
+# for material_id in simulator.getMesh("domain").getMaterialIDs():
+#     print(material_id)
 
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
 simulator.finalize()
