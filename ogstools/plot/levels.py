@@ -34,6 +34,8 @@ def nice_range(lower: float, upper: float, n_ticks: float) -> np.ndarray:
 
     The length of the arrays will be close to n_ticks.
     """
+    if n_ticks == 1 or lower == upper:
+        return np.asarray([lower, upper])
     base = nice_num(upper - lower)
     tick_spacing = nice_num(base / (n_ticks - 1))
     nice_lower = np.ceil(lower / tick_spacing) * tick_spacing
@@ -55,7 +57,8 @@ def adaptive_rounding(vals: np.ndarray, precision: int) -> np.ndarray:
     rounded_vals = np.stack([np.round(v, precision - median_exp) for v in vals])
     if len(set(rounded_vals)) > 1:
         return rounded_vals
-    return np.stack([np.round(v, 12 - median_exp) for v in vals])
+    FLOAT_PRECISION = 16
+    return np.stack([np.round(v, FLOAT_PRECISION - median_exp) for v in vals])
 
 
 def compute_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
@@ -65,12 +68,11 @@ def compute_levels(lower: float, upper: float, n_ticks: int) -> np.ndarray:
     The length of the arrays will be close to n_ticks.
     At the boundaries the tickspacing may differ from the remaining array.
     """
-    if lower == upper:
-        return np.asarray([lower, nextafter(lower, np.inf)])
     result = nice_range(lower, upper, n_ticks)
     levels = np.unique(
         adaptive_rounding(
-            np.append(np.append(lower, result), upper), precision=3
+            np.append(np.append(lower, result), upper),
+            precision=max(3, abs(median_exponent(np.asarray(upper - lower)))),
         )
     )
     if levels[0] == levels[-1]:
