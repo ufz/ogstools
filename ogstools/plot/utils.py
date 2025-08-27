@@ -292,10 +292,6 @@ def get_cmap_norm(
     else:
         cmap = setup.custom_cmap
     boundaries = level_boundaries(levels) if variable.categoric else levels
-    if vmax == nextafter(vmin, np.inf):
-        cmap = mcolors.ListedColormap(["grey", "grey"], name="custom")
-    if nextafter(levels[0], np.inf) == levels[-1]:
-        return cmap, None
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=False
     )
