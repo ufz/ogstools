@@ -106,6 +106,41 @@ for file in results_path.iterdir():
 status = simulator.executeTimeStep()
 print(f"The current simulation time is: {simulator.currentTime()} s.")
 
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+status = simulator.executeTimeStep()
+print(f"time: {simulator.currentTime()}")
+
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+p = mesh.dataArray("pressure","double")
+print(f"pressure: {p[1:10]}")
+
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+status = simulator.executeTimeStep()
+print(f"time: {simulator.currentTime()}")
+
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+status = simulator.executeTimeStep()
+print(f"time: {simulator.currentTime()}")
+
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+status = simulator.executeTimeStep()
+print(f"time: {simulator.currentTime()}")
+
+mesh = simulator.getMesh("domain")
+print(f"Mesh: {mesh}")
+
+
+exit()
 # Now let us put this into a simple loop that runs until the end time is reached.
 
 # %%
