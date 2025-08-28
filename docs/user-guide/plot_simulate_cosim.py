@@ -115,7 +115,7 @@ print(f"time: {simulator.currentTime()}")
 mesh = simulator.getMesh("domain")
 print(f"Mesh: {mesh}")
 
-p = mesh.dataArray("pressure","double")
+p = mesh.dataArray("pressure", "double")
 print(f"pressure: {p[1:10]}")
 
 mesh = simulator.getMesh("domain")
