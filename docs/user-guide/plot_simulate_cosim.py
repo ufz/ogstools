@@ -310,11 +310,25 @@ for name in simulator.getMeshNames():
 
 print("data arrays in mesh:")
 for name in simulator.getMesh("domain").getDataArrayNames():
-    number_of_components = simulator.getMesh("domain").getNumberOfComponentsForDataArray(name)
+    number_of_components = simulator.getMesh(
+        "domain"
+    ).getNumberOfComponentsForDataArray(name)
     if simulator.getMesh("domain").isNodeBasedDataArray(name):
-        print('node based data array ' + name + ' has ' + str(number_of_components) + ' components')
+        print(
+            "node based data array "
+            + name
+            + " has "
+            + str(number_of_components)
+            + " components"
+        )
     if simulator.getMesh("domain").isCellBasedDataArray(name):
-        print('cell based data array ' + name + ' has ' + str(number_of_components) + ' components')
+        print(
+            "cell based data array "
+            + name
+            + " has "
+            + str(number_of_components)
+            + " components"
+        )
 
 # print("access MaterialIDs")
 # for material_id in simulator.getMesh("domain").getMaterialIDs():
