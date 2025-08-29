@@ -38,9 +38,9 @@ class TestUtils:
             ot.meshlib.rect(
                 1, 1, structured_grid=quads, order=2, out_name=mesh_path
             )
-            meshes = ot.meshes_from_gmsh(mesh_path, log=False)
-            for name, mesh in meshes.items():
-                pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
+
+            meshes = ot.Meshes.from_gmsh(mesh_path)
+            meshes.save(tmp_path)
 
             model = ot.Project(
                 output_file=tmp_path / "default.prj",
@@ -523,9 +523,9 @@ class TestUtils:
             mixed_elements=mixed,
             jiggle=0.01,
         )
-        meshes = ot.meshes_from_gmsh(mesh_path, log=False)
-        for name, mesh in meshes.items():
-            pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
+        meshes = ot.Meshes.from_gmsh(mesh_path)
+        meshes.save(tmp_path)
+
         model = ot.Project(
             output_file=tmp_path / "default.prj",
             input_file=examples.prj_mechanics,
@@ -560,9 +560,10 @@ class TestUtils:
         ot.meshlib.rect(
             n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
         )
-        meshes = ot.meshes_from_gmsh(msh_path, log=False)
-        for name, mesh in meshes.items():
-            pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
+
+        meshes = ot.Meshes.from_gmsh(msh_path)
+        meshes.save(tmp_path)
+
         model = ot.Project(
             input_file=examples.prj_mechanics,
             output_file=tmp_path / "default.prj",
@@ -579,7 +580,7 @@ class TestUtils:
         msh_path = tmp_path / "tri_mesh.msh"
         ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
         assert len(
-            ot.meshes_from_gmsh(msh_path, reindex=False, log=False).items()
+            ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
         ) == 1 + len(np.unique(mesh["MaterialIDs"]))
         # boundaries are not assigned a physical tag in remesh_with_trinagles
 
@@ -779,33 +780,38 @@ class TestUtils:
 
     @pytest.mark.parametrize("threshold_angle", [None, 20.0])
     @pytest.mark.parametrize("angle_y", [0.0, -20.0, -45.0, -70.0])
-    def test_extract_boundaries(
+    def test_meshes_from_mesh(
         self, threshold_angle: None | float, angle_y: float
     ):
         mesh = examples.load_meshseries_THM_2D_PVD()[0].rotate_y(angle_y)
-        boundaries = ot.meshlib.extract_boundaries(mesh, threshold_angle)
+        boundaries = ot.Meshes.from_mesh(mesh, threshold_angle)
+        # not recommended, but here we are only interested in the boundaries
+        boundaries.pop("domain")
+
         assert len(boundaries) == 4
         np.testing.assert_array_equal(
             [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
         )
         assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
-        assert np.all(boundaries["left"].points[:, 0] == mesh.bounds[0])
-        assert np.all(boundaries["right"].points[:, 0] == mesh.bounds[1])
-        assert boundaries["bottom"].bounds[2] == mesh.bounds[2]
-        assert boundaries["top"].bounds[3] == mesh.bounds[3]
+        assert np.all(
+            boundaries["physical_group_left"].points[:, 0] == mesh.bounds[0]
+        )
+        assert np.all(
+            boundaries["physical_group_right"].points[:, 0] == mesh.bounds[1]
+        )
+        assert boundaries["physical_group_bottom"].bounds[2] == mesh.bounds[2]
+        assert boundaries["physical_group_top"].bounds[3] == mesh.bounds[3]
 
     @pytest.mark.system()
-    def test_extract_boundaries_run(self, tmp_path):
+    def test_meshes_from_mesh_run(self, tmp_path):
         "Test using extracted boundaries for a simulation."
         mesh_path = tmp_path / "mesh.msh"
         ot.meshlib.rect(n_edge_cells=(2, 4), out_name=mesh_path)
-        domain = ot.meshes_from_gmsh(mesh_path, log=False)["domain"]
+        domain = ot.Meshes.from_gmsh(mesh_path)["domain"]
         # this is no good practice and only done for testing purposes
         # we recommend to define the boundaries as physical groups within gmsh
-        boundaries = ot.meshlib.extract_boundaries(domain)
-        for name, mesh in boundaries.items():
-            pv.save_meshio(tmp_path / f"physical_group_{name}.vtu", mesh)
-        pv.save_meshio(tmp_path / "domain.vtu", domain)
+        meshes = ot.Meshes.from_mesh(domain)
+        meshes.save(tmp_path)
 
         model = ot.Project(
             input_file=examples.prj_mechanics,
@@ -847,9 +853,10 @@ class TestUtils:
         path.mkdir(parents=True, exist_ok=True)
         mesh_name = path / "rect.msh"
         mesh_func(n_edge_cells=n_cells, n_layers=n_layers, out_name=mesh_name)
-        meshes = ot.meshes_from_gmsh(mesh_name, log=False)
+        meshes = ot.Meshes.from_gmsh(mesh_name, log=False)
         layer: pv.UnstructuredGrid
         layer = meshes["domain"].threshold([rand_id, rand_id], "MaterialIDs")
+        # multi-dim test
         if meshes["domain"].volume:
             meshes["layer_surface"] = layer.extract_surface()
         meshes["layer_edges"] = layer.extract_feature_edges()
@@ -858,18 +865,20 @@ class TestUtils:
         )
         if failcase:
             meshes["extra_mesh"] = meshes["layer_points"].translate([-1, 0, 0])
-        for name, m in meshes.items():
+        for m in meshes.values():
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
-            pv.save_meshio(path / f"{name}.vtu", m)
-        domain_path = path / "domain.vtu"
-        domain = meshes.pop("domain")
-        sub_paths = [path / f"{name}.vtu" for name in meshes]
-        subdomains = meshes.values()
+
+        sub_paths = meshes.save(path)
+        domain_mesh = meshes.domain()
         ot.cli().identifySubdomains(
-            f=True, o=path / "new_", m=domain_path, *sub_paths  # noqa: B026
+            f=True,
+            o=path / "new_",
+            m=domain_mesh.filepath,
+            *sub_paths,  # noqa: B026
         )
-        ot.meshlib.subdomains.identify_subdomains(domain, subdomains)
+        # actually meshes.subdomains(), but here we let the domain mesh also get bulk ids
+        ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
 
         def _check(mesh_1, mesh_2, key: str):
             np.testing.assert_array_equal(mesh_1[key], mesh_2[key])

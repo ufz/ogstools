@@ -17,8 +17,9 @@ import pytest
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
 
-from ogstools import meshes_from_gmsh
+import ogstools as ot
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
+from ogstools.meshlib.gmsh_converter import meshes_from_gmsh
 from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.msh2vtu._cli import cli
 
@@ -210,7 +211,8 @@ def test_rect(tmp_path: Path, rect_p):
         msh_version=rect_p.version,
     )
 
-    n_meshes = len(meshes_from_gmsh(msh_file, log=False))
+    meshes = ot.Meshes.from_gmsh(msh_file, log=False)
+    n_meshes = len(meshes)
     msg = f"Expecting {4 + rect_p.n_layers} meshes, got {n_meshes=}."
     assert n_meshes == 4 + rect_p.n_layers, msg
 
