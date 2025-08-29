@@ -34,7 +34,6 @@ from tempfile import mkdtemp
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pyvista as pv
 from IPython.display import HTML
 from scipy.constants import Julian_year as sec_per_yr
 
@@ -46,7 +45,7 @@ temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
 # %% [markdown]
 # Let's run the different simulations with increasingly fine spatial and
 # temporal discretization via ogs6py. The mesh and its boundaries are generated
-# easily via gmsh and :py:mod:`ogstools.meshlib.gmsh_converter.meshes_from_gmsh`.
+# easily via gmsh and :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh`.
 # First some definitions:
 
 # %%
@@ -66,8 +65,8 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 # %%
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
     ot.meshlib.rect(lengths=100.0, n_edge_cells=(n_cells, 1), out_name=msh_path)
-    for name, mesh in ot.meshes_from_gmsh(msh_path, log=False).items():
-        pv.save_meshio(Path(temp_dir, name + ".vtu"), mesh)
+    meshes = ot.Meshes.from_gmsh(msh_path, log=False)
+    meshes.save(temp_dir)
 
     prj = ot.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
     prj.replace_text(str(dt * sec_per_yr), ".//delta_t")
