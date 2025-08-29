@@ -1,0 +1,3 @@
+# DUMMY FILE for binder links
+# Actual environment in the binder is taken from
+# https://github.com/bilke/binder-ogs-requirements

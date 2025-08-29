@@ -7,6 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os
+import re
 import warnings
 from datetime import datetime
 
@@ -146,6 +147,49 @@ def reset_plot_setup(*_):
     ogstools.plot.setup.reset()
 
 
+# Custom function to generate Binder URLs
+def custom_gen_binder_url(fpath, binder_conf, _gallery_conf):
+    """Generate a Binder URL according to the configuration in conf.py.
+
+    Parameters
+    ----------
+    fpath: str
+        The path to the `.py` file for which a Binder badge will be generated.
+    binder_conf: dict or None
+        The Binder configuration dictionary. See `gen_binder_rst` for details.
+
+    Returns
+    -------
+    binder_url : str
+        A URL that can be used to direct the user to the live Binder
+        environment.
+    """
+    relpath = re.sub(r".*?examples/", "examples/", str(fpath))
+    # Make sure we have the right slashes (in case we're on Windows)
+    relpath = relpath.replace(os.sep, "/")
+
+    # Create the URL
+    binder_url = "/".join(
+        [
+            binder_conf["binderhub_url"],
+            "v2",
+            "gh",
+            binder_conf["org"],
+            binder_conf["repo"],
+            binder_conf["branch"],
+        ]
+    )
+    binder_url += "?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgitlab.opengeosys.org%252Fogs%252Ftools%252Fogstools%26urlpath%3Dlab%252Ftree%252Fogstools/docs/"
+    binder_url += relpath
+
+    return binder_url
+
+
+# Monkey-patching the Sphinx-Gallery binder url
+from sphinx_gallery import interactive_example as ie  # noqa: E402
+
+ie.gen_binder_url = custom_gen_binder_url
+
 sphinx_gallery_conf = {
     "examples_dirs": ["examples", "user-guide"],
     "gallery_dirs": ["auto_examples", "auto_user-guide"],
@@ -166,6 +210,16 @@ sphinx_gallery_conf = {
         ]
     ),
     "within_subsection_order": FileNameSortKey,
+    "binder": {
+        "org": "bilke",
+        "repo": "binder-ogs-requirements",
+        "branch": "master",
+        "binderhub_url": "https://binder.opengeosys.org",
+        # The following are not used because of monkey patching
+        "dependencies": ["./requirements.txt"],
+        "notebooks_dir": "notebooks",
+        "use_jupyter_lab": True,
+    },
 }
 
 # feflowlib is optional
