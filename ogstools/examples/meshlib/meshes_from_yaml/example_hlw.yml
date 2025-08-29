@@ -1,0 +1,191 @@
+# -----------------------------------------------------------------------------
+# Example geometry definition for gmsh-wrapper YAML
+# -----------------------------------------------------------------------------
+# This YAML file demonstrates how to define a 2D tunnel cross-section
+# with several subdomains (host rock, excavation damage zone, support,
+# floor, canister, filling). The syntax is essentially a wrapper around
+# the gmsh Python API, with identical keywords (e.g. 'start', 'end',
+# 'center' for arcs).
+#
+# All identifiers (names of points, lines, surfaces, groups) are written
+# in quotation marks ("..."). This is recommended to clearly separate
+# them from keywords like 'start' or 'end'.
+# -----------------------------------------------------------------------------
+
+parameters:
+  # --- User-defined parameters (geometry input) -----------------------------
+  "domain_width": 40.0              # width of the rectangular outer domain
+  "domain_height": 60.0            # height of the rectangular outer domain
+  "tunnel_radius": 6.0              # tunnel radius
+  "support_thickness": 1.8          # thickness of support layer
+  "edz_thickness": 10               # thickness of excavation damaged zone
+  "floor_width": 10.0               # tunnel floor width
+  "canister_height": 8.0           # canister height
+  "canister_width": 6.5            # canister width
+
+  # --- Derived parameters ---------------------------------------------------
+  # Mathematical expressions can be used here. They are evaluated with
+  # 'eval' (actually via the Python package 'simpleeval'), so functions
+  # like sqrt() are supported.
+  "center_x": "domain_width/2"      # domain center (x)
+  "center_y": "domain_height/2"     # domain center (y)
+
+  # floor_level is computed from tunnel radius and floor width
+  "floor_level": "center_y - sqrt(tunnel_radius**2 - (floor_width/2)**2)"
+
+  # characteristic lengths control mesh element sizes in different regions
+  "domain_size": "(domain_width + domain_height)/2"
+  "char_length_domain": "domain_size/10"
+  "char_length_edz": "edz_thickness/5"
+  "char_length_support": "support_thickness/5"
+  "canister_size": "(canister_height+canister_width)/2"
+  "char_length_canister": "canister_size/20"
+
+# -----------------------------------------------------------------------------
+# Point definitions
+# Each point has coordinates (x,y) and a target mesh element size
+# ('char_length'). Coordinates can be numeric or expressions.
+# -----------------------------------------------------------------------------
+points:
+  # Outer domain corners
+  "d_bottom_left":  { coords: [0.0, 0.0], char_length: "char_length_domain" }
+  "d_bottom_right": { coords: ["domain_width", 0.0], char_length: "char_length_domain" }
+  "d_top_right":    { coords: ["domain_width", "domain_height"], char_length: "char_length_domain" }
+  "d_top_left":     { coords: [0.0, "domain_height"], char_length: "char_length_domain" }
+
+  # Reference circle center (used for arcs)
+  "r0": { coords: ["center_x", "center_y"], char_length: 0.3 }
+
+  # Tunnel boundaries (top and bottom points of tunnel arc)
+  "t_top":    { coords: ["center_x", "center_y + tunnel_radius"], char_length: "char_length_support" }
+  "t_bottom": { coords: ["center_x", "center_y - tunnel_radius"], char_length: "char_length_support" }
+
+  # Support boundaries
+  "s_top":    { coords: ["center_x", "center_y + tunnel_radius + support_thickness"], char_length: "char_length_support" }
+  "s_bottom": { coords: ["center_x", "center_y - tunnel_radius - support_thickness"], char_length: "char_length_support" }
+
+  # EDZ boundaries
+  "e_top":    { coords: ["center_x", "center_y + tunnel_radius + support_thickness + edz_thickness"], char_length: "char_length_edz" }
+  "e_bottom": { coords: ["center_x", "center_y - tunnel_radius - support_thickness - edz_thickness"], char_length: "char_length_edz" }
+
+  # Tunnel floor edges
+  "f_left":  { coords: ["center_x - floor_width/2", "floor_level"], char_length: 0.3 }
+  "f_right": { coords: ["center_x + floor_width/2", "floor_level"], char_length: 0.3 }
+
+  # Canister corners
+  "c_bottom_left":  { coords: ["center_x - canister_width/2", "floor_level"], char_length: "char_length_canister" }
+  "c_bottom_right": { coords: ["center_x + canister_width/2", "floor_level"], char_length: "char_length_canister" }
+  "c_top_right":    { coords: ["center_x + canister_width/2", "floor_level + canister_height"], char_length: "char_length_canister" }
+  "c_top_left":     { coords: ["center_x - canister_width/2", "floor_level + canister_height"], char_length: "char_length_canister" }
+
+# -----------------------------------------------------------------------------
+# Line and arc definitions
+# - A straight line requires 'start' and 'end'
+# - A circular arc requires 'start', 'end', and 'center'
+# - Elliptical arcs are not supported yet, they will follow in a future release
+# -----------------------------------------------------------------------------
+lines:
+  # Outer domain rectangle
+  "domain_bottom": { start: "d_bottom_left", end: "d_bottom_right" }
+  "domain_left":   { start: "d_bottom_left", end: "d_top_left" }
+  "domain_top":    { start: "d_bottom_right", end: "d_top_right" }
+  "domain_right":  { start: "d_top_right", end: "d_top_left" }
+
+  # Tunnel (half-circle, split into left, bottom, right arcs)
+  "tunnel_arc_left":   { start: "t_top", end: "f_left", center: "r0" }
+  "tunnel_arc_bottom": { start: "f_left", end: "f_right", center: "r0" }
+  "tunnel_arc_right":  { start: "f_right", end: "t_top", center: "r0" }
+
+  # EDZ arcs
+  "edz_arc_left":  { start: "e_top", end: "e_bottom", center: "r0" }
+  "edz_arc_right": { start: "e_bottom", end: "e_top", center: "r0" }
+
+  # Support arcs
+  "support_arc_left":  { start: "s_top", end: "s_bottom", center: "r0" }
+  "support_arc_right": { start: "s_bottom", end: "s_top", center: "r0" }
+
+  # Floor and canister
+  "floor_line_1": { start: "f_left", end: "c_bottom_left" }
+  "floor_line_2": { start: "c_bottom_left", end: "c_bottom_right" }
+  "floor_line_3": { start: "c_bottom_right", end: "f_right" }
+
+  "canister_bottom": { start: "c_bottom_left", end: "c_bottom_right" }
+  "canister_right":  { start: "c_bottom_right", end: "c_top_right" }
+  "canister_top":    { start: "c_top_right", end: "c_top_left" }
+  "canister_left":   { start: "c_top_left", end: "c_bottom_left" }
+
+# -----------------------------------------------------------------------------
+# Surface definitions
+# Each surface is defined by one or more "loops".
+#
+# - A loop is a closed contour made of line/arc segments.
+# - Segments must connect without gaps; their orientations must be consistent.
+# - A leading minus ("-segment") reverses the orientation of that segment.
+# - All segments in a loop must share the same orientation (either CCW or CW).
+# - CCW loops define positive surfaces.
+# - CW loops define holes (subtracted regions from the parent surface).
+# -----------------------------------------------------------------------------
+surfaces:
+  "host_rock":
+    loops:
+      - [ "domain_bottom", "domain_right", "domain_top", "-domain_left" ]
+        # Outer domain loop (counter-clockwise). 'domain_left' is reversed so
+        # that all lines follow a consistent CCW orientation.
+      - [ "-edz_arc_right", "-edz_arc_left" ]
+        # Inner loop (clockwise). Because this loop is CW, gmsh interprets it
+        # as a hole → the EDZ region is subtracted from the host rock.
+
+  "edz":
+    loops:
+      - [ "edz_arc_left", "edz_arc_right" ]
+        # Outer EDZ loop (CCW, positive surface).
+      - [ "-support_arc_right", "-support_arc_left" ]
+        # Inner support loop (CW, hole). Support is cut out from EDZ.
+
+  "support":
+    loops:
+      - [ "support_arc_left", "support_arc_right" ]
+        # Outer support loop (CCW).
+      - [ "-tunnel_arc_right", "-tunnel_arc_left", "-tunnel_arc_bottom", ]
+        # Inner tunnel loop (CW). Tunnel is cut out from support.
+
+  "floor":
+    loops:
+      - [ "floor_line_1", "floor_line_2", "floor_line_3", "-tunnel_arc_bottom" ]
+        # Rectangular floor slab. The bottom arc is reversed to ensure CCW.
+
+  "canister":
+    loops:
+      - [ "canister_bottom", "canister_right", "canister_top", "canister_left" ]
+        # Simple rectangular canister (CCW).
+
+  "filling":
+    loops:
+      - [ "floor_line_1", "-canister_left", "-canister_top", "-canister_right",
+          "floor_line_3", "tunnel_arc_right", "tunnel_arc_left" ]
+        # Complex filling region: outer floor + tunnel arcs, with the canister
+        # subtracted (CW inner loop).
+
+# -----------------------------------------------------------------------------
+# Groups
+# Groups are collections of geometric entities (points, lines, or surfaces)
+# grouped under a common name. They define physical groups in gmsh.
+# The 'dim' field specifies the geometric dimension:
+#   dim=0: points, dim=1: lines, dim=2: surfaces.
+# -----------------------------------------------------------------------------
+groups:
+  "Hostrock":   { dim: 2, entities: ["host_rock"] }
+  "EDZ":        { dim: 2, entities: ["edz"] }
+  "Support":    { dim: 2, entities: ["support"] }
+  "Floor":      { dim: 2, entities: ["floor"] }
+  "Canister":  { dim: 2, entities: ["canister"] }
+  "Filling":    { dim: 2, entities: ["filling"] }
+
+  # Boundary groups, e.g. for BCs etc.
+  "Domain_Left":   { dim: 1, entities: ["domain_left"] }
+  "Domain_Top":    { dim: 1, entities: ["domain_top"] }
+  "Domain_Right":  { dim: 1, entities: ["domain_right"] }
+  "Domain_Bottom": { dim: 1, entities: ["domain_bottom"] }
+
+  # 0-dimensional entities, for e.g. observation points
+  "Observation_Point": { dim: 0, entities: ["t_top"] }

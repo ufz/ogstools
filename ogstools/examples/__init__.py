@@ -21,6 +21,7 @@ _msh_dir = EXAMPLES_DIR / "msh"
 _prj_dir = EXAMPLES_DIR / "prj"
 _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
 _shp_dir = EXAMPLES_DIR / "shapefiles"
+_yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
 def load_meshseries_THM_2D_PVD():
@@ -251,4 +252,6 @@ circle_shapefile = _shp_dir / "circle.shp"
 
 elder_h5 = _meshseries_dir / "elder.h5"
 elder_xdmf = _meshseries_dir / "elder.xdmf"
+
 mechanics_2D = _meshseries_dir / "mechanics_2D.vtu"
+example_hlw = _yaml_mesh_dir / "example_hlw.yml"
