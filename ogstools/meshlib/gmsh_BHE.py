@@ -13,10 +13,9 @@ from typing import Any, Literal
 
 import gmsh
 import numpy as np
-import pyvista as pv
 import shapely
 
-from ogstools.meshlib import meshes_from_gmsh
+import ogstools as ot
 
 
 @dataclass(frozen=True)
@@ -1325,7 +1324,7 @@ def gen_bhe_mesh(
     propagation: float = 1.1,
     order: int = 1,
     out_name: Path = Path("bhe_mesh.vtu"),
-) -> list[str]:
+) -> list[Path]:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
     submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
@@ -1378,22 +1377,18 @@ def gen_bhe_mesh(
         out_name=msh_file,
     )
 
-    meshes = meshes_from_gmsh(msh_file, dim=[1, 3], log=False)
-    for name, mesh in meshes.items():
-        pv.save_meshio(Path(out_name.parents[0], name + ".vtu"), mesh)
-
-    mesh_names = [
-        "domain.vtu",
-        "physical_group_Top_Surface.vtu",
-        "physical_group_Bottom_Surface.vtu",
-    ]
+    meshes = ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
+    mesh_names = meshes.save(tmp_dir)
 
     groundwater = (
         [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
     for i, _ in enumerate(groundwater):
-        mesh_names.append(f"physical_group_Groundwater_upstream_{i}.vtu")
-        mesh_names.append(f"physical_group_Groundwater_downstream_{i}.vtu")
-
+        mesh_names.append(
+            tmp_dir / f"physical_group_Groundwater_upstream_{i}.vtu"
+        )
+        mesh_names.append(
+            tmp_dir / f"physical_group_Groundwater_downstream_{i}.vtu"
+        )
     return mesh_names

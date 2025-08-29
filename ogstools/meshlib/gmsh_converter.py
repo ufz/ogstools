@@ -29,6 +29,8 @@ def meshes_from_gmsh(
     log: bool = True,
 ) -> dict[str, Mesh]:
     """
+    .. deprecated:: 0.7.1
+       Use :func:`new_function` instead.
     Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
     Extracts domain-, boundary- and physical group-submeshes.
