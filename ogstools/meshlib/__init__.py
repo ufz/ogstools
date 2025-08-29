@@ -13,13 +13,13 @@ from .gmsh_meshing import cuboid, rect
 from .ip_mesh import to_ip_mesh, to_ip_point_cloud
 from .mesh import Mesh
 from .mesh_series import MeshSeries
+from .meshes import Meshes
 from .region import (
     to_region_prism,
     to_region_simplified,
     to_region_tetraeder,
     to_region_voxel,
 )
-from .subdomains import extract_boundaries
 
 __all__ = [
     "Boundary",
@@ -28,6 +28,7 @@ __all__ = [
     "LayerSet",
     "LocationFrame",
     "Mesh",
+    "Meshes",
     "MeshSeries",
     "Raster",
     "Surface",
@@ -35,8 +36,7 @@ __all__ = [
     "difference",
     "difference_matrix",
     "difference_pairwise",
-    "extract_boundaries",
-    "meshes_from_gmsh",
+    "meshes_from_gmsh",  # deprecated
     "rect",
     "to_ip_mesh",
     "to_ip_point_cloud",
