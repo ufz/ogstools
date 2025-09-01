@@ -27,7 +27,6 @@ classifiers = [
 readme = "README.md"
 requires-python = '>=3.10'
 dependencies = [
-  "bokeh>=3.7.0",
   "gmsh>=4.12.0",
   "h5py>=3.8.0",
   "json5>=0.12.0",
@@ -81,7 +80,6 @@ pinned = [
   "attrs==25.3.0",
   "beautifulsoup4==4.13.4",
   "bleach==6.2.0",
-  "bokeh==3.7.3",
   "certifi==2025.6.15",
   "cffi==1.17.1",
   "charset-normalizer==3.4.2",
@@ -137,7 +135,6 @@ pinned = [
   "more-itertools==10.7.0",
   "msgpack==1.1.1",
   "multidict==6.4.4",
-  "narwhals==1.43.0",
   "nbclient==0.10.2",
   "nbconvert==7.16.6",
   "nbformat==5.10.4",

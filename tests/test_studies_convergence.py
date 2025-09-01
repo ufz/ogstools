@@ -5,7 +5,6 @@ from shutil import rmtree
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import pyvista as pv
 
 import ogstools as ot
 from ogstools.examples import anasol, prj_steady_state_diffusion
@@ -20,15 +19,15 @@ class TestConvergence:
         sim_results = []
         edge_cells = [2**i for i in range(3, 6)]
         for n_edge_cells in edge_cells:
-            msh_path = tmp_path / "square.msh"
+            msh_file = tmp_path / "square.msh"
             ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=n_edge_cells,
                 structured_grid=True,
-                out_name=msh_path,
+                out_name=msh_file,
             )
-            meshes = ot.meshes_from_gmsh(filename=msh_path, log=False)
-            for name, mesh in meshes.items():
-                pv.save_meshio(tmp_path / (name + ".vtu"), mesh)
+            meshes = ot.Meshes.from_gmsh(msh_file)
+            meshes.save(tmp_path)
+
             model = ot.Project(
                 output_file=tmp_path / "default.prj",
                 input_file=prj_steady_state_diffusion,

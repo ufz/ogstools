@@ -12,10 +12,7 @@ a contiuous boundary mesh.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
 
-import pyvista as pv
 
 import ogstools as ot
 from ogstools import examples
@@ -25,10 +22,12 @@ domain = examples.load_meshseries_THM_2D_PVD()[0]
 # %% [markdown]
 # We can generate the boundary meshes from the given example in the following
 # way and get a dictionary of name and mesh pairs per edge. For details, have a
-# look into the documentation: :py:func:`ogstools.meshlib.extract_boundaries`.
+# look into the documentation:
+# :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_mesh`.
 
 # %%
-boundaries = ot.meshlib.extract_boundaries(domain)
+meshes = ot.Meshes.from_mesh(domain)
+boundaries = meshes.subdomains()
 for name, mesh in boundaries.items():
     print(name, mesh)
 
@@ -41,6 +40,6 @@ fig = domain.plot_contourf(ot.variables.material_id)
 colors = ["black", "grey", "lime", "yellow"]
 for i, (name, mesh) in enumerate(boundaries.items()):
     ot.plot.line(mesh, ax=fig.axes[0], lw=2, annotate=name, color=colors[i])
-    pv.save_meshio(Path(mkdtemp()) / (name + ".vtu"), mesh)
 
 # %%
+meshes.save()  # optional provide a path

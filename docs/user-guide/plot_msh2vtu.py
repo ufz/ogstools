@@ -14,8 +14,6 @@ group in the gmsh mesh.
 from pathlib import Path
 from tempfile import mkdtemp
 
-import pyvista as pv
-
 import ogstools as ot
 from ogstools import examples
 
@@ -26,7 +24,7 @@ msh = examples.msh_geolayers_2d
 # Conversion
 # ----------
 #
-# Using :func:`~ogstools.meshlib.gmsh_converter.meshes_from_gmsh` we can
+# Using :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh` we can
 # generate unstructured grids from a given .msh file. As OGS wants to have the
 # MaterialIDs numbered beginning from zero, you usually want to set reindex to
 # True. The return value is a dict with the mesh names pointing to the
@@ -35,7 +33,7 @@ msh = examples.msh_geolayers_2d
 # line application. Please, call it with `--help` for info about the usage.
 
 # %%
-meshes = ot.meshes_from_gmsh(filename=msh, reindex=True, log=False)
+meshes = ot.Meshes.from_gmsh(filename=msh, reindex=True, log=False)
 print(*[f"{name}: {mesh.n_cells=}" for name, mesh in meshes.items()], sep="\n")
 
 # %% [markdown]
@@ -59,5 +57,4 @@ for name, mesh in meshes.items():
 # standards:
 
 # %%
-for name, mesh in meshes.items():
-    pv.save_meshio(Path(model_dir, name + ".vtu"), mesh)
+meshes.save(model_dir)

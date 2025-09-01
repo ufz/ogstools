@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pyvista as pv
 
-from ogstools import __version__
-from ogstools.meshlib.gmsh_converter import meshes_from_gmsh
+import ogstools as ot
 
 logging.basicConfig()  # Important, initializes root logger
 
@@ -19,9 +18,9 @@ logging.basicConfig()  # Important, initializes root logger
 def argparser() -> argparse.ArgumentParser:
     # parsing command line arguments
     def get_help(arg: str) -> str:
-        assert meshes_from_gmsh.__doc__ is not None
+        assert ot.Meshes.from_gmsh.__doc__ is not None
         return (
-            meshes_from_gmsh.__doc__.split(arg + ":")[1]
+            ot.Meshes.from_gmsh.__doc__.split(arg + ":")[1]
             .split(":param")[0]
             .strip()
         )
@@ -51,7 +50,7 @@ def argparser() -> argparse.ArgumentParser:
     add_arg("-r", "--reindex", action="store_true", help=get_help("reindex"))
     add_arg("-a", "--ascii", action="store_true", help="Save in ascii format.")
     add_arg("-l", "--log", action="store_true", help=get_help("log"))
-    version = f"msh2vtu (part of ogstools {__version__})"
+    version = f"msh2vtu (part of ogstools {ot.__version__})"
     add_arg("-v", "--version", action="version", version=version)
 
     return parser
@@ -64,8 +63,8 @@ def cli() -> int:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if args.log else logging.ERROR)
 
-    meshes = meshes_from_gmsh(
-        filename=args.filename, dim=args.dim, reindex=args.reindex, log=args.log
+    meshes = ot.Meshes.from_gmsh(
+        args.filename, dim=args.dim, reindex=args.reindex, log=args.log
     )
 
     output_basename = (
@@ -84,7 +83,9 @@ def cli() -> int:
         # meshes for simulation with OGS. This uses the VTK definitions for
         # the order of nodes in cells. Using save_meshio uses a different
         # definition which from meshio, which is the same as in OGS.
+        # usually use meshes.save()
         pv.save_meshio(mesh_path, mesh, binary=not args.ascii)
+
     logger.info("Finished.")
 
     return 0

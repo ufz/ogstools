@@ -5,10 +5,9 @@ from pathlib import Path
 from typing import NoReturn
 
 import pytest
-import pyvista as pv
 from lxml import etree as ET
 
-from ogstools import meshes_from_gmsh
+import ogstools as ot
 from ogstools.examples import (
     prj_3bhes_id_1U_2U_1U,
     prj_3bhes_id_1U_2U_1U_ref,
@@ -1519,9 +1518,8 @@ class TestiOGS:
     ) -> Project:
         meshname = temp_dir / "cuboid.msh"
         cuboid(lengths=1.0, n_edge_cells=1, n_layers=1, out_name=meshname)
-        meshes = meshes_from_gmsh(meshname, dim=[1, 3], log=False)
-        for name, mesh in meshes.items():
-            pv.save_meshio(Path(meshname.parents[0], name + ".vtu"), mesh)
+        meshes = ot.Meshes.from_gmsh(meshname, dim=[1, 3], log=False)
+        meshes.save(temp_dir)
 
         kwargs = {thread_type: num_threads}
         return Project(

@@ -13,10 +13,9 @@ from typing import Any, Literal
 
 import gmsh
 import numpy as np
-import pyvista as pv
 import shapely
 
-from ogstools.meshlib import meshes_from_gmsh
+import ogstools as ot
 
 
 @dataclass(frozen=True)
@@ -26,17 +25,21 @@ class Groundwater:
     isolation_layer_id: int = 1
     """ number of the groundwater isolation layer (count starts with 0)"""
     upstream: tuple[float, float] = (160, 200)
-    """Tuple of length 2 defining the angular range (in degrees) of groundwater inflow surfaces.
+    """
+    Tuple of length 2 defining the angular range (in degrees) of groundwater inflow surfaces.
     Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
     values increase counterclockwise. The first value defines the start angle, the second defines
     the end angle. If the start angle is larger than the end angle, the range wraps around 0°
-    (e.g., (359, 1) covers 359° -> 0° -> 1°)."""
+    (e.g., (359, 1) covers 359° -> 0° -> 1°).
+    """
     downstream: tuple[float, float] = (340, 20)
-    """Tuple of length 2 defining the angular range (in degrees) of groundwater outflow surfaces.
+    """
+    Tuple of length 2 defining the angular range (in degrees) of groundwater outflow surfaces.
     Angles are measured on a 0 - 359° circle, where 0° corresponds to the +x axis direction and
     values increase counterclockwise. The first value defines the start angle, the second defines
     the end angle. If the start angle is larger than the end angle, the range wraps around 0°
-    (e.g., (340, 20) covers 340° -> 359° -> 0° -> 20°)."""
+    (e.g., (340, 20) covers 340° -> 359° -> 0° -> 20°).
+    """
 
 
 @dataclass(frozen=True)
@@ -1325,7 +1328,7 @@ def gen_bhe_mesh(
     propagation: float = 1.1,
     order: int = 1,
     out_name: Path = Path("bhe_mesh.vtu"),
-) -> list[str]:
+) -> list[Path]:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
     submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
@@ -1378,22 +1381,18 @@ def gen_bhe_mesh(
         out_name=msh_file,
     )
 
-    meshes = meshes_from_gmsh(msh_file, dim=[1, 3], log=False)
-    for name, mesh in meshes.items():
-        pv.save_meshio(Path(out_name.parents[0], name + ".vtu"), mesh)
-
-    mesh_names = [
-        "domain.vtu",
-        "physical_group_Top_Surface.vtu",
-        "physical_group_Bottom_Surface.vtu",
-    ]
+    meshes = ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
+    mesh_names = meshes.save(tmp_dir)
 
     groundwater = (
         [groundwater] if isinstance(groundwater, Groundwater) else groundwater
     )
 
     for i, _ in enumerate(groundwater):
-        mesh_names.append(f"physical_group_Groundwater_upstream_{i}.vtu")
-        mesh_names.append(f"physical_group_Groundwater_downstream_{i}.vtu")
-
+        mesh_names.append(
+            tmp_dir / f"physical_group_Groundwater_upstream_{i}.vtu"
+        )
+        mesh_names.append(
+            tmp_dir / f"physical_group_Groundwater_downstream_{i}.vtu"
+        )
     return mesh_names

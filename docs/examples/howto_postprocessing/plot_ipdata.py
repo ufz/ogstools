@@ -20,8 +20,6 @@ represented by one subsection of a cell.
 from pathlib import Path
 from tempfile import mkdtemp
 
-import pyvista as pv
-
 import ogstools as ot
 from ogstools import examples
 from ogstools.meshlib.gmsh_meshing import rect
@@ -45,9 +43,9 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
         order=elem_order,
         out_name=msh_path,
     )
-    meshes = ot.meshes_from_gmsh(msh_path, log=False)
-    for name, mesh in meshes.items():
-        pv.save_meshio(Path(tmp_dir, name + ".vtu"), mesh)
+
+    meshes = ot.Meshes.from_gmsh(msh_path, log=False)
+    meshes.save(tmp_dir)
 
     model = ot.Project(
         output_file=tmp_dir / "default.prj",

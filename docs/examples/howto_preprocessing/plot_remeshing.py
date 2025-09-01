@@ -39,5 +39,5 @@ mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
 ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
-meshes = ot.meshes_from_gmsh(msh_path, reindex=False, log=False)
+meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
 fig = meshes["domain"].plot_contourf(ot.variables.material_id)
