@@ -213,7 +213,7 @@ sphinx_gallery_conf = {
     "binder": {
         "org": "bilke",
         "repo": "binder-ogs-requirements",
-        "branch": "master",
+        "branch": "pyvista-base",  # TODO: change to master later
         "binderhub_url": "https://binder.opengeosys.org",
         # The following are not used because of monkey patching
         "dependencies": ["./requirements.txt"],
