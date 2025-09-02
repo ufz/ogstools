@@ -8,6 +8,7 @@ For this example we create meshes from surface layers.
 """
 
 # %%
+import ogstools as ot
 from ogstools import meshlib as ml
 from ogstools.examples import surface_paths
 
@@ -41,27 +42,27 @@ tm = ml.to_region_tetraeder(layer_set1, resolution=200).mesh
 # %% [markdown]
 # Simplified mesh
 # ---------------
+
 # %%
-sm["regions"] = [str(m) for m in sm["MaterialIDs"]]
-sm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
+ot.plot.contourf(sm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Voxel mesh
 # ---------------
+
 # %%
-vm["regions"] = [str(m) for m in vm["MaterialIDs"]]
-vm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
+ot.plot.contourf(vm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Prism mesh
 # ---------------
+
 # %%
-pm["regions"] = [str(m) for m in pm["MaterialIDs"]]
-pm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
+ot.plot.contourf(pm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Tetraeder mesh
 # ---------------
+
 # %%
-tm["regions"] = [str(m) for m in tm["MaterialIDs"]]
-tm.scale([1, 1, 5]).plot(scalars="regions", show_edges=True)
+ot.plot.contourf(tm.scale([1, 1, 5]), ot.variables.material_id).show()
