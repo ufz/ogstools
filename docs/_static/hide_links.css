@@ -1,0 +1,14 @@
+/* Download link note in header */
+.sphx-glr-download-link-note,
+/* Binder launch badge in footer */
+.binder-badge,
+/* Lite launch badge in footer */
+.lite-badge,
+/* Download Jupyter notebook link in footer */
+.sphx-glr-download-jupyter,
+/* Download Python script link in footer */
+.sphx-glr-download-python,
+/* Download zipped link in footer */
+.sphx-glr-download-zip {
+  display: none;
+}

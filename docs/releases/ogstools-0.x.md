@@ -19,6 +19,8 @@
 
 ## Infrastructure
 
+- Added Binder links to example notebooks for interactive execution.
+
 ### Tests
 
 ### Imports
