@@ -362,10 +362,10 @@ class Variable:
         name = self.output_name
         if symbol_str != "":
             for suffix in ["xx", "yy", "zz", "yx", "yz", "xz", "x", "y", "z"]:
-                if name.endswith(suffix):
+                if name.endswith(("_" + suffix, " " + suffix)):
                     name = name[: -(len(suffix) + 1)]
             for suffix in [str(num) for num in range(10)]:
-                if name.endswith(str(suffix)):
+                if name.endswith(("_" + str(suffix), " " + str(suffix))):
                     name = name[:-2]
         label = name.replace("_", " ") + symbol_str + unit_str
         if split_at is None:
