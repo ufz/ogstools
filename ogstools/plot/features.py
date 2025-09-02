@@ -46,7 +46,7 @@ def element_edges(
     lin_mesh = mesh.linear_copy() if hasattr(mesh, "linear_copy") else mesh
     cell_points = [cell.points for cell in lin_mesh.cell]
     cell_types = getattr(
-        lin_mesh, "celltypes", {cell.type for cell in mesh.cell}
+        lin_mesh, "celltypes", [cell.type for cell in mesh.cell]
     )
     for cell_type in np.unique(cell_types):
         cell_pts = [

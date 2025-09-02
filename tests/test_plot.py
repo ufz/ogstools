@@ -1,5 +1,6 @@
 """Unit tests for plotting."""
 
+from pathlib import Path
 from tempfile import mkstemp
 
 import matplotlib.pyplot as plt
@@ -329,3 +330,21 @@ class TestPlotting:
         with pytest.raises(TypeError):
             ot.plot.line(sample_y, ax)
         plt.close()
+
+    @pytest.mark.parametrize("opacities", [None, {7: 0.1, 10: 0.9}])
+    def test_pv_plot(self, tmp_path: Path, opacities: dict | None):
+        """Smoke test, test object: plot_contourf with pyvista
+
+        Doesn't check for correctness of the plot itself"""
+        mesh_3D = examples.load_meshseries_diffusion_3D()[-1]
+        cpts = mesh_3D.cell_centers().points
+        mesh_3D.cell_data["MaterialIDs"] = (12 * cpts[:, 0] + 3).astype(int)
+        # test static plots
+        mesh_3D.plot_contourf(
+            "MaterialIDs", opacities=opacities, interactive=False
+        )
+        # test dynamic plots with screenshot
+        mesh_3D.plot_contourf("MaterialIDs", opacities=opacities).screenshot(
+            tmp_path / "test.png"
+        )
+        assert (tmp_path / "test.png").is_file()

@@ -16,12 +16,14 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
+from PIL.Image import Image
 
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
 from ogstools.variables import Variable, Vector
 
 from . import features
+from .contourplots_pv import contourf_pv
 from .levels import compute_levels, median_exponent
 from .shared import setup
 from .vectorplots import streamlines
@@ -387,18 +389,22 @@ def contourf(
     variable: Variable | str,
     fig: plt.Figure | None = None,
     ax: plt.Axes | None = None,
+    interactive: bool | None = None,
     **kwargs: Any,
-) -> plt.Figure | None:
+) -> plt.Figure | pv.Plotter | Image | list[pv.Plotter] | list[Image] | None:
     """
     Plot the variable field of meshes with default settings.
 
     The resulting figure adheres to the configurations in plot.setup.
-    For 2D, the whole domain, for 3D a set of slices is displayed.
+    For 2D meshes matplotlib backend is used, for 3D pyvista backend.
 
     :param meshes:      Singular mesh of 2D numpy array of meshes
-    :param variable:   The field to be visualized on all meshes
+    :param variable:    The field to be visualized on all meshes
     :param fig:         matplotlib figure to use for plotting
     :param ax:          matplotlib axis to use for plotting
+    :param interactive: By default: 2D mesh -> matplotlib, 3D mesh -> pyvista,
+                        if True: always use interactive pyvista plot
+                        if False and 3D mesh: -> pyvista static Image
 
     Keyword Arguments:
         - cb_labelsize:       colorbar labelsize
@@ -417,8 +423,23 @@ def contourf(
         - vmin:               minimum value
         - vmax:               maximum value
     """
+
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
+    max_dim = max(
+        [
+            int(np.max([cell.dimension for cell in mesh.cell]))
+            for mesh in _meshes
+        ]
+    )
+    if interactive or max_dim == 3:
+        plotters = [contourf_pv(mesh, variable, **kwargs) for mesh in _meshes]
+        if interactive is False:
+            for pl in plotters:
+                pl.show(jupyter_backend="static", interactive=False)
+            return None
+        return plotters[0] if len(plotters) == 1 else plotters
+
     variable = Variable.find(variable, _meshes[0])
     data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
     if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
