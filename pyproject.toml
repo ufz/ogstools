@@ -67,7 +67,7 @@ fallback_version = "0.7.0+no-scm" # Manually increment on release!
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 feflow2ogs = 'ogstools.feflowlib._cli:cli'
-meshes_from_yaml = 'ogstools.meshlib.meshes_from_yaml_cli:cli'
+yaml2vtu = 'ogstools.meshlib.meshes_from_yaml_cli:cli'
 
 [project.optional-dependencies]
 
