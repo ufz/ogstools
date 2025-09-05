@@ -21,51 +21,24 @@ from tempfile import mkdtemp
 from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
-import pyvista as pv
 from ogs import mesh, simulator  # Python API to a running OGS
 
 import ogstools as ot
 from ogstools._find_ogs import interrupted as current_sim_interrupted
-from ogstools.definitions import EXAMPLES_DIR
-
-mesh_path = Path(mkdtemp())
-prj_path = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
-gmsh_mesh_name = mesh_path / "rect.msh"
-
+from ogstools.examples import load_model_liquid_flow_simple
 
 # %%
-# 1. Create mesh and boundary meshes
-# ==================================
-#
-# In this example, we create the domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
-# We also set the boundary condition (prescribed pressure) on the left and right boundary meshes.
-ot.meshlib.rect(
-    lengths=(10, 2),
-    n_edge_cells=(10, 4),
-    n_layers=2,
-    structured_grid=True,
-    order=1,
-    mixed_elements=False,
-    jiggle=0.0,
-    out_name=Path(gmsh_mesh_name),
-)
+# 1. Select a Project
+# ===================
 
-meshes = ot.meshes_from_gmsh(gmsh_mesh_name)
+# Here liquid flow
+working_dir = Path(mkdtemp())
+prj, meshes = load_model_liquid_flow_simple()
+prj.write_input(working_dir / "LiquidFlowSimple.prj")
+_ = meshes.save(working_dir)
 
-# %%
-# Add data array 'pressure' to the left and right meshes boundary meshes
-
-points_shape = np.shape(meshes["physical_group_left"].points)
-meshes["physical_group_left"].point_data["pressure"] = np.full(
-    points_shape[0], 2.9e7
-)
-meshes["physical_group_right"].point_data["pressure"] = np.full(
-    points_shape[0], 3e7
-)
-
-# Save the domain and boundary meshes (in gmsh format)
-for name, sub_mesh in meshes.items():
-    pv.save_meshio(Path(mesh_path, name + ".vtu"), sub_mesh)
+# model.run(interactive=True)
+# model.run(dry=True)
 
 
 # %%
@@ -75,16 +48,9 @@ for name, sub_mesh in meshes.items():
 # possible argument are documented under
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
-results_path = Path(mkdtemp())
-arguments = [
-    "",
-    str(prj_path),
-    "-l debug",  # optional
-    "-m",  # optional, if mesh is located on different folder then prj file
-    str(mesh_path),
-    "-o",
-    str(results_path),
-]
+arguments = ["", str(working_dir / "LiquidFlowSimple.prj")]
+# extend like this: ,"-m", str(mesh_dir), "-l debug", -o", str(output_dir)]
+
 
 # Initialize starts OpenGeoSys and runs time step 0
 initialization_status = simulator.initialize(arguments)
@@ -95,7 +61,7 @@ print(f"The end time defined is: {simulator.endTime()} s.")
 
 # %%
 # These output files for this time step are created in results_path:
-for file in results_path.iterdir():
+for file in working_dir.iterdir():
     print(file.name)
 
 
@@ -105,43 +71,6 @@ for file in results_path.iterdir():
 # Advance a single step and read the time of the current step.
 status = simulator.executeTimeStep()
 print(f"The current simulation time is: {simulator.currentTime()} s.")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-status = simulator.executeTimeStep()
-print(f"time: {simulator.currentTime()}")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-p = mesh.dataArray("pressure", "double")
-print(f"pressure: {p[1:10]}")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-status = simulator.executeTimeStep()
-print(f"time: {simulator.currentTime()}")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-status = simulator.executeTimeStep()
-print(f"time: {simulator.currentTime()}")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-status = simulator.executeTimeStep()
-print(f"time: {simulator.currentTime()}")
-
-mesh = simulator.getMesh("domain")
-print(f"Mesh: {mesh}")
-
-
-exit()
-# Now let us put this into a simple loop that runs until the end time is reached.
 
 # %%
 # 4. Basic simulation loop
@@ -245,6 +174,7 @@ simulator.executeTimeStep()
 simulator.executeSimulation()
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
 simulator.finalize()
+
 
 # %%
 # The influence of the changed boundary condition can be observed by the significant increase in

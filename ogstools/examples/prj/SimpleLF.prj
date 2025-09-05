@@ -94,12 +94,14 @@
       <timesteps>
         <pair>
           <repeat> 1 </repeat>
-          <each_steps> 4 </each_steps>
+          <each_steps> 1 </each_steps>
         </pair>
       </timesteps>
       <variables>
         <variable>pressure</variable>
         <variable>darcy_velocity</variable>
+        <variable>MaterialIDs</variable>
+        <variable>VolumetricFlowRate</variable>
       </variables>
       <suffix>_ts_{:timestep}_t_{:time}</suffix>
     </output>
