@@ -52,7 +52,7 @@ pip_setup_headless:  ## Install gmsh without X11 dependencies
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
-	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned]
+	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 	.venv-devcontainer/bin/pip uninstall gmsh -y
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
