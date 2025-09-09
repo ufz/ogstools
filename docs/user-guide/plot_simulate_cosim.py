@@ -21,7 +21,7 @@ from tempfile import mkdtemp
 from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
-from ogs import mesh, simulator  # Python API to a running OGS
+from ogs import OGSSimulator, mesh  # Python API to a running OGS
 
 import ogstools as ot
 from ogstools._find_ogs import interrupted as current_sim_interrupted
@@ -48,16 +48,25 @@ _ = meshes.save(working_dir)
 # possible argument are documented under
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
-arguments = ["", str(working_dir / "LiquidFlowSimple.prj")]
+sim1_result_dir = working_dir / "sim1"
+sim1_result_dir.mkdir(exist_ok=True)
+arguments = [
+    "",
+    str(working_dir / "LiquidFlowSimple.prj"),
+    "-o",
+    str(sim1_result_dir),
+]
 # extend like this: ,"-m", str(mesh_dir), "-l debug", -o", str(output_dir)]
 
-
+# %%
 # Initialize starts OpenGeoSys and runs time step 0
-initialization_status = simulator.initialize(arguments)
+
+sim1 = OGSSimulator.OGSSimulation(arguments)
+
 
 # %%
-print(f"The current simulation time is: {simulator.currentTime()} s.")
-print(f"The end time defined is: {simulator.endTime()} s.")
+print(f"The current simulation time is: {sim1.currentTime()} s.")
+print(f"The end time defined is: {sim1.endTime()} s.")
 
 # %%
 # These output files for this time step are created in results_path:
@@ -69,8 +78,8 @@ for file in working_dir.iterdir():
 # 3. Advancing the simulation by a single step
 # ============================================
 # Advance a single step and read the time of the current step.
-status = simulator.executeTimeStep()
-print(f"The current simulation time is: {simulator.currentTime()} s.")
+status = sim1.executeTimeStep()
+print(f"The current simulation time is: {sim1.currentTime()} s.")
 
 # %%
 # 4. Basic simulation loop
@@ -79,26 +88,26 @@ print(f"The current simulation time is: {simulator.currentTime()} s.")
 # The following loop runs the simulation step-by-step until the end time is reached (or the user interrupts it).
 while (
     # Condition to Stop when simulation reaches the end time
-    simulator.currentTime()  # in s, value changes with invoking executeTimeStep
-    < simulator.endTime()  # in s, value stays constant (defined in prj file - timeloop)
+    sim1.currentTime()  # in s, value changes with invoking executeTimeStep
+    < sim1.endTime()  # in s, value stays constant (defined in prj file - timeloop)
     and not current_sim_interrupted()  # Stops if the user presses Ctrl+C or interrupts the notebook.
 ):
 
-    simulator.executeTimeStep()
+    sim1.executeTimeStep()
     sleep(0.01)  # This is required if you want to pause the simulation.
     # Here you may add custom code to interact with data of current time step
     # See section 5
 
 # Or just run without any interaction from current time step till the end of the simulation
-simulator.executeSimulation()
+sim1.executeSimulation()
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-simulator.finalize()
+sim1.finalize()
 
 # Next, we build a more advanced loop that adapts boundary conditions dynamically.
 
 # %%
-# 5. Co-simulation with the native OGS interface
-# ==============================================
+# 5. Co-simulation with the native OGS interface - Using OGSTools
+# ===============================================================
 # This example shows how to run an OGS simulation interactively,
 # monitor convergence (steady state), and dynamically change boundary conditions during the run.
 # Use it as a template for adaptive simulation loops.
@@ -108,17 +117,25 @@ simulator.finalize()
 # Send this pyvista mesh back to the simulator with :py:meth:`~ogstools.meshlib.Mesh.write_to_simulator`.
 # Use :py:meth:`~ogstools.meshlib.Mesh.update_from_simulator` as a performance tuned method, when you already have received the mesh.
 
-simulator.initialize(arguments)  # we will restart the same simulation as above
-domain_mesh = ot.Mesh.from_simulator(simulator, "domain", ["pressure"])
+sim2_result_dir = working_dir / "sim2"
+sim2_result_dir.mkdir(exist_ok=True)
+arguments = [
+    "",
+    str(working_dir / "LiquidFlowSimple.prj"),
+    "-o",
+    str(sim2_result_dir),
+]
+sim2 = OGSSimulator.OGSSimulation(
+    arguments
+)  # we will restart the same simulation as above into new folder
+domain_mesh = ot.Mesh.from_simulator(sim2, "domain", ["pressure"])
 
 # Let us store the mesh of a time step to compare it later
 previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
 # Later, we will dynamically modify the left boundary mesh
-left_mesh = ot.Mesh.from_simulator(
-    simulator, "physical_group_left", ["pressure"]
-)
+left_mesh = ot.Mesh.from_simulator(sim2, "physical_group_left", ["pressure"])
 
 steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)  # constant
 delta = steady_state_threshold + 1e-10  # to be computed for each time step
@@ -127,23 +144,23 @@ delta = steady_state_threshold + 1e-10  # to be computed for each time step
 # Main simulation loop running till defined simulation end
 # OR interrupted by user
 while (
-    simulator.currentTime()
-    < simulator.endTime()  # Stop when simulation reaches the end time
+    sim2.currentTime()
+    < sim2.endTime()  # Stop when simulation reaches the end time
     and not current_sim_interrupted()  # Stop if user presses Ctrl-C or SIGTERM is received (e.g. Stop Button in Jupyter Notebook)
     # any other stopping condition based on the mesh, log, ...
     # e.g. # `delta > steady_state_threshold``
 ):
 
-    previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]  # Copy
+    previous_domain_mesh_pressure = domain_mesh.point_data["pressure"].copy()
 
-    simulator.executeTimeStep()
+    sim2.executeTimeStep()
     # Must have, if you want to pause the simulation
     sleep(0.01)  # directly after `executeTimeStep`` is often a good place
 
     # Example for an In-loop condition
     # 1. Check, if a steady state is reached
     # 2. Change a boundary condition
-    domain_mesh.update_from_simulator(simulator)
+    # domain_mesh.update_from_simulator(sim2)
     delta = np.max(
         np.absolute(
             domain_mesh.point_data["pressure"] - previous_domain_mesh_pressure
@@ -153,10 +170,8 @@ while (
         print(
             "The steady state condition is reached. Now a new boundary condition is applied."
         )
-        left_mesh.point_data["pressure"] = np.full(
-            np.shape(left_mesh.number_of_points), 3.1e7
-        )
-        left_mesh.write_to_simulator(simulator)
+        # [:] Is important! Otherwise you would assign a new numpy array to pressure (which would write into the insitu mesh)
+        left_mesh.point_data["pressure"][:] = np.full(left_mesh.n_points, 3.1e7)
     # else: we keep the boundary conditions constant
 
 # This simulation reaches the steady state condition twice
@@ -169,11 +184,11 @@ fig = ot.plot.contourf(domain_mesh, "pressure")
 
 # %%
 # Continue the ("paused") simulation with a single step
-simulator.executeTimeStep()
+sim2.executeTimeStep()
 # Or run over multiple steps (see while loop above)
-simulator.executeSimulation()
+sim2.executeSimulation()
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-simulator.finalize()
+sim2.finalize()
 
 
 # %%
@@ -181,7 +196,7 @@ simulator.finalize()
 # the pressure value after half of the simulation time.
 # The left boundary (x=0) changes after 60 s
 # The right boundary (x=10) changes after the first time step
-ms = ot.MeshSeries(results_path / "LiquidFlow_Simple.pvd")
+ms = ot.MeshSeries(sim2_result_dir / "LiquidFlow_Simple.pvd")
 # !paraview {ms.filepath} # for interactive exploration
 # Time slice over x
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
@@ -189,7 +204,7 @@ ms_probe = ot.MeshSeries.extract_probe(ms, points, "pressure")
 fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
 
 # %%
-# 7. Advanced Interaction with the OpenGeoSys interface
+# 6. Advanced Interaction with the OpenGeoSys interface
 # =====================================================
 # For performance-critical applications, you can bypass the conversion to pyvista
 # and use the Co-Simulation interface of OpenGeoSys directly.
@@ -200,69 +215,86 @@ fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
 # the mesh via the getMesh() method
 # https://doxygen.opengeosys.org/d9/de9/classogsmesh
 
-simulator.initialize(arguments)  # we will restart the same simulation as above
 
-# getMesh
-left_boundary: mesh = simulator.getMesh("physical_group_left")
+sim3_result_dir = working_dir / "sim3"
+sim3_result_dir.mkdir(exist_ok=True)
+arguments = [
+    "",
+    str(working_dir / "LiquidFlowSimple.prj"),
+    "-o",
+    str(sim3_result_dir),
+]
+sim3 = OGSSimulator.OGSSimulation(
+    arguments
+)  # we will restart the same simulation as above
 
+# %%
+# %% 7.1 Simulator Interface
 
-pressure = np.array(left_boundary.pointDoubleDataArray("pressure", 1))
+# Control
+print("CurrentTime:", sim3.currentTime())
+sim3.executeTimeStep()
+# sim3.executeSimulation() runs till defined simulation end
+# sim3.finalize() to close simulation
+
+# Exploration
+print("Available meshes:")
+for name in sim3.getMeshNames():
+    print(name)
+
+# Get any of the available meshes
+left_boundary: mesh = sim3.getMesh("physical_group_left")
+
+# %% 7.2 Native Mesh Interface
+# explore the Mesh
+print("Some points:", left_boundary.getPointCoordinates()[:10])
+print("Some cells:", left_boundary.getCells()[:10])
+print("Data array names:", left_boundary.dataArrayNames())
+print("Mesh item type:", left_boundary.meshItemType("pressure"))
+
+# Read an attribute
+pressure = left_boundary.dataArray("pressure", "double")
+
+# %%
 # We recommend to use numpy for manipulation of the values.
 # Note: You can only modify the values, not the size of the array.
 
-# %%
-# Replace property values of the mesh with setCellDataArray or setPointDataArray
 
+pressure[0] = 3.1e7  # Example 1
+number_of_points = int(
+    len(left_boundary.getPointCoordinates()) / 3
+)  # OGS has only 3D points
+pressure[0:10] = np.linspace(1e7, 2e7, 9)  # Example 2
+pressure[:] = np.full(number_of_points, 3.1e7, dtype=np.float32)  # Example 3
+# Important: always assign directly to values
+# Not pressure = np.full(mesh.n_points, 3.1e7, dtype=np.float32)
+
+# %%
+# 7.3 Dynamic example
 
 for i in range(12):
     # Modify left boundary condition values
     if i < 6:
         # All points get the same pressure values
-        pressure = np.full(pressure.shape, 2.99e7)
+        pressure[:] = np.full(pressure.shape, 2.9e7)
     else:
-        pressure = np.full(pressure.shape, 3.01e7)
-
-    # Write values back to the simulator (OpenGeoSys)
-    left_boundary.resetPointDataArray("pressure", pressure, 1)
-    # Use setCellDataArray for node-centred properties
+        pressure[:] = np.full(pressure.shape, 3.1e7)
 
     # Now, with modified boundary conditions execute a single step
     # The step size is determined by setting in projectfile/timeloop
     # In this example we have fixed step
-    simulator.executeTimeStep()
+    sim3.executeTimeStep()
 
 # To run the simulation from last executed time step till the end (according to definitions in the project file)
-simulator.executeSimulation()
+sim3.executeSimulation()
+sim3.finalize()
 
-print("available meshes:")
-for name in simulator.getMeshNames():
-    print(name)
+# %%
 
-print("data arrays in mesh:")
-for name in simulator.getMesh("domain").getDataArrayNames():
-    number_of_components = simulator.getMesh(
-        "domain"
-    ).getNumberOfComponentsForDataArray(name)
-    if simulator.getMesh("domain").isNodeBasedDataArray(name):
-        print(
-            "node based data array "
-            + name
-            + " has "
-            + str(number_of_components)
-            + " components"
-        )
-    if simulator.getMesh("domain").isCellBasedDataArray(name):
-        print(
-            "cell based data array "
-            + name
-            + " has "
-            + str(number_of_components)
-            + " components"
-        )
-
-# print("access MaterialIDs")
-# for material_id in simulator.getMesh("domain").getMaterialIDs():
-#     print(material_id)
-
-# Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-simulator.finalize()
+ms3 = ot.MeshSeries(sim3_result_dir / "LiquidFlow_Simple.pvd")
+# !paraview {ms.filepath} # for interactive exploration
+# Time slice over x
+points = np.linspace([0, 1, 0], [10, 1, 0], 100)
+ms_probe = ot.MeshSeries.extract_probe(ms3, points, "pressure")
+fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
+# %%

@@ -132,10 +132,11 @@ class Mesh(pv.UnstructuredGrid):
     @classmethod
     def from_simulator(
         cls,
-        simulator: Any,
+        simulation: Any,
         name: str,
         node_properties: list[str] | None = None,
         cell_properties: list[str] | None = None,
+        field_properties: list[str] | None = None,
     ) -> Mesh:
         """
         Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)
@@ -153,13 +154,12 @@ class Mesh(pv.UnstructuredGrid):
             :returns:               A Mesh (Pyvista Unstructured Grid) object
 
         """
-        from ogstools.meshlib.vtk_pyvista import construct_cells
         from ogs.mesh import MeshItemType
+        from vtk.util import numpy_support
 
-        node_properties = node_properties or []
-        cell_properties = cell_properties or []
+        from ogstools.meshlib.vtk_pyvista import construct_cells
 
-        in_situ_mesh = simulator.getMesh(name)
+        in_situ_mesh = simulation.getMesh(name)
         points_flat = in_situ_mesh.getPointCoordinates()
         points = np.array(points_flat, dtype=float).reshape(-1, 3)
 
@@ -168,54 +168,85 @@ class Mesh(pv.UnstructuredGrid):
 
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
+        properties_in_mesh = in_situ_mesh.dataArrayNames()
+
+        node_properties_in_mesh = [
+            prop
+            for prop in properties_in_mesh
+            if in_situ_mesh.meshItemType(prop) == MeshItemType.Node
+        ]
+        # 1 Edge, 2 Face not supported yet
+        cell_properties_in_mesh = [
+            prop
+            for prop in properties_in_mesh
+            if in_situ_mesh.meshItemType(prop) == MeshItemType.Cell
+        ]
+        field_properties_in_mesh = [
+            prop
+            for prop in properties_in_mesh
+            if in_situ_mesh.meshItemType(prop) == MeshItemType.IntegrationPoint
+        ]
+
+        node_properties = node_properties or node_properties_in_mesh
+        cell_properties = cell_properties or cell_properties_in_mesh
+        field_properties = field_properties or field_properties_in_mesh
+
         for node_property_name in node_properties:
-            pv_mesh.point_data[node_property_name] = (
-                in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1)
-            )
-            print('shape of {node_property_name} is ')
-            print(in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1).shape)
+            data_type = "double"  # in_situ_mesh.
+            arr = in_situ_mesh.dataArray(node_property_name, data_type)
+            vtk_arr = numpy_support.numpy_to_vtk(arr, deep=0)
+            pv_mesh.point_data.set_array(vtk_arr, node_property_name)
+            # print('shape of {node_property_name} is ')
+            # print(in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1).shape)
         for cell_property_name in cell_properties:
-            pv_mesh.cell_data[cell_property_name] = (
-                in_situ_mesh.dataArray("double", ogs.mesh.Cell, cell_property_name, 1)
+            data_type = "int"
+            pv_mesh.cell_data[cell_property_name] = in_situ_mesh.dataArray(
+                cell_property_name, data_type
             )
 
-        pv_mesh.field_data["in_situ_mesh_name"] = np.array([name])
+        for field_property_name in field_properties_in_mesh:
+            data_type = "char"
+            pv_mesh.field_data[field_property_name] = in_situ_mesh.dataArray(
+                field_property_name, data_type
+            )
+
         return cls(pv_mesh)
 
-    def write_to_simulator(
-        self, simulator: Any, name: str | None = None
-    ) -> None:
-        """
-        only property values will be written
-        Developer note:
-        """
-        name = name or self.field_data["in_situ_mesh_name"]
-        name_str = str(name[0])
-        in_situ_mesh = simulator.getMesh(name_str)
-        # error handling
 
-        for key, values in self.cell_data.items():
-            n_components = values.shape[1] if values.ndim > 1 else 1
-            in_situ_mesh.setCellDataArray(key, values, n_components)
-            # error handling
-
-        for key, values in self.point_data.items():
-            n_components = values.shape[1] if values.ndim > 1 else 1
-            in_situ_mesh.resetPointDataArray(key, values, n_components)
-            # error handling
-
-    def update_from_simulator(self, simulator: Any) -> None:
-        """ """
-        name = self.field_data["in_situ_mesh_name"]
-        name_str = str(name[0])
-        in_situ_mesh = simulator.getMesh(name_str)
-
-        from ogs.mesh import MeshItemType
-
-        for key in self.point_data:
-            self.point_data[key] = in_situ_mesh.dataArray("double", MeshItemType.Node, key, 1)
-            # error handling
-
-        for key in self.cell_data:
-            self.cell_data[key] = in_situ_mesh.cellDoubleDataArray(key, 1)
-            # error handling
+##    def write_to_simulator(
+##        self, simulation: Any, name: str | None = None
+##    ) -> None:
+##        """
+##        only property values will be written
+##        Developer note:
+##        """
+##        name = name or self.field_data["in_situ_mesh_name"]
+##        name_str = str(name[0])
+##        in_situ_mesh = simulation.getMesh(name_str)
+##        # error handling
+##
+##        for key, values in self.cell_data.items():
+##            n_components = values.shape[1] if values.ndim > 1 else 1
+##            in_situ_mesh.setCellDataArray(key, values, n_components)
+##            # error handling
+##
+##        for key, values in self.point_data.items():
+##            n_components = values.shape[1] if values.ndim > 1 else 1
+##            in_situ_mesh.resetPointDataArray(key, values, n_components)
+##            # error handling
+##
+##    def update_from_simulator(self, simulator: Any) -> None:
+##        """ """
+##        name = self.field_data["in_situ_mesh_name"]
+##        name_str = str(name[0])
+##        in_situ_mesh = simulator.getMesh(name_str)
+##
+##        from ogs.mesh import MeshItemType
+##
+##        for key in self.point_data:
+##            self.point_data[key] = in_situ_mesh.dataArray("double", MeshItemType.Node, key, 1)
+##            # error handling
+##
+##        for key in self.cell_data:
+##            self.cell_data[key] = in_situ_mesh.cellDoubleDataArray(key, 1)
+##            # error handling
