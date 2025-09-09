@@ -281,14 +281,17 @@ docs preview (M):
     - pip install -e .[ogs,docs]
     - *pip-setup-extra-headless
   script:
-    - make docs SPHINXOPTS="--keep-going -n -j 4" | tee sphinx_output.log
+    - make docs SPHINXOPTS="--keep-going -n -j 4 --warning-file sphinx_warnings.log"
+    - |
+      if [[ ! -f "sphinx_warnings.log" ]]; then
+        echo "Found no warnings in the Sphinx warnings log.";
+        exit 0
+      fi
     - echo "Counting warnings in Sphinx output..."
-    # Count lines with "WARNING" in the Sphinx log
-    - warning_count=$(grep -c "WARNING" sphinx_output.log || true)
-    - echo "Found $warning_count warnings in Sphinx documentation."
-    # Set the warning threshold
+    - warning_count=$(grep -c "WARNING" sphinx_warnings.log || true)
+    - echo "Found $warning_count warnings in Sphinx documentation:"
+    - cat sphinx_warnings.log
     - warning_threshold=7
-    # Check if warnings exceed the threshold
     - if [ "$warning_count" -lt "$warning_threshold" ]; then
         echo "Warnings ($warning_count) are below the threshold ($warning_threshold). Pipeline is green.";
         exit 0;
