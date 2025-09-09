@@ -243,7 +243,17 @@ tests (mac - pip) (R):
   - source .venv-devcontainer/bin/activate
   - make docs SPHINXOPTS="-W --keep-going -n -j 4"
   - make indexdocs
-  - mv docs/_build/html public
+
+docs main:
+  stage: deploy
+  needs: []
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - *docs-script
+  pages:
+    publish: docs/_build/html
+  environment: production
 
 docs preview (R):
   stage: test
@@ -252,12 +262,12 @@ docs preview (R):
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
     - *docs-script
-  artifacts:
-    paths:
-      - public
+  pages:
+    publish: docs/_build/html
+    path_prefix: 'mr-$CI_MERGE_REQUEST_IID'
   environment:
-    name: docs preview $CI_MERGE_REQUEST_IID $CI_PROJECT_ROOT_NAMESPACE
-    url: "${ARTIFACTS_PAGES_URL}/public/index.html"
+    name: docs preview $CI_MERGE_REQUEST_IID
+    url: $CI_PAGES_URL
 
 docs preview (M):
   stage: maintenance
@@ -286,13 +296,12 @@ docs preview (M):
         echo "Warnings ($warning_count) exceeded the threshold ($warning_threshold). Pipeline failed.";
         exit 1;
       fi
-    - mv docs/_bpublicuild/html
-  artifacts:
-    paths:
-      - public
+  pages:
+    publish: docs/_build/html
+    path_prefix: 'mr-$CI_MERGE_REQUEST_IID-m'
   environment:
-    name: docs preview $CI_COMMIT_REF_SLUG
-    url: "${ARTIFACTS_PAGES_URL}/public/index.html"
+    name: docs preview {M} $CI_MERGE_REQUEST_IID
+    url: $CI_PAGES_URL
 
 setup maintainer (M):
   stage: maintenance
@@ -320,24 +329,13 @@ setup developer (R):
     - pip install -e .[ogs,pinned,dev,test,docs,feflow]
     - *pip-setup-extra-headless
 
-pages:
-  stage: deploy
-  needs: []
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  script:
-    - *docs-script
-  artifacts:
-    paths:
-      - public
-  environment: production
-
 pages-tag:
   stage: prepare
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - *docs-script
+    - mv docs/_build/html public
   artifacts:
     paths:
       - public
