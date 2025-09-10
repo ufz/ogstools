@@ -44,6 +44,7 @@ def contourf_pv(
     """
     plot_mesh: pv.UnstructuredGrid = mesh.copy()
     variable_ = Variable.find(variable, mesh)
+
     # converting to float as the interactive plot seems to have trouble with int
     # taking magnitude of pint quantities to prevent numpy warning
     plot_var = variable_.replace(func=lambda x: variable_.func(x).astype(float))
@@ -62,7 +63,13 @@ def contourf_pv(
     plotter = pv.Plotter(
         off_screen=True, window_size=(720, 400), border=False, image_scale=2
     )
+
     plot_mesh[plot_var.output_name] = plot_var.transform(mesh)
+    if plot_var.mask_used(plot_mesh):
+        plot_mesh = plot_mesh.ctp(True).threshold(
+            value=[1, 1], scalars=variable_.mask
+        )
+
     if opacities is None:
         plotter.add_mesh(
             plot_mesh, scalars=plot_var.output_name, show_scalar_bar=False,
@@ -103,7 +110,9 @@ def contourf_pv(
 
     # Latex in vtk renderer is broken for now, thus removing special characters
     # see https://github.com/pyvista/pyvista/discussions/2928
-    label = plot_var.get_label().replace("$", "").replace("\\", "")
+    label = plot_var.get_label()
+    for s in ["$", "\\", "{", "}"]:
+        label = label.replace(s, "")
     scalar_bar_args = dict(  # noqa: C408
         vertical=True, position_x=0.8, position_y=0.05, height=0.9, title=label
     )
