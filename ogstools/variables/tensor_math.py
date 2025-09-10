@@ -57,7 +57,7 @@ def identity(vals: T) -> T:
 
 
 def sym_tensor_to_mat(values: ValType) -> ValType:
-    "Convert an symmetric tensor to a 3x3 matrix."
+    "Convert a symmetric tensor to a 3x3 matrix."
     vals, unit = _split_quantity(values)
     assert np.shape(vals)[-1] in [4, 6]
     shape = list(np.shape(vals))[:-1] + [3, 3]
@@ -68,10 +68,10 @@ def sym_tensor_to_mat(values: ValType) -> ValType:
     mat[..., 0, 1] = vals[..., 3]
     mat[..., 1, 0] = vals[..., 3]
     if np.shape(vals)[-1] == 6:
-        mat[..., 0, 2] = vals[..., 4]
-        mat[..., 2, 0] = vals[..., 4]
-        mat[..., 1, 2] = vals[..., 5]
-        mat[..., 2, 1] = vals[..., 5]
+        mat[..., 1, 2] = vals[..., 4]
+        mat[..., 2, 1] = vals[..., 4]
+        mat[..., 0, 2] = vals[..., 5]
+        mat[..., 2, 0] = vals[..., 5]
     return _to_quantity(mat, unit)
 
 
