@@ -103,9 +103,9 @@ def combined_levels(
     mesh: UnstructuredGrid
     for mesh in np.ravel(meshes):
         values = variable.magnitude.transform(
-            mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
-            if variable.mask_used(mesh)
-            else mesh
+            mesh
+            if not variable.mask_used(mesh)
+            else mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
         )
         if (
             kwargs.get("log_scaled", setup.log_scaled)
