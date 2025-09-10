@@ -82,6 +82,30 @@ fig = mesh.plot_contourf(ot.variables.stress.von_Mises)
 fig = mesh.plot_contourf(ot.variables.stress.octahedral_shear)
 
 # %% [markdown]
+# Stresses in polar coordinates
+# =============================
+# You can inspect stresses in a polar coordinate system by deriving a new
+# Variable from the stress Variable. Specify the polar center and, if needed,
+# the rotation axis (default is z-axis: [0, 0, 1]).
+
+# %%
+polar_stress = ot.variables.stress.to_polar(center=(150, -650, 0))
+fig = mesh.plot_contourf(polar_stress["rr"])
+fig = mesh.plot_contourf(polar_stress["tt"])
+fig = mesh.plot_contourf(polar_stress["pp"])
+
+# %% [markdown]
+# Here is a 3D example with a cylindrical hole at (0, 0, 0) in y direction:
+
+# %%
+mesh_3D = examples.load_mesh_mechanics_3D_sphere()
+polar_stress_3D = ot.variables.stress.to_polar()
+for comp in ["rr", "tt", "pp"]:
+    pl = mesh_3D.plot_contourf(polar_stress_3D[comp])
+    pl.view_xz()
+    pl.show()
+
+# %% [markdown]
 # Integrity criteria
 # ==================
 # Evaluating models regarding their integrity is often dependent on the

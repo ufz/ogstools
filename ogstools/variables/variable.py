@@ -361,7 +361,9 @@ class Variable:
         symbol_str = " " + f"${self.symbol}$" if self.symbol != "" else ""
         name = self.output_name
         if symbol_str != "":
-            for suffix in ["xx", "yy", "zz", "yx", "yz", "xz", "x", "y", "z"]:
+            cartesian_suf = ["xx", "yy", "zz", "yx", "yz", "xz", "x", "y", "z"]
+            polar_suf = ["rr", "tt", "pp", "rt", "tp", "rp"]
+            for suffix in cartesian_suf + polar_suf:
                 if name.endswith(("_" + suffix, " " + suffix)):
                     name = name[: -(len(suffix) + 1)]
             for suffix in [str(num) for num in range(10)]:

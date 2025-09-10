@@ -97,3 +97,41 @@ def dilatancy_alkan(
         sigma_m -= mesh["pressure"]
     tau = octahedral_shear(sigma)
     return tau - tau_max * (b * sigma_m / (1e6 + b * sigma_m))
+
+
+def angles(
+    mesh: pv.UnstructuredGrid,
+    center: Sequence = (0.0, 0.0, 0.0),
+    normal: Sequence = (0.0, 0.0, 1.0),
+) -> np.ndarray:
+    """Compute the angles of the mesh's points around a normal and center.
+
+    :param mesh:    For the points of this mesh the angles are computed.
+    :param center:  Center of rotation.
+    :param normal:  Normal axis of rotation.
+    """
+
+    n = np.asarray(normal, dtype=float)
+    assert n.shape == (3,), "normal must be length-3"
+    n_unit = n / np.linalg.norm(n)
+
+    vecs = mesh.points - np.asarray(center, dtype=float)
+    # project each vector into the plane
+    v_dot_n = np.dot(vecs, n_unit)  # (N,)
+    v_proj = vecs - np.outer(v_dot_n, n_unit)  # (N,3)
+
+    trial_axis = np.array([1.0, 0.0, 0.0])
+    if abs(np.dot(trial_axis, n_unit)) > 0.9:
+        trial_axis = np.array([0.0, 1.0, 0.0])
+
+    u_axis = trial_axis - np.dot(trial_axis, n_unit) * n_unit
+    u_unit = u_axis / np.linalg.norm(u_axis)
+    v_axis = np.cross(n_unit, u_unit)
+    v_unit = v_axis / np.linalg.norm(v_axis)
+
+    # coordinates in plane
+    x = np.dot(v_proj, u_unit)
+    y = np.dot(v_proj, v_unit)
+
+    result = np.arctan2(y, x)  # in radians, range (-pi, pi]
+    return np.where(np.hypot(x, y) > 1e-12, result, 0.0)

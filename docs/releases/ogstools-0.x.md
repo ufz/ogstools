@@ -21,6 +21,7 @@
   - None (default): 2D mesh -> matplotlib plot, 3D mesh -> interactive pyvista plot
   - True: always interactive pyvista plot
   - False: 2D mesh -> matplotlib plot, 3D mesh -> pyvista plot screenshot
+- added `to_polar` method for Variables. Useful, to convert stresses to a cylindrical or spherical coordinate system.
 
 ## Infrastructure
 
