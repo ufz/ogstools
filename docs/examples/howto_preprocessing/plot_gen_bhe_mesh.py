@@ -13,9 +13,9 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import pyvista as pv
-from pyvista.plotting import Plotter
 from shapely import Polygon
 
+import ogstools as ot
 from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
@@ -58,39 +58,30 @@ bhe_meshes = gen_bhe_mesh(
 )
 
 # %% [markdown]
-# Load the domain mesh and all submeshes as well as extract the BHE lines:
+# Load the domain mesh and all submeshes, extract the BHE lines and visualize it all:
+
 
 # %%
-mesh = pv.read(tmp_dir / bhe_meshes[0])
-top_mesh = pv.read(tmp_dir / bhe_meshes[1])
-bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
-gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
-bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
+def load_and_plot(bhe_meshes: list[Path]):
+    mesh: pv.UnstructuredGrid = pv.read(tmp_dir / bhe_meshes[0])
+    bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
+    top_bottom_gw_mesh = [
+        pv.read(tmp_dir / bhe_meshes[idx]) for idx in range(1, 4)
+    ]
+    offsets = [(0, 0, 10), (0, 0, -10), (-10, 0, 0)]
+    plotter = ot.plot.contourf(
+        mesh.clip("x", bhe_line.center, crinkle=True), ot.variables.material_id
+    )
+    plotter.add_mesh(mesh, style="wireframe", color="grey")
+    plotter.add_mesh(bhe_line, color="r", line_width=3)
+    for submesh, offset in zip(top_bottom_gw_mesh, offsets, strict=True):
+        plotter.add_mesh(submesh.translate(offset), show_edges=True)
+    plotter.show()
 
-# %% [markdown]
-# Visualize the mesh:
 
 # %%
-top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
-bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
-gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
 
-p = Plotter()
-p.add_mesh(mesh, style="wireframe", color="grey")
-p.add_mesh(
-    mesh.clip("x", bhe_line.center, crinkle=True),
-    show_edges=True,
-    scalars="MaterialIDs",
-    cmap="Accent",
-    categories=True,
-    scalar_bar_args={"vertical": True, "n_labels": 2, "fmt": "%.0f"},
-)
-p.add_mesh(bhe_line, color="r", line_width=3)
-p.add_mesh(top_mesh, show_edges=True)
-p.add_mesh(bottom_mesh, show_edges=True)
-p.add_mesh(gw_mesh, show_edges=True)
-p.add_axes()
-p.show()
+load_and_plot(bhe_meshes)
 
 # %% [markdown]
 # Create a simple structured mesh
@@ -123,36 +114,7 @@ bhe_meshes = gen_bhe_mesh(
 # Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
-mesh = pv.read(tmp_dir / bhe_meshes[0])
-top_mesh = pv.read(tmp_dir / bhe_meshes[1])
-bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
-gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
-bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-
-# %% [markdown]
-# Visualize the mesh:
-
-# %%
-top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
-bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
-gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
-
-p = Plotter()
-p.add_mesh(mesh, style="wireframe", color="grey")
-p.add_mesh(
-    mesh.clip("x", bhe_line.center, crinkle=True),
-    show_edges=True,
-    scalars="MaterialIDs",
-    cmap="Accent",
-    categories=True,
-    scalar_bar_args={"vertical": True, "n_labels": 2, "fmt": "%.0f"},
-)
-p.add_mesh(bhe_line, color="r", line_width=3)
-p.add_mesh(top_mesh, show_edges=True)
-p.add_mesh(bottom_mesh, show_edges=True)
-p.add_mesh(gw_mesh, show_edges=True)
-p.add_axes()
-p.show()
+load_and_plot(bhe_meshes)
 
 # %% [markdown]
 # Create an advanced structured mesh
@@ -210,33 +172,4 @@ bhe_meshes = gen_bhe_mesh(
 # Load the domain mesh and all submeshes as well as extract the BHE lines:
 
 # %%
-mesh = pv.read(tmp_dir / bhe_meshes[0])
-top_mesh = pv.read(tmp_dir / bhe_meshes[1])
-bottom_mesh = pv.read(tmp_dir / bhe_meshes[2])
-gw_mesh = pv.read(tmp_dir / bhe_meshes[3])
-bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-
-# %% [markdown]
-# Visualize the mesh:
-
-# %%
-top_mesh = top_mesh.translate((0, 0, 10), inplace=False)
-bottom_mesh = bottom_mesh.translate((0, 0, -10), inplace=False)
-gw_mesh = gw_mesh.translate((-10, 0, 0), inplace=False)
-
-p = Plotter()
-p.add_mesh(mesh, style="wireframe", color="grey")
-p.add_mesh(
-    mesh.clip("x", bhe_line.center, crinkle=True),
-    show_edges=True,
-    scalars="MaterialIDs",
-    cmap="Accent",
-    categories=True,
-    scalar_bar_args={"vertical": True, "n_labels": 2, "fmt": "%.0f"},
-)
-p.add_mesh(bhe_line, color="r", line_width=3)
-p.add_mesh(top_mesh, show_edges=True)
-p.add_mesh(bottom_mesh, show_edges=True)
-p.add_mesh(gw_mesh, show_edges=True)
-p.add_axes()
-p.show()
+load_and_plot(bhe_meshes)

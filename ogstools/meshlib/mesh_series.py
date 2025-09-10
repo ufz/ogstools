@@ -94,11 +94,7 @@ class MeshSeries(Sequence[Mesh]):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        self.dim = MeshSeries._max_dim(self.mesh(0))
-
-    @staticmethod
-    def _max_dim(mesh: Mesh) -> int:
-        return int(np.max([cell.dimension for cell in mesh.cell]))
+        self.dim = Mesh.max_dim(self.mesh(0))
 
     @classmethod
     def from_data(
@@ -110,7 +106,7 @@ class MeshSeries(Sequence[Mesh]):
         new_ms._mesh_cache.update(
             dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
         )
-        new_ms.dim = MeshSeries._max_dim(meshes[0])
+        new_ms.dim = Mesh.max_dim(meshes[0])
         return new_ms
 
     def extend(self, mesh_series: MeshSeries) -> None:
@@ -962,7 +958,7 @@ class MeshSeries(Sequence[Mesh]):
         for cache_timevalue, cache_mesh in self._mesh_cache.items():
             ms_copy._mesh_cache[cache_timevalue] = Mesh(mesh_func(cache_mesh))
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
-        ms_copy.dim = MeshSeries._max_dim(ms_copy.mesh(0))
+        ms_copy.dim = Mesh.max_dim(ms_copy.mesh(0))
         return ms_copy
 
     def scale(

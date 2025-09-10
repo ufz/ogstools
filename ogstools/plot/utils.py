@@ -258,9 +258,6 @@ def get_cmap_norm(
 ) -> tuple[mcolors.Colormap, mcolors.Normalize]:
     """Construct a discrete colormap and norm for the variable field."""
     vmin, vmax = (levels[0], levels[-1])
-    if variable.categoric:
-        vmin += 0.5
-        vmax += 0.5
 
     if "cmap" in kwargs:
         continuous_cmap = colormaps[kwargs.get("cmap")]
@@ -268,6 +265,7 @@ def get_cmap_norm(
         continuous_cmap = colormaps[variable.cmap]
     else:
         continuous_cmap = variable.cmap
+
     conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
     if variable.bilinear_cmap:
         if vmin < 0.0 < vmax:
@@ -285,12 +283,17 @@ def get_cmap_norm(
             conti_norm = mcolors.Normalize(vmin, vmax)
     else:
         conti_norm = mcolors.Normalize(vmin, vmax)
+
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
-    colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
+    if variable.categoric:
+        colors = [continuous_cmap(idx) for idx in range(len(levels))]
+    else:
+        colors = [continuous_cmap(conti_norm(m_l)) for m_l in mid_levels]
     if setup.custom_cmap is None:
         cmap = mcolors.ListedColormap(colors, name="custom")
     else:
         cmap = setup.custom_cmap
+
     boundaries = level_boundaries(levels) if variable.categoric else levels
     norm = mcolors.BoundaryNorm(
         boundaries=boundaries, ncolors=len(boundaries), clip=False

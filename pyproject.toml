@@ -331,3 +331,9 @@ flake8-unused-arguments.ignore-variadic-names = true
 [tool.codespell]
 ignore-words-list = "methode,ot"
 skip = "*.vtu"
+
+[tool.pyright]
+reportAttributeAccessIssue = false
+reportOptionalMemberAccess = false
+reportArgumentType = false
+reportCallIssue = false

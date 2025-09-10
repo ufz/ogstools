@@ -15,12 +15,14 @@ from .features import shape_on_top
 from .heatmaps import heatmap
 from .levels import compute_levels
 from .lineplots import line
+from .contourplots_pv import contourf_pv
 from .vectorplots import quiver, streamlines
 
 __all__ = [
     "animate",
     "compute_levels",
     "contourf",
+    "contourf_pv",
     "heatmap",
     "line",
     "quiver",

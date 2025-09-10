@@ -9,8 +9,9 @@
 import numpy as np
 from matplotlib import colormaps
 from matplotlib.colors import LinearSegmentedColormap as LSC
+from matplotlib.colors import ListedColormap
 
-mask_cmap = LSC.from_list("mask_cmap", ["lightgrey", "g"])
+mask_cmap = ListedColormap(name="mask__cmap", colors=["lightgrey", "g"])
 temperature_cmap = LSC.from_list(
     "temperature_cmap",
     np.r_[

@@ -97,6 +97,10 @@ class Mesh(pv.UnstructuredGrid):
         mesh.filepath = Path(filepath).with_suffix(".vtu")
         return mesh
 
+    @staticmethod
+    def max_dim(mesh: pv.DataSet) -> int:
+        return int(np.max([cell.dimension for cell in mesh.cell]))
+
     def reindex_material_ids(self) -> None:
         unique_mat_ids = np.unique(self["MaterialIDs"])
         id_map = dict(
