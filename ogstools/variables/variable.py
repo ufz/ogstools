@@ -21,6 +21,7 @@ import numpy as np
 import pyvista as pv
 from matplotlib.colors import Colormap
 from pint.facets.plain import PlainQuantity
+from typing_extensions import Self
 
 from .custom_colormaps import mask_cmap
 from .tensor_math import identity
@@ -97,7 +98,7 @@ class Variable:
     def type_name(self) -> str:
         return type(self).__name__
 
-    def replace(self: Variable, **changes: Any) -> Variable:
+    def replace(self, **changes: Any) -> Self:
         """
         Create a new Variable object with modified attributes.
 
@@ -111,9 +112,7 @@ class Variable:
         return replace(self, **changes)
 
     @classmethod
-    def from_variable(  # type: ignore[no-untyped-def]
-        cls, new_variable: Variable, **changes: Any
-    ):
+    def from_variable(cls, new_variable: Variable, **changes: Any) -> Self:
         "Create a new Variable object with modified attributes."
         return cls(
             data_name=new_variable.data_name,
@@ -170,8 +169,8 @@ class Variable:
             if data_key == f"{variable.output_name}_difference":
                 return variable.difference
             if data_key.rsplit("_")[0] in [
-                "min", "max", "mean", "median", "sum", "std", "var"  # fmt:skip
-            ]:
+                "min", "max", "mean", "median", "sum", "std", "var",
+            ]:  # fmt:skip
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
