@@ -20,7 +20,7 @@ from ogstools import examples
 # A bulk mesh file is loaded. If it already contains old Material IDs
 # we delete them first.
 
-mesh = ot.Mesh(examples.mechanics_vtu)
+mesh = ot.Mesh(examples.mechanics_2D)
 mesh.cell_data.remove("MaterialIDs")
 
 

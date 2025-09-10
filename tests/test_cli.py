@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 import ogstools as ot
-from ogstools.examples import mechanics_vtu
+from ogstools.examples import mechanics_2D
 
 
 @pytest.mark.tools()
@@ -27,6 +27,6 @@ def test_hide_cli_stderr(capfd, stderr):
 @pytest.mark.parametrize("stdout", [None, False])
 def test_hide_cli_stdout(capfd, stdout):
     os.environ["OGS_BIN_PATH"] = str(Path(shutil.which("ogs")).parent)
-    ot.cli().checkMesh(mechanics_vtu, stdout=stdout)
+    ot.cli().checkMesh(mechanics_2D, stdout=stdout)
     captured = capfd.readouterr()
     assert ("[ogs] [info]" in captured.out) == (stdout is None)
