@@ -902,7 +902,7 @@ class MeshSeries(Sequence[Mesh]):
 
             time_var = var_x if var_x.data_name == "time" else var_y
             get_time = time_var.func
-            time_var.func = lambda ms, _: log10time(get_time(ms, _))
+            time_var.func = lambda ms: log10time(get_time(ms))
             time_var.output_name = f"log10 {time_var.output_name}"
 
         x_vals = var_x.transform(self)

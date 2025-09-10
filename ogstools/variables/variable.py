@@ -233,7 +233,7 @@ class Variable:
         is_ms = isinstance(data, Sequence) and isinstance(data[0], pv.DataSet)
         if self.mesh_dependent:
             if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
-                result = Qty(self.func(data, self), o_u)
+                result = Qty(Qty(self.func(data), d_u), o_u)
             else:
                 msg = "This variable can only be evaluated on a mesh."
                 raise TypeError(msg)
@@ -410,11 +410,11 @@ def _spatial_preset(axis: str) -> Scalar:
 
     def get_pts(
         index: int,
-    ) -> Callable[[pv.UnstructuredGrid | Sequence, Variable], np.ndarray]:
+    ) -> Callable[[pv.UnstructuredGrid | Sequence], np.ndarray]:
         "Returns the coordinates of all points with the given index"
 
         def get_pts_coordinate(
-            dataset: pv.UnstructuredGrid | Sequence, _: Variable
+            dataset: pv.UnstructuredGrid | Sequence,
         ) -> np.ndarray:
             mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
             return mesh.points[:, index]
@@ -445,5 +445,5 @@ def _time_preset() -> Scalar:
         setup.time_unit,  # type:ignore[attr-defined]
         setup.time_unit,  # type:ignore[attr-defined]
         mesh_dependent=True,
-        func=lambda ms, _: getattr(ms, "timevalues", range(len(ms))),
+        func=lambda ms: getattr(ms, "timevalues", range(len(ms))),
     )

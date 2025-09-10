@@ -6,69 +6,60 @@
 
 "Functions related to stress analysis which can be only applied to a mesh."
 
+from collections.abc import Sequence
 
 import numpy as np
 import pyvista as pv
-from pint.facets.plain import PlainQuantity
 
-from .tensor_math import _split_quantity, eigenvalues, mean, octahedral_shear
-from .unit_registry import u_reg
-from .variable import Variable
+from .tensor_math import eigenvalues, mean, octahedral_shear
 
 
-def fluid_pressure_criterion(
-    mesh: pv.UnstructuredGrid, variable: Variable
-) -> PlainQuantity:
-    """Return the fluid pressure criterion.
+def fluid_pressure_criterion(mesh: pv.UnstructuredGrid) -> np.ndarray:
+    """Compute the fluid pressure criterion.
 
-    Defined as the difference between fluid pressure and minimal principal
-    stress (compression positive). Requires "pressure" to be available in the
-    mesh's point_data.
+    Requires "sigma" and "pressure" to be in the mesh and having the same units.
+    The criterion is defined as:
+
+        fluid pressure - minimal principal stress (compression positive).
 
     .. math::
 
         F_{p} = p_{fl} - \\sigma_{min}
     """
-
-    Qty = u_reg.Quantity
-    sigma = mesh[variable.data_name]
-    pressure = mesh["pressure"]
-    sig_min = _split_quantity(eigenvalues(-sigma))[0][..., 0]
-    return Qty(pressure, "Pa") - Qty(sig_min, variable.data_unit)
+    sig_min = eigenvalues(-mesh["sigma"])[..., 0]
+    return mesh["pressure"] - sig_min
 
 
 def dilatancy_critescu(
     mesh: pv.UnstructuredGrid,
-    variable: Variable,
     a: float = -0.01697,
     b: float = 0.8996,
     effective: bool = False,
-) -> PlainQuantity:
-    """Return the dilatancy criterion defined as:
+) -> np.ndarray:
+    """Compute the dilatancy criterion.
+
+    Requires "sigma" and "pressure" to be in the mesh (in Pa).
+
+    For total stresses it is defined as:
 
     .. math::
 
         F_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma_m}{\\sigma_0}
 
-    for total stresses and defined as:
+    For effective stresses it is defined as:
 
     .. math::
 
         F'_{dil} = \\frac{\\tau_{oct}}{\\sigma_0} - a \\left( \\frac{\\sigma'_m}{\\sigma_0} \\right)^2 - b \\frac{\\sigma'_m}{\\sigma_0}
 
-    for effective stresses. Requires "pressure" to be available in the
-    mesh's point_data.
-
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
     """
 
-    Qty = u_reg.Quantity
-    sigma = -Qty(mesh[variable.data_name], variable.data_unit)
-    sigma_0 = Qty(1, "MPa")
+    sigma = -mesh["sigma"]
+    sigma_0 = 1e6
     sigma_m = mean(sigma)
-    pressure = mesh["pressure"]
     if effective:
-        sigma_m -= Qty(pressure, "Pa")
+        sigma_m -= mesh["pressure"]
     tau_oct = octahedral_shear(sigma)
     return (
         tau_oct / sigma_0 - a * (sigma_m / sigma_0) ** 2 - b * sigma_m / sigma_0
@@ -77,34 +68,32 @@ def dilatancy_critescu(
 
 def dilatancy_alkan(
     mesh: pv.UnstructuredGrid,
-    variable: Variable,
     b: float = 0.04,
+    tau_max: float = 33e6,
     effective: bool = False,
-) -> PlainQuantity | np.ndarray:
-    """Return the dilatancy criterion defined as:
+) -> np.ndarray:
+    """Compute the dilatancy criterion.
+
+    Requires "sigma" and "pressure" to be in the mesh (in Pa).
+
+    For total stresses it is defined as:
 
     .. math::
 
         F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
 
-    for total stresses and defined as:
+    For effective stresses it is defined as:
 
     .. math::
 
         F_{dil} = \\tau_{oct} - \\tau_{max} \\cdot b \\frac{\\sigma'_m}{\\sigma_0 + b \\cdot \\sigma'_m}
-
-    for effective stresses. Requires "pressure" to be available in the
-    mesh's point_data.
 
     <https://www.sciencedirect.com/science/article/pii/S1365160906000979>
     """
 
-    Qty = u_reg.Quantity
-    sigma = -Qty(mesh[variable.data_name], variable.data_unit)
-    tau_max = Qty(33, "MPa")
+    sigma = -mesh["sigma"]
     sigma_m = mean(sigma)
-    pressure = mesh["pressure"]
     if effective:
-        sigma_m -= Qty(pressure, "Pa")
+        sigma_m -= mesh["pressure"]
     tau = octahedral_shear(sigma)
-    return tau - tau_max * (b * sigma_m / (Qty(1, "MPa") + b * sigma_m))
+    return tau - tau_max * (b * sigma_m / (1e6 + b * sigma_m))
