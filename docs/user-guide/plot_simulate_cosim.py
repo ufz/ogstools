@@ -21,7 +21,7 @@ from tempfile import mkdtemp
 from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
-from ogs import OGSSimulator, mesh  # Python API to a running OGS
+from ogs.OGSSimulator import OGSSimulation
 
 import ogstools as ot
 from ogstools._find_ogs import interrupted as current_sim_interrupted
@@ -61,12 +61,12 @@ arguments = [
 # %%
 # Initialize starts OpenGeoSys and runs time step 0
 
-sim1 = OGSSimulator.OGSSimulation(arguments)
+sim1 = OGSSimulation(arguments)
 
 
 # %%
-print(f"The current simulation time is: {sim1.currentTime()} s.")
-print(f"The end time defined is: {sim1.endTime()} s.")
+print(f"The current simulation time is: {sim1.current_time()} s.")
+print(f"The end time defined is: {sim1.end_time()} s.")
 
 # %%
 # These output files for this time step are created in results_path:
@@ -78,8 +78,8 @@ for file in working_dir.iterdir():
 # 3. Advancing the simulation by a single step
 # ============================================
 # Advance a single step and read the time of the current step.
-status = sim1.executeTimeStep()
-print(f"The current simulation time is: {sim1.currentTime()} s.")
+status = sim1.execute_time_step()
+print(f"The current simulation time is: {sim1.current_time()} s.")
 
 # %%
 # 4. Basic simulation loop
@@ -88,20 +88,20 @@ print(f"The current simulation time is: {sim1.currentTime()} s.")
 # The following loop runs the simulation step-by-step until the end time is reached (or the user interrupts it).
 while (
     # Condition to Stop when simulation reaches the end time
-    sim1.currentTime()  # in s, value changes with invoking executeTimeStep
-    < sim1.endTime()  # in s, value stays constant (defined in prj file - timeloop)
+    sim1.current_time()  # in s, value changes with invoking execute_time_step
+    < sim1.end_time()  # in s, value stays constant (defined in prj file - timeloop)
     and not current_sim_interrupted()  # Stops if the user presses Ctrl+C or interrupts the notebook.
 ):
 
-    sim1.executeTimeStep()
+    sim1.execute_time_step()
     sleep(0.01)  # This is required if you want to pause the simulation.
     # Here you may add custom code to interact with data of current time step
     # See section 5
 
 # Or just run without any interaction from current time step till the end of the simulation
-sim1.executeSimulation()
+sim1.execute_simulation()
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-sim1.finalize()
+sim1.close()
 
 # Next, we build a more advanced loop that adapts boundary conditions dynamically.
 
@@ -125,7 +125,7 @@ arguments = [
     "-o",
     str(sim2_result_dir),
 ]
-sim2 = OGSSimulator.OGSSimulation(
+sim2 = OGSSimulation(
     arguments
 )  # we will restart the same simulation as above into new folder
 domain_mesh = ot.Mesh.from_simulator(sim2, "domain", ["pressure"])
@@ -144,8 +144,8 @@ delta = steady_state_threshold + 1e-10  # to be computed for each time step
 # Main simulation loop running till defined simulation end
 # OR interrupted by user
 while (
-    sim2.currentTime()
-    < sim2.endTime()  # Stop when simulation reaches the end time
+    sim2.current_time()
+    < sim2.end_time()  # Stop when simulation reaches the end time
     and not current_sim_interrupted()  # Stop if user presses Ctrl-C or SIGTERM is received (e.g. Stop Button in Jupyter Notebook)
     # any other stopping condition based on the mesh, log, ...
     # e.g. # `delta > steady_state_threshold``
@@ -153,9 +153,9 @@ while (
 
     previous_domain_mesh_pressure = domain_mesh.point_data["pressure"].copy()
 
-    sim2.executeTimeStep()
+    sim2.execute_time_step()
     # Must have, if you want to pause the simulation
-    sleep(0.01)  # directly after `executeTimeStep`` is often a good place
+    sleep(0.01)  # directly after `execute_time_step`` is often a good place
 
     # Example for an In-loop condition
     # 1. Check, if a steady state is reached
@@ -184,11 +184,11 @@ fig = ot.plot.contourf(domain_mesh, "pressure")
 
 # %%
 # Continue the ("paused") simulation with a single step
-sim2.executeTimeStep()
+sim2.execute_time_step()
 # Or run over multiple steps (see while loop above)
-sim2.executeSimulation()
+sim2.execute_simulation()
 # Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-sim2.finalize()
+sim2.close()
 
 
 # %%
@@ -224,36 +224,34 @@ arguments = [
     "-o",
     str(sim3_result_dir),
 ]
-sim3 = OGSSimulator.OGSSimulation(
-    arguments
-)  # we will restart the same simulation as above
+sim3 = OGSSimulation(arguments)  # we will restart the same simulation as above
 
 # %%
 # %% 7.1 Simulator Interface
 
 # Control
-print("CurrentTime:", sim3.currentTime())
-sim3.executeTimeStep()
-# sim3.executeSimulation() runs till defined simulation end
-# sim3.finalize() to close simulation
+print("CurrentTime:", sim3.current_time())
+sim3.execute_time_step()
+# sim3.execute_simulation() runs till defined simulation end
+# sim3.close() to close simulation
 
 # Exploration
 print("Available meshes:")
-for name in sim3.getMeshNames():
+for name in sim3.mesh_names():
     print(name)
 
 # Get any of the available meshes
-left_boundary: mesh = sim3.getMesh("physical_group_left")
+left_boundary = sim3.mesh("physical_group_left")
 
 # %% 7.2 Native Mesh Interface
 # explore the Mesh
 print("Some points:", left_boundary.getPointCoordinates()[:10])
 print("Some cells:", left_boundary.getCells()[:10])
-print("Data array names:", left_boundary.dataArrayNames())
-print("Mesh item type:", left_boundary.meshItemType("pressure"))
+print("Data array names:", left_boundary.data_array_names())
+print("Mesh item type:", left_boundary.mesh_item_type("pressure"))
 
 # Read an attribute
-pressure = left_boundary.dataArray("pressure", "double")
+pressure = left_boundary.data_array("pressure", "double")
 
 # %%
 # We recommend to use numpy for manipulation of the values.
@@ -283,11 +281,11 @@ for i in range(12):
     # Now, with modified boundary conditions execute a single step
     # The step size is determined by setting in projectfile/timeloop
     # In this example we have fixed step
-    sim3.executeTimeStep()
+    sim3.execute_time_step()
 
 # To run the simulation from last executed time step till the end (according to definitions in the project file)
-sim3.executeSimulation()
-sim3.finalize()
+sim3.execute_simulation()
+sim3.close()
 
 # %%
 

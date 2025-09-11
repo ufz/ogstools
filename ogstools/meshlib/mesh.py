@@ -154,12 +154,12 @@ class Mesh(pv.UnstructuredGrid):
             :returns:               A Mesh (Pyvista Unstructured Grid) object
 
         """
-        from ogs.mesh import MeshItemType
+        from ogs.OGSMesh import MeshItemType
         from vtk.util import numpy_support
 
         from ogstools.meshlib.vtk_pyvista import construct_cells
 
-        in_situ_mesh = simulation.getMesh(name)
+        in_situ_mesh = simulation.mesh(name)
         points_flat = in_situ_mesh.getPointCoordinates()
         points = np.array(points_flat, dtype=float).reshape(-1, 3)
 
@@ -168,23 +168,24 @@ class Mesh(pv.UnstructuredGrid):
 
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)
 
-        properties_in_mesh = in_situ_mesh.dataArrayNames()
+        properties_in_mesh = in_situ_mesh.data_array_names()
 
         node_properties_in_mesh = [
             prop
             for prop in properties_in_mesh
-            if in_situ_mesh.meshItemType(prop) == MeshItemType.Node
+            if in_situ_mesh.mesh_item_type(prop) == MeshItemType.Node
         ]
         # 1 Edge, 2 Face not supported yet
         cell_properties_in_mesh = [
             prop
             for prop in properties_in_mesh
-            if in_situ_mesh.meshItemType(prop) == MeshItemType.Cell
+            if in_situ_mesh.mesh_item_type(prop) == MeshItemType.Cell
         ]
         field_properties_in_mesh = [
             prop
             for prop in properties_in_mesh
-            if in_situ_mesh.meshItemType(prop) == MeshItemType.IntegrationPoint
+            if in_situ_mesh.mesh_item_type(prop)
+            == MeshItemType.IntegrationPoint
         ]
 
         node_properties = node_properties or node_properties_in_mesh
@@ -193,20 +194,20 @@ class Mesh(pv.UnstructuredGrid):
 
         for node_property_name in node_properties:
             data_type = "double"  # in_situ_mesh.
-            arr = in_situ_mesh.dataArray(node_property_name, data_type)
+            arr = in_situ_mesh.data_array(node_property_name, data_type)
             vtk_arr = numpy_support.numpy_to_vtk(arr, deep=0)
             pv_mesh.point_data.set_array(vtk_arr, node_property_name)
             # print('shape of {node_property_name} is ')
-            # print(in_situ_mesh.dataArray("double", MeshItemType.Node, node_property_name, 1).shape)
+            # print(in_situ_mesh.data_array("double", MeshItemType.Node, node_property_name, 1).shape)
         for cell_property_name in cell_properties:
             data_type = "int"
-            pv_mesh.cell_data[cell_property_name] = in_situ_mesh.dataArray(
+            pv_mesh.cell_data[cell_property_name] = in_situ_mesh.data_array(
                 cell_property_name, data_type
             )
 
         for field_property_name in field_properties_in_mesh:
             data_type = "char"
-            pv_mesh.field_data[field_property_name] = in_situ_mesh.dataArray(
+            pv_mesh.field_data[field_property_name] = in_situ_mesh.data_array(
                 field_property_name, data_type
             )
 
@@ -244,7 +245,7 @@ class Mesh(pv.UnstructuredGrid):
 ##        from ogs.mesh import MeshItemType
 ##
 ##        for key in self.point_data:
-##            self.point_data[key] = in_situ_mesh.dataArray("double", MeshItemType.Node, key, 1)
+##            self.point_data[key] = in_situ_mesh.data_array("double", MeshItemType.Node, key, 1)
 ##            # error handling
 ##
 ##        for key in self.cell_data:
