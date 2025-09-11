@@ -1,0 +1,8 @@
+AqueousLiquid:
+  water:
+    carbon_dioxide: 1.92e-9
+    hydrogen: 2.10e-9
+    air: 2.30e-9
+Gas:
+  carbon_dioxide:
+    water: 1.0e-6

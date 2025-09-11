@@ -1,0 +1,46 @@
+name: hydrogen
+group: gas
+type: phase
+properties:
+  molar_mass:
+    - type: Constant
+      value: 0.002016
+      unit: kg/mol
+      source: "CODATA 2018 recommended values"
+  specific_heat_capacity:
+    - type: Constant
+      value: 14300
+      unit: J/(kg·K)
+      source: "NIST Chemistry WebBook"
+  thermal_conductivity:
+    - type: Constant
+      value: 0.1805
+      unit: W/(m·K)
+      source: "NIST Chemistry WebBook"
+  density:
+    - type: Constant
+      value: 0.08988
+      unit: kg/m³
+      source: "NIST Chemistry WebBook"
+  viscosity:
+    - type: Constant
+      value: 8.76e-6
+      unit: Pa·s
+      source: "NIST Chemistry WebBook"
+  vapour_pressure:
+    - type: Antoine
+      A: 4.584
+      B: 99.42
+      C: -6.0
+      unit: Pa
+      source: "NIST Chemistry WebBook"
+  specific_latent_heat:
+    - type: Constant
+      value: 446000
+      unit: J/kg
+      source: "NIST Chemistry WebBook"
+  henry_coefficient:
+    - type: Constant
+      value: 1.28e-5
+      unit: mol/(m³·Pa)
+      source: "Sander, R. (2015), Atmospheric Chemistry and Physics, 15, 4399–4981"

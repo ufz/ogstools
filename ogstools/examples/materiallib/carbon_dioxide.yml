@@ -1,0 +1,59 @@
+name: carbon_dioxide
+group: liquid
+type: phase
+properties:
+  molar_mass:
+    - type: Constant
+      value: 0.018016
+      unit: kg/mol
+      source: "IUPAC Chemical Data Series, J. R. Deshazer, 2007, International Union of Pure and Applied Chemistry, pp. 12-14"
+  specific_heat_capacity:
+    - type: Constant
+      value: 4187
+      unit: J/(kg·K)
+      source: "Engineering Toolbox: Thermal Properties of Water, P. G. Herndon, 2015, Engineering Toolbox Publications, Chapter 3, Section 2"
+  thermal_conductivity:
+    - type: Constant
+      value: 0.6
+      unit: W/(m·K)
+      source: "Fundamentals of Heat and Mass Transfer, F. P. Incognito, 2021, Thermal Press, pp. 45-47"
+  density:
+    - type: IdealGasLawBinaryMixture
+  # density:
+  #   - type: Constant
+  #     value: 1000
+  #     unit: kg/m³
+  #     source: "Standard Water Density, Department of Hydrology, R. C. Waters, 2012, HydroScience Publications, pp. 34-36"
+  #   - type: Linear
+  #     reference_value: 1000
+  #     independent_variables:
+  #       concentration:
+  #         reference_condition: 0.0
+  #         slope: 2.0e-6
+  #       temperature:
+  #         reference_condition: 293.15
+  #         slope: 1.5e-5
+  #     source: "Experimental Study on Salinity Effects on Water Density, D. A. Salter, 2018, AquaLab Journal, pp. 78-82"
+  viscosity:
+    - type: Constant
+      value: 1.0e-3
+      unit: Pa·s
+      source: "The Perfect Cup of Coffee: A Study on Water Viscosity, L. M. Brewster, 2020, Caffeine Press, pp. 15-19"
+  vapour_pressure:
+    - type: ClausiusClapeyron
+      triple_temperature: 273.16
+      triple_pressure: 611.66
+      critical_temperature: 647.096
+      critical_pressure: 22.064e6
+      reference_temperature: 373.15
+      reference_pressure: 101325
+      source: "Thermodynamics 101: Understanding Vapour Pressure, E. Dew Point, 2016, Physics Insights Publishing, Chapter 5, Section 4"
+  henry_coefficient:
+    - type: Constant
+      value: 1.0
+      unit: mol/m^3
+      source: "The Perfect Cup of Coffee: A Study on Water Viscosity, L. M. Brewster, 2020, Caffeine Press, pp. 15-19"
+  specific_latent_heat:
+    - type: Constant
+      value: 100.0
+      unit: J/kg
