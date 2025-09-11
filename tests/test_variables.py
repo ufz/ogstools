@@ -292,3 +292,40 @@ class TestPhysicalVariable:
         check_limits(ov.temperature, 7.9, 50)
         check_limits(ov.pressure, 0, 8)
         check_limits(ov.displacement.magnitude, 0, 0.3)
+
+    def test_polar_tranformation_2D(self):
+        "Check with different formulation for rr and tt components."
+        mesh = examples.load_mesh_mechanics_2D()
+        sig = mesh["sigma"]
+        center = (150, -650, 0)
+        phi = ov.mesh_dependent.angles(mesh, center)
+        ref_phi = np.atan2(
+            mesh.points[:, 1] - center[1], mesh.points[:, 0] - center[0]
+        )
+        np.testing.assert_allclose(phi, ref_phi)
+        ref_sigma_rr, ref_sigma_tt = (
+            (
+                0.5 * (sig[:, 0] + sig[:, 1])
+                + signum * 0.5 * (sig[:, 0] - sig[:, 1]) * np.cos(2 * phi)
+                + signum * sig[:, 3] * np.sin(2 * phi)
+            )
+            for signum in [1, -1]
+        )
+        sigma_rr = ov.stress.to_polar(center)["rr"].transform(mesh)
+        sigma_tt = ov.stress.to_polar(center)["tt"].transform(mesh)
+        np.testing.assert_allclose(sigma_rr, 1e-6 * ref_sigma_rr)
+        np.testing.assert_allclose(sigma_tt, 1e-6 * ref_sigma_tt)
+
+    def test_polar_tranformation_3D(self):
+        """Check, for homogeneous polar stresses in spherical mesh.
+
+        As the mesh is structured, we can group all transformed values together
+        per radius and check if they are all roughly the same.
+        """
+        mesh = examples.load_mesh_mechanics_3D_sphere()
+        radii = np.round(np.linalg.norm(mesh.points, axis=-1), 5)
+        unique_r = np.unique(radii)
+        vals = ov.stress.to_polar().transform(mesh)
+        for r in unique_r:
+            x = vals[radii == r]
+            assert np.allclose(x, x[0], atol=0.4)

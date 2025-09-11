@@ -348,3 +348,11 @@ class TestPlotting:
             tmp_path / "test.png"
         )
         assert (tmp_path / "test.png").is_file()
+
+    def test_pv_plot_mask(self, tmp_path: Path):
+        """Smoke test, test object: plot_contourf with pyvista / masked dataset
+
+        Doesn't check for correctness of the plot itself"""
+        mesh_3D = examples.load_mesh_mechanics_3D_cylinder()
+        mesh_3D.plot_contourf("displacement").screenshot(tmp_path / "test.png")
+        assert (tmp_path / "test.png").is_file()

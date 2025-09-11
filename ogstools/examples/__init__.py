@@ -110,7 +110,20 @@ def load_meshseries_PETSc_2D():
 
 
 def load_mesh_mechanics_2D():
-    return Mesh.read(_meshseries_dir / "mechanics_example.vtu")
+    return Mesh.read(_meshseries_dir / "mechanics_2D.vtu")
+
+
+def load_mesh_mechanics_3D_cylinder():
+    # from ogs/Tests/Data/Mechanics/Linear/ElementDeactivation3D/element_deactivation_M_3D.prj
+    # Adjusted params to get reasonable stresses
+    # clipped manually to 1/8 due to symmetry
+    return Mesh.read(_meshseries_dir / "mechanics_3D_cylinder.vtu")
+
+
+def load_mesh_mechanics_3D_sphere():
+    # from ogs/Tests/Data/Mechanics/Linear/PressureBC/hollow_sphere.prj
+    # Adjusted params to get reasonable stresses
+    return Mesh.read(_meshseries_dir / "mechanics_3D_sphere.vtu")
 
 
 msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"
@@ -193,4 +206,4 @@ circle_shapefile = _shp_dir / "circle.shp"
 
 elder_h5 = _meshseries_dir / "elder.h5"
 elder_xdmf = _meshseries_dir / "elder.xdmf"
-mechanics_vtu = _meshseries_dir / "mechanics_example.vtu"
+mechanics_2D = _meshseries_dir / "mechanics_2D.vtu"

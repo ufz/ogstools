@@ -57,7 +57,7 @@ def identity(vals: T) -> T:
 
 
 def sym_tensor_to_mat(values: ValType) -> ValType:
-    "Convert an symmetric tensor to a 3x3 matrix."
+    "Convert a symmetric tensor to a 3x3 matrix."
     vals, unit = _split_quantity(values)
     assert np.shape(vals)[-1] in [4, 6]
     shape = list(np.shape(vals))[:-1] + [3, 3]
@@ -68,11 +68,26 @@ def sym_tensor_to_mat(values: ValType) -> ValType:
     mat[..., 0, 1] = vals[..., 3]
     mat[..., 1, 0] = vals[..., 3]
     if np.shape(vals)[-1] == 6:
-        mat[..., 0, 2] = vals[..., 4]
-        mat[..., 2, 0] = vals[..., 4]
-        mat[..., 1, 2] = vals[..., 5]
-        mat[..., 2, 1] = vals[..., 5]
+        mat[..., 1, 2] = vals[..., 4]
+        mat[..., 2, 1] = vals[..., 4]
+        mat[..., 0, 2] = vals[..., 5]
+        mat[..., 2, 0] = vals[..., 5]
     return _to_quantity(mat, unit)
+
+
+def mat_to_sym_tensor(matrix: ValType) -> ValType:
+    "Convert a 3x3 matrix to a symmetric tensor."
+    mat, unit = _split_quantity(matrix)
+    assert np.shape(mat)[-2:] == (3, 3)
+    shape = list(np.shape(mat))[:-2] + [6]
+    vals = np.zeros(shape)
+    vals[..., 0] = mat[..., 0, 0]
+    vals[..., 1] = mat[..., 1, 1]
+    vals[..., 2] = mat[..., 2, 2]
+    vals[..., 3] = mat[..., 0, 1]
+    vals[..., 4] = mat[..., 1, 2]
+    vals[..., 5] = mat[..., 0, 2]
+    return _to_quantity(vals, unit)
 
 
 def trace(values: ValType) -> ValType:
@@ -241,3 +256,34 @@ def qp_ratio(values: ValType) -> ValType:
     :math:`qp = \\sigma_{Mises} / \\pi`
     """
     return von_mises(values) / effective_pressure(values)
+
+
+def to_polar(
+    values: ValType, phi: np.ndarray, th: np.ndarray | None
+) -> ValType:
+    """Transform the values to a polar coordinate system defined by phi and th.
+
+    :math:`\\sigma' = R^\\text{T} \\sigma R`
+
+    :param values:  The values corresponding to the cartesian coordinate system.
+    :param phi:     Azimuth angles.
+    :param th:      Inclination angles. If None, 2D rotation is performed.
+    """
+    if th is None:
+        rot_mat = [
+            [np.cos(phi), -np.sin(phi), np.zeros(len(phi))],
+            [np.sin(phi), np.cos(phi), np.zeros(len(phi))],
+            [np.zeros(len(phi)), np.zeros(len(phi)), np.ones(len(phi))],
+        ]
+    else:
+        if isinstance(th, (float | int)):
+            th = np.repeat(th, len(phi))
+        rot_mat = [
+            [np.sin(th) * np.cos(phi), np.cos(th) * np.cos(phi), -np.sin(phi)],
+            [np.sin(th) * np.sin(phi), np.cos(th) * np.sin(phi), np.cos(phi)],
+            [np.cos(th), -np.sin(th), np.zeros(len(phi))],
+        ]
+    rot_mat = np.moveaxis(np.asarray(rot_mat), -1, 0)
+    vals, unit = _split_quantity(values)
+    result = np.moveaxis(rot_mat, -1, -2) @ sym_tensor_to_mat(vals) @ rot_mat
+    return _to_quantity(mat_to_sym_tensor(result), unit)

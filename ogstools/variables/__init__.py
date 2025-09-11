@@ -123,7 +123,7 @@ effective_pressure = Scalar(
 )
 dilatancy_critescu_tot = Scalar(
     data_name="sigma",
-    data_unit="Pa",
+    data_unit="",
     output_unit="",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
