@@ -41,8 +41,8 @@ _ = meshes.save(working_dir)
 
 
 # %%
-# Read and write meshes to running OGS simulations - using OGSTools
-# ==================================================================
+# Read and write In-Situ meshes
+# =============================
 #
 # We will work with these functions:
 #

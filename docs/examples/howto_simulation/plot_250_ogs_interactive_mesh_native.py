@@ -44,8 +44,8 @@ _ = meshes.save(working_dir)
 
 
 # %%
-# Read and write meshes to running OGS simulations - using the OGS native interface
-# =================================================================================
+# Read and write In-Situ meshes
+# =============================
 #
 # We now start and connect to a running OGS simulation and access its meshes using the native Co-Simulation interface.
 # For further details search for OGSSimulation in https://doxygen.opengeosys.org/search.html?query=OGSSimulation.
