@@ -47,7 +47,7 @@ _ = meshes.save(working_dir)
 #
 # - :py:meth:`ot.Mesh.from_simulator <ogstools.meshlib.Mesh.from_simulator>`
 #      give you direct access to the values of th InSitu-Mesh during a running OGS simulation
-# - 2. and --------(interrupter)
+# - ToDo interrupter
 #
 #
 # This example demonstrates an adaptive simulation loop:

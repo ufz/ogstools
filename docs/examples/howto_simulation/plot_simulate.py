@@ -1,6 +1,6 @@
 """
-Running OGS Simulations from Python
-===================================
+Run a simulation - from a Project file
+======================================
 
 .. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 

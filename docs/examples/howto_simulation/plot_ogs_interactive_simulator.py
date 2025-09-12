@@ -1,6 +1,6 @@
 """
-Interactive OpenGeoSys execution (Co-Simulation)
-================================================
+Run a simulation - Step by step
+===============================
 
 With interactive execution, OpenGeoSys provides a Python interface that lets you
 advance a simulation one step at a time, inspect intermediate results, and react before continuing.
