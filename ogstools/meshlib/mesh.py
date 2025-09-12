@@ -154,16 +154,17 @@ class Mesh(pv.UnstructuredGrid):
             :returns:               A Mesh (Pyvista Unstructured Grid) object
 
         """
+        from ogs import OGSMesh
         from ogs.OGSMesh import MeshItemType
         from vtk.util import numpy_support
 
         from ogstools.meshlib.vtk_pyvista import construct_cells
 
-        in_situ_mesh = simulation.mesh(name)
-        points_flat = in_situ_mesh.getPointCoordinates()
+        in_situ_mesh: OGSMesh = simulation.mesh(name)
+        points_flat = in_situ_mesh.points()
         points = np.array(points_flat, dtype=float).reshape(-1, 3)
 
-        cells_and_types = in_situ_mesh.getCells()
+        cells_and_types = in_situ_mesh.cells()
         cells = construct_cells(cells_and_types[0], cells_and_types[1])
 
         pv_mesh = pv.UnstructuredGrid(cells, cells_and_types[1], points)

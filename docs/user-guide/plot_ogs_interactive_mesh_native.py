@@ -20,6 +20,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import numpy as np
+from ogs import OGSMesh
 from ogs.OGSSimulator import OGSSimulation
 
 import ogstools as ot
@@ -64,7 +65,7 @@ for name in sim3.mesh_names():
     print(name)
 
 # Get any of the available meshes
-left_boundary = sim3.mesh("physical_group_left")
+left_boundary: OGSMesh = sim3.mesh("physical_group_left")
 
 print("Points:", left_boundary.points()[:10])
 print("Cells:", left_boundary.cells()[:10])

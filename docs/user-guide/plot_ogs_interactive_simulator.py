@@ -22,6 +22,7 @@ In this guide, we will show how to:
 from pathlib import Path
 from tempfile import mkdtemp
 
+from ogs import OGSMesh
 from ogs.OGSSimulator import OGSSimulation
 
 from ogstools.examples import load_model_liquid_flow_simple
@@ -82,7 +83,7 @@ while (
 ):
 
     # Add here your specific code with mesh manipulation:
-    my_mesh = sim1.mesh("domain")
+    my_mesh: OGSMesh = sim1.mesh("domain")
     sim1.execute_time_step()
 
 # Alternatively, run the entire simulation without interaction:
