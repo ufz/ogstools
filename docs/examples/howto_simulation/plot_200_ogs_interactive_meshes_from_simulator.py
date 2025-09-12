@@ -2,16 +2,18 @@
 Interactive Mesh manipulation (OGSTools - Integrated)
 =====================================================
 
-This tutorial builds on the interactive Interface OGS Simulation. If you haven't seen that, start there first.
-
-We demonstrate how to access and modify in-situ meshes during an OpenGeoSys simulation.
+We demonstrate how to access and modify In-Situ meshes during an OpenGeoSys simulation.
 
 Key features in this tutorial:
+
 - Inspect mesh data via standard PyVista functions
+
 - Dynamically modify point/cell properties (e.g., boundary conditions)
+
 - React to simulation progress or state in an adaptive simulation loop
 
-For a lower-level control, see the Interactive Mesh manipulation (Native) examples.
+
+This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_100_ogs_interactive_simulator.py`. For a lower-level control, see :ref:`sphx_glr_auto_examples_howto_simulation_plot_250_ogs_interactive_mesh_native.py`.
 
 """
 
@@ -42,16 +44,17 @@ _ = meshes.save(working_dir)
 # Read and write meshes to running OGS simulations - using OGSTools
 # ==================================================================
 #
-# This example requires knowledge about interactive control of the simulation.
-# See alternative:
+# We will work with these functions:
 #
 # - :py:meth:`ot.Mesh.from_simulator <ogstools.meshlib.Mesh.from_simulator>`
-#      give you direct access to the values of th InSitu-Mesh during a running OGS simulation
+#      gives you direct access to the values of th InSitu-Mesh during a running OGS simulation
 # - ToDo interrupter
 #
 #
 # This example demonstrates an adaptive simulation loop:
+#
 # 1. The simulation is monitored for steady-state convergence
+#
 # 2. Boundary conditions are dynamically adjusted during runtime
 
 

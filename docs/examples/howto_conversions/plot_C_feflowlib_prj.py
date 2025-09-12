@@ -36,7 +36,7 @@ ot.plot.contourf(ogs_sim_res, "single_species")
 # %%
 # 4. Replace the scalar pore diffusion constant by a tensor to introducec anisotropy.
 # How to manipulate a prj file also is explained in this example:
-# # :ref:`sphx_glr_auto_examples_plot_simulate.py`.
+# # :ref:`sphx_glr_auto_examples_plot_010_simulate.py`.
 tensor = """
         1e-9 1e-12
         """

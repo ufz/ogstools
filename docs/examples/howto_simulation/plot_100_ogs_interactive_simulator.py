@@ -11,8 +11,11 @@ In this guide, we will show how to:
 - Step-by-step simulation control
 - Inspect simulation status and intermediate results
 - Prepare for mesh manipulation examples
-  - :ref:`sphx_glr_auto_examples_howto_logparser_plot_100_logparser_intro.py`.
-  - :ref:`sphx_glr_auto_examples_howto_logparser_plot_100_logparser_intro.py`.
+  - :ref:`sphx_glr_auto_examples_howto_simulation_plot_200_ogs_interactive_meshes_from_simulator.py`.
+  - :ref:`sphx_glr_auto_examples_howto_simulation_plot_250_ogs_interactive_mesh_native.py`.
+
+
+
 
 """
 
@@ -95,7 +98,8 @@ sim1.close()
 # %%
 # Advance examples with mesh manipulation
 # =======================================
-
+#
 # Manipulate the mesh with either
-# - Link1
-# - Link2
+#
+# - :ref:`sphx_glr_auto_examples_howto_simulation_plot_200_ogs_interactive_meshes_from_simulator.py`.
+# - :ref:`sphx_glr_auto_examples_howto_simulation_plot_250_ogs_interactive_mesh_native.py`.

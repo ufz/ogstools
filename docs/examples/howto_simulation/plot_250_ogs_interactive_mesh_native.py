@@ -7,10 +7,16 @@ This tutorial builds on the Interface OGS Simulation. If you haven't seen that, 
 Here we demonstrate how to access and modify in-situ meshes during an OpenGeoSys simulation.
 
 This allows you to:
+
 - Inspect in-situ mesh data
+
 - Modify point/cell properties dynamically (e.g. boundary conditions)
+
 - React to simulation progress and state
+
 For a higher-level, more integrated approach, see the OGSTools-based examples.
+
+This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_100_ogs_interactive_simulator.py`. For a lower-level control, see :ref:`sphx_glr_auto_examples_howto_simulation_plot_200_ogs_interactive_meshes_from_simulator.py`.
 
 """
 
@@ -40,11 +46,10 @@ _ = meshes.save(working_dir)
 # %%
 # Read and write meshes to running OGS simulations - using the OGS native interface
 # =================================================================================
-
+#
 # We now start and connect to a running OGS simulation and access its meshes using the native Co-Simulation interface.
-# - [OGSSimulation API documentation](https://doxygen.opengeosys.org/d1/d7b/classsimulation)
-#   - See the mesh() method
-# - [OGSMesh API documentation](https://doxygen.opengeosys.org/d9/de9/classogsmesh)
+# For further details search for OGSSimulation in https://doxygen.opengeosys.org/search.html?query=OGSSimulation.
+
 
 sim3_result_dir = working_dir / "sim3"
 sim3_result_dir.mkdir(exist_ok=True)
