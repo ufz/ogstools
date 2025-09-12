@@ -45,7 +45,7 @@ _ = meshes.save(working_dir)
 # This example requires knowledge about interactive control of the simulation.
 # See alternative:
 #
-# - :py:meth:`ot.Mesh.create_from_simulator <ogstools.meshlib.Mesh.create_from_simulator>`
+# - :py:meth:`ot.Mesh.from_simulator <ogstools.meshlib.Mesh.from_simulator>`
 #      give you direct access to the values of th InSitu-Mesh during a running OGS simulation
 # - 2. and --------(interrupter)
 #
