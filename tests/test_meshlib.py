@@ -292,6 +292,9 @@ class TestUtils:
             "time", "y", "temperature", time_logscale=True, cb_loc="left",
             dpi=50, fontsize=10
         )  # fmt: skip
+        fig = ms_pts.plot_time_slice(
+            "x", "time", "temperature", log_scaled=True
+        )
         with pytest.raises(ValueError, match="fig and ax together"):
             _ = ms_pts.plot_time_slice("x", "time", "temperature", fig=fig)
         with pytest.raises(KeyError, match="has to be 'time'"):
