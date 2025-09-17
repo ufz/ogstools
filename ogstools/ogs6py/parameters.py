@@ -56,7 +56,8 @@ class Parameters(build_tree.BuildTree):
             used in TimeDependentHeterogeneousParameter
         parameter_name : `list`
             used in `CurveScaled` to specify the parameter that shall be scaled
-        use_local_coordinate_system : `bool` or `str`
+            use_local_coordinate_system : `bool` or `str`
+
         """
         self._convertargs(args)
         if "name" not in args:
