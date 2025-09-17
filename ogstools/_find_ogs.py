@@ -59,14 +59,29 @@ def has_ogs_wheel(verbose: bool = False) -> bool:
     return importlib.util.find_spec("ogs") is not None
 
 
-def has_ogs_in_path(verbose: bool = False) -> bool:
+def has_exclusive_ogs_in_path(verbose: bool = False) -> bool:
+    """
+    Has one or more ogs in PATH that were not added by wheel
+    """
+    import importlib.util
+
     ogs_executables = find_all_executables("ogs")
     all_outside_python_env = [
         x for x in ogs_executables if is_outside_python_env(x)
     ]
+
+    module_path = importlib.util.find_spec("ogs")
+    module_paths: list[str] = (
+        list(module_path.submodule_search_locations)
+        if module_path and module_path.submodule_search_locations
+        else []
+    )
+
+    ogs_exclusive_on_path = set(all_outside_python_env) - set(module_paths)
+
     if verbose:
-        print("OGS in PATH: ", all_outside_python_env, ".\n")
-    return any(is_outside_python_env(x) for x in ogs_executables)
+        print("OGS in PATH (and not in wheel): ", ogs_exclusive_on_path, ".\n")
+    return len(ogs_exclusive_on_path) > 0
 
 
 def read_ogs_path(verbose: bool = False) -> Path | None:
@@ -95,7 +110,7 @@ def status(verbose: bool = False) -> bool:
     """
     ogs_in_specified_path = read_ogs_path(verbose) is not None
     ogs_wheel = has_ogs_wheel(verbose)
-    ogs_in_global_path = has_ogs_in_path(verbose)
+    ogs_in_global_path = has_exclusive_ogs_in_path(verbose)
 
     err_missing = "No OGS installation found. Please install ogs via `pip install ogs`. OR specify an environment variable OGS_BIN_PATH locating the directory of a ogs binary and ogs binary tools.\n"
     # {find_all_executables("ogs")}
@@ -135,7 +150,7 @@ def cli() -> Any:
 
     has_ogs_bin_path = read_ogs_path() is not None
     ogs_wheel = has_ogs_wheel()
-    ogs_in_global_path = has_ogs_in_path()
+    ogs_in_global_path = has_exclusive_ogs_in_path()
 
     if not status():
         status(verbose=True)
