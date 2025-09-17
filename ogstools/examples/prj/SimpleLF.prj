@@ -4,8 +4,6 @@
     <mesh>domain.vtu</mesh>
     <mesh>physical_group_left.vtu</mesh>
     <mesh>physical_group_right.vtu</mesh>
-    <!--mesh>physical_group_top.vtu</mesh-->
-    <!--mesh>physical_group_bottom.vtu</mesh-->
   </meshes>
   <processes>
     <process>
@@ -84,26 +82,6 @@
           <timesteps>
             <pair>
               <repeat>1</repeat>
-              <delta_t>1e-7</delta_t>
-            </pair>
-            <pair>
-              <repeat>1</repeat>
-              <delta_t>1e-5</delta_t>
-            </pair>
-            <pair>
-              <repeat>1</repeat>
-              <delta_t>1e-3</delta_t>
-            </pair>
-            <pair>
-              <repeat>1</repeat>
-              <delta_t>1e-1</delta_t>
-            </pair>
-            <pair>
-              <repeat>1</repeat>
-              <delta_t>1</delta_t>
-            </pair>
-            <pair>
-              <repeat>1</repeat>
               <delta_t>10</delta_t>
             </pair>
           </timesteps>
@@ -112,7 +90,7 @@
     </processes>
     <output>
       <type>VTK</type>
-      <prefix>LF_</prefix>
+      <prefix>LiquidFlow_Simple</prefix>
       <timesteps>
         <pair>
           <repeat> 1 </repeat>
@@ -122,6 +100,8 @@
       <variables>
         <variable>pressure</variable>
         <variable>darcy_velocity</variable>
+        <variable>MaterialIDs</variable>
+        <variable>VolumetricFlowRate</variable>
       </variables>
       <suffix>_ts_{:timestep}_t_{:time}</suffix>
     </output>
@@ -130,7 +110,7 @@
     <parameter>
       <name>P0</name>
       <type>Constant</type>
-      <value>2.99e7</value>
+      <value>2.9e7</value>
     </parameter>
     <parameter>
       <name>p_Dirichlet_left</name>
@@ -185,7 +165,7 @@
         <solver_type>BiCGSTAB</solver_type>
         <precon_type>DIAGONAL</precon_type>
         <max_iteration_step>10000</max_iteration_step>
-        <error_tolerance>1e-12</error_tolerance>
+        <error_tolerance>1e-14</error_tolerance>
       </eigen>
     </linear_solver>
   </linear_solvers>
