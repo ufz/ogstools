@@ -479,7 +479,7 @@ class MeshSeries(Sequence[Mesh]):
         """
         Get the data in the MeshSeries for all timesteps.
 
-        Adheres to time slicing via `__get_item__` and an applied pyvista filter
+        Adheres to time slicing via `__getitem__` and an applied pyvista filter
         via `transform` if the applied filter produced 'vtkOriginalPointIds' or
         'vtkOriginalCellIds' (e.g. `clip(..., crinkle=True)`,
         `extract_cells(...)`, `threshold(...)`.)
