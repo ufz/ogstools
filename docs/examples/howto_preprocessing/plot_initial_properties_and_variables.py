@@ -2,8 +2,6 @@
 Setting initial properties and variables in bulk meshes
 =======================================================
 
-.. sectionauthor:: Jörg Buchwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 For this example we use an existing mesh file and add the required arrays.
 """
 

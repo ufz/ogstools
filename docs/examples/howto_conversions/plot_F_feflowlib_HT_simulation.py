@@ -1,7 +1,6 @@
 """
-Workflow: Hydro-thermal model - conversion, simulation and post-processing
-==========================================================================
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
+Workflow with Feflowlib: Hydro-thermal model - conversion, simulation and post-processing
+=========================================================================================
 
 In this example we show how a simple hydro thermal FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
 be simulated in ot.

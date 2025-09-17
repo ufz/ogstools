@@ -1,8 +1,6 @@
 """
-Workflow: Hydraulic model - conversion, simulation and post-processing
-======================================================================
-
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
+Workflow with Feflowlib: Hydraulic model - conversion, simulation and post-processing
+=====================================================================================
 
 In this example we show how a simple flow/hydraulic FEFLOW model can be converted to a pyvista.UnstructuredGrid and then
 be simulated in ot.

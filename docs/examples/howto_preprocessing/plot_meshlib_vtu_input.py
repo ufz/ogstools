@@ -2,8 +2,6 @@
 Creating meshes from vtu surface files
 ======================================
 
-.. sectionauthor:: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 For this example we create meshes from surface layers.
 """
 

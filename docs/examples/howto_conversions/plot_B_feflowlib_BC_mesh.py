@@ -2,8 +2,6 @@
 Feflowlib: How to modify boundary conditions after conversion of a FEFLOW model.
 ================================================================================
 
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example shows how boundary conditions can be modified after converting a FEFLOW model.
 First we will change the values of the boundary conditions and later we will show how to define a new boundary mesh.
 """

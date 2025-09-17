@@ -4,9 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Original author: Dominik Kern (TU Bergakademie Freiberg)
-# Author: Florian Zill
-
 import logging
 from pathlib import Path
 

@@ -2,8 +2,6 @@
 Plotting nuclear waste heat over time
 =====================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 First, some minimal example usage:
 """
 

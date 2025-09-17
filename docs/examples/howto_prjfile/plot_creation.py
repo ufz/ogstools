@@ -2,8 +2,6 @@
 How to Create Simple Mechanics Problem
 ======================================
 
-.. sectionauthor:: Jörg Buchwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 The following example consists of a simple mechanics problem.
 The source file can be found in the [OGS benchmark folder](https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/Mechanics/Linear/square_1e2.prj?ref_type=heads).
 The names of the method calls are based on the corresponding XML tags.

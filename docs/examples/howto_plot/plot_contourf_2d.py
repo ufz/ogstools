@@ -2,8 +2,6 @@
 Visualizing 2D model data
 =========================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 To demonstrate the creation of filled contour plots we load a 2D THM meshseries
 example. In the ``plot.setup`` we can provide a dictionary to map names
 to material ids. Other plot configurations are also available, see:

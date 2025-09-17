@@ -1,7 +1,6 @@
 """
-Workflow: Component-transport model - conversion, simulation, postprocessing
-============================================================================
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
+Workflow with Feflowlib: Component-transport model - conversion, simulation, postprocessing
+===========================================================================================
 
 In this example we show how a simple mass transport FEFLOW model can be
 converted to a pyvista.UnstructuredGrid and then be simulated in OGS with the

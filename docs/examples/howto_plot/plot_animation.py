@@ -2,8 +2,6 @@
 How to create Animations
 ========================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 To demonstrate the creation of an animated plot we use a component transport
 example from the ogs benchmark gallery
 (https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).

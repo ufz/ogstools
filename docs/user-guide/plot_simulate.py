@@ -2,8 +2,6 @@
 Running OGS Simulations from Python
 ===================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 OGSTools is a Python library designed to simplify the process of running
 simulations with the OpenGeoSys (OGS) framework. The `Project` class is a core
 component of OGSTools, providing a convenient interface for creating and

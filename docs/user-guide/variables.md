@@ -3,7 +3,6 @@
 ## Overview
 
 ```{eval-rst}
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 ```
 
 `variables` provides a base class to handle common mesh variables systematically

@@ -2,8 +2,6 @@
 Meshes from gmsh (msh2vtu)
 ==========================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 Here you find, how you can generate OGS-compatible meshes from a .msh file.
 This is accomplished by extracting domain-, boundary- and physical groups
 from the gmsh mesh. This requires the mesh entities to be assigned to a physical

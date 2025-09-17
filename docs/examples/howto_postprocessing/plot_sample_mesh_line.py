@@ -1,9 +1,6 @@
 """
-*****************************
 Plot data of a sampling lines
-*****************************
-
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
+=============================
 
 This example provides clean coding recipes for plotting data of meshes over
 sampling lines. We also present different ways to setup the sampling lines.

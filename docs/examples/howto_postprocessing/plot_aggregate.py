@@ -2,8 +2,6 @@
 Aggregation of Meshseries Data
 ==============================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 In this example we show how to aggregate data in a model over all timesteps as
 well as plot differences between to timesteps. For this purpose we use
 a component transport example from the ogs benchmark gallery

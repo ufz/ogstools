@@ -2,8 +2,6 @@
 Feflowlib: How to get started with the FEFLOW converter.
 ========================================================
 
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example shows how a FEFLOW model can be converted and simulated in OGS.
 """
 

@@ -2,8 +2,6 @@
 Shared axes
 ===========
 
-.. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 In this example we show how to create filled contourplots on a figure with
 subplots having shared axes.
 """

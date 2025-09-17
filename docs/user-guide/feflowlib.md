@@ -1,7 +1,6 @@
 # feflowlib - feflow2ogs
 
 ```{eval-rst}
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
 ```
 
 ## Introduction

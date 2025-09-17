@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """utility functions for workflows."""
 
 from .jupyter_conversion import jupyter_to_html, jupytext_to_jupyter

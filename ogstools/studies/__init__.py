@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """Convergence study."""
 
 
