@@ -2,7 +2,7 @@ Examples
 ========
 
 On this page you will find practical examples of using various features of
-how ogstools can be used. Different stages of the simulation workflow are
+how OGSTools can be used. Different stages of the simulation workflow are
 covered.
 
 .. toctree::
