@@ -72,7 +72,7 @@ tests (arch - conda) (R):
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[ogs,pinned,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - pytest -n auto
@@ -92,7 +92,7 @@ tests (arch - conda - ogs wheel release) (M):
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[ogs,test]"
+    - pip install -e ".[ogs,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - pytest -n auto --hypothesis-profile ci
@@ -182,7 +182,7 @@ tests (arch - pip - no OGS) (R):
   needs: []
   before_script:
     - *pip-setup-activate
-    - pip install -e .[pinned,test]
+    - pip install -e .[pinned,test] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
@@ -219,7 +219,7 @@ tests (win - pip) (R):
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[ogs,pinned,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
   script:
     - pytest
 
@@ -232,7 +232,7 @@ tests (mac - pip) (R):
   before_script:
     - python() { python3.10 "$@"; } # alias don't work in non-interactive shells
     - *pip-setup-activate
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[ogs,pinned,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
   script:
     - pytest
 
@@ -278,7 +278,7 @@ docs preview (M):
   before_script:
     - *pip-setup-activate
     - *pip-install-ogs-latest
-    - pip install -e .[ogs,docs]
+    - pip install -e .[ogs,docs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - make docs SPHINXOPTS="--keep-going -n -j 4 --warning-file sphinx_warnings.log"
@@ -316,7 +316,7 @@ setup maintainer (M):
     - *pip-setup-activate
     - *pip-install-ogs-latest
   script:
-    - pip install -e .[dev,test,docs,feflow,ogs]
+    - pip install -e .[dev,test,docs,feflow,ogs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
 
 setup developer (R):
@@ -329,7 +329,7 @@ setup developer (R):
     - *pip-setup-activate
     - *pip-install-ogs-latest
   script:
-    - pip install -e .[ogs,pinned,dev,test,docs,feflow]
+    - pip install -e .[ogs,pinned,dev,test,docs,feflow] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
 
 pages-tag:
@@ -422,6 +422,7 @@ code_quality_mypy (R):
     # Use same mypy as in .pre-commit-config.yaml
     - uvx mypy==1.4.1 ogstools > mypy-output.txt || true
     - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json
+    - cat mypy-code-quality-report.json
   artifacts:
     reports:
       codequality: mypy-code-quality-report.json

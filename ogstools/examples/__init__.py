@@ -126,6 +126,51 @@ def load_mesh_mechanics_3D_sphere():
     return Mesh.read(_meshseries_dir / "mechanics_3D_sphere.vtu")
 
 
+def load_meshes_liquid_flow_simple():
+    # In this example, we create the domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
+    # We also set the boundary condition (prescribed pressure) on the left and right boundary meshes.
+    from pathlib import Path
+
+    import ogstools as ot
+
+    workingdir = Path()
+    gmsh_file = workingdir / "rect_10_2.msh"
+
+    ot.meshlib.rect(
+        lengths=(10, 2),
+        n_edge_cells=(10, 4),
+        n_layers=2,
+        structured_grid=True,
+        order=1,
+        mixed_elements=False,
+        jiggle=0.0,
+        out_name=gmsh_file,
+    )
+
+    meshes = ot.Meshes.from_gmsh(gmsh_file)
+
+    # Add data array 'pressure' to the left and right meshes boundary meshes
+    points_shape = np.shape(meshes["physical_group_left"].points)
+    meshes["physical_group_left"].point_data["pressure"] = np.full(
+        points_shape[0], 2.9e7
+    )
+    meshes["physical_group_right"].point_data["pressure"] = np.full(
+        points_shape[0], 3e7
+    )
+
+    return meshes
+
+
+def load_model_liquid_flow_simple():
+    from ogstools import Project
+
+    prj_file = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
+    prj = Project(prj_file)
+    meshes = load_meshes_liquid_flow_simple()
+
+    return prj, meshes
+
+
 msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"
 msh_geoterrain_3d = _msh_dir / "geoterrain_3d.msh"
 

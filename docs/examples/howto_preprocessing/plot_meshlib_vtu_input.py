@@ -6,6 +6,8 @@ For this example we create meshes from surface layers.
 """
 
 # %%
+from shutil import which
+
 import ogstools as ot
 from ogstools import meshlib as ml
 from ogstools.examples import surface_paths
@@ -35,7 +37,11 @@ layer_set1 = ml.LayerSet(layers=[layer1, layer2, layer3])
 sm = ml.to_region_simplified(layer_set1, xy_resolution=200, rank=3).mesh
 pm = ml.to_region_prism(layer_set1, resolution=200).mesh
 vm = ml.to_region_voxel(layer_set1, resolution=[200, 200, 50]).mesh
-tm = ml.to_region_tetraeder(layer_set1, resolution=200).mesh
+tetgen_present = (
+    which("tetgen") is not None
+)  # an optional requirement (needs to be installed on system or via pip)
+if tetgen_present:
+    tm = ml.to_region_tetraeder(layer_set1, resolution=200).mesh
 
 # %% [markdown]
 # Simplified mesh
@@ -63,4 +69,5 @@ ot.plot.contourf(pm.scale([1, 1, 5]), ot.variables.material_id).show()
 # ---------------
 
 # %%
-ot.plot.contourf(tm.scale([1, 1, 5]), ot.variables.material_id).show()
+if tm:
+    ot.plot.contourf(tm.scale([1, 1, 5]), ot.variables.material_id).show()

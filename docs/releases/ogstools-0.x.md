@@ -1,5 +1,7 @@
 # OGSTools 0.7.0 Release Notes
 
+- works with ogs==6.5.6
+
 # Breaking changes
 
 ## API breaking changes
@@ -15,17 +17,23 @@
 ## Features
 
 - added `Meshes` class
-- added `extract_boundaries` for simple extraction of boundary meshes from a 2D domain mesh
+  - `from_simulator` works directly with the OGS mesh in a running simulation
+  - `from_gmsh` is `ot.meshes_from_gmsh`
+  - `save` performs identify_subdomains
+  - `from_msh`
+    - uses the added `extract_boundaries` for simple extraction of boundary meshes from a 2D domain mesh
 - added `plot.contourf_pv` for pyvista plots which work with `Variables`.
 - `plot.contourf` now dispatches depending on the value of the new argument `interactive`:
   - None (default): 2D mesh -> matplotlib plot, 3D mesh -> interactive pyvista plot
   - True: always interactive pyvista plot
   - False: 2D mesh -> matplotlib plot, 3D mesh -> pyvista plot screenshot
 - added `to_polar` method for Variables. Useful, to convert stresses to a cylindrical or spherical coordinate system.
+- added `SimulationController` as wrapper for `OGSSimulation` to allow interruption and continuing simulations
 
 ## Infrastructure
 
 - Added Binder links to example notebooks for interactive execution.
+- Added tutorials for interactive ogs simulation
 
 ### Tests
 
@@ -36,3 +44,5 @@
 ### next sub release
 
 ### next main release
+
+- deprecation notice for `ot.meshes_from_gmsh`

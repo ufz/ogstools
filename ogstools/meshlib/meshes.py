@@ -46,10 +46,10 @@ class Meshes:
         if key not in self._meshes:
             msg = f"Key {key!r} not found"
             raise KeyError(msg)
-        self.has_identified_subdomains = False
         return self._meshes[key]
 
     def __setitem__(self, key: str, mesh: pv.UnstructuredGrid) -> None:
+        self.has_identified_subdomains = False
         self._meshes[key] = Mesh(mesh)
 
     def __len__(self) -> int:
@@ -188,7 +188,7 @@ class Meshes:
         :returns: A dictionary of {name: Mesh} for all subdomains
         """
         items = list(self._meshes.items())
-        return dict(items[1:])  # by convention, when
+        return dict(items[1:])  # by convention: first mesh is domain
 
     def save(self, meshes_path: Path | None = None) -> list[Path]:
         """

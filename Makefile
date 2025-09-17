@@ -5,7 +5,7 @@ help:  ## Show this help
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install -e .[pinned,dev,test,docs]
+	.venv/bin/pip install -e .[pinned,dev,test,docs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 	.venv/bin/pre-commit install
 	@echo
 	@echo ATTENTION: You need to activate the virtual environment in every shell with:
@@ -52,7 +52,7 @@ pip_setup_headless:  ## Install gmsh without X11 dependencies
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
-	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned]
+	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
 	.venv-devcontainer/bin/pip uninstall gmsh -y
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
