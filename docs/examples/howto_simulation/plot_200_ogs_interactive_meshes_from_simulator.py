@@ -17,18 +17,19 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 
 """
 
+# %%
 # Imports and definitions
 # =======================
+# %%
 from pathlib import Path
 from tempfile import mkdtemp
 from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
-from ogs.OGSSimulator import OGSSimulation
 
 import ogstools as ot
-from ogstools._find_ogs import interrupted as current_sim_interrupted
 from ogstools.examples import load_model_liquid_flow_simple
+from ogstools.simulation import SimulationController
 
 # %%
 # Select a Project
@@ -68,7 +69,7 @@ arguments = [
     "-o",
     str(sim2_result_dir),
 ]
-sim2 = OGSSimulation(
+sim2 = SimulationController(
     arguments
 )  # we will restart the same simulation as above into new folder
 domain_mesh = ot.Mesh.from_simulator(sim2, "domain", ["pressure"])
@@ -96,7 +97,7 @@ delta = steady_state_threshold + 1e-10  # to be computed for each time step
 
 while (
     sim2.current_time() < sim2.end_time()
-    and not current_sim_interrupted()
+    and not sim2.is_interrupted()
     # any other stopping condition based on the mesh, log, ...
     # e.g. # `delta > steady_state_threshold``
 ):
@@ -104,8 +105,7 @@ while (
     previous_domain_mesh_pressure = domain_mesh.point_data["pressure"].copy()
 
     sim2.execute_time_step()
-    # Must have, if you want to pause the simulation
-    sleep(0.01)  # directly after `execute_time_step`` is often a good place
+    sleep(0.01)  # Must have, if you want to pause the simulation
 
     # --------------- until here minimal loop -------------------------------
     # Example for an In-loop condition
