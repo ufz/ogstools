@@ -140,7 +140,7 @@ pinned = [
   "nbformat==5.10.4",
   "nest-asyncio==1.6.0",
   "numpy==2.2.6",
-  "ogs==6.5.5",
+  "ogs==6.5.6.dev463", # use make setup
   "overrides==7.7.0",
   "packaging==25.0",
   "pandas==2.3.0",
@@ -212,6 +212,7 @@ pinned = [
   "yarl==1.20.1"
 ]
 
+
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
 test = ["coverage", "hypothesis", "pytest", "pytest-xdist", "pytest-dependency"]
 docs = [
@@ -233,7 +234,7 @@ docs = [
 feflow = [
   "ifm_contrib>=0.2.4",
 ]
-ogs = ["ogs>=6.5.5"]
+ogs = ["ogs>=6.5.6.dev463"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
