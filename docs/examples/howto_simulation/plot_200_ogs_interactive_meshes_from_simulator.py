@@ -105,6 +105,7 @@ while (
     # Must have, if you want to pause the simulation
     sleep(0.01)  # directly after `execute_time_step`` is often a good place
 
+    # --------------- until here minimal loop -------------------------------
     # Example for an In-loop condition
     # 1. Check, if a steady state is reached
     # 2. Change a boundary condition
@@ -135,8 +136,8 @@ while (
 fig = ot.plot.contourf(domain_mesh, "pressure")
 
 # %%
-# Continue the ("paused") simulation with a single step
-# =====================================================
+# Continue the ("paused") simulation
+# ==================================
 sim2.execute_time_step()
 # Or run over multiple steps (see while loop above)
 sim2.execute_simulation()
