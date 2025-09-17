@@ -10,7 +10,7 @@
 Together they are referred to as FEFLOW-converter, as they enable the conversion of data stored in FEFLOW binary format to VTK format (`.vtu`) and the preparation of OGS-models.-processes
 The converter interacts with the Python API (`ifm`) of the proprietary software FEFLOW.
 `pyvista` is used especially for creating unstructured grids/meshes.
-With the usage of the [`Project`](../auto_user-guide/plot_simulate.rst) class it is possible to create a proposal of a `prj-file` from the converted model to enable simulations with OGS.
+With the usage of the [`Project`](../auto_examples/howto_simulation/plot_010_simulate.rst) class it is possible to create a proposal of a `prj-file` from the converted model to enable simulations with OGS.
 At the moment `steady state diffusion`, `liquid flow`, `hydro thermal` and `component/mass transport` processes are supported to set up complete `prj-files`.
 For other processes, a generic `prj-file` is created that needs manual configurations to be ready for OGS simulation.
 
