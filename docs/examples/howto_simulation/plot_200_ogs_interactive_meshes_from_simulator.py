@@ -48,7 +48,9 @@ _ = meshes.save(working_dir)
 #
 # - :py:meth:`ot.Mesh.from_simulator <ogstools.meshlib.Mesh.from_simulator>`
 #      gives you direct access to the values of th in situ-Mesh during a running OGS simulation
-# - ToDo interrupter
+#
+# - :class:`~ogstools.simulation.simulation_controller.SimulationController`,
+#   that works exactly like `OGSSimulation` introduced in :ref:`sphx_glr_auto_examples_howto_simulation_plot_100_ogs_interactive_simulator.py`.
 #
 #
 # This example demonstrates an adaptive simulation loop:
