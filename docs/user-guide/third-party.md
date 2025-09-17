@@ -1,7 +1,6 @@
 # Third-party applications
 
 ```{eval-rst}
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 ```
 
 `ogstools` makes use of some several third party python packages:

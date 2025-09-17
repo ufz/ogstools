@@ -2,8 +2,6 @@
 Stress analysis
 ===============
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 The following example from the ogs benchmark collection is used for the
 stress analysis:
 

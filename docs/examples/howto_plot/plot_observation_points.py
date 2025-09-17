@@ -2,8 +2,6 @@
 How to plot data at observation points
 ======================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 In this example we plot the data values on observation points over all
 timesteps. Since requested observation points don't necessarily coincide with
 actual nodes of the mesh different interpolation options are available. See

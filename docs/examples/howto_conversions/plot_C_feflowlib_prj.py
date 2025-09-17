@@ -2,8 +2,6 @@
 Feflowlib: How to modify the project-file after converting a FEFLOW model.
 ==========================================================================
 
-.. sectionauthor:: Julian Heinze (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example shows how to convert a FEFLOW model and how to modify the corresponding OGS project file and boundary meshes after conversion.
 """
 

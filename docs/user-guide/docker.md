@@ -1,7 +1,6 @@
 # Running in a container
 
 ```{eval-rst}
-.. sectionauthor:: Lars Bilke (Helmholtz Centre for Environmental Research GmbH - UFZ)
 ```
 
 ## Running with Docker

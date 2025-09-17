@@ -2,8 +2,6 @@
 Extracting boundaries of a 2D mesh
 ==================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 There are situations, when you have a 2D domain mesh, but not the corresponding
 boundary meshes (e.g. when extracting a slice from a 3D model). But you need
 them to properly set boundary conditions. For those cases `ogstools` provides a

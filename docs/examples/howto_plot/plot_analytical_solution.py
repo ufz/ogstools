@@ -2,8 +2,6 @@
 How to compare results with reference data or an analytical solution
 ====================================================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example provides recipes for frequently needed plots in the OpenGeoSys
 benchmark section. It is a repeating pattern, to compare numerical results with
 analytical or reference data and evaluate the errors. The goal here is to have a

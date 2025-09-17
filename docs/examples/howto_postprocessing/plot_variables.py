@@ -2,8 +2,6 @@
 Variable presets and data transformation
 ========================================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 :py:mod:`ogstools.variables` provides classes (Scalar, Vector, Matrix) which
 encapsulate unit handling and data transformation for simplified processing of
 mesh data. There are also several predefined variables.

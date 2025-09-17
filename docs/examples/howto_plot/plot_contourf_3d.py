@@ -2,11 +2,12 @@
 Visualizing 3D model data
 =========================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
-For visualizing 3D data ``ogstools`` provides a plot function, which uses the
-``pyvista`` backend. First, let's load a 3D example and plot the only available
-data: "facies".
+For visualizing 3D data it might make sense to plot multiple views / slices.
+To create them we use ``pyvista`` as it provides all the necessary functionality.
+If we want to plot multiple meshes, they have to be in a 2D ``numpy`` array.
+The shape of this array determines the number of rows and columns in our plot.
+First, let's load 3D example data from ``pyvista`` and plot the only available
+data: "facies" with a native pyvista plot.
 """
 
 # %%

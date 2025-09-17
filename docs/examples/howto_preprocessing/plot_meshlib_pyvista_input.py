@@ -2,8 +2,6 @@
 Creating meshes from pyvista surfaces
 ======================================
 
-.. sectionauthor:: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 For this example we create meshes from pyvista surfaces. See other examples for
 different meshing algorithms.
 """

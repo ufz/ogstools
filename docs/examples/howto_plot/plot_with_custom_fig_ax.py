@@ -2,8 +2,6 @@
 Plotting different process variables on already existing Matplotlib figures / axes
 ==================================================================================
 
-.. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This tutorial covers plotting meshseries data using user defined matplotlib
 objects for figure and / or axes. This is useful if different plotting functions
 ogstools are to be used on different subplots within the same figure.

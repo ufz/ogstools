@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """Predefined variables for data and unit transformation."""
 
 from functools import partial

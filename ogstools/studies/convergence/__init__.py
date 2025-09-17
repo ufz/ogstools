@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """functions to generate a convergence study."""
 
 from .convergence import (

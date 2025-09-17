@@ -2,8 +2,6 @@
 How to Create Time Slices
 =========================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 In this example we show how to create a filled contourplot of transient data
 over a sampling line. For this purpose we use a component transport example
 from the ogs benchmark gallery

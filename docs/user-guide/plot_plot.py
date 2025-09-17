@@ -2,8 +2,6 @@
 plotting model data
 ===================
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 One strength of ``ogstools`` is to simplify the process of plotting mesh data.
 
 For 2D meshes (or slices of 3D meshes) we use the ``matplotlib`` backend, as it

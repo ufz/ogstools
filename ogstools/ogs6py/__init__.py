@@ -4,8 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Joerg Buchwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 from .project import Project
 
 __all__ = ["Project"]

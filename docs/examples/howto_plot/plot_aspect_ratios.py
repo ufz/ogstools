@@ -2,8 +2,6 @@
 Aspect ratios
 =============
 
-.. sectionauthor:: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 By default, filled contour plots try to retain the true mesh proportions.
 If the meshes aspect ratio lies outside of predefined limits
 (setup.min_ax_aspect, setup.max_ax_aspect) the axes get compressed to stay

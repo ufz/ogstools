@@ -1,7 +1,6 @@
 # logparser
 
 ```{eval-rst}
-.. sectionauthor:: Tobias Meisel (Helmholtz Centre for Environmental Research GmbH - UFZ)
 ```
 
 `logparser` provides an easy way to analyze log messages from ogs runs.

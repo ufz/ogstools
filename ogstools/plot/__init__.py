@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-# Author: Florian Zill (Helmholtz Centre for Environmental Research GmbH - UFZ)
 """Plotting utilities for simple access."""
 
 from .shared import setup  # noqa: I001

@@ -2,8 +2,6 @@
 Calculate differences between meshes
 ====================================
 
-.. sectionauthor:: Feliks Kiszkurno (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example shows how to calculate differences between meshes.
 """
 
