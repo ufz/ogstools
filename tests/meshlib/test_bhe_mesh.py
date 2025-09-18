@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from itertools import product
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -12,7 +11,7 @@ from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 
 # confinded aquifer: top level of groundwater ends at soil layer transition
-def case_1(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
+def case_1(mesh_type: str) -> Meshes:
     bhe = BHE(x=25, y=30, z_begin=-5, z_end=-50, borehole_radius=0.076)
     distance_bhe_to_refinment_area_x = 10
     distance_bhe_to_refinment_area_y = 8
@@ -33,11 +32,10 @@ def case_1(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
             ymax=bhe.y + distance_bhe_to_refinment_area_y,
         ),
         meshing_type=mesh_type,
-        out_name=vtu_out_file_path,
     )
 
 
-def case_2(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
+def case_2(mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=50, y=40, z_begin=0, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=30, z_begin=-1, z_end=-60, borehole_radius=0.076),
@@ -66,11 +64,10 @@ def case_2(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
             + distance_bhe_to_refinment_area_y,
         ),
         meshing_type=mesh_type,
-        out_name=vtu_out_file_path,
     )
 
 
-def case_3(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
+def case_3(mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=50, y=25, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=30, z_begin=-1, z_end=-49, borehole_radius=0.076),
@@ -107,11 +104,10 @@ def case_3(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
             + distance_bhe_to_refinment_area_y,
         ),
         meshing_type=mesh_type,
-        out_name=vtu_out_file_path,
     )
 
 
-def case_4(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
+def case_4(mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=40, y=15, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=15, z_begin=-1, z_end=-49, borehole_radius=0.076),
@@ -142,12 +138,11 @@ def case_4(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
             + distance_bhe_to_refinment_area_y,
         ),
         meshing_type=mesh_type,
-        out_name=vtu_out_file_path,
         target_z_size_fine=1,
     )
 
 
-def case_5(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
+def case_5(mesh_type: str) -> Meshes:
     # test a 12x12 bhe array
     n_bhe_per_row = 12
     dist_bhe = 2.5
@@ -173,7 +168,6 @@ def case_5(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
         groundwater=[],
         BHE_Array=bhe_array,
         meshing_type=mesh_type,
-        out_name=vtu_out_file_path,
         inner_mesh_size=10,
         outer_mesh_size=20,
         refinement_area=Polygon.from_bounds(
@@ -197,11 +191,8 @@ class TestBHE:
         ("model", "max_id"),
         [(case_1, 4), (case_2, 5), (case_3, 7), (case_4, 7), (case_5, 144)],
     )
-    def test_bhe_mesh(
-        self, tmp_path, mesh_type: str, model: Callable, max_id: int
-    ):
-        vtu_file = tmp_path / "bhe_mesh.vtu"
-        meshes = model(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
+    def test_bhe_mesh(self, mesh_type: str, model: Callable, max_id: int):
+        meshes = model(mesh_type=mesh_type)
 
         mesh = meshes.domain()
         assert max(mesh.cell_data["MaterialIDs"]) == max_id
