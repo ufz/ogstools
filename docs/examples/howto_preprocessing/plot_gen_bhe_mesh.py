@@ -62,19 +62,20 @@ bhe_meshes = gen_bhe_mesh(
 
 
 # %%
-def load_and_plot(bhe_meshes: list[Path]):
-    mesh: pv.UnstructuredGrid = pv.read(tmp_dir / bhe_meshes[0])
-    bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-    top_bottom_gw_mesh = [
-        pv.read(tmp_dir / bhe_meshes[idx]) for idx in range(1, 4)
-    ]
-    offsets = [(0, 0, 10), (0, 0, -10), (-10, 0, 0)]
+def load_and_plot(bhe_meshes: ot.Meshes):
+    bhe_line = bhe_meshes.domain().extract_cells_by_type(pv.CellType.LINE)
+    offsets = [(0, 0, 10), (0, 0, -10), (10, 0, 0), (-10, 0, 0)]
     plotter = ot.plot.contourf(
-        mesh.clip("x", bhe_line.center, crinkle=True), ot.variables.material_id
+        bhe_meshes.domain().clip("x", bhe_line.center, crinkle=True),
+        ot.variables.material_id,
+        interactive=True,
     )
-    plotter.add_mesh(mesh, style="wireframe", color="grey")
+    plotter.add_mesh(bhe_meshes.domain(), style="wireframe", color="grey")
     plotter.add_mesh(bhe_line, color="r", line_width=3)
-    for submesh, offset in zip(top_bottom_gw_mesh, offsets, strict=True):
+
+    for submesh, offset in zip(
+        bhe_meshes.subdomains().values(), offsets, strict=True
+    ):
         plotter.add_mesh(submesh.translate(offset), show_edges=True)
     plotter.show()
 

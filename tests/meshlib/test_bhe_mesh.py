@@ -7,11 +7,12 @@ import pytest
 import pyvista as pv
 from shapely import Polygon
 
+from ogstools import Meshes
 from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 
 # confinded aquifer: top level of groundwater ends at soil layer transition
-def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+def case_1(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
     bhe = BHE(x=25, y=30, z_begin=-5, z_end=-50, borehole_radius=0.076)
     distance_bhe_to_refinment_area_x = 10
     distance_bhe_to_refinment_area_y = 8
@@ -36,7 +37,7 @@ def case_1(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
 
-def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+def case_2(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=50, y=40, z_begin=0, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=30, z_begin=-1, z_end=-60, borehole_radius=0.076),
@@ -69,7 +70,7 @@ def case_2(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
 
-def case_3(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+def case_3(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=50, y=25, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=30, z_begin=-1, z_end=-49, borehole_radius=0.076),
@@ -110,7 +111,7 @@ def case_3(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
 
-def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+def case_4(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
     bhe_array = [
         BHE(x=40, y=15, z_begin=-1, z_end=-60, borehole_radius=0.076),
         BHE(x=50, y=15, z_begin=-1, z_end=-49, borehole_radius=0.076),
@@ -146,7 +147,7 @@ def case_4(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
     )
 
 
-def case_5(vtu_out_file_path: Path, mesh_type: str) -> list[str]:
+def case_5(vtu_out_file_path: Path, mesh_type: str) -> Meshes:
     # test a 12x12 bhe array
     n_bhe_per_row = 12
     dist_bhe = 2.5
@@ -201,9 +202,8 @@ class TestBHE:
     ):
         vtu_file = tmp_path / "bhe_mesh.vtu"
         meshes = model(vtu_out_file_path=vtu_file, mesh_type=mesh_type)
-        for mesh in meshes:
-            assert Path(tmp_path / mesh).is_file()
-        mesh = pv.read(tmp_path / meshes[0])
+
+        mesh = meshes.domain()
         assert max(mesh.cell_data["MaterialIDs"]) == max_id
         bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
         soil = mesh.extract_cells_by_type(

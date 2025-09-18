@@ -1328,7 +1328,7 @@ def gen_bhe_mesh(
     propagation: float = 1.1,
     order: int = 1,
     out_name: Path = Path("bhe_mesh.vtu"),
-) -> list[Path]:
+) -> ot.Meshes:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
     submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
@@ -1381,18 +1381,4 @@ def gen_bhe_mesh(
         out_name=msh_file,
     )
 
-    meshes = ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
-    mesh_names = meshes.save(tmp_dir)
-
-    groundwater = (
-        [groundwater] if isinstance(groundwater, Groundwater) else groundwater
-    )
-
-    for i, _ in enumerate(groundwater):
-        mesh_names.append(
-            tmp_dir / f"physical_group_Groundwater_upstream_{i}.vtu"
-        )
-        mesh_names.append(
-            tmp_dir / f"physical_group_Groundwater_downstream_{i}.vtu"
-        )
-    return mesh_names
+    return ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
