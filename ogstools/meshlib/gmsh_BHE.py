@@ -1327,12 +1327,12 @@ def gen_bhe_mesh(
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
     order: int = 1,
-    out_name: Path = Path("bhe_mesh.vtu"),
+    meshname: str = "bhe_mesh",
 ) -> ot.Meshes:
     """
     Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
-    submeshes at the top, at the bottom and the groundwater in- and outflow, which is exported
-    in the OGS readable .vtu format. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
+    submeshes at the top, at the bottom and the groundwater in- and outflow, which is returned as :py:mod:`ogstools.meshlib.Meshes`
+    Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
@@ -1355,13 +1355,12 @@ def gen_bhe_mesh(
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
-    :param out_name: name of the exported mesh, must end with .vtu
-    :returns: list of filenames of the created vtu mesh files
+    :param meshname: The name of the domain mesh and used as a prefix for subdomain meshes.
+    :returns: A ot.Meshes object
     """
 
     tmp_dir = Path(mkdtemp())
-    mesh_name = out_name.stem
-    msh_file = tmp_dir / f"{mesh_name}.msh"
+    msh_file = tmp_dir / f"{meshname}.msh"
 
     # using gen_bhe_mesh_gmsh as basis function
     gen_bhe_mesh_gmsh(
@@ -1381,4 +1380,6 @@ def gen_bhe_mesh(
         out_name=msh_file,
     )
 
-    return ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
+    return ot.Meshes.from_gmsh(
+        msh_file, dim=[1, 3], log=False, meshname=meshname
+    )

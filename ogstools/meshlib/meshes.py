@@ -75,6 +75,7 @@ class Meshes:
         dim: int | list[int] = 0,
         reindex: bool = True,
         log: bool = True,
+        meshname: str = "domain",
     ) -> "Meshes":
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
@@ -88,10 +89,11 @@ class Meshes:
         :param reindex: Physical groups / regions / Material IDs to be
                         renumbered consecutively beginning with zero.
         :param log:     If False, silence log messages
+        :param meshname:    The name of the domain mesh and used as a prefix for subdomain meshes.
 
         :returns: A dictionary of names and corresponding meshes
         """
-        meshes_dict = meshes_from_gmsh(filename, dim, reindex, log)
+        meshes_dict = meshes_from_gmsh(filename, dim, reindex, log, meshname)
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = True
         return meshes_obj
@@ -101,7 +103,7 @@ class Meshes:
         cls,
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
-        domain_name: str | None = None,
+        meshname: str = "domain",
     ) -> "Meshes":
         """Extract 1D boundaries of a 2D mesh.
 
@@ -111,9 +113,10 @@ class Meshes:
                                 it represents the angle (in degrees) between
                                 neighbouring elements which - if exceeded -
                                 determines the corners of the boundary mesh.
+        :param meshname:       The name of the domain mesh and used as a prefix for subdomain meshes.
         :returns:               A Meshes object.
         """
-        domain_name = domain_name or "domain"
+
         dim = get_dim(mesh)
         assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
         boundary = mesh.extract_feature_edges()
@@ -122,9 +125,9 @@ class Meshes:
         else:
             subdomains = split_by_threshold_angle(boundary, threshold_angle)
 
-        sub_meshes_dict = named_boundaries(subdomains)
+        sub_meshes_dict = named_boundaries(subdomains, meshname)
 
-        meshes_dict = {domain_name: mesh} | sub_meshes_dict
+        meshes_dict = {meshname: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = False
         return meshes_obj

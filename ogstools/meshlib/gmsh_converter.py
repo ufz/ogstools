@@ -24,6 +24,7 @@ def meshes_from_gmsh(
     dim: int | list[int] = 0,
     reindex: bool = True,
     log: bool = True,
+    meshname: str = "domain",
 ) -> dict[str, Mesh]:
     """
     .. deprecated:: 0.7.1
@@ -40,6 +41,7 @@ def meshes_from_gmsh(
     :param reindex: Physical groups / regions / Material IDs to be
                     renumbered consecutively beginning with zero.
     :param log:     If False, silence log messages
+    :param meshame: The name of the domain mesh and used as a prefix for subdomain meshes.
 
     :returns: A dictionary of names and corresponding meshes
     """
@@ -92,7 +94,7 @@ def meshes_from_gmsh(
         domain_mesh.reindex_material_ids()
         logger.info("Renumbered to: %s", np.unique(domain_mesh["MaterialIDs"]))
 
-    meshes["domain"] = domain_mesh
+    meshes[meshname] = domain_mesh
     logger.info("%s: %s", "domain", domain_mesh)
 
     for name, (group_index, group_dim) in mesh.field_data.items():
@@ -142,7 +144,7 @@ def meshes_from_gmsh(
         subdomain.field_data.clear()
         identify_subdomains(domain_mesh, [subdomain])
 
-        meshes[f"physical_group_{name}"] = Mesh(subdomain)
+        meshes[f"{meshname}_physical_group_{name}"] = Mesh(subdomain)
         logger.info("%s: %s", f"physical_group_{name}", subdomain)
 
     logger.info("Conversion complete.")

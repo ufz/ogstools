@@ -54,7 +54,7 @@ bhe_meshes = gen_bhe_mesh(
     ],
     refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="prism",
-    out_name=vtu_file,
+    meshname="bhe_prism",
 )
 
 # %% [markdown]
@@ -108,7 +108,7 @@ bhe_meshes = gen_bhe_mesh(
     ],
     refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="structured",
-    out_name=vtu_file,
+    meshname="bhe_prism_2",
 )
 
 # %% [markdown]
@@ -166,7 +166,7 @@ bhe_meshes = gen_bhe_mesh(
     propagation=1.2,  # default value 1.1
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
-    out_name=vtu_file,
+    meshname="bhe_strucutred",
 )
 
 # %% [markdown]
