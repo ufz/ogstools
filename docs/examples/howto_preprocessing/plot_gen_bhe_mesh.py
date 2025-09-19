@@ -9,9 +9,6 @@ Creating a BHE mesh (Borehole Heat Exchanger)
 # a Borehole Heat Exchanger (BHE) mesh.
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
-
 import pyvista as pv
 from shapely import Polygon
 
@@ -36,8 +33,7 @@ from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 # Generate a customizable prism BHE mesh:
 
 # %%
-tmp_dir = Path(mkdtemp())
-vtu_file = tmp_dir / "bhe_prism.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
@@ -68,7 +64,6 @@ def load_and_plot(bhe_meshes: ot.Meshes):
     plotter = ot.plot.contourf(
         bhe_meshes.domain().clip("x", bhe_line.center, crinkle=True),
         ot.variables.material_id,
-        interactive=True,
     )
     plotter.add_mesh(bhe_meshes.domain(), style="wireframe", color="grey")
     plotter.add_mesh(bhe_line, color="r", line_width=3)
@@ -76,7 +71,9 @@ def load_and_plot(bhe_meshes: ot.Meshes):
     for submesh, offset in zip(
         bhe_meshes.subdomains().values(), offsets, strict=True
     ):
-        plotter.add_mesh(submesh.translate(offset), show_edges=True)
+        plotter.add_mesh(
+            submesh.translate(offset), show_edges=True, color="lightgrey"
+        )
     plotter.show()
 
 
@@ -90,8 +87,7 @@ load_and_plot(bhe_meshes)
 # Generate a customizable structured BHE mesh:
 
 # %%
-tmp_dir = Path(mkdtemp())
-vtu_file = tmp_dir / "bhe_structured.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
@@ -130,7 +126,7 @@ load_and_plot(bhe_meshes)
 
 
 # %%
-vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     # add additional points for better subsidivision of the surface by structured algorithm
     # compare with previous example, to see the difference
@@ -166,7 +162,7 @@ bhe_meshes = gen_bhe_mesh(
     propagation=1.2,  # default value 1.1
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
-    meshname="bhe_strucutred",
+    meshname="bhe_structured",
 )
 
 # %% [markdown]
