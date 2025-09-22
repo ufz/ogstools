@@ -125,7 +125,7 @@ class Meshes:
         else:
             subdomains = split_by_threshold_angle(boundary, threshold_angle)
 
-        sub_meshes_dict = named_boundaries(subdomains, meshname)
+        sub_meshes_dict = named_boundaries(subdomains)
 
         meshes_dict = {meshname: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)

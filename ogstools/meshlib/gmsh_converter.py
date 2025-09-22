@@ -144,8 +144,8 @@ def meshes_from_gmsh(
         subdomain.field_data.clear()
         identify_subdomains(domain_mesh, [subdomain])
 
-        meshes[f"{meshname}_physical_group_{name}"] = Mesh(subdomain)
-        logger.info("%s: %s", f"physical_group_{name}", subdomain)
+        meshes[f"{name}"] = Mesh(subdomain)
+        logger.info("%s: %s", f"{name}", subdomain)
 
     logger.info("Conversion complete.")
 

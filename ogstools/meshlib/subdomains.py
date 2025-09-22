@@ -20,29 +20,19 @@ def get_dim(mesh: pv.UnstructuredGrid) -> int:
 
 def named_boundaries(
     subdomains: list[pv.UnstructuredGrid],
-    meshname: str = "domain",
 ) -> dict[str, pv.UnstructuredGrid]:
     """Name 1D meshes according to their position (top, bottom, left, right)
 
     :param subdomains: List of meshes to name
-    :param meshname:   The name of the domain mesh and used as a prefix for subdomain meshes.
     :returns:          A dict mapping the meshes to top, bottom, left and right.
     """
     horizontal_id, vertical_id = _axis_ids_2D(pv.merge(subdomains))
     centers = np.array([mesh.center for mesh in subdomains])
     return {
-        f"{meshname}_physical_group_top": subdomains[
-            np.argmax(centers[:, vertical_id])
-        ],
-        f"{meshname}_physical_group_bottom": subdomains[
-            np.argmin(centers[:, vertical_id])
-        ],
-        f"{meshname}_physical_group_left": subdomains[
-            np.argmin(centers[:, horizontal_id])
-        ],
-        f"{meshname}_physical_group_right": subdomains[
-            np.argmax(centers[:, horizontal_id])
-        ],
+        "top": subdomains[np.argmax(centers[:, vertical_id])],
+        "bottom": subdomains[np.argmin(centers[:, vertical_id])],
+        "left": subdomains[np.argmin(centers[:, horizontal_id])],
+        "right": subdomains[np.argmax(centers[:, horizontal_id])],
     }
 
 
