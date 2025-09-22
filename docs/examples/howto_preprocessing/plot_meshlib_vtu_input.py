@@ -42,6 +42,8 @@ tetgen_present = (
 )  # an optional requirement (needs to be installed on system or via pip)
 if tetgen_present:
     tm = ml.to_region_tetraeder(layer_set1, resolution=200).mesh
+else:
+    tm = None
 
 # %% [markdown]
 # Simplified mesh
