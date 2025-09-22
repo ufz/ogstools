@@ -281,7 +281,7 @@ def run_cli(cmd: str) -> int:
         ("cube_mixed.py", 1, None),
         ("quarter_rectangle_with_hole.py", 11, 2.2),
         ("quarter_rectangle_with_hole.py", 11, 4.1),
-        ("line.py", 4, None),
+        ("line.py", 3, None),
     ],
 )
 def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
