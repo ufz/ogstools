@@ -8,7 +8,7 @@
 from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
-from tempfile import mkdtemp
+from tempfile import TemporaryDirectory
 from typing import Any, Literal
 
 import gmsh
@@ -58,9 +58,9 @@ class BHE:
     """borehole radius in m"""
 
 
-def gen_bhe_mesh_gmsh(
+def gen_bhe_mesh(
     model_area: shapely.Polygon,
-    layer: float | list[float],
+    layer: float | list[float],  # e.g. 100
     groundwater: Groundwater | list[Groundwater],
     BHE_Array: BHE | list[BHE],
     refinement_area: shapely.Polygon,
@@ -72,29 +72,36 @@ def gen_bhe_mesh_gmsh(
     outer_mesh_size: float = 10.0,
     propagation: float = 1.1,
     order: int = 1,
-    out_name: Path = Path("bhe_mesh.msh"),
-) -> None:
+    meshname: str = "bhe_mesh",
+) -> ot.Meshes:
     """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally submeshes at the top, at the bottom and the groundwater inflow, which is exported in the Gmsh .msh format. For the usage in OGS, a mesh conversion with meshes_from_gmsh with dim-Tags [1,3] is needed. The mesh is defined by multiple input parameters. Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
+    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
+    submeshes at the top, at the bottom and the groundwater in- and outflow, which is returned as :py:mod:`ogstools.meshlib.Meshes`
+    Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
 
     :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
     :param layer: List of the soil layer thickness in m
     :param groundwater: List of groundwater layers, where every is specified by a tuple
         of three entries: [depth of groundwater begin (negative), number of the groundwater
         isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
-    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats: [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative), BHE end depth (negative), borehole radius in m]
-    :param target_z_size_coarse: maximum edge length of the elements in m in z-direction, if no refinemnt needed
-    :param target_z_size_fine: maximum edge length of the elements in the refinement zone in m in z-direction
-    :param n_refinement_layers: number of refinement layers which are evenly set above and beneath the refinemnt depths (see general description above)
+    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
+        [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
+        BHE end depth (negative), borehole radius in m]
+    :param target_z_size_coarse: maximum edge length of the elements in m in z-direction,
+        if no refinemnt needed
+    :param target_z_size_fine: maximum edge length of the elements in the refinement zone
+        in m in z-direction
+    :param n_refinement_layers: number of refinement layers which are evenly set above and
+        beneath the refinemnt depths (see general description above)
     :param meshing_type: 'structured' and 'prism' are supported
     :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
     :param inner_mesh_size: mesh size inside the refinement area in m
     :param outer_mesh_size: mesh size outside of the refinement area in m
-    :param propagation: growth of the outer_mesh_size, only supported by meshing_type 'structured'
+    :param propagation: growth of the outer_mesh_size, only supported by meshing_type
+        'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
-    :param out_name: name of the exported mesh, must end with .msh
-
-    :returns: a gmsh .msh file
+    :param meshname: The name of the domain mesh and used as a prefix for subdomain meshes.
+    :returns: A ot.Meshes object
 
     # .. image:: ../../examples/howto_preprocessing/gen_bhe_mesh.png
     """
@@ -1278,108 +1285,43 @@ def gen_bhe_mesh_gmsh(
 
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
-    gmsh.initialize()
-    gmsh.option.setNumber("General.Verbosity", 2)
-    model = gmsh.model
-    geo = model.geo
-    mesh = model.mesh
+    with TemporaryDirectory() as tmpdir:
+        msh_file = Path(tmpdir) / f"{meshname}.msh"
+        gmsh.initialize()
+        gmsh.option.setNumber("General.Verbosity", 2)
+        model = gmsh.model
+        geo = model.geo
+        mesh = model.mesh
 
-    model.add(Path(out_name).stem)
+        model.add(msh_file.stem)
 
-    if meshing_type == "structured":
-        _mesh_structured()
-    elif meshing_type == "prism":
-        _mesh_prism()
+        if meshing_type == "structured":
+            _mesh_structured()
+        elif meshing_type == "prism":
+            _mesh_prism()
 
-    mesh.generate(3)
-    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-    mesh.setOrder(order)
-    mesh.removeDuplicateNodes()
+        mesh.generate(3)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+        mesh.setOrder(order)
+        mesh.removeDuplicateNodes()
 
-    # delete zero-volume elements
-    # 1 for line elements --> BHE's are the reason
-    elem_tags, node_tags = mesh.getElementsByType(1)
-    elem_qualities = mesh.getElementQualities(
-        elementTags=elem_tags, qualityName="volume"
-    )
-    zero_volume_elements_id = np.argwhere(elem_qualities == 0)
+        # delete zero-volume elements
+        # 1 for line elements --> BHE's are the reason
+        elem_tags, node_tags = mesh.getElementsByType(1)
+        elem_qualities = mesh.getElementQualities(
+            elementTags=elem_tags, qualityName="volume"
+        )
+        zero_volume_elements_id = np.argwhere(elem_qualities == 0)
 
-    # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
-    mesh.setVisibility(elem_tags[zero_volume_elements_id].ravel().tolist(), 0)
-    gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
-    gmsh.plugin.run("Invisible")
+        # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
+        mesh.setVisibility(
+            elem_tags[zero_volume_elements_id].ravel().tolist(), 0
+        )
+        gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
+        gmsh.plugin.run("Invisible")
 
-    gmsh.write(str(out_name))
-    gmsh.finalize()
-
-
-def gen_bhe_mesh(
-    model_area: shapely.Polygon,
-    layer: float | list[float],  # e.g. 100
-    groundwater: Groundwater | list[Groundwater],
-    BHE_Array: BHE | list[BHE],
-    refinement_area: shapely.Polygon,
-    target_z_size_coarse: float = 7.5,
-    target_z_size_fine: float = 1.5,
-    n_refinement_layers: int = 2,
-    meshing_type: Literal["prism", "structured"] = "prism",
-    inner_mesh_size: float = 5.0,
-    outer_mesh_size: float = 10.0,
-    propagation: float = 1.1,
-    order: int = 1,
-    meshname: str = "bhe_mesh",
-) -> ot.Meshes:
-    """
-    Create a generic BHE mesh for the Heat_Transport_BHE-Process with additionally
-    submeshes at the top, at the bottom and the groundwater in- and outflow, which is returned as :py:mod:`ogstools.meshlib.Meshes`
-    Refinement layers are placed at the BHE-begin, the BHE-end and the groundwater start/end. See detailed description of the parameters below:
-
-    :param model_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the model. No holes are allowed.
-    :param layer: List of the soil layer thickness in m
-    :param groundwater: List of groundwater layers, where every is specified by a tuple
-        of three entries: [depth of groundwater begin (negative), number of the groundwater
-        isolation layer (count starts with 0), groundwater upstream and downstream as tuple of 2 thresholds angles starting with 0 at +x (first value start, second end),  empty list [] for no groundwater flow
-    :param BHE_Array: List of BHEs, where every BHE is specified by a tuple of five floats:
-        [x-coordinate BHE, y-coordinate BHE, BHE begin depth (zero or negative),
-        BHE end depth (negative), borehole radius in m]
-    :param target_z_size_coarse: maximum edge length of the elements in m in z-direction,
-        if no refinemnt needed
-    :param target_z_size_fine: maximum edge length of the elements in the refinement zone
-        in m in z-direction
-    :param n_refinement_layers: number of refinement layers which are evenly set above and
-        beneath the refinemnt depths (see general description above)
-    :param meshing_type: 'structured' and 'prism' are supported
-    :param refinement_area: A shapely.Polygon (see https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html) of the refinement_area. No holes are allowed.
-    :param inner_mesh_size: mesh size inside the refinement area in m
-    :param outer_mesh_size: mesh size outside of the refinement area in m
-    :param propagation: growth of the outer_mesh_size, only supported by meshing_type
-        'structured'
-    :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
-    :param meshname: The name of the domain mesh and used as a prefix for subdomain meshes.
-    :returns: A ot.Meshes object
-    """
-
-    tmp_dir = Path(mkdtemp())
-    msh_file = tmp_dir / f"{meshname}.msh"
-
-    # using gen_bhe_mesh_gmsh as basis function
-    gen_bhe_mesh_gmsh(
-        model_area=model_area,
-        layer=layer,
-        groundwater=groundwater,
-        BHE_Array=BHE_Array,
-        target_z_size_coarse=target_z_size_coarse,
-        target_z_size_fine=target_z_size_fine,
-        n_refinement_layers=n_refinement_layers,
-        meshing_type=meshing_type,
-        refinement_area=refinement_area,
-        inner_mesh_size=inner_mesh_size,
-        outer_mesh_size=outer_mesh_size,
-        propagation=propagation,
-        order=order,
-        out_name=msh_file,
-    )
-
-    return ot.Meshes.from_gmsh(
-        msh_file, dim=[1, 3], log=False, meshname=meshname
-    )
+        gmsh.write(str(msh_file))
+        gmsh.finalize()
+        return ot.Meshes.from_gmsh(
+            msh_file, dim=[1, 3], log=False, meshname=meshname
+        )
