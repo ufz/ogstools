@@ -70,7 +70,7 @@ for name in sim3.mesh_names():
     print(name)
 
 # Get any of the available meshes
-left_boundary: OGSMesh = sim3.mesh("physical_group_left")
+left_boundary: OGSMesh = sim3.mesh("left")
 
 print("Points:", left_boundary.points()[:10])
 print("Cells:", left_boundary.cells()[:10])
