@@ -2,12 +2,12 @@
 <OpenGeoSysProject>
     <meshes>
         <mesh>domain.vtu</mesh>
-        <mesh>physical_group_back.vtu</mesh>
-        <mesh>physical_group_bottom.vtu</mesh>
-        <mesh>physical_group_front.vtu</mesh>
-        <mesh>physical_group_top.vtu</mesh>
-        <mesh>physical_group_right.vtu</mesh>
-        <mesh>physical_group_left.vtu</mesh>
+        <mesh>back.vtu</mesh>
+        <mesh>bottom.vtu</mesh>
+        <mesh>front.vtu</mesh>
+        <mesh>top.vtu</mesh>
+        <mesh>right.vtu</mesh>
+        <mesh>left.vtu</mesh>
     </meshes>
     <processes>
         <process>
@@ -255,32 +255,32 @@
             <initial_condition>T_ref</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_top</mesh>
+                    <mesh>top</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_left</mesh>
+                    <mesh>left</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_right</mesh>
+                    <mesh>right</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_front</mesh>
+                    <mesh>front</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_back</mesh>
+                    <mesh>back</mesh>
                     <type>Dirichlet</type>
                     <parameter>temperature_bc</parameter>
                 </boundary_condition>
@@ -299,19 +299,19 @@
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_left</mesh>
+                    <mesh>left</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <component>2</component>
                     <parameter>0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_front</mesh>
+                    <mesh>front</mesh>
                     <type>Dirichlet</type>
                     <component>1</component>
                     <parameter>0</parameter>

@@ -2,10 +2,10 @@
 <OpenGeoSysProject>
 	<meshes>
     <mesh>domain.vtu</mesh>
-	<mesh>physical_group_top.vtu</mesh>
-	<mesh>physical_group_left.vtu</mesh>
-	<mesh>physical_group_bottom.vtu</mesh>
-	<mesh>physical_group_right.vtu</mesh>
+	<mesh>top.vtu</mesh>
+	<mesh>left.vtu</mesh>
+	<mesh>bottom.vtu</mesh>
+	<mesh>right.vtu</mesh>
 	</meshes>
     <processes>
         <process>
@@ -117,19 +117,19 @@
             <initial_condition>initial_displacement</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <component>1</component>
                     <parameter>zero</parameter>
                 </boundary_condition>
 				<boundary_condition>
-                    <mesh>physical_group_left</mesh>
+                    <mesh>left</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>zero</parameter>
                 </boundary_condition>
 				<boundary_condition>
-                    <mesh>physical_group_right</mesh>
+                    <mesh>right</mesh>
                     <type>Neumann</type>
                     <component>1</component>
                     <parameter>shear_stress</parameter>

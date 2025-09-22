@@ -61,21 +61,21 @@ def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
 
     meshes = meshes_from_gmsh(msh_file)
     ncells_per_group = {
-        "physical_group_bottom": [19, 6, 13],
-        "physical_group_left": [43, 27, 16],
+        "bottom": [19, 6, 13],
+        "left": [43, 27, 16],
     }
     for group, n_cells in ncells_per_group.items():
         for index, suffix in enumerate(["", "_1", "_2"]):
             if group + suffix in meshes:
                 assert n_cells[index] == meshes[group + suffix].n_cells
-    assert meshes["physical_group_bottom_1"].bounds[0] == 0
-    assert meshes["physical_group_bottom_1"].bounds[1] == 3
-    assert meshes["physical_group_bottom_2"].bounds[0] == 3
-    assert meshes["physical_group_bottom_2"].bounds[1] == 25
-    assert meshes["physical_group_left_1"].bounds[2] == 0
-    assert meshes["physical_group_left_1"].bounds[3] == 20
-    assert meshes["physical_group_left_2"].bounds[2] == 20
-    assert meshes["physical_group_left_2"].bounds[3] == 50
+    assert meshes["bottom_1"].bounds[0] == 0
+    assert meshes["bottom_1"].bounds[1] == 3
+    assert meshes["bottom_2"].bounds[0] == 3
+    assert meshes["bottom_2"].bounds[1] == 25
+    assert meshes["left_1"].bounds[2] == 0
+    assert meshes["left_1"].bounds[3] == 20
+    assert meshes["left_2"].bounds[2] == 20
+    assert meshes["left_2"].bounds[3] == 50
 
 
 def test_multiple_groups_per_element(tmp_path: Path):
@@ -116,12 +116,12 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert len(meshes) == 7
 
     def num_cells(boundary_name: str) -> int:
-        return meshes[f"physical_group_{boundary_name}"].number_of_cells
+        return meshes[f"{boundary_name}"].number_of_cells
 
     names = ["left", "right", "top", "bottom"]
     assert num_cells("boundaries") == sum([num_cells(name) for name in names])
-    bot = meshes["physical_group_bottom"]
-    bot_center = meshes["physical_group_bottom_center"]
+    bot = meshes["bottom"]
+    bot_center = meshes["bottom_center"]
     assert bot.number_of_cells == 25
     assert bot_center.number_of_cells == 19
     assert np.all(np.isin(bot_center["bulk_node_ids"], bot["bulk_node_ids"]))
@@ -314,7 +314,7 @@ def test_subdomains_2D():
         "Top": (120, 1, bounds[3]),
     }
     for name, (ref_num_cells, coord, coord_value) in boundaries.items():
-        mesh = meshes[f"physical_group_{name}"]
+        mesh = meshes[f"{name}"]
         assert ref_num_cells == mesh.number_of_cells
         assert np.all(mesh.points[:, coord] == coord_value)
 
@@ -324,7 +324,7 @@ def test_subdomains_2D():
         "SedimentLayer3": (230, [0.0, -1873.982884659469, 0.0]),
     }
     for name, (ref_num_cells, ref_center) in subdomains.items():
-        mesh = meshes[f"physical_group_{name}"]
+        mesh = meshes[f"{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)
 
@@ -342,6 +342,6 @@ def test_subdomains_3D():
         "TopSurface": (1176, [0.5, 0.5, -1.3476350030128259e-05]),
     }
     for name, (ref_num_cells, ref_center) in boundaries.items():
-        mesh = meshes[f"physical_group_{name}"]
+        mesh = meshes[f"{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)

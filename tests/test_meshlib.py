@@ -808,14 +808,10 @@ class TestUtils:
             [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
         )
         assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
-        assert np.all(
-            boundaries["physical_group_left"].points[:, 0] == mesh.bounds[0]
-        )
-        assert np.all(
-            boundaries["physical_group_right"].points[:, 0] == mesh.bounds[1]
-        )
-        assert boundaries["physical_group_bottom"].bounds[2] == mesh.bounds[2]
-        assert boundaries["physical_group_top"].bounds[3] == mesh.bounds[3]
+        assert np.all(boundaries["left"].points[:, 0] == mesh.bounds[0])
+        assert np.all(boundaries["right"].points[:, 0] == mesh.bounds[1])
+        assert boundaries["bottom"].bounds[2] == mesh.bounds[2]
+        assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
     @pytest.mark.system()
     def test_meshes_from_mesh_run(self, tmp_path):
