@@ -113,7 +113,7 @@ class Meshes:
                                 it represents the angle (in degrees) between
                                 neighbouring elements which - if exceeded -
                                 determines the corners of the boundary mesh.
-        :param meshname:       The name of the domain mesh and used as a prefix for subdomain meshes.
+        :param meshname:       The name of the domain mesh.
         :returns:               A Meshes object.
         """
 

@@ -100,7 +100,7 @@ def gen_bhe_mesh(
     :param propagation: growth of the outer_mesh_size, only supported by meshing_type
         'structured'
     :param order: Define the order of the mesh: 1 for linear finite elements / 2 for quadratic finite elements
-    :param meshname: The name of the domain mesh and used as a prefix for subdomain meshes.
+    :param meshname: The name of the domain mesh.
     :returns: A ot.Meshes object
 
     # .. image:: ../../examples/howto_preprocessing/gen_bhe_mesh.png

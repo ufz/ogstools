@@ -41,7 +41,7 @@ def meshes_from_gmsh(
     :param reindex: Physical groups / regions / Material IDs to be
                     renumbered consecutively beginning with zero.
     :param log:     If False, silence log messages
-    :param meshame: The name of the domain mesh and used as a prefix for subdomain meshes.
+    :param meshame: The name of the domain mesh.
 
     :returns: A dictionary of names and corresponding meshes
     """
