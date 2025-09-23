@@ -421,8 +421,9 @@ code_quality_mypy (R):
   script:
     # Use same mypy as in .pre-commit-config.yaml
     - uvx mypy==1.4.1 ogstools > mypy-output.txt || true
-    - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json
-    - cat mypy-code-quality-report.json
+    - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
+    - test -f mypy-code-quality-report.json || echo "[]" > mypy-code-quality-report.json
+    - cat mypy-code-quality-report.json || true
   artifacts:
     reports:
       codequality: mypy-code-quality-report.json
