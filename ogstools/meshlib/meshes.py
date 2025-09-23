@@ -103,7 +103,7 @@ class Meshes:
         cls,
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
-        meshname: str = "domain",
+        domain_name: str = "domain",
     ) -> "Meshes":
         """Extract 1D boundaries of a 2D mesh.
 
@@ -113,7 +113,7 @@ class Meshes:
                                 it represents the angle (in degrees) between
                                 neighbouring elements which - if exceeded -
                                 determines the corners of the boundary mesh.
-        :param meshname:       The name of the domain mesh.
+        :param domain_name:     The name of the domain mesh.
         :returns:               A Meshes object.
         """
 
@@ -127,7 +127,7 @@ class Meshes:
 
         sub_meshes_dict = named_boundaries(subdomains)
 
-        meshes_dict = {meshname: mesh} | sub_meshes_dict
+        meshes_dict = {domain_name: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = False
         return meshes_obj
