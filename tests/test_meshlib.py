@@ -46,28 +46,27 @@ class TestUtils:
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
     @pytest.mark.system()
-    def test_read_quadratic_xdmf(self, tmp_path):
+    @pytest.mark.parametrize("quads", [True, False])
+    def test_read_quadratic_xdmf(self, tmp_path, quads):
         "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
         mesh_path = tmp_path / "mesh.msh"
-        for quads in [True, False]:
-            ot.meshlib.rect(
-                1, 1, structured_grid=quads, order=2, out_name=mesh_path
-            )
 
-            meshes = ot.Meshes.from_gmsh(mesh_path)
-            meshes.save(tmp_path)
+        ot.meshlib.rect(
+            1, 1, structured_grid=quads, order=2, out_name=mesh_path
+        )
 
-            model = ot.Project(
-                output_file=tmp_path / "default.prj",
-                input_file=examples.prj_mechanics,
-            )
-            model.replace_text("XDMF", xpath="./time_loop/output/type")
-            model.replace_text(4, xpath=".//integration_order")
-            model.write_input()
-            model.run_model(
-                write_logs=False, args=f"-m {tmp_path} -o {tmp_path}"
-            )
-            ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
+        meshes = ot.Meshes.from_gmsh(mesh_path)
+        meshes.save(tmp_path)
+
+        model = ot.Project(
+            output_file=tmp_path / "default.prj",
+            input_file=examples.prj_mechanics,
+        )
+        model.replace_text("XDMF", xpath="./time_loop/output/type")
+        model.replace_text(4, xpath=".//integration_order")
+        model.write_input()
+        model.run_model(write_logs=False, args=f"-m {tmp_path} -o {tmp_path}")
+        ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",
