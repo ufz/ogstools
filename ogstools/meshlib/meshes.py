@@ -206,7 +206,9 @@ class Meshes:
         items = list(self._meshes.items())
         return dict(items[1:])  # by convention: first mesh is domain
 
-    def save(self, meshes_path: Path | None = None) -> list[Path]:
+    def save(
+        self, meshes_path: Path | None = None, overwrite: bool = False
+    ) -> list[Path]:
         """
         Save all meshes.
 
@@ -215,13 +217,26 @@ class Meshes:
         :param meshes_path: Optional path to the directory where meshes
                             should be saved. If None, a temporary directory
                             will be used.
+
+        :param overwrite: If True, existing mesh files will be overwritten.
+                          If False, an error is raised if any file already exists.
+
         :returns: A list of Paths pointing to the saved mesh files
         """
         meshes_path = meshes_path or self._tmp_dir
+        meshes_path.mkdir(parents=True, exist_ok=True)
 
         if not self.has_identified_subdomains:
             identify_subdomains(self.domain(), list(self.subdomains().values()))
             self.has_identified_subdomains = True
+
+        output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
+        existing_files = [f for f in output_files if f.exists()]
+        if existing_files and not overwrite:
+            existing_list = "\n".join(str(f) for f in existing_files)
+            msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
+
+            raise FileExistsError(msg)
 
         for name, mesh in self._meshes.items():
             mesh.filepath = meshes_path / f"{name}.vtu"
