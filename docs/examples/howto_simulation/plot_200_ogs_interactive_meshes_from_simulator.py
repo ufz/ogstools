@@ -79,7 +79,7 @@ previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
 # Later, we will dynamically modify the left boundary mesh
-left_mesh = ot.Mesh.from_simulator(sim2, "physical_group_left", ["pressure"])
+left_mesh = ot.Mesh.from_simulator(sim2, "left", ["pressure"])
 
 steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)  # constant
 delta = steady_state_threshold + 1e-10  # to be computed for each time step

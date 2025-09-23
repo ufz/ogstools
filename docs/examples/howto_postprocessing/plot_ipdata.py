@@ -31,21 +31,24 @@ sigma_ip = ot.variables.stress.replace(
     data_name="sigma_ip", output_name="IP_stress"
 )
 
-tmp_dir = Path(mkdtemp())
-msh_path = tmp_dir / "mesh.msh"
-
 
 def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
+
+    tmp_dir = Path(mkdtemp())
+    case_path = tmp_dir / f"case_{elem_order}_{quads}_{intpt_order}"
+    case_path.mkdir(parents=True, exist_ok=True)
+    gmsh_file = case_path / "mesh.msh"
+
     rect(
         lengths=1,
         n_edge_cells=6,
         structured_grid=quads,
         order=elem_order,
-        out_name=msh_path,
+        out_name=gmsh_file,
     )
 
-    meshes = ot.Meshes.from_gmsh(msh_path, log=False)
-    meshes.save(tmp_dir)
+    meshes = ot.Meshes.from_gmsh(gmsh_file, log=False)
+    meshes.save(case_path)
 
     model = ot.Project(
         output_file=tmp_dir / "default.prj",
@@ -53,8 +56,8 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     )
     model.replace_text(intpt_order, xpath=".//integration_order")
     model.write_input()
-    model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
-    mesh = ot.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
+    model.run_model(write_logs=True, args=f"-m {case_path} -o {case_path}")
+    mesh = ot.MeshSeries(case_path / "mesh.pvd").mesh(-1)
     int_pts = mesh.to_ip_point_cloud()
     ip_mesh = mesh.to_ip_mesh()
 

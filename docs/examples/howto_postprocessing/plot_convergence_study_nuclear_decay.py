@@ -40,7 +40,7 @@ from scipy.constants import Julian_year as sec_per_yr
 import ogstools as ot
 from ogstools import examples, physics, studies, workflow
 
-temp_dir = Path(mkdtemp(prefix="nuclear_decay"))
+temp_path = Path(mkdtemp(prefix="nuclear_decay"))
 
 # %% [markdown]
 # Let's run the different simulations with increasingly fine spatial and
@@ -53,10 +53,9 @@ n_refinements = 4
 time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
 prefix = "stepsize_{0}"
 sim_results = []
-msh_path = temp_dir / "rect.msh"
+msh_path = temp_path / "rect.msh"
 script_path = Path(examples.pybc_nuclear_decay).parent
 prj_path = examples.prj_nuclear_decay
-ogs_args = f"-m {temp_dir} -o {temp_dir} -s {script_path}"
 edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %% [markdown]
@@ -66,14 +65,17 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
     ot.meshlib.rect(lengths=100.0, n_edge_cells=(n_cells, 1), out_name=msh_path)
     meshes = ot.Meshes.from_gmsh(msh_path, log=False)
-    meshes.save(temp_dir)
+    mesh_path = temp_path / f"dt_{dt}_n_cells_{n_cells}"
+    mesh_path.mkdir(parents=True, exist_ok=True)
+    meshes.save(mesh_path)
 
-    prj = ot.Project(output_file=temp_dir / "default.prj", input_file=prj_path)
+    prj = ot.Project(output_file=temp_path / "default.prj", input_file=prj_path)
     prj.replace_text(str(dt * sec_per_yr), ".//delta_t")
     prj.replace_text(prefix.format(dt), ".//prefix")
     prj.write_input()
+    ogs_args = f"-m {mesh_path} -o {temp_path} -s {script_path}"
     prj.run_model(write_logs=False, args=ogs_args)
-    sim_results += [temp_dir / (prefix.format(dt) + "_domain.xdmf")]
+    sim_results += [temp_path / (prefix.format(dt) + "_domain.xdmf")]
 
 # %% plotting:
 # Let's extract the temperature evolution and the applied heat via vtuIO and
@@ -121,7 +123,7 @@ fig.show()
 # as expected.
 
 # %%
-report_name = temp_dir / "report.ipynb"
+report_name = temp_path / "report.ipynb"
 studies.convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=sim_results,

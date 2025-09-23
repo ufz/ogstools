@@ -40,8 +40,8 @@ import ogstools as ot
 from ogstools import examples, workflow
 from ogstools.studies import convergence
 
-temp_dir = Path(mkdtemp(suffix="steady_state_diffusion"))
-report_name = str(temp_dir / "report.ipynb")
+tmp_path = Path(mkdtemp(suffix="steady_state_diffusion"))
+report_name = str(tmp_path / "report.ipynb")
 result_paths = []
 
 # %% [markdown]
@@ -54,30 +54,33 @@ result_paths = []
 refinements = 6
 edge_cells = [2**i for i in range(refinements)]
 for n_edge_cells in edge_cells:
-    msh_path = temp_dir / "square.msh"
+    case_dir = tmp_path / f"cells_{n_edge_cells}"
+    case_dir.mkdir(parents=True, exist_ok=True)
+
+    msh_path = case_dir / "square.msh"
     ot.meshlib.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
 
     meshes = ot.Meshes.from_gmsh(msh_path, log=False)
-    meshes.save(temp_dir)
+    meshes.save(case_dir)
 
     model = ot.Project(
-        output_file=temp_dir / "default.prj",
+        output_file=tmp_path / "default.prj",
         input_file=examples.prj_steady_state_diffusion,
     )
     prefix = "steady_state_diffusion_" + str(n_edge_cells)
     model.replace_text(prefix, ".//prefix")
     model.write_input()
-    ogs_args = f"-m {temp_dir} -o {temp_dir}"
+    ogs_args = f"-m {case_dir} -o {tmp_path}"
     model.run_model(write_logs=False, args=ogs_args)
-    result_paths += [str(temp_dir / (prefix + ".pvd"))]
+    result_paths += [str(tmp_path / (prefix + ".pvd"))]
 
 # %% [markdown]
 # Here we calculate the analytical solution on one of the meshes:
 
 # %%
-analytical_solution_path = temp_dir / "analytical_solution.vtu"
+analytical_solution_path = tmp_path / "analytical_solution.vtu"
 solution = examples.anasol.diffusion_head_analytical(
     ot.MeshSeries(result_paths[-1]).mesh(0)
 )

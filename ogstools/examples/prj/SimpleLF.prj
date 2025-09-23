@@ -2,8 +2,8 @@
 <OpenGeoSysProject>
   <meshes>
     <mesh>domain.vtu</mesh>
-    <mesh>physical_group_left.vtu</mesh>
-    <mesh>physical_group_right.vtu</mesh>
+    <mesh>left.vtu</mesh>
+    <mesh>right.vtu</mesh>
   </meshes>
   <processes>
     <process>
@@ -115,13 +115,13 @@
     <parameter>
       <name>p_Dirichlet_left</name>
       <type>MeshNode</type>
-      <mesh>physical_group_left</mesh>
+      <mesh>left</mesh>
       <field_name>pressure</field_name>
     </parameter>
     <parameter>
       <name>p_Dirichlet_right</name>
       <type>MeshNode</type>
-      <mesh>physical_group_right</mesh>
+      <mesh>right</mesh>
       <field_name>pressure</field_name>
     </parameter>
   </parameters>
@@ -133,12 +133,12 @@
       <initial_condition>P0</initial_condition>
       <boundary_conditions>
         <boundary_condition>
-          <mesh>physical_group_left</mesh>
+          <mesh>left</mesh>
           <type>Dirichlet</type>
           <parameter>p_Dirichlet_left</parameter>
         </boundary_condition>
         <boundary_condition>
-          <mesh>physical_group_right</mesh>
+          <mesh>right</mesh>
           <type>Dirichlet</type>
           <parameter>p_Dirichlet_right</parameter>
         </boundary_condition>

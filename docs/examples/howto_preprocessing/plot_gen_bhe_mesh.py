@@ -9,9 +9,6 @@ Creating a BHE mesh (Borehole Heat Exchanger)
 # a Borehole Heat Exchanger (BHE) mesh.
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
-
 import pyvista as pv
 from shapely import Polygon
 
@@ -36,8 +33,7 @@ from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 # Generate a customizable prism BHE mesh:
 
 # %%
-tmp_dir = Path(mkdtemp())
-vtu_file = tmp_dir / "bhe_prism.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
@@ -54,7 +50,7 @@ bhe_meshes = gen_bhe_mesh(
     ],
     refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="prism",
-    out_name=vtu_file,
+    meshname="bhe_prism",
 )
 
 # %% [markdown]
@@ -62,20 +58,22 @@ bhe_meshes = gen_bhe_mesh(
 
 
 # %%
-def load_and_plot(bhe_meshes: list[Path]):
-    mesh: pv.UnstructuredGrid = pv.read(tmp_dir / bhe_meshes[0])
-    bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
-    top_bottom_gw_mesh = [
-        pv.read(tmp_dir / bhe_meshes[idx]) for idx in range(1, 4)
-    ]
-    offsets = [(0, 0, 10), (0, 0, -10), (-10, 0, 0)]
+def load_and_plot(bhe_meshes: ot.Meshes):
+    bhe_line = bhe_meshes.domain().extract_cells_by_type(pv.CellType.LINE)
+    offsets = [(0, 0, 10), (0, 0, -10), (10, 0, 0), (-10, 0, 0)]
     plotter = ot.plot.contourf(
-        mesh.clip("x", bhe_line.center, crinkle=True), ot.variables.material_id
+        bhe_meshes.domain().clip("x", bhe_line.center, crinkle=True),
+        ot.variables.material_id,
     )
-    plotter.add_mesh(mesh, style="wireframe", color="grey")
+    plotter.add_mesh(bhe_meshes.domain(), style="wireframe", color="grey")
     plotter.add_mesh(bhe_line, color="r", line_width=3)
-    for submesh, offset in zip(top_bottom_gw_mesh, offsets, strict=True):
-        plotter.add_mesh(submesh.translate(offset), show_edges=True)
+
+    for submesh, offset in zip(
+        bhe_meshes.subdomains().values(), offsets, strict=True
+    ):
+        plotter.add_mesh(
+            submesh.translate(offset), show_edges=True, color="lightgrey"
+        )
     plotter.show()
 
 
@@ -89,8 +87,7 @@ load_and_plot(bhe_meshes)
 # Generate a customizable structured BHE mesh:
 
 # %%
-tmp_dir = Path(mkdtemp())
-vtu_file = tmp_dir / "bhe_structured.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     model_area=Polygon.from_bounds(xmin=0, ymin=0, xmax=150, ymax=100),
     layer=[50, 50, 50],
@@ -107,7 +104,7 @@ bhe_meshes = gen_bhe_mesh(
     ],
     refinement_area=Polygon.from_bounds(xmin=40, ymin=30, xmax=60, ymax=70),
     meshing_type="structured",
-    out_name=vtu_file,
+    meshname="bhe_prism_2",
 )
 
 # %% [markdown]
@@ -129,7 +126,7 @@ load_and_plot(bhe_meshes)
 
 
 # %%
-vtu_file = tmp_dir / "bhe_structured_advanced.vtu"
+
 bhe_meshes = gen_bhe_mesh(
     # add additional points for better subsidivision of the surface by structured algorithm
     # compare with previous example, to see the difference
@@ -165,7 +162,7 @@ bhe_meshes = gen_bhe_mesh(
     propagation=1.2,  # default value 1.1
     inner_mesh_size=8,  # default value 5
     outer_mesh_size=12,  # default value 10
-    out_name=vtu_file,
+    meshname="bhe_structured",
 )
 
 # %% [markdown]

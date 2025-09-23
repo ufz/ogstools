@@ -27,13 +27,13 @@ from tempfile import mkdtemp
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
 
-tmp_dir = Path(mkdtemp())
-mesh_path = tmp_dir / "mesh.msh"
-vtu_path = tmp_dir / "mesh_domain.vtu"
-
 
 def custom_mesh(lengths: int, element_order: int, quads: bool) -> ot.Mesh:
     "Creates a custom mesh and runs a Mechanics simulation on it."
+
+    tmp_dir = Path(mkdtemp())
+    mesh_path = tmp_dir / "mesh.msh"
+
     ot.meshlib.rect(
         lengths=lengths,
         n_edge_cells=21,

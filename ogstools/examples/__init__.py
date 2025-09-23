@@ -151,13 +151,9 @@ def load_meshes_liquid_flow_simple():
     meshes = ot.Meshes.from_gmsh(gmsh_file)
 
     # Add data array 'pressure' to the left and right meshes boundary meshes
-    points_shape = np.shape(meshes["physical_group_left"].points)
-    meshes["physical_group_left"].point_data["pressure"] = np.full(
-        points_shape[0], 2.9e7
-    )
-    meshes["physical_group_right"].point_data["pressure"] = np.full(
-        points_shape[0], 3e7
-    )
+    points_shape = np.shape(meshes["left"].points)
+    meshes["left"].point_data["pressure"] = np.full(points_shape[0], 2.9e7)
+    meshes["right"].point_data["pressure"] = np.full(points_shape[0], 3e7)
 
     return meshes
 

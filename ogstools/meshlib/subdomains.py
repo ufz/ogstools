@@ -29,12 +29,10 @@ def named_boundaries(
     horizontal_id, vertical_id = _axis_ids_2D(pv.merge(subdomains))
     centers = np.array([mesh.center for mesh in subdomains])
     return {
-        "physical_group_top": subdomains[np.argmax(centers[:, vertical_id])],
-        "physical_group_bottom": subdomains[np.argmin(centers[:, vertical_id])],
-        "physical_group_left": subdomains[np.argmin(centers[:, horizontal_id])],
-        "physical_group_right": subdomains[
-            np.argmax(centers[:, horizontal_id])
-        ],
+        "top": subdomains[np.argmax(centers[:, vertical_id])],
+        "bottom": subdomains[np.argmin(centers[:, vertical_id])],
+        "left": subdomains[np.argmin(centers[:, horizontal_id])],
+        "right": subdomains[np.argmax(centers[:, horizontal_id])],
     }
 
 

@@ -46,28 +46,27 @@ class TestUtils:
         assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
     @pytest.mark.system()
-    def test_read_quadratic_xdmf(self, tmp_path):
+    @pytest.mark.parametrize("quads", [True, False])
+    def test_read_quadratic_xdmf(self, tmp_path, quads):
         "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
         mesh_path = tmp_path / "mesh.msh"
-        for quads in [True, False]:
-            ot.meshlib.rect(
-                1, 1, structured_grid=quads, order=2, out_name=mesh_path
-            )
 
-            meshes = ot.Meshes.from_gmsh(mesh_path)
-            meshes.save(tmp_path)
+        ot.meshlib.rect(
+            1, 1, structured_grid=quads, order=2, out_name=mesh_path
+        )
 
-            model = ot.Project(
-                output_file=tmp_path / "default.prj",
-                input_file=examples.prj_mechanics,
-            )
-            model.replace_text("XDMF", xpath="./time_loop/output/type")
-            model.replace_text(4, xpath=".//integration_order")
-            model.write_input()
-            model.run_model(
-                write_logs=False, args=f"-m {tmp_path} -o {tmp_path}"
-            )
-            ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
+        meshes = ot.Meshes.from_gmsh(mesh_path)
+        meshes.save(tmp_path)
+
+        model = ot.Project(
+            output_file=tmp_path / "default.prj",
+            input_file=examples.prj_mechanics,
+        )
+        model.replace_text("XDMF", xpath="./time_loop/output/type")
+        model.replace_text(4, xpath=".//integration_order")
+        model.write_input()
+        model.run_model(write_logs=False, args=f"-m {tmp_path} -o {tmp_path}")
+        ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
 
     @pytest.mark.parametrize(
         "ht",
@@ -808,14 +807,10 @@ class TestUtils:
             [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
         )
         assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
-        assert np.all(
-            boundaries["physical_group_left"].points[:, 0] == mesh.bounds[0]
-        )
-        assert np.all(
-            boundaries["physical_group_right"].points[:, 0] == mesh.bounds[1]
-        )
-        assert boundaries["physical_group_bottom"].bounds[2] == mesh.bounds[2]
-        assert boundaries["physical_group_top"].bounds[3] == mesh.bounds[3]
+        assert np.all(boundaries["left"].points[:, 0] == mesh.bounds[0])
+        assert np.all(boundaries["right"].points[:, 0] == mesh.bounds[1])
+        assert boundaries["bottom"].bounds[2] == mesh.bounds[2]
+        assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
     @pytest.mark.system()
     def test_meshes_from_mesh_run(self, tmp_path):
@@ -884,7 +879,7 @@ class TestUtils:
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
 
-        sub_paths = meshes.save(path)
+        sub_paths = meshes.save(path, overwrite=True)
         domain_mesh = meshes.domain()
         ot.cli().identifySubdomains(
             f=True,
@@ -1244,12 +1239,8 @@ class TestUtils:
         assert meshes, "No meshes returned"
 
         assert "domain" in meshes, "No 'domain' mesh found"
-        assert (
-            "physical_group_Background" in meshes
-        ), "No 'physical_group_Background' mesh found"
-        assert (
-            "physical_group_Foreground" in meshes
-        ), "No 'physical_group_Foreground' mesh found"
+        assert "Background" in meshes, "No 'Background' mesh found"
+        assert "Foreground" in meshes, "No 'Foreground' mesh found"
 
         domain = meshes["domain"]
         assert 2000 < domain.n_points < 4000, "Wrong number of points"
@@ -1294,9 +1285,7 @@ class TestUtils:
         assert meshes, "No meshes returned"
 
         # Build expected mesh keys: "domain" + prefixed group names
-        expected_meshes = {"domain"} | {
-            f"physical_group_{name}" for name in expected
-        }
+        expected_meshes = {"domain"} | {f"{name}" for name in expected}
 
         missing_meshes = expected_meshes - set(meshes.keys())
         unexpected_meshes = set(meshes.keys()) - expected_meshes
@@ -1327,9 +1316,7 @@ class TestUtils:
             "Filling",
         }
 
-        expected_meshes = {"domain"} | {
-            f"physical_group_{name}" for name in expected
-        }
+        expected_meshes = {"domain"} | {f"{name}" for name in expected}
 
         assert set(meshes.keys()) == expected_meshes, (
             f"Unexpected mesh keys: {set(meshes.keys()) - expected_meshes} "
@@ -1344,8 +1331,8 @@ class TestUtils:
         # Test access to subdomains
         subdomains = meshes.subdomains()
         assert all(isinstance(m, ot.Mesh) for m in subdomains.values())
-        assert "physical_group_Floor" in subdomains
-        assert "physical_group_Canister" in subdomains
+        assert "Floor" in subdomains
+        assert "Canister" in subdomains
 
         # Test saving (writes temporary VTUs)
         files = meshes.save()

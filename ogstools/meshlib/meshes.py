@@ -75,6 +75,7 @@ class Meshes:
         dim: int | list[int] = 0,
         reindex: bool = True,
         log: bool = True,
+        meshname: str = "domain",
     ) -> "Meshes":
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
@@ -88,10 +89,11 @@ class Meshes:
         :param reindex: Physical groups / regions / Material IDs to be
                         renumbered consecutively beginning with zero.
         :param log:     If False, silence log messages
+        :param meshname:    The name of the domain mesh and used as a prefix for subdomain meshes.
 
         :returns: A dictionary of names and corresponding meshes
         """
-        meshes_dict = meshes_from_gmsh(filename, dim, reindex, log)
+        meshes_dict = meshes_from_gmsh(filename, dim, reindex, log, meshname)
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = True
         return meshes_obj
@@ -101,7 +103,7 @@ class Meshes:
         cls,
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
-        domain_name: str | None = None,
+        domain_name: str = "domain",
     ) -> "Meshes":
         """Extract 1D boundaries of a 2D mesh.
 
@@ -111,9 +113,10 @@ class Meshes:
                                 it represents the angle (in degrees) between
                                 neighbouring elements which - if exceeded -
                                 determines the corners of the boundary mesh.
+        :param domain_name:     The name of the domain mesh.
         :returns:               A Meshes object.
         """
-        domain_name = domain_name or "domain"
+
         dim = get_dim(mesh)
         assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
         boundary = mesh.extract_feature_edges()
@@ -203,7 +206,9 @@ class Meshes:
         items = list(self._meshes.items())
         return dict(items[1:])  # by convention: first mesh is domain
 
-    def save(self, meshes_path: Path | None = None) -> list[Path]:
+    def save(
+        self, meshes_path: Path | None = None, overwrite: bool = False
+    ) -> list[Path]:
         """
         Save all meshes.
 
@@ -212,13 +217,26 @@ class Meshes:
         :param meshes_path: Optional path to the directory where meshes
                             should be saved. If None, a temporary directory
                             will be used.
+
+        :param overwrite: If True, existing mesh files will be overwritten.
+                          If False, an error is raised if any file already exists.
+
         :returns: A list of Paths pointing to the saved mesh files
         """
         meshes_path = meshes_path or self._tmp_dir
+        meshes_path.mkdir(parents=True, exist_ok=True)
 
         if not self.has_identified_subdomains:
             identify_subdomains(self.domain(), list(self.subdomains().values()))
             self.has_identified_subdomains = True
+
+        output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
+        existing_files = [f for f in output_files if f.exists()]
+        if existing_files and not overwrite:
+            existing_list = "\n".join(str(f) for f in existing_files)
+            msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
+
+            raise FileExistsError(msg)
 
         for name, mesh in self._meshes.items():
             mesh.filepath = meshes_path / f"{name}.vtu"

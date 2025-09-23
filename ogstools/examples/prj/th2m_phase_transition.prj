@@ -2,10 +2,10 @@
 <OpenGeoSysProject>
     <meshes>
         <mesh>domain.vtu</mesh>
-        <mesh>physical_group_top.vtu</mesh>
-        <mesh>physical_group_left.vtu</mesh>
-        <mesh>physical_group_bottom.vtu</mesh>
-        <mesh>physical_group_right.vtu</mesh>
+        <mesh>top.vtu</mesh>
+        <mesh>left.vtu</mesh>
+        <mesh>bottom.vtu</mesh>
+        <mesh>right.vtu</mesh>
     </meshes>
     <processes>
         <process>
@@ -249,25 +249,25 @@
             <compensate_non_equilibrium_initial_residuum>true</compensate_non_equilibrium_initial_residuum>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_left</mesh>
+                    <mesh>left</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>zero</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_right</mesh>
+                    <mesh>right</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>zero</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <component>1</component>
                     <parameter>zero</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_top</mesh>
+                    <mesh>top</mesh>
                     <type>Neumann</type>
                     <component>1</component>
                     <parameter>sigma_v_0</parameter>
@@ -282,13 +282,13 @@
             <initial_condition>pg_0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_left</mesh>
+                    <mesh>left</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>pg_bc_left</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_right</mesh>
+                    <mesh>right</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>pg_bc_right</parameter>
@@ -305,13 +305,13 @@
             <initial_condition>pc_0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_top</mesh>
+                    <mesh>top</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>pc_0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>pc_0</parameter>
@@ -326,13 +326,13 @@
             <initial_condition>T0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <mesh>physical_group_bottom</mesh>
+                    <mesh>bottom</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>T0</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <mesh>physical_group_top</mesh>
+                    <mesh>top</mesh>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>T0</parameter>
