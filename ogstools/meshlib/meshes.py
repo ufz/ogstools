@@ -12,6 +12,7 @@ import pyvista as pv
 
 from .gmsh_converter import meshes_from_gmsh
 from .mesh import Mesh
+from .meshes_from_yaml import meshes_from_yaml
 from .subdomains import (
     get_dim,
     identify_subdomains,
@@ -54,6 +55,18 @@ class Meshes:
 
     def __len__(self) -> int:
         return len(self._meshes)
+
+    @classmethod
+    def from_yaml(cls, geometry_file: Path) -> "Meshes":
+        """ """
+
+        gmsh_file = meshes_from_yaml(geometry_file)
+        print(f"Info: Mesh written to {gmsh_file}")
+
+        meshes_dict = meshes_from_gmsh(gmsh_file)
+        meshes_obj = cls(meshes_dict)
+        meshes_obj.has_identified_subdomains = True
+        return meshes_obj
 
     @classmethod
     def from_gmsh(

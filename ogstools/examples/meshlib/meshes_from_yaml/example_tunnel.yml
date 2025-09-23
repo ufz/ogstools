@@ -1,0 +1,62 @@
+parameters:
+  tunnel_radius: 6.0        # Tunnel radius [m]
+  wall_thickness: 2.0       # Tunnel wall / support thickness [m]
+  domain_size: "(tunnel_radius + wall_thickness) * 4"   # Overall model box size
+  center: "domain_size / 2" # Domain center (x = y)
+
+points:
+  # Reference circle center (for arcs)
+  c0: { coords: [0.0, "center"], char_length: 0.3 }
+
+  # Tunnel inner arc points (void boundary)
+  t_bottom: { coords: [0.0, "center - tunnel_radius"],     char_length: 0.5 }
+  t_top:    { coords: [0.0, "center + tunnel_radius"],     char_length: 0.5 }
+
+  # Tunnel wall outer arc points
+  w_bottom: { coords: [0.0, "center - tunnel_radius - wall_thickness"], char_length: 0.5 }
+  w_top:    { coords: [0.0, "center + tunnel_radius + wall_thickness"], char_length: 0.5 }
+
+  # Domain corners (left half-box)
+  box_bl:   { coords: [0.0,          0.0],       char_length: 0.5 }   # bottom left
+  box_br:   { coords: ["center",     0.0],       char_length: 0.5 }   # bottom right
+  box_tr:   { coords: ["center", "2*center"],    char_length: 0.5 }   # top right
+  box_tl:   { coords: [0.0,      "2*center"],    char_length: 0.5 }   # top left
+
+lines:
+  # Circular arcs
+  tunnel_arc: { start: t_bottom, end: t_top, center: c0 }   # inner radius
+  wall_arc:   { start: w_bottom, end: w_top, center: c0 }   # outer radius
+
+  # Outer box edges
+  l1: { start: t_bottom, end: w_bottom }
+  l2: { start: w_bottom, end: box_bl }
+  l3: { start: box_bl,   end: box_br }
+  l4: { start: box_br,   end: box_tr }
+  l5: { start: box_tr,   end: box_tl }
+  l6: { start: box_tl,   end: w_top }
+  l7: { start: w_top,    end: t_top }
+
+surfaces:
+  # Tunnel wall (support ring)
+  tunnel_wall:
+    loops:
+      - [ l7, "-tunnel_arc", l1, "wall_arc" ]
+
+  # Host rock
+  hostrock:
+    loops:
+      - [ l2, l3, l4, l5, l6, "-wall_arc" ]
+
+groups:
+  TunnelWall:
+    dim: 2
+    entities: [tunnel_wall]   # support layer
+  Hostrock:
+    dim: 2
+    entities: [hostrock]      # surrounding rock
+  BoundaryTunnel:
+    dim: 1
+    entities: [tunnel_arc]
+  BoundaryLeft:
+    dim: 1
+    entities: [l6, l7, l1, l2]

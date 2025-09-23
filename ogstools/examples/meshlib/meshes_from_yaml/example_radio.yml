@@ -1,0 +1,99 @@
+parameters:
+  radius_dot: 2.0
+  radius_inner: 2.5
+  radius_outer: 6.5
+  phi_0 : 0
+  phi_60 : 1.04720
+  phi_120 : 2.09440
+  phi_180 : 3.14159
+  phi_240 : 4.18879
+  phi_300 : 5.23599
+  box_size : "radius_outer * 2.2"
+  center : "box_size / 2"
+
+# Punkte des Modells
+points:
+ 
+  b00: { coords: [0.0, 0.0], char_length: 0.3 }
+  b01: { coords: ["box_size", 0.0], char_length: 0.3 }
+  b02: { coords: ["box_size", "box_size"], char_length: 0.3 }
+  b03: { coords: [0.0, "box_size"], char_length: 0.3 }
+  
+  p00: { coords: ["center", "center"], char_length: 0.3 }
+  p01: { coords: ["radius_dot+center", "center"], char_length: 0.3 }
+  p02: { coords: ["center-radius_dot", "center"], char_length: 0.3 }
+  p03: { coords: ["(cos(phi_0) * radius_inner)+center", "(sin(phi_0) * radius_inner)+center"], char_length: 0.3 }
+  p04: { coords: ["(cos(phi_0) * radius_outer)+center", "(sin(phi_0) * radius_outer)+center"], char_length: 0.3 }
+  p05: { coords: ["(cos(phi_60) * radius_outer)+center", "(sin(phi_60) * radius_outer)+center"], char_length: 0.3 }
+  p06: { coords: ["(cos(phi_60) * radius_inner)+center", "(sin(phi_60) * radius_inner)+center"], char_length: 0.3 }
+  
+  p07: { coords: ["(cos(phi_120) * radius_inner)+center", "(sin(phi_120) * radius_inner)+center"], char_length: 0.3 }
+  p08: { coords: ["(cos(phi_120) * radius_outer)+center", "(sin(phi_120) * radius_outer)+center"], char_length: 0.3 }
+  p09: { coords: ["(cos(phi_180) * radius_outer)+center", "(sin(phi_180) * radius_outer)+center"], char_length: 0.3 }
+  p10: { coords: ["(cos(phi_180) * radius_inner)+center", "(sin(phi_180) * radius_inner)+center"], char_length: 0.3 }
+
+  p11: { coords: ["(cos(phi_240) * radius_inner)+center", "(sin(phi_240) * radius_inner)+center"], char_length: 0.3 }
+  p12: { coords: ["(cos(phi_240) * radius_outer)+center", "(sin(phi_240) * radius_outer)+center"], char_length: 0.3 }
+  p13: { coords: ["(cos(phi_300) * radius_outer)+center", "(sin(phi_300) * radius_outer)+center"], char_length: 0.3 }
+  p14: { coords: ["(cos(phi_300) * radius_inner)+center", "(sin(phi_300) * radius_inner)+center"], char_length: 0.3 }
+
+
+# Linien und Bögen
+lines:
+  g00: { start: b00, end: b01}
+  g01: { start: b01, end: b02}
+  g02: { start: b02, end: b03}
+  g03: { start: b03, end: b00}
+
+  a00: { start: p01, end: p02, center: p00 }
+  a01: { start: p02, end: p01, center: p00 }
+  
+  l01: { start: p03, end: p04}
+  a02: { start: p04, end: p05, center: p00 }
+  l02: { start: p05, end: p06}
+  a03: { start: p06, end: p03, center: p00 }
+
+  l03: { start: p07, end: p08}
+  a04: { start: p08, end: p09, center: p00 }
+  l04: { start: p09, end: p10}
+  a05: { start: p10, end: p07, center: p00 }
+
+  l05: { start: p11, end: p12}
+  a06: { start: p12, end: p13, center: p00 }
+  l06: { start: p13, end: p14}
+  a07: { start: p14, end: p11, center: p00 }
+
+
+# Flächen
+surfaces:
+
+  s1:
+    loops:
+      - [a00, a01]
+  s2:
+    loops:  
+      - [l01, a02, l02, a03]
+  s3:
+    loops:  
+      - [l03, a04, l04, a05]
+  s4:
+    loops:  
+      - [l05, a06, l06, a07]
+  
+  box:
+    loops:
+      - [g00, g01, g02, g03]
+      - ["-a00", "-a01"]
+      - ["-l01", "-a02", "-l02", "-a03"]
+      - ["-l03", "-a04", "-l04", "-a05"]
+      - ["-l05", "-a06", "-l06", "-a07"]
+
+
+# Gruppen
+groups:
+  Domain:
+    dim: 2
+    entities: [box]
+  Logo:
+    dim: 2
+    entities: [s1, s2, s3, s4]

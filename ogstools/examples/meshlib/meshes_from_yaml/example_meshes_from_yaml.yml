@@ -1,0 +1,62 @@
+parameters:
+  radius_tunnel: 5.0
+  radius_edz: 0.5
+  some_other_param: 1.5
+
+# Punkte des Modells
+points:
+  p00: { coords: [0.0, 0.0], char_length: 0.3 }
+  p01: { coords: ["radius_tunnel * radius_edz", 0.0], char_length: 0.3 }
+  p02: { coords: [3.0, 5.0], char_length: some_other_param }
+  p03: { coords: [0.0, 5.0], char_length: 0.3 }
+  p04: { coords: [0.0, 3.5], char_length: 0.3 }
+  p05: { coords: [0.0, 3.0], char_length: 0.01 }
+  p06: { coords: [0.0, 2.0], char_length: 0.3 }
+  p07: { coords: [0.0, 1.0], char_length: 0.1 }
+  p08: { coords: [0.0, 0.5], char_length: 0.1 }
+  p09: { coords: [2.0, 4.0], char_length: 0.1 }
+  p10: { coords: [2.5, 4.0], char_length: 0.1 }
+  p11: { coords: [2.5, 4.5], char_length: 0.1 }
+  p12: { coords: [2.0, 4.5], char_length: 0.1 }
+
+# Linien und Bögen
+lines:
+  l00: { start: p00, end: p01 }
+  l01: { start: p01, end: p02 }
+  l02: { start: p02, end: p03 }
+  l03: { start: p03, end: p04 }
+  l04: { start: p04, end: p05 }
+  l05: { start: p07, end: p08 }
+  l06: { start: p08, end: p00 }
+
+  # Kreisbögen
+  a00: { start: p07, end: p05, center: p06 }
+  a01: { start: p08, end: p04, center: p06 }
+
+  # Loch
+  h00: { start: p09, end: p10 }
+  h01: { start: p10, end: p11 }
+  h02: { start: p11, end: p12 }
+  h03: { start: p12, end: p09 }
+
+# Flächen
+surfaces:
+  s0:
+    loops:
+      - [l00, l01, l02, l03, "-a01", l06]
+      - ["-h03", "-h02", "-h01", "-h00"]
+  s1:
+    loops:
+      - [a01, l04, "-a00", l05]
+
+# Gruppen
+groups:
+  Domain:
+    dim: 2
+    entities: [s0]
+  EDZ:
+    dim: 2
+    entities: [s1]
+  BoundaryLeft:
+    dim: 1
+    entities: [l03, l04, a00, l05, l06]
