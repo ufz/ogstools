@@ -1240,12 +1240,8 @@ class TestUtils:
         assert meshes, "No meshes returned"
 
         assert "domain" in meshes, "No 'domain' mesh found"
-        assert (
-            "physical_group_Background" in meshes
-        ), "No 'physical_group_Background' mesh found"
-        assert (
-            "physical_group_Foreground" in meshes
-        ), "No 'physical_group_Foreground' mesh found"
+        assert "Background" in meshes, "No 'Background' mesh found"
+        assert "Foreground" in meshes, "No 'Foreground' mesh found"
 
         domain = meshes["domain"]
         assert 2000 < domain.n_points < 4000, "Wrong number of points"
@@ -1290,9 +1286,7 @@ class TestUtils:
         assert meshes, "No meshes returned"
 
         # Build expected mesh keys: "domain" + prefixed group names
-        expected_meshes = {"domain"} | {
-            f"physical_group_{name}" for name in expected
-        }
+        expected_meshes = {"domain"} | {f"{name}" for name in expected}
 
         missing_meshes = expected_meshes - set(meshes.keys())
         unexpected_meshes = set(meshes.keys()) - expected_meshes
@@ -1323,9 +1317,7 @@ class TestUtils:
             "Filling",
         }
 
-        expected_meshes = {"domain"} | {
-            f"physical_group_{name}" for name in expected
-        }
+        expected_meshes = {"domain"} | {f"{name}" for name in expected}
 
         assert set(meshes.keys()) == expected_meshes, (
             f"Unexpected mesh keys: {set(meshes.keys()) - expected_meshes} "
@@ -1340,8 +1332,8 @@ class TestUtils:
         # Test access to subdomains
         subdomains = meshes.subdomains()
         assert all(isinstance(m, ot.Mesh) for m in subdomains.values())
-        assert "physical_group_Floor" in subdomains
-        assert "physical_group_Canister" in subdomains
+        assert "Floor" in subdomains
+        assert "Canister" in subdomains
 
         # Test saving (writes temporary VTUs)
         files = meshes.save()
