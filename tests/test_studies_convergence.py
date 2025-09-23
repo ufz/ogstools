@@ -19,6 +19,8 @@ class TestConvergence:
         sim_results = []
         edge_cells = [2**i for i in range(3, 6)]
         for n_edge_cells in edge_cells:
+            case_path = tmp_path / f"cells_{n_edge_cells}"
+            case_path.mkdir(parents=True, exist_ok=True)
             msh_file = tmp_path / "square.msh"
             ot.meshlib.gmsh_meshing.rect(
                 n_edge_cells=n_edge_cells,
@@ -26,7 +28,7 @@ class TestConvergence:
                 out_name=msh_file,
             )
             meshes = ot.Meshes.from_gmsh(msh_file)
-            meshes.save(tmp_path)
+            meshes.save(case_path)
 
             model = ot.Project(
                 output_file=tmp_path / "default.prj",
@@ -35,7 +37,7 @@ class TestConvergence:
             prefix = "steady_state_diffusion_" + str(n_edge_cells)
             model.replace_text(prefix, ".//prefix")
             model.write_input()
-            ogs_args = f"-m {tmp_path} -o {tmp_path}"
+            ogs_args = f"-m {case_path} -o {tmp_path}"
             model.run_model(write_logs=False, args=ogs_args)
             sim_results += [
                 ot.MeshSeries(str(tmp_path / (prefix + ".pvd"))).mesh(-1)

@@ -879,7 +879,7 @@ class TestUtils:
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
 
-        sub_paths = meshes.save(path)
+        sub_paths = meshes.save(path, overwrite=True)
         domain_mesh = meshes.domain()
         ot.cli().identifySubdomains(
             f=True,
