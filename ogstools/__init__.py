@@ -14,7 +14,6 @@ from .meshlib import (
     Meshes,  # noqa: F401
     MeshSeries,  # noqa: F401
     meshes_from_gmsh,
-    meshes_from_yaml,  # noqa: F401
 )
 from .ogs6py import Project  # noqa: F401
 

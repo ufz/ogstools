@@ -14,7 +14,6 @@ from .ip_mesh import to_ip_mesh, to_ip_point_cloud
 from .mesh import Mesh
 from .mesh_series import MeshSeries
 from .meshes import Meshes
-from .meshes_from_yaml import meshes_from_yaml
 from .region import (
     to_region_prism,
     to_region_simplified,
@@ -38,7 +37,6 @@ __all__ = [
     "difference_matrix",
     "difference_pairwise",
     "meshes_from_gmsh",  # deprecated
-    "meshes_from_yaml",
     "rect",
     "to_ip_mesh",
     "to_ip_point_cloud",

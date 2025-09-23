@@ -14,6 +14,7 @@ from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
 
 
 def validate_msh_file(path: str) -> list[str]:
@@ -943,7 +944,7 @@ class TestUtils:
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
 
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
 
         print(f"mesh-file: {msh_file}")
 
@@ -969,7 +970,7 @@ class TestUtils:
         )
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
         assert msh_file.exists()
 
     def test_mfy_with_list_coords(self, tmp_path):
@@ -985,7 +986,7 @@ class TestUtils:
         )
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
         assert msh_file.exists()
 
     def test_mfy_invalid_type(self, tmp_path):
@@ -1003,7 +1004,7 @@ class TestUtils:
         yaml_file.write_text(yaml_content)
 
         with pytest.raises(TypeError, match="Unsupported type"):
-            ot.meshes_from_yaml(yaml_file, tmp_path)
+            meshes_from_yaml(yaml_file, tmp_path)
 
     def test_mfy_invalid_expression(self, tmp_path):
         yaml_content = textwrap.dedent(
@@ -1020,7 +1021,7 @@ class TestUtils:
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
         with pytest.raises(ValueError, match="Failed to evaluate parameter"):
-            ot.meshes_from_yaml(yaml_file, tmp_path)
+            meshes_from_yaml(yaml_file, tmp_path)
 
     def test_mfy_point_without_coords(self, tmp_path):
         yaml_content = textwrap.dedent(
@@ -1036,7 +1037,7 @@ class TestUtils:
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
         with pytest.raises(ValueError, match="Incomplete point definition"):
-            ot.meshes_from_yaml(yaml_file, tmp_path)
+            meshes_from_yaml(yaml_file, tmp_path)
 
     def test_mfy_surface_without_loops(self, tmp_path):
         yaml_content = textwrap.dedent(
@@ -1058,7 +1059,7 @@ class TestUtils:
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
         with pytest.raises(ValueError, match="has no 'loop' or 'loops'"):
-            ot.meshes_from_yaml(yaml_file, tmp_path)
+            meshes_from_yaml(yaml_file, tmp_path)
 
     def test_mfy_unsupported_group_dim(self, tmp_path):
         yaml_content = textwrap.dedent(
@@ -1081,7 +1082,7 @@ class TestUtils:
         with pytest.raises(
             NotImplementedError, match="Unsupported group dimension"
         ):
-            ot.meshes_from_yaml(yaml_file, tmp_path)
+            meshes_from_yaml(yaml_file, tmp_path)
 
     def test_mfy_arc_line(self, tmp_path):
         yaml_content = textwrap.dedent(
@@ -1099,7 +1100,7 @@ class TestUtils:
         )
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
         assert msh_file.exists()
 
     def test_mfy_empty_blocks(self, tmp_path):
@@ -1114,7 +1115,7 @@ class TestUtils:
         )
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
         assert msh_file.exists()
 
     def test_mfy_radioactive(self, tmp_path):
@@ -1219,7 +1220,7 @@ class TestUtils:
         yaml_file = tmp_path / "geom.yml"
         yaml_file.write_text(yaml_content)
 
-        msh_file = ot.meshes_from_yaml(yaml_file, tmp_path)
+        msh_file = meshes_from_yaml(yaml_file, tmp_path)
         print(f"mesh-file: {msh_file}")
 
         assert msh_file.exists()
@@ -1257,7 +1258,7 @@ class TestUtils:
     def test_mfy_hlw_repository(self, tmp_path):
         # Load YAML geometry definition directly from file
 
-        msh_file = ot.meshes_from_yaml(examples.example_hlw, tmp_path)
+        msh_file = meshes_from_yaml(examples.example_hlw, tmp_path)
         assert msh_file.exists()
         print(f"mesh-file: {msh_file}")
 
