@@ -9,3 +9,4 @@ recursive-include ogstools *.py
 recursive-include ogstools *.sh
 recursive-include ogstools *.vtu
 recursive-include ogstools *.xdmf
+recursive-include ogstools *.yml *.yaml

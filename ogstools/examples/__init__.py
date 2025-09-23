@@ -240,6 +240,7 @@ prj_beier_sandbox_power_ref = _prj_dir / "beier_sandbox_power_ref.prj"
 prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
 prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
+prj_th2m_phase_transition = _prj_dir / "th2m_phase_transition.prj"
 
 
 surface_paths = [

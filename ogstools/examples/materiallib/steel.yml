@@ -1,0 +1,76 @@
+name: steel
+group: solid
+type: phase
+properties:
+  molar_mass:
+    - type: Constant
+      value: 0.055845
+      unit: kg/mol
+      source:
+  specific_heat_capacity:
+    - type: Constant
+      value: 500
+      unit: J/(kg·K)
+      source:
+  thermal_conductivity:
+    - type: Constant
+      value: 45
+      unit: W/(m·K)
+      source:
+  density:
+    - type: Constant
+      value: 7850
+      unit: kg/m³
+      source:
+  youngs_modulus:
+    - type: Constant
+      value: 2.0e11
+      unit: Pa
+      source:
+  poisson_ratio:
+    - type: Constant
+      value: 0.3
+      unit: 1
+      source:
+  yield_strength:
+    - type: Constant
+      value: 250e6
+      unit: Pa
+      source:
+  thermal_expansivity:
+    - type: Constant
+      value: 1.2e-5
+      unit: 1/K
+      source:
+  permeability:
+    - type: Constant
+      value: 1.0e-99
+      unit: m²
+  relative_permeability:
+    - type: Constant
+      value: 1.0
+      unit: 1
+  relative_permeability_nonwetting_phase:
+    - type: Constant
+      value: 1.0
+      unit: 1
+  saturation:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  tortuosity:
+    - type: Constant
+      value: 1.0e+99
+      unit: 1
+  porosity:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  bishops_effective_stress:
+    - type: Constant
+      value: 0.0
+      unit: 1
+  biot_coefficient:
+    - type: Constant
+      value: 0.0
+      unit: 1

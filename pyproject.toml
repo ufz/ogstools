@@ -54,6 +54,9 @@ dependencies = [
 "Bug Tracker" = 'https://discourse.opengeosys.org'
 "Source Code" = 'https://gitlab.opengeosys.org/ogs/tools/ogstools'
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ogstools*"]
@@ -217,6 +220,7 @@ pinned = [
   "xyzservices==2025.4.0",
   "yarl==1.20.1"
 ]
+
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]

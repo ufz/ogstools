@@ -3,9 +3,3 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
-
-import pathlib
-
-ROOT_DIR = pathlib.Path(__file__).parent.resolve()
-EXAMPLES_DIR = ROOT_DIR / "examples"
-MATERIALS_DIR = EXAMPLES_DIR / "materiallib"

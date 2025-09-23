@@ -9,12 +9,13 @@ from importlib import metadata
 
 from . import logparser, plot, variables
 from ._find_ogs import cli, status
+from .materiallib.core.material_manager import MaterialManager  # noqa: F401
+from .materiallib.core.media import MediaSet  # noqa: F401
 from .meshlib import (
     Mesh,  # noqa: F401
     Meshes,  # noqa: F401
     MeshSeries,  # noqa: F401
     meshes_from_gmsh,
-    meshes_from_yaml,  # noqa: F401
 )
 from .ogs6py import Project  # noqa: F401
 

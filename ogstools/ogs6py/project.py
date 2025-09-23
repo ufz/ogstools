@@ -23,6 +23,7 @@ import pandas as pd
 import psutil
 from lxml import etree as ET
 
+from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
     curves,
     display,
@@ -38,6 +39,7 @@ from ogstools.ogs6py import (
     python_script,
     timeloop,
 )
+from ogstools.ogs6py.project_media_importer import _ProjectMediaImporter
 from ogstools.ogs6py.properties import (
     Property,
     PropertySet,
@@ -1176,3 +1178,7 @@ class Project:
                     index=False, float_format=float_format.format
                 )
             )
+
+    def set_media(self, media_set: MediaSet) -> None:
+        """Public API: import MediaSet into this Project."""
+        _ProjectMediaImporter(self).set_media(media_set)
