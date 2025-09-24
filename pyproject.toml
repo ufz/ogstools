@@ -244,7 +244,7 @@ docs = [
 feflow = [
   "ifm_contrib>=0.2.4",
 ]
-ogs = ["ogs>=6.5.6.dev463"]
+ogs = ["ogs>=6.5.6"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

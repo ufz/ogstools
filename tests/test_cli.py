@@ -29,4 +29,4 @@ def test_hide_cli_stdout(capfd, stdout):
     os.environ["OGS_BIN_PATH"] = str(Path(shutil.which("ogs")).parent)
     ot.cli().checkMesh(mechanics_2D, stdout=stdout)
     captured = capfd.readouterr()
-    assert ("[ogs] [info]" in captured.out) == (stdout is None)
+    assert ("info" in captured.out) == (stdout is None)
