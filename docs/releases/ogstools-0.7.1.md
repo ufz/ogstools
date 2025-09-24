@@ -56,12 +56,24 @@
 
 ## Features
 
+- Added `MaterialManager` and `MediaSet` to core API and further helper classes: `Phase`, `Medium`, `Material`, `Component`
+  - It introduces a modular and schema-driven material handling system for OGS project files.
+  - It includes:
+    - A YAML-based material database
+    - Schema filtering via MaterialList
+    - Export to XML (.to_prj()) compatible with OGS
+    - Examples for TH2M
+  - It is limited to TH2M for now
 - Added `Meshes` class
   - `from_simulator` works directly with the OGS mesh in a running simulation
   - `from_gmsh` is `ot.meshes_from_gmsh`
-  - `save` performs identify_subdomains
+  - `save` performs identify_subdomains, and checks for overwrite
   - `from_msh`
     - Uses the newly introduced `extract_boundaries` for simple extraction of boundary meshes from a 2D domain mesh
+  - `from_yaml`
+    - Introduces a new tool to generate Gmsh meshes from YAML geometry descriptions.
+      - Based on a simple declarative schema (parameters, points, lines, surfaces, groups)
+      - Generates .msh files via Gmsh, `meshes_from_yaml`
 - Added `plot.contourf_pv` for pyvista plots which work with `Variables`.
 - `plot.contourf` now dispatches depending on the value of the new argument `interactive`:
   - None (default): 2D mesh -> matplotlib plot, 3D mesh -> interactive pyvista plot
