@@ -27,10 +27,8 @@ via :meth:`~ogstools.ogs6py.Project.set_media`.
 from pathlib import Path
 from tempfile import mkdtemp
 
+import ogstools as ot
 from ogstools import definitions as defs
-from ogstools.materiallib.core import material_manager
-from ogstools.materiallib.core.media import MediaSet
-from ogstools.ogs6py import Project
 
 model_dir = Path(mkdtemp())
 
@@ -58,7 +56,7 @@ print((Path(defs.MATERIALS_DIR) / "water.yml").read_text(encoding="utf-8"))
 #   (allows grouping several mesh regions under one subdomain name)
 
 # %%
-db = material_manager.MaterialManager()
+db = ot.MaterialManager()
 
 subdomains = [
     {
@@ -80,7 +78,7 @@ fluids = {
 
 filtered = db.filter(process="TH2M_PT", subdomains=subdomains, fluids=fluids)
 
-media = MediaSet(filtered)
+media = ot.MediaSet(filtered)
 
 # %% [markdown]
 # Export to OGS Project XML
@@ -90,7 +88,7 @@ media = MediaSet(filtered)
 # via ``Project.set_media()``.
 
 # %%
-prj = Project()
+prj = ot.Project()
 prj.set_media(media)
 
 xml_file = model_dir / "material_test.prj"
