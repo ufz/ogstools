@@ -329,7 +329,7 @@ setup developer (R):
     - *pip-setup-activate
     - *pip-install-ogs-latest
   script:
-    - pip install -e .[ogs,pinned,dev,test,docs,feflow]
+    - pip install -e .[ogs,pinned,dev,test,docs]
     - *pip-setup-extra-headless
 
 pages-tag:
