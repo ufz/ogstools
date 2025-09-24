@@ -1,4 +1,4 @@
-# OGSTools 0.7.0 Release Notes
+# OGSTools 0.7.1 Release Notes
 
 - Works with ogs==6.5.6
 - Python: 3.10 - 3.13
