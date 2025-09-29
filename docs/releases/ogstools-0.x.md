@@ -14,6 +14,8 @@
 
 ## Features
 
+- added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
+
 ## Infrastructure
 
 ## Documentation

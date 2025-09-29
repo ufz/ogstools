@@ -871,6 +871,7 @@ class MeshSeries(Sequence[Mesh]):
             - num_levels:         number of levels for colorbar
             - figsize:            figure size
             - dpi:                resolution
+            - log_scaled:         logarithmic scaling
         """
         if ax is None and fig is None:
             fig, ax = plt.subplots(
@@ -911,6 +912,16 @@ class MeshSeries(Sequence[Mesh]):
         if values.shape == (len(x_vals), len(y_vals)):
             values = values.T
 
+        # sort w.r.t spatial index if not already sorted
+        if x in "xyz" and not np.all(np.diff(x_vals) >= 0):
+            sorted_indices = np.argsort(x_vals)
+            x_vals = x_vals[sorted_indices]
+            values = values[:, sorted_indices]
+        elif y in "xyz" and not np.all(np.diff(y_vals) >= 0):
+            sorted_indices = np.argsort(y_vals)
+            y_vals = y_vals[sorted_indices]
+            values = values[sorted_indices]
+
         if "levels" in kwargs:
             levels = np.asarray(kwargs.pop("levels"))
         else:
@@ -919,6 +930,13 @@ class MeshSeries(Sequence[Mesh]):
                 kwargs.get("vmin", np.nanmin(values) if vmin is None else vmin),
                 kwargs.get("vmax", np.nanmax(values) if vmax is None else vmax),
                 kwargs.get("num_levels", plot.setup.num_levels),
+            )
+        if (
+            kwargs.get("log_scaled", plot.setup.log_scaled)
+            and not var_z.is_mask()
+        ):
+            values = np.log10(
+                values, where=values > 1e-14, out=np.ones_like(values) * (-14)
             )
         cmap, norm = plot.utils.get_cmap_norm(levels, var_z, **kwargs)
         ax.pcolormesh(x_vals, y_vals, values, cmap=cmap, norm=norm)
