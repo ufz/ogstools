@@ -97,6 +97,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     gmsh.model.geo.addCurveLoop([1, 2, 3, 4, 5, 6], 1)
     gmsh.model.geo.addPlaneSurface([1], 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(2, 20)
+    gmsh.model.geo.addPhysicalGroup(dim=2, tags=[1], name="domain")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[2], name="bottom_center")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[1, 2, 3], name="bottom")
     gmsh.model.geo.addPhysicalGroup(dim=1, tags=[4], name="right")
@@ -128,6 +129,7 @@ def test_multiple_groups_per_element(tmp_path: Path):
     assert np.all(
         np.isin(bot_center["bulk_element_ids"], bot["bulk_element_ids"])
     )
+    assert "MaterialIDs" in meshes["domain"].cell_data
 
 
 valid_edge_length = st.floats(

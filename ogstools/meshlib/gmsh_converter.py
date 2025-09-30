@@ -32,7 +32,8 @@ def meshes_from_gmsh(
     Use :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh` instead.
     Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
-    Extracts domain-, boundary- and physical group-submeshes.
+    Extracts domain, boundary- and submeshes by definition of named physical
+    groups within gmsh.
 
     :param filename:    Gmsh mesh file (.msh) as input data
     :param dim: Spatial dimension (1, 2 or 3), trying automatic detection,
@@ -97,9 +98,12 @@ def meshes_from_gmsh(
     meshes[meshname] = domain_mesh
     logger.info("%s: %s", "domain", domain_mesh)
 
+    # field_data here only contains named physical groups.
+    # physical groups without a name have an individual MaterialID but are not
+    # written into a new mesh.
     for name, (group_index, group_dim) in mesh.field_data.items():
         # skip iteration for domain mesh
-        if name == filename.stem:
+        if name in [filename.stem, meshname]:
             continue
 
         # for old gmsh versions
