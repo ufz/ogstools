@@ -14,10 +14,6 @@ from scipy.spatial import KDTree as scikdtree
 from ogstools.plot.utils import get_projection
 
 
-def get_dim(mesh: pv.UnstructuredGrid) -> int:
-    return np.max([cell.dimension for cell in mesh.cell])
-
-
 def named_boundaries(
     subdomains: list[pv.UnstructuredGrid],
 ) -> dict[str, pv.UnstructuredGrid]:
@@ -48,7 +44,7 @@ def split_by_threshold_angle(
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
-    dim = get_dim(mesh)
+    dim = mesh.GetMaxSpatialDimension()
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     cell_pts = np.asarray([cell.points for cell in mesh.cell])
     ordered_cell_ids = [0]
@@ -96,7 +92,7 @@ def split_by_vertical_lateral_edges(
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 corners.
     """
-    dim = get_dim(mesh)
+    dim = mesh.GetMaxSpatialDimension()
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     subdomains = []
     centers = mesh.cell_centers().points
@@ -130,7 +126,7 @@ def extract_boundaries(
                             of the boundary mesh.
     """
 
-    dim = get_dim(mesh)
+    dim = mesh.GetMaxSpatialDimension()
     assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
     boundary = mesh.extract_feature_edges()
     if threshold_angle is None:
@@ -174,14 +170,14 @@ def identify_subdomains(
     """
     datanames = ["bulk_element_ids", "bulk_node_ids", "number_bulk_elements"]
     remove_data(mesh, datanames)
-    dim = get_dim(mesh)
+    dim = mesh.GetMaxSpatialDimension()
     for subdomain in subdomains:
         remove_data(subdomain, datanames)
         tree = scikdtree(mesh.points)
         bulk_nodes = tree.query(subdomain.points)[1]
         bulk_element_data = subdomain.cell_data
 
-        sub_dim = get_dim(subdomain)
+        sub_dim = subdomain.GetMaxSpatialDimension()
         if sub_dim == dim:
             bulk_elements = mesh.find_containing_cell(
                 subdomain.cell_centers().points

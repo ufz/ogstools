@@ -426,12 +426,7 @@ def contourf(
 
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()
-    max_dim = max(
-        [
-            int(np.max([cell.dimension for cell in mesh.cell]))
-            for mesh in _meshes
-        ]
-    )
+    max_dim = max([mesh.GetMaxSpatialDimension() for mesh in _meshes])
     if interactive or max_dim == 3:
         plotters = [contourf_pv(mesh, variable, **kwargs) for mesh in _meshes]
         if interactive is False:

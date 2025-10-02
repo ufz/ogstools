@@ -94,11 +94,11 @@ class MeshSeries(Sequence[Mesh]):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        self.dim = Mesh.max_dim(self.mesh(0))
+        self.dim = self.mesh(0).max_dim
 
     @classmethod
     def from_data(
-        cls, meshes: Sequence[pv.DataSet], timevalues: np.ndarray
+        cls, meshes: Sequence[pv.UnstructuredGrid], timevalues: np.ndarray
     ) -> MeshSeries:
         "Create a MeshSeries from a list of meshes and timevalues."
         new_ms = cls()
@@ -106,7 +106,7 @@ class MeshSeries(Sequence[Mesh]):
         new_ms._mesh_cache.update(
             dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
         )
-        new_ms.dim = Mesh.max_dim(meshes[0])
+        new_ms.dim = meshes[0].GetMaxSpatialDimension()
         return new_ms
 
     def extend(self, mesh_series: MeshSeries) -> None:
@@ -976,7 +976,7 @@ class MeshSeries(Sequence[Mesh]):
         for cache_timevalue, cache_mesh in self._mesh_cache.items():
             ms_copy._mesh_cache[cache_timevalue] = Mesh(mesh_func(cache_mesh))
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
-        ms_copy.dim = Mesh.max_dim(ms_copy.mesh(0))
+        ms_copy.dim = ms_copy.mesh(0).max_dim
         return ms_copy
 
     def scale(
