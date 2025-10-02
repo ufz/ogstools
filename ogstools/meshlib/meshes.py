@@ -14,7 +14,6 @@ from .gmsh_converter import meshes_from_gmsh
 from .mesh import Mesh
 from .meshes_from_yaml import meshes_from_yaml
 from .subdomains import (
-    get_dim,
     identify_subdomains,
     named_boundaries,
     split_by_threshold_angle,
@@ -117,7 +116,7 @@ class Meshes:
         :returns:               A Meshes object.
         """
 
-        dim = get_dim(mesh)
+        dim = mesh.GetMaxSpatialDimension()
         assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
         boundary = mesh.extract_feature_edges()
         if threshold_angle is None:
