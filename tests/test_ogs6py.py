@@ -8,6 +8,7 @@ import pytest
 from lxml import etree as ET
 
 import ogstools as ot
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.examples import (
     prj_3bhes_id_1U_2U_1U,
     prj_3bhes_id_1U_2U_1U_ref,
@@ -21,6 +22,7 @@ from ogstools.examples import (
     prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
+    prj_mechanics,
     prj_pid_timestepping,
     prj_pid_timestepping_ref,
     prj_solid_inc_ref,
@@ -35,7 +37,7 @@ from ogstools.examples import (
     prj_tunnel_trm_withincludes,
 )
 from ogstools.meshlib.gmsh_BHE import BHE, gen_bhe_mesh
-from ogstools.meshlib.gmsh_meshing import cuboid
+from ogstools.meshlib.gmsh_meshing import cuboid, rect
 from ogstools.ogs6py import Project
 
 mapping = dict.fromkeys(range(32))
@@ -1588,3 +1590,24 @@ class TestiOGS:
                 "Aborting the simulation after it has finished has changed the "
                 "status, although it should not change."
             )
+
+    def test_mesh_paths_from_prj(self, temp_dir: Path) -> NoReturn:
+        "Check, that the mesh paths generated from a Project are correct."
+        rect(out_name=temp_dir / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(temp_dir / "mesh.msh", log=False)
+        mesh_list = meshes.save(temp_dir)
+
+        prj = Project(prj_mechanics)
+        mesh_paths = prj.get_mesh_paths(temp_dir)
+
+        assert sorted(mesh_list) == sorted(mesh_paths.values())
+
+    def test_create_gml_meshes(self, temp_dir: Path) -> NoReturn:
+        """Check, that the meshes generated from a Project + gml are correct."""
+        prj = Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
+        mesh_paths = prj.get_mesh_paths(EXAMPLES_DIR / "prj", temp_dir)
+        gml_meshes = ot.Meshes.from_paths(mesh_paths)
+
+        ref_names = ["square_1x1_quad_1e2", "left", "bottom", "top"]
+        assert gml_meshes.domain_name() == ref_names[0]
+        assert sorted(gml_meshes.keys()) == sorted(ref_names)

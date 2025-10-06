@@ -1184,3 +1184,62 @@ class Project:
     def set_media(self, media_set: MediaSet) -> None:
         """Public API: import MediaSet into this Project."""
         _ProjectMediaImporter(self).set_media(media_set)
+
+    def create_gml_meshes(
+        self, mesh_dir: Path | None = None, out_dir: Path | None = None
+    ) -> dict[str, Path]:
+        """Create meshes from geometry definition in the gml file.
+
+        Requires the domain mesh and the gml file to exist in mesh_dir.
+        Only creates those meshes, which are used within the Project.
+
+        :param mesh_dir:    Path to the meshes directory (default: input dir)
+        :param out_dir:     Where to write the gml meshes (default: input dir)
+
+        :returns:           A dict of meshnames and corresponding filepaths.
+        """
+        mesh_dir = self.folder if mesh_dir is None else mesh_dir
+        out_dir = self.folder if out_dir is None else out_dir
+        root = self._get_root()
+        gm = root.find("./geometry")
+        if gm is None or gm.text is None:
+            return {}
+
+        cur_dir = Path.cwd()
+        os.chdir(out_dir)
+
+        domain_path = mesh_dir / root.find(".//mesh").text
+        gml_path = mesh_dir / gm.text
+
+        from ogstools._find_ogs import cli
+
+        cli().constructMeshesFromGeometry(
+            "-g", gml_path, "-m", domain_path, "-s", "1e-12"
+        )
+        os.chdir(cur_dir)
+        prefix = root.find(".//geometrical_set").text
+        gml_names = {m.text for m in root.findall(".//geometry")}
+        gml_names.remove(root.find("./geometry").text)
+        return {m: Path(out_dir / f"{prefix}_{m}.vtu") for m in gml_names}
+
+    def get_mesh_paths(
+        self, mesh_dir: Path | None = None, out_dir: Path | None = None
+    ) -> dict[str, Path]:
+        """Returns a dict of meshnames and corresponding filepaths.
+
+        Creates gml meshes if necessary.
+
+        :param mesh_dir:    Path to the meshes directory (default: input dir)
+        :param out_dir:     Where to write the gml meshes (default: input dir)
+
+        :returns:           A dict of meshnames and corresponding filepaths.
+        """
+        mesh_dir = self.folder if mesh_dir is None else mesh_dir
+        mesh_paths: dict[str, Path] = {
+            m.text.split(".vtu")[0]: mesh_dir / m.text
+            for xpath in ["./meshes/mesh", "./mesh"]
+            for m in self._get_root().findall(xpath)
+        }
+        gml_mesh_paths = self.create_gml_meshes(mesh_dir, out_dir)
+
+        return mesh_paths | gml_mesh_paths

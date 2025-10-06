@@ -56,6 +56,16 @@ class Meshes:
         return len(self._meshes)
 
     @classmethod
+    def from_paths(cls, mesh_paths: dict[str, Path]) -> "Meshes":
+        """
+        Initialize a Meshes object from a dict of names and mesh paths.
+
+        :param meshpaths:   Dict of names and mesh paths.
+        :returns:           A Meshes object
+        """
+        return cls({key: Mesh.read(value) for key, value in mesh_paths.items()})
+
+    @classmethod
     def from_yaml(cls, geometry_file: Path) -> "Meshes":
         """ """
 
