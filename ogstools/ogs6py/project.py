@@ -19,9 +19,12 @@ import time
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import psutil
 from lxml import etree as ET
+from matplotlib import colormaps
 
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
@@ -49,6 +52,7 @@ from ogstools.ogs6py.properties import (
     location_pointer,
     property_dict,
 )
+from ogstools.plot import contourf, line, setup, utils
 
 
 class Project:
@@ -1198,8 +1202,8 @@ class Project:
 
         :returns:           A dict of meshnames and corresponding filepaths.
         """
-        mesh_dir = self.folder if mesh_dir is None else mesh_dir
-        out_dir = self.folder if out_dir is None else out_dir
+        mesh_dir = Path(self.folder if mesh_dir is None else mesh_dir)
+        out_dir = Path(self.folder if out_dir is None else out_dir)
         root = self._get_root()
         gm = root.find("./geometry")
         if gm is None or gm.text is None:
@@ -1243,3 +1247,169 @@ class Project:
         gml_mesh_paths = self.create_gml_meshes(mesh_dir, out_dir)
 
         return mesh_paths | gml_mesh_paths
+
+    def get_BCs_STs(self) -> dict[str, dict[str, list]]:
+        """Creates a dict of boundary conditions and source terms.
+
+        Structured in the following way:
+        {meshes: {process_variable: [boundary_conditions_and_source_terms]}}
+        """
+        root = self._get_root(remove_blank_text=True, remove_comments=True)
+
+        def texts(xpath: str) -> list[str]:
+            return [e.text for e in root.findall(xpath)]
+
+        used_meshes = set(
+            texts(".//boundary_condition/mesh")
+            + texts(".//boundary_condition/geometry")
+            + texts(".//source_term/mesh")
+        )
+
+        result: dict[str, dict[str, list]] = {
+            mesh: {pvar: [] for pvar in texts(".//process_variable/name")}
+            for mesh in used_meshes
+        }
+
+        for pvar in texts(".//process_variable/name"):
+            for bc_or_st in ["boundary_condition", "source_term"]:
+                for entry in root.findall(
+                    f".//process_variable[name='{pvar}']//{bc_or_st}"
+                ):
+                    tags = {
+                        e.tag: e.text
+                        for e in list(entry.iter())[1:]
+                        if "comment" not in str(e.tag).lower()
+                    }
+                    if "mesh" in tags:
+                        mesh = tags.pop("mesh")
+                    else:
+                        mesh = tags.pop("geometry")
+                        tags.pop("geometrical_set")
+                    if bc_or_st == "source_term":
+                        tags["type"] += " source term"
+                    result[mesh][pvar].append(tags)
+
+        return result
+
+    def get_param_value_expression(self, param_name: str) -> str:
+        "Return the text of the parameter value/s or expression."
+        param = self._get_root().find(
+            f"./parameters/parameter[name='{param_name}']"
+        )
+        if param is None:
+            return param_name
+        param_def = {e.tag: e.text for e in list(param.iter())[1:]}
+        for tag in ["value", "values", "expression"]:
+            if tag in param_def:
+                return param_def[tag].strip().strip("\n")
+        return param_name
+
+    def _create_BC_ST_label(
+        self, mesh_name: str, mesh_BCs_STs: dict[str, list[dict]] | None
+    ) -> str:
+        label = f"{mesh_name}"
+
+        if mesh_BCs_STs is None:
+            return label
+        label += ":"
+
+        pvar_map = {
+            "displacement": "$u$",
+            "temperature": "$T$",
+            "pressure": "$p$",
+            "gas_pressure": "$p_g$",
+            "capillary_pressure": "$p_c$",
+        }
+        comp_map = {"0": "$_x$", "1": "$_y$", "2": "$_z$"}
+
+        for process_var, entries in mesh_BCs_STs.items():
+            for entry in entries:
+                # pressure doesn't need a "direction"
+                if "pressure" in process_var and "component" in entry:
+                    entry.pop("component")
+
+                label += "\n  "
+                entry_type = entry.get("type", "")
+                if entry_type == "Neumann" or "source term" in entry_type:
+                    var_str = "~$d${pvar}{comp}/$dN$"
+                else:
+                    var_str = "{pvar}{comp}"
+                label += var_str.format(
+                    pvar=pvar_map.get(process_var, process_var),
+                    comp=comp_map.get(entry.pop("component", ""), ""),
+                )
+
+                entry_type = entry.pop("type", "")
+                if entry_type not in ["", "Dirichlet", "Neumann"]:
+                    label += f" ({entry_type})"
+                if "parameter" in entry:
+                    label += "=" + self.get_param_value_expression(
+                        entry.pop("parameter")
+                    )
+                for tag, text in entry.items():
+                    text_val = self.get_param_value_expression(text)
+                    label += f"\n  {tag}: {text_val}"
+        return label
+
+    def plot_model(
+        self, mesh_dir: Path | None = None, **kwargs: Any
+    ) -> plt.Figure:
+        """Plot the model domain with boundary conditions and source terms.
+
+        :param mesh_dir: directory of meshes.
+
+        keyword arguments: see plot.contourf
+        """
+
+        from tempfile import mkdtemp
+
+        from ogstools.meshlib.meshes import Meshes
+
+        outer = kwargs.get("loc", "") == "outer"
+        if outer:
+            kwargs["loc"] = "right"
+        fontsize = kwargs.pop("fontsize", setup.fontsize)
+        lw = kwargs.get("lw", kwargs.get("linewidth", 2))
+        show_edges = kwargs.pop("show_edges", True)
+
+        meshes = Meshes.from_paths(
+            self.get_mesh_paths(mesh_dir=mesh_dir, out_dir=Path(mkdtemp()))
+        )
+        definition = self.get_BCs_STs()
+        used_meshes = {key: meshes[key] for key in definition if key in meshes}
+
+        if len(np.unique(meshes.domain().cell_data.get("MaterialIDs", []))) > 1:
+            var = "MaterialIDs"
+        else:
+            var = "None"
+        cbar = kwargs.pop("cbar", var != "None")
+        fig = contourf(
+            meshes.domain(), var, show_edges=show_edges, cbar=cbar, **kwargs
+        )
+        if fig is None:
+            assert "fig" in kwargs, "Only provide ax together with fig."
+            fig = kwargs.get("fig")
+        assert isinstance(fig, plt.Figure)
+        ax: plt.Axes = fig.axes[0]
+
+        for i, (name, subdomain) in enumerate(used_meshes.items()):
+            color = kwargs.get("color", colormaps["Set2"](i))
+            label = self._create_BC_ST_label(name, definition.get(name))
+
+            if subdomain.max_dim == 1:
+                line(
+                    subdomain, ax=ax, label=label, lw=lw, color=color,
+                    fontsize=fontsize, loc=kwargs.get("loc")
+                )  # fmt: skip
+            else:
+                if name == meshes.domain_name():
+                    ax.plot([], [], "-", label=label, c="lightgrey", lw=4 * lw)
+                else:
+                    axis_1, axis_2, _, _ = utils.get_projection(meshes.domain())
+                    ax.plot(
+                        *subdomain.points[:, [axis_1, axis_2]].T,
+                        "o", label=label, clip_on=False, color=color, ms=8 * lw,
+                    )  # fmt: skip
+                ax.legend(fontsize=fontsize)
+        fig.axes[0].legend(bbox_to_anchor=(1, 1), fontsize=fontsize)
+        return fig
