@@ -122,7 +122,7 @@ def meshes_from_yaml(
 
     params = _evaluate_parameters(geometry.get("parameters") or {})
 
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.model.add("simple_mesh")
 
     # --- Points ---

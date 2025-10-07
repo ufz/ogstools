@@ -16,7 +16,7 @@
 import gmsh
 
 # init
-gmsh.initialize()
+gmsh.initialize(["-noenv"])
 gmsh.option.setNumber("General.Terminal", 1)
 gmsh.model.add("cubes_mixed")
 
