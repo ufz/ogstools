@@ -94,6 +94,8 @@ def line(
         - monospace:    if True, the legend uses a monospace font
         - loc:          location of the legend (default="upper right")
         - annotate:     string to be annotate at the center of the mesh
+        - clip_on:      If True, clip the output to stay within the Axes.
+                        (default=False)
         - all other kwargs get passed to matplotlib's plot function
 
     Note:
@@ -150,6 +152,7 @@ def line(
     )
     only_points = (cell_types == [0]) or (cell_types == [1])
     reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
+    kwargs["clip_on"] = False
     if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
         ax_.plot(x, y, **kwargs)
     else:
@@ -160,7 +163,12 @@ def line(
             label = kwargs.get("label") if reg_id == reg_ids[0] else None
             ax_.plot(x[idx], y[idx], **{**kwargs, "label": label})
     if annotation is not None:
-        style = {"size": fontsize, "backgroundcolor": "0.8", "ha": "center"}
+        style = {
+            "size": fontsize,
+            "backgroundcolor": "0.8",
+            "ha": "center",
+            "va": "center",
+        }
         label_xy = utils.padded(ax_, mesh.center[0], mesh.center[1])
         ax_.annotate(annotation, label_xy, **style)
     if labels:
