@@ -4,9 +4,15 @@ help:  ## Show this help
 .PHONY : setup pip_setup_headless test coverage check clean docs cleandocs preview
 
 setup:  ## Setup a virtual environment and install all development dependencies
-	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install -e .[pinned,dev,test,docs]
-	.venv/bin/pre-commit install
+	if command -v uv > /dev/null 2>&1; then \
+		uv venv; \
+		uv pip install -e ".[pinned,dev,test,docs]"; \
+		uv run pre-commit install; \
+	else \
+		python -m venv .venv --upgrade-deps; \
+		.venv/bin/pip install -e .[pinned,dev,test,docs]; \
+		.venv/bin/pre-commit install; \
+	fi
 	@echo
 	@echo ATTENTION: You need to activate the virtual environment in every shell with:
 	@echo source .venv/bin/activate
