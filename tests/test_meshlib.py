@@ -18,7 +18,7 @@ from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
 
 
 def validate_msh_file(path: str) -> list[str]:
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.open(path)
 
     gmsh.logger.start()
@@ -1223,7 +1223,7 @@ class TestUtils:
 
         assert msh_file.exists()
 
-        gmsh.initialize()
+        gmsh.initialize(["-noenv"])
         gmsh.open(str(msh_file))
 
         groups = gmsh.model.getPhysicalGroups()
@@ -1257,7 +1257,7 @@ class TestUtils:
         print(f"mesh-file: {msh_file}")
 
         # Collect physical group names as returned by gmsh
-        gmsh.initialize()
+        gmsh.initialize(["-noenv"])
         gmsh.open(str(msh_file))
         groups = gmsh.model.getPhysicalGroups()
         names = [gmsh.model.getPhysicalName(dim, tag) for dim, tag in groups]

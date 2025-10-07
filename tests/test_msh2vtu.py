@@ -25,7 +25,7 @@ from ogstools.msh2vtu._cli import cli
 
 
 def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.model.add("multiple_groups_per_element_2")
 
     block = gmsh.model.occ.addRectangle(0, 0, 0, 25, 50)
@@ -80,7 +80,7 @@ def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
 
 def test_multiple_groups_per_element(tmp_path: Path):
     """Test correct conversion, if element are assigned to multiple groups."""
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     # gmsh.option.setNumber("General.Terminal", 1)
     gmsh.model.add("multiple_groups_per_element")
 
@@ -289,7 +289,7 @@ def run_cli(cmd: str) -> int:
 def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
     os.chdir(tmp_path)
     if version is not None:
-        gmsh.initialize()
+        gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("Mesh.MshFileVersion", version)
     runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
     prefix = str(Path(script).stem)

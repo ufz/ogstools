@@ -1287,7 +1287,7 @@ def gen_bhe_mesh(
 
     with TemporaryDirectory() as tmpdir:
         msh_file = Path(tmpdir) / f"{meshname}.msh"
-        gmsh.initialize()
+        gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("General.Verbosity", 2)
         model = gmsh.model
         geo = model.geo

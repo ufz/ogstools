@@ -86,7 +86,7 @@ def rect(
             "Warning: The length of the rectangle divided by the number of edge cells is smaller than 1e-10. This may lead to unexpected results."
         )
 
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)
     if msh_version is not None:
         gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
@@ -188,7 +188,7 @@ def cuboid(
     out_name: Path = Path("unit_cube.msh"),
     msh_version: float | None = None,
 ) -> None:
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)
     if msh_version is not None:
         gmsh.option.setNumber("Mesh.MshFileVersion", msh_version)
@@ -292,7 +292,7 @@ def remesh_with_triangles(
     :param order:       The element order (1=linear, 2=quadratic, ...)
     """
 
-    gmsh.initialize()
+    gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)
     gmsh.clear()
     gmsh.model.add("domain")

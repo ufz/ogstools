@@ -8,7 +8,7 @@
 import gmsh
 
 # Before using any functions in the Python API, Gmsh must be initialized:
-gmsh.initialize()
+gmsh.initialize(["-noenv"])
 gmsh.option.setNumber("General.Terminal", 1)
 gmsh.model.add("line")
 
