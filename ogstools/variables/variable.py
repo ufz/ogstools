@@ -157,7 +157,7 @@ class Variable:
             return _time_preset()
 
         if isinstance(variable, Variable):
-            if variable.data_name in data_keys:
+            if variable.data_name in data_keys + ["None"]:
                 return variable
             matches = [
                 variable.output_name in data_key for data_key in data_keys
@@ -339,6 +339,8 @@ class Variable:
         if self.data_name not in (
             data_keys := set().union(mesh.point_data, mesh.cell_data)
         ):
+            if self.data_name in ["MaterialIDs", "None"]:
+                return np.full(mesh.number_of_cells, 0)
             msg = (
                 f"Data name {self.data_name} not found in mesh. "
                 f"Available data names are {', '.join(data_keys)}. "

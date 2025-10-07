@@ -175,7 +175,11 @@ def subplot(
     # Passing the data and not the mesh here purposely to ensure correct shape
     # of mask. Otherwise transform() might remove additional triangulated cells
     # due to those being part of the usual mask e.g. "pressure_active".
-    nan_mask = np.isnan(surf_tri.ptc()[variable.data_name])
+    nan_mask = np.isnan(
+        surf_tri.ptc().cell_data.get(
+            variable.data_name, np.zeros(surf_tri.n_cells)
+        )
+    )
     # Getting rid of extra dimension for vectors and matrices
     if len(nan_mask.shape) == 2:
         nan_mask = np.sum(nan_mask, axis=-1)
@@ -206,8 +210,8 @@ def subplot(
         else:
             ax.tripcolor(
                 x, y, tri, facecolors=values, mask=nan_mask,
-                cmap=cmap, norm=norm  # fmt: skip
-            )
+                cmap=cmap, norm=norm
+            )  # fmt: skip
             if variable.is_mask():
                 ax.tripcolor(
                     x, y, tri, facecolors=values, mask=(values == 1),
@@ -274,7 +278,7 @@ def subplot(
                 mticker.FixedLocator(list(ax.get_xticks()))
             )
             secax.set_xticklabels(sec_labels)
-            secax.set_xlabel(f'{"xyz"[projection]} / {setup.spatial_unit}')
+            secax.set_xlabel(f"{'xyz'[projection]} / {setup.spatial_unit}")
             utils.update_font_sizes(secax, fontsize)
 
 
