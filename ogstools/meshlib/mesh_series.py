@@ -764,12 +764,13 @@ class MeshSeries(Sequence[Mesh]):
         points: np.ndarray | list,
         variable: Variable | str,
         variable_abscissa: Variable | str | None = None,
-        labels: list[str] | None = None,
+        labels: list[str] | str | None = None,
         interp_method: Literal["nearest", "linear"] = "linear",
         colors: list | None = None,
         linestyles: list | None = None,
         ax: plt.Axes | None = None,
         fill_between: bool = False,
+        outer_legend: bool | tuple[float, float] = False,
         **kwargs: Any,
     ) -> plt.Figure | None:
         """
@@ -782,10 +783,37 @@ class MeshSeries(Sequence[Mesh]):
                                 `linear` for xdmf MeshSeries and
                                 `probefilter` for pvd MeshSeries.
         :param interp_backend:  Interpolation backend for PVD MeshSeries.
+        :outer_legend: Draw legend on the right side outside of the plot area.
+                       By default False (no outer legend).
+                       User can pass a tuple of two floats (x, y), which will be
+                       passed to bbox_to_anchor parameter in Matplotlib legend
+                       call. True will pass the default values - (1.05, 1.0).
 
         Keyword Arguments get passed to `matplotlib.pyplot.plot`
         """
         points = reshape_obs_points(points, self.mesh(0))
+        # Validate input for labels
+        if labels is None and "label" in kwargs:
+            # Assume user wanted to pass singular label for one obs pt
+            if isinstance(kwargs["label"], str):
+                labels = [kwargs.pop("label")]
+            elif isinstance(kwargs["label"], list):
+                labels = kwargs["label"]
+            else:
+                err_msg = (
+                    "Unrecognizable type for labels. Only list of strings "
+                    "or string are accaptable. "
+                )
+        if isinstance(labels, str):
+            labels = [labels]
+        if labels is not None and points.shape[0] != len(labels):
+            err_msg = (
+                "Mismatch between number of provided labels and"
+                " observation points."
+            )
+            raise RuntimeError(err_msg)
+        outer_bool = outer_legend is True or isinstance(outer_legend, tuple)
+        loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
         variable = Variable.find(variable, self.mesh(0))
         values = variable.magnitude.transform(
             self.probe(points, variable.data_name, interp_method)
@@ -826,10 +854,24 @@ class MeshSeries(Sequence[Mesh]):
             )
         else:
             ax.plot(x_values, values, label=labels, **kwargs)
-        if labels is not None:
-            ax.legend(
-                facecolor="white", framealpha=1, prop={"family": "monospace"}
+        legend_props = {
+            "facecolor": "white",
+            "framealpha": 1,
+            "prop": {"family": "monospace"},
+        }
+        if isinstance(outer_legend, bool) and outer_legend is True:
+            outer_legend = (1.05, 1.0)
+        if labels is not None and outer_bool:
+            legend_props.update(
+                {
+                    "loc": loc,
+                    "bbox_to_anchor": outer_legend,
+                    "borderaxespad": 0.0,
+                }
             )
+        if labels is not None:
+            hdls, lbls = ax.get_legend_handles_labels()
+            ax.legend(**legend_props, handles=hdls, labels=lbls)
         ax.set_axisbelow(True)
         ax.grid(which="major", color="lightgrey", linestyle="-")
         ax.grid(which="minor", color="0.95", linestyle="--")

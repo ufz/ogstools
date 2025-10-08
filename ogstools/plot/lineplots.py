@@ -61,6 +61,7 @@ def line(
     var2: str | Variable | None = None,
     ax: plt.Axes | None = None,
     sort: bool = True,
+    outer_legend: bool | tuple[float, float] = False,
     **kwargs: Any,
 ) -> plt.Figure | None:
     """Plot some data of a (1D) mesh.
@@ -83,6 +84,11 @@ def line(
                     figure will be created.
     :param sort:    Automatically sort the values along the dimension of the
                     mesh with the largest extent
+    :outer_legend:  Draw legend to the right next to the plot area.
+                    By default False (legend stays inside).
+                    User can pass a tuple of two floats (x, y), which will be
+                    passed to bbox_to_anchor parameter in matplotlib legend call.
+                    True will pass the default values (1.05, 1.0).
 
     Keyword Arguments:
         - figsize:      figure size (default=[16, 10])
@@ -125,7 +131,8 @@ def line(
     kwargs["linewidth"] *= lw_scale
     labels = kwargs.pop("labels", kwargs.pop("label", None))
     annotation = kwargs.pop("annotate", None)
-    loc = kwargs.pop("loc", "upper right")
+    outer_bool = outer_legend is True or isinstance(outer_legend, tuple)
+    loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
 
     if sort and "time" not in [var1, var2]:
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
@@ -150,6 +157,7 @@ def line(
     )
     only_points = (cell_types == [0]) or (cell_types == [1])
     reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
+    prop = {}
     if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
         ax_.plot(x, y, **kwargs)
     else:
@@ -163,10 +171,21 @@ def line(
         style = {"size": fontsize, "backgroundcolor": "0.8", "ha": "center"}
         label_xy = utils.padded(ax_, mesh.center[0], mesh.center[1])
         ax_.annotate(annotation, label_xy, **style)
-    if labels:
-        prop = {"size": fontsize}
-        if monospace:
-            prop["family"] = "monospace"
-        ax_.legend(prop=prop, loc=loc)
+    prop["size"] = fontsize
+    if monospace:
+        prop["family"] = "monospace"
+    leg_prop: dict[str, Any] = {}
+    if outer_legend is True:
+        outer_legend = (1.05, 1.0)
+    if labels is not None and isinstance(outer_legend, tuple):
+        leg_prop.update(
+            {
+                "loc": loc,
+                "bbox_to_anchor": outer_legend,
+                "borderaxespad": 0.0,
+            }
+        )
+    if labels is not None:
+        ax_.legend(prop=prop, **leg_prop)
     utils.update_font_sizes(axes=ax_, fontsize=fontsize)
     return ax_.figure if ax is None else None
