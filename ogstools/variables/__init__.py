@@ -181,7 +181,10 @@ saturation = Scalar(
 )
 
 temperature_BHE = BHE_Vector(
-    data_name="temperature_BHE", data_unit="K", output_unit="°C", symbol="T"
+    data_name="temperature_BHE",
+    data_unit="K",
+    output_unit="°C",
+    symbol="T",
 )
 
 all_variables = [v for v in locals().values() if isinstance(v, Variable)]

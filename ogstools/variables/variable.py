@@ -323,11 +323,10 @@ class Variable:
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
         "Check whether the mesh contains the mask of this variable."
-        return (
-            not self.is_mask()
-            and self.mask in mesh.cell_data
-            and (len(mesh.cell_data[self.mask]) != 0)
-        )
+        mask_data = next(  # type: ignore[call-overload]
+            (d for d in [mesh.point_data, mesh.cell_data] if self.mask in d), {}
+        ).get(self.mask, [])
+        return not self.is_mask() and (len(mask_data) != 0)
 
     def _get_data(
         self,

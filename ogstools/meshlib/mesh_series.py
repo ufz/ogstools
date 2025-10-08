@@ -12,6 +12,7 @@ from copy import copy as shallowcopy
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Literal, cast, overload
+from warnings import warn
 
 import meshio
 import numpy as np
@@ -28,6 +29,7 @@ from typeguard import typechecked
 
 from ogstools import plot
 from ogstools._internal import deprecated
+from ogstools.meshlib.data_processing import difference_pairwise
 from ogstools.variables import Variable, normalize_vars, u_reg
 
 from ._utils import reshape_obs_points
@@ -1060,6 +1062,41 @@ class MeshSeries(Sequence[Mesh]):
         new_ms._mesh_cache = scaled_cache
 
         return new_ms
+
+    @classmethod
+    @typechecked
+    def difference(
+        cls,
+        ms_a: MeshSeries,
+        ms_b: MeshSeries,
+        variable: Variable | str | None = None,
+    ) -> MeshSeries:
+        """
+        Compute difference of variables between the two MeshSeries instances
+        from which this method is called and a second MeshSeries
+        instance passed as method parameter.
+        Returns new instance of MeshSeries:
+        ms = ms_a - ms_b
+
+        :param base_ms:         The mesh from which data is to be subtracted.
+        :param subtract_mesh:   The mesh whose data is to be subtracted.
+        :param variable:        The variable of interest. If not given, all
+                                point and cell_data will be processed raw.
+        :returns:   MeshSeries containing the difference of variable` or
+                    of all datasets between both MeshSeries.
+        """
+        if not np.array_equal(ms_a.timevalues, ms_b.timevalues):
+            ms_b_resampled = ms_b.resample(ms_b, ms_a.timevalues)
+            msg = "Two instances of MeshSeries have different time values. \
+                Direct difference cannot be computed. \
+                    ms_b will be interpolated to match timesteps of ms_a."
+            warn(msg, RuntimeWarning, stacklevel=2)
+        else:
+            ms_b_resampled = ms_b
+        return MeshSeries.from_data(
+            difference_pairwise(ms_a, ms_b_resampled, variable),
+            ms_a.timevalues,
+        )
 
     @typechecked
     def extract(
