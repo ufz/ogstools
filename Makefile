@@ -5,8 +5,7 @@ help:  ## Show this help
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	if command -v uv > /dev/null 2>&1; then \
-		uv venv; \
-		uv pip install -e ".[pinned,dev,test,docs]"; \
+		uv sync --extra pinned --extra dev --extra test --extra docs; \
 		uv run pre-commit install; \
 	else \
 		python -m venv .venv --upgrade-deps; \
