@@ -296,13 +296,24 @@ class TestPlotting:
             lambda mesh: mesh.sample_over_line([x1, yc, z], [x2, yc, z])
         )
 
-        def check_labels(*args, x_l: str, y_l: str) -> None:
-            fig = ot.plot.line(*args, figsize=[4, 3])
+        def check_labels(
+            *args, x_l: str, y_l: str, outer_legend: float | None = None
+        ) -> None:
+            fig = ot.plot.line(
+                *args, figsize=[4, 3], label="center", outer_legend=outer_legend
+            )
             assert fig.axes[0].get_xlabel().split(" ")[0] == x_l
             assert fig.axes[0].get_ylabel().split(" ")[0] == y_l
+            assert fig.axes[0].get_legend() is not None
             plt.close()
 
         temp = ot.variables.temperature
+        check_labels(
+            ms_sample_x, temp, x_l="x", y_l="temperature", outer_legend=0.8
+        )
+        check_labels(
+            ms_sample_x, temp, x_l="x", y_l="temperature", outer_legend=True
+        )
         check_labels(ms_sample_x, temp, x_l="x", y_l="temperature")
         check_labels(ms_sample_x, "time", temp, x_l="time", y_l="temperature")
         check_labels(ms_sample_x, temp, "time", x_l="temperature", y_l="time")
