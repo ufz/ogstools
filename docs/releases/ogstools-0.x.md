@@ -16,6 +16,7 @@
 
 - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
 - add option to plot legend outside of plots.
+- MeshSeries now has difference method.
 
 ## Infrastructure
 

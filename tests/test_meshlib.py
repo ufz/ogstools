@@ -496,6 +496,81 @@ class TestUtils:
         meshes_diff = ot.meshlib.difference_matrix(meshes1, meshes2)
 
     @pytest.mark.parametrize(
+        ("ms", "var"),
+        [
+            (examples.load_meshseries_THM_2D_PVD(), ot.variables.temperature),
+            (examples.load_meshseries_THM_2D_PVD(), ot.variables.pressure),
+            (examples.load_meshseries_CT_2D_XDMF(), ot.variables.saturation),
+            (
+                examples.load_meshseries_HT_2D_XDMF(),
+                ot.variables.velocity.replace(data_name="darcy_velocity"),
+            ),
+            (
+                examples.load_meshseries_BHEs_3D("full", ".xdmf"),
+                ot.variables.temperature_BHE[1, 1],
+            ),
+        ],
+    )
+    def test_diff_meshseries(self, ms, var):
+        """
+        Tests using difference method:
+            A) By computing difference with self -> zero.
+            B) By computing difference with doubled self -> self.
+        """
+        variable = var.replace(
+            output_unit=var.data_unit
+        )  # needed for double check
+
+        # A) Diff with self, should result in only 0 values
+        ms_diff = ot.MeshSeries.difference(ms, ms, variable)
+        assert isinstance(ms_diff, ot.MeshSeries)
+        assert len(ms) == len(ms_diff)
+        for mesh in ms_diff:
+            # np.nan_to_num is needed to account for mask in pressure in THM_2D
+            data = np.nan_to_num(mesh[variable.difference.output_name])
+            assert np.count_nonzero(data) == 0
+
+        # B) Diff with self*2 should result in values equal to self
+        ms_double = ms.copy()
+        for m in ms_double:
+            m[variable.data_name] = m[variable.data_name] * 2
+        ms_zero = ot.MeshSeries.difference(ms_double, ms, variable)
+        assert isinstance(ms_zero, ot.MeshSeries)
+        assert len(ms) == len(ms_zero)
+        for mesh_diff, mesh in zip(ms_zero, ms, strict=True):
+            assert np.array_equal(
+                mesh_diff[variable.difference.data_name],
+                # Below: mesh has to be transformed to keep unit conversion consistent
+                # and for temperature_BHE to select one column from a vector
+                variable.transform(mesh),
+                equal_nan=True,  # for cases with masks (subdomain deactivated)
+            )
+
+    @pytest.mark.parametrize(
+        ("ms"),
+        [
+            (examples.load_meshseries_THM_2D_PVD()),
+            (examples.load_meshseries_HT_2D_XDMF()),
+            (examples.load_meshseries_BHEs_3D("full", ".xdmf")),
+        ],
+    )
+    def test_raw_diff_meshseries(self, ms):
+        ms = examples.load_meshseries_THM_2D_PVD()
+
+        # Diff with self, should result in only 0 values
+        ms_diff = ot.MeshSeries.difference(ms, ms)
+        assert isinstance(ms_diff, ot.MeshSeries)
+        assert len(ms) == len(ms_diff)
+
+        for key in ms_diff.point_data:
+            assert np.count_nonzero(ms_diff[key]) == 0
+
+        for key in ms_diff.cell_data:
+            if key == "MaterialIDs":
+                continue
+            assert np.count_nonzero(ms_diff[key]) == 0
+
+    @pytest.mark.parametrize(
         "mesh",
         [
             examples.load_mesh_mechanics_2D(),

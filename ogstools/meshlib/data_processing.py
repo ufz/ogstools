@@ -4,8 +4,10 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from collections.abc import Sequence
 from itertools import product
 from typing import TypeVar
+from warnings import warn
 
 import numpy as np
 import pyvista as pv
@@ -14,21 +16,28 @@ from typeguard import typechecked
 from ogstools.variables import Variable
 
 Mesh = TypeVar("Mesh", bound=pv.UnstructuredGrid)
+MeshSeries = TypeVar("MeshSeries", bound=Sequence[pv.UnstructuredGrid])
+
+
+def _is_same_topology(mesh_a: Mesh, mesh_b: Mesh) -> bool:
+    return (
+        mesh_a.points.shape == mesh_b.points.shape
+        # and base_mesh.cells.shape == subtract_mesh.cells.shape
+        and np.all(np.equal(mesh_a.points, mesh_b.points))
+        # and np.all(np.equal(base_mesh.cells, subtract_mesh.cells))
+    )
 
 
 def _raw_differences_all_data(base_mesh: Mesh, subtract_mesh: Mesh) -> Mesh:
     diff = base_mesh.copy(deep=True)
-    sampled_subtract_mesh = base_mesh.sample(subtract_mesh)
     for point_data_key in base_mesh.point_data:
-        diff.point_data[point_data_key] -= sampled_subtract_mesh.point_data[
+        diff.point_data[point_data_key] -= subtract_mesh.point_data[
             point_data_key
         ]
     for cell_data_key in base_mesh.cell_data:
         if cell_data_key == "MaterialIDs":
             continue
-        diff.cell_data[cell_data_key] -= sampled_subtract_mesh.cell_data[
-            cell_data_key
-        ]
+        diff.cell_data[cell_data_key] -= subtract_mesh.cell_data[cell_data_key]
     return diff
 
 
@@ -47,24 +56,28 @@ def difference(
     :returns:   A new mesh containing the difference of `variable` or
                 of all datasets between both meshes.
     """
-    if variable is None:
-        return _raw_differences_all_data(base_mesh, subtract_mesh)
-    if isinstance(variable, str):
-        variable = Variable(data_name=variable, output_name=variable)
-
-    var_key = variable.data_name if isinstance(variable, Variable) else variable
-    is_same_topology = (
-        base_mesh.points.shape == subtract_mesh.points.shape
-        and base_mesh.cells.shape == subtract_mesh.cells.shape
-        and np.all(np.equal(base_mesh.points, subtract_mesh.points))
-        and np.all(np.equal(base_mesh.cells, subtract_mesh.cells))
-    )
+    is_same_topology = _is_same_topology(base_mesh, subtract_mesh)
     if is_same_topology:
         sub_mesh = subtract_mesh
         mask = None
     else:
+        base_mesh.point_data["TOPOLOGY_MASK"] = np.ones_like(
+            base_mesh.number_of_points
+        )
+        msg = """
+        The topologies of base_mesh and subtract_mesh aren't identical.
+        In order to compute difference, subtract_mesh will be spatially
+        resampled.
+        """
+        warn(msg, RuntimeWarning, stacklevel=2)
         sub_mesh = base_mesh.sample(subtract_mesh)
-        mask = sub_mesh[var_key] == 0.0
+        mask = sub_mesh["TOPOLOGY_MASK"] == 0.0
+
+    if variable is None:
+        return _raw_differences_all_data(base_mesh, sub_mesh)
+    if isinstance(variable, str):
+        variable = Variable(data_name=variable, output_name=variable)
+
     diff_mesh = base_mesh.copy(deep=True)
     diff_mesh.clear_point_data()
     diff_mesh.clear_cell_data()
@@ -80,8 +93,8 @@ def difference(
 
 
 def difference_pairwise(
-    meshes_1: list | np.ndarray,
-    meshes_2: list | np.ndarray,
+    meshes_1: list | np.ndarray | MeshSeries,
+    meshes_2: list | np.ndarray | MeshSeries,
     variable: Variable | str | None = None,
 ) -> np.ndarray:
     """
@@ -96,8 +109,10 @@ def difference_pairwise(
     :returns:   An array of meshes containing the differences of `variable`
                 or all datasets between meshes_1 and meshes_2.
     """
-    meshes_1 = np.asarray(meshes_1).ravel()
-    meshes_2 = np.asarray(meshes_2).ravel()
+    if isinstance(meshes_1, list):
+        meshes_1 = np.asarray(meshes_1).ravel()
+    if isinstance(meshes_2, list):
+        meshes_2 = np.asarray(meshes_2).ravel()
     if len(meshes_1) != len(meshes_2):
         msg = "Mismatch in length of provided lists/arrays. \
               Their length has to be identical to calculate pairwise \
@@ -106,7 +121,7 @@ def difference_pairwise(
     return np.asarray(
         [
             difference(m1, m2, variable)
-            for m1, m2 in zip(meshes_1, meshes_2, strict=False)
+            for m1, m2 in zip(meshes_1, meshes_2, strict=True)
         ]
     )
 
