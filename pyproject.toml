@@ -8,7 +8,23 @@ dynamic = ["version"]
 description = "A collection of Python tools aimed at evolving into a modeling toolchain around OpenGeoSys."
 authors = [{ name = 'OpenGeoSys Community', email = 'info@opengeosys.org' }]
 license = { text = "BSD-3-Clause" }
-keywords = ["opengeosys", "geoscience", "subsurface modeling", "hydrogeology", "numerical simulation", "finite element method", "groundwater flow", "geochemistry", "geotechnical engineering", "porous media", "contaminant transport", "mesh generation", "data visualization", "scientific computing", "open-source software"]
+keywords = [
+  "opengeosys",
+  "geoscience",
+  "subsurface modeling",
+  "hydrogeology",
+  "numerical simulation",
+  "finite element method",
+  "groundwater flow",
+  "geochemistry",
+  "geotechnical engineering",
+  "porous media",
+  "contaminant transport",
+  "mesh generation",
+  "data visualization",
+  "scientific computing",
+  "open-source software",
+]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
@@ -22,7 +38,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3 :: Only",
-  "Operating System :: OS Independent"
+  "Operating System :: OS Independent",
 ]
 readme = "README.md"
 requires-python = '>=3.10'
@@ -46,7 +62,8 @@ dependencies = [
   "psutil>=6.0.0",
   "watchdog>=6.0.0",
   "PyYAML>=6.0.0",
-  "types-PyYAML>=6.0.0.20240917"
+  "types-PyYAML>=6.0.0.20240917",
+  "vtk>=9.4.0",
 ]
 
 [project.urls]
@@ -63,7 +80,7 @@ include = ["ogstools*"]
 namespaces = false
 
 [tool.setuptools_scm]
-version_scheme = "no-guess-dev"         # would increment version otherwise
+version_scheme = "no-guess-dev"   # would increment version otherwise
 local_scheme = "dirty-tag"
 fallback_version = "0.7.0+no-scm" # Manually increment on release!
 
@@ -218,9 +235,8 @@ pinned = [
   "widgetsnbextension==4.0.14",
   "wslink==2.3.4",
   "xyzservices==2025.4.0",
-  "yarl==1.20.1"
+  "yarl==1.20.1",
 ]
-
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
@@ -241,9 +257,7 @@ docs = [
   "trame-vtk>=2.6.0",
   "pagefind[extended]",
 ]
-feflow = [
-  "ifm_contrib>=0.2.4",
-]
+feflow = ["ifm_contrib>=0.2.4"]
 ogs = ["ogs>=6.5.6"]
 
 [tool.pytest.ini_options]
