@@ -14,6 +14,7 @@
 
 setup_dict = {
     "default_cmap": "RdBu_r",
+    "continuous_cmap": False,
     "custom_cmap": None,
     "dpi": 120,
     "min_ax_aspect": 0.5,
