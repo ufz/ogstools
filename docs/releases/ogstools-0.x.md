@@ -18,6 +18,7 @@
 - add option to plot legend outside of plots.
 - MeshSeries now has difference method.
 - added support for continuous contourplots via `continuous_cmap=True`.
+- Allow user to set arrowsize parameter in contourf
 
 ## Infrastructure
 

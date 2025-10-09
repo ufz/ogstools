@@ -38,4 +38,5 @@ setup_dict = {
     "label_split": 30,
     "spatial_unit": "m",
     "time_unit": "s",
+    "arrowsize": 1,
 }

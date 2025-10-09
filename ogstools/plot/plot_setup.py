@@ -70,6 +70,8 @@ class PlotSetup:
     "Unit of the spatial dimension."
     time_unit: str
     "Unit of the time dimension."
+    arrowsize: float
+    "Size of arrows in contourf plots"
 
     @classmethod
     def from_dict(cls: type["PlotSetup"], obj: dict) -> "PlotSetup":
@@ -98,6 +100,7 @@ class PlotSetup:
             label_split=obj["label_split"],
             spatial_unit=obj["spatial_unit"],
             time_unit=obj["time_unit"],
+            arrowsize=obj["arrowsize"],
         )
 
     def reset(self) -> None:

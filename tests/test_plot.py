@@ -122,6 +122,11 @@ class TestPlotting:
         ot.plot.contourf(
             mesh.threshold((1, 3), "MaterialIDs"), ot.variables.velocity
         )
+        ot.plot.contourf(
+            mesh.threshold((1, 3), "MaterialIDs"),
+            ot.variables.velocity,
+            arrowsize=5,
+        )
         fig = mesh.plot_contourf(ot.variables.displacement[0])
         ot.plot.shape_on_top(
             fig.axes[0], mesh, lambda x: min(max(0, 0.1 * (x - 3)), 100)
