@@ -6,7 +6,7 @@
 
 import os
 import tempfile
-from collections.abc import ItemsView, KeysView, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 from pathlib import Path
 
 import pyvista as pv
@@ -55,6 +55,9 @@ class Meshes:
 
     def __len__(self) -> int:
         return len(self._meshes)
+
+    def __iter__(self) -> Iterator[str]:
+        yield from self._meshes
 
     @classmethod
     def from_yaml(cls, geometry_file: Path) -> "Meshes":
