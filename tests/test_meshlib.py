@@ -14,6 +14,7 @@ from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
 
 
@@ -989,6 +990,38 @@ class TestUtils:
 
             else:
                 _check(mesh, cli_subdomain, "bulk_element_ids")
+
+    def test_meshes_from_prj(self, tmp_path: Path):
+        "Check, that the mesh paths generated from a Project are correct."
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes_ref = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        meshes_ref.save(tmp_path)
+        prj = ot.Project(examples.prj_mechanics)
+        meshes = ot.Meshes(
+            {m.stem: ot.Mesh(m) for m in prj.meshpaths(tmp_path)}
+        )
+        assert meshes.domain_name() == meshes_ref.domain_name()
+        for name, name_ref in zip(
+            sorted(meshes), sorted(meshes_ref), strict=True
+        ):
+            assert name == name_ref
+            for data in ["point_data", "cell_data", "field_data"]:
+                np.testing.assert_array_equal(
+                    getattr(meshes[name], data).values(),
+                    getattr(meshes_ref[name_ref], data).values(),
+                )
+
+    def test_create_gml_meshes(self, tmp_path):
+        """Check, that the meshes generated from a Project + gml are correct."""
+        prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
+        meshes = ot.Meshes.from_gml(
+            prj.meshpaths()[0], prj.gml_filepath(), tmp_path
+        )
+        prefix = "square_1x1_geometry_"
+        subdomain_names = [
+            prefix + name for name in ["bottom", "left", "right", "top"]
+        ]
+        assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
 
     def test_mfy_meshes_from_yaml(self, tmp_path):
         yaml_content = textwrap.dedent(

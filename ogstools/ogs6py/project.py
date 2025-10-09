@@ -1184,3 +1184,28 @@ class Project:
     def set_media(self, media_set: MediaSet) -> None:
         """Public API: import MediaSet into this Project."""
         _ProjectMediaImporter(self).set_media(media_set)
+
+    def gml_filepath(self, mesh_dir: Path | None = None) -> Path | None:
+        """Returns the filepath gml file if given in the Project.
+
+        :param mesh_dir:    Path to the meshes directory (default: input dir)
+        """
+        mesh_dir = self.folder if mesh_dir is None else mesh_dir
+        gm = self._get_root().find("./geometry")
+        if gm is None or gm.text is None:
+            return None
+        return mesh_dir / gm.text
+
+    def meshpaths(self, mesh_dir: Path | None = None) -> list[Path]:
+        """Returns the filepaths to the given meshes in the Project.
+
+        This does not include meshes defined via a .gml file.
+
+        :param mesh_dir:    Path to the meshes directory (default: input dir)
+        """
+        mesh_dir = self.folder if mesh_dir is None else mesh_dir
+        return [
+            mesh_dir / m.text
+            for xpath in ["./mesh", "./meshes/mesh"]
+            for m in self._get_root().findall(xpath)
+        ]

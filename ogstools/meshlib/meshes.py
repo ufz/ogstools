@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import os
 import tempfile
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
@@ -130,6 +131,40 @@ class Meshes:
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = False
         return meshes_obj
+
+    @classmethod
+    def from_gml(
+        cls,
+        domain_path: Path,
+        gml_path: Path,
+        out_dir: Path | None = None,
+        tolerance: float = 1e-12,
+    ) -> "Meshes":
+        """Create Meshes from geometry definition in the gml file.
+
+        :param domain_path: Path to the domain mesh.
+        :param gml_file:    Path to the gml file.
+        :param out_dir:     Where to write the gml meshes (default: gml dir)
+        :param tolerance:   search length for node search algorithm
+
+        :returns:           A Meshes object.
+        """
+        out_dir = gml_path.parent if out_dir is None else out_dir
+
+        cur_dir = Path.cwd()
+        os.chdir(out_dir)
+
+        from ogstools._find_ogs import cli
+
+        prev_files = set(out_dir.glob("*.vtu"))
+        cli().constructMeshesFromGeometry(
+            "-g", gml_path, "-m", domain_path, "-s", str(tolerance)
+        )
+        vtu_files = sorted(set(out_dir.glob("*.vtu")).difference(prev_files))
+        os.chdir(cur_dir)
+        return cls(
+            {file.stem: Mesh(file) for file in [domain_path] + vtu_files}
+        )
 
     def keys(self) -> KeysView[str]:
         """
