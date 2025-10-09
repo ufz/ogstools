@@ -25,6 +25,8 @@ class PlotSetup:
     "True if all subplots share on colorbar, else each has its own colorbar."
     custom_cmap: Any | None
     "Custom colormap to use if given"
+    continuous_cmap: bool
+    "If False (default), cmap contains one color per level, else continuous."
     dpi: int
     "The resolution (dots per inch) for the figure."
     min_ax_aspect: float | None
@@ -88,6 +90,7 @@ class PlotSetup:
             material_names=obj["material_names"],
             combined_colorbar=obj["combined_colorbar"],
             custom_cmap=obj["custom_cmap"],
+            continuous_cmap=obj["continuous_cmap"],
             tick_pad=obj["tick_pad"],
             tick_length=obj["tick_length"],
             fontsize=obj["fontsize"],

@@ -266,11 +266,15 @@ def get_cmap_norm(
     else:
         continuous_cmap = variable.cmap
 
+    cmap_is_continuous = kwargs.get("continuous_cmap", setup.continuous_cmap)
     conti_norm: mcolors.TwoSlopeNorm | mcolors.Normalize
     if variable.bilinear_cmap:
         if vmin < 0.0 < vmax:
             vcenter = 0.0
-            vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array([-1.0, 1.0])
+            if not cmap_is_continuous:
+                vmin, vmax = np.max(np.abs([vmin, vmax])) * np.array(
+                    [-1.0, 1.0]
+                )
             conti_norm = mcolors.TwoSlopeNorm(vcenter, vmin, vmax)
         else:
             # only use one half of the diverging colormap
@@ -283,6 +287,8 @@ def get_cmap_norm(
             conti_norm = mcolors.Normalize(vmin, vmax)
     else:
         conti_norm = mcolors.Normalize(vmin, vmax)
+    if cmap_is_continuous:
+        return continuous_cmap, conti_norm
 
     mid_levels = np.append((levels[:-1] + levels[1:]) * 0.5, levels[-1])
     if variable.categoric:

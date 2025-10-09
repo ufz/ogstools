@@ -117,7 +117,7 @@ class TestPlotting:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh = meshseries.mesh(1)
         mesh.plot_contourf(ot.variables.material_id)
-        mesh.plot_contourf(ot.variables.temperature)
+        mesh.plot_contourf(ot.variables.temperature, continuous_cmap=True)
         mesh.plot_contourf(ot.variables.Scalar("pressure_active"))
         ot.plot.contourf(
             mesh.threshold((1, 3), "MaterialIDs"), ot.variables.velocity

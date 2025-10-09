@@ -25,11 +25,18 @@ mesh = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km")).mesh(1)
 #   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
 #
 
-# %% First, let's plot the material ids (cell_data). Per default in
-# the setup, this will automatically show the element edges.
+# %% [markdown]
+# Plotting Cell Data
+# ==================
+# First, let's plot the material ids, which is part of the mesh's cell_data.
+# Per default in the setup, this will automatically show the element edges.
+
+# %%
 fig = mesh.plot_contourf(ot.variables.material_id)
 
 # %% [markdown]
+# Plotting Point Data
+# ===================
 # Now, let's plot the temperature field (point_data) at the first timestep.
 # The default temperature variable from the ``variables`` reads the temperature
 # data as Kelvin and converts them to degrees Celsius.
@@ -46,18 +53,33 @@ fig = mesh.plot_contourf(
 )
 
 # %%
-fig = mesh.plot_contourf(
-    ot.variables.displacement[1], show_max=True, show_edges=True
-)
+fig = mesh.plot_contourf(ot.variables.displacement[1], show_max=True)
 
 # %% [markdown]
-# This example has hydraulically deactivated subdomains:
+# To have a continuous colormap instead of discrete colors per level pass a
+# the equally named argument. In this case this helps to increase the level
+# of detail of the negative displacements due to the bilinear colormap.
+
+# %%
+fig = mesh.plot_contourf(ot.variables.displacement[1], continuous_cmap=True)
+
+# %% [markdown]
+# Plotting with deactivated subdomains
+# ====================================
+# This example has hydraulically deactivated subdomains, which will mask the
+# related variables.
 
 # %%
 fig = mesh.plot_contourf(ot.variables.pressure.get_mask(), fontsize=40)
 
+# %%
+fig = mesh.plot_contourf(ot.variables.pressure)
+
 # %% [markdown]
-# Let's plot the fluid velocity field.
+# Plotting vector data
+# ====================
+# Let's plot the fluid velocity field. As this is vectorial data, this will
+# automatically add streamlines to indicate the vector directions.
 
 # %%
 fig = mesh.plot_contourf(ot.variables.velocity, show_region_bounds=False)

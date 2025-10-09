@@ -91,6 +91,8 @@ def add_colorbars(
         bounds = level_boundaries(levels)
         ticks = bounds[:-1] + 0.5 * np.diff(bounds)
 
+    continuous_cmap = kwargs.get("continuous_cmap", setup.continuous_cmap)
+
     with np.errstate(over="ignore"):
         cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
         scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -99,15 +101,25 @@ def add_colorbars(
             norm=norm,
             ax=ax,
             ticks=ticks,
-            drawedges=True,
+            drawedges=not continuous_cmap,
             location=kwargs.get("cb_loc", "right"),
             spacing="uniform",
             pad=kwargs.get("cb_pad", 0.05),
             extendrect=True,
         )
+    if continuous_cmap and variable.bilinear_cmap:
+        # fix stretched colorbar with Matplotlib's TwoSlopeNorm
+        cb.ax.set_yscale("linear")
+        cb.set_ticks(ticks)
     # Formatting the colorbar label and ticks
 
     tick_labels, offset = get_ticklabels(ticks)
+    if continuous_cmap and len(ticks) > 2:
+        half_delta = 0.5 * abs(np.median(np.diff(ticks)))
+        if abs(ticks[1] - ticks[0]) < half_delta:
+            tick_labels[1] = ""
+        if abs(ticks[-1] - ticks[-2]) < half_delta:
+            tick_labels[-2] = ""
     cb_label = variable.magnitude.get_label(setup.label_split)
     if offset is not None:
         if offset[0] == "-":
@@ -191,12 +203,14 @@ def subplot(
         levels = compute_levels(vmin, vmax, num_levels)
     cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
 
+    conti_cmap = kwargs.get("continuous_cmap", setup.continuous_cmap)
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if variable.data_name in mesh.point_data:
+            tri_levels = 255 if conti_cmap else kwargs.get("levels", levels)
             ax.tricontourf(
-                x, y, tri, values, levels=kwargs.get("levels", levels),
+                x, y, tri, values, levels=tri_levels,
                 cmap=cmap, norm=norm, extend="both", mask=nan_mask
             )  # fmt: skip
             if variable.bilinear_cmap:
@@ -234,6 +248,7 @@ def subplot(
     show_min = kwargs.get("show_min", False) and not variable.is_mask()
     fontsize = kwargs.get("fontsize", setup.fontsize)
 
+    # TODO: refactor to provide a function to return pos and val of min / max
     for show, func, level_index in zip(
         [show_min, show_max], [np.argmin, np.argmax], [0, -1], strict=True
     ):
