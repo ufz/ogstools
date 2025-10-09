@@ -313,9 +313,7 @@ def contrast_color(color: ColorType) -> ColorType:
     https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
     """
     r, g, b = mcolors.to_rgb(color)
-    # threshold lowered on purpose to prefer black coloring to only use white
-    # when it is really necessary
-    return "k" if (r * 0.299 + g * 0.587 + b * 0.114) > 0.2 else "w"
+    return "k" if (r * 0.299 + g * 0.587 + b * 0.114) > 149 / 255 else "w"
 
 
 def colors_from_cmap(cmap: str | list, num: int) -> list[str]:

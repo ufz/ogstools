@@ -255,9 +255,9 @@ def subplot(
         if not show:
             continue
         index = np.unravel_index(func(values), values.shape)[0]
-        x_pos, y_pos = mesh.points[index, [x_id, y_id]]
-        value = values[mesh.find_closest_point(mesh.points[index])]
-        color = utils.contrast_color(cmap(norm(value)))
+        x_pos, y_pos = (x[index], y[index])
+
+        color = utils.contrast_color(cmap(norm(func(values))))
         ax.plot(
             x_pos, y_pos, color=color, marker="x", clip_on=False,
             markersize=fontsize*0.625, markeredgewidth=3
