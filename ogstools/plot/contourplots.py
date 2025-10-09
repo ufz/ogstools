@@ -161,7 +161,15 @@ def subplot(
     levels: np.ndarray | None = None,
     **kwargs: Any,
 ) -> None:
-    "Plot the variable field of a mesh on a matplotlib.axis."
+    """Plot the variable field of a mesh on a matplotlib.axis.
+
+    :param mesh: singular mesh
+    :param variable: the field to be visualized on all meshes
+    :param ax: matplotlib ax to use for plotting
+    :param levels: value levels
+
+    Matplotlib kwargs are also accepted.
+    """
 
     variable = Variable.find(variable, mesh)
     if mesh.get_cell(0).dimension == 3:
@@ -241,7 +249,13 @@ def subplot(
         features.layer_boundaries(ax, mesh, projection)
 
     if isinstance(variable, Vector):
-        streamlines(surf_tri, ax, variable, projection)
+        streamlines(
+            surf_tri,
+            ax,
+            variable,
+            kwargs.get("arrowsize", setup.arrowsize),
+            projection,
+        )
 
     ax.margins(0, 0)  # otherwise it shrinks the plot content
     show_max = kwargs.get("show_max", False) and not variable.is_mask()
@@ -422,6 +436,7 @@ def contourf(
                         if False and 3D mesh: -> pyvista static Image
 
     Keyword Arguments:
+        - arrowsize           scaling factor for arrowsize
         - cb_labelsize:       colorbar labelsize
         - cb_loc:             colorbar location ('left' or 'right')
         - cb_pad:             colorbar padding

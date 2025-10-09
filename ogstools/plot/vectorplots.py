@@ -75,6 +75,7 @@ def streamlines(
     mesh: pv.DataSet,
     ax: plt.Axes,
     variable: Vector,
+    arrowsize: float | None = None,
     projection: int | None = None,
 ) -> None:
     """
@@ -83,19 +84,32 @@ def streamlines(
     :param mesh:        Mesh containing the vector variable
     :param ax:          Matplotlib axis to plot onto
     :param variable:    Vector variable to visualize
+    :param arrowsize:   Sets size of arrows in the plot.
     :param projection:  Index of flat dimension (e.g. 2 for z axis),
                         gets automatically determined if not given
     """
     if (setup.num_streamline_interp_pts) is None:
         return
+    if arrowsize is None:
+        arrowsize = setup.arrowsize
     x_g, y_g, u, v, lw = _vectorfield(mesh, variable, projection)
-    ax.streamplot(x_g, y_g, u, v, color="k", linewidth=lw, density=1.5)
+    ax.streamplot(
+        x_g,
+        y_g,
+        u,
+        v,
+        color="k",
+        linewidth=lw,
+        density=1.5,
+        arrowsize=arrowsize,
+    )
 
 
 def quiver(
     mesh: pv.DataSet,
     ax: plt.Axes,
     variable: Vector,
+    arrowsize: float | None = None,
     projection: int | None = None,
     glyph_type: Literal["arrow", "line"] = "arrow",
 ) -> None:
@@ -105,15 +119,18 @@ def quiver(
     :param mesh:        Mesh containing the vector variable
     :param ax:          Matplotlib axis to plot onto
     :param variable:    Vector variable to visualize
+    :param arrowsize:   Sets size of arrows in the plot.
     :param projection:  Index of flat dimension (e.g. 2 for z axis),
                         gets automatically determined if not given
     :param glyph_type:  Whether to plot arrows or lines.
     """
 
+    if arrowsize is None:
+        arrowsize = setup.arrowsize
     x_g, y_g, u, v, _ = _vectorfield(mesh, variable, projection)
     line_args = (
         {"headlength": 0, "headaxislength": 0, "headwidth": 1, "pivot": "mid"}
         if glyph_type == "line"
         else {}
     )
-    ax.quiver(x_g, y_g, u, v, **line_args, scale=1.0 / 0.03)
+    ax.quiver(x_g, y_g, u, v, **line_args, scale=arrowsize / 0.03)
