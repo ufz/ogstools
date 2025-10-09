@@ -991,6 +991,19 @@ class TestUtils:
             else:
                 _check(mesh, cli_subdomain, "bulk_element_ids")
 
+    def test_meshes_saving_reading(self, tmp_path):
+        "Check, that saving+reading meshes equal the original."
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        meshes.save(tmp_path)
+        for name in meshes:
+            mesh = ot.Mesh.read(tmp_path / f"{name}.vtu")
+            for data in ["point_data", "cell_data", "field_data"]:
+                np.testing.assert_array_equal(
+                    getattr(mesh, data).values(),
+                    getattr(meshes[name], data).values(),
+                )
+
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
