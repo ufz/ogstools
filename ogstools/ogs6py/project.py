@@ -88,8 +88,8 @@ class Project:
         self.process: None | subprocess.Popen = None
         self.runtime_start: float = 0.0
         self.runtime_end: float = 0.0
-        self.tree = None
-        self.include_elements: list[ET.Element] = []
+        self.tree: ET._ElementTree | None = None
+        self.include_elements: list[ET._Element] = []
         self.include_files: list[Path] = []
         self.add_includes: list[dict[str, str]] = []
         self.output_dir = Path(output_dir)  # default -> current dir
@@ -157,7 +157,7 @@ class Project:
 
     def _get_root(
         self, remove_blank_text: bool = False, remove_comments: bool = False
-    ) -> ET.Element:
+    ) -> ET._Element:
         parser = ET.XMLParser(
             remove_blank_text=remove_blank_text,
             remove_comments=remove_comments,
@@ -208,8 +208,8 @@ class Project:
 
     @staticmethod
     def _get_parameter_pointer(
-        root: ET.Element, name: str, xpath: str
-    ) -> ET.Element:
+        root: ET._Element, name: str, xpath: str
+    ) -> ET._Element:
         params = root.findall(xpath)
         parameterpointer = None
         for parameter in params:
@@ -224,7 +224,7 @@ class Project:
         return parameterpointer
 
     @staticmethod
-    def _get_medium_pointer(root: ET.Element, mediumid: int) -> ET.Element:
+    def _get_medium_pointer(root: ET._Element, mediumid: int) -> ET._Element:
         xpathmedia = "./media/medium"
         mediae = root.findall(xpathmedia)
         mediumpointer = None
@@ -241,7 +241,7 @@ class Project:
         return mediumpointer
 
     @staticmethod
-    def _get_phase_pointer(root: ET.Element, phase: str) -> ET.Element:
+    def _get_phase_pointer(root: ET._Element, phase: str) -> ET._Element:
         phases = root.findall("./phases/phase")
         phasetypes = root.findall("./phases/phase/type")
         phasecounter = None
@@ -255,7 +255,9 @@ class Project:
         return phasepointer
 
     @staticmethod
-    def _get_component_pointer(root: ET.Element, component: str) -> ET.Element:
+    def _get_component_pointer(
+        root: ET._Element, component: str
+    ) -> ET._Element:
         components = root.findall("./components/component")
         componentnames = root.findall("./components/component/name")
         componentcounter = None
@@ -270,7 +272,7 @@ class Project:
 
     @staticmethod
     def _set_type_value(
-        parameterpointer: ET.Element,
+        parameterpointer: ET._ElementIterator,
         value: int,
         parametertype: Any | None,
         valuetag: str | None = None,
@@ -328,7 +330,7 @@ class Project:
         """
         self.add_includes.append({"parent_xpath": parent_xpath, "file": file})
 
-    def _add_includes(self, root: ET.Element) -> None:
+    def _add_includes(self, root: ET._Element) -> None:
         for add_include in self.add_includes:
             parent = root.findall(add_include["parent_xpath"])
             newelement = []
@@ -995,7 +997,7 @@ class Project:
             raise RuntimeError(msg)
 
     def _property_df_move_elastic_properties_to_mpl(
-        self, newtree: ET.ElementTree, root: ET.Element
+        self, newtree: ET._ElementTree, root: ET._Element
     ) -> None:
         for entry in newtree.findall(
             "./processes/process/constitutive_relation"
@@ -1019,7 +1021,7 @@ class Project:
                             r.text = str(textlist[i])
 
     def _resolve_parameters(
-        self, location: str, newtree: ET.ElementTree
+        self, location: str, newtree: ET._ElementTree
     ) -> None:
         parameter_names_add = newtree.findall(
             f"./media/medium/{location_pointer[location]}properties/property[type='Parameter']/parameter_name"
@@ -1054,7 +1056,7 @@ class Project:
         self,
         mediamapping: dict[int, str],
         numofmedia: int,
-        root: ET.Element,
+        root: ET._Element,
         property_names: list,
         values: dict[str, list],
         location: str,

@@ -24,7 +24,7 @@ mesh.cell_data.remove("MaterialIDs")
 
 # %% [markdown]
 # One way to set-up new Material IDs is by defining a function.
-def material_ids(pt: np.array) -> int:
+def material_ids(pt: np.ndarray) -> int:
     if np.sqrt((pt[0] - 150) ** 2 + (pt[1] + 650) ** 2 + pt[2] ** 2) < 90:
         return 0
     return 1
