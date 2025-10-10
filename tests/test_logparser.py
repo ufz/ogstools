@@ -247,32 +247,38 @@ class TestLogparser:
             f"total_runtime {run_time} from timestamps is to large."
         )
 
-    # TODO: graphical output is not yet tested
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     @pytest.mark.parametrize("x_metric", ["time_step", "model_time"])
     @pytest.mark.parametrize(
         "log", [log_adaptive_timestepping, log_petsc_mpi_1, log_petsc_mpi_2]
     )
-    def test_plot_error(self, x_metric: str, log: Path):
+    def test_plot_convergence_error(self, x_metric: str, log: Path):
+        """Test via image comparison."""
         records = lp.parse_file(log)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
         df_log_copy = df_log.copy()
-        fig, axes = plt.subplots(3, figsize=(20, 30))
+        fig, axes = plt.subplots(3, figsize=(25, 30))
         lp.plot_convergence(df_log, "dx", x_metric, fig=fig, ax=axes[0])
         lp.plot_convergence(df_log, "dx_x", x_metric, fig=fig, ax=axes[1])
         lp.plot_convergence(df_log, "x", x_metric, fig=fig, ax=axes[2])
         pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
+        return fig
 
-    # TODO: graphical output is not yet tested
-    def test_plot_convergence_order(self):
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        ("n", "x_metric"), [(3, "time_step"), (4, "model_time")]
+    )
+    def test_plot_convergence_order(self, n: int, x_metric: str):
+        """Test via image comparison."""
         records = lp.parse_file(log_adaptive_timestepping)
         df_log = lp.fill_ogs_context(pd.DataFrame(records))
         df_log_copy = df_log.copy()
-        fig = lp.plot_convergence_order(df_log, n=3, x_metric="time_step")
-        fig = lp.plot_convergence_order(df_log, n=4, x_metric="model_time")
+        fig = lp.plot_convergence_order(df_log, n=n, x_metric=x_metric)
         pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 2
         assert fig.axes[1].get_ylabel() == "convergence order $q$"
+        return fig
 
     def test_read_version(self):
         file = serial_v2_coupled_ht
