@@ -205,7 +205,8 @@ class Mesh(pv.UnstructuredGrid):
             # print('shape of {node_property_name} is ')
             # print(in_situ_mesh.data_array("double", MeshItemType.Node, node_property_name, 1).shape)
         for cell_property_name in cell_properties:
-            data_type = "int"
+            uint64 = cell_property_name in ["bulk_elem_ids", "bulk_element_ids"]
+            data_type = "std::size_t" if uint64 else "int"
             pv_mesh.cell_data[cell_property_name] = in_situ_mesh.data_array(
                 cell_property_name, data_type
             )
