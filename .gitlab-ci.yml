@@ -435,3 +435,18 @@ ogs/tools/feflow-converter-tests:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   trigger: ogs/tools/feflow-converter-tests
+
+ogs/ogs-notebooks:
+  stage: test
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+      when: manual
+      allow_failure: true
+  variables:
+    OGSTOOLS_REF: "ogstools@git+${CI_SERVER_URL}/${CI_MERGE_REQUEST_SOURCE_PROJECT_PATH}.git@${CI_COMMIT_SHA}"
+    BUILD_CTEST_LARGE: "true"
+    CTEST_ARGS: -R nb-
+    PIPELINE_TYPE: notebooks
+  trigger:
+    project: 'ogs/ogs'
+    branch: 'master'
