@@ -175,15 +175,14 @@ def identify_subdomains(
         remove_data(subdomain, datanames)
         tree = scikdtree(mesh.points)
         bulk_nodes = tree.query(subdomain.points)[1]
-        bulk_element_data = subdomain.cell_data
 
         sub_dim = subdomain.GetMaxSpatialDimension()
         if sub_dim == dim:
             bulk_elements = mesh.find_containing_cell(
                 subdomain.cell_centers().points
             )
+            subdomain.cell_data["bulk_element_ids"] = np.uint64(bulk_elements)
         else:
-            # special case for subdomain cells which touch multiple bulk cells
             nodes_per_sub_cell = [cell.point_ids for cell in subdomain.cell]
             cells_per_sub_node = {
                 sub_node_id: mesh.point_cell_ids(bulk_node_id)
@@ -198,11 +197,17 @@ def identify_subdomains(
                 )
 
             ncells_per_sub_cell = [len(cells) for cells in cells_per_sub_cell]
+            bulk_elements = list(chain.from_iterable(cells_per_sub_cell))
             if set(ncells_per_sub_cell) != {1}:
+                # special case: subdomain cells touch multiple bulk cells
+                subdomain.field_data["bulk_element_ids"] = np.uint64(
+                    bulk_elements
+                )
                 subdomain.cell_data["number_bulk_elements"] = np.uint64(
                     ncells_per_sub_cell
                 )
-            bulk_elements = list(chain.from_iterable(cells_per_sub_cell))
-            bulk_element_data = subdomain.field_data
-        bulk_element_data["bulk_element_ids"] = np.uint64(bulk_elements)
+            else:
+                subdomain.cell_data["bulk_element_ids"] = np.uint64(
+                    bulk_elements
+                )
         subdomain.point_data["bulk_node_ids"] = np.uint64(bulk_nodes)
