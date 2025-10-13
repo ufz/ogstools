@@ -79,7 +79,7 @@ fig.tight_layout()
 
 # %%
 pts = np.linspace([120, -460, 0], [120, -800, 0], 100)
-sample_1 = pv.PolyData(pts).sample(mesh)
+sample_1 = pv.lines_from_points(pts).sample(mesh)
 
 # %% [markdown]
 # Mutilsegmented line from list of points
@@ -90,7 +90,7 @@ sample_1 = pv.PolyData(pts).sample(mesh)
 # %%
 obs_pts = np.asarray([[150, -460, 0], [50, -650, 0], [150, -800, 0]])
 pts = np.vstack([np.linspace(pt1, pt2, 50) for pt1, pt2 in pairwise(obs_pts)])
-sample_2 = pv.PolyData(pts).sample(mesh)
+sample_2 = pv.lines_from_points(pts).sample(mesh)
 
 # %% [markdown]
 # Spline from list of points
@@ -104,7 +104,7 @@ pts = np.asarray([[200, -460, 0], [250, -650, 0], [200, -800, 0]])
 fit = np.poly1d(np.polyfit(pts[:, 1], pts[:, 0], 2))
 y = np.linspace(-460, -800, 100)
 pts = np.transpose([fit(y), y, y * 0])
-sample_3 = pv.PolyData(pts).sample(mesh)
+sample_3 = pv.lines_from_points(pts).sample(mesh)
 
 # %% [markdown]
 # Use existing geometry
@@ -119,7 +119,7 @@ edges = mesh.clip("x").extract_feature_edges()
 is_top_bot = np.isin(edges.points[:, 1], [-800, -460])
 is_left = edges.points[:, 0] == 0
 pts = edges.points[np.invert(is_top_bot | is_left)]
-sample_4 = pv.PolyData(pts).sample(mesh)
+sample_4 = pv.lines_from_points(pts).sample(mesh)
 
 # %% [markdown]
 # Now we plot all samples for comparison.
