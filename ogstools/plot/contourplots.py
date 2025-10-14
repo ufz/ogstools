@@ -96,15 +96,17 @@ def add_colorbars(
     with np.errstate(over="ignore"):
         cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
         scalar_mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
+        cb_loc = kwargs.get("cb_loc", "right")
+        cb_pad = kwargs.get("cb_pad", 0.15 if cb_loc == "left" else 0.05)
         cb = fig.colorbar(
             scalar_mappable,
             norm=norm,
             ax=ax,
             ticks=ticks,
             drawedges=not continuous_cmap,
-            location=kwargs.get("cb_loc", "right"),
+            location=cb_loc,
             spacing="uniform",
-            pad=kwargs.get("cb_pad", 0.05),
+            pad=cb_pad,
             extendrect=True,
         )
     if continuous_cmap and variable.bilinear_cmap:

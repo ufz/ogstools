@@ -62,7 +62,10 @@ setup_devcontainer:  ## Internal usage [CI]
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
 test:  ## Runs the unit tests
-	pytest
+	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
+
+test_figures:  ## Create the reference figures for the plot tests
+	pytest --mpl-generate-path=tests/baseline -k "TestPlotting or test_plot" -n auto
 
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest --hypothesis-profile ci

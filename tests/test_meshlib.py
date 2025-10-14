@@ -4,7 +4,6 @@ import textwrap
 from pathlib import Path
 
 import gmsh
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
@@ -276,35 +275,6 @@ class TestUtils:
         assert np.all(temp_max > temp_mean)
         assert np.all(temp_mean > temp_min)
 
-    def test_plot_domain_aggregate(self):
-        "Test aggregation of meshseries."
-        mesh_series = examples.load_meshseries_THM_2D_PVD()
-        _ = mesh_series.plot_domain_aggregate("temperature", np.mean)
-        plt.close()
-
-    def test_time_slice(self):
-        results = examples.load_meshseries_HT_2D_XDMF()
-        points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        ms_pts = ot.MeshSeries.extract_probe(results, points, "temperature")
-        fig = ms_pts.plot_time_slice(
-            "x", "time", "temperature", levels=[78, 79, 80]
-        )
-        fig = ms_pts.plot_time_slice(
-            "time", "y", "temperature", time_logscale=True, cb_loc="left",
-            dpi=50, fontsize=10
-        )  # fmt: skip
-        fig = ms_pts.plot_time_slice(
-            "x", "time", "temperature", log_scaled=True
-        )
-        with pytest.raises(ValueError, match="fig and ax together"):
-            _ = ms_pts.plot_time_slice("x", "time", "temperature", fig=fig)
-        with pytest.raises(KeyError, match="has to be 'time'"):
-            _ = ms_pts.plot_time_slice("x", "y", "temperature")
-        with pytest.raises(KeyError, match="has to be a spatial"):
-            _ = ms_pts.plot_time_slice("time", "temperature", "y")
-
-        plt.close()
-
     def _check_probe(self, ms: ot.MeshSeries, points: np.ndarray) -> None:
         "checks different variants for points arg: point_array, point, [point]"
         pt_ids = np.asarray([ms[0].find_closest_point(pt) for pt in points])
@@ -320,20 +290,6 @@ class TestUtils:
                 assert values.shape == shape
                 np.testing.assert_allclose(values, ref_values[:, slicing])
                 assert not np.any(np.isnan(values))
-
-    def test_probe_2D_mesh_PETSC(self):
-        ms = examples.load_meshseries_PETSc_2D()
-        ms.scale(time=("s", "a"))
-        points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
-        labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
-        ms_pts = ot.MeshSeries.extract_probe(ms, points_coords)
-        ot.plot.line(
-            ms_pts,
-            "time",
-            ot.variables.pressure,
-            labels=labels,
-            colors=["b", "r"],
-        )
 
     def test_probe_2D_mesh(self):
         "Test point probing on a 2D meshseries."
@@ -384,22 +340,6 @@ class TestUtils:
                 np.testing.assert_array_equal(
                     ms_pts.values(key), ms_ref.values(key)
                 )
-
-    def test_plot_probe(self):
-        """Test creation of probe plots."""
-        ms = examples.load_meshseries_THM_2D_PVD()
-        ms_pts = ot.MeshSeries.extract_probe(ms, np.array(ms.mesh(0).center))
-        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
-        ms_pts = ot.MeshSeries.extract_probe(ms, ms.mesh(0).points[[0, -1]])
-        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
-        _ = ot.plot.line(ms_pts, "time", ot.variables.velocity)
-        _ = ot.plot.line(ms_pts, "time", ot.variables.stress)
-        _ = ot.plot.line(ms_pts, "time", ot.variables.stress.von_Mises)
-        ms = examples.load_meshseries_HT_2D_XDMF()
-        ms_pts = ot.MeshSeries.extract_probe(ms, np.array(ms.mesh(0).center))
-        _ = ot.plot.line(ms_pts, "time", ot.variables.temperature)
-        _ = ot.plot.line(ms_pts, "time", ot.variables.velocity)
-        plt.close()
 
     def test_extract_probe(self):
         results = examples.load_meshseries_HT_2D_XDMF()

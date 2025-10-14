@@ -26,6 +26,8 @@
 
 ### Tests
 
+- plotting tests now actually check whether the resulting figure is as expected
+
 ### Imports
 
 ## Maintainer TODOs

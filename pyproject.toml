@@ -64,6 +64,7 @@ dependencies = [
   "PyYAML>=6.0.0",
   "types-PyYAML>=6.0.0.20240917",
   "vtk>=9.4.0",
+  "pytest-mpl>=0.17.0",
 ]
 
 [project.urls]
@@ -270,6 +271,7 @@ addopts = [
   "--import-mode=importlib",
   "--log-cli-level=INFO",
   "--tb=short",
+  "--mpl",
 ]
 xfail_strict = true
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu

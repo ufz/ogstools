@@ -182,7 +182,7 @@ class MeshSeries(Sequence[Mesh]):
 
         :returns: A MeshSeries (Pointcloud) containing the probed data.
         """
-        pointset = pv.PolyData(points)
+        pointset = pv.PolyData(np.asarray(points))
         if data_name is None:
             variables = list(
                 set().union(original[0].point_data, original[0].cell_data)
@@ -948,7 +948,9 @@ class MeshSeries(Sequence[Mesh]):
             time_var = var_x if var_x.data_name == "time" else var_y
             get_time = time_var.func
             time_var.func = lambda ms: log10time(get_time(ms))
-            time_var.output_name = f"log10 {time_var.output_name}"
+            time_var.get_label = (  # type: ignore[assignment]
+                lambda *_: f"log$_{{10}}$( time $t$ / {time_var.output_unit})"
+            )
 
         x_vals = var_x.transform(self)
         y_vals = var_y.transform(self)
@@ -970,17 +972,19 @@ class MeshSeries(Sequence[Mesh]):
             levels = np.asarray(kwargs.pop("levels"))
         else:
             vmin, vmax = (plot.setup.vmin, plot.setup.vmax)
+            if (
+                kwargs.get("log_scaled", plot.setup.log_scaled)
+                and not var_z.is_mask()
+            ):
+                values = np.log10(
+                    values,
+                    where=values > 1e-14,
+                    out=np.ones_like(values) * (-14),
+                )
             levels = plot.levels.compute_levels(
                 kwargs.get("vmin", np.nanmin(values) if vmin is None else vmin),
                 kwargs.get("vmax", np.nanmax(values) if vmax is None else vmax),
                 kwargs.get("num_levels", plot.setup.num_levels),
-            )
-        if (
-            kwargs.get("log_scaled", plot.setup.log_scaled)
-            and not var_z.is_mask()
-        ):
-            values = np.log10(
-                values, where=values > 1e-14, out=np.ones_like(values) * (-14)
             )
         cmap, norm = plot.utils.get_cmap_norm(levels, var_z, **kwargs)
         ax.pcolormesh(x_vals, y_vals, values, cmap=cmap, norm=norm)
@@ -988,6 +992,7 @@ class MeshSeries(Sequence[Mesh]):
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
         plot.utils.label_ax(fig, ax, var_x, var_y, fontsize)
         ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
+        ax.margins(0, 0)
         if cbar:
             plot.contourplots.add_colorbars(fig, ax, var_z, levels, **kwargs)
         plot.utils.update_font_sizes(fig.axes, fontsize)

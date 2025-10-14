@@ -22,12 +22,16 @@ from .common_ogs_analyses import (
 
 
 def _format_fig(
-    fig: plt.Figure, x_ticks: np.ndarray, y_ticks: np.ndarray, x_label: str
+    fig: plt.Figure,
+    ax: plt.Axes,
+    x_ticks: np.ndarray,
+    y_ticks: np.ndarray,
+    x_label: str,
 ) -> plt.Figure:
-    fig.axes[0].set_xticks(x_ticks, minor=True)
-    fig.axes[0].set_yticks(y_ticks, minor=True)
-    fig.axes[0].set_xlabel(x_label.replace("_", " "))
-    fig.axes[0].set_ylabel("iteration")
+    ax.set_xticks(x_ticks, minor=True)
+    ax.set_yticks(y_ticks, minor=True)
+    ax.set_xlabel(x_label.replace("_", " "))
+    ax.set_ylabel("iteration")
     fig.tight_layout()
     return fig
 
@@ -89,7 +93,8 @@ def plot_convergence_order(
     kwargs.setdefault("vmax", 2)
     res = heatmap(orders, order_var, x_vals=x_vals, **kwargs)
     fig = kwargs.get("fig", res)
-    return _format_fig(fig, x_ticks, y_ticks, x_label=x_metric)
+    ax = kwargs.get("ax", fig.axes[0])
+    return _format_fig(fig, ax, x_ticks, y_ticks, x_label=x_metric)
 
 
 def plot_convergence(
@@ -127,4 +132,5 @@ def plot_convergence(
     kwargs.setdefault("log_scale", True)
     res = heatmap(errors, err_var, x_vals=x_vals, **kwargs)
     fig = kwargs.get("fig", res)
-    return _format_fig(fig, x_ticks, y_ticks, x_label=x_metric)
+    ax = kwargs.get("ax", fig.axes[0])
+    return _format_fig(fig, ax, x_ticks, y_ticks, x_label=x_metric)
