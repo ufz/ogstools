@@ -22,23 +22,27 @@ def find_files(path: Path, pattern: str, exclude: str | None) -> list[Path]:
     return sorted(matches)
 
 
-def write_hashes(docs_dir: Path, pattern: str, exclude: str | None) -> None:
+def write_hashes(
+    docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
+) -> None:
     "Write hashes for gallery examples figures to a json file."
     fig_paths = find_files(docs_dir / "auto_examples", pattern, exclude)
     hashes = {str(file): str(hash_file(file)) for file in tqdm(fig_paths)}
 
-    with Path.open(docs_dir / "gallery_hashes.json", "w") as f:
+    with Path.open(hashes_file, "w") as f:
         json.dump(hashes, f, indent=4, sort_keys=True)
 
 
-def compare_hashes(docs_dir: Path, pattern: str, exclude: str | None) -> None:
+def compare_hashes(
+    docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
+) -> None:
     "Check gallery example figure hashes match the stored reference hashes."
     fig_paths = find_files(docs_dir / "auto_examples", pattern, exclude)
     hashes = {str(file): hash_file(file) for file in tqdm(fig_paths)}
 
     msg = ""
 
-    with Path.open(docs_dir / "gallery_hashes.json") as json_file:
+    with Path.open(hashes_file) as json_file:
         ref = {
             k: imagehash.hex_to_hash(v) for k, v in json.load(json_file).items()
         }
@@ -64,7 +68,7 @@ def compare_hashes(docs_dir: Path, pattern: str, exclude: str | None) -> None:
             msg += (
                 "For the following figures there is a stored hash, but they "
                 "are not generated anymore.\nIf this is intentional, "
-                f"please remove them from {docs_dir / 'gallery_hashes.json'}:"
+                f"please remove them from {hashes_file}:"
                 "\n\n" + "\n".join(delta) + "\n\n"
             )
     if msg != "":
@@ -94,6 +98,12 @@ def main():
         help="Directory containing documents. Default: 'docs'.",
     )
     parser.add_argument(
+        "--hashes_file",
+        type=str,
+        default="docs/gallery_hashes.json",
+        help="File containing the hashes. Default: 'docs/gallery_hashes.json'.",
+    )
+    parser.add_argument(
         "--pattern",
         type=str,
         default="*[!thumb].png",
@@ -109,9 +119,19 @@ def main():
     args = parser.parse_args()
 
     if args.action == "compare":
-        compare_hashes(Path(args.docs_dir), args.pattern, args.exclude)
+        compare_hashes(
+            Path(args.docs_dir),
+            args.pattern,
+            args.exclude,
+            Path(args.hashes_file),
+        )
     elif args.action == "write":
-        write_hashes(Path(args.docs_dir), args.pattern, args.exclude)
+        write_hashes(
+            Path(args.docs_dir),
+            args.pattern,
+            args.exclude,
+            Path(args.hashes_file),
+        )
     else:
         print("Invalid action. Use 'compare' or 'write'.", file=sys.stderr)
         sys.exit(1)

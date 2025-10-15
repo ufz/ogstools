@@ -264,15 +264,27 @@ docs preview (R):
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
     - *docs-script
-    - python docs/gallery_hashes.py compare --exclude *feflowlib*
-  allow_failure:
-    exit_codes: 123  # gallery figure hashes don't match
   pages:
     publish: docs/_build/html
     path_prefix: 'mr-$CI_MERGE_REQUEST_IID'
   environment:
     name: docs preview $CI_MERGE_REQUEST_IID
     url: $CI_PAGES_URL
+  artifacts:
+    paths:
+      - docs/auto_examples # for hashes check job
+
+docs hashes check:
+  stage: test
+  needs: ["docs preview (R)"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - make setup_devcontainer
+    - source .venv-devcontainer/bin/activate
+    - python docs/gallery_hashes.py compare --exclude *feflowlib* || exit $?
+  allow_failure:
+    exit_codes: 123  # gallery figure hashes don't match
 
 docs preview (M):
   stage: maintenance
