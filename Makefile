@@ -67,6 +67,12 @@ test:  ## Runs the unit tests
 test_figures:  ## Create the reference figures for the plot tests
 	pytest --mpl-generate-path=tests/baseline -k "TestPlotting or test_plot" -n auto
 
+gallery_hashes:
+	python docs/gallery_hashes.py write
+
+gallery_check:
+	python docs/gallery_hashes.py compare --exclude *feflowlib*
+
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest --hypothesis-profile ci
 	coverage report --no-skip-covered
@@ -94,7 +100,6 @@ indexdocs:  ## Creates the pagefind index
 preview:  ## Runs an auto-updating web server for the documentation
 	make docs
 	python docs/server.py
-
 
 .PHONY: requirement
 requirement:

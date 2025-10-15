@@ -264,6 +264,9 @@ docs preview (R):
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
     - *docs-script
+    - python docs/gallery_hashes.py compare --exclude *feflowlib*
+  allow_failure:
+    exit_codes: 123  # gallery figure hashes don't match
   pages:
     publish: docs/_build/html
     path_prefix: 'mr-$CI_MERGE_REQUEST_IID'
