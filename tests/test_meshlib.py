@@ -964,6 +964,7 @@ class TestUtils:
                     getattr(meshes_ref[name_ref], data).values(),
                 )
 
+    @pytest.mark.tools()
     def test_create_gml_meshes(self, tmp_path):
         """Check, that the meshes generated from a Project + gml are correct."""
         prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
