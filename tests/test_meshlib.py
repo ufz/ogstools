@@ -898,13 +898,14 @@ class TestUtils:
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
 
-        sub_paths = meshes.save(path, overwrite=True)
+        serial_sub_paths = meshes.save(path, overwrite=True)[1]
         domain_mesh = meshes.domain()
+
         ot.cli().identifySubdomains(
             f=True,
             o=path / "new_",
             m=domain_mesh.filepath,
-            *sub_paths,  # noqa: B026
+            *serial_sub_paths,  # noqa: B026
         )
         # actually meshes.subdomains(), but here we let the domain mesh also get bulk ids
         ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
