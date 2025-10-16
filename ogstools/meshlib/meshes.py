@@ -40,7 +40,6 @@ class Meshes:
             name: Mesh(mesh) for name, mesh in meshes.items()
         }
         self.has_identified_subdomains: bool = False
-        self._accessed: bool = False
         self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
 
     def __getitem__(self, key: str) -> Mesh:
