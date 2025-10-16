@@ -274,12 +274,11 @@ docs preview (R):
 docs hashes check:
   stage: test
   needs: ["docs preview (R)"]
+  tags: [shell, envinf]
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
-    - make setup_devcontainer
-    - source .venv-devcontainer/bin/activate
-    - python docs/gallery_hashes.py compare --exclude *feflowlib* || exit $?
+    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* || exit $?
   allow_failure:
     exit_codes: 123  # gallery figure hashes don't match
 

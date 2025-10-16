@@ -1,3 +1,11 @@
+# /// script
+# dependencies = [
+#   "imagehash",
+#   "Pillow",
+#   "tqdm"
+# ]
+# ///
+
 import argparse
 import json
 import sys
