@@ -26,7 +26,7 @@ def write_hashes(
     docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
 ) -> None:
     "Write hashes for gallery examples figures to a json file."
-    fig_paths = find_files(docs_dir / "auto_examples", pattern, exclude)
+    fig_paths = find_files(docs_dir, pattern, exclude)
     hashes = {str(file): str(hash_file(file)) for file in tqdm(fig_paths)}
 
     with Path.open(hashes_file, "w") as f:
@@ -37,7 +37,7 @@ def compare_hashes(
     docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
 ) -> None:
     "Check gallery example figure hashes match the stored reference hashes."
-    fig_paths = find_files(docs_dir / "auto_examples", pattern, exclude)
+    fig_paths = find_files(docs_dir, pattern, exclude)
     hashes = {str(file): hash_file(file) for file in tqdm(fig_paths)}
 
     msg = ""
@@ -94,7 +94,7 @@ def main():
     parser.add_argument(
         "--docs_dir",
         type=str,
-        default="docs",
+        default="docs/_build/html/_images",
         help="Directory containing documents. Default: 'docs'.",
     )
     parser.add_argument(
@@ -106,8 +106,8 @@ def main():
     parser.add_argument(
         "--pattern",
         type=str,
-        default="*[!thumb].png",
-        help="Pattern for document filenames. Default: '*[!thumb].png'.",
+        default="sphx_glr_plot_*.png",
+        help="Pattern for document filenames. Default: 'sphx_glr_plot_*.png'.",
     )
     parser.add_argument(
         "--exclude",

@@ -270,9 +270,6 @@ docs preview (R):
   environment:
     name: docs preview $CI_MERGE_REQUEST_IID
     url: $CI_PAGES_URL
-  artifacts:
-    paths:
-      - docs/auto_examples # for hashes check job
 
 docs hashes check:
   stage: test
