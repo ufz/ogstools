@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pyvista as pv
 
+from ogstools._internal import deprecated
+
 from .gmsh_converter import meshes_from_gmsh
 from .mesh import Mesh
 from .meshes_from_yaml import meshes_from_yaml
@@ -259,9 +261,28 @@ class Meshes:
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
         return parallel_path / self.domain_name()
 
-    def _partmesh_single(
-        self, num_partitions: int, base_file: Path
-    ) -> list[Path]:
+
+
+
+    @deprecated(
+        """
+    Please rename the groups in the original meshes - containing physical_group OR (better)
+    Use the shorter names (without "physical_group") -> renaming in prj-files and scripts necessary.
+    """
+    )
+    def subdomain_legacy_rename(self) -> None:
+        """
+        Add to the name physical_group to restore legacy convention
+        """
+        d = {self.domain_name: self.domain}
+        self._meshes = d | {
+            f"physical_group_{k}": v
+            for k, v in list(self._meshes.items())[1:]
+            if "physical_group_" not in k
+        }
+
+        
+    def _partmesh_single(self, num_partitions: int, base_file: Path) -> list[Path]:
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
