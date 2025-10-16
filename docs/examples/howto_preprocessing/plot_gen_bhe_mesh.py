@@ -68,9 +68,7 @@ def load_and_plot(bhe_meshes: ot.Meshes):
     plotter.add_mesh(bhe_meshes.domain(), style="wireframe", color="grey")
     plotter.add_mesh(bhe_line, color="r", line_width=3)
 
-    for submesh, offset in zip(
-        bhe_meshes.subdomains().values(), offsets, strict=True
-    ):
+    for submesh, offset in zip(bhe_meshes.values(), offsets, strict=True):
         plotter.add_mesh(
             submesh.translate(offset), show_edges=True, color="lightgrey"
         )

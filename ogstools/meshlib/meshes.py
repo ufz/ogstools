@@ -230,6 +230,7 @@ class Meshes:
         """
         return next(iter(self._meshes.keys()))
 
+    @property
     def subdomains(self) -> dict[str, Mesh]:
         """
         Get the subdomain meshes.
@@ -345,7 +346,7 @@ class Meshes:
         meshes_path.mkdir(parents=True, exist_ok=True)
 
         if not self.has_identified_subdomains:
-            identify_subdomains(self.domain(), list(self.subdomains().values()))
+            identify_subdomains(self.domain(), list(self.subdomains.values()))
             self.has_identified_subdomains = True
 
         output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]

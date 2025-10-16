@@ -1414,7 +1414,7 @@ class TestUtils:
         assert domain.n_cells > 4000
 
         # Test access to subdomains
-        subdomains = meshes.subdomains()
+        subdomains = meshes.subdomains
         assert all(isinstance(m, ot.Mesh) for m in subdomains.values())
         assert "Floor" in subdomains
         assert "Canister" in subdomains
