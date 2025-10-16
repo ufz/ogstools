@@ -278,7 +278,7 @@ docs hashes check:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
-    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* || exit $?
+    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png || exit $?
   allow_failure:
     exit_codes: 123  # gallery figure hashes don't match
 

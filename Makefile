@@ -68,10 +68,10 @@ test_figures:  ## Create the reference figures for the plot tests
 	pytest --mpl-generate-path=tests/baseline -k "TestPlotting or test_plot" -n auto
 
 gallery_hashes:
-	python docs/gallery_hashes.py write
+	python docs/gallery_hashes.py write  --exclude *thumb.png
 
 gallery_check:
-	python docs/gallery_hashes.py compare --exclude *feflowlib*
+	python docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png
 
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest --hypothesis-profile ci

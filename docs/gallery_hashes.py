@@ -22,16 +22,16 @@ def hash_file(filepath: Path, hash_size: int = 64):
     return imagehash.phash(Image.open(filepath), hash_size=hash_size)
 
 
-def find_files(path: Path, pattern: str, exclude: str | None) -> list[Path]:
+def find_files(path: Path, pattern: str, exclude: list[str]) -> list[Path]:
     "Find all files matching the pattern but not the exclude pattern."
     matches = set(path.rglob(pattern))
-    if exclude is not None:
-        matches -= set(path.rglob(exclude))
+    for entry in exclude:
+        matches -= set(path.rglob(entry))
     return sorted(matches)
 
 
 def write_hashes(
-    docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
+    docs_dir: Path, pattern: str, exclude: list[str], hashes_file: Path
 ) -> None:
     "Write hashes for gallery examples figures to a json file."
     fig_paths = find_files(docs_dir, pattern, exclude)
@@ -42,7 +42,7 @@ def write_hashes(
 
 
 def compare_hashes(
-    docs_dir: Path, pattern: str, exclude: str | None, hashes_file: Path
+    docs_dir: Path, pattern: str, exclude: list[str], hashes_file: Path
 ) -> None:
     "Check gallery example figure hashes match the stored reference hashes."
     fig_paths = find_files(docs_dir, pattern, exclude)
@@ -120,8 +120,9 @@ def main():
     parser.add_argument(
         "--exclude",
         type=str,
-        default=None,
-        help="Pattern for excluded document filenames. Default: ''",
+        nargs="+",
+        default=[],
+        help="Pattern for excluded document filenames. Default: []",
     )
 
     args = parser.parse_args()
