@@ -945,6 +945,20 @@ class TestUtils:
                     getattr(meshes[name], data).values(),
                 )
 
+    @pytest.mark.tools()  # partmesh
+    @pytest.mark.parametrize("partition", [2, 4, 8, 16])
+    def test_meshes_save_parallel(self, tmp_path, partition):
+        "Checks the number of saved files"
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        partitions = [partition]
+        files = meshes.save(tmp_path, partitions=partitions)
+        f1 = files[1]
+        # Mesh contains domain, left, right, top, bottom
+        assert len(f1) == 5
+        # Each boundary (4*) 8 and domain 6 and .mesh
+        assert len(files[partition]) == 38
+
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
