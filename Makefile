@@ -54,12 +54,14 @@ pip_setup_headless:  ## Install gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh -y
 	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
+# gmsh same version as pinned for gallery_check, otherwise meshes might
+# change slightly, causing the hash check to fail.
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
 	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned]
 	.venv-devcontainer/bin/pip uninstall gmsh -y
-	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
+	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh==4.13.1.dev1
 
 test:  ## Runs the unit tests
 	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
