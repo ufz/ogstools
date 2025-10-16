@@ -331,8 +331,6 @@ class Meshes:
         meshes_path = meshes_path or self._tmp_dir
         meshes_path.mkdir(parents=True, exist_ok=True)
 
-        partitions = partitions or []
-
         if not self.has_identified_subdomains:
             identify_subdomains(self.domain(), list(self.subdomains().values()))
             self.has_identified_subdomains = True
@@ -353,6 +351,8 @@ class Meshes:
             1: [meshes_path / f"{name}.vtu" for name in self._meshes]
         }
 
-        parallel_files = self._partmesh_save_all(partitions, meshes_path)
+        if not partitions:
+            return serial_files
 
+        parallel_files = self._partmesh_save_all(partitions, meshes_path)
         return serial_files | parallel_files
