@@ -206,6 +206,7 @@ class Meshes:
         """
         return self._meshes.pop(key)
 
+    @property
     def domain(self) -> Mesh:
         """
         Get the domain mesh.
@@ -219,6 +220,7 @@ class Meshes:
         """
         return next(iter(self._meshes.values()))
 
+    @property
     def domain_name(self) -> str:
         """
         Get the name of the domain mesh.
@@ -346,7 +348,7 @@ class Meshes:
         meshes_path.mkdir(parents=True, exist_ok=True)
 
         if not self.has_identified_subdomains:
-            identify_subdomains(self.domain(), list(self.subdomains.values()))
+            identify_subdomains(self.domain, list(self.subdomains.values()))
             self.has_identified_subdomains = True
 
         output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]

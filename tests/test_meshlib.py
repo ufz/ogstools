@@ -899,8 +899,8 @@ class TestUtils:
             m.cell_data.pop("bulk_element_ids", None)
 
         serial_sub_paths = meshes.save(path, overwrite=True)
-        domain_mesh = meshes.domain()
-
+        domain_mesh = meshes.domain
+        
         ot.cli().identifySubdomains(
             f=True,
             o=path / "new_",
@@ -973,7 +973,7 @@ class TestUtils:
         meshes = ot.Meshes(
             {m.stem: ot.Mesh(m) for m in prj.meshpaths(tmp_path)}
         )
-        assert meshes.domain_name() == meshes_ref.domain_name()
+        assert meshes.domain_name == meshes_ref.domain_name
         for name, name_ref in zip(
             sorted(meshes), sorted(meshes_ref), strict=True
         ):
@@ -1409,7 +1409,7 @@ class TestUtils:
         )
 
         # Check domain
-        domain = meshes.domain()
+        domain = meshes.domain
         assert domain.n_points > 2000
         assert domain.n_cells > 4000
 
