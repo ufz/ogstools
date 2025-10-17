@@ -308,7 +308,7 @@ class Meshes:
         meshes_path: Path | None = None,
         overwrite: bool = False,
         partitions: list | None = None,
-    ) -> dict[int, list[Path]]:
+    ) -> list[Path] | dict[int, list[Path]]:
         """
         Save all meshes.
 
@@ -321,12 +321,14 @@ class Meshes:
         :param overwrite:   If True, existing mesh files will be overwritten.
                             If False, an error is raised if any file already exists.
 
-        :param partitions:  List of integers > 1 that indicate the number of partitions
+        :param partitions:  List of integers > 0 that indicate the number of partitions
                             similar to the OGS binary tool partmesh.
                             The serial mesh will always be generated
-                            Example: partitions = [2,4,8,16]
+                            Example: partitions = [1,2,4,8,16]
 
-        :returns: A list of Paths pointing to the saved mesh files
+        :returns:           A list of Paths pointing to the saved mesh files, if partitions are given (also just [1]),
+                            then it returns
+                            A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
         meshes_path = meshes_path or self._tmp_dir
         meshes_path.mkdir(parents=True, exist_ok=True)
@@ -347,12 +349,10 @@ class Meshes:
             mesh.filepath = meshes_path / f"{name}.vtu"
             pv.save_meshio(mesh.filepath, mesh)
 
-        serial_files = {
-            1: [meshes_path / f"{name}.vtu" for name in self._meshes]
-        }
+        serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
 
         if not partitions:
             return serial_files
 
         parallel_files = self._partmesh_save_all(partitions, meshes_path)
-        return serial_files | parallel_files
+        return {1: serial_files} | parallel_files
