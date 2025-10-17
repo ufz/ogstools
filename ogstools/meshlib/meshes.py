@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pyvista as pv
 
+from ogstools._internal import deprecated
+
 from .gmsh_converter import meshes_from_gmsh
 from .mesh import Mesh
 from .meshes_from_yaml import meshes_from_yaml
@@ -206,6 +208,7 @@ class Meshes:
         """
         return self._meshes.pop(key)
 
+    @property
     def domain(self) -> Mesh:
         """
         Get the domain mesh.
@@ -219,6 +222,7 @@ class Meshes:
         """
         return next(iter(self._meshes.values()))
 
+    @property
     def domain_name(self) -> str:
         """
         Get the name of the domain mesh.
@@ -230,6 +234,13 @@ class Meshes:
         """
         return next(iter(self._meshes.keys()))
 
+    @domain_name.setter
+    def domain_name(self, name: str) -> None:
+        list_meshes = list(self._meshes.items())
+        _, domain_mesh = list_meshes[0]
+        self._meshes = {name: domain_mesh} | dict(list_meshes[1:])
+
+    @property
     def subdomains(self) -> dict[str, Mesh]:
         """
         Get the subdomain meshes.
@@ -243,18 +254,59 @@ class Meshes:
         return dict(items[1:])  # by convention: first mesh is domain
 
     def identify_subdomain(self) -> None:
-        identify_subdomains(self.domain(), list(self.subdomains().values()))
+        identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
     def _partmesh_prepare(self, meshes_path: Path) -> Path:
         from ogstools import cli
 
-        domain_file_name = self.domain_name() + ".vtu"
+        domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
         parallel_path = meshes_path / "partition"
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
-        return parallel_path / self.domain_name()
+        return parallel_path / self.domain_name
+
+    def rename_subdomains(self, rename_map: dict[str, str]) -> None:
+        """
+        Rename subdomain meshes according to the provided mapping.
+
+        :param rename_map:  A dictionary mapping old subdomain names -> new names.
+                            e.g. {'left':'subdomain_left'}
+        """
+
+        items = list(self._meshes.items())
+        domain_name, domain_mesh = items[0]
+        subdomains = dict(items[1:])
+
+        invalid = [name for name in rename_map if name not in subdomains]
+        if invalid:
+            msg = f"Invalid subdomain names: {invalid}. Valid names: {list(subdomains)}"
+            raise KeyError(msg)
+
+        new_subdomains = {
+            rename_map.get(name, name): mesh
+            for name, mesh in subdomains.items()
+        }
+
+        self._meshes = {domain_name: domain_mesh} | new_subdomains
+
+    @deprecated(
+        """
+    Please rename the groups in the original meshes - containing physical_group OR (better)
+    Use the shorter names (without "physical_group") -> renaming in prj-files and scripts necessary.
+    """
+    )
+    def rename_subdomains_legacy(self) -> None:
+        """
+        Add to the name physical_group to restore legacy convention
+        """
+        rename_map = {
+            name: f"physical_group_{name}"
+            for name in self.subdomains
+            if not name.startswith("physical_group_")
+        }
+        self.rename_subdomains(rename_map)
 
     def _partmesh_single(
         self, num_partitions: int, base_file: Path
@@ -265,11 +317,10 @@ class Meshes:
         meshes_path = base_file.parent.parent
         partition_path.mkdir(parents=True, exist_ok=True)
         subdomain_files = [
-            meshes_path / (subdomain + ".vtu")
-            for subdomain in self.subdomains()
+            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
         ]
 
-        domain_file_name = self.domain_name() + ".vtu"
+        domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
         if num_partitions == 1:
@@ -345,7 +396,7 @@ class Meshes:
         meshes_path.mkdir(parents=True, exist_ok=True)
 
         if not self.has_identified_subdomains:
-            identify_subdomains(self.domain(), list(self.subdomains().values()))
+            identify_subdomains(self.domain, list(self.subdomains.values()))
             self.has_identified_subdomains = True
 
         output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]

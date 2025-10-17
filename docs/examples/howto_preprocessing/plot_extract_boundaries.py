@@ -25,7 +25,7 @@ domain = examples.load_meshseries_THM_2D_PVD()[0]
 
 # %%
 meshes = ot.Meshes.from_mesh(domain)
-boundaries = meshes.subdomains()
+boundaries = meshes.subdomains
 for name, mesh in boundaries.items():
     print(name, mesh)
 

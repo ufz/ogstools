@@ -59,17 +59,17 @@ bhe_meshes = gen_bhe_mesh(
 
 # %%
 def load_and_plot(bhe_meshes: ot.Meshes):
-    bhe_line = bhe_meshes.domain().extract_cells_by_type(pv.CellType.LINE)
+    bhe_line = bhe_meshes.domain.extract_cells_by_type(pv.CellType.LINE)
     offsets = [(0, 0, 10), (0, 0, -10), (10, 0, 0), (-10, 0, 0)]
     plotter = ot.plot.contourf(
-        bhe_meshes.domain().clip("x", bhe_line.center, crinkle=True),
+        bhe_meshes.domain.clip("x", bhe_line.center, crinkle=True),
         ot.variables.material_id,
     )
-    plotter.add_mesh(bhe_meshes.domain(), style="wireframe", color="grey")
+    plotter.add_mesh(bhe_meshes.domain, style="wireframe", color="grey")
     plotter.add_mesh(bhe_line, color="r", line_width=3)
 
     for submesh, offset in zip(
-        bhe_meshes.subdomains().values(), offsets, strict=True
+        bhe_meshes.subdomains.values(), offsets, strict=True
     ):
         plotter.add_mesh(
             submesh.translate(offset), show_edges=True, color="lightgrey"

@@ -899,7 +899,7 @@ class TestUtils:
             m.cell_data.pop("bulk_element_ids", None)
 
         serial_sub_paths = meshes.save(path, overwrite=True)
-        domain_mesh = meshes.domain()
+        domain_mesh = meshes.domain
 
         ot.cli().identifySubdomains(
             f=True,
@@ -907,7 +907,7 @@ class TestUtils:
             m=domain_mesh.filepath,
             *serial_sub_paths,  # noqa: B026
         )
-        # actually meshes.subdomains(), but here we let the domain mesh also get bulk ids
+        # actually meshes.subdomains, but here we let the domain mesh also get bulk ids
         ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
 
         def _check(mesh_1, mesh_2, key: str):
@@ -964,6 +964,23 @@ class TestUtils:
         else:  # partition == None
             assert len(files) == 5
 
+    def test_meshes_rename(self, tmp_path):
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        left_mesh = meshes["left"]
+        right_mesh = meshes["right"]
+        meshes.rename_subdomains({"left": "left_new_name"})
+        meshes.domain_name = "my_new_domain_name"
+
+        assert meshes.domain_name == "my_new_domain_name"
+        assert meshes["left_new_name"] == left_mesh
+
+        with pytest.raises(KeyError, match="Invalid subdomain names"):
+            meshes.rename_subdomains({"does_not_exist": "foo"})
+
+        meshes.rename_subdomains_legacy()
+        assert meshes["physical_group_right"] == right_mesh
+
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
@@ -973,7 +990,7 @@ class TestUtils:
         meshes = ot.Meshes(
             {m.stem: ot.Mesh(m) for m in prj.meshpaths(tmp_path)}
         )
-        assert meshes.domain_name() == meshes_ref.domain_name()
+        assert meshes.domain_name == meshes_ref.domain_name
         for name, name_ref in zip(
             sorted(meshes), sorted(meshes_ref), strict=True
         ):
@@ -1409,12 +1426,12 @@ class TestUtils:
         )
 
         # Check domain
-        domain = meshes.domain()
+        domain = meshes.domain
         assert domain.n_points > 2000
         assert domain.n_cells > 4000
 
         # Test access to subdomains
-        subdomains = meshes.subdomains()
+        subdomains = meshes.subdomains
         assert all(isinstance(m, ot.Mesh) for m in subdomains.values())
         assert "Floor" in subdomains
         assert "Canister" in subdomains

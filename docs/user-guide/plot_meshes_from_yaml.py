@@ -65,9 +65,7 @@ print(*[f"{name}: {mesh.n_cells=}" for name, mesh in meshes.items()], sep="\n")
 # Here we plot the domain mesh with material IDs shown.
 
 # %%
-fig = ot.plot.contourf(
-    meshes.domain(), ot.variables.material_id, show_edges=True
-)
+fig = ot.plot.contourf(meshes.domain, ot.variables.material_id, show_edges=True)
 
 # %%
 # Saving meshes

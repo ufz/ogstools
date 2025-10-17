@@ -194,7 +194,7 @@ class TestBHE:
     def test_bhe_mesh(self, mesh_type: str, model: Callable, max_id: int):
         meshes = model(mesh_type=mesh_type)
 
-        mesh = meshes.domain()
+        mesh = meshes.domain
         assert max(mesh.cell_data["MaterialIDs"]) == max_id
         bhe_line = mesh.extract_cells_by_type(pv.CellType.LINE)
         soil = mesh.extract_cells_by_type(
