@@ -26,6 +26,9 @@
 
 ## Infrastructure
 
+- Gallery example figures are now tested against hashes which avoids
+  unexpectedly changing figures.
+
 ## Documentation
 
 ### Tests

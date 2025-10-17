@@ -54,18 +54,26 @@ pip_setup_headless:  ## Install gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh -y
 	.venv/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
 
+# gmsh same version as pinned for gallery_check, otherwise meshes might
+# change slightly, causing the hash check to fail.
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
 	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned]
 	.venv-devcontainer/bin/pip uninstall gmsh -y
-	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh
+	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh==4.13.1.dev1
 
 test:  ## Runs the unit tests
 	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
 
 test_figures:  ## Create the reference figures for the plot tests
 	pytest --mpl-generate-path=tests/baseline -k "TestPlotting or test_plot" -n auto
+
+gallery_hashes:
+	python docs/gallery_hashes.py write  --exclude *thumb.png
+
+gallery_check:
+	python docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png
 
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest --hypothesis-profile ci
@@ -94,7 +102,6 @@ indexdocs:  ## Creates the pagefind index
 preview:  ## Runs an auto-updating web server for the documentation
 	make docs
 	python docs/server.py
-
 
 .PHONY: requirement
 requirement:

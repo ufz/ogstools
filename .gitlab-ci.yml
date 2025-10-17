@@ -271,6 +271,17 @@ docs preview (R):
     name: docs preview $CI_MERGE_REQUEST_IID
     url: $CI_PAGES_URL
 
+docs hashes check:
+  stage: test
+  needs: ["docs preview (R)"]
+  tags: [shell, envinf]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png || exit $?
+  allow_failure:
+    exit_codes: 123  # gallery figure hashes don't match
+
 docs preview (M):
   stage: maintenance
   needs: []
