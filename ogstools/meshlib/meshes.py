@@ -252,7 +252,7 @@ class Meshes:
         domain_file_name = self.domain_name() + ".vtu"
         domain_file = meshes_path / domain_file_name
 
-        parallel_path = meshes_path / "p"
+        parallel_path = meshes_path / "partition"
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
         return parallel_path / self.domain_name()
 
@@ -262,15 +262,24 @@ class Meshes:
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
-        partition_path.mkdir(parents=True, exist_ok=True)
         meshes_path = base_file.parent.parent
-
+        partition_path.mkdir(parents=True, exist_ok=True)
         subdomain_files = [
-            f"{meshes_path}/{subdomain}.vtu" for subdomain in self.subdomains()
+            meshes_path / (subdomain + ".vtu")
+            for subdomain in self.subdomains()
         ]
 
         domain_file_name = self.domain_name() + ".vtu"
         domain_file = meshes_path / domain_file_name
+
+        if num_partitions == 1:
+            for file in subdomain_files + [domain_file]:
+                file_link = file.parent / "partition" / "1" / file.name
+                if file_link.exists() or file_link.is_symlink():
+                    file_link.unlink()
+                file_link.symlink_to(Path("../..") / file.name)
+
+            return list(partition_path.glob("*"))
 
         cli().partmesh(
             o=partition_path,
@@ -280,17 +289,18 @@ class Meshes:
             x=base_file,
             *subdomain_files,  # noqa: B026
         )
+
         return list(partition_path.glob("*"))
 
     def _partmesh_save_all(
-        self, partitions: list[int], meshes_path: Path
+        self, num_partitions: list[int], meshes_path: Path
     ) -> dict[int, list[Path]]:
         """
         Creates a folder with decomposed / partitioned mesh suitable for parallel OGS execution
 
         :param num_partitions:  The number of partitions (internally passed to OGS bin tool partmesh)
 
-        :param meshes_path:     The folder where the original serial mesh is ALREADY stored.
+        :param meshes_path:     Path to the folder where the original serial mesh files are already stored.
                                 E.g. `save` must be called before.
 
         """
@@ -298,7 +308,7 @@ class Meshes:
         base_file = self._partmesh_prepare(meshes_path)
         parallel_files: dict[int, list[Path]] = {
             partition: self._partmesh_single(partition, base_file)
-            for partition in partitions
+            for partition in num_partitions
         }
 
         return parallel_files
@@ -307,7 +317,7 @@ class Meshes:
         self,
         meshes_path: Path | None = None,
         overwrite: bool = False,
-        partitions: list | None = None,
+        num_partitions: int | list[int] | None = None,
     ) -> list[Path] | dict[int, list[Path]]:
         """
         Save all meshes.
@@ -321,12 +331,13 @@ class Meshes:
         :param overwrite:   If True, existing mesh files will be overwritten.
                             If False, an error is raised if any file already exists.
 
-        :param partitions:  List of integers > 0 that indicate the number of partitions
+        :param num_partitions:  List of integers or a single integer that indicate the number of partitions
                             similar to the OGS binary tool partmesh.
                             The serial mesh will always be generated
-                            Example: partitions = [1,2,4,8,16]
+                            Example 1: num_partitions = [1,2,4,8,16]
+                            Example 2: num_partitions = 2
 
-        :returns:           A list of Paths pointing to the saved mesh files, if partitions are given (also just [1]),
+        :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
                             then it returns
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
@@ -351,8 +362,10 @@ class Meshes:
 
         serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
 
-        if not partitions:
+        if not num_partitions:
             return serial_files
 
-        parallel_files = self._partmesh_save_all(partitions, meshes_path)
+        if isinstance(num_partitions, int):
+            num_partitions = [num_partitions]
+        parallel_files = self._partmesh_save_all(num_partitions, meshes_path)
         return {1: serial_files} | parallel_files

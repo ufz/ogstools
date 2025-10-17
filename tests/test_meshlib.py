@@ -946,18 +946,23 @@ class TestUtils:
                 )
 
     @pytest.mark.tools()  # partmesh
-    @pytest.mark.parametrize("partition", [2, 4, 8, 16])
+    @pytest.mark.parametrize("partition", [None, 1, 2, 4, 8, 16])
     def test_meshes_save_parallel(self, tmp_path, partition):
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-        partitions = [partition]
-        files = meshes.save(tmp_path, partitions=partitions)
-        f1 = files[1]
-        # Mesh contains domain, left, right, top, bottom
-        assert len(f1) == 5
-        # Each boundary (4*) 8 and domain 6 and .mesh
-        assert len(files[partition]) == 38
+        files = meshes.save(tmp_path, num_partitions=partition)
+        if partition:
+            f1 = files[1]
+            # Mesh contains domain, left, right, top, bottom
+            assert len(f1) == 5  # checking the serial mesh
+            # Each boundary (4*) 8 and domain 6
+            if partition > 1:
+                assert len(files[partition]) == 38
+            else:  # partition==1
+                assert len(files[partition]) == 5
+        else:  # partition == None
+            assert len(files) == 5
 
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
