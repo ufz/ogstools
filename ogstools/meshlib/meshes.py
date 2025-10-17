@@ -254,18 +254,18 @@ class Meshes:
         return dict(items[1:])  # by convention: first mesh is domain
 
     def identify_subdomain(self) -> None:
-        identify_subdomains(self.domain(), list(self.subdomains().values()))
+        identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
     def _partmesh_prepare(self, meshes_path: Path) -> Path:
         from ogstools import cli
 
-        domain_file_name = self.domain_name() + ".vtu"
+        domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
         parallel_path = meshes_path / "partition"
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
-        return parallel_path / self.domain_name()
+        return parallel_path / self.domain_name
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
         """
@@ -308,19 +308,19 @@ class Meshes:
         }
         self.rename_subdomains(rename_map)
 
-        
-    def _partmesh_single(self, num_partitions: int, base_file: Path) -> list[Path]:
+    def _partmesh_single(
+        self, num_partitions: int, base_file: Path
+    ) -> list[Path]:
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
         meshes_path = base_file.parent.parent
         partition_path.mkdir(parents=True, exist_ok=True)
         subdomain_files = [
-            meshes_path / (subdomain + ".vtu")
-            for subdomain in self.subdomains()
+            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
         ]
 
-        domain_file_name = self.domain_name() + ".vtu"
+        domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
         if num_partitions == 1:

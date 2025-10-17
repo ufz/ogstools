@@ -907,7 +907,7 @@ class TestUtils:
             m=domain_mesh.filepath,
             *serial_sub_paths,  # noqa: B026
         )
-        # actually meshes.subdomains(), but here we let the domain mesh also get bulk ids
+        # actually meshes.subdomains, but here we let the domain mesh also get bulk ids
         ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
 
         def _check(mesh_1, mesh_2, key: str):
@@ -963,7 +963,6 @@ class TestUtils:
                 assert len(files[partition]) == 5
         else:  # partition == None
             assert len(files) == 5
-
 
     def test_meshes_rename(self, tmp_path):
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
