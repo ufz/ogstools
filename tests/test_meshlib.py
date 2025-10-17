@@ -900,7 +900,7 @@ class TestUtils:
 
         serial_sub_paths = meshes.save(path, overwrite=True)
         domain_mesh = meshes.domain
-        
+
         ot.cli().identifySubdomains(
             f=True,
             o=path / "new_",
@@ -963,6 +963,24 @@ class TestUtils:
                 assert len(files[partition]) == 5
         else:  # partition == None
             assert len(files) == 5
+
+
+    def test_meshes_rename(self, tmp_path):
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        left_mesh = meshes["left"]
+        right_mesh = meshes["right"]
+        meshes.rename_subdomains({"left": "left_new_name"})
+        meshes.domain_name = "my_new_domain_name"
+
+        assert meshes.domain_name == "my_new_domain_name"
+        assert meshes["left_new_name"] == left_mesh
+
+        with pytest.raises(KeyError, match="Invalid subdomain names"):
+            meshes.rename_subdomains({"does_not_exist": "foo"})
+
+        meshes.subdomain_legacy_rename()
+        assert meshes["physical_group_right"] == right_mesh
 
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
