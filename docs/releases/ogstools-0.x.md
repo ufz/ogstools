@@ -14,11 +14,15 @@
 
 ## Features
 
-- added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
-- add option to plot legend outside of plots.
-- MeshSeries now has difference method.
-- added support for continuous contourplots via `continuous_cmap=True`.
-- Allow user to set arrowsize parameter in contourf
+- MeshSeries
+  - has now has difference method.
+  - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
+- Meshes
+  - save function performs partmesh if number of partitions are given
+- plot
+  - add option to plot legend outside of plots.
+  - added support for continuous contourplots via `continuous_cmap=True`.
+  - Allow user to set arrowsize parameter in contourf
 
 ## Infrastructure
 

@@ -898,13 +898,14 @@ class TestUtils:
             m.point_data.pop("bulk_node_ids", None)
             m.cell_data.pop("bulk_element_ids", None)
 
-        sub_paths = meshes.save(path, overwrite=True)
+        serial_sub_paths = meshes.save(path, overwrite=True)
         domain_mesh = meshes.domain()
+
         ot.cli().identifySubdomains(
             f=True,
             o=path / "new_",
             m=domain_mesh.filepath,
-            *sub_paths,  # noqa: B026
+            *serial_sub_paths,  # noqa: B026
         )
         # actually meshes.subdomains(), but here we let the domain mesh also get bulk ids
         ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
@@ -943,6 +944,25 @@ class TestUtils:
                     getattr(mesh, data).values(),
                     getattr(meshes[name], data).values(),
                 )
+
+    @pytest.mark.tools()  # partmesh
+    @pytest.mark.parametrize("partition", [None, 1, 2, 4, 8, 16])
+    def test_meshes_save_parallel(self, tmp_path, partition):
+        "Checks the number of saved files"
+        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
+        files = meshes.save(tmp_path, num_partitions=partition)
+        if partition:
+            f1 = files[1]
+            # Mesh contains domain, left, right, top, bottom
+            assert len(f1) == 5  # checking the serial mesh
+            # Each boundary (4*) 8 and domain 6
+            if partition > 1:
+                assert len(files[partition]) == 38
+            else:  # partition==1
+                assert len(files[partition]) == 5
+        else:  # partition == None
+            assert len(files) == 5
 
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
