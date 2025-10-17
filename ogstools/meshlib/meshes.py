@@ -234,6 +234,12 @@ class Meshes:
         """
         return next(iter(self._meshes.keys()))
 
+    @domain_name.setter
+    def domain_name(self, name: str) -> None:
+        list_meshes = list(self._meshes.items())
+        _, domain_mesh = list_meshes[0]
+        self._meshes = {name: domain_mesh} | dict(list_meshes[1:])
+
     @property
     def subdomains(self) -> dict[str, Mesh]:
         """
@@ -261,8 +267,29 @@ class Meshes:
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
         return parallel_path / self.domain_name()
 
+    def rename_subdomains(self, rename_map: dict[str, str]) -> None:
+        """
+        Rename subdomain meshes according to the provided mapping.
 
+        :param rename_map:  A dictionary mapping old subdomain names -> new names.
+                            e.g. {'left':'subdomain_left'}
+        """
 
+        items = list(self._meshes.items())
+        domain_name, domain_mesh = items[0]
+        subdomains = dict(items[1:])
+
+        invalid = [name for name in rename_map if name not in subdomains]
+        if invalid:
+            msg = f"Invalid subdomain names: {invalid}. Valid names: {list(subdomains)}"
+            raise KeyError(msg)
+
+        new_subdomains = {
+            rename_map.get(name, name): mesh
+            for name, mesh in subdomains.items()
+        }
+
+        self._meshes = {domain_name: domain_mesh} | new_subdomains
 
     @deprecated(
         """
@@ -274,12 +301,12 @@ class Meshes:
         """
         Add to the name physical_group to restore legacy convention
         """
-        d = {self.domain_name: self.domain}
-        self._meshes = d | {
-            f"physical_group_{k}": v
-            for k, v in list(self._meshes.items())[1:]
-            if "physical_group_" not in k
+        rename_map = {
+            name: f"physical_group_{name}"
+            for name in self.subdomains
+            if not name.startswith("physical_group_")
         }
+        self.rename_subdomains(rename_map)
 
         
     def _partmesh_single(self, num_partitions: int, base_file: Path) -> list[Path]:
