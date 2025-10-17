@@ -979,7 +979,7 @@ class TestUtils:
         with pytest.raises(KeyError, match="Invalid subdomain names"):
             meshes.rename_subdomains({"does_not_exist": "foo"})
 
-        meshes.subdomain_legacy_rename()
+        meshes.rename_subdomains_legacy()
         assert meshes["physical_group_right"] == right_mesh
 
     def test_meshes_from_prj(self, tmp_path: Path):

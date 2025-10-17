@@ -297,7 +297,7 @@ class Meshes:
     Use the shorter names (without "physical_group") -> renaming in prj-files and scripts necessary.
     """
     )
-    def subdomain_legacy_rename(self) -> None:
+    def rename_subdomains_legacy(self) -> None:
         """
         Add to the name physical_group to restore legacy convention
         """
