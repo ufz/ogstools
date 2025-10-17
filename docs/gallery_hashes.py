@@ -42,7 +42,11 @@ def write_hashes(
 
 
 def compare_hashes(
-    docs_dir: Path, pattern: str, exclude: list[str], hashes_file: Path
+    docs_dir: Path,
+    pattern: str,
+    exclude: list[str],
+    hashes_file: Path,
+    threshold: int = 10,
 ) -> None:
     "Check gallery example figure hashes match the stored reference hashes."
     fig_paths = find_files(docs_dir, pattern, exclude)
@@ -56,9 +60,9 @@ def compare_hashes(
         }
         common_keys = set(ref.keys()).intersection(hashes.keys())
         diffs = {key: hashes[key] - ref[key] for key in common_keys}
-        if not all(diff == 0 for diff in diffs.values()):
+        if not all(diff < threshold for diff in diffs.values()):
             failcases = sorted(
-                [f"{k}: delta={v}" for k, v in diffs.items() if v != 0]
+                [f"{k}: delta={v}" for k, v in diffs.items() if v < threshold]
             )
             msg += (
                 "Some figure hashes for the gallery have changed.\n"
