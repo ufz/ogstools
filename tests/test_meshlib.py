@@ -1000,6 +1000,12 @@ class TestUtils:
         )
         assert basefile.exists()
 
+        files = ot.Meshes.partmesh(2, basefile, files[0], files[1:])
+        assert len(files) == 38
+
+        for file in files:
+            assert file.exists()
+
     def test_meshes_rename(self, tmp_path):
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
