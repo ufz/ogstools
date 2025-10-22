@@ -936,7 +936,7 @@ class TestUtils:
         "Check, that saving+reading meshes equal the original."
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-        meshes.save(tmp_path)
+        meshes.save(tmp_path)  # serial mesh only
         for name in meshes:
             mesh = ot.Mesh.read(tmp_path / f"{name}.vtu")
             for data in ["point_data", "cell_data", "field_data"]:

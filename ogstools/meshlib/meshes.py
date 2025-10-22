@@ -257,7 +257,9 @@ class Meshes:
         identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
-    def _partmesh_prepare(self, meshes_path: Path) -> Path:
+    def _partmesh_prepare(
+        self, meshes_path: Path, dry_run: bool = False
+    ) -> Path:
         from ogstools import cli
 
         domain_file_name = self.domain_name + ".vtu"
@@ -270,8 +272,18 @@ class Meshes:
             print(msg)
 
         parallel_path = meshes_path / "partition"
-        cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
-        return parallel_path / self.domain_name
+
+        outfile = parallel_path / (Path(self.domain_name).stem + ".mesh")
+        if dry_run:
+            return outfile
+
+        ret = cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
+
+        if ret:
+            msg = f"partmesh -o {parallel_path} -i {domain_file} --ogs2metis failed with return value {ret}"
+            raise ValueError
+
+        return outfile
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
         """
@@ -315,13 +327,12 @@ class Meshes:
         self.rename_subdomains(rename_map)
 
     def _partmesh_single(
-        self, num_partitions: int, base_file: Path
+        self, num_partitions: int, base_file: Path, dry_run: bool = False
     ) -> list[Path]:
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
         meshes_path = base_file.parent.parent
-        partition_path.mkdir(parents=True, exist_ok=True)
         subdomain_files = [
             meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
         ]
@@ -329,28 +340,76 @@ class Meshes:
         domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
+        missing_files = [
+            f
+            for f in subdomain_files + [domain_file] + [base_file]
+            if not f.exists()
+        ]
+
+        if missing_files:
+            missing_str = ", ".join(str(f) for f in missing_files)
+            msg = f"The following files do not exist: {missing_str}"
+            if not dry_run:
+                raise FileExistsError(msg)
+            print(dry_run)
+
+        if not dry_run:
+            partition_path.mkdir(parents=True, exist_ok=True)
+
         if num_partitions == 1:
-            for file in subdomain_files + [domain_file]:
-                file_link = file.parent / "partition" / "1" / file.name
+            files = [
+                file.parent / "partition" / "1" / file.name
+                for file in subdomain_files + [domain_file]
+            ]
+            if dry_run:
+                return files
+            for file_link in files:
+
                 if file_link.exists() or file_link.is_symlink():
                     file_link.unlink()
-                file_link.symlink_to(Path("../..") / file.name)
+                file_link.symlink_to(Path("../..") / file_link.name)
 
             return list(partition_path.glob("*"))
+
+        file_names = [
+            "node_properties_val",
+            "node_properties_cfg",
+            "cell_properties_val",
+            "cell_properties_cfg",
+            "msh_nod",
+            "msh_ele",
+            "msh_ele_g",
+            "msh_cfg",
+        ]
+
+        if dry_run:
+            subdomain_files = [
+                Path(f"{subdomain_name}_{file_part}{num_partitions}.bin")
+                for file_part in file_names
+                for subdomain_name in self.subdomains
+            ]
+            domain_files = [
+                Path(f"{self.domain_name}_{file_part}{num_partitions}.bin")
+                for file_part in file_names[2:]
+            ]
+
+            return subdomain_files + domain_files
 
         cli().partmesh(
             o=partition_path,
             i=domain_file,
             m=True,
             n=num_partitions,
-            x=base_file,
+            x=base_file.parent / base_file.stem,  # without .mesh extension
             *subdomain_files,  # noqa: B026
         )
-
         return list(partition_path.glob("*"))
 
     def _partmesh_save_all(
-        self, num_partitions: list[int], meshes_path: Path
+        self,
+        num_partitions: list[int],
+        meshes_path: Path,
+        dry_run: bool = False,
     ) -> dict[int, list[Path]]:
         """
         Creates a folder with decomposed / partitioned mesh suitable for parallel OGS execution
@@ -359,12 +418,15 @@ class Meshes:
 
         :param meshes_path:     Path to the folder where the original serial mesh files are already stored.
                                 E.g. `save` must be called before.
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
 
         """
 
-        base_file = self._partmesh_prepare(meshes_path)
+        base_file = self._partmesh_prepare(meshes_path, dry_run)
         parallel_files: dict[int, list[Path]] = {
-            partition: self._partmesh_single(partition, base_file)
+            partition: self._partmesh_single(partition, base_file, dry_run)
             for partition in num_partitions
         }
 
@@ -375,6 +437,7 @@ class Meshes:
         meshes_path: Path | None = None,
         overwrite: bool = False,
         num_partitions: int | list[int] | None = None,
+        dry_run: bool = False,
     ) -> list[Path] | dict[int, list[Path]]:
         """
         Save all meshes.
@@ -382,8 +445,8 @@ class Meshes:
         This function will perform identifySubdomains, if not yet been done.
 
         :param meshes_path: Optional path to the directory where meshes
-                            should be saved. If None, a temporary directory
-                            will be used.
+                            should be saved. It must already exist (will not be created).
+                            If None, a temporary directory will be used.
 
         :param overwrite:   If True, existing mesh files will be overwritten.
                             If False, an error is raised if any file already exists.
@@ -394,22 +457,24 @@ class Meshes:
                             Example 1: num_partitions = [1,2,4,8,16]
                             Example 2: num_partitions = 2
 
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
         :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
                             then it returns
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
         meshes_path = meshes_path or self._tmp_dir
-        meshes_path.mkdir(parents=True, exist_ok=True)
+        if isinstance(num_partitions, int):
+            num_partitions = [num_partitions]
+        serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
 
-        if not self.has_identified_subdomains:
-            identify_subdomains(self.domain, list(self.subdomains.values()))
-            self.has_identified_subdomains = True
+        if not dry_run:
+            meshes_path.mkdir(parents=True, exist_ok=True)
 
-        output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
-        existing_files = [f for f in output_files if f.exists()]
-        if existing_files and not overwrite:
-            existing_list = "\n".join(str(f) for f in existing_files)
-            msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
+            if not self.has_identified_subdomains:
+                identify_subdomains(self.domain, list(self.subdomains.values()))
+                self.has_identified_subdomains = True
 
             output_files = [
                 meshes_path / f"{name}.vtu" for name in self._meshes
@@ -421,12 +486,14 @@ class Meshes:
 
                 raise FileExistsError(msg)
 
-        serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
+            for name, mesh in self._meshes.items():
+                mesh.filepath = meshes_path / f"{name}.vtu"
+                pv.save_meshio(mesh.filepath, mesh)
 
         if not num_partitions:
             return serial_files
 
-        if isinstance(num_partitions, int):
-            num_partitions = [num_partitions]
-        parallel_files = self._partmesh_save_all(num_partitions, meshes_path)
+        parallel_files = self._partmesh_save_all(
+            num_partitions, meshes_path, dry_run
+        )
         return {1: serial_files} | parallel_files
