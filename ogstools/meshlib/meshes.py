@@ -257,13 +257,11 @@ class Meshes:
         identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
-    def _partmesh_prepare(
-        self, meshes_path: Path, dry_run: bool = False
+    @staticmethod
+    def partmesh_prepare(
+        domain_file: Path, output_path: Path, dry_run: bool = False
     ) -> Path:
         from ogstools import cli
-
-        domain_file_name = self.domain_name + ".vtu"
-        domain_file = meshes_path / domain_file_name
 
         if not domain_file.exists():
             msg = f"File does not exist: {domain_file}"
@@ -271,19 +269,16 @@ class Meshes:
                 raise FileExistsError(msg)
             print(msg)
 
-        parallel_path = meshes_path / "partition"
-
-        outfile = parallel_path / (Path(self.domain_name).stem + ".mesh")
+        cmd = f"partmesh -o {output_path} -i {domain_file} --ogs2metis"
         if dry_run:
-            return outfile
+            print(cmd)
+        else:
+            ret = cli().partmesh(o=output_path, i=domain_file, ogs2metis=True)
+            if ret:
+                msg = f"partmesh -o {output_path} -i {domain_file} --ogs2metis failed with return value {ret}"
+                raise ValueError(msg)
 
-        ret = cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
-
-        if ret:
-            msg = f"partmesh -o {parallel_path} -i {domain_file} --ogs2metis failed with return value {ret}"
-            raise ValueError
-
-        return outfile
+        return output_path / (Path(domain_file).stem + ".mesh")
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
         """
@@ -326,19 +321,17 @@ class Meshes:
         }
         self.rename_subdomains(rename_map)
 
-    def _partmesh_single(
-        self, num_partitions: int, base_file: Path, dry_run: bool = False
+    @staticmethod
+    def partmesh(
+        num_partitions: int,
+        base_file: Path,
+        domain_file: Path,
+        subdomain_files: list[Path],
+        dry_run: bool = False,
     ) -> list[Path]:
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
-        meshes_path = base_file.parent.parent
-        subdomain_files = [
-            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
-        ]
-
-        domain_file_name = self.domain_name + ".vtu"
-        domain_file = meshes_path / domain_file_name
 
         missing_files = [
             f
@@ -384,12 +377,12 @@ class Meshes:
 
         if dry_run:
             subdomain_files = [
-                Path(f"{subdomain_name}_{file_part}{num_partitions}.bin")
+                Path(f"{subdomain_file.stem}_{file_part}{num_partitions}.bin")
                 for file_part in file_names
-                for subdomain_name in self.subdomains
+                for subdomain_file in subdomain_files
             ]
             domain_files = [
-                Path(f"{self.domain_name}_{file_part}{num_partitions}.bin")
+                Path(f"{domain_file.stem}_{file_part}{num_partitions}.bin")
                 for file_part in file_names[2:]
             ]
 
@@ -424,9 +417,20 @@ class Meshes:
 
         """
 
-        base_file = self._partmesh_prepare(meshes_path, dry_run)
+        domain_file_name = self.domain_name + ".vtu"
+        domain_file = meshes_path / domain_file_name
+        parallel_path = meshes_path / "partition"
+        base_file = self.partmesh_prepare(domain_file, parallel_path, dry_run)
+
+        meshes_path = base_file.parent.parent
+        subdomain_files = [
+            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
+        ]
+
         parallel_files: dict[int, list[Path]] = {
-            partition: self._partmesh_single(partition, base_file, dry_run)
+            partition: self.partmesh(
+                partition, base_file, domain_file, subdomain_files, dry_run
+            )
             for partition in num_partitions
         }
 

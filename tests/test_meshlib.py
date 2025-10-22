@@ -981,6 +981,25 @@ class TestUtils:
             for file in file_list:
                 assert file.exists()
 
+    def test_meshes_file_only(self, tmp_path):
+
+        meshes1_path = Path(tmp_path / "meshes1")
+        meshes1_path.mkdir()
+
+        ot.meshlib.rect(out_name=meshes1_path / "mesh.msh")
+        meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
+        files = meshes1.save(meshes1_path)
+
+        ### Now assume only the files are still present (e.g. in workflow)
+
+        meshes2 = Path(tmp_path / "meshes2")
+        meshes2.mkdir()
+
+        basefile = ot.Meshes.partmesh_prepare(
+            domain_file=files[0], output_path=meshes2
+        )
+        assert basefile.exists()
+
     def test_meshes_rename(self, tmp_path):
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
