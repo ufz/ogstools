@@ -964,6 +964,16 @@ class TestUtils:
         else:  # partition == None
             assert len(files) == 5
 
+        if dry_run:
+            assert not any(meshes_path.iterdir())  # still empty folder
+        else:
+            if partition:
+                file_list = [file for lst in files.values() for file in lst]
+            else:
+                file_list = files
+            for file in file_list:
+                assert file.exists()
+
     def test_meshes_rename(self, tmp_path):
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)

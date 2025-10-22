@@ -263,6 +263,12 @@ class Meshes:
         domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
 
+        if not domain_file.exists():
+            msg = f"File does not exist: {domain_file}"
+            if not dry_run:
+                raise FileExistsError(msg)
+            print(msg)
+
         parallel_path = meshes_path / "partition"
         cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
         return parallel_path / self.domain_name
@@ -405,11 +411,15 @@ class Meshes:
             existing_list = "\n".join(str(f) for f in existing_files)
             msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
 
-            raise FileExistsError(msg)
+            output_files = [
+                meshes_path / f"{name}.vtu" for name in self._meshes
+            ]
+            existing_files = [f for f in output_files if f.exists()]
+            if existing_files and not overwrite:
+                existing_list = "\n".join(str(f) for f in existing_files)
+                msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
 
-        for name, mesh in self._meshes.items():
-            mesh.filepath = meshes_path / f"{name}.vtu"
-            pv.save_meshio(mesh.filepath, mesh)
+                raise FileExistsError(msg)
 
         serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
 
