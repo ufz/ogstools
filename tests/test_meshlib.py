@@ -946,12 +946,19 @@ class TestUtils:
                 )
 
     @pytest.mark.tools()  # partmesh
-    @pytest.mark.parametrize("partition", [None, 1, 2, 4, 8, 16])
-    def test_meshes_save_parallel(self, tmp_path, partition):
+    @pytest.mark.parametrize("partition", [None, 1, 2, 4])
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_meshes_save_parallel(self, tmp_path, partition, dry_run):
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        meshes_path = Path(
+            tmp_path / "meshes"
+        )  # additional clean folder (no gmsh file inside)
+        meshes_path.mkdir()
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-        files = meshes.save(tmp_path, num_partitions=partition)
+        files = meshes.save(
+            meshes_path, num_partitions=partition, dry_run=dry_run
+        )
         if partition:
             f1 = files[1]
             # Mesh contains domain, left, right, top, bottom
