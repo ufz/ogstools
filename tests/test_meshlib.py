@@ -987,7 +987,8 @@ class TestUtils:
             for file in file_list:
                 assert file.exists()
 
-    def test_meshes_file_only(self, tmp_path):
+    @pytest.mark.parametrize("partition", [1, 2, 4])
+    def test_meshes_partmesh_file_only(self, tmp_path, partition):
         """
         Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
         Use Case: Meshes files are already present and only partitioning is requested
@@ -1000,6 +1001,7 @@ class TestUtils:
 
         ot.meshlib.rect(out_name=meshes1_path / "mesh.msh")
         meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
+
         files = meshes1.save(meshes1_path)
 
         meshes2 = Path(tmp_path / "meshes2")
@@ -1011,8 +1013,12 @@ class TestUtils:
         )
         assert basefile.exists()
 
-        files = ot.Meshes.partmesh(2, basefile, files[0], files[1:])
-        assert len(files) == 38
+        files = ot.Meshes.partmesh(partition, basefile, files[0], files[1:])
+
+        if partition == 1:
+            assert len(files) == 5  # 4 subdomains + domain
+        else:
+            assert len(files) == 38  # subdomains(4)*8 + 6(domain)
 
         for file in files:
             assert file.exists()

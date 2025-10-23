@@ -357,9 +357,12 @@ class Meshes:
                             should be saved. It must already exist (will not be created).
                             If None, a temporary directory will be used.
 
-        :param metis_file:   A path to existing metis partitioned file (.mesh extension).
+        :param metis_file:  A Path to existing metis partitioned file (.mesh extension).
 
-        :param domain_file: A path to existing domain mesh file (.vtu extension)
+        :param domain_file: A Path to existing domain mesh file (.vtu extension)
+
+        :param subdomain_files:
+                            A list of Path to existing subdomain files (.vtu extensions)
 
         :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
                             If False: Writes files and returns the list of created files
@@ -391,16 +394,17 @@ class Meshes:
 
         if num_partitions == 1:
             files = [
-                file.parent / "partition" / "1" / file.name
+                (partition_path / file.name, file)
                 for file in subdomain_files + [domain_file]
             ]
             if dry_run:
-                return files
-            for file_link in files:
+                return [symlink for symlink, _ in files]
+            for file_link, file in files:
 
                 if file_link.exists() or file_link.is_symlink():
                     file_link.unlink()
-                file_link.symlink_to(Path("../..") / file_link.name)
+                rel = os.path.relpath(file.parent, file_link.parent)
+                file_link.symlink_to(Path(rel) / file.name)
 
             return list(partition_path.glob("*"))
 
