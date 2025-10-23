@@ -949,6 +949,12 @@ class TestUtils:
     @pytest.mark.parametrize("partition", [None, 1, 2, 4])
     @pytest.mark.parametrize("dry_run", [False, True])
     def test_meshes_save_parallel(self, tmp_path, partition, dry_run):
+        """
+        Test object: Meshes.save()
+        Use Case: Stores Meshes object and optionally performs partitioning
+        Assumes: A Meshes object is present. The folder is already present and empty.
+        Checks: Return value of test object and that these files are existing.
+        """
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes_path = Path(
@@ -982,7 +988,13 @@ class TestUtils:
                 assert file.exists()
 
     def test_meshes_file_only(self, tmp_path):
-
+        """
+        Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
+        Use Case: Meshes files are already present and only partitioning is requested
+        Assumes: The input meshes contain at least one point and one cell property
+        Checks: If partition files are generated.
+        """
+        # Setup
         meshes1_path = Path(tmp_path / "meshes1")
         meshes1_path.mkdir()
 
@@ -990,10 +1002,9 @@ class TestUtils:
         meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
         files = meshes1.save(meshes1_path)
 
-        ### Now assume only the files are still present (e.g. in workflow)
-
         meshes2 = Path(tmp_path / "meshes2")
         meshes2.mkdir()
+        # End of setup
 
         basefile = ot.Meshes.partmesh_prepare(
             domain_file=files[0], output_path=meshes2
@@ -1007,6 +1018,13 @@ class TestUtils:
             assert file.exists()
 
     def test_meshes_rename(self, tmp_path):
+        """
+        Test object:    Meshes.rename_subdomains() and Meshes.rename_subdomains_legacy()
+        Use Case:       Already existing Meshes object, but file names (e.g. of .save) must follow specific naming
+                        e.g. to fit into existing prj description
+        Assumes:        Meshes contains  "left" and "right" named meshes
+        Checks:         rename_subdomains_legacy works like rename_subdomains(+physical_group)
+        """
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         left_mesh = meshes["left"]
