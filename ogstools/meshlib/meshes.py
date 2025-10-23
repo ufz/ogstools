@@ -6,7 +6,7 @@
 
 import os
 import tempfile
-from collections.abc import ItemsView, Iterator, KeysView, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
 from pathlib import Path
 
 import pyvista as pv
@@ -334,8 +334,6 @@ class Meshes:
                 raise ValueError(msg)
 
         return output_path / (Path(domain_file).stem + ".mesh")
-
-    from collections.abc import Sequence
 
     @staticmethod
     def partmesh(
