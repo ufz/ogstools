@@ -257,29 +257,6 @@ class Meshes:
         identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
-    @staticmethod
-    def partmesh_prepare(
-        domain_file: Path, output_path: Path, dry_run: bool = False
-    ) -> Path:
-        from ogstools import cli
-
-        if not domain_file.exists():
-            msg = f"File does not exist: {domain_file}"
-            if not dry_run:
-                raise FileExistsError(msg)
-            print(msg)
-
-        cmd = f"partmesh -o {output_path} -i {domain_file} --ogs2metis"
-        if dry_run:
-            print(cmd)
-        else:
-            ret = cli().partmesh(o=output_path, i=domain_file, ogs2metis=True)
-            if ret:
-                msg = f"partmesh -o {output_path} -i {domain_file} --ogs2metis failed with return value {ret}"
-                raise ValueError(msg)
-
-        return output_path / (Path(domain_file).stem + ".mesh")
-
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
         """
         Rename subdomain meshes according to the provided mapping.
@@ -322,6 +299,40 @@ class Meshes:
         self.rename_subdomains(rename_map)
 
     @staticmethod
+    def partmesh_prepare(
+        domain_file: Path, output_path: Path, dry_run: bool = False
+    ) -> Path:
+        """
+        Creates a metis files. This file is needed for partitioning the OGS input mesh (for parallel OGS compution).
+
+        :param domain_file: A Path to existing domain mesh file (.vtu extension)
+        :param output:      A Path to existing folder. Here the resulting metis file will be stored (.mesh)
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
+        :returns:           Path to the generated metis file.
+        """
+
+        from ogstools import cli
+
+        if not domain_file.exists():
+            msg = f"File does not exist: {domain_file}"
+            if not dry_run:
+                raise FileExistsError(msg)
+            print(msg)
+
+        cmd = f"partmesh -o {output_path} -i {domain_file} --ogs2metis"
+        if dry_run:
+            print(cmd)
+        else:
+            ret = cli().partmesh(o=output_path, i=domain_file, ogs2metis=True)
+            if ret:
+                msg = f"partmesh -o {output_path} -i {domain_file} --ogs2metis failed with return value {ret}"
+                raise ValueError(msg)
+
+        return output_path / (Path(domain_file).stem + ".mesh")
+
+    @staticmethod
     def partmesh(
         num_partitions: int,
         base_file: Path,
@@ -329,6 +340,35 @@ class Meshes:
         subdomain_files: list[Path],
         dry_run: bool = False,
     ) -> list[Path]:
+        """
+        Creates a folder in the folder where the base_file is. Puts .bin files into this folder that are needed
+        as input files for running OGS parallel (MPI).
+        Wrapper around command line tool partmesh - adding file checks and dry-run option
+        Only use this function directly when you want to bypass creating the Meshes object
+        (e.g. files for domain and subdomains are already present)
+
+        :param num_partitions:  List of integers or a single integer that indicate the number of partitions
+                            similar to the OGS binary tool partmesh.
+                            The serial mesh will always be generated
+                            Example 1: num_partitions = [1,2,4,8,16]
+                            Example 2: num_partitions = 2
+
+        :param meshes_path: Optional path to the directory where meshes
+                            should be saved. It must already exist (will not be created).
+                            If None, a temporary directory will be used.
+
+        :param base_file:   A path to existing metis partitioned file (.mesh extension).
+
+        :param domain_file: A path to existing domain mesh file (.vtu extension)
+
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
+        :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
+                            then it returns
+                            A dict, with keys representing the number of partitions and values A list of Paths (like above)
+        """
+
         from ogstools import cli
 
         partition_path = base_file.parent / str(num_partitions)
@@ -414,7 +454,8 @@ class Meshes:
         :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
                             If False: Writes files and returns the list of created files
 
-
+        :returns:           A dict with key indicating the number of partition and value a list of
+                            Paths of the generated files
         """
 
         domain_file_name = self.domain_name + ".vtu"
