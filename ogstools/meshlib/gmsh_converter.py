@@ -5,6 +5,7 @@
 #
 
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 
 import meshio
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def meshes_from_gmsh(
     filename: Path,
-    dim: int | list[int] = 0,
+    dim: int | Sequence[int] = 0,
     reindex: bool = True,
     log: bool = True,
     meshname: str = "domain",

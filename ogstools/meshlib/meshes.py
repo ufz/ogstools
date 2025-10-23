@@ -76,7 +76,7 @@ class Meshes:
     def from_gmsh(
         cls,
         filename: Path,
-        dim: int | list[int] = 0,
+        dim: int | Sequence[int] = 0,
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
@@ -457,7 +457,7 @@ class Meshes:
 
     def _partmesh_save_all(
         self,
-        num_partitions: list[int],
+        num_partitions: Sequence[int],
         meshes_path: Path | str,
         dry_run: bool = False,
     ) -> dict[int, list[Path]]:
@@ -499,7 +499,7 @@ class Meshes:
         self,
         meshes_path: Path | str | None = None,
         overwrite: bool = False,
-        num_partitions: int | list[int] | None = None,
+        num_partitions: int | Sequence[int] | None = None,
         dry_run: bool = False,
     ) -> list[Path] | dict[int, list[Path]]:
         """
