@@ -335,15 +335,15 @@ class Meshes:
     @staticmethod
     def partmesh(
         num_partitions: int,
-        base_file: Path,
+        metis_file: Path,
         domain_file: Path,
         subdomain_files: list[Path],
         dry_run: bool = False,
     ) -> list[Path]:
         """
-        Creates a folder in the folder where the base_file is. Puts .bin files into this folder that are needed
+        Creates a folder in the folder where the metis_file is. Puts .bin files into this folder that are needed
         as input files for running OGS parallel (MPI).
-        Wrapper around command line tool partmesh - adding file checks and dry-run option
+        Wrapper around command line tool partmesh, adding file checks, dry-run option, normalized behaviour for partition == 1
         Only use this function directly when you want to bypass creating the Meshes object
         (e.g. files for domain and subdomains are already present)
 
@@ -357,7 +357,7 @@ class Meshes:
                             should be saved. It must already exist (will not be created).
                             If None, a temporary directory will be used.
 
-        :param base_file:   A path to existing metis partitioned file (.mesh extension).
+        :param metis_file:   A path to existing metis partitioned file (.mesh extension).
 
         :param domain_file: A path to existing domain mesh file (.vtu extension)
 
@@ -371,11 +371,11 @@ class Meshes:
 
         from ogstools import cli
 
-        partition_path = base_file.parent / str(num_partitions)
+        partition_path = metis_file.parent / str(num_partitions)
 
         missing_files = [
             f
-            for f in subdomain_files + [domain_file] + [base_file]
+            for f in subdomain_files + [domain_file] + [metis_file]
             if not f.exists()
         ]
 
@@ -433,7 +433,7 @@ class Meshes:
             i=domain_file,
             m=True,
             n=num_partitions,
-            x=base_file.parent / base_file.stem,  # without .mesh extension
+            x=metis_file.parent / metis_file.stem,  # without .mesh extension
             *subdomain_files,  # noqa: B026
         )
         return list(partition_path.glob("*"))
@@ -461,16 +461,16 @@ class Meshes:
         domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
         parallel_path = meshes_path / "partition"
-        base_file = self.partmesh_prepare(domain_file, parallel_path, dry_run)
+        metis_file = self.partmesh_prepare(domain_file, parallel_path, dry_run)
 
-        meshes_path = base_file.parent.parent
+        meshes_path = metis_file.parent.parent
         subdomain_files = [
             meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
         ]
 
         parallel_files: dict[int, list[Path]] = {
             partition: self.partmesh(
-                partition, base_file, domain_file, subdomain_files, dry_run
+                partition, metis_file, domain_file, subdomain_files, dry_run
             )
             for partition in num_partitions
         }
