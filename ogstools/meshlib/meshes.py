@@ -407,16 +407,17 @@ class Meshes:
 
         if num_partitions == 1:
             files = [
-                file.parent / "partition" / "1" / file.name
-                for file in subdomain_files + [domain_file]
+                (partition_path / file.name, file)
+                for file in subdomain_file_paths + [domain_file]
             ]
             if dry_run:
-                return files
-            for file_link in files:
+                return [symlink for symlink, _ in files]
+            for file_link, file in files:
 
                 if file_link.exists() or file_link.is_symlink():
                     file_link.unlink()
-                file_link.symlink_to(Path("../..") / file_link.name)
+                rel = os.path.relpath(file.parent, file_link.parent)
+                file_link.symlink_to(Path(rel) / file.name)
 
             return list(partition_path.glob("*"))
 
