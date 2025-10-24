@@ -315,6 +315,9 @@ class Meshes:
 
         from ogstools import cli
 
+        domain_file = Path(domain_file)
+        output_path = Path(output_path)
+
         if not domain_file.exists():
             msg = f"File does not exist: {domain_file}"
             if not dry_run:
@@ -357,9 +360,12 @@ class Meshes:
                             should be saved. It must already exist (will not be created).
                             If None, a temporary directory will be used.
 
-        :param metis_file:   A path to existing metis partitioned file (.mesh extension).
+        :param metis_file:  A Path to existing metis partitioned file (.mesh extension).
 
-        :param domain_file: A path to existing domain mesh file (.vtu extension)
+        :param domain_file: A Path to existing domain mesh file (.vtu extension)
+
+        :param subdomain_files:
+                            A list of Path to existing subdomain files (.vtu extensions)
 
         :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
                             If False: Writes files and returns the list of created files
@@ -371,11 +377,21 @@ class Meshes:
 
         from ogstools import cli
 
+        if isinstance(metis_file, str):
+            metis_file = Path(metis_file)
+
+        if isinstance(domain_file, str):
+            domain_file = Path(domain_file)
+
+        subdomain_file_paths: list = [
+            Path(file) for file in subdomain_files if isinstance(file, str)
+        ]
+
         partition_path = metis_file.parent / str(num_partitions)
 
         missing_files = [
             f
-            for f in subdomain_files + [domain_file] + [metis_file]
+            for f in subdomain_file_paths + [domain_file] + [metis_file]
             if not f.exists()
         ]
 
@@ -416,17 +432,17 @@ class Meshes:
         ]
 
         if dry_run:
-            subdomain_files = [
+            subdomain_file_paths = [
                 Path(f"{subdomain_file.stem}_{file_part}{num_partitions}.bin")
                 for file_part in file_names
-                for subdomain_file in subdomain_files
+                for subdomain_file in subdomain_file_paths
             ]
             domain_files = [
                 Path(f"{domain_file.stem}_{file_part}{num_partitions}.bin")
                 for file_part in file_names[2:]
             ]
 
-            return subdomain_files + domain_files
+            return subdomain_file_paths + domain_files
 
         cli().partmesh(
             o=partition_path,
@@ -511,6 +527,8 @@ class Meshes:
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
         meshes_path = meshes_path or self._tmp_dir
+        meshes_path = Path(meshes_path)
+
         if isinstance(num_partitions, int):
             num_partitions = [num_partitions]
         serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
