@@ -6,7 +6,7 @@
 
 import os
 import tempfile
-from collections.abc import ItemsView, Iterator, KeysView, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
 from pathlib import Path
 
 import pyvista as pv
@@ -76,7 +76,7 @@ class Meshes:
     def from_gmsh(
         cls,
         filename: Path,
-        dim: int | list[int] = 0,
+        dim: int | Sequence[int] = 0,
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
@@ -300,7 +300,7 @@ class Meshes:
 
     @staticmethod
     def partmesh_prepare(
-        domain_file: Path, output_path: Path, dry_run: bool = False
+        domain_file: Path | str, output_path: Path | str, dry_run: bool = False
     ) -> Path:
         """
         Creates a metis files. This file is needed for partitioning the OGS input mesh (for parallel OGS compution).
@@ -335,9 +335,9 @@ class Meshes:
     @staticmethod
     def partmesh(
         num_partitions: int,
-        metis_file: Path,
-        domain_file: Path,
-        subdomain_files: list[Path],
+        metis_file: Path | str,
+        domain_file: Path | str,
+        subdomain_files: Sequence[Path | str],
         dry_run: bool = False,
     ) -> list[Path]:
         """
@@ -434,14 +434,14 @@ class Meshes:
             m=True,
             n=num_partitions,
             x=metis_file.parent / metis_file.stem,  # without .mesh extension
-            *subdomain_files,  # noqa: B026
+            *subdomain_file_paths,  # noqa: B026
         )
         return list(partition_path.glob("*"))
 
     def _partmesh_save_all(
         self,
-        num_partitions: list[int],
-        meshes_path: Path,
+        num_partitions: Sequence[int],
+        meshes_path: Path | str,
         dry_run: bool = False,
     ) -> dict[int, list[Path]]:
         """
@@ -458,6 +458,7 @@ class Meshes:
                             Paths of the generated files
         """
 
+        meshes_path = Path(meshes_path)
         domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
         parallel_path = meshes_path / "partition"
@@ -479,9 +480,9 @@ class Meshes:
 
     def save(
         self,
-        meshes_path: Path | None = None,
+        meshes_path: Path | str | None = None,
         overwrite: bool = False,
-        num_partitions: int | list[int] | None = None,
+        num_partitions: int | Sequence[int] | None = None,
         dry_run: bool = False,
     ) -> list[Path] | dict[int, list[Path]]:
         """
