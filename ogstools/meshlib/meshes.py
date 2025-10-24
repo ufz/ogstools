@@ -383,9 +383,7 @@ class Meshes:
         if isinstance(domain_file, str):
             domain_file = Path(domain_file)
 
-        subdomain_file_paths: list = [
-            Path(file) for file in subdomain_files if isinstance(file, str)
-        ]
+        subdomain_file_paths: list = [Path(file) for file in subdomain_files]
 
         partition_path = metis_file.parent / str(num_partitions)
 
