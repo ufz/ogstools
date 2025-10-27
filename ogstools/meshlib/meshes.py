@@ -303,7 +303,7 @@ class Meshes:
         domain_file: Path | str, output_path: Path | str, dry_run: bool = False
     ) -> Path:
         """
-        Creates a metis files. This file is needed for partitioning the OGS input mesh (for parallel OGS compution).
+        Creates a metis files. This file is needed to partition the OGS input mesh (for parallel OGS compution).
 
         :param domain_file: A Path to existing domain mesh file (.vtu extension)
         :param output:      A Path to existing folder. Here the resulting metis file will be stored (.mesh)
@@ -377,11 +377,9 @@ class Meshes:
 
         from ogstools import cli
 
-        if isinstance(metis_file, str):
-            metis_file = Path(metis_file)
+        metis_file = Path(metis_file)
 
-        if isinstance(domain_file, str):
-            domain_file = Path(domain_file)
+        domain_file = Path(domain_file)
 
         subdomain_file_paths: list = [Path(file) for file in subdomain_files]
 

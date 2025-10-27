@@ -957,9 +957,8 @@ class TestUtils:
         """
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
-        meshes_path = Path(
-            tmp_path / "meshes"
-        )  # additional clean folder (no gmsh file inside)
+        # additional clean folder (no gmsh file inside)
+        meshes_path = Path(tmp_path / "meshes")  
         meshes_path.mkdir()
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         files = meshes.save(
