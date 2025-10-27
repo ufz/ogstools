@@ -958,7 +958,7 @@ class TestUtils:
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         # additional clean folder (no gmsh file inside)
-        meshes_path = Path(tmp_path / "meshes")  
+        meshes_path = Path(tmp_path / "meshes")
         meshes_path.mkdir()
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         files = meshes.save(
@@ -987,7 +987,10 @@ class TestUtils:
                 assert file.exists()
 
     @pytest.mark.parametrize("partition", [1, 2, 4])
-    def test_meshes_partmesh_file_only(self, tmp_path, partition):
+    @pytest.mark.parametrize("default_metis", [True, False])
+    def test_meshes_partmesh_file_only(
+        self, tmp_path, partition, default_metis
+    ):
         """
         Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
         Use Case: Meshes files are already present and only partitioning is requested
@@ -1007,12 +1010,17 @@ class TestUtils:
         meshes2.mkdir()
         # End of setup
 
-        basefile = ot.Meshes.partmesh_prepare(
+        basefile = ot.Meshes.partition_metis(
             domain_file=files[0], output_path=meshes2
         )
         assert basefile.exists()
 
-        files = ot.Meshes.partmesh(partition, basefile, files[0], files[1:])
+        if default_metis:
+            basefile = None
+
+        files = ot.Meshes.partition(
+            partition, files[0], files[1:], metis_file=basefile
+        )
 
         if partition == 1:
             assert len(files) == 5  # 4 subdomains + domain
