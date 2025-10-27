@@ -226,13 +226,13 @@ class TestPlotting:
         return contourf(slice_func(mesh), "Spatial Point Data")
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-    @pytest.mark.parametrize(("axis"), ["x", "y", "z", [1, 1, 0]])
+    @pytest.mark.parametrize(
+        ("axis"), ["x", "y", "z", [1, 1, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
+    )
     def test_streamlines(self, axis) -> plt.Figure:
         "Test streamlines on arbitrarily oriented slices via image comparison."
         mesh = pv_examples.load_uniform()
-        mesh.point_data["velocity"] = np.random.default_rng(123456).random(
-            (mesh.n_points, 3)
-        )
+        mesh.point_data["velocity"] = mesh.points
         fig, ax = plt.subplots()
         ot.plot.vectorplots.streamlines(
             mesh.slice(axis), ax=ax, variable=ot.variables.velocity
