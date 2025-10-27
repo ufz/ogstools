@@ -36,24 +36,17 @@ def _vectorfield(
         projection = int(np.argmax(mean_normal))
     i_id, j_id = np.delete([0, 1, 2], projection)
     _mesh = mesh.copy()
+    _mesh.points[:, projection] = 0.0
     for key in _mesh.point_data:
         if key not in [variable.data_name, variable.mask]:
             del _mesh.point_data[key]
+
     i_pts = np.linspace(mesh.bounds[2 * i_id], mesh.bounds[2 * i_id + 1], n_pts)
     j_pts = np.linspace(mesh.bounds[2 * j_id], mesh.bounds[2 * j_id + 1], n_pts)
-    i_size = i_pts[-1] - i_pts[0]
-    j_size = j_pts[-1] - j_pts[0]
-    grid = pv.Plane(_mesh.center, mean_normal, i_size, j_size, *[n_pts - 1] * 2)
-    # fixes orientation of plane
-    if projection != 2:
-        grid = grid.rotate_vector(mean_normal, 90)
-
-    # fix cases where the plane misaligns with the mesh by floating point error
-    grid.points = grid.points.astype("float64")
-    offset = np.asarray(grid.center) - np.asarray(_mesh.center)
-    grid = grid.translate(-offset)
-
-    grid = grid.sample(_mesh, pass_cell_data=False)
+    i_grid, j_grid = np.meshgrid(i_pts, j_pts, indexing="ij")
+    grid_input = [i_grid, j_grid]
+    grid_input.insert(projection, i_grid * 0)
+    grid = pv.StructuredGrid(*grid_input).sample(_mesh, pass_cell_data=False)
     values = variable.transform(grid.point_data[variable.data_name])
 
     values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
