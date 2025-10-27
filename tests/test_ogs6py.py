@@ -8,6 +8,7 @@ import pytest
 from lxml import etree as ET
 
 import ogstools as ot
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.examples import (
     prj_3bhes_id_1U_2U_1U,
     prj_3bhes_id_1U_2U_1U_ref,
@@ -1588,3 +1589,21 @@ class TestiOGS:
                 "Aborting the simulation after it has finished has changed the "
                 "status, although it should not change."
             )
+
+    def test_dependencies(self):
+        """
+        Tests an incomplete (meshes missing) and an complete (OGS would run) project file. If it return
+        it's dependencies and if the files are present
+        """
+        files = ot.Project.dependencies(prj_tunnel_trm_withincludes)
+        assert len(files) == 7  # 6 meshes + 1 xml
+        assert all(
+            [file.exists() for file in files if file.suffix == "xml"]
+        )  # mesh files not existing in this example
+
+        prj_path_in = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
+        files = ot.Project.dependencies(prj_path_in)
+        assert len(files) == 2  # 1 vtu mesh + 1 gml mesh
+        assert all(
+            [f.exists() for f in files]
+        ), f"Missing files: {[f for f in files if not f.exists()]}"

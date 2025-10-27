@@ -207,6 +207,63 @@ class Project:
                 entry.getparent().remove(entry)
 
     @staticmethod
+    def dependencies(
+        input_file: str | Path,
+        mesh_dir: str | Path | None = None,
+        check: bool = False,
+    ) -> list[Path]:
+        """
+        Searches a (partial) project file for included files (e.g. xml snippets, meshes (vtu,gml), python scripts)
+        Can be used before constructing a Project object (static function).
+
+        :param input_file:  Path to the prj-file
+        :param mesh_dir:    Optional directory used to resolve referenced mesh files.
+                            If omitted, mesh paths is interpreted to be in same folder as input_file.
+        :param check:       If `True`, assert that all collected files exist on disk
+        :returns:           A list of dependency file paths (order-preserving, de-duplicated).
+        :raises AssertionError:
+                            If `check=True` and at least one referenced file is missing.
+
+        """
+
+        input_file = Path(input_file)
+        if not mesh_dir:
+            mesh_dir = input_file.parent
+        mesh_dir = Path(mesh_dir).absolute()
+
+        tree = ET.parse(input_file)
+        root = tree.getroot()
+        xml_files = [
+            Path(elem.get("file"))
+            for elem in root.findall(".//include")
+            if elem.get("file")
+        ]
+
+        meshes_file = [
+            mesh_dir / m.text
+            for xpath in ["./mesh", "./meshes/mesh", "./geometry"]
+            for m in root.findall(xpath)
+        ]
+
+        python_files = [
+            input_file.parent / m.text
+            for xpath in ["./python_script"]
+            for m in root.findall(xpath)
+        ]
+
+        files = xml_files + meshes_file + python_files
+
+        if check:
+            missing_files = [file for file in files if not file.exists()]
+            if len(missing_files) > 0:
+                missing_files_str = ", ".join(missing_files)
+                msg = f"The following files are missing: {missing_files_str}."
+                raise FileExistsError(msg)
+
+        # make unique
+        return list(dict.fromkeys(files))
+
+    @staticmethod
     def _get_parameter_pointer(
         root: ET._Element, name: str, xpath: str
     ) -> ET._Element:
