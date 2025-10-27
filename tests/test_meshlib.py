@@ -980,16 +980,19 @@ class TestUtils:
             assert not any(meshes_path.iterdir())  # still empty folder
         else:
             if partition:
-                file_list = [file for lst in files.values() for file in lst]
+                partition_files = [
+                    file for lst in files.values() for file in lst
+                ]
             else:
-                file_list = files
-            for file in file_list:
+                partition_files = files
+            for file in partition_files:
                 assert file.exists()
 
     @pytest.mark.parametrize("partition", [1, 2, 4])
     @pytest.mark.parametrize("default_metis", [True, False])
+    @pytest.mark.parametrize("dry_run", [True, False])
     def test_meshes_partmesh_file_only(
-        self, tmp_path, partition, default_metis
+        self, tmp_path, partition, default_metis, dry_run
     ):
         """
         Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
@@ -1011,15 +1014,19 @@ class TestUtils:
         # End of setup
 
         basefile = ot.Meshes.partition_metis(
-            domain_file=files[0], output_path=meshes2
+            domain_file=files[0], output_path=meshes2, dry_run=dry_run
         )
-        assert basefile.exists()
+
+        if dry_run:
+            assert not basefile.exists()
+        else:
+            assert basefile.exists()
 
         if default_metis:
             basefile = None
 
         files = ot.Meshes.partition(
-            partition, files[0], files[1:], metis_file=basefile
+            partition, files[0], files[1:], metis_file=basefile, dry_run=dry_run
         )
 
         if partition == 1:
@@ -1028,7 +1035,10 @@ class TestUtils:
             assert len(files) == 38  # subdomains(4)*8 + 6(domain)
 
         for file in files:
-            assert file.exists()
+            if dry_run:
+                assert not file.exists()
+            else:
+                assert file.exists()
 
     def test_meshes_rename(self, tmp_path):
         """

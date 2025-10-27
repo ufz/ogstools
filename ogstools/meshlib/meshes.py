@@ -308,8 +308,8 @@ class Meshes:
 
         :param domain_file: A Path to existing domain mesh file (.vtu extension)
         :param output:      A Path to existing folder. Here the resulting metis file will be stored (.mesh)
-        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
-                            If False: Writes files and returns the list of created files
+        :param dry_run:     If True: Metis file is not written, but returns the list of files expected to be created
+                            If False: Metis file is written, and returns the list of created files
 
         :returns:           Path to the generated metis file.
         """
@@ -345,7 +345,7 @@ class Meshes:
         dry_run: bool = False,
     ) -> list[Path]:
         """
-        Creates a folder in the folder where the metis_file is. Puts .bin files into this folder that are needed
+        Creates a subfolder in the metis_file' folder. Puts .bin files into this folder that are needed
         as input files for running OGS parallel (MPI).
         Wrapper around command line tool partmesh, adding file checks, dry-run option, normalized behaviour for partition == 1
         Only use this function directly when you want to bypass creating the Meshes object
