@@ -111,7 +111,11 @@ def combined_levels(
             kwargs.get("log_scaled", setup.log_scaled)
             and not variable.is_mask()
         ):
-            values = np.log10(np.where(values > 1e-14, values, 1e-14))
+            values = np.log10(
+                values,
+                where=values > 0.0,
+                out=np.ones_like(values) * (np.nan if VMIN is None else VMIN),
+            )
         vmin = min(vmin, np.nanmin(values)) if VMIN is None else vmin
         vmax = max(vmax, np.nanmax(values)) if VMAX is None else vmax
         unique_vals = np.unique(

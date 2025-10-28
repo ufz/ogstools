@@ -978,8 +978,8 @@ class MeshSeries(Sequence[Mesh]):
             ):
                 values = np.log10(
                     values,
-                    where=values > 1e-14,
-                    out=np.ones_like(values) * (-14),
+                    where=values > 0.0,
+                    out=np.ones_like(values) * kwargs.get("vmin", np.nan),
                 )
             levels = plot.levels.compute_levels(
                 kwargs.get("vmin", np.nanmin(values) if vmin is None else vmin),

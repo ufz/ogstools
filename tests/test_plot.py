@@ -102,7 +102,7 @@ class TestPlotting:
         (ot.variables.temperature, {"continuous_cmap": True}),
         (ot.variables.pressure.get_mask(), {}),
         (ot.variables.velocity, {"arrowsize": 2}),
-        (ot.variables.displacement[0], {}),
+        (ot.variables.displacement[1], {"log_scaled": True}),
         (ot.variables.stress, {}),
         (ot.variables.stress.von_Mises, {}),
     ]

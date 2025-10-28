@@ -67,6 +67,7 @@ test:  ## Runs the unit tests
 	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
 
 test_figures:  ## Create the reference figures for the plot tests
+	rm -rf tests/baseline
 	pytest --mpl-generate-path=tests/baseline -k "TestPlotting or test_plot" -n auto
 
 gallery_hashes:
