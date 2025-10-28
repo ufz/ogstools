@@ -299,7 +299,7 @@ class Meshes:
         self.rename_subdomains(rename_map)
 
     @staticmethod
-    def partition_metis(
+    def create_metis(
         domain_file: Path | str, output_path: Path | str, dry_run: bool = False
     ) -> Path:
         """
@@ -308,8 +308,8 @@ class Meshes:
 
         :param domain_file: A Path to existing domain mesh file (.vtu extension)
         :param output:      A Path to existing folder. Here the resulting metis file will be stored (.mesh)
-        :param dry_run:     If True: Metis file is not written, but returns the list of files expected to be created
-                            If False: Metis file is written, and returns the list of created files
+        :param dry_run:     If True: Metis file is not written
+                            If False: Metis file is written
 
         :returns:           Path to the generated metis file.
         """
@@ -337,7 +337,7 @@ class Meshes:
         return output_path / (Path(domain_file).stem + ".mesh")
 
     @staticmethod
-    def partition(
+    def create_partitioning(
         num_partitions: int,
         domain_file: Path | str,
         subdomain_files: Sequence[Path | str],
@@ -377,7 +377,7 @@ class Meshes:
         domain_file = Path(domain_file)
         if not metis_file:
             parallel_path = domain_file.parent / "partition"
-            metis_file = Meshes.partition_metis(
+            metis_file = Meshes.create_metis(
                 domain_file=domain_file,
                 output_path=parallel_path,
                 dry_run=dry_run,
@@ -477,7 +477,7 @@ class Meshes:
         domain_file_name = self.domain_name + ".vtu"
         domain_file = meshes_path / domain_file_name
         parallel_path = meshes_path / "partition"
-        metis_file = self.partition_metis(domain_file, parallel_path, dry_run)
+        metis_file = self.create_metis(domain_file, parallel_path, dry_run)
 
         meshes_path = metis_file.parent.parent
         subdomain_files = [
@@ -485,7 +485,7 @@ class Meshes:
         ]
 
         parallel_files: dict[int, list[Path]] = {
-            partition: self.partition(
+            partition: self.create_partitioning(
                 partition, domain_file, subdomain_files, metis_file, dry_run
             )
             for partition in num_partitions

@@ -239,7 +239,7 @@ class Project:
             if elem.get("file")
         ]
 
-        meshes_file = [
+        mesh_files = [
             mesh_dir / m.text
             for xpath in ["./mesh", "./meshes/mesh", "./geometry"]
             for m in root.findall(xpath)
@@ -251,7 +251,7 @@ class Project:
             for m in root.findall(xpath)
         ]
 
-        files = xml_files + meshes_file + python_files
+        files = xml_files + mesh_files + python_files
 
         if check:
             missing_files = [file for file in files if not file.exists()]
@@ -261,7 +261,7 @@ class Project:
                 raise FileExistsError(msg)
 
         # make unique
-        return list(dict.fromkeys(files))
+        return list(set(files))
 
     @staticmethod
     def _get_parameter_pointer(

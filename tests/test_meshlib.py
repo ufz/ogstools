@@ -1013,7 +1013,7 @@ class TestUtils:
         meshes2.mkdir()
         # End of setup
 
-        basefile = ot.Meshes.partition_metis(
+        basefile = ot.Meshes.create_metis(
             domain_file=files[0], output_path=meshes2, dry_run=dry_run
         )
 
@@ -1025,7 +1025,7 @@ class TestUtils:
         if default_metis:
             basefile = None
 
-        files = ot.Meshes.partition(
+        files = ot.Meshes.create_partitioning(
             partition, files[0], files[1:], metis_file=basefile, dry_run=dry_run
         )
 

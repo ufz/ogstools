@@ -1598,12 +1598,12 @@ class TestiOGS:
         files = ot.Project.dependencies(prj_tunnel_trm_withincludes)
         assert len(files) == 7  # 6 meshes + 1 xml
         assert all(
-            [file.exists() for file in files if file.suffix == "xml"]
+            file.exists() for file in files if file.suffix == "xml"
         )  # mesh files not existing in this example
 
         prj_path_in = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
         files = ot.Project.dependencies(prj_path_in)
         assert len(files) == 2  # 1 vtu mesh + 1 gml mesh
         assert all(
-            [f.exists() for f in files]
+            f.exists() for f in files
         ), f"Missing files: {[f for f in files if not f.exists()]}"
