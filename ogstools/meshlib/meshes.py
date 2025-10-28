@@ -6,7 +6,7 @@
 
 import os
 import tempfile
-from collections.abc import ItemsView, Iterator, KeysView, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
 from pathlib import Path
 
 import pyvista as pv
@@ -76,7 +76,7 @@ class Meshes:
     def from_gmsh(
         cls,
         filename: Path,
-        dim: int | list[int] = 0,
+        dim: int | Sequence[int] = 0,
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
@@ -257,16 +257,6 @@ class Meshes:
         identify_subdomains(self.domain(), list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
-    def _partmesh_prepare(self, meshes_path: Path) -> Path:
-        from ogstools import cli
-
-        domain_file_name = self.domain_name + ".vtu"
-        domain_file = meshes_path / domain_file_name
-
-        parallel_path = meshes_path / "partition"
-        cli().partmesh(o=parallel_path, i=domain_file, ogs2metis=True)
-        return parallel_path / self.domain_name
-
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
         """
         Rename subdomain meshes according to the provided mapping.
@@ -308,43 +298,166 @@ class Meshes:
         }
         self.rename_subdomains(rename_map)
 
-    def _partmesh_single(
-        self, num_partitions: int, base_file: Path
-    ) -> list[Path]:
+    @staticmethod
+    def create_metis(
+        domain_file: Path | str, output_path: Path | str, dry_run: bool = False
+    ) -> Path:
+        """
+        Creates a metis files. This file is needed to partition the OGS input mesh (for parallel OGS compution)
+        using the OGS cmd line tool partmesh.
+
+        :param domain_file: A Path to existing domain mesh file (.vtu extension)
+        :param output:      A Path to existing folder. Here the resulting metis file will be stored (.mesh)
+        :param dry_run:     If True: Metis file is not written
+                            If False: Metis file is written
+
+        :returns:           Path to the generated metis file.
+        """
+
         from ogstools import cli
 
-        partition_path = base_file.parent / str(num_partitions)
-        meshes_path = base_file.parent.parent
-        partition_path.mkdir(parents=True, exist_ok=True)
-        subdomain_files = [
-            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
+        domain_file = Path(domain_file)
+        output_path = Path(output_path)
+
+        if not domain_file.exists():
+            msg = f"File does not exist: {domain_file}"
+            if not dry_run:
+                raise FileExistsError(msg)
+            print(msg)
+
+        cmd = f"partmesh -o {output_path} -i {domain_file} --ogs2metis"
+        if dry_run:
+            print(cmd)
+        else:
+            ret = cli().partmesh(o=output_path, i=domain_file, ogs2metis=True)
+            if ret:
+                msg = f"partmesh -o {output_path} -i {domain_file} --ogs2metis failed with return value {ret}"
+                raise ValueError(msg)
+
+        return output_path / (Path(domain_file).stem + ".mesh")
+
+    @staticmethod
+    def create_partitioning(
+        num_partitions: int,
+        domain_file: Path | str,
+        subdomain_files: Sequence[Path | str],
+        metis_file: Path | str | None = None,
+        dry_run: bool = False,
+    ) -> list[Path]:
+        """
+        Creates a subfolder in the metis_file' folder. Puts .bin files into this folder that are needed
+        as input files for running OGS parallel (MPI).
+        Wrapper around command line tool partmesh, adding file checks, dry-run option, normalized behaviour for partition == 1
+        Only use this function directly when you want to bypass creating the Meshes object
+        (e.g. files for domain and subdomains are already present)
+
+        :param num_partitions:  List of integers or a single integer that indicate the number of partitions
+                            similar to the OGS binary tool partmesh.
+                            The serial mesh will always be generated
+                            Example 1: num_partitions = [1,2,4,8,16]
+                            Example 2: num_partitions = 2
+
+        :param domain_file: A Path to existing domain mesh file (.vtu extension)
+
+        :param subdomain_files:
+                            A list of Path to existing subdomain files (.vtu extensions)
+
+        :param metis_file:  A Path to existing metis partitioned file (.mesh extension).
+
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
+        :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
+                            then it returns
+                            A dict, with keys representing the number of partitions and values A list of Paths (like above)
+        """
+
+        from ogstools import cli
+
+        domain_file = Path(domain_file)
+        if not metis_file:
+            parallel_path = domain_file.parent / "partition"
+            metis_file = Meshes.create_metis(
+                domain_file=domain_file,
+                output_path=parallel_path,
+                dry_run=dry_run,
+            )
+
+        metis_file = Path(metis_file)
+        subdomain_file_paths: list = [Path(file) for file in subdomain_files]
+        partition_path = metis_file.parent / str(num_partitions)
+
+        missing_files = [
+            f
+            for f in subdomain_file_paths + [domain_file] + [metis_file]
+            if not f.exists()
         ]
 
-        domain_file_name = self.domain_name + ".vtu"
-        domain_file = meshes_path / domain_file_name
+        if missing_files:
+            missing_str = ", ".join(str(f) for f in missing_files)
+            msg = f"The following files do not exist: {missing_str}"
+            if not dry_run:
+                raise FileExistsError(msg)
+            print(dry_run)
+
+        if not dry_run:
+            partition_path.mkdir(parents=True, exist_ok=True)
 
         if num_partitions == 1:
-            for file in subdomain_files + [domain_file]:
-                file_link = file.parent / "partition" / "1" / file.name
+            files = [
+                (partition_path / file.name, file)
+                for file in subdomain_file_paths + [domain_file]
+            ]
+            if dry_run:
+                return [symlink for symlink, _ in files]
+            for file_link, file in files:
+
                 if file_link.exists() or file_link.is_symlink():
                     file_link.unlink()
-                file_link.symlink_to(Path("../..") / file.name)
+                rel = os.path.relpath(file.parent, file_link.parent)
+                file_link.symlink_to(Path(rel) / file.name)
 
             return list(partition_path.glob("*"))
+
+        file_names = [
+            "node_properties_val",
+            "node_properties_cfg",
+            "cell_properties_val",
+            "cell_properties_cfg",
+            "msh_nod",
+            "msh_ele",
+            "msh_ele_g",
+            "msh_cfg",
+        ]
+
+        if dry_run:
+            subdomain_file_paths = [
+                Path(f"{subdomain_file.stem}_{file_part}{num_partitions}.bin")
+                for file_part in file_names
+                for subdomain_file in subdomain_file_paths
+            ]
+            domain_files = [
+                Path(f"{domain_file.stem}_{file_part}{num_partitions}.bin")
+                for file_part in file_names[2:]
+            ]
+
+            return subdomain_file_paths + domain_files
 
         cli().partmesh(
             o=partition_path,
             i=domain_file,
             m=True,
             n=num_partitions,
-            x=base_file,
-            *subdomain_files,  # noqa: B026
+            x=metis_file.parent / metis_file.stem,  # without .mesh extension
+            *subdomain_file_paths,  # noqa: B026
         )
-
         return list(partition_path.glob("*"))
 
     def _partmesh_save_all(
-        self, num_partitions: list[int], meshes_path: Path
+        self,
+        num_partitions: Sequence[int],
+        meshes_path: Path | str,
+        dry_run: bool = False,
     ) -> dict[int, list[Path]]:
         """
         Creates a folder with decomposed / partitioned mesh suitable for parallel OGS execution
@@ -353,12 +466,28 @@ class Meshes:
 
         :param meshes_path:     Path to the folder where the original serial mesh files are already stored.
                                 E.g. `save` must be called before.
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
 
+        :returns:           A dict with key indicating the number of partition and value a list of
+                            Paths of the generated files
         """
 
-        base_file = self._partmesh_prepare(meshes_path)
+        meshes_path = Path(meshes_path)
+        domain_file_name = self.domain_name + ".vtu"
+        domain_file = meshes_path / domain_file_name
+        parallel_path = meshes_path / "partition"
+        metis_file = self.create_metis(domain_file, parallel_path, dry_run)
+
+        meshes_path = metis_file.parent.parent
+        subdomain_files = [
+            meshes_path / (subdomain + ".vtu") for subdomain in self.subdomains
+        ]
+
         parallel_files: dict[int, list[Path]] = {
-            partition: self._partmesh_single(partition, base_file)
+            partition: self.create_partitioning(
+                partition, domain_file, subdomain_files, metis_file, dry_run
+            )
             for partition in num_partitions
         }
 
@@ -366,9 +495,10 @@ class Meshes:
 
     def save(
         self,
-        meshes_path: Path | None = None,
+        meshes_path: Path | str | None = None,
         overwrite: bool = False,
-        num_partitions: int | list[int] | None = None,
+        num_partitions: int | Sequence[int] | None = None,
+        dry_run: bool = False,
     ) -> list[Path] | dict[int, list[Path]]:
         """
         Save all meshes.
@@ -376,8 +506,8 @@ class Meshes:
         This function will perform identifySubdomains, if not yet been done.
 
         :param meshes_path: Optional path to the directory where meshes
-                            should be saved. If None, a temporary directory
-                            will be used.
+                            should be saved. It must already exist (will not be created).
+                            If None, a temporary directory will be used.
 
         :param overwrite:   If True, existing mesh files will be overwritten.
                             If False, an error is raised if any file already exists.
@@ -388,35 +518,45 @@ class Meshes:
                             Example 1: num_partitions = [1,2,4,8,16]
                             Example 2: num_partitions = 2
 
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files
+
         :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
                             then it returns
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
         meshes_path = meshes_path or self._tmp_dir
-        meshes_path.mkdir(parents=True, exist_ok=True)
+        meshes_path = Path(meshes_path)
 
-        if not self.has_identified_subdomains:
-            identify_subdomains(self.domain, list(self.subdomains.values()))
-            self.has_identified_subdomains = True
-
-        output_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
-        existing_files = [f for f in output_files if f.exists()]
-        if existing_files and not overwrite:
-            existing_list = "\n".join(str(f) for f in existing_files)
-            msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
-
-            raise FileExistsError(msg)
-
-        for name, mesh in self._meshes.items():
-            mesh.filepath = meshes_path / f"{name}.vtu"
-            pv.save_meshio(mesh.filepath, mesh)
-
+        if isinstance(num_partitions, int):
+            num_partitions = [num_partitions]
         serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
+
+        if not dry_run:
+            meshes_path.mkdir(parents=True, exist_ok=True)
+
+            if not self.has_identified_subdomains:
+                identify_subdomains(self.domain, list(self.subdomains.values()))
+                self.has_identified_subdomains = True
+
+            output_files = [
+                meshes_path / f"{name}.vtu" for name in self._meshes
+            ]
+            existing_files = [f for f in output_files if f.exists()]
+            if existing_files and not overwrite:
+                existing_list = "\n".join(str(f) for f in existing_files)
+                msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
+
+                raise FileExistsError(msg)
+
+            for name, mesh in self._meshes.items():
+                mesh.filepath = meshes_path / f"{name}.vtu"
+                pv.save_meshio(mesh.filepath, mesh)
 
         if not num_partitions:
             return serial_files
 
-        if isinstance(num_partitions, int):
-            num_partitions = [num_partitions]
-        parallel_files = self._partmesh_save_all(num_partitions, meshes_path)
+        parallel_files = self._partmesh_save_all(
+            num_partitions, meshes_path, dry_run
+        )
         return {1: serial_files} | parallel_files

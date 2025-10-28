@@ -936,7 +936,7 @@ class TestUtils:
         "Check, that saving+reading meshes equal the original."
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-        meshes.save(tmp_path)
+        meshes.save(tmp_path)  # serial mesh only
         for name in meshes:
             mesh = ot.Mesh.read(tmp_path / f"{name}.vtu")
             for data in ["point_data", "cell_data", "field_data"]:
@@ -946,12 +946,24 @@ class TestUtils:
                 )
 
     @pytest.mark.tools()  # partmesh
-    @pytest.mark.parametrize("partition", [None, 1, 2, 4, 8, 16])
-    def test_meshes_save_parallel(self, tmp_path, partition):
+    @pytest.mark.parametrize("partition", [None, 1, 2, 4])
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_meshes_save_parallel(self, tmp_path, partition, dry_run):
+        """
+        Test object: Meshes.save()
+        Use Case: Stores Meshes object and optionally performs partitioning
+        Assumes: A Meshes object is present. The folder is already present and empty.
+        Checks: Return value of test object and that these files are existing.
+        """
         "Checks the number of saved files"
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        # additional clean folder (no gmsh file inside)
+        meshes_path = Path(tmp_path / "meshes")
+        meshes_path.mkdir()
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-        files = meshes.save(tmp_path, num_partitions=partition)
+        files = meshes.save(
+            meshes_path, num_partitions=partition, dry_run=dry_run
+        )
         if partition:
             f1 = files[1]
             # Mesh contains domain, left, right, top, bottom
@@ -964,7 +976,78 @@ class TestUtils:
         else:  # partition == None
             assert len(files) == 5
 
+        if dry_run:
+            assert not any(meshes_path.iterdir())  # still empty folder
+        else:
+            if partition:
+                partition_files = [
+                    file for lst in files.values() for file in lst
+                ]
+            else:
+                partition_files = files
+            for file in partition_files:
+                assert file.exists()
+
+    @pytest.mark.parametrize("partition", [1, 2, 4])
+    @pytest.mark.parametrize("default_metis", [True, False])
+    @pytest.mark.parametrize("dry_run", [True, False])
+    def test_meshes_partmesh_file_only(
+        self, tmp_path, partition, default_metis, dry_run
+    ):
+        """
+        Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
+        Use Case: Meshes files are already present and only partitioning is requested
+        Assumes: The input meshes contain at least one point and one cell property
+        Checks: If partition files are generated.
+        """
+        # Setup
+        meshes1_path = Path(tmp_path / "meshes1")
+        meshes1_path.mkdir()
+
+        ot.meshlib.rect(out_name=meshes1_path / "mesh.msh")
+        meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
+
+        files = meshes1.save(meshes1_path)
+
+        meshes2 = Path(tmp_path / "meshes2")
+        meshes2.mkdir()
+        # End of setup
+
+        basefile = ot.Meshes.create_metis(
+            domain_file=files[0], output_path=meshes2, dry_run=dry_run
+        )
+
+        if dry_run:
+            assert not basefile.exists()
+        else:
+            assert basefile.exists()
+
+        if default_metis:
+            basefile = None
+
+        files = ot.Meshes.create_partitioning(
+            partition, files[0], files[1:], metis_file=basefile, dry_run=dry_run
+        )
+
+        if partition == 1:
+            assert len(files) == 5  # 4 subdomains + domain
+        else:
+            assert len(files) == 38  # subdomains(4)*8 + 6(domain)
+
+        for file in files:
+            if dry_run:
+                assert not file.exists()
+            else:
+                assert file.exists()
+
     def test_meshes_rename(self, tmp_path):
+        """
+        Test object:    Meshes.rename_subdomains() and Meshes.rename_subdomains_legacy()
+        Use Case:       Already existing Meshes object, but file names (e.g. of .save) must follow specific naming
+                        e.g. to fit into existing prj description
+        Assumes:        Meshes contains  "left" and "right" named meshes
+        Checks:         rename_subdomains_legacy works like rename_subdomains(+physical_group)
+        """
         ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         left_mesh = meshes["left"]
