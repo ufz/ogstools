@@ -19,8 +19,11 @@
   - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
   - new functions for renaming domain and subdomains
 - Meshes
-  - save function performs partmesh if number of partitions are given
+  - save function performs partmesh if number of partitions are given, with optional dry_run
+    - create_partitioning() and create_metis if vtu files are already present
   - subdomains() -> subdomain, domain_name() -> domain_name (with setter)
+- Project
+  - dependencies () return a list of referenced/needed files (meshes, xml includes, python scripts)
 - plot
   - add option to plot legend outside of plots.
   - added support for continuous contourplots via `continuous_cmap=True`.
