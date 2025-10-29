@@ -20,7 +20,6 @@ _logs_dir = EXAMPLES_DIR / "logs"
 _msh_dir = EXAMPLES_DIR / "msh"
 _prj_dir = EXAMPLES_DIR / "prj"
 _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
-_shp_dir = EXAMPLES_DIR / "shapefiles"
 _yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
@@ -243,9 +242,6 @@ surface_paths = [
     _surface_dir / (file + ".vtu")
     for file in ["00_KB", "01_q", "02_krl", "03_S3", "04_krp"]
 ]
-
-test_shapefile = _shp_dir / "test_shape.shp"
-circle_shapefile = _shp_dir / "circle.shp"
 
 elder_h5 = _meshseries_dir / "elder.h5"
 elder_xdmf = _meshseries_dir / "elder.xdmf"
