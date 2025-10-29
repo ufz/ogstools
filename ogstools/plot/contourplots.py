@@ -21,6 +21,7 @@ from PIL.Image import Image
 from ogstools.plot import utils
 from ogstools.plot.levels import combined_levels, level_boundaries
 from ogstools.variables import Variable, Vector
+from ogstools.variables.custom_colormaps import grey_cmap
 
 from . import features
 from .contourplots_pv import contourf_pv
@@ -181,7 +182,8 @@ def subplot(
     ax.axis("auto")
 
     if variable.mask_used(mesh):
-        subplot(mesh, variable.get_mask(), ax, **kwargs)
+        var_mask = variable.get_mask().replace(cmap=grey_cmap)
+        subplot(mesh.threshold([0, 0], variable.mask), var_mask, ax, **kwargs)
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
 
     surf_tri = mesh.triangulate().extract_surface()
@@ -202,8 +204,13 @@ def subplot(
     if len(nan_mask.shape) == 2:
         nan_mask = np.sum(nan_mask, axis=-1)
     if kwargs.get("log_scaled", setup.log_scaled) and not variable.is_mask():
-        values_temp = np.where(values > 1e-14, values, 1e-14)
-        values = np.log10(values_temp)
+        if np.any(values <= 0.0):
+            nan_mask[np.any(values[tri] <= 0.0, axis=-1)] = True
+        values = np.log10(
+            values,
+            where=values > 0.0,
+            out=np.ones_like(values) * kwargs.get("vmin", np.nan),
+        )
     vmin, vmax = np.nanmin(values), np.nanmax(values)
 
     if levels is None:
