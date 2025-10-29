@@ -1600,6 +1600,9 @@ class TestiOGS:
         assert all(
             file.exists() for file in files if file.suffix == "xml"
         )  # mesh files not existing in this example
+        # first mesh must be always domain
+        assert meshes[0].stem == "tunnel"
+        # mesh files not existing in this example
 
         prj_path_in = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
         files = ot.Project.dependencies(prj_path_in)
