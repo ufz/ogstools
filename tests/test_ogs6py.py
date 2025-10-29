@@ -1597,9 +1597,16 @@ class TestiOGS:
         """
         files = ot.Project.dependencies(prj_tunnel_trm_withincludes)
         assert len(files) == 7  # 6 meshes + 1 xml
+
+        xmls = [file for file in files if file.suffix == ".xml"]
+        assert len(xmls) == 1
         assert all(
-            file.exists() for file in files if file.suffix == "xml"
-        )  # mesh files not existing in this example
+            xml.exists() for xml in xmls
+        ), f"Missing: {', '.join(str(x) for x in xmls if not x.exists())}"
+
+        meshes = [file for file in files if file.suffix == ".vtu"]
+        assert len(meshes) == 6
+
         # first mesh must be always domain
         assert meshes[0].stem == "tunnel"
         # mesh files not existing in this example

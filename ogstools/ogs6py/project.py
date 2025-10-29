@@ -234,7 +234,7 @@ class Project:
         tree = ET.parse(input_file)
         root = tree.getroot()
         xml_files = [
-            Path(elem.get("file"))
+            input_file.parent / Path(elem.get("file"))
             for elem in root.findall(".//include")
             if elem.get("file")
         ]
