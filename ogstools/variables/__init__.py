@@ -214,7 +214,7 @@ def get_dataframe() -> pd.DataFrame:
     )
 
 
-def normalize_vars(
+def _normalize_vars(
     var1: str | Variable | None, var2: str | Variable | None, mesh: pv.DataSet
 ) -> tuple[Variable, Variable]:
     "Normalize arguments to return two Variables."

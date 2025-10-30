@@ -30,7 +30,7 @@ from typeguard import typechecked
 from ogstools import plot
 from ogstools._internal import deprecated
 from ogstools.meshlib.data_processing import difference_pairwise
-from ogstools.variables import Variable, normalize_vars, u_reg
+from ogstools.variables import Variable, _normalize_vars, u_reg
 
 from . import to_ip_mesh, to_ip_point_cloud
 from ._utils import reshape_obs_points
@@ -684,7 +684,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
 
         Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
-        time_var, variable = normalize_vars("time", variable, self.mesh(0))
+        time_var, variable = _normalize_vars("time", variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
         x_values = self.timevalues
         if ax is None:
@@ -987,7 +987,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             raise KeyError(msg)
 
         var_z = Variable.find(variable, self.mesh(0))
-        var_x, var_y = normalize_vars(x, y, self.mesh(0))
+        var_x, var_y = _normalize_vars(x, y, self.mesh(0))
         time_var = var_x if var_x.data_name == "time" else var_y
         unit = self.time_unit
         time_var.data_unit = time_var.output_unit = str(

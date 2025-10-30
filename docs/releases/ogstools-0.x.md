@@ -4,7 +4,10 @@
 
 ## API breaking changes
 
-- removed the Mesh class entirely...
+- removed the Mesh class entirely, MeshSeries is now a Sequence of native
+  `pyvista.UnstructuredGrid`'s.
+- `MeshSeries.scale` does not return a new MeshSeries, but changes the calling
+  object.
 
 ## Deprecations
 
@@ -20,6 +23,7 @@
   - has now has difference method.
   - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
   - new functions for renaming domain and subdomains
+  - can now be scaled spatially / temporally in the Constructor
 - Meshes
   - save function performs partmesh if number of partitions are given, with optional dry_run
     - create_partitioning() and create_metis if vtu files are already present

@@ -8,7 +8,7 @@ from pint.facets.plain import PlainQuantity
 
 from ogstools import examples
 from ogstools import variables as ov
-from ogstools.meshlib.geo import p_fluid
+from ogstools.meshlib import p_fluid
 
 Qty = ov.u_reg.Quantity
 

@@ -21,7 +21,6 @@ stress analysis:
 
 import ogstools as ot
 from ogstools import examples
-from ogstools.meshlib import geo
 
 mesh = examples.load_mesh_mechanics_2D()
 fig = ot.plot.contourf(mesh, ot.variables.displacement)
@@ -118,7 +117,7 @@ for comp in ["rr", "tt", "pp"]:
 # calculated as the following:
 
 # %%
-mesh["pressure"] = geo.p_fluid(mesh)
+mesh["pressure"] = ot.meshlib.p_fluid(mesh)
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
@@ -127,9 +126,9 @@ fig = ot.plot.contourf(mesh, ot.variables.pressure)
 # correct the depth manually. Then the pressure is calculated correctly:
 
 # %%
-mesh["depth"] = geo.depth(mesh, use_coords=True)
+mesh["depth"] = ot.meshlib.depth(mesh, use_coords=True)
 fig = ot.plot.contourf(mesh, "depth")
-mesh["pressure"] = geo.p_fluid(mesh)
+mesh["pressure"] = ot.meshlib.p_fluid(mesh)
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]

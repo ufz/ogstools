@@ -10,6 +10,7 @@ from .boundary_set import LayerSet
 from .boundary_subset import Gaussian2D, Surface
 from .cosim import mesh_from_simulator
 from .data_processing import difference, difference_matrix, difference_pairwise
+from .geo import depth, p_fluid
 from .gmsh_converter import meshes_from_gmsh
 from .gmsh_meshing import cuboid, rect
 from .ip_mesh import to_ip_mesh, to_ip_point_cloud
@@ -33,11 +34,13 @@ __all__ = [
     "Raster",
     "Surface",
     "cuboid",
+    "depth",
     "difference",
     "difference_matrix",
     "difference_pairwise",
     "mesh_from_simulator",
     "meshes_from_gmsh",  # deprecated
+    "p_fluid",
     "rect",
     "reindex_material_ids",
     "to_ip_mesh",

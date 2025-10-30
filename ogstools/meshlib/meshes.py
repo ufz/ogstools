@@ -4,6 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from __future__ import annotations
+
 import os
 import tempfile
 from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
@@ -41,6 +43,17 @@ class Meshes:
         self.has_identified_subdomains: bool = False
         self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
 
+    @classmethod
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+        """Initialize a Meshes object from a Sequence of existing files.
+
+        :param filepaths:   Sequence of Mesh files (.vtu)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their
+                            points must align with points on the domain mesh.
+        """
+        return cls({Path(m).stem: pv.read(m) for m in filepaths})
+
     def __getitem__(self, key: str) -> pv.UnstructuredGrid:
         if key not in self._meshes:
             msg = f"Key {key!r} not found"
@@ -58,7 +71,7 @@ class Meshes:
         yield from self._meshes
 
     @classmethod
-    def from_yaml(cls, geometry_file: Path) -> "Meshes":
+    def from_yaml(cls, geometry_file: Path) -> Meshes:
         """ """
 
         gmsh_file = meshes_from_yaml(geometry_file)
@@ -77,7 +90,7 @@ class Meshes:
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
-    ) -> "Meshes":
+    ) -> Meshes:
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
@@ -105,7 +118,7 @@ class Meshes:
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
         domain_name: str = "domain",
-    ) -> "Meshes":
+    ) -> Meshes:
         """Extract 1D boundaries of a 2D mesh.
 
         :param mesh:            The 2D domain
@@ -140,7 +153,7 @@ class Meshes:
         gml_path: Path,
         out_dir: Path | None = None,
         tolerance: float = 1e-12,
-    ) -> "Meshes":
+    ) -> Meshes:
         """Create Meshes from geometry definition in the gml file.
 
         :param domain_path: Path to the domain mesh.

@@ -14,7 +14,6 @@ from lxml import etree as ET
 import ogstools as ot
 from ogstools import examples
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.meshlib import geo, to_ip_point_cloud
 from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
 
 
@@ -535,10 +534,10 @@ class TestUtils:
     )
     def test_depth(self, mesh: pv.UnstructuredGrid):
         mesh = examples.load_mesh_mechanics_2D()
-        mesh["depth"] = geo.depth(mesh, use_coords=True)
+        mesh["depth"] = ot.meshlib.depth(mesh, use_coords=True)
         depth_idx = 2 if mesh.volume != 0.0 else 1
         assert np.all(mesh["depth"] == -mesh.points[..., depth_idx])
-        mesh["depth"] = geo.depth(mesh)
+        mesh["depth"] = ot.meshlib.depth(mesh)
         assert np.all(mesh["depth"] < -mesh.points[..., depth_idx])
 
     @pytest.mark.parametrize(
@@ -582,7 +581,8 @@ class TestUtils:
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
         meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
-        int_pts = to_ip_point_cloud(meshseries.mesh(-1))
+        result = meshseries[-1]
+        int_pts = ot.meshlib.to_ip_point_cloud(result)
         ip_ms = meshseries.ip_tesselated()
         ip_mesh = ip_ms.mesh(-1)
         vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
@@ -1086,9 +1086,7 @@ class TestUtils:
         meshes_ref = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         meshes_ref.save(tmp_path)
         prj = ot.Project(examples.prj_mechanics)
-        meshes = ot.Meshes(
-            {m.stem: pv.read(m) for m in prj.meshpaths(tmp_path)}
-        )
+        meshes = ot.Meshes.from_files(prj.meshpaths(tmp_path))
         assert meshes.domain_name == meshes_ref.domain_name
         for name, name_ref in zip(
             sorted(meshes), sorted(meshes_ref), strict=True
