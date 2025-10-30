@@ -152,9 +152,9 @@ class Variable:
             f"Data not found in mesh. Available data names are {data_keys}. "
         )
         if isinstance(variable, str) and variable in ["x", "y", "z"]:
-            return _spatial_preset(variable)
+            return _spatial_preset(variable, getattr(mesh, "spatial_unit", "m"))
         if variable == "time":
-            return _time_preset()
+            return _time_preset(getattr(mesh, "time_unit", "s"))
 
         if isinstance(variable, Variable):
             if variable.data_name in data_keys:
@@ -399,14 +399,7 @@ class Scalar(Variable):
     "Represent a scalar variable."
 
 
-def _spatial_preset(axis: str) -> Scalar:
-    # pylint: disable=import-outside-toplevel
-    # Importing here dynamically to avoid circular import
-    # If we want to avoid this, we'd have to move plot.setup to someplace
-    # outside of plot
-    from ogstools.plot import setup
-
-    # pylint: enable=import-outside-toplevel
+def _spatial_preset(axis: str, unit: PlainQuantity | str) -> Scalar:
 
     def get_pts(
         index: int,
@@ -421,29 +414,32 @@ def _spatial_preset(axis: str) -> Scalar:
 
         return get_pts_coordinate
 
+    if isinstance(unit, PlainQuantity):
+        unit_str = str(unit) if unit.magnitude != 1 else unit.units
+    else:
+        unit_str = unit
     return Scalar(
-        axis,
-        setup.spatial_unit,  # type:ignore[attr-defined]
-        setup.spatial_unit,  # type:ignore[attr-defined]
+        "",
+        unit_str,
+        unit_str,
+        symbol=axis,
         mesh_dependent=True,
         func=get_pts("xyz".index(axis)),
         color="k",
     )
 
 
-def _time_preset() -> Scalar:
-    # pylint: disable=import-outside-toplevel
-    # Importing here dynamically to avoid circular import
-    # If we want to avoid this, we'd have to move plot.setup to someplace
-    # outside of plot
-    from ogstools.plot import setup
+def _time_preset(unit: PlainQuantity | str) -> Scalar:
 
-    # pylint: enable=import-outside-toplevel
-
+    if isinstance(unit, PlainQuantity):
+        unit_str = str(unit) if unit.magnitude != 1 else unit.units
+    else:
+        unit_str = unit
     return Scalar(
         "time",
-        setup.time_unit,  # type:ignore[attr-defined]
-        setup.time_unit,  # type:ignore[attr-defined]
+        unit_str,
+        unit_str,
+        symbol="t",
         mesh_dependent=True,
         func=lambda ms: getattr(ms, "timevalues", range(len(ms))),
     )

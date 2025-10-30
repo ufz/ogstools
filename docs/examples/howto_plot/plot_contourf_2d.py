@@ -15,14 +15,15 @@ import ogstools as ot
 from ogstools import examples
 
 ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-mesh = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km")).mesh(1)
+ms = examples.load_meshseries_THM_2D_PVD(spatial_unit="km")
+mesh = ms.mesh(1)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
 #
 # ..  code-block:: python
 #
-#   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
+#   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf", "km")
 #
 
 # %% [markdown]

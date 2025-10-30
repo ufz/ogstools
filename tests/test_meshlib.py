@@ -365,6 +365,20 @@ class TestUtils:
                 half_delta = mesh[var] - results[idx][var]
                 np.testing.assert_almost_equal(half_delta, 0.5 * delta)
 
+    def test_scaling(self):
+        ms = examples.load_meshseries_THM_2D_PVD()
+        bounds_m = ms[0].bounds
+        ms.scale("km")
+        np.testing.assert_allclose(bounds_m, 1e3 * np.asarray(ms[0].bounds))
+        ms.scale(1e3)
+        np.testing.assert_allclose(bounds_m, ms[0].bounds)
+
+        tv_s = ms.timevalues
+        ms.scale(time="d")
+        np.testing.assert_allclose(tv_s, 86400 * ms.timevalues)
+        ms.scale(time=86400)
+        np.testing.assert_allclose(tv_s, ms.timevalues)
+
     def test_diff_two_meshes(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh1 = meshseries.mesh(0)

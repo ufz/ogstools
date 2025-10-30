@@ -36,7 +36,6 @@ setup_dict = {
     "fontsize": 32,
     "linewidth": 1,
     "label_split": 30,
-    "spatial_unit": "m",
     "time_unit": "s",
     "arrowsize": 1,
 }

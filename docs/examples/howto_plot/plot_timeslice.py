@@ -20,7 +20,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "a"))
+mesh_series = examples.load_meshseries_CT_2D_XDMF(time_unit="a")
 si = ot.variables.saturation
 
 # %% [markdown]
@@ -58,7 +58,9 @@ fig = ms_vert.plot_time_slice("time", "z", si, vmin=0, vmax=100)
 
 # %%
 ms_vert_fine = ot.MeshSeries.resample(ms_vert, np.linspace(0, 4.2, 300))
-fig = ms_vert_fine.plot_time_slice("time", "z", si, vmin=0, vmax=100)
+fig = ms_vert_fine.plot_time_slice(
+    "time", "z", si, vmin=0, vmax=100, time_logscale=True
+)
 
 # %% [markdown]
 # You can also change the order of the arguments for spatial coordinate and time

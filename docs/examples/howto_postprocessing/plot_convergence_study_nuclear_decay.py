@@ -89,7 +89,7 @@ fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
 for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
-    mesh_series = ot.MeshSeries(sim_result).scale(time=("s", "yrs"))
+    mesh_series = ot.MeshSeries(sim_result, time_unit="yrs")
     results = {"heat_flux": [], "temperature": []}
     for ts in mesh_series.timesteps:
         mesh = mesh_series.mesh(ts)

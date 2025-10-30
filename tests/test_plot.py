@@ -377,8 +377,7 @@ class TestPlotting:
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     def test_lineplot_PETSC(self):
         """Test plot.line with PETSC results via image comparison."""
-        ms = examples.load_meshseries_PETSc_2D()
-        ms.scale(time=("s", "a"))
+        ms = examples.load_meshseries_PETSc_2D(time_unit=("a", "a"))
         points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
         labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
         ms_pts = ot.MeshSeries.extract_probe(ms, points_coords)

@@ -40,7 +40,7 @@ abs_error = ref_values - results["temperature"]
 rel_error = abs_error / ref_values
 np.testing.assert_array_less(np.abs(abs_error), 6)
 np.testing.assert_array_less(np.abs(rel_error), 0.02)
-results = results.scale(time=("s", "h"))
+results.scale(time="h")
 
 # %% [markdown]
 # Write the data into the results, to leverage plotting features.

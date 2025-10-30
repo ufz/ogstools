@@ -38,9 +38,9 @@ ms
 
 # %%
 print(f"First 3 time values are: {ms.timevalues[:3]} s.")
-ms = ms.scale(time=("s", "h"))
+ms.scale(time="h")
 print(f"Last time value is: {ms.timevalues[-1]} h.")
-ms = ms.scale(time=3600.0)
+ms.scale(time=3600.0)
 print(f"Last time value is: {ms.timevalues[-1]} s.")
 
 # %% [markdown]
