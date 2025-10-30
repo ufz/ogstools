@@ -234,7 +234,7 @@ class Project:
         tree = ET.parse(input_file)
         root = tree.getroot()
         xml_files = [
-            Path(elem.get("file"))
+            input_file.parent / Path(elem.get("file"))
             for elem in root.findall(".//include")
             if elem.get("file")
         ]
@@ -251,7 +251,8 @@ class Project:
             for m in root.findall(xpath)
         ]
 
-        files = xml_files + mesh_files + python_files
+        # combine, make unique, preserve order
+        files = list(dict.fromkeys(xml_files + mesh_files + python_files))
 
         if check:
             missing_files = [file for file in files if not file.exists()]
@@ -260,8 +261,7 @@ class Project:
                 msg = f"The following files are missing: {missing_files_str}."
                 raise FileExistsError(msg)
 
-        # make unique
-        return list(set(files))
+        return files
 
     @staticmethod
     def _get_parameter_pointer(
