@@ -12,17 +12,11 @@ if find_spec("ifm") is None:
     msg = "Could not import ifm. A working FEFLOW Python setup is required!"
     raise ImportError(msg)
 
-from ._tools import (
-    assign_bulk_ids,
-    remove_bulk_ids,
-)
+from ._feflowlib import read_feflow
+from ._tools import assign_bulk_ids, remove_bulk_ids
 from .feflow_model import FeflowModel
 
-__all__ = [
-    "assign_bulk_ids",
-    "FeflowModel",
-    "remove_bulk_ids",
-]
+__all__ = ["FeflowModel", "assign_bulk_ids", "read_feflow", "remove_bulk_ids"]
 
 # log configuration
 log.basicConfig(

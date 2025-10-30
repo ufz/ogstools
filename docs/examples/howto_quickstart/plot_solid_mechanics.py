@@ -21,9 +21,10 @@ stress analysis:
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.meshlib import geo
 
 mesh = examples.load_mesh_mechanics_2D()
-fig = mesh.plot_contourf(ot.variables.displacement)
+fig = ot.plot.contourf(mesh, ot.variables.displacement)
 
 # %% [markdown]
 # Tensor components
@@ -31,8 +32,8 @@ fig = mesh.plot_contourf(ot.variables.displacement)
 # We can inspect the stress (or strain) tensor components by indexing.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress["xx"])
-fig = mesh.plot_contourf(ot.variables.stress["xy"])
+fig = ot.plot.contourf(mesh, ot.variables.stress["xx"])
+fig = ot.plot.contourf(mesh, ot.variables.stress["xy"])
 
 # %% [markdown]
 # Principal stresses
@@ -44,16 +45,16 @@ fig = mesh.plot_contourf(ot.variables.stress["xy"])
 
 # %%
 eigvecs = ot.variables.stress.eigenvectors
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[0])
-mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[0], glyph_type="line")
+fig = ot.plot.contourf(mesh, variable=ot.variables.stress.eigenvalues[0])
+ot.plot.quiver(mesh, ax=fig.axes[0], variable=eigvecs[0], glyph_type="line")
 
 # %%
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[1])
-mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[1], glyph_type="line")
+fig = ot.plot.contourf(mesh, variable=ot.variables.stress.eigenvalues[1])
+ot.plot.quiver(mesh, ax=fig.axes[0], variable=eigvecs[1], glyph_type="line")
 
 # %%
-fig = mesh.plot_contourf(variable=ot.variables.stress.eigenvalues[2])
-mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
+fig = ot.plot.contourf(mesh, variable=ot.variables.stress.eigenvalues[2])
+ot.plot.quiver(mesh, ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 
 # %% [markdown]
 # We can also plot the mean of the principal stress, i.e. the magnitude of the
@@ -61,7 +62,7 @@ mesh.plot_quiver(ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 # see: :py:func:`ogstools.variables.tensor_math.mean`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.mean)
+fig = ot.plot.contourf(mesh, ot.variables.stress.mean)
 
 # %% [markdown]
 # Von Mises stress
@@ -69,7 +70,7 @@ fig = mesh.plot_contourf(ot.variables.stress.mean)
 # see: :py:func:`ogstools.variables.tensor_math.von_mises`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.von_Mises)
+fig = ot.plot.contourf(mesh, ot.variables.stress.von_Mises)
 
 # %% [markdown]
 # octahedral shear stress
@@ -77,7 +78,7 @@ fig = mesh.plot_contourf(ot.variables.stress.von_Mises)
 # see: :py:func:`ogstools.variables.tensor_math.octahedral_shear`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.stress.octahedral_shear)
+fig = ot.plot.contourf(mesh, ot.variables.stress.octahedral_shear)
 
 # %% [markdown]
 # Stresses in polar coordinates
@@ -88,9 +89,9 @@ fig = mesh.plot_contourf(ot.variables.stress.octahedral_shear)
 
 # %%
 polar_stress = ot.variables.stress.to_polar(center=(150, -650, 0))
-fig = mesh.plot_contourf(polar_stress["rr"])
-fig = mesh.plot_contourf(polar_stress["tt"])
-fig = mesh.plot_contourf(polar_stress["pp"])
+fig = ot.plot.contourf(mesh, polar_stress["rr"])
+fig = ot.plot.contourf(mesh, polar_stress["tt"])
+fig = ot.plot.contourf(mesh, polar_stress["pp"])
 
 # %% [markdown]
 # Here is a 3D example with a cylindrical hole at (0, 0, 0) in y direction:
@@ -99,7 +100,7 @@ fig = mesh.plot_contourf(polar_stress["pp"])
 mesh_3D = examples.load_mesh_mechanics_3D_sphere()
 polar_stress_3D = ot.variables.stress.to_polar()
 for comp in ["rr", "tt", "pp"]:
-    pl = mesh_3D.plot_contourf(polar_stress_3D[comp])
+    pl = ot.plot.contourf(mesh_3D, polar_stress_3D[comp])
     pl.view_xz()
     pl.show()
 
@@ -117,8 +118,8 @@ for comp in ["rr", "tt", "pp"]:
 # calculated as the following:
 
 # %%
-mesh["pressure"] = mesh.p_fluid()
-fig = mesh.plot_contourf(ot.variables.pressure)
+mesh["pressure"] = geo.p_fluid(mesh)
+fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
 # But since this assumes that the top of the model is equal to the ground
@@ -126,10 +127,10 @@ fig = mesh.plot_contourf(ot.variables.pressure)
 # correct the depth manually. Then the pressure is calculated correctly:
 
 # %%
-mesh["depth"] = mesh.depth(use_coords=True)
-fig = mesh.plot_contourf("depth")
-mesh["pressure"] = mesh.p_fluid()
-fig = mesh.plot_contourf(ot.variables.pressure)
+mesh["depth"] = geo.depth(mesh, use_coords=True)
+fig = ot.plot.contourf(mesh, "depth")
+mesh["pressure"] = geo.p_fluid(mesh)
+fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
@@ -137,8 +138,8 @@ fig = mesh.plot_contourf(ot.variables.pressure)
 # see: :py:func:`ogstools.variables.mesh_dependent.dilatancy_critescu`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_tot)
-fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_eff)
+fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_tot)
+fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
 
 # %% [markdown]
 # Fluid pressure criterion
@@ -146,4 +147,4 @@ fig = mesh.plot_contourf(ot.variables.dilatancy_critescu_eff)
 # see: :py:func:`ogstools.variables.mesh_dependent.fluid_pressure_criterion`
 
 # %%
-fig = mesh.plot_contourf(ot.variables.fluid_pressure_crit)
+fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_crit)

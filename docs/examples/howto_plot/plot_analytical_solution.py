@@ -102,9 +102,9 @@ fig.tight_layout()
 fig, axs = plt.subplots(1, 3, figsize=[40, 10], sharey=True)
 results_y_slice = results.transform(lambda mesh: mesh.slice("y"))
 y_slice = results_y_slice[results.closest_timestep(20)]
-y_slice.plot_contourf(temp, fig=fig, ax=axs[0])
-y_slice.plot_contourf(temp.abs_error, fig=fig, ax=axs[1])
-y_slice.plot_contourf(temp.rel_error, fig=fig, ax=axs[2])
+ot.plot.contourf(y_slice, temp, fig=fig, ax=axs[0])
+ot.plot.contourf(y_slice, temp.abs_error, fig=fig, ax=axs[1])
+ot.plot.contourf(y_slice, temp.rel_error, fig=fig, ax=axs[2])
 fig.tight_layout()
 
 # %% [markdown]

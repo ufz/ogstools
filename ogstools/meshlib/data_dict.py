@@ -8,10 +8,9 @@ from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from typing import Any
 
 import numpy as np
+import pyvista as pv
 
 from ogstools.variables import Variable
-
-from .mesh import Mesh
 
 
 class DataDict(MutableMapping):
@@ -19,8 +18,8 @@ class DataDict(MutableMapping):
 
     def __init__(
         self,
-        ms: Sequence[Mesh],
-        get_data: Callable[[Mesh], dict],
+        ms: Sequence[pv.UnstructuredGrid],
+        get_data: Callable[[pv.UnstructuredGrid], dict],
         array_len: int | None,
     ) -> None:
         self.ms = ms

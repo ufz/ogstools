@@ -26,8 +26,12 @@ ot.plot.setup.combined_colorbar = False
 # same figure:
 
 fig, ax = plt.subplots(2, 1, figsize=(15, 15))
-meshseries.mesh(0).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[0])
-meshseries.mesh(1).plot_contourf(ot.variables.displacement, fig=fig, ax=ax[1])
+ot.plot.contourf(
+    meshseries.mesh(0), ot.variables.temperature, fig=fig, ax=ax[0]
+)
+ot.plot.contourf(
+    meshseries.mesh(1), ot.variables.displacement, fig=fig, ax=ax[1]
+)
 fig.tight_layout()
 
 # %% [markdown]
@@ -41,14 +45,18 @@ fig.tight_layout()
 
 fig, ax = plt.subplots(3, 1, figsize=(20, 30))
 
-meshseries.mesh(0).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[0])
-meshseries.mesh(1).plot_contourf(ot.variables.temperature, fig=fig, ax=ax[1])
-diff_mesh = meshseries.mesh(1).difference(
-    meshseries.mesh(0), ot.variables.temperature
+ot.plot.contourf(
+    meshseries.mesh(0), ot.variables.temperature, fig=fig, ax=ax[0]
+)
+ot.plot.contourf(
+    meshseries.mesh(1), ot.variables.temperature, fig=fig, ax=ax[1]
+)
+diff_mesh = ot.meshlib.difference(
+    meshseries.mesh(1), meshseries.mesh(0), ot.variables.temperature
 )
 
 
-diff_mesh.plot_contourf(ot.variables.temperature, fig=fig, ax=ax[2])
+ot.plot.contourf(diff_mesh, ot.variables.temperature, fig=fig, ax=ax[2])
 ax[0].set_title(r"$T(\mathrm{t}_{0})$")
 ax[1].set_title(r"$T(\mathrm{t}_{end})$")
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")

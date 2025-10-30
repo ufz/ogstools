@@ -9,8 +9,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyvista as pv
 
-from .mesh import Mesh
+
+def reindex_material_ids(mesh: pv.UnstructuredGrid) -> None:
+    unique_mat_ids = np.unique(mesh["MaterialIDs"])
+    id_map = dict(
+        zip(*np.unique(unique_mat_ids, return_inverse=True), strict=True)
+    )
+    mesh["MaterialIDs"] = np.int32(list(map(id_map.get, mesh["MaterialIDs"])))
+    return
 
 
 def layer_names(folder: str) -> Callable[[dict], Path]:
@@ -65,7 +73,7 @@ def centered_range(min_val: float, max_val: float, step: float) -> np.ndarray:
 
 
 def reshape_obs_points(
-    points: np.ndarray | list, mesh: Mesh | None = None
+    points: np.ndarray | list, mesh: pv.UnstructuredGrid | None = None
 ) -> np.ndarray:
     points = np.asarray(points)
 
@@ -78,7 +86,7 @@ def reshape_obs_points(
         pts_pyvista = np.hstack(
             (pts, np.zeros((pts.shape[0], 3 - pts.shape[1])))
         )
-    elif isinstance(mesh, Mesh):
+    elif isinstance(mesh, pv.UnstructuredGrid):
         # Detect and handle flat dimensions
         geom = mesh.points
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))

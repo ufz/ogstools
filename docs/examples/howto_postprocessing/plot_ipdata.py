@@ -11,7 +11,7 @@ represented by one subsection of a cell.
 # %% [markdown]
 # For brevity of this example we wrap the entire workflow from meshing and
 # simulation to plotting in a parameterized function. The main function of
-# importance is :meth:`~ogstools.meshlib.mesh.Mesh.to_ip_mesh`. We will use this
+# importance is :py:func:`~ogstools.meshlib.ip_mesh.to_ip_mesh`. We will use this
 # function to show the tessellated visualization of the integration point data
 # for different element and integration point orders and element types. Note,
 # you can also tessellate an entire MeshSeries via
@@ -58,14 +58,14 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     model.write_input()
     model.run_model(write_logs=True, args=f"-m {case_path} -o {case_path}")
     mesh = ot.MeshSeries(case_path / "mesh.pvd").mesh(-1)
-    int_pts = mesh.to_ip_point_cloud()
-    ip_mesh = mesh.to_ip_mesh()
+    int_pts = ot.meshlib.to_ip_point_cloud(mesh)
+    ip_mesh = ot.meshlib.to_ip_mesh(mesh)
 
-    fig = mesh.plot_contourf(ot.variables.stress)
+    fig = ot.plot.contourf(mesh, ot.variables.stress)
     fig.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
-    fig = ip_mesh.plot_contourf(sigma_ip)
+    fig = ot.plot.contourf(ip_mesh, sigma_ip)
     fig.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )

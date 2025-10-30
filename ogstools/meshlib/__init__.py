@@ -4,14 +4,15 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from ._utils import reindex_material_ids
 from .boundary import Boundary, Layer, LocationFrame, Raster
 from .boundary_set import LayerSet
 from .boundary_subset import Gaussian2D, Surface
+from .cosim import mesh_from_simulator
 from .data_processing import difference, difference_matrix, difference_pairwise
 from .gmsh_converter import meshes_from_gmsh
 from .gmsh_meshing import cuboid, rect
 from .ip_mesh import to_ip_mesh, to_ip_point_cloud
-from .mesh import Mesh
 from .mesh_series import MeshSeries
 from .meshes import Meshes
 from .region import (
@@ -27,17 +28,18 @@ __all__ = [
     "Layer",
     "LayerSet",
     "LocationFrame",
-    "Mesh",
-    "Meshes",
     "MeshSeries",
+    "Meshes",
     "Raster",
     "Surface",
     "cuboid",
     "difference",
     "difference_matrix",
     "difference_pairwise",
+    "mesh_from_simulator",
     "meshes_from_gmsh",  # deprecated
     "rect",
+    "reindex_material_ids",
     "to_ip_mesh",
     "to_ip_point_cloud",
     "to_region_prism",

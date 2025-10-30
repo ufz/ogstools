@@ -11,12 +11,7 @@ from . import logparser, plot, variables
 from ._find_ogs import cli, status
 from .materiallib.core.material_manager import MaterialManager  # noqa: F401
 from .materiallib.core.media import MediaSet  # noqa: F401
-from .meshlib import (
-    Mesh,  # noqa: F401
-    Meshes,  # noqa: F401
-    MeshSeries,  # noqa: F401
-    meshes_from_gmsh,
-)
+from .meshlib import Meshes, MeshSeries, meshes_from_gmsh  # noqa: F401
 from .ogs6py import Project  # noqa: F401
 
 with suppress(ImportError):
@@ -31,8 +26,8 @@ del metadata  # optional, avoids polluting the results of dir(__package__)
 __all__ = [
     "cli",
     "logparser",
+    "meshes_from_gmsh",
     "plot",
     "status",
     "variables",
-    "meshes_from_gmsh",
 ]

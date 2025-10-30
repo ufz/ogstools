@@ -14,6 +14,7 @@ from lxml import etree as ET
 import ogstools as ot
 from ogstools import examples
 from ogstools.definitions import EXAMPLES_DIR
+from ogstools.meshlib import geo, to_ip_point_cloud
 from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
 
 
@@ -515,15 +516,15 @@ class TestUtils:
         "mesh",
         [
             examples.load_mesh_mechanics_2D(),
-            ot.Mesh(pv.SolidSphere(100, center=(0, 0, -101))),
+            pv.SolidSphere(100, center=(0, 0, -101)),
         ],
     )
-    def test_depth(self, mesh: ot.Mesh):
+    def test_depth(self, mesh: pv.UnstructuredGrid):
         mesh = examples.load_mesh_mechanics_2D()
-        mesh["depth"] = mesh.depth(use_coords=True)
+        mesh["depth"] = geo.depth(mesh, use_coords=True)
         depth_idx = 2 if mesh.volume != 0.0 else 1
         assert np.all(mesh["depth"] == -mesh.points[..., depth_idx])
-        mesh["depth"] = mesh.depth()
+        mesh["depth"] = geo.depth(mesh)
         assert np.all(mesh["depth"] < -mesh.points[..., depth_idx])
 
     @pytest.mark.parametrize(
@@ -567,7 +568,7 @@ class TestUtils:
         model.write_input()
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
         meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
-        int_pts = meshseries.mesh(-1).to_ip_point_cloud()
+        int_pts = to_ip_point_cloud(meshseries.mesh(-1))
         ip_ms = meshseries.ip_tesselated()
         ip_mesh = ip_ms.mesh(-1)
         vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
@@ -583,7 +584,6 @@ class TestUtils:
     def test_reader(self):
         assert isinstance(examples.load_meshseries_THM_2D_PVD(), ot.MeshSeries)
         assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
-        assert isinstance(ot.Mesh.read(examples.mechanics_2D), ot.Mesh)
 
     @pytest.mark.system()
     def test_xdmf_quadratic(self, tmp_path):
@@ -619,7 +619,7 @@ class TestUtils:
 
     def test_indexing(self):
         ms = examples.load_meshseries_HT_2D_XDMF()
-        assert isinstance(ms[1], ot.Mesh)
+        assert isinstance(ms[1], pv.UnstructuredGrid)
 
     def test_slice(self):
         ms = examples.load_meshseries_HT_2D_XDMF()
@@ -794,8 +794,10 @@ class TestUtils:
         assert ot.variables.pressure.mask in ms.cell_data
         assert ot.variables.temperature.data_name in ms.point_data
         assert ot.variables.temperature.mask not in ms.cell_data
-        m_diff_T = ms[-1].difference(ms[0], ot.variables.temperature)
-        m_diff_p = ms[-1].difference(ms[0], ot.variables.pressure)
+        m_diff_T = ot.meshlib.difference(
+            ms[-1], ms[0], ot.variables.temperature
+        )
+        m_diff_p = ot.meshlib.difference(ms[-1], ms[0], ot.variables.pressure)
         assert (
             np.count_nonzero(
                 np.isnan(
@@ -938,7 +940,7 @@ class TestUtils:
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         meshes.save(tmp_path)  # serial mesh only
         for name in meshes:
-            mesh = ot.Mesh.read(tmp_path / f"{name}.vtu")
+            mesh = pv.read(tmp_path / f"{name}.vtu")
             for data in ["point_data", "cell_data", "field_data"]:
                 np.testing.assert_array_equal(
                     getattr(mesh, data).values(),
@@ -1071,7 +1073,7 @@ class TestUtils:
         meshes_ref.save(tmp_path)
         prj = ot.Project(examples.prj_mechanics)
         meshes = ot.Meshes(
-            {m.stem: ot.Mesh(m) for m in prj.meshpaths(tmp_path)}
+            {m.stem: pv.read(m) for m in prj.meshpaths(tmp_path)}
         )
         assert meshes.domain_name == meshes_ref.domain_name
         for name, name_ref in zip(
@@ -1515,7 +1517,9 @@ class TestUtils:
 
         # Test access to subdomains
         subdomains = meshes.subdomains
-        assert all(isinstance(m, ot.Mesh) for m in subdomains.values())
+        assert all(
+            isinstance(m, pv.UnstructuredGrid) for m in subdomains.values()
+        )
         assert "Floor" in subdomains
         assert "Canister" in subdomains
 

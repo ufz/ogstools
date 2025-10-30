@@ -36,7 +36,7 @@ mesh = examples.load_mesh_mechanics_2D()
 
 # %%
 sample = mesh.sample_over_line([25, -460, 0], [100, -800, 0])
-fig = mesh.plot_contourf(ot.variables.temperature)
+fig = ot.plot.contourf(mesh, ot.variables.temperature)
 fig = ot.plot.line(sample, ax=fig.axes[0], linestyle="--")
 
 # %% [markdown]
@@ -62,7 +62,7 @@ sample = mesh.sample_over_circular_arc(
     center=[150, -650, 0],
 )
 fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
-mesh.plot_contourf(ot.variables.displacement["x"], fig=fig, ax=axs[1])
+ot.plot.contourf(mesh, ot.variables.displacement["x"], fig=fig, ax=axs[1])
 ot.plot.line(sample, ax=axs[1], lw=3, color="red")
 ot.plot.line(sample, ot.variables.displacement["x"], ax=axs[0])
 fig.tight_layout()
@@ -127,7 +127,7 @@ sample_4 = pv.lines_from_points(pts).sample(mesh)
 # %%
 fig, axs = plt.subplots(ncols=2, figsize=[26, 10])
 u_x = ot.variables.displacement["x"]
-mesh.plot_contourf(u_x, fig=fig, ax=axs[1])
+ot.plot.contourf(mesh, u_x, fig=fig, ax=axs[1])
 for i, sample in enumerate([sample_1, sample_2, sample_3, sample_4]):
     c = f"C{i}"  # cycle through default color cycle
     ot.plot.line(sample, ax=axs[1], linestyle="--", color=c)

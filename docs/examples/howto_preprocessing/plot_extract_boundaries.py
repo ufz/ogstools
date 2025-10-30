@@ -34,7 +34,7 @@ for name, mesh in boundaries.items():
 # Let's display and save them:
 
 # %%
-fig = domain.plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(domain, ot.variables.material_id)
 colors = ["black", "grey", "lime", "yellow"]
 for i, (name, mesh) in enumerate(boundaries.items()):
     ot.plot.line(mesh, ax=fig.axes[0], lw=2, annotate=name, color=colors[i])

@@ -44,7 +44,7 @@ si = ot.variables.saturation
 
 # %%
 rows = np.array([np.linspace([0, 0, z], [120, 0, z], 4) for z in [60, 40]])
-fig = mesh_series.mesh(0).plot_contourf(si)
+fig = ot.plot.contourf(mesh_series.mesh(0), si)
 fig.axes[0].scatter(rows[..., 0], rows[..., 2], s=50, fc="none", ec="r", lw=3)
 for i, pt in enumerate(rows.reshape(-1, 3)):
     fig.axes[0].annotate(str(i), (pt[0], pt[2] - 5), va="top", fontsize=32)

@@ -26,7 +26,7 @@ mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 
 # %% This is our example mesh which we want to discretize with triangle
 # elements.
-fig = mesh.plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(mesh, ot.variables.material_id)
 
 # %% [markdown]
 # Here, we do the remeshing and convert the resulting msh file to an
@@ -38,4 +38,4 @@ temp_dir = Path(mkdtemp())
 msh_path = temp_dir / "tri_mesh.msh"
 ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
 meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
-fig = meshes["domain"].plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(meshes["domain"], ot.variables.material_id)

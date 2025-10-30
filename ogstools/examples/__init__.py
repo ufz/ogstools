@@ -10,7 +10,7 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.meshlib import Mesh, MeshSeries
+from ogstools.meshlib import MeshSeries
 
 from . import analytical_solutions as anasol
 
@@ -99,7 +99,7 @@ def load_meshseries_diffusion_3D(Tb=373.15, Ta=293.15, alpha=1e-6):
         mesh["temperature"] = (
             anasol.heat_conduction_temperature(x, tv, Tb, Ta, alpha) + offset
         )
-        meshes += [Mesh(mesh.copy())]
+        meshes += [mesh.copy()]
     return MeshSeries.from_data(meshes, timevalues)
 
 
@@ -110,20 +110,20 @@ def load_meshseries_PETSc_2D():
 
 
 def load_mesh_mechanics_2D():
-    return Mesh.read(_meshseries_dir / "mechanics_2D.vtu")
+    return pv.read(_meshseries_dir / "mechanics_2D.vtu")
 
 
 def load_mesh_mechanics_3D_cylinder():
     # from ogs/Tests/Data/Mechanics/Linear/ElementDeactivation3D/element_deactivation_M_3D.prj
     # Adjusted params to get reasonable stresses
     # clipped manually to 1/8 due to symmetry
-    return Mesh.read(_meshseries_dir / "mechanics_3D_cylinder.vtu")
+    return pv.read(_meshseries_dir / "mechanics_3D_cylinder.vtu")
 
 
 def load_mesh_mechanics_3D_sphere():
     # from ogs/Tests/Data/Mechanics/Linear/PressureBC/hollow_sphere.prj
     # Adjusted params to get reasonable stresses
-    return Mesh.read(_meshseries_dir / "mechanics_3D_sphere.vtu")
+    return pv.read(_meshseries_dir / "mechanics_3D_sphere.vtu")
 
 
 def load_meshes_liquid_flow_simple():

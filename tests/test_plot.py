@@ -137,13 +137,15 @@ class TestPlotting:
     ) -> plt.Figure:
         """Test creation of difference plots via image comparison."""
         ms = examples.load_meshseries_THM_2D_PVD()
-        return contourf(ms[1].difference(ms[0], var), var.difference, **kwargs)
+        return contourf(
+            ot.meshlib.difference(ms[1], ms[0], var), var.difference, **kwargs
+        )
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_user_defined_ax(self) -> plt.Figure:
         """Test plotting with provided ax via image comparison."""
         ms = examples.load_meshseries_THM_2D_PVD()
-        diff = ms[1].difference(ms[0], ot.variables.temperature)
+        diff = ot.meshlib.difference(ms[1], ms[0], ot.variables.temperature)
         fig, ax = plt.subplots(3, 1, figsize=(40, 30))
         contourf(ms[0], ot.variables.temperature, fig=fig, ax=ax[0])
         contourf(ms[1], ot.variables.temperature, fig=fig, ax=ax[1])
@@ -407,11 +409,13 @@ class TestPlotting:
         ms = ot.MeshSeries.resample(ms_full, timevalues).transform(
             lambda mesh: mesh.clip("x")
         )
-        fig = ms[0].plot_contourf(ot.variables.temperature)
+        fig = ot.plot.contourf(ms[0], ot.variables.temperature)
 
-        def plot_func(timevalue: float, mesh: ot.Mesh) -> None:
+        def plot_func(timevalue: float, mesh: pv.UnstructuredGrid) -> None:
             fig.axes[0].clear()
-            mesh.plot_contourf(ot.variables.temperature, ax=fig.axes[0], dpi=50)
+            ot.plot.contourf(
+                mesh, ot.variables.temperature, ax=fig.axes[0], dpi=50
+            )
             fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
 
         anim = ot.plot.animate(fig, plot_func, ms.timevalues, ms)
@@ -454,13 +458,13 @@ class TestPlotting:
         cpts = mesh_3D.cell_centers().points
         mesh_3D.cell_data["MaterialIDs"] = (12 * cpts[:, 0] + 3).astype(int)
         # test static plots
-        mesh_3D.plot_contourf(
-            "MaterialIDs", opacities=opacities, interactive=False
+        ot.plot.contourf(
+            mesh_3D, "MaterialIDs", opacities=opacities, interactive=False
         )
         # test dynamic plots with screenshot
-        mesh_3D.plot_contourf("MaterialIDs", opacities=opacities).screenshot(
-            tmp_path / "test.png"
-        )
+        ot.plot.contourf(
+            mesh_3D, "MaterialIDs", opacities=opacities
+        ).screenshot(tmp_path / "test.png")
         assert (tmp_path / "test.png").is_file()
 
     def test_pv_plot_mask(self, tmp_path: Path):
@@ -468,5 +472,7 @@ class TestPlotting:
 
         Doesn't check for correctness of the plot itself"""
         mesh_3D = examples.load_mesh_mechanics_3D_cylinder()
-        mesh_3D.plot_contourf("displacement").screenshot(tmp_path / "test.png")
+        ot.plot.contourf(mesh_3D, "displacement").screenshot(
+            tmp_path / "test.png"
+        )
         assert (tmp_path / "test.png").is_file()

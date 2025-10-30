@@ -53,7 +53,7 @@ fig = ot.plot.contourf(ms_r[0], saturation, vmin=0, vmax=100, dpi=50)
 fig.axes[0].set_title(f"{0} yrs", fontsize=32)
 
 
-def plot_contourf(timevalue: float, mesh: ot.Mesh) -> None:
+def plot_contourf(timevalue: float, mesh) -> None:
     fig.axes[0].clear()
     ot.plot.contourf(mesh, saturation, ax=fig.axes[0], dpi=50)
     fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
@@ -73,7 +73,7 @@ ms_x = ms.transform(
 fig = ot.plot.line(ms_x[0], ot.variables.saturation)
 
 
-def plot_line(mesh: ot.Mesh) -> None:
+def plot_line(mesh) -> None:
     fig.axes[0].clear()
     ot.plot.line(mesh, saturation, ax=fig.axes[0])
     fig.axes[0].set_ylim([0, 100])

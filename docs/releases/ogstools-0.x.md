@@ -4,6 +4,8 @@
 
 ## API breaking changes
 
+- removed the Mesh class entirely...
+
 ## Deprecations
 
 ### Examples

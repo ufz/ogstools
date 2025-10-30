@@ -7,6 +7,7 @@ For this example we use an existing mesh file and add the required arrays.
 
 # %%
 import numpy as np
+import pyvista as pv
 
 import ogstools as ot
 from ogstools import examples
@@ -18,7 +19,7 @@ from ogstools import examples
 # A bulk mesh file is loaded. If it already contains old Material IDs
 # we delete them first.
 
-mesh = ot.Mesh(examples.mechanics_2D)
+mesh: pv.UnstructuredGrid = pv.read(examples.mechanics_2D)
 mesh.cell_data.remove("MaterialIDs")
 
 
@@ -43,7 +44,7 @@ mat_ids = np.array([material_ids(pt) for pt in ccp], dtype=np.int32)
 
 mesh.cell_data.set_array(mat_ids, "MaterialIDs")
 
-fig = mesh.plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(mesh, ot.variables.material_id)
 
 # %% [markdown]
 # Likewise material properties / MeshElement parameters can be set
@@ -62,7 +63,7 @@ p = 1e6 * y / (np.min(y) - np.max(y)) + 4e6
 # The array is added to the mesh.
 mesh.point_data.set_array(p, "pressure_gradient")
 
-fig = mesh.plot_contourf("pressure_gradient")
+fig = ot.plot.contourf(mesh, "pressure_gradient")
 
 # %%
 # This also works with multidimensional data.
@@ -97,6 +98,6 @@ mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
 #
 # pv.save_meshio("bulk_mesh.vtu", mesh)
 
-fig = mesh.plot_contourf("initial_pressure")
+fig = ot.plot.contourf(mesh, "initial_pressure")
 
-fig = mesh.plot_contourf("initial_pressure_second-variant")
+fig = ot.plot.contourf(mesh, "initial_pressure_second-variant")

@@ -7,6 +7,7 @@ Read mesh from file (vtu or xdmf) into pyvista mesh
 # %%
 import numpy as np
 
+import ogstools as ot
 from ogstools import examples
 
 # %% [markdown]
@@ -105,4 +106,4 @@ print("Data on clipped domain:", np.shape(temp_right_half))
 # Let's plot the last timestep of the transformed MeshSeries.
 
 # %%
-fig = ms_right_half[-1].plot_contourf("temperature")
+fig = ot.plot.contourf(ms_right_half[-1], "temperature")
