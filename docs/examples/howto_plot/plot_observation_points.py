@@ -80,3 +80,4 @@ for index in range(2):
     ts = ms_pts[index].timevalues
     fig.axes[index].plot(ts, mean_values, "rk"[index], lw=4)
     fig.axes[index].legend(labels[index] + ["mean"], fontsize=20)
+fig.tight_layout()
