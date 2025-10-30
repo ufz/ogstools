@@ -1046,7 +1046,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         ax.pcolormesh(x_vals, y_vals, values, cmap=cmap, norm=norm)
 
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
-        plot.utils.label_ax(fig, ax, var_x, var_y, fontsize)
+        x_label = var_x.get_label()
+        y_label = var_y.get_label()
+        plot.utils.label_ax(fig, ax, x_label, y_label, fontsize)
         ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
         ax.margins(0, 0)
         if cbar:
