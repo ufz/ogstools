@@ -13,7 +13,7 @@ import numpy as np
 import pyvista as pv
 from meshio._vtk_common import meshio_to_vtk_type
 
-from .mesh import Mesh
+from ._utils import reindex_material_ids
 from .subdomains import identify_subdomains
 
 logging.basicConfig()  # Important, initializes root logger
@@ -26,7 +26,7 @@ def meshes_from_gmsh(
     reindex: bool = True,
     log: bool = True,
     meshname: str = "domain",
-) -> dict[str, Mesh]:
+) -> dict[str, pv.UnstructuredGrid]:
     """
     .. deprecated:: 0.7.1
 
@@ -80,8 +80,8 @@ def meshes_from_gmsh(
         logger.info("Detected domain dimension of %d", dim[0])
     elif isinstance(dim, int):
         dim = [dim]
-    domain_mesh = Mesh(
-        pv_mesh.extract_cells([cell.dimension in dim for cell in pv_mesh.cell])
+    domain_mesh = pv_mesh.extract_cells(
+        [cell.dimension in dim for cell in pv_mesh.cell]
     )
     mat_ids = domain_mesh.cell_data.pop(
         "gmsh:physical", np.zeros(domain_mesh.number_of_cells)
@@ -93,7 +93,7 @@ def meshes_from_gmsh(
     domain_mesh.clear_field_data()
     domain_mesh.cell_data["MaterialIDs"] = np.int32(mat_ids)
     if reindex:
-        domain_mesh.reindex_material_ids()
+        reindex_material_ids(domain_mesh)
         logger.info("Renumbered to: %s", np.unique(domain_mesh["MaterialIDs"]))
 
     meshes[meshname] = domain_mesh
@@ -149,7 +149,7 @@ def meshes_from_gmsh(
         subdomain.field_data.clear()
         identify_subdomains(domain_mesh, [subdomain])
 
-        meshes[f"{name}"] = Mesh(subdomain)
+        meshes[f"{name}"] = subdomain
         logger.info("%s: %s", f"{name}", subdomain)
 
     logger.info("Conversion complete.")

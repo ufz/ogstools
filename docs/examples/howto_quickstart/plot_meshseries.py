@@ -7,6 +7,7 @@ Read mesh from file (vtu or xdmf) into pyvista mesh
 # %%
 import numpy as np
 
+import ogstools as ot
 from ogstools import examples
 
 # %% [markdown]
@@ -37,9 +38,9 @@ ms
 
 # %%
 print(f"First 3 time values are: {ms.timevalues[:3]} s.")
-ms = ms.scale(time=("s", "h"))
+ms.scale(time="h")
 print(f"Last time value is: {ms.timevalues[-1]} h.")
-ms = ms.scale(time=3600.0)
+ms.scale(time=3600.0)
 print(f"Last time value is: {ms.timevalues[-1]} s.")
 
 # %% [markdown]
@@ -105,4 +106,4 @@ print("Data on clipped domain:", np.shape(temp_right_half))
 # Let's plot the last timestep of the transformed MeshSeries.
 
 # %%
-fig = ms_right_half[-1].plot_contourf("temperature")
+fig = ot.plot.contourf(ms_right_half[-1], "temperature")

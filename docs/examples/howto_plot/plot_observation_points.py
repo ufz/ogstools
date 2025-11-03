@@ -24,7 +24,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "a"))
+mesh_series = examples.load_meshseries_CT_2D_XDMF(time_unit="a")
 si = ot.variables.saturation
 
 # %% [markdown]
@@ -44,7 +44,7 @@ si = ot.variables.saturation
 
 # %%
 rows = np.array([np.linspace([0, 0, z], [120, 0, z], 4) for z in [60, 40]])
-fig = mesh_series.mesh(0).plot_contourf(si)
+fig = ot.plot.contourf(mesh_series.mesh(0), si)
 fig.axes[0].scatter(rows[..., 0], rows[..., 2], s=50, fc="none", ec="r", lw=3)
 for i, pt in enumerate(rows.reshape(-1, 3)):
     fig.axes[0].annotate(str(i), (pt[0], pt[2] - 5), va="top", fontsize=32)
@@ -80,3 +80,4 @@ for index in range(2):
     ts = ms_pts[index].timevalues
     fig.axes[index].plot(ts, mean_values, "rk"[index], lw=4)
     fig.axes[index].legend(labels[index] + ["mean"], fontsize=20)
+fig.tight_layout()

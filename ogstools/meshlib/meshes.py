@@ -4,6 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from __future__ import annotations
+
 import os
 import tempfile
 from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
@@ -14,7 +16,6 @@ import pyvista as pv
 from ogstools._internal import deprecated
 
 from .gmsh_converter import meshes_from_gmsh
-from .mesh import Mesh
 from .meshes_from_yaml import meshes_from_yaml
 from .subdomains import (
     identify_subdomains,
@@ -38,13 +39,22 @@ class Meshes:
                                 If needed, the domain mesh itself can also be added again as a subdomain.
             :returns:           A Meshes object
         """
-        self._meshes: dict[str, Mesh] = {
-            name: Mesh(mesh) for name, mesh in meshes.items()
-        }
+        self._meshes = meshes
         self.has_identified_subdomains: bool = False
         self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
 
-    def __getitem__(self, key: str) -> Mesh:
+    @classmethod
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+        """Initialize a Meshes object from a Sequence of existing files.
+
+        :param filepaths:   Sequence of Mesh files (.vtu)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their
+                            points must align with points on the domain mesh.
+        """
+        return cls({Path(m).stem: pv.read(m) for m in filepaths})
+
+    def __getitem__(self, key: str) -> pv.UnstructuredGrid:
         if key not in self._meshes:
             msg = f"Key {key!r} not found"
             raise KeyError(msg)
@@ -52,7 +62,7 @@ class Meshes:
 
     def __setitem__(self, key: str, mesh: pv.UnstructuredGrid) -> None:
         self.has_identified_subdomains = False
-        self._meshes[key] = Mesh(mesh)
+        self._meshes[key] = mesh
 
     def __len__(self) -> int:
         return len(self._meshes)
@@ -61,7 +71,7 @@ class Meshes:
         yield from self._meshes
 
     @classmethod
-    def from_yaml(cls, geometry_file: Path) -> "Meshes":
+    def from_yaml(cls, geometry_file: Path) -> Meshes:
         """ """
 
         gmsh_file = meshes_from_yaml(geometry_file)
@@ -80,7 +90,7 @@ class Meshes:
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
-    ) -> "Meshes":
+    ) -> Meshes:
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
@@ -108,7 +118,7 @@ class Meshes:
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
         domain_name: str = "domain",
-    ) -> "Meshes":
+    ) -> Meshes:
         """Extract 1D boundaries of a 2D mesh.
 
         :param mesh:            The 2D domain
@@ -143,7 +153,7 @@ class Meshes:
         gml_path: Path,
         out_dir: Path | None = None,
         tolerance: float = 1e-12,
-    ) -> "Meshes":
+    ) -> Meshes:
         """Create Meshes from geometry definition in the gml file.
 
         :param domain_path: Path to the domain mesh.
@@ -166,9 +176,7 @@ class Meshes:
         )
         vtu_files = sorted(set(out_dir.glob("*.vtu")).difference(prev_files))
         os.chdir(cur_dir)
-        return cls(
-            {file.stem: Mesh(file) for file in [domain_path] + vtu_files}
-        )
+        return cls({file.stem: file for file in [domain_path] + vtu_files})
 
     def keys(self) -> KeysView[str]:
         """
@@ -178,7 +186,7 @@ class Meshes:
         """
         return self._meshes.keys()
 
-    def values(self) -> ValuesView[Mesh]:
+    def values(self) -> ValuesView[pv.UnstructuredGrid]:
         """
         Get all Mesh objects (pyvista.UnstructuredGrid).
 
@@ -186,7 +194,7 @@ class Meshes:
         """
         return self._meshes.values()
 
-    def items(self) -> ItemsView[str, Mesh]:
+    def items(self) -> ItemsView[str, pv.UnstructuredGrid]:
         """
         Get all meshnames-Mesh pairs.
 
@@ -196,7 +204,7 @@ class Meshes:
         """
         return self._meshes.items()
 
-    def pop(self, key: str) -> Mesh:
+    def pop(self, key: str) -> pv.UnstructuredGrid:
         """
         Remove a mesh by name and return it.
 
@@ -209,7 +217,7 @@ class Meshes:
         return self._meshes.pop(key)
 
     @property
-    def domain(self) -> Mesh:
+    def domain(self) -> pv.UnstructuredGrid:
         """
         Get the domain mesh.
 
@@ -241,7 +249,7 @@ class Meshes:
         self._meshes = {name: domain_mesh} | dict(list_meshes[1:])
 
     @property
-    def subdomains(self) -> dict[str, Mesh]:
+    def subdomains(self) -> dict[str, pv.UnstructuredGrid]:
         """
         Get the subdomain meshes.
 
@@ -549,8 +557,9 @@ class Meshes:
 
                 raise FileExistsError(msg)
 
+            set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
-                mesh.filepath = meshes_path / f"{name}.vtu"
+                set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
                 pv.save_meshio(mesh.filepath, mesh)
 
         if not num_partitions:

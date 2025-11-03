@@ -40,7 +40,7 @@ abs_error = ref_values - results["temperature"]
 rel_error = abs_error / ref_values
 np.testing.assert_array_less(np.abs(abs_error), 6)
 np.testing.assert_array_less(np.abs(rel_error), 0.02)
-results = results.scale(time=("s", "h"))
+results.scale(time="h")
 
 # %% [markdown]
 # Write the data into the results, to leverage plotting features.
@@ -102,9 +102,9 @@ fig.tight_layout()
 fig, axs = plt.subplots(1, 3, figsize=[40, 10], sharey=True)
 results_y_slice = results.transform(lambda mesh: mesh.slice("y"))
 y_slice = results_y_slice[results.closest_timestep(20)]
-y_slice.plot_contourf(temp, fig=fig, ax=axs[0])
-y_slice.plot_contourf(temp.abs_error, fig=fig, ax=axs[1])
-y_slice.plot_contourf(temp.rel_error, fig=fig, ax=axs[2])
+ot.plot.contourf(y_slice, temp, fig=fig, ax=axs[0])
+ot.plot.contourf(y_slice, temp.abs_error, fig=fig, ax=axs[1])
+ot.plot.contourf(y_slice, temp.rel_error, fig=fig, ax=axs[2])
 fig.tight_layout()
 
 # %% [markdown]

@@ -329,7 +329,7 @@ class TestConverter:
 
     def test_mesh_class(self):
         "Test if ogstools-mesh class can read FEFLOW model."
-        mesh = ml.Mesh.read_feflow(examples.feflow_model_box_Neumann)
+        mesh = _feflowlib.read_feflow(examples.feflow_model_box_Neumann)
         assert mesh.n_points == 6768
         assert mesh.n_cells == 11462
         assert mesh.get_cell(0).type == pv.CellType.WEDGE

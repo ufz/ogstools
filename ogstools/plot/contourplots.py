@@ -189,7 +189,7 @@ def subplot(
     surf_tri = mesh.triangulate().extract_surface()
     # Get rid of 1D elements in the mesh
     surf_tri = surf_tri.extract_cells_by_type(pv.CellType.TRIANGLE)
-    x_id, y_id, projection, mean_normal = utils.get_projection(mesh)
+    x_id, y_id, projection, _ = utils.get_projection(mesh)
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
@@ -291,30 +291,6 @@ def subplot(
         ha, va = ("center", "center")
         ax.text(*text_xy, s=text, ha=ha, va=va, fontsize=fontsize, color=color)
 
-    if abs(max(mean_normal) - 1) > 1e-6:
-        sec_id = np.argmax(np.delete(mean_normal, projection))
-        sec_labels = []
-        for tick in ax.get_xticks():
-            origin = np.array(mesh.center)
-            origin[sec_id] = min(
-                max(tick, mesh.bounds[2 * sec_id] + 1e-6),
-                mesh.bounds[2 * sec_id + 1] - 1e-6,
-            )
-            sec_mesh = mesh.slice("xyz"[sec_id], origin)
-            if sec_mesh.n_cells:
-                sec_labels += [f"{sec_mesh.bounds[2 * projection]:.1f}"]
-            else:
-                sec_labels += [""]
-        if not all(label == sec_labels[0] for label in sec_labels):
-            # TODO: use a function to make this short
-            secax = ax.secondary_xaxis("top")
-            secax.xaxis.set_major_locator(
-                mticker.FixedLocator(list(ax.get_xticks()))
-            )
-            secax.set_xticklabels(sec_labels)
-            secax.set_xlabel(f'{"xyz"[projection]} / {setup.spatial_unit}')
-            utils.update_font_sizes(secax, fontsize)
-
 
 # TODO: fixed_figure_size -> ax aspect automatic
 
@@ -377,6 +353,35 @@ def _take_axes(
     return np.reshape(np.asarray(axes), shape)
 
 
+def label_sec_ax(
+    mesh: pv.UnstructuredGrid, ax: plt.Axes, x2_var: Variable, fontsize: float
+) -> None:
+    _, _, projection, mean_normal = utils.get_projection(mesh)
+    if abs(max(mean_normal) - 1) <= 1e-6:
+        return
+    sec_id = np.argmax(np.delete(mean_normal, projection))
+    sec_labels = []
+    for tick in ax.get_xticks():
+        origin = np.array(mesh.center)
+        origin[sec_id] = min(
+            max(tick, mesh.bounds[2 * sec_id] + 1e-6),
+            mesh.bounds[2 * sec_id + 1] - 1e-6,
+        )
+        sec_mesh = mesh.slice("xyz"[sec_id], origin)
+        if sec_mesh.n_cells:
+            sec_labels += [f"{sec_mesh.bounds[2 * projection]:.1f}"]
+        else:
+            sec_labels += [""]
+    if not all(label == sec_labels[0] for label in sec_labels):
+        secax = ax.secondary_xaxis("top")
+        secax.xaxis.set_major_locator(
+            mticker.FixedLocator(list(ax.get_xticks()))
+        )
+        secax.set_xticklabels(sec_labels)
+        secax.set_xlabel(x2_var.get_label())
+        utils.update_font_sizes(secax, fontsize)
+
+
 def draw_plot(
     meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     variable: Variable,
@@ -396,6 +401,13 @@ def draw_plot(
     np_meshes = np.reshape(meshes, shape)
     np_axs = _take_axes(fig, axes, shape)
 
+    # One mesh is sufficient, it should be the same for all of them
+    mesh_0 = np_meshes.flat[0]
+    x_id, y_id, projection, _ = utils.get_projection(mesh_0)
+    x_var, y_var, x2_var = (
+        Variable.find("xyz"[idx], mesh_0) for idx in (x_id, y_id, projection)
+    )
+
     if setup.combined_colorbar:
         _levels = combined_levels(np_meshes, variable, **kwargs)
     for i, j in [(r0, r1) for r0 in range(shape[0]) for r1 in range(shape[1])]:
@@ -404,14 +416,14 @@ def draw_plot(
         elif not setup.combined_colorbar:
             _levels = combined_levels(np_meshes[i, j, None], variable, **kwargs)
         subplot(np_meshes[i, j], variable, np_axs[i, j], _levels, **kwargs)
+        label_sec_ax(
+            np_meshes[i, j], np_axs[i, j], x2_var,
+            kwargs.get("fontsize", setup.fontsize)
+        )  # fmt: skip
         if fig is None or setup.combined_colorbar:
             continue
         add_colorbars(fig, np_axs[i, j], variable, _levels, **kwargs)
 
-    # One mesh is sufficient, it should be the same for all of them
-    mesh_0 = np_meshes[0, 0]
-    x_id, y_id, _, _ = utils.get_projection(mesh_0)
-    x_var, y_var = (Variable.find("xyz"[idx], mesh_0) for idx in (x_id, y_id))
     utils.label_spatial_axes(fig, np_axs, x_var, y_var)
     # make extra space for the upper limit of the colorbar
     if setup.layout == "tight" and fig is not None:

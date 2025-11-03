@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import ogstools as ot
 from ogstools import examples
 
-meshseries = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km"))
+meshseries = examples.load_meshseries_THM_2D_PVD(spatial_unit="km")
 mesh_0 = meshseries.mesh(0)
 mesh_1 = meshseries.mesh(1)
 temperature = ot.variables.temperature
@@ -29,8 +29,8 @@ fig = ot.plot.contourf([mesh_0, mesh_1], temperature)
 # be passed.
 
 fig, axs = plt.subplots(2, 2, figsize=(40, 17), sharex=True, sharey=True)
-diff_a = mesh_0.difference(mesh_1, temperature)
-diff_b = mesh_1.difference(mesh_0, temperature)
+diff_a = ot.meshlib.difference(mesh_0, mesh_1, temperature)
+diff_b = ot.meshlib.difference(mesh_1, mesh_0, temperature)
 ot.plot.contourf(mesh_0, temperature, fig=fig, ax=axs[0][0])
 ot.plot.contourf(mesh_1, temperature, fig=fig, ax=axs[1][0])
 ot.plot.contourf(diff_a, temperature, fig=fig, ax=axs[0][1])

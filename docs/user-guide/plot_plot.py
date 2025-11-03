@@ -37,7 +37,7 @@ mesh_3D = examples.load_meshseries_diffusion_3D()[-1]
 # your liking.
 
 # %%
-fig = mesh_2D.plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(mesh_2D, ot.variables.material_id)
 
 # %% [markdown]
 # Plotting 3D meshes returns a ``pyvista.Plotter`` object, which you can add
@@ -46,7 +46,7 @@ fig = mesh_2D.plot_contourf(ot.variables.material_id)
 # model around.
 
 # %%
-plotter = mesh_3D.plot_contourf(ot.variables.temperature)
+plotter = ot.plot.contourf(mesh_3D, ot.variables.temperature)
 plotter.show()
 
 # %% [markdown]
@@ -64,7 +64,7 @@ mesh_3D.cell_data["MaterialIDs"] = (12 * cpts[:, 0] + 3).astype(int)
 #
 # .. code-block:: python
 #
-#    mesh_3D.plot_contourf(
+#    ot.plot.contourf(mesh_3D,
 #        "MaterialIDs", opacities={7: 0.1, 10: 0.9}, interactive=False
 #    )
 #
@@ -73,9 +73,9 @@ mesh_3D.cell_data["MaterialIDs"] = (12 * cpts[:, 0] + 3).astype(int)
 # notebook, that there are some differences in the resulting figure. E.g. remote
 # rendering seems to have trouble correctly labeling categorical values.
 # sphinx_gallery_start_ignore
-mesh_3D.plot_contourf("MaterialIDs", opacities={7: 0.1, 10: 0.9}).screenshot(
-    return_img=False
-)
+ot.plot.contourf(
+    mesh_3D, "MaterialIDs", opacities={7: 0.1, 10: 0.9}
+).screenshot(return_img=False)
 # sphinx_gallery_end_ignore
 
 
@@ -83,5 +83,5 @@ mesh_3D.plot_contourf("MaterialIDs", opacities={7: 0.1, 10: 0.9}).screenshot(
 # When passing ``interactive=true``, also 2D meshes will use the ``pyvista``
 # backend:
 
-plotter = mesh_2D.plot_contourf(ot.variables.temperature, interactive=True)
+plotter = ot.plot.contourf(mesh_2D, ot.variables.temperature, interactive=True)
 plotter.show()

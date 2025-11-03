@@ -17,7 +17,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "a"))
+mesh_series = examples.load_meshseries_CT_2D_XDMF(time_unit="a")
 saturation = ot.variables.saturation
 
 # %% [markdown]
@@ -43,7 +43,7 @@ saturation = ot.variables.saturation
 
 # %%
 mesh = mesh_series.aggregate_over_time(saturation, np.max)
-fig = mesh.plot_contourf(saturation)
+fig = ot.plot.contourf(mesh, saturation)
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
@@ -52,7 +52,9 @@ fig = mesh.plot_contourf(saturation)
 
 # %%
 mesh = mesh_series.time_of_max(saturation)
-fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "a", "a"))
+fig = ot.plot.contourf(
+    mesh, ot.variables.Scalar("max_Saturation_time", "a", "a")
+)
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
@@ -60,14 +62,16 @@ fig = mesh.plot_contourf(ot.variables.Scalar("max_Saturation_time", "a", "a"))
 
 # %%
 mesh = mesh_series.aggregate_over_time(saturation, np.var)
-fig = mesh.plot_contourf(saturation)
+fig = ot.plot.contourf(mesh, saturation)
 
 # %% [markdown]
 # Difference between the last and the first timestep:
 
 # %%
-mesh = mesh_series.mesh(-1).difference(mesh_series.mesh(0), saturation)
-fig = mesh.plot_contourf(saturation)
+mesh = ot.meshlib.difference(
+    mesh_series.mesh(-1), mesh_series.mesh(0), saturation
+)
+fig = ot.plot.contourf(mesh, saturation)
 
 # %% [markdown]
 # It's also possible to aggregate the data per timestep to return a timeseries

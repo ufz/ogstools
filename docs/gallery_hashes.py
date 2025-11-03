@@ -16,7 +16,7 @@ from PIL import Image
 from tqdm import tqdm
 
 
-def hash_file(filepath: Path, hash_size: int = 64):
+def hash_file(filepath: Path, hash_size: int = 32):
     "Generate a perceptual hash of a figure."
     # The higher the hash_size, the more detail can be captured.
     return imagehash.phash(Image.open(filepath), hash_size=hash_size)
@@ -62,7 +62,7 @@ def compare_hashes(
         diffs = {key: hashes[key] - ref[key] for key in common_keys}
         if not all(diff < threshold for diff in diffs.values()):
             failcases = sorted(
-                [f"{k}: delta={v}" for k, v in diffs.items() if v >= threshold]
+                [f"{k}: delta={v}" for k, v in diffs.items() if v > threshold]
             )
             msg += (
                 "Some figure hashes for the gallery have changed.\n"

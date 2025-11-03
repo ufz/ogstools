@@ -79,7 +79,7 @@ def label_spatial_axes(
         ax: plt.Axes
         if fig is not None:
             for ax in np.ravel(axes):
-                label_ax(fig, ax, x_var, y_var)
+                label_ax(fig, ax, x_var.get_label(), y_var.get_label())
         else:
             for ax in axes[-1, :]:
                 ax.set_xlabel(x_var.get_label())
@@ -93,8 +93,8 @@ def label_spatial_axes(
 def label_ax(
     fig: plt.Figure,
     ax: plt.Axes,
-    var_x: Variable,
-    var_y: Variable,
+    x_label: str,
+    y_label: str,
     fontsize: float | None = None,
 ) -> None:
     """Labels the x- and y-Axes according to the given Variables.
@@ -111,9 +111,9 @@ def label_ax(
     )
     fontsize = setup.fontsize if fontsize is None else fontsize
     if not sharex or (sharex and is_first_in_col):
-        ax.set_xlabel(var_x.get_label(), fontsize=fontsize)
+        ax.set_xlabel(x_label, fontsize=fontsize)
     if not sharey or (sharey and is_first_in_row):
-        ax.set_ylabel(var_y.get_label(), fontsize=fontsize)
+        ax.set_ylabel(y_label, fontsize=fontsize)
 
 
 def update_font_sizes(

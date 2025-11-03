@@ -20,7 +20,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-mesh_series = examples.load_meshseries_CT_2D_XDMF().scale(time=("s", "a"))
+mesh_series = examples.load_meshseries_CT_2D_XDMF(time_unit="a")
 si = ot.variables.saturation
 
 # %% [markdown]
@@ -29,7 +29,7 @@ si = ot.variables.saturation
 # %%
 pts_vert = np.linspace([25, 0, -75], [25, 0, 75], num=300)
 pts_diag = np.linspace([25, 0, 75], [100, 0, 0], num=300)
-fig = mesh_series.mesh(-1).plot_contourf(si, vmin=0)
+fig = ot.plot.contourf(mesh_series.mesh(-1), si, vmin=0)
 fig.axes[0].plot(pts_vert[:, 0], pts_vert[:, 2], "-k", linewidth=3)
 fig.axes[0].plot(pts_diag[:, 0], pts_diag[:, 2], "-.k", linewidth=3)
 
@@ -58,7 +58,9 @@ fig = ms_vert.plot_time_slice("time", "z", si, vmin=0, vmax=100)
 
 # %%
 ms_vert_fine = ot.MeshSeries.resample(ms_vert, np.linspace(0, 4.2, 300))
-fig = ms_vert_fine.plot_time_slice("time", "z", si, vmin=0, vmax=100)
+fig = ms_vert_fine.plot_time_slice(
+    "time", "z", si, vmin=0, vmax=100, time_logscale=True
+)
 
 # %% [markdown]
 # You can also change the order of the arguments for spatial coordinate and time

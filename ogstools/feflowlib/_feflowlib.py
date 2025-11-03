@@ -5,6 +5,7 @@
 #
 
 import logging as log
+from pathlib import Path
 
 import ifm_contrib as ifm
 import numpy as np
@@ -446,3 +447,16 @@ def convert_properties_mesh(doc: ifm.FeflowDoc) -> pv.UnstructuredGrid:
     update_geometry(mesh, doc)
     _deactivate_cells(mesh)
     return mesh
+
+
+def read_feflow(feflow_file: Path | str) -> pv.UnstructuredGrid:
+    """
+    Initialize a Mesh object read from a FEFLOW file. This mesh stores all model specific
+    information such as boundary conditions or material parameters.
+
+        :param feflow_file:         Path to the feflow file.
+
+        :returns:                   A Mesh object
+    """
+    doc = ifm.loadDocument(str(feflow_file))
+    return convert_properties_mesh(doc)

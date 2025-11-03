@@ -30,37 +30,66 @@ from typeguard import typechecked
 from ogstools import plot
 from ogstools._internal import deprecated
 from ogstools.meshlib.data_processing import difference_pairwise
-from ogstools.variables import Variable, normalize_vars, u_reg
+from ogstools.variables import Variable, _normalize_vars, u_reg
 
+from . import to_ip_mesh, to_ip_point_cloud
 from ._utils import reshape_obs_points
 from .data_dict import DataDict
-from .mesh import Mesh
 from .xdmf_reader import XDMFReader
 
 
-class MeshSeries(Sequence[Mesh]):
+class MeshSeries(Sequence[pv.UnstructuredGrid]):
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
 
-    def __init__(self, filepath: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        filepath: str | Path | None = None,
+        spatial_unit: str | Sequence[str] = "m",
+        time_unit: str | Sequence[str] = "s",
+    ) -> None:
         """
         Initialize a MeshSeries object
 
-            :param filepath:    Path to the PVD or XDMF file.
+            :param filepath:        Path to the PVD or XDMF file.
+            :param spatial_unit:    Unit/s of the mesh points. See note.
+            :param time_unit:       Unit/s of the timevalues. See note.
+            :returns:               A MeshSeries object
 
-            :returns:           A MeshSeries object
+        :note:
+            If given as a single string, the data is read in SI units i.e. in
+            seconds and meters and converted to the given units. If given as a
+            tuple, the first str corresponds to the data_unit, the second to the
+            output_unit. E.g.: ``ot.MeshSeries(filepath, "km", ("a", "d"))``
+            would read in the spatial data in meters and convert to kilometers
+            and read in the timevalues in years and convert to days.
         """
-        self._spatial_factor = 1.0
         self._time_factor = 1.0
         self._epsilon = 1.0e-6
-        self._mesh_cache: dict[float, Mesh] = {}
-        self._mesh_func_opt: Callable[[Mesh], Mesh] | None = None
+        self._mesh_cache: dict[float, pv.UnstructuredGrid] = {}
+        self._mesh_func_opt: (
+            Callable[[pv.UnstructuredGrid], pv.UnstructuredGrid] | None
+        ) = None
         # list of slices to be able to have nested slices with xdmf
         # (but only the first slice will be efficient)
         self._time_indices: list[slice | Any] = [slice(None)]
         self._timevalues: np.ndarray
         "original data timevalues - do not change."
+
+        base_spatial, spatial_unit = (
+            ("m", spatial_unit)
+            if isinstance(spatial_unit, str)
+            else spatial_unit
+        )
+        base_time, time_unit = (
+            ("s", time_unit) if isinstance(time_unit, str) else time_unit
+        )
+        self.spatial_unit = u_reg.Quantity(1, base_spatial)
+        self.time_unit = u_reg.Quantity(1, base_time)
+        if (self.spatial_unit != u_reg.Quantity(1, spatial_unit) or
+            self.time_unit != u_reg.Quantity(1, time_unit)):  # fmt: skip
+            self.scale(spatial_unit, time_unit)
 
         if filepath is None:
             self.filepath = self._data_type = None
@@ -96,17 +125,21 @@ class MeshSeries(Sequence[Mesh]):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        self.dim = self.mesh(0).max_dim
+        self.dim = self.mesh(0).GetMaxSpatialDimension()
 
     @classmethod
     def from_data(
-        cls, meshes: Sequence[pv.UnstructuredGrid], timevalues: np.ndarray
+        cls,
+        meshes: Sequence[pv.UnstructuredGrid],
+        timevalues: np.ndarray,
+        spatial_unit: str | Sequence[str] = "m",
+        time_unit: str | Sequence[str] = "s",
     ) -> MeshSeries:
         "Create a MeshSeries from a list of meshes and timevalues."
-        new_ms = cls()
+        new_ms = cls(spatial_unit=spatial_unit, time_unit=time_unit)
         new_ms._timevalues = deepcopy(timevalues)  # pylint: disable=W0212
         new_ms._mesh_cache.update(
-            dict(zip(new_ms._timevalues, deepcopy(meshes), strict=True))
+            dict(zip(new_ms.timevalues, deepcopy(meshes), strict=True))
         )
         new_ms.dim = meshes[0].GetMaxSpatialDimension()
         return new_ms
@@ -164,7 +197,12 @@ class MeshSeries(Sequence[Mesh]):
     ) -> MeshSeries:
         "Return a new MeshSeries interpolated to the given timevalues."
         interp_meshes = [original.read_interp(tv) for tv in timevalues]
-        return cls.from_data(interp_meshes, timevalues)
+        return cls.from_data(
+            interp_meshes,
+            timevalues,
+            (original.spatial_unit, original.spatial_unit),
+            (original.time_unit, original.time_unit),
+        )
 
     @classmethod
     def extract_probe(
@@ -192,7 +230,12 @@ class MeshSeries(Sequence[Mesh]):
         else:
             variables = [data_name]
         meshes = [pointset.copy() for _ in original.timevalues]
-        probe_ms = cls.from_data(meshes, original.timevalues)
+        probe_ms = cls.from_data(
+            meshes,
+            original.timevalues,
+            (str(original.spatial_unit), str(original.spatial_unit)),
+            (str(original.time_unit), str(original.time_unit)),
+        )
         point_data_keys = [
             key for key in variables if key in original.point_data
         ]
@@ -244,7 +287,7 @@ class MeshSeries(Sequence[Mesh]):
         return deepcopy(self) if deep else shallowcopy(self)
 
     @overload
-    def __getitem__(self, index: int) -> Mesh: ...
+    def __getitem__(self, index: int) -> pv.UnstructuredGrid: ...
 
     @overload
     def __getitem__(self, index: slice | Sequence) -> MeshSeries: ...
@@ -277,7 +320,7 @@ class MeshSeries(Sequence[Mesh]):
     def __len__(self) -> int:
         return len(self.timesteps)
 
-    def __iter__(self) -> Iterator[Mesh]:
+    def __iter__(self) -> Iterator[pv.UnstructuredGrid]:
         for i in np.arange(len(self.timevalues), dtype=int):
             yield self.mesh(i)
 
@@ -302,13 +345,13 @@ class MeshSeries(Sequence[Mesh]):
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
     # apparent fix
-    def items(self) -> Sequence[tuple[float, Mesh]]:
+    def items(self) -> Sequence[tuple[float, pv.UnstructuredGrid]]:
         "Returns zipped tuples of timevalues and meshes."
         return zip(self.timevalues, self, strict=True)  # type: ignore[return-value]
 
     def aggregate_over_time(
         self, variable: Variable | str, func: Callable
-    ) -> Mesh:
+    ) -> pv.UnstructuredGrid:
         """Aggregate data over all timesteps using a specified function.
 
         :param variable:    The mesh variable to be aggregated.
@@ -341,8 +384,8 @@ class MeshSeries(Sequence[Mesh]):
 
     def ip_tesselated(self) -> MeshSeries:
         "Create a new MeshSeries from integration point tessellation."
-        ip_mesh = self.mesh(0).to_ip_mesh()
-        ip_pt_cloud = self.mesh(0).to_ip_point_cloud()
+        ip_mesh = to_ip_mesh(self.mesh(0))
+        ip_pt_cloud = to_ip_point_cloud(self.mesh(0))
         ordering = ip_mesh.find_containing_cell(ip_pt_cloud.points)
         ip_meshes = []
         for i in np.arange(len(self.timevalues), dtype=int):
@@ -354,7 +397,9 @@ class MeshSeries(Sequence[Mesh]):
             ip_meshes += [ip_mesh.copy()]
         return MeshSeries.from_data(ip_meshes, self.timevalues)
 
-    def mesh(self, timestep: int, lazy_eval: bool = True) -> Mesh:
+    def mesh(
+        self, timestep: int, lazy_eval: bool = True
+    ) -> pv.UnstructuredGrid:
         """Returns the mesh at the given timestep."""
         timevalue = self.timevalues[timestep]
         if not np.any(self.timevalues == timevalue):
@@ -376,13 +421,18 @@ class MeshSeries(Sequence[Mesh]):
                 case _:
                     msg = f"Unexpected datatype {self._data_type}."
                     raise TypeError(msg)
-            mesh = Mesh(self.mesh_func(pv_mesh))
+            mesh = self.mesh_func(pv_mesh)
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
+        set_pv_attr = getattr(pv, "set_new_attribute", setattr)
         if self._data_type == ".pvd":
-            mesh.filepath = Path(self.timestep_files[data_timestep])
+            set_pv_attr(
+                mesh, "filepath", Path(self.timestep_files[data_timestep])
+            )
         else:
-            mesh.filepath = self.filepath
+            set_pv_attr(mesh, "filepath", self.filepath)
+        set_pv_attr(mesh, "spatial_unit", self.spatial_unit)
+        set_pv_attr(mesh, "time_unit", self.time_unit)
         return mesh
 
     def rawdata_file(self) -> Path | None:
@@ -398,7 +448,9 @@ class MeshSeries(Sequence[Mesh]):
             return self._xdmf_reader.rawdata_path()  # single h5 file
         return None
 
-    def read_interp(self, timevalue: float, lazy_eval: bool = True) -> Mesh:
+    def read_interp(
+        self, timevalue: float, lazy_eval: bool = True
+    ) -> pv.UnstructuredGrid:
         """Return the temporal interpolated mesh for a given timevalue."""
         t_vals = self.timevalues
         ts1 = int(t_vals.searchsorted(timevalue, "right") - 1)
@@ -578,7 +630,7 @@ class MeshSeries(Sequence[Mesh]):
         variable: Variable | str,
         np_func: Callable,
         prefix: Literal["min", "max"],
-    ) -> Mesh:
+    ) -> pv.UnstructuredGrid:
         """Returns a Mesh with the time of a given variable extremum as data.
 
         The data is named as `f'{prefix}_{variable.output_name}_time'`."""
@@ -592,11 +644,11 @@ class MeshSeries(Sequence[Mesh]):
         ]
         return mesh
 
-    def time_of_min(self, variable: Variable | str) -> Mesh:
+    def time_of_min(self, variable: Variable | str) -> pv.UnstructuredGrid:
         "Returns a Mesh with the time of the variable minimum as data."
         return self._time_of_extremum(variable, np.argmin, "min")
 
-    def time_of_max(self, variable: Variable | str) -> Mesh:
+    def time_of_max(self, variable: Variable | str) -> pv.UnstructuredGrid:
         "Returns a Mesh with the time of the variable maximum as data."
         return self._time_of_extremum(variable, np.argmax, "max")
 
@@ -632,10 +684,9 @@ class MeshSeries(Sequence[Mesh]):
 
         Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
-        variable = Variable.find(variable, self.mesh(0))
+        time_var, variable = _normalize_vars("time", variable, self.mesh(0))
         values = self.aggregate_over_domain(variable.magnitude, func)
         x_values = self.timevalues
-        x_label = f"time t / {plot.setup.time_unit}"
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -650,7 +701,7 @@ class MeshSeries(Sequence[Mesh]):
         ax.set_axisbelow(True)
         ax.grid(which="major", color="lightgrey", linestyle="-")
         ax.grid(which="minor", color="0.95", linestyle="--")
-        ax.set_xlabel(x_label)
+        ax.set_xlabel(time_var.get_label())
         ax.set_ylabel(ylabel)
         ax.legend()
         ax.label_outer()
@@ -824,7 +875,7 @@ class MeshSeries(Sequence[Mesh]):
             values = values.ravel()
         if variable_abscissa is None:
             x_values = self.timevalues
-            x_label = f"time / {plot.setup.time_unit}"
+            x_label = f"time / {self.time_unit}"
         else:
             variable_abscissa = Variable.find(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
@@ -936,7 +987,12 @@ class MeshSeries(Sequence[Mesh]):
             raise KeyError(msg)
 
         var_z = Variable.find(variable, self.mesh(0))
-        var_x, var_y = normalize_vars(x, y, self.mesh(0))
+        var_x, var_y = _normalize_vars(x, y, self.mesh(0))
+        time_var = var_x if var_x.data_name == "time" else var_y
+        unit = self.time_unit
+        time_var.data_unit = time_var.output_unit = str(
+            unit if unit.magnitude != 1 else unit.units
+        )
         if time_logscale:
 
             def log10time(vals: np.ndarray) -> np.ndarray:
@@ -945,11 +1001,11 @@ class MeshSeries(Sequence[Mesh]):
                     log10vals[0] = log10vals[1] - (log10vals[2] - log10vals[1])
                 return log10vals
 
-            time_var = var_x if var_x.data_name == "time" else var_y
             get_time = time_var.func
             time_var.func = lambda ms: log10time(get_time(ms))
+            time_label = time_var.get_label()
             time_var.get_label = (  # type: ignore[assignment]
-                lambda *_: f"log$_{{10}}$( time $t$ / {time_var.output_unit})"
+                lambda *_: f"log$_{{10}}$( {time_label} )"
             )
 
         x_vals = var_x.transform(self)
@@ -990,7 +1046,9 @@ class MeshSeries(Sequence[Mesh]):
         ax.pcolormesh(x_vals, y_vals, values, cmap=cmap, norm=norm)
 
         fontsize = kwargs.get("fontsize", plot.setup.fontsize)
-        plot.utils.label_ax(fig, ax, var_x, var_y, fontsize)
+        x_label = var_x.get_label()
+        y_label = var_y.get_label()
+        plot.utils.label_ax(fig, ax, x_label, y_label, fontsize)
         ax.tick_params(axis="both", labelsize=fontsize, length=fontsize * 0.5)
         ax.margins(0, 0)
         if cbar:
@@ -999,18 +1057,19 @@ class MeshSeries(Sequence[Mesh]):
         return optional_return_figure
 
     @property
-    def mesh_func(self) -> Callable[[Mesh], Mesh]:
+    def mesh_func(self) -> Callable[[pv.UnstructuredGrid], pv.UnstructuredGrid]:
         """Returns stored transformation function or identity if not given."""
         if self._mesh_func_opt is None:
-            return lambda mesh: mesh.scale(self._spatial_factor)
-        return lambda mesh: Mesh(
-            self._mesh_func_opt(mesh).scale(  # type: ignore[misc]
-                self._spatial_factor
-            )
+            return lambda mesh: mesh
+        return lambda mesh: pv.UnstructuredGrid(
+            self._mesh_func_opt(mesh), deep=True  # type: ignore[misc]
         )
 
     def transform(
-        self, mesh_func: Callable[[Mesh], Mesh] = lambda mesh: mesh
+        self,
+        mesh_func: Callable[
+            [pv.UnstructuredGrid], pv.UnstructuredGrid
+        ] = lambda mesh: mesh,
     ) -> MeshSeries:
         """
         Apply a transformation function to the underlying mesh.
@@ -1023,50 +1082,63 @@ class MeshSeries(Sequence[Mesh]):
         ms_copy = self.copy(deep=True)
         # pylint: disable=protected-access
         for cache_timevalue, cache_mesh in self._mesh_cache.items():
-            ms_copy._mesh_cache[cache_timevalue] = Mesh(mesh_func(cache_mesh))
+            ms_copy._mesh_cache[cache_timevalue] = pv.UnstructuredGrid(
+                mesh_func(cache_mesh), deep=True
+            )
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
-        ms_copy.dim = ms_copy.mesh(0).max_dim
+        ms_copy.dim = ms_copy.mesh(0).GetMaxSpatialDimension()
         return ms_copy
 
     def scale(
         self,
-        spatial: float | tuple[str, str] = 1.0,
-        time: float | tuple[str, str] = 1.0,
-    ) -> MeshSeries:
+        spatial: int | float | str = 1.0,
+        time: int | float | str = 1.0,
+    ) -> None:
         """Scale the spatial coordinates and timevalues.
 
         Useful to convert to other units, e.g. "m" to "km" or "s" to "a".
-        If given as tuple of strings, the latter units will also be set in
-        ot.plot.setup.spatial_unit and ot.plot.setup.time_unit for plotting.
+        Converts from SI units (i.e. 'm' and 's') to the given arguments.
 
-        :param spatial: Float factor or a tuple of str (from_unit, to_unit).
-        :param time:    Float factor or a tuple of str (from_unit, to_unit).
+        :param spatial: Float factor or str for target unit.
+        :param time:    Float factor or str for target unit.
+        :returns:       None.
         """
         Qty = u_reg.Quantity
-        if isinstance(spatial, float):
+
+        if isinstance(spatial, str):
+            spatial_factor = Qty(self.spatial_unit, spatial).magnitude
+            spatial_unit = Qty(1, spatial)
+        else:
             spatial_factor = spatial
+            spatial_unit = self.spatial_unit / spatial
+
+        if isinstance(time, str):
+            time_factor = Qty(self.time_unit, time).magnitude
+            time_unit = Qty(1, time)
         else:
-            spatial_factor = Qty(Qty(spatial[0]), spatial[1]).magnitude
-            plot.setup.spatial_unit = spatial[1]
-        if isinstance(time, float):
             time_factor = time
+            time_unit = self.time_unit / time
+
+        if time_factor == 1.0:
+            scaled_cache = self._mesh_cache
         else:
-            time_factor = Qty(Qty(time[0]), time[1]).magnitude
-            plot.setup.time_unit = time[1]
-        new_ms = self.copy()
-        new_ms._spatial_factor *= spatial_factor
-        new_ms._time_factor *= time_factor
-
-        for _, mesh in new_ms._mesh_cache.items():
-            mesh.scale(spatial_factor, inplace=True)
-        scaled_cache = {
-            timevalue * time_factor: mesh
-            for timevalue, mesh in new_ms._mesh_cache.items()
-        }
-        new_ms.clear_cache()
-        new_ms._mesh_cache = scaled_cache
-
-        return new_ms
+            scaled_cache = {
+                timevalue * time_factor: self._mesh_cache.pop(timevalue)
+                for timevalue in list(self._mesh_cache.keys())
+            }
+        if spatial_factor != 1.0:
+            for mesh in scaled_cache.values():
+                # using transform would shorten this, but doing it explicitly
+                # allows us to use inplace=True which is a bit more efficient
+                mesh.scale(spatial_factor, inplace=True)
+            if (func := self._mesh_func_opt) is None:
+                self._mesh_func_opt = lambda mesh: mesh.scale(spatial_factor)
+            else:
+                self._mesh_func_opt = lambda mesh: func(mesh).scale(spatial_factor)  # type: ignore[misc]
+        self._mesh_cache = scaled_cache
+        self.spatial_unit = spatial_unit
+        self.time_unit = time_unit
+        self._time_factor = self._time_factor * time_factor
 
     @classmethod
     @typechecked
@@ -1101,6 +1173,8 @@ class MeshSeries(Sequence[Mesh]):
         return MeshSeries.from_data(
             difference_pairwise(ms_a, ms_b_resampled, variable),
             ms_a.timevalues,
+            (ms_a.spatial_unit, ms_a.spatial_unit),
+            (ms_a.time_unit, ms_a.time_unit),
         )
 
     @typechecked
@@ -1117,7 +1191,9 @@ class MeshSeries(Sequence[Mesh]):
 
         :returns: A MeshSeries with the selected domain subset.
         """
-        func: dict[str, Callable[[Mesh], Mesh]] = {
+        func: dict[
+            str, Callable[[pv.UnstructuredGrid], pv.UnstructuredGrid]
+        ] = {
             "points": lambda mesh: mesh.extract_points(
                 np.arange(mesh.n_points)[index], include_cells=False
             ),

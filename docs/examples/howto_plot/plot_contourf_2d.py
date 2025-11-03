@@ -15,14 +15,15 @@ import ogstools as ot
 from ogstools import examples
 
 ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-mesh = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km")).mesh(1)
+ms = examples.load_meshseries_THM_2D_PVD(spatial_unit="km")
+mesh = ms.mesh(1)
 
 # %% [markdown]
 # To read your own data as a mesh series you can do:
 #
 # ..  code-block:: python
 #
-#   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
+#   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf", "km")
 #
 
 # %% [markdown]
@@ -32,7 +33,7 @@ mesh = examples.load_meshseries_THM_2D_PVD().scale(spatial=("m", "km")).mesh(1)
 # Per default in the setup, this will automatically show the element edges.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.material_id)
+fig = ot.plot.contourf(mesh, ot.variables.material_id)
 
 # %% [markdown]
 # Plotting Point Data
@@ -42,18 +43,18 @@ fig = mesh.plot_contourf(ot.variables.material_id)
 # data as Kelvin and converts them to degrees Celsius.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.temperature, show_max=True)
+fig = ot.plot.contourf(mesh, ot.variables.temperature, show_max=True)
 
 # %% [markdown]
 # We can also plot components of vector variables:
 
 # %%
-fig = mesh.plot_contourf(
-    ot.variables.displacement[0], show_min=True, show_max=True
+fig = ot.plot.contourf(
+    mesh, ot.variables.displacement[0], show_min=True, show_max=True
 )
 
 # %%
-fig = mesh.plot_contourf(ot.variables.displacement[1], show_max=True)
+fig = ot.plot.contourf(mesh, ot.variables.displacement[1], show_max=True)
 
 # %% [markdown]
 # To have a continuous colormap instead of discrete colors per level pass a
@@ -61,7 +62,7 @@ fig = mesh.plot_contourf(ot.variables.displacement[1], show_max=True)
 # of detail of the negative displacements due to the bilinear colormap.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.displacement[1], continuous_cmap=True)
+fig = ot.plot.contourf(mesh, ot.variables.displacement[1], continuous_cmap=True)
 
 # %% [markdown]
 # Plotting with deactivated subdomains
@@ -70,10 +71,10 @@ fig = mesh.plot_contourf(ot.variables.displacement[1], continuous_cmap=True)
 # related variables.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.pressure.get_mask(), fontsize=40)
+fig = ot.plot.contourf(mesh, ot.variables.pressure.get_mask(), fontsize=40)
 
 # %%
-fig = mesh.plot_contourf(ot.variables.pressure)
+fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
 # Plotting vector data
@@ -82,10 +83,10 @@ fig = mesh.plot_contourf(ot.variables.pressure)
 # automatically add streamlines to indicate the vector directions.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.velocity, show_region_bounds=False)
+fig = ot.plot.contourf(mesh, ot.variables.velocity, show_region_bounds=False)
 
 # %% [markdown]
 # Let's plot it again, this time log-scaled.
 
 # %%
-fig = mesh.plot_contourf(ot.variables.velocity, log_scaled=True, vmin=-8)
+fig = ot.plot.contourf(mesh, ot.variables.velocity, log_scaled=True, vmin=-8)

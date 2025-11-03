@@ -13,7 +13,7 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.plot import setup, utils
-from ogstools.variables import Variable, normalize_vars
+from ogstools.variables import Variable, _normalize_vars
 
 
 def _format_ax(
@@ -116,7 +116,7 @@ def line(
 
     mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
     region_mesh = mesh.connectivity("all")
-    x_var, y_var = normalize_vars(var1, var2, mesh)
+    x_var, y_var = _normalize_vars(var1, var2, mesh)
 
     if isinstance(dataset, Sequence) and "color" not in kwargs:
         color = kwargs.pop("colors", "tab10")

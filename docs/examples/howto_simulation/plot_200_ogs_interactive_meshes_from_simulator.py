@@ -47,7 +47,7 @@ _ = meshes.save(working_dir)
 #
 # We will work with these functions:
 #
-# - :py:meth:`ot.Mesh.from_simulator <ogstools.meshlib.Mesh.from_simulator>`
+# - :py:func:`mesh_from_simulator <ogstools.meshlib.mesh_from_simulator>`
 #      gives you direct access to the values of th in situ-Mesh during a running OGS simulation
 #
 # - :class:`~ogstools.simulation.simulation_controller.SimulationController`,
@@ -72,14 +72,14 @@ arguments = [
 sim2 = SimulationController(
     arguments
 )  # we will restart the same simulation as above into new folder
-domain_mesh = ot.Mesh.from_simulator(sim2, "domain", ["pressure"])
+domain_mesh = ot.meshlib.mesh_from_simulator(sim2, "domain", ["pressure"])
 
 # Let us store the mesh of a time step to compare it later
 previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
 # Later, we will dynamically modify the left boundary mesh
-left_mesh = ot.Mesh.from_simulator(sim2, "left", ["pressure"])
+left_mesh = ot.meshlib.mesh_from_simulator(sim2, "left", ["pressure"])
 
 steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)  # constant
 delta = steady_state_threshold + 1e-10  # to be computed for each time step
