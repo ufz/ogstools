@@ -422,8 +422,7 @@ class Monitor:
             if t_tmp - t0 > update_interval:
                 t0 = t_tmp
                 push_notebook(handle=handle_line_chart)
-            else:
-                pass
+        push_notebook(handle=handle_line_chart)
 
     def plot_log(
         self,
