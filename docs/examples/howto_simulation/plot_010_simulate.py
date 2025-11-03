@@ -116,7 +116,9 @@ monitor.plot_log(
 )
 
 # %% [markdown]
-# ![image](bokeh_logs.png)
+"""
+ ![image](bokeh_logs.png)
+"""
 
 # %% [markdown]
 # Creating a Project from scratch
