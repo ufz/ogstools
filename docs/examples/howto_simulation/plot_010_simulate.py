@@ -100,6 +100,25 @@ simc.run()  # this call is blocking, it waits for the simulation to finish
 
 
 # %% [markdown]
+# Logfile monitoring
+# ====================
+# If you want to plot the progress of your simulation in real-time, you can use the
+# 'plot_log' method from the returned `Monitor` object. The model run has to be
+# executed in the background for this to work.
+
+# %%
+prj.write_input()
+monitor = prj.run_model(
+    background=True, args=f"-m {prj_path_in.parent} -o {results_dir}"
+)
+monitor.plot_log(
+    log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x"]]
+)
+
+# %% [markdown]
+# ![image](bokeh_logs.png)
+
+# %% [markdown]
 # Creating a Project from scratch
 # ===============================
 # You can also create a Project without a prj-file. Have a look at this example
