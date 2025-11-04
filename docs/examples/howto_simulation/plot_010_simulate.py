@@ -116,9 +116,8 @@ monitor.plot_log(
 )
 
 # %% [markdown]
-"""
- ![image](bokeh_logs.png)
-"""
+# .. image:: /examples/howto_simulation/bokeh_logs.png
+#    :alt: Bokeh log plot
 
 # %% [markdown]
 # Creating a Project from scratch
