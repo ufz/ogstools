@@ -155,7 +155,7 @@ def line(
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
     )
-    only_points = (cell_types == [0]) or (cell_types == [1])
+    only_points = cell_types in [{0}, {1}]
     reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
     prop = {}
     if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
