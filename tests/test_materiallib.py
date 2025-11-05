@@ -276,7 +276,7 @@ class TestMaterialManager:
             },
         )
 
-        db = material_manager.MaterialManager(data_dir=tmp_path)
+        db = material_manager.MaterialManager(data_dir=str(tmp_path))
         mat = db.get_material("granite")
 
         assert mat is not None

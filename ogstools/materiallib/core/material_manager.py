@@ -48,7 +48,7 @@ class MaterialManager:
 
     def __init__(
         self,
-        data_dir: Path | None = None,
+        data_dir: Path | str | None = None,
         materials: dict[str, Material] | None = None,
         subdomain_ids: dict[str, int] | None = None,
         process: str | None = None,
@@ -58,7 +58,7 @@ class MaterialManager:
 
         Parameters
         ----------
-        data_dir : Path | None
+        data_dir : Path | str | None
             Directory containing the repository of material YAML files.
             Defaults to `defs.MATERIALS_DIR`. Only used if no `materials`
             are passed.
@@ -78,7 +78,8 @@ class MaterialManager:
         - If `materials` is provided, the instance represents a **filtered view**
           and does not perform any additional repository access.
         """
-        self.data_dir = data_dir or Path(defs.MATERIALS_DIR)
+
+        self.data_dir = Path(data_dir or defs.MATERIALS_DIR)
         self.materials_db: dict[str, Material] = materials or {}
         self.subdomain_ids: dict[str, int] = subdomain_ids or {}
         self.fluids: dict[str, Material] = {}
