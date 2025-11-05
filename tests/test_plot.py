@@ -175,14 +175,14 @@ class TestPlotting:
     def test_aggregate_over_time(self) -> plt.Figure:
         """Test creation of temporal aggregation plots via image comparison."""
         ms = examples.load_meshseries_CT_2D_XDMF()
-        mesh = ms.aggregate_over_time("Si", np.var)
+        mesh = ms.aggregate_temporal("Si", np.var)
         return contourf(mesh, "Si_var")
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 50})
     def test_domain_aggregate(self):
         """Test creation of spatial aggregation plots via image comparison."""
         mesh_series = examples.load_meshseries_THM_2D_PVD()
-        return mesh_series.plot_domain_aggregate("temperature", np.mean)
+        return mesh_series.plot_spatial_aggregate("temperature", np.mean)
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     @pytest.mark.parametrize(
@@ -197,14 +197,14 @@ class TestPlotting:
         """Test creation of time slice plots via image comparison."""
         results = examples.load_meshseries_CT_2D_XDMF()
         points = np.linspace([0, 0, 70], [150, 0, 70], num=100)
-        ms_pts = ot.MeshSeries.extract_probe(results, points)
+        ms_pts = results.probe(points)
         return ms_pts.plot_time_slice(*args, variable="Saturation", **kwargs)
 
     def test_time_slice_failing_args(self):
         """Test time slice for expected errors when given wrong arguments."""
         results = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        ms_pts = ot.MeshSeries.extract_probe(results, points, "temperature")
+        ms_pts = results.probe(points, "temperature")
         fig, _ = plt.subplots()
         with pytest.raises(ValueError, match="fig and ax together"):
             _ = ms_pts.plot_time_slice("x", "time", "temperature", fig=fig)
@@ -310,7 +310,7 @@ class TestPlotting:
         """Test plot.line from sampled meshseries data via image comparison."""
         ms = examples.load_meshseries_CT_2D_XDMF()
         pts = np.linspace([0, 0, 60], [120, 0, 60], 4)
-        ms_pts = ot.MeshSeries.extract_probe(ms, pts)
+        ms_pts = ms.probe(pts)
         labels = [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
         fig = ot.plot.line(
             ms_pts, var1, var2, labels=labels, monospace=True, outer_legend=True
@@ -352,7 +352,7 @@ class TestPlotting:
     ) -> plt.Figure:
         """Test plot.line over 2 vars temporally via image comparison."""
         ms = examples.load_meshseries_HT_2D_XDMF()
-        ms_pts = ot.MeshSeries.extract_probe(ms, (0, 10, 0))
+        ms_pts = ms.probe((0, 10, 0))
         fig = ot.plot.line(ms_pts, var1, var2, outer_legend=0.5)
         fig.tight_layout()
         return fig
@@ -380,7 +380,7 @@ class TestPlotting:
         ms = examples.load_meshseries_PETSc_2D(time_unit=("a", "a"))
         points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
         labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
-        ms_pts = ot.MeshSeries.extract_probe(ms, points_coords)
+        ms_pts = ms.probe(points_coords)
         var = ot.variables.pressure.replace(output_unit="mPa")
         fig = ot.plot.line(
             ms_pts, "time", var, labels=labels, colors=["b", "r"]
@@ -405,7 +405,7 @@ class TestPlotting:
         """Test creation and saving of an animation."""
         ms_full = examples.load_meshseries_THM_2D_PVD()
         timevalues = np.linspace(0, ms_full.timevalues[-1], num=3)
-        ms = ot.MeshSeries.resample(ms_full, timevalues).transform(
+        ms = ms_full.resample_temporal(timevalues).transform(
             lambda mesh: mesh.clip("x")
         )
         fig = ot.plot.contourf(ms[0], ot.variables.temperature)

@@ -35,14 +35,14 @@ saturation = ot.variables.saturation
 # %% [markdown]
 # You aggregate the data in MeshSeries over all timesteps given some
 # aggregation function, e.g. np.min, np.max, np.var
-# (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate_over_time`).
+# (see: :meth:`~ogstools.meshlib.mesh_series.MeshSeries.aggregate_temporal`).
 # The following code gets the maximum saturation for each point in the mesh over
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
 # equal to the aggregation functions name. The plot function will find the
 # correct data anyway if given the original variable
 
 # %%
-mesh = mesh_series.aggregate_over_time(saturation, np.max)
+mesh = mesh_series.aggregate_temporal(saturation, np.max)
 fig = ot.plot.contourf(mesh, saturation)
 
 # %% [markdown]
@@ -61,7 +61,7 @@ fig = ot.plot.contourf(
 
 
 # %%
-mesh = mesh_series.aggregate_over_time(saturation, np.var)
+mesh = mesh_series.aggregate_temporal(saturation, np.var)
 fig = ot.plot.contourf(mesh, saturation)
 
 # %% [markdown]
@@ -78,4 +78,4 @@ fig = ot.plot.contourf(mesh, saturation)
 # of e.g. the max or mean value of a variable in the entire domain.
 
 # %%
-fig = mesh_series.plot_domain_aggregate(saturation, np.mean)
+fig = mesh_series.plot_spatial_aggregate(saturation, np.mean)
