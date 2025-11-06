@@ -191,23 +191,57 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
                 self._timevalues
             ), "Timestep files and timevalues do not match."
 
-    @classmethod
-    def resample(
-        cls, original: MeshSeries, timevalues: np.ndarray
-    ) -> MeshSeries:
+    def resample_temporal(self, timevalues: np.ndarray) -> MeshSeries:
         "Return a new MeshSeries interpolated to the given timevalues."
-        interp_meshes = [original.read_interp(tv) for tv in timevalues]
-        return cls.from_data(
+        interp_meshes = [self.mesh_interp(tv) for tv in timevalues]
+        return MeshSeries.from_data(
             interp_meshes,
             timevalues,
-            (original.spatial_unit, original.spatial_unit),
-            (original.time_unit, original.time_unit),
+            (self.spatial_unit, self.spatial_unit),
+            (self.time_unit, self.time_unit),
         )
 
-    @classmethod
-    def extract_probe(
-        cls,
-        original: MeshSeries,
+    def _extract_probe(
+        self,
+        pts_or_mesh: np.ndarray | pv.DataSet,
+        data_name: str | Variable | list[str | Variable] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
+    ) -> MeshSeries:
+        if isinstance(pts_or_mesh, pv.DataSet):
+            points = pts_or_mesh.points
+            mesh = pts_or_mesh
+        else:
+            points = pts_or_mesh
+            mesh = pv.PolyData(np.asarray(points))
+        if data_name is None:
+            variables = list(set().union(self[0].point_data, self[0].cell_data))
+        elif isinstance(data_name, list):
+            variables = data_name
+        else:
+            variables = [data_name]
+        meshes = [mesh.copy() for _ in self.timevalues]
+        probe_ms = MeshSeries.from_data(
+            meshes,
+            self.timevalues,
+            (str(self.spatial_unit), str(self.spatial_unit)),
+            (str(self.time_unit), str(self.time_unit)),
+        )
+        point_data_keys = [key for key in variables if key in self.point_data]
+        cell_data_keys = [key for key in variables if key in self.cell_data]
+        for keys, data in [
+            (point_data_keys, probe_ms.point_data),
+            (cell_data_keys, probe_ms.cell_data),
+        ]:
+            if len(keys) == 0:
+                continue
+            values = self._probe(points, keys, interp_method)
+            for var, vals in zip(keys, values, strict=True):
+                name = var.output_name if isinstance(var, Variable) else var
+                data[name] = vals
+        return probe_ms
+
+    def probe(
+        self,
         points: np.ndarray,
         data_name: str | Variable | list[str | Variable] | None = None,
         interp_method: Literal["nearest", "linear"] = "linear",
@@ -220,37 +254,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
 
         :returns: A MeshSeries (Pointcloud) containing the probed data.
         """
-        pointset = pv.PolyData(np.asarray(points))
-        if data_name is None:
-            variables = list(
-                set().union(original[0].point_data, original[0].cell_data)
-            )
-        elif isinstance(data_name, list):
-            variables = data_name
-        else:
-            variables = [data_name]
-        meshes = [pointset.copy() for _ in original.timevalues]
-        probe_ms = cls.from_data(
-            meshes,
-            original.timevalues,
-            (str(original.spatial_unit), str(original.spatial_unit)),
-            (str(original.time_unit), str(original.time_unit)),
-        )
-        point_data_keys = [
-            key for key in variables if key in original.point_data
-        ]
-        cell_data_keys = [key for key in variables if key in original.cell_data]
-        for keys, data in [
-            (point_data_keys, probe_ms.point_data),
-            (cell_data_keys, probe_ms.cell_data),
-        ]:
-            if len(keys) == 0:
-                continue
-            values = original.probe(points, keys, interp_method)
-            for var, vals in zip(keys, values, strict=True):
-                name = var.output_name if isinstance(var, Variable) else var
-                data[name] = vals
-        return probe_ms
+        return self._extract_probe(points, data_name, interp_method)
+
+    def interpolate(
+        self,
+        mesh: pv.DataSet,
+        data_name: str | Variable | list[str | Variable] | None = None,
+    ) -> MeshSeries:
+        """Create a new MeshSeries by spatial interpolation.
+
+        :param mesh: The mesh on which to interpolate.
+        :param data_name: Data to extract. If None, use all point data.
+
+        :returns: A spatially interpolated MeshSeries.
+        """
+        return self._extract_probe(mesh, data_name, "linear")
 
     def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
@@ -349,7 +367,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         "Returns zipped tuples of timevalues and meshes."
         return zip(self.timevalues, self, strict=True)  # type: ignore[return-value]
 
-    def aggregate_over_time(
+    def aggregate_temporal(
         self, variable: Variable | str, func: Callable
     ) -> pv.UnstructuredGrid:
         """Aggregate data over all timesteps using a specified function.
@@ -448,7 +466,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             return self._xdmf_reader.rawdata_path()  # single h5 file
         return None
 
-    def read_interp(
+    def mesh_interp(
         self, timevalue: float, lazy_eval: bool = True
     ) -> pv.UnstructuredGrid:
         """Return the temporal interpolated mesh for a given timevalue."""
@@ -652,7 +670,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         "Returns a Mesh with the time of the variable maximum as data."
         return self._time_of_extremum(variable, np.argmax, "max")
 
-    def aggregate_over_domain(
+    def aggregate_spatial(
         self, variable: Variable | str, func: Callable
     ) -> np.ndarray:
         """Aggregate data over domain per timestep using a specified function.
@@ -665,7 +683,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         """
         return func(self.values(variable), axis=1)
 
-    def plot_domain_aggregate(
+    def plot_spatial_aggregate(
         self,
         variable: Variable | str,
         func: Callable,
@@ -685,7 +703,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         Keyword arguments get passed to `matplotlib.pyplot.plot`
         """
         time_var, variable = _normalize_vars("time", variable, self.mesh(0))
-        values = self.aggregate_over_domain(variable.magnitude, func)
+        values = self.aggregate_spatial(variable.magnitude, func)
         x_values = self.timevalues
         if ax is None:
             fig, ax = plt.subplots()
@@ -726,7 +744,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             idx += comp
         return original_list
 
-    def probe(
+    def _probe(
         self,
         points: np.ndarray,
         data_name: str | Variable | list[str | Variable],
@@ -869,7 +887,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
         variable = Variable.find(variable, self.mesh(0))
         values = variable.magnitude.transform(
-            self.probe(points, variable.data_name, interp_method)
+            self._probe(points, variable.data_name, interp_method)
         )
         if values.shape[0] == 1:
             values = values.ravel()
@@ -879,7 +897,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         else:
             variable_abscissa = Variable.find(variable_abscissa, self.mesh(0))
             x_values = variable_abscissa.magnitude.transform(
-                self.probe(points, variable_abscissa.data_name, interp_method)
+                self._probe(points, variable_abscissa.data_name, interp_method)
             )
             x_unit_str = (
                 f" / {variable_abscissa.get_output_unit}"
@@ -1163,7 +1181,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
                     of all datasets between both MeshSeries.
         """
         if not np.array_equal(ms_a.timevalues, ms_b.timevalues):
-            ms_b_resampled = ms_b.resample(ms_b, ms_a.timevalues)
+            ms_b_resampled = ms_b.resample_temporal(ms_a.timevalues)
             msg = "Two instances of MeshSeries have different time values. \
                 Direct difference cannot be computed. \
                     ms_b will be interpolated to match timesteps of ms_a."

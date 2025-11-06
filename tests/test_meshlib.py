@@ -239,12 +239,12 @@ class TestUtils:
             ):
                 np.testing.assert_array_equal(a, b)
 
-    def test_time_aggregate(self):
+    def test_temporal_aggregate(self):
         "Test aggregation of meshseries."
         mesh_series = examples.load_meshseries_HT_2D_XDMF()
         funcs = [np.min, np.max, np.mean, np.median, np.sum, np.std, np.var]
         for func in funcs:
-            agg_mesh = mesh_series.aggregate_over_time("temperature", func)
+            agg_mesh = mesh_series.aggregate_temporal("temperature", func)
             assert not np.any(
                 np.isnan(agg_mesh["temperature_" + func.__name__])
             )
@@ -257,21 +257,21 @@ class TestUtils:
         max_mesh = mesh_series.time_of_max("temperature")
         assert not np.any(np.isnan(max_mesh["max_temperature_time"]))
 
-    def test_time_aggregate_mesh_dependent(self):
+    def test_temporal_aggregate_mesh_dependent(self):
         "Test aggregation of mesh_dependent variable on meshseries."
         mesh_series = examples.load_meshseries_THM_2D_PVD()
         prop = ot.variables.dilatancy_alkan
-        agg_mesh = mesh_series.aggregate_over_time(prop, np.max)
+        agg_mesh = mesh_series.aggregate_temporal(prop, np.max)
         assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
         agg_mesh = mesh_series.time_of_max(prop)
         assert not np.any(np.isnan(agg_mesh[f"max_{prop.output_name}_time"]))
 
-    def test_domain_aggregate(self):
+    def test_spatial_aggregate(self):
         "Test aggregation of meshseries."
         ms = examples.load_meshseries_HT_2D_XDMF()[1:]
-        temp_min = ms.aggregate_over_domain("temperature", np.min)
-        temp_mean = ms.aggregate_over_domain("temperature", np.mean)
-        temp_max = ms.aggregate_over_domain("temperature", np.max)
+        temp_min = ms.aggregate_spatial("temperature", np.min)
+        temp_mean = ms.aggregate_spatial("temperature", np.mean)
+        temp_max = ms.aggregate_spatial("temperature", np.max)
         assert np.all(temp_max > temp_mean)
         assert np.all(temp_mean > temp_min)
 
@@ -286,7 +286,7 @@ class TestUtils:
         ]
         for method in ["nearest", "linear"]:
             for slicing, shape in slice_shapes:
-                values = ms.probe(points[slicing], "temperature", method)
+                values = ms._probe(points[slicing], "temperature", method)
                 assert values.shape == shape
                 np.testing.assert_allclose(values, ref_values[:, slicing])
                 assert not np.any(np.isnan(values))
@@ -306,12 +306,12 @@ class TestUtils:
         points = np.linspace(pt_min, pt_max, num=10)
         self._check_probe(ms_1D, points)
 
-    def test_extract_probe_1D_mesh_single_pt(self):
+    def test_probe_1D_mesh_single_pt(self):
         "Test single point probing on a 1D meshseries."
         ms = examples.load_meshseries_HT_2D_XDMF()
         ms_1D = ms.extract(ms[0].points[:, 1] == 0)
         pt_min = np.reshape(ms_1D[0].bounds, (3, 2)).T[0]
-        ms_ref = ot.MeshSeries.extract_probe(ms_1D, pt_min)
+        ms_ref = ms_1D.probe(pt_min)
         for key in ms_ref.point_data:
             np.testing.assert_array_equal(
                 ms_ref.values(key)[:, 0], ms_1D.values(key)[:, 0]
@@ -334,30 +334,29 @@ class TestUtils:
         ]
         all_keys = set().union(ms.point_data.keys(), ms.cell_data.keys())
         for arg, keys in [(custom_keys, custom_keys), (None, all_keys)]:
-            ms_pts = ot.MeshSeries.extract_probe(ms, points, arg)
+            ms_pts = ms.probe(points, arg)
             for key in keys:
-                ms_ref = ot.MeshSeries.extract_probe(ms, points, key)
+                ms_ref = ms.probe(points, key)
                 np.testing.assert_array_equal(
                     ms_pts.values(key), ms_ref.values(key)
                 )
 
-    def test_extract_probe(self):
+    def test_probe(self):
         results = examples.load_meshseries_HT_2D_XDMF()
         points = np.linspace([2, 2, 0], [4, 18, 0], num=100)
-        ms_pts = ot.MeshSeries.extract_probe(results, points, "temperature")
+        ms_pts = results.probe(points, "temperature")
         np.testing.assert_array_equal(ms_pts[0].points, points)
-        ms_pts = ot.MeshSeries.extract_probe(
-            results, points, "temperature", "nearest"
-        )
+        pts_mesh = pv.PolyData(points)
+        ms_pts = results.probe(pts_mesh, "temperature", "nearest")
         pt_id = results[0].find_closest_point(points[0])
         np.testing.assert_array_equal(
             ms_pts["temperature"][:, 0], results["temperature"][:, pt_id]
         )
 
-    def test_resample(self):
+    def test_temporal_resample(self):
         results = examples.load_meshseries_HT_2D_XDMF()
         in_between = 0.5 * (results.timevalues[:-1] + results.timevalues[1:])
-        resampled = ot.MeshSeries.resample(results, in_between)
+        resampled = results.resample_temporal(in_between)
         for idx, mesh in enumerate(resampled):
             for var in ["temperature", "pressure", "darcy_velocity"]:
                 delta = results[idx + 1][var] - results[idx][var]
@@ -585,7 +584,7 @@ class TestUtils:
         int_pts = ot.meshlib.to_ip_point_cloud(result)
         ip_ms = meshseries.ip_tesselated()
         ip_mesh = ip_ms.mesh(-1)
-        vals = ip_ms.probe(ip_mesh.center, sigma_ip.data_name)
+        vals = ip_ms._probe(ip_mesh.center, sigma_ip.data_name)
         assert not np.any(np.isnan(vals))
         assert int_pts.number_of_points == ip_mesh.number_of_cells
         containing_cells = ip_mesh.find_containing_cell(int_pts.points)
@@ -677,8 +676,8 @@ class TestUtils:
         assert len(ms.timevalues) == len(ms_test.timevalues)
         assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
         for var in ["temperature", "darcy_velocity", "pressure"]:
-            val_ref = np.sum(ms.aggregate_over_domain(var, np.max))
-            val_test = np.sum(ms_test.aggregate_over_domain(var, np.max))
+            val_ref = np.sum(ms.aggregate_spatial(var, np.max))
+            val_test = np.sum(ms_test.aggregate_spatial(var, np.max))
             assert np.abs(val_ref - val_test) < 1e-14
 
         for m in ms_test:
@@ -708,8 +707,8 @@ class TestUtils:
         assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
         assert (
             np.abs(
-                np.sum(ms.aggregate_over_domain("Si", np.max))
-                - np.sum(ms_test.aggregate_over_domain("Si", np.max))
+                np.sum(ms.aggregate_spatial("Si", np.max))
+                - np.sum(ms_test.aggregate_spatial("Si", np.max))
             )
             < 1e-14
         )

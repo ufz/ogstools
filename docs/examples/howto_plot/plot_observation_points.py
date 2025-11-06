@@ -57,7 +57,7 @@ labels = [
     [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
     for pts in rows
 ]
-ms_pts = [ot.MeshSeries.extract_probe(mesh_series, pts) for pts in rows]
+ms_pts = [mesh_series.probe(pts) for pts in rows]
 fig = ot.plot.line(ms_pts[0], "time", si, labels=labels[0], monospace=True)
 fig.tight_layout()
 

@@ -8,6 +8,12 @@
   `pyvista.UnstructuredGrid`'s.
 - `MeshSeries.scale` does not return a new MeshSeries, but changes the calling
   object.
+- `MeshSeries.read_interp` -> `MeshSeries.mesh_interp`
+- `MeshSeries.probe` -> `MeshSeries._probe`
+- `MeshSeries.extract_probe` -> `MeshSeries.probe`
+- `MeshSeries.aggregate_over_domain` -> `MeshSeries.aggregate_spatial`
+- `MeshSeries.aggregate_over_time` -> `MeshSeries.aggregate_temporal`
+- `MeshSeries.plot_domain_aggregate` -> `MeshSeries.plot_spatial_aggregate`
 
 ## Deprecations
 
@@ -24,6 +30,7 @@
   - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
   - new functions for renaming domain and subdomains
   - can now be scaled spatially / temporally in the Constructor
+  - added `interpolate` method, to interpolate the MeshSeries data on a new mesh
 - Meshes
   - save function performs partmesh if number of partitions are given, with optional dry_run
     - create_partitioning() and create_metis if vtu files are already present

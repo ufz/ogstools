@@ -130,5 +130,5 @@ ms3 = ot.MeshSeries(sim3_result_dir / "LiquidFlow_Simple.pvd")
 # !paraview {ms.filepath} # for interactive exploration
 # Time slice over x
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
-ms_probe = ot.MeshSeries.extract_probe(ms3, points, "pressure")
+ms_probe = ms3.probe(points, "pressure")
 fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
