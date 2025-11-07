@@ -13,7 +13,7 @@ import pandas as pd
 import pyvista as pv
 
 from . import mesh_dependent, tensor_math
-from .custom_colormaps import integrity_cmap, temperature_cmap
+from .custom_colormaps import integrity_cmap, none_cmap, temperature_cmap
 from .matrix import Matrix
 from .unit_registry import u_reg
 from .variable import Scalar, Variable
@@ -187,12 +187,21 @@ temperature_BHE = BHE_Vector(
     symbol="T",
 )
 
+none = Scalar("None", output_name="", cmap=none_cmap, categoric=True, mask="")
+
 all_variables = [v for v in locals().values() if isinstance(v, Variable)]
 
 
 def get_dataframe() -> pd.DataFrame:
     data = [
-        "preset,data_name,data_unit,output_unit,output_name,type".split(",")
+        [
+            "preset",
+            "data_name",
+            "data_unit",
+            "output_unit",
+            "output_name",
+            "type",
+        ]
     ]
     for preset_name, preset_value in globals().items():
         if isinstance(preset := preset_value, Variable):
