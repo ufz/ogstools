@@ -87,6 +87,8 @@ def add_colorbars(
     **kwargs: Any,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
+    if not kwargs.get("cbar", True):
+        return
     ticks = levels
     if variable.categoric or (len(levels) == 2):
         bounds = level_boundaries(levels)
@@ -462,6 +464,7 @@ def contourf(
 
     Keyword Arguments:
         - arrowsize           scaling factor for arrowsize
+        - cbar:               If True (default), draw a colorbar
         - cb_labelsize:       colorbar labelsize
         - cb_loc:             colorbar location ('left' or 'right')
         - cb_pad:             colorbar padding
