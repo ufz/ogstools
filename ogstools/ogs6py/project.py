@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import psutil
 from lxml import etree as ET
@@ -1266,3 +1267,176 @@ class Project:
             for xpath in ["./mesh", "./meshes/mesh"]
             for m in self._get_root().findall(xpath)
         ]
+
+    def param_value_expression(self, param_name: str) -> str:
+        """Return the text of the parameter value/s or expression.
+
+        :param param_name:  Name of the parameter whose value is returned.
+        """
+        param = self._get_root().find(
+            f"./parameters/parameter[name='{param_name}']"
+        )
+        if param is None:
+            return param_name
+        param_def = {e.tag: e.text for e in list(param.iter())[1:]}
+        for tag in ["value", "values", "expression"]:
+            if tag in param_def:
+                return param_def[tag].strip().strip("\n")
+        return param_name
+
+    def constraints(self) -> dict[str, dict[str, list]]:
+        """Creates a dict of boundary conditions and source terms.
+
+        Structured in the following way:
+        {meshname: {process_variable_name: [constraint_data]}}
+        """
+        root = self._get_root(remove_blank_text=True, remove_comments=True)
+
+        def texts(xpath: str) -> list[str]:
+            return [e.text for e in root.findall(xpath)]
+
+        used_meshes = set(
+            texts(".//boundary_condition/mesh")
+            + texts(".//boundary_condition/geometry")
+            + texts(".//source_term/mesh")
+        )
+
+        result: dict[str, dict[str, list]] = {
+            mesh: {pvar: [] for pvar in texts(".//process_variable/name")}
+            for mesh in used_meshes
+        }
+
+        for pvar in texts(".//process_variable/name"):
+            for constraint_type in ["boundary_condition", "source_term"]:
+                for entry in root.findall(
+                    f".//process_variable[name='{pvar}']//{constraint_type}"
+                ):
+                    constraint = {
+                        e.tag: e.text
+                        for e in list(entry.iter())[1:]
+                        if "comment" not in str(e.tag).lower()
+                    }
+                    if "mesh" in constraint:
+                        mesh = constraint.pop("mesh")
+                    else:
+                        mesh = constraint.pop("geometry")
+                        constraint.pop("geometrical_set")
+                    if constraint_type == "source_term":
+                        constraint["type"] += " source term"
+                    result[mesh][pvar].append(constraint)
+
+        return result
+
+    def _format_constraint(self, constraint: dict, process_var: str) -> str:
+        pvar_map = {
+            "displacement": "$u$",
+            "temperature": "$T$",
+            "pressure": "$p$",
+            "gas_pressure": "$p_g$",
+            "capillary_pressure": "$p_c$",
+        }
+        comp_map = {"0": "$_x$", "1": "$_y$", "2": "$_z$"}
+        non_comp_pvars = ["pressure", "temperature"]
+
+        if (
+            any(pvar in process_var for pvar in non_comp_pvars)
+            and "component" in constraint
+        ):
+            constraint.pop("component")
+
+        label = "\n  "
+        constraint_type = constraint.get("type", "")
+        if constraint_type == "Neumann" or "source term" in constraint_type:
+            var_str = "~$d${pvar}{comp}/$dN$"
+        else:
+            var_str = "{pvar}{comp}"
+        label += var_str.format(
+            pvar=pvar_map.get(process_var, process_var),
+            comp=comp_map.get(constraint.pop("component", ""), ""),
+        )
+
+        constraint_type = constraint.pop("type", "")
+        if constraint_type not in ["", "Dirichlet", "Neumann"]:
+            label += f" ({constraint_type})"
+        if "parameter" in constraint:
+            label += "=" + self.param_value_expression(
+                constraint.pop("parameter")
+            )
+        for tag, text in constraint.items():
+            text_val = self.param_value_expression(text)
+            label += f"\n  {tag}: {text_val}"
+        return label
+
+    def constraints_labels(self) -> dict[str, str]:
+        """Formatted information about boundary conditions and source terms.
+
+        :returns:   Formatted str of constraints per meshname.
+
+        Example output:
+
+        .. code-block:: python
+
+            {
+                "domain": "domain:\\n  $T$=-8./3600*t+277.15\\n  $p$=0",
+                "bottom": "bottom:\\n  $u$$_y$=0",
+                "left": "left:\\n  $u$$_x$=0",
+            }
+        """
+        labels = {}
+        for mesh_name, constraint in self.constraints().items():
+            if len(constraint) == 0:
+                labels[mesh_name] = mesh_name
+                continue
+            label = f"{mesh_name}:"
+
+            for process_var, entries in constraint.items():
+                for entry in entries:
+                    label += self._format_constraint(entry, process_var)
+            labels[mesh_name] = label
+        return labels
+
+    # TODO move into Model class when available
+    def plot_constraints(
+        self, mesh_dir: Path | None = None, **kwargs: Any
+    ) -> plt.Figure:
+        """Plot the meshes with annotated boundary conditions and source terms.
+
+        keyword arguments: see :func:`~ogstools.plot.contourf`
+        """
+
+        from tempfile import mkdtemp
+
+        from ogstools.meshlib.meshes import Meshes
+
+        meshes = Meshes.from_files(self.meshpaths(mesh_dir))
+        tmp_path = Path(mkdtemp(prefix="plot_constraints"))
+        if (gml_file := self.gml_filepath(mesh_dir)) is not None:
+            meshes.add_gml_subdomains(
+                self.meshpaths(mesh_dir)[0], gml_file, tmp_path
+            )
+
+        constraints = self.constraints_labels()
+        unused = set(meshes.subdomains.keys()) - set(constraints.keys())
+        for subdomain in unused:
+            meshes.pop(subdomain)
+
+        from ogstools.plot import setup
+
+        loc = kwargs.pop("loc", "upper left")
+        bbox = kwargs.pop("bbox_to_anchor", (1.05, 1))
+        fontsize = kwargs.get("fontsize", setup.fontsize)
+        leg_fontsize = kwargs.get("leg_fontsize", 0.9 * fontsize)
+
+        fig = meshes.plot(**kwargs, loc=loc, bbox_to_anchor=bbox)
+        ax: plt.Axes = fig.axes[0]
+
+        handles, labels = ax.get_legend_handles_labels()
+        for meshname, label in constraints.items():
+            idx = labels.index(meshname)
+            labels[idx] = label
+        ax.legend(
+            handles, labels, loc=loc, fontsize=leg_fontsize,
+            bbox_to_anchor=bbox, borderaxespad=0.0, numpoints=1,
+        )  # fmt: skip
+
+        return fig

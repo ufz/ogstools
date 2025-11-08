@@ -153,15 +153,16 @@ prj.linear_solvers.add_lin_solver(
 )
 
 # %%
+mesh_dir = EXAMPLES_DIR / "prj"
+fig = prj.plot_constraints(mesh_dir, fontsize=26)
+
+# %%
 # Write project file to disc:
 prj.write_input()
 
 # %%
 # Execute file and pipe output to logfile out.log:
-prj.run_model(
-    logfile="out.log",
-    args="-m " + str(EXAMPLES_DIR / "prj") + " -o " + str(output_dir),
-)
+prj.run_model(logfile="out.log", args=f"-m {mesh_dir} -o {output_dir}")
 
 # %% [markdown]
 # If the desired OGS version is not in PATH, a separate path containing the OGS binary can be specified.
