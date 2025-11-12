@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
+from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -28,8 +28,7 @@ from .subdomains import (
 )
 
 
-# TODO: derive from collections.MutableMapping?
-class Meshes:
+class Meshes(MutableMapping):
     """
     OGS input mesh. Refers to prj - file section <meshes>
     """
@@ -47,17 +46,6 @@ class Meshes:
         self.has_identified_subdomains: bool = False
         self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
 
-    @classmethod
-    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
-        """Initialize a Meshes object from a Sequence of existing files.
-
-        :param filepaths:   Sequence of Mesh files (.vtu)
-                            The first mesh is the domain mesh.
-                            All following meshes represent subdomains, and their
-                            points must align with points on the domain mesh.
-        """
-        return cls({Path(m).stem: pv.read(m) for m in filepaths})
-
     def __getitem__(self, key: str) -> pv.UnstructuredGrid:
         if key not in self._meshes:
             msg = f"Key {key!r} not found"
@@ -68,11 +56,25 @@ class Meshes:
         self.has_identified_subdomains = False
         self._meshes[key] = mesh
 
+    def __delitem__(self, key: str) -> None:
+        del self._meshes[key]
+
     def __len__(self) -> int:
         return len(self._meshes)
 
     def __iter__(self) -> Iterator[str]:
         yield from self._meshes
+
+    @classmethod
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+        """Initialize a Meshes object from a Sequence of existing files.
+
+        :param filepaths:   Sequence of Mesh files (.vtu)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their
+                            points must align with points on the domain mesh.
+        """
+        return cls({Path(m).stem: pv.read(m) for m in filepaths})
 
     @classmethod
     def from_yaml(cls, geometry_file: Path) -> Meshes:
@@ -181,44 +183,6 @@ class Meshes:
             prefix = f"{gml_path.stem}_geometry_"
             prefix_offset = len(prefix) if filename.startswith(prefix) else 0
             self[filename[prefix_offset:]] = pv.read(file)
-
-    def keys(self) -> KeysView[str]:
-        """
-        Get the names of all meshes.
-
-        :returns: All mesh names
-        """
-        return self._meshes.keys()
-
-    def values(self) -> ValuesView[pv.UnstructuredGrid]:
-        """
-        Get all Mesh objects (pyvista.UnstructuredGrid).
-
-        :returns: All Mesh objects
-        """
-        return self._meshes.values()
-
-    def items(self) -> ItemsView[str, pv.UnstructuredGrid]:
-        """
-        Get all meshnames-Mesh pairs.
-
-        Each item is a tuple of (name, Mesh)
-
-        :returns: All (name, Mesh) pairs
-        """
-        return self._meshes.items()
-
-    def pop(self, key: str) -> pv.UnstructuredGrid:
-        """
-        Remove a mesh by name and return it.
-
-        This removes the mesh from the internal dictionary.
-
-        :param key: The name of the mesh to remove
-
-        :returns: The Mesh object that was removed
-        """
-        return self._meshes.pop(key)
 
     def sort(self) -> None:
         "Sort the subdomains alphanumerically."
