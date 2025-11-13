@@ -11,7 +11,7 @@ import numpy as np
 import pyvista as pv
 
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.meshlib import MeshSeries
+from ogstools.meshseries import MeshSeries
 
 from . import analytical_solutions as anasol
 
@@ -188,7 +188,7 @@ def load_meshes_liquid_flow_simple():
     workingdir = Path()
     gmsh_file = workingdir / "rect_10_2.msh"
 
-    ot.meshlib.rect(
+    ot.gmsh_tools.rect(
         lengths=(10, 2),
         n_edge_cells=(10, 4),
         n_layers=2,

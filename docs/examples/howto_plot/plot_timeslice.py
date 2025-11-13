@@ -46,7 +46,7 @@ fig.tight_layout()
 # %% [markdown]
 # As the above kind of plot is getting cluttered for lots of timesteps we
 # provide a function to create a filled contour plot over the transient data.
-# The function :meth:`~ogstools.meshlib.mesh_series.MeshSeries.plot_time_slice`
+# The function :meth:`~ogstools.MeshSeries.plot_time_slice`
 # creates a heatmap over time and space.
 
 # %%

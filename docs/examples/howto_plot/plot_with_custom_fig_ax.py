@@ -51,7 +51,7 @@ ot.plot.contourf(
 ot.plot.contourf(
     meshseries.mesh(1), ot.variables.temperature, fig=fig, ax=ax[1]
 )
-diff_mesh = ot.meshlib.difference(
+diff_mesh = ot.mesh.difference(
     meshseries.mesh(1), meshseries.mesh(0), ot.variables.temperature
 )
 

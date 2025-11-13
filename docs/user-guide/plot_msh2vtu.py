@@ -22,7 +22,7 @@ msh = examples.msh_geolayers_2d
 # Conversion
 # ----------
 #
-# Using :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh` we can
+# Using :class:`~ogstools.Meshes`. :meth:`~ogstools.Meshes.from_gmsh` we can
 # generate unstructured grids from a given .msh file. As OGS wants to have the
 # MaterialIDs numbered beginning from zero, you usually want to set reindex to
 # True. The return value is a dict with the mesh names pointing to the

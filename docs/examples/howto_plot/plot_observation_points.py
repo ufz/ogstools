@@ -5,7 +5,7 @@ How to plot data at observation points
 In this example we plot the data values on observation points over all
 timesteps. Since requested observation points don't necessarily coincide with
 actual nodes of the mesh different interpolation options are available. See
-:py:mod:`ogstools.meshlib.mesh_series.MeshSeries.probe` for more details.
+:meth:`~ogstools.MeshSeries.probe` for more details.
 Here we use a component transport example from the ogs benchmark gallery
 (https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
 """

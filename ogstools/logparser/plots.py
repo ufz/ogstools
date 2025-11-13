@@ -67,7 +67,7 @@ def plot_convergence_order(
     """
     Create a heatmap of the nonlinear solver convergence order.
 
-    see: :py:func:`~ogstools.logparser.common_ogs_analyses.convergence_order_per_ts_iteration`
+    see: :func:`~ogstools.logparser.common_ogs_analyses.convergence_order_per_ts_iteration`
     In order to estimate the convergence order we need to take into account
     multiple values and thus cannot assign each iteration a convergence order.
     Only for iterations `i` of `i  >= n` an order is calculated and plotted.
@@ -81,7 +81,7 @@ def plot_convergence_order(
     :param x_metric:    x_axis can represent either "time_step" or "model_time"
 
     Keyword Arguments:
-        - see: :py:func:`~ogstools.plot.heatmaps.heatmap`)
+        - see: :func:`~ogstools.plot.heatmaps.heatmap`)
 
     :returns: A figure with a heatmap of the nonlinear solver convergence order.
     """
@@ -119,7 +119,7 @@ def plot_convergence(
     :param x_metric:    x_axis can represent either "time_step" or "model_time"
 
     Keyword Arguments:
-        - see: :py:func:`~ogstools.plot.heatmaps.heatmap`)
+        - see: :func:`~ogstools.plot.heatmaps.heatmap`)
 
     :returns: A figure with a heatmap of the nonlinear solver convergence data.
     """

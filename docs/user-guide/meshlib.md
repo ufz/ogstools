@@ -17,4 +17,4 @@ Following examples demonstrate the usage of the meshlib:
 - [](../auto_examples/howto_preprocessing/plot_meshlib_pyvista_input.rst)
 - [](../auto_examples/howto_preprocessing/plot_meshlib_vtu_input.rst)
 
-You can access the comprehensive API documentation at: [](../reference/ogstools.meshlib).
+You can access the comprehensive API documentation at: [](../reference/ogstools.mesh).

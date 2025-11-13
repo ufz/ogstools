@@ -21,7 +21,7 @@ domain = examples.load_meshseries_THM_2D_PVD()[0]
 # We can generate the boundary meshes from the given example in the following
 # way and get a dictionary of name and mesh pairs per edge. For details, have a
 # look into the documentation:
-# :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_mesh`.
+# :class:`~ogstools.Meshes`. :meth:`~ogstools.Meshes.from_mesh`.
 
 # %%
 meshes = ot.Meshes.from_mesh(domain)

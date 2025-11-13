@@ -18,7 +18,7 @@ mesh_1 = meshseries.mesh(1)
 temperature = ot.variables.temperature
 
 # %%
-# If you pass multiple meshes to :py:func:`ogstools.plot.contourf`
+# If you pass multiple meshes to :func:`ogstools.plot.contourf`
 # by default both x and y axes will shared. Thus, only the outer axes get
 # axes labels and tick label.
 
@@ -29,8 +29,8 @@ fig = ot.plot.contourf([mesh_0, mesh_1], temperature)
 # be passed.
 
 fig, axs = plt.subplots(2, 2, figsize=(40, 17), sharex=True, sharey=True)
-diff_a = ot.meshlib.difference(mesh_0, mesh_1, temperature)
-diff_b = ot.meshlib.difference(mesh_1, mesh_0, temperature)
+diff_a = ot.mesh.difference(mesh_0, mesh_1, temperature)
+diff_b = ot.mesh.difference(mesh_1, mesh_0, temperature)
 ot.plot.contourf(mesh_0, temperature, fig=fig, ax=axs[0][0])
 ot.plot.contourf(mesh_1, temperature, fig=fig, ax=axs[1][0])
 ot.plot.contourf(diff_a, temperature, fig=fig, ax=axs[0][1])

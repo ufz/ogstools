@@ -46,7 +46,7 @@ class Variable:
     """The name of the mask data in the mesh."""
     func: Callable = identity
     """The function to be applied on the data.
-       .. seealso:: :meth:`~ogstools.variables.variable.Variable.transform`"""
+       .. seealso:: :meth:`~ogstools.variables.Variable.transform`"""
     mesh_dependent: bool = False
     """If the function to be applied is dependent on the mesh itself"""
     process_with_units: bool = False

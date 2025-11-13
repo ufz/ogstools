@@ -154,7 +154,7 @@ fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
 # In order to estimate the convergence order we need to take into account
 # multiple values and thus cannot assign each iteration a convergence order.
 # Only for iterations `i` of `i  >= n` an order is calculated and plotted.
-# See: :py:func:`~ogstools.logparser.common_ogs_analyses.convergence_order_per_ts_iteration`
+# See: :func:`~ogstools.logparser.common_ogs_analyses.convergence_order_per_ts_iteration`
 # for more info.
 
 # %%

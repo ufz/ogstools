@@ -34,7 +34,7 @@ def custom_mesh(lengths: int, element_order: int, quads: bool):
     tmp_dir = Path(mkdtemp())
     mesh_path = tmp_dir / "mesh.msh"
 
-    ot.meshlib.rect(
+    ot.gmsh_tools.rect(
         lengths=lengths,
         n_edge_cells=21,
         structured_grid=quads,
@@ -75,7 +75,7 @@ mesh2 = mesh_series.mesh(-1)
 # variable between the two provided meshes. Then we plot the difference:
 
 # %%
-mesh_diff = ot.meshlib.difference(mesh1, mesh2, ot.variables.temperature)
+mesh_diff = ot.mesh.difference(mesh1, mesh2, ot.variables.temperature)
 fig = ot.plot.contourf(mesh_diff, ot.variables.temperature)
 
 # %% [markdown]
@@ -102,7 +102,7 @@ fig = ot.plot.contourf([quad_mesh, tri_mesh], ot.variables.stress["xx"])
 # topologies is inherently affected by interpolation.
 
 # %%
-diff_mesh = ot.meshlib.difference(quad_mesh, tri_mesh, ot.variables.stress)
+diff_mesh = ot.mesh.difference(quad_mesh, tri_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
 
 # %% [markdown]
@@ -111,7 +111,7 @@ fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
 # which are outside of the domain of the second mesh are masked.
 
 # %%
-diff_mesh = ot.meshlib.difference(tri_mesh, quad_mesh, ot.variables.stress)
+diff_mesh = ot.mesh.difference(tri_mesh, quad_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
 
 # %% [markdown]
@@ -148,7 +148,7 @@ fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
 meshes_1 = [mesh1] * 3
 meshes_2 = [mesh2] * 3
 
-mesh_diff_pair_wise = ot.meshlib.difference_pairwise(
+mesh_diff_pair_wise = ot.mesh.difference_pairwise(
     meshes_1, meshes_2, ot.variables.temperature
 )
 print(f"Length of mesh_list1: {len(meshes_1)}")
@@ -179,7 +179,7 @@ print(f"Shape of mesh_diff_pair_wise: {mesh_diff_pair_wise.shape}")
 # %%
 mesh_list = [mesh1, mesh2, mesh1, mesh2]
 
-mesh_diff_matrix = ot.meshlib.difference_matrix(
+mesh_diff_matrix = ot.mesh.difference_matrix(
     mesh_list, variable=ot.variables.temperature
 )
 print(f"Length of mesh_list1: {len(mesh_list)}")
@@ -215,7 +215,7 @@ print(f"Shape of mesh_list1: {mesh_diff_matrix.shape}")
 mesh_list_matrix_1 = [mesh1, mesh2, mesh1]
 mesh_list_matrix_2 = [mesh2, mesh1]
 
-mesh_diff_matrix = ot.meshlib.difference_matrix(
+mesh_diff_matrix = ot.mesh.difference_matrix(
     mesh_list_matrix_1, mesh_list_matrix_2, ot.variables.temperature
 )
 print(f"Length of mesh_list_matrix_1: {len(mesh_list_matrix_1)}")

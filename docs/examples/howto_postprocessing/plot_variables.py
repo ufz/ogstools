@@ -15,7 +15,7 @@ ot.variables.get_dataframe()
 
 # %% [markdown]
 # Scalar, Vector and Matrix inherit from the class Variable with its
-# :meth:`~ogstools.variables.variable.Variable.transform` function.
+# :meth:`~ogstools.variables.Variable.transform` function.
 # This function converts the argument from data_unit to output_unit and
 # applies a function if specified. In this case we convert from K to °C:
 

@@ -7,12 +7,13 @@
 from contextlib import suppress
 from importlib import metadata
 
-from . import logparser, plot, variables
+from . import gmsh_tools, logparser, mesh, plot, variables
 from ._find_ogs import cli, status
-from .materiallib.core.material_manager import MaterialManager  # noqa: F401
-from .materiallib.core.media import MediaSet  # noqa: F401
-from .meshlib import Meshes, MeshSeries, meshes_from_gmsh  # noqa: F401
-from .ogs6py import Project  # noqa: F401
+from .materiallib.core.material_manager import MaterialManager
+from .materiallib.core.media import MediaSet
+from .meshes import Meshes
+from .meshseries import MeshSeries
+from .ogs6py import Project
 
 with suppress(ImportError):
     from .feflowlib import FeflowModel  # noqa: F401
@@ -23,10 +24,18 @@ __authors__ = metadata.metadata(__package__)["Author-email"]
 
 del metadata  # optional, avoids polluting the results of dir(__package__)
 
+""".. noindex::"""
+
 __all__ = [
+    "MaterialManager",
+    "MediaSet",
+    "MeshSeries",
+    "Meshes",
+    "Project",
     "cli",
+    "gmsh_tools",
     "logparser",
-    "meshes_from_gmsh",
+    "mesh",
     "plot",
     "status",
     "variables",

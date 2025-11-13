@@ -14,7 +14,7 @@ import pyvista as pv
 from pint import UnitRegistry
 from tqdm import tqdm
 
-from ogstools import meshlib, variables
+from ogstools import MeshSeries, variables
 
 u_reg: UnitRegistry = UnitRegistry()
 u_reg.formatter.default_format = "~.3g"
@@ -264,7 +264,7 @@ def plot_convergence_errors(metrics: pd.DataFrame) -> plt.Figure:
 
 
 def convergence_metrics_evolution(
-    mesh_series: list[meshlib.MeshSeries],
+    mesh_series: list[MeshSeries],
     variable: variables.Variable,
     refinement_ratio: float = 2.0,
     units: tuple[str, str] = ("s", "s"),

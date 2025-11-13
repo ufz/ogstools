@@ -5,20 +5,19 @@ Creating a BHE mesh (Borehole Heat Exchanger)
 """
 
 # %% [markdown]
-# This example demonstrates how to use :py:mod:`ogstools.meshlib.gmsh_BHE.gen_bhe_mesh` to create
-# a Borehole Heat Exchanger (BHE) mesh.
+# This example demonstrates how to create a Borehole Heat Exchanger (BHE) mesh.
 
 # %%
 import pyvista as pv
 from shapely import Polygon
 
 import ogstools as ot
-from ogstools.meshlib.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
+from ogstools.meshes.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
 # Introduction
 # ----------------
-# This example shows the general usage of :py:mod:`ogstools.meshlib.gmsh_BHE.gen_bhe_mesh` and how some of
+# This example shows the general usage of :func:`ogstools.meshes.gmsh_BHE.gen_bhe_mesh` and how some of
 # the parameters will effect the mesh. This section demonstrates the mesh
 # generation with only three soil layers, groundwater flow in one layer
 # and three BHE's. However, this tool provides multiple soil layers,

@@ -33,7 +33,7 @@ ms
 # Accessing time values
 # =====================
 # Time values (and spatial coordinates) can be unit transformed via
-# :meth:`~ogstools.meshlib.mesh_series.MeshSeries.scale`. Either pass a tuple
+# :meth:`~ogstools.MeshSeries.scale`. Either pass a tuple
 # to convert from the first to the second unit or pass a scaling factor.
 
 # %%

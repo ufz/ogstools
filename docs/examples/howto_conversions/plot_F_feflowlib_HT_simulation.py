@@ -69,7 +69,7 @@ ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
 feflow_model.mesh["HEAD"] = feflow_model.mesh["P_HEAD"]
 ogs_sim_res["HEAD"] = ogs_sim_res["HEAD_OGS"]
 # Plot differences in hydraulic head/height.
-diff_mesh = ot.meshlib.difference(feflow_model.mesh, ogs_sim_res, "HEAD")
+diff_mesh = ot.mesh.difference(feflow_model.mesh, ogs_sim_res, "HEAD")
 hydraulic_head_diff = ot.variables.Scalar(
     data_name="HEAD_difference", data_unit="m", output_unit="m"
 )
@@ -78,7 +78,7 @@ ot.plot.contourf(diff_mesh, hydraulic_head_diff, vmin=-1.5e-9, vmax=1.5e-9)
 # Plot differences in temperature.
 feflow_model.mesh["temperature"] = feflow_model.mesh["P_TEMP"]
 # Plot differences in temperature.
-diff_mesh = ot.meshlib.difference(
+diff_mesh = ot.mesh.difference(
     feflow_model.mesh, ogs_sim_res, ot.variables.temperature
 )
 ot.plot.contourf(

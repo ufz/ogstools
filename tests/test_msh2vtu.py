@@ -19,8 +19,7 @@ from hypothesis import strategies as st
 
 import ogstools as ot
 from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
-from ogstools.meshlib.gmsh_converter import meshes_from_gmsh
-from ogstools.meshlib.gmsh_meshing import cuboid, rect
+from ogstools.meshes.gmsh_converter import meshes_from_gmsh
 from ogstools.msh2vtu._cli import cli
 
 
@@ -202,7 +201,7 @@ def test_rect(tmp_path: Path, rect_p):
 
     print(msh_file)
 
-    rect(
+    ot.gmsh_tools.rect(
         lengths=rect_p.edge_length,
         n_edge_cells=rect_p.n_edge_cells,
         n_layers=rect_p.n_layers,
@@ -237,7 +236,7 @@ class TestPhysGroups:
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
         msh_file = self.tmp_path / "rect.msh"
-        rect(
+        ot.gmsh_tools.rect(
             n_layers=len(layer_ids),
             out_name=msh_file,
             layer_ids=layer_ids,
@@ -260,7 +259,7 @@ def test_cuboid(tmp_path: Path):
         # this combination doesn't work (yet?)
         if order == 2 and mixed_elements:
             continue
-        cuboid(
+        ot.gmsh_tools.cuboid(
             lengths=edge_length, n_edge_cells=n_edge_cells,
             n_layers=n_layers, structured_grid=structured,
             order=order, mixed_elements=mixed_elements,
