@@ -244,7 +244,7 @@ class TestPhysicalVariable:
         ms = bhe_mesh_series[bhe_type]
         index_combinations = index_gen(ov.BHE_Vector.BHE_COMPONENTS[bhe_type])
         temp = [
-            ms._probe((0, 0, 0), ov.temperature_BHE[1, idx])[0]
+            ms.probe_values((0, 0, 0), ov.temperature_BHE[1, idx])[0]
             for idx in index_combinations
         ]
         # initial vector is +1 for every component
@@ -262,7 +262,7 @@ class TestPhysicalVariable:
             for x in np.unique(lines.points[:, 0])
         ]
         for bhe_idx, pt in enumerate(pts):
-            vals = ms._probe(pt, ov.temperature_BHE[bhe_idx + 1, 0])
+            vals = ms.probe_values(pt, ov.temperature_BHE[bhe_idx + 1, 0])
             # model symmetric: first and last BHE have the same temperature
             last_val = [21.998526268, 22.10904857, 21.998526268][bhe_idx]
             np.testing.assert_almost_equal(vals, [21.85, last_val])

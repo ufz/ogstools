@@ -9,7 +9,7 @@
 - `MeshSeries.scale` does not return a new MeshSeries, but changes the calling
   object.
 - `MeshSeries.read_interp` -> `MeshSeries.mesh_interp`
-- `MeshSeries.probe` -> `MeshSeries._probe`
+- `MeshSeries.probe` -> `MeshSeries.probe_vals`
 - `MeshSeries.extract_probe` -> `MeshSeries.probe`
 - `MeshSeries.aggregate_over_domain` -> `MeshSeries.aggregate_spatial`
 - `MeshSeries.aggregate_over_time` -> `MeshSeries.aggregate_temporal`

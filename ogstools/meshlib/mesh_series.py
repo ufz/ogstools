@@ -235,7 +235,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         ]:
             if len(keys) == 0:
                 continue
-            values = self._probe(points, keys, interp_method)
+            values = self.probe_values(points, keys, interp_method)
             for var, vals in zip(keys, values, strict=True):
                 name = var.output_name if isinstance(var, Variable) else var
                 data[name] = vals
@@ -702,14 +702,17 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             idx += comp
         return original_list
 
-    def _probe(
+    def probe_values(
         self,
         points: np.ndarray | list,
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
         """
-        Probe the MeshSeries at observation points.
+        Return the sampled data of the MeshSeries at observation points.
+
+        Similar to :func:`~ogstools.meshlib.MeshSeries.probe` but returns the data
+        directly instead of creating a new MeshSeries.
 
         :param points:          The observation points to sample at.
         :param data_name:       Data to sample. If provided as a Variable, the
