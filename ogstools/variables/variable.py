@@ -148,12 +148,11 @@ class Variable:
         data_keys: list[str] = list(
             set().union(mesh.point_data, mesh.cell_data)
         )
-        error_msg = (
-            f"Data not found in mesh. Available data names are {data_keys}. "
-        )
-        if isinstance(variable, str) and variable in ["x", "y", "z"]:
-            return _spatial_preset(variable, getattr(mesh, "spatial_unit", "m"))
-        if variable == "time":
+        error_msg = f"{variable} not found in mesh. Available data names are {data_keys}. "
+        var_name = variable if isinstance(variable, str) else variable.data_name
+        if var_name in ["x", "y", "z"]:
+            return _spatial_preset(var_name, getattr(mesh, "spatial_unit", "m"))
+        if var_name == "time":
             return _time_preset(getattr(mesh, "time_unit", "s"))
 
         if isinstance(variable, Variable):

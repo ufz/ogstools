@@ -28,8 +28,9 @@ from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
-from ogstools._internal import deprecated
+from ogstools._internal import copy_function_signature, deprecated
 from ogstools.meshlib.data_processing import difference_pairwise
+from ogstools.plot.lineplots import line
 from ogstools.variables import Variable, _normalize_vars, u_reg
 
 from . import to_ip_mesh, to_ip_point_cloud
@@ -780,6 +781,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             result = self._restore_vectors(result, components)
         return result
 
+    @copy_function_signature(line)
+    def plot_line(self, *args: Any, **kwargs: Any) -> Any:
+        return line(self, *args, **kwargs)
+
+    # TODO: make us of ot.plot.heatmaps
     def plot_time_slice(
         self,
         x: Literal["x", "y", "z", "time"],
@@ -833,7 +839,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             raise KeyError(msg)
 
         var_z = Variable.find(variable, self.mesh(0))
-        var_x, var_y = _normalize_vars(x, y, self.mesh(0))
+        var_x, var_y = _normalize_vars(x, y, self.mesh(0), ["time", "time"])
         time_var = var_x if var_x.data_name == "time" else var_y
         unit = self.time_unit
         time_var.data_unit = time_var.output_unit = str(

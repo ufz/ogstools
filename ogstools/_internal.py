@@ -15,18 +15,32 @@ S = TypeVar("S")
 P = ParamSpec("P")
 T = TypeVar("T")
 
-# yet unused
-# def copy_function_signature(
-#     source: Callable[P, T]
-# ) -> Callable[[Callable], Callable[P, T]]:
-#     def wrapper(target: Callable) -> Callable[P, T]:
-#         @functools.wraps(source)
-#         def wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
-#             return target(*args, **kwargs)
 
-#         return wrapped
+# developer note:
+# if you use this decorator make sure, that the return type of the copied
+# function is static. I.e. `plt.Figure` is a decorated class, which receives
+# some dynamic docstring substitution from matplotlib, and will not correctly be
+# inferred by linters (shows Unknown instead). But if you type hint with
+# `matplotlib.figure.Figure` it works as it seemingly takes the Figure class
+# without executing the decorator (just a guess).
+def copy_function_signature(
+    source: Callable[P, T],
+) -> Callable[[Callable], Callable[P, T]]:
+    def wrapper(target: Callable) -> Callable[P, T]:
+        @functools.wraps(source)
+        def wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
+            return target(*args, **kwargs)
 
-#     return wrapper
+        # remove first param entry
+        doc = wrapped.__doc__
+        if doc is not None and ":param" in doc:
+            param1_start = doc.index(":param")
+            param1_end = param1_start + doc[param1_start:].index("\n")
+            wrapped.__doc__ = doc[:param1_start] + doc[param1_end:]
+
+        return wrapped
+
+    return wrapper
 
 
 def copy_method_signature(

@@ -40,7 +40,7 @@ fig.axes[0].plot(pts_diag[:, 0], pts_diag[:, 2], "-.k", linewidth=3)
 # %%
 ms_vert = mesh_series.probe(pts_vert)
 labels = [f"{tv:.1f} a" for tv in ms_vert.timevalues]
-fig = ot.plot.line(ms_vert, si, "z", labels=labels, colors="coolwarm")
+fig = ms_vert.plot_line(si, "z", labels=labels, colors="coolwarm")
 fig.tight_layout()
 
 # %% [markdown]

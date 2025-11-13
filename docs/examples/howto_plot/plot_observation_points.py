@@ -57,8 +57,8 @@ labels = [
     [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
     for pts in rows
 ]
-ms_pts = [mesh_series.probe(pts) for pts in rows]
-fig = ot.plot.line(ms_pts[0], "time", si, labels=labels[0], monospace=True)
+probes = [mesh_series.probe(pts) for pts in rows]
+fig = probes[0].plot_line(si, labels=labels[0], monospace=True)
 fig.tight_layout()
 
 
@@ -71,13 +71,13 @@ fig.tight_layout()
 
 # %%
 fig, axs = plt.subplots(nrows=2, figsize=[16, 10], sharey=True)
-ot.plot.line(ms_pts[0], "time", si, ax=axs[0], color="k", fontsize=20)
-ot.plot.line(ms_pts[1], "time", si, ax=axs[1], marker="o", fontsize=20)
+probes[0].plot_line(si, ax=axs[0], color="k", fontsize=20)
+probes[1].plot_line(si, ax=axs[1], marker="o", fontsize=20)
 # add the mean of the observation point timeseries
 for index in range(2):
-    values = si.transform(ms_pts[index])
+    values = si.transform(probes[index])
     mean_values = np.mean((values), axis=-1)
-    ts = ms_pts[index].timevalues
+    ts = probes[index].timevalues
     fig.axes[index].plot(ts, mean_values, "rk"[index], lw=4)
     fig.axes[index].legend(labels[index] + ["mean"], fontsize=20)
 fig.tight_layout()

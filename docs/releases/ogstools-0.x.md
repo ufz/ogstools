@@ -13,6 +13,8 @@
 - `MeshSeries.extract_probe` -> `MeshSeries.probe`
 - `MeshSeries.aggregate_over_domain` -> `MeshSeries.aggregate_spatial`
 - `MeshSeries.aggregate_over_time` -> `MeshSeries.aggregate_temporal`
+- `MeshSeries.plot_domain_aggregate` -> `ms.plot_line(variable.max/mean/...)`
+- removed deprecated `MeshSeries.plot_probe` -> `probe = MeshSeries.probe(...); probe.plot_line(...)`
 - `Matrix.mean -> Matrix.tensor_mean`
 
 ## Deprecations
