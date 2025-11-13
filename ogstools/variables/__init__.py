@@ -224,10 +224,12 @@ def get_dataframe() -> pd.DataFrame:
 
 
 def _normalize_vars(
-    var1: str | Variable | None, var2: str | Variable | None, mesh: pv.DataSet
+    var1: str | Variable | None,
+    var2: str | Variable | None,
+    mesh: pv.DataSet,
+    default: str | list[str],
 ) -> tuple[Variable, Variable]:
     "Normalize arguments to return two Variables."
-    default = ("time", "time") if "time" in [var1, var2] else "xyz"
     axes_idx = np.argwhere(
         np.invert(np.all(np.isclose(mesh.points, mesh.points[0]), axis=0))
     ).ravel()

@@ -180,10 +180,12 @@ class TestPlotting:
         return contourf(mesh, "Si_var")
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 50})
-    def test_domain_aggregate(self):
+    def test_spatial_aggregate(self):
         """Test creation of spatial aggregation plots via image comparison."""
-        mesh_series = examples.load_meshseries_THM_2D_PVD()
-        return mesh_series.plot_spatial_aggregate("temperature", np.mean)
+        mesh_series = examples.load_meshseries_THM_2D_PVD(time_unit="a")
+        fig = mesh_series.plot_line(ot.variables.temperature.max)
+        fig.tight_layout()
+        return fig
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     @pytest.mark.parametrize(
@@ -311,10 +313,10 @@ class TestPlotting:
         """Test plot.line from sampled meshseries data via image comparison."""
         ms = examples.load_meshseries_CT_2D_XDMF()
         pts = np.linspace([0, 0, 60], [120, 0, 60], 4)
-        ms_pts = ms.probe(pts)
+        probe = ms.probe(pts)
         labels = [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
-        fig = ot.plot.line(
-            ms_pts, var1, var2, labels=labels, monospace=True, outer_legend=True
+        fig = probe.plot_line(
+            var1, var2, labels=labels, monospace=True, outer_legend=True
         )
         fig.tight_layout()
         return fig
@@ -353,8 +355,8 @@ class TestPlotting:
     ) -> plt.Figure:
         """Test plot.line over 2 vars temporally via image comparison."""
         ms = examples.load_meshseries_HT_2D_XDMF()
-        ms_pts = ms.probe((0, 10, 0))
-        fig = ot.plot.line(ms_pts, var1, var2, outer_legend=0.5)
+        probe = ms.probe((0, 10, 0))
+        fig = probe.plot_line(var1, var2, outer_legend=0.5)
         fig.tight_layout()
         return fig
 
@@ -381,11 +383,9 @@ class TestPlotting:
         ms = examples.load_meshseries_PETSc_2D(time_unit=("a", "a"))
         points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
         labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
-        ms_pts = ms.probe(points_coords)
+        probe = ms.probe(points_coords)
         var = ot.variables.pressure.replace(output_unit="mPa")
-        fig = ot.plot.line(
-            ms_pts, "time", var, labels=labels, colors=["b", "r"]
-        )
+        fig = probe.plot_line(var, labels=labels, colors=["b", "r"])
         fig.tight_layout()
         return fig
 

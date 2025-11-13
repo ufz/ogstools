@@ -286,7 +286,7 @@ class TestUtils:
         ]
         for method in ["nearest", "linear"]:
             for slicing, shape in slice_shapes:
-                values = ms._probe(points[slicing], "temperature", method)
+                values = ms.probe_values(points[slicing], "temperature", method)
                 assert values.shape == shape
                 np.testing.assert_allclose(values, ref_values[:, slicing])
                 assert not np.any(np.isnan(values))
@@ -584,7 +584,7 @@ class TestUtils:
         int_pts = ot.meshlib.to_ip_point_cloud(result)
         ip_ms = meshseries.ip_tesselated()
         ip_mesh = ip_ms.mesh(-1)
-        vals = ip_ms._probe(ip_mesh.center, sigma_ip.data_name)
+        vals = ip_ms.probe_values(ip_mesh.center, sigma_ip.data_name)
         assert not np.any(np.isnan(vals))
         assert int_pts.number_of_points == ip_mesh.number_of_cells
         containing_cells = ip_mesh.find_containing_cell(int_pts.points)

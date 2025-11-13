@@ -14,7 +14,6 @@ from warnings import warn
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
-from cycler import Cycler
 from matplotlib import colormaps
 from matplotlib import colors as mcolors
 from matplotlib.animation import FFMpegWriter, FuncAnimation, ImageMagickWriter
@@ -25,26 +24,6 @@ from ogstools.plot.levels import level_boundaries
 from ogstools.variables import Variable
 
 from .shared import setup
-
-
-# TODO: remove when plot_probe gets removed (@deprecated)
-def get_style_cycler(
-    min_number_of_styles: int,
-    colors: list | None | None = None,
-    linestyles: list | None = None,
-) -> Cycler:
-    if colors is None:
-        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    if linestyles is None:
-        linestyles = ["-", "--", ":", "-."]
-    styles_len = min(len(colors), len(linestyles))
-    c_cycler = plt.cycler(color=colors)
-    ls_cycler = plt.cycler(linestyle=linestyles)
-    if min_number_of_styles <= styles_len:
-        style_cycler = c_cycler[:styles_len] + ls_cycler[:styles_len]
-    else:
-        style_cycler = ls_cycler * c_cycler
-    return style_cycler
 
 
 def justified_labels(points: np.ndarray) -> list[str]:
@@ -213,10 +192,16 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
                      Try installing ffmpeg and/or ImageMagick
                      respectively to enable them."""
         case ".mp4", True, _:
-            codec_args = (
-                "-crf 28 -preset ultrafast -pix_fmt yuv420p "
-                "-vf pad=ceil(iw/2)*2:ceil(ih/2)*2"
-            ).split(" ")
+            codec_args = [
+                "-crf",
+                "28",
+                "-preset",
+                "ultrafast",
+                "-pix_fmt",
+                "yuv420p",
+                "-vf",
+                "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+            ]
             writer = FFMpegWriter(
                 fps=fps, codec="libx265", extra_args=codec_args
             )

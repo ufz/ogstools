@@ -148,12 +148,11 @@ class Variable:
         data_keys: list[str] = list(
             set().union(mesh.point_data, mesh.cell_data)
         )
-        error_msg = (
-            f"Data not found in mesh. Available data names are {data_keys}. "
-        )
-        if isinstance(variable, str) and variable in ["x", "y", "z"]:
-            return _spatial_preset(variable, getattr(mesh, "spatial_unit", "m"))
-        if variable == "time":
+        error_msg = f"{variable} not found in mesh. Available data names are {data_keys}. "
+        var_name = variable if isinstance(variable, str) else variable.data_name
+        if var_name in ["x", "y", "z"]:
+            return _spatial_preset(var_name, getattr(mesh, "spatial_unit", "m"))
+        if var_name == "time":
             return _time_preset(getattr(mesh, "time_unit", "s"))
 
         if isinstance(variable, Variable):
@@ -249,6 +248,59 @@ class Variable:
     def get_output_unit(self) -> str:
         "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
+
+    def _agg(self, func: Callable, new_symbol: str | None) -> Self:
+        subclasses = Variable.__subclasses__()
+        vector = next(x for x in subclasses if x.__name__ == "Vector")
+        matrix = next(x for x in subclasses if x.__name__ == "Matrix")
+        index = -2 if isinstance(self, vector | matrix) else -1
+        return self.replace(
+            func=lambda x: func(self.func(x), axis=index),
+            output_name="_".join([self.output_name, func.__name__]),
+            symbol=new_symbol,
+        )
+
+    @property
+    def min(self) -> Self:
+        "A variable relating to minimum of this quantity."
+        return self._agg(np.min, f"{self.symbol}_{{min}}")
+
+    @property
+    def max(self) -> Self:
+        "A variable relating to maximum of this quantity."
+        return self._agg(np.max, f"{self.symbol}_{{max}}")
+
+    @property
+    def mean(self) -> Self:
+        "A variable relating to mean of this quantity."
+        return self._agg(np.mean, rf"\overline{{{self.symbol}}}")
+
+    @property
+    def median(self) -> Self:
+        "A variable relating to median of this quantity."
+        return self._agg(np.median, rf"med({self.symbol})")
+
+    @property
+    def sum(self) -> Self:
+        "A variable relating to sum of this quantity."
+        return self._agg(np.sum, rf"\sum{{{self.symbol}}}")
+
+    @property
+    def std(self) -> Self:
+        "A variable relating to standard deviation of this quantity."
+        return self._agg(np.std, f"SD({self.symbol})")
+
+    @property
+    def var(self) -> Self:
+        "A variable relating to variance of this quantity."
+
+        def square_unit(unit: str) -> str:
+            return "" if unit == "" else unit + "**2"
+
+        return self._agg(np.var, f"Var({self.symbol})").replace(
+            data_unit=square_unit(self.data_unit),
+            output_unit=square_unit(self.output_unit),
+        )
 
     @property
     def difference(self) -> Variable:

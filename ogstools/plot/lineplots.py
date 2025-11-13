@@ -10,7 +10,8 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pyvista as pv
+from matplotlib.figure import Figure
+from pyvista import DataSet
 
 from ogstools.plot import setup, utils
 from ogstools.variables import Variable, _normalize_vars
@@ -39,9 +40,7 @@ def _format_ax(
         ax.figure.tight_layout()
 
 
-def _separate_by_empty_cells(
-    mesh: pv.DataSet, *arrays: list[np.ndarray]
-) -> None:
+def _separate_by_empty_cells(mesh: DataSet, *arrays: list[np.ndarray]) -> None:
     if "vtkGhostType" not in mesh.cell_data:
         return
     mask = (
@@ -56,28 +55,31 @@ def _separate_by_empty_cells(
 
 
 def line(
-    dataset: pv.DataSet | Sequence[pv.DataSet],
+    dataset: DataSet | Sequence[DataSet],
     var1: str | Variable | None = None,
     var2: str | Variable | None = None,
     ax: plt.Axes | None = None,
     sort: bool = True,
     outer_legend: bool | tuple[float, float] = False,
     **kwargs: Any,
-) -> plt.Figure | None:
-    """Plot some data of a (1D) mesh.
+) -> Figure | None:
+    """Plot some data of a (1D) dataset.
 
     You can pass "x", "y" or "z" to either of x_var or y_var to specify which
-    spatial dimension should be used for the corresponding axis. You can also
-    pass two data variables for a phase plot. if no value is given, automatic
+    spatial dimension should be used for the corresponding axis. By passing
+    "time" the timevalues will be use for this axis. You can also pass two data
+    variables for a phase plot. if no value is given, automatic
     detection of spatial axis is tried.
 
-    >>> line(mesh)  # z=const: y over x, y=const: z over x, x=const: z over y
+    >>> line(ms, ot.variables.temperature)          # temperature over time
+    >>> line(ms, ot.variables.temperature, "time")  # time over temperature
+    >>> line(ms, "pressure", "temperature")     # temperature over pressure
     >>> line(mesh, ot.variables.temperature)    # temperature over x, y or z
     >>> line(mesh, "y", "temperature")          # temperature over y
     >>> line(mesh, ot.variables.pressure, "y")  # y over pressure
-    >>> line(mesh, "pressure", "temperature")   # temperature over pressure
+    >>> line(mesh)  # z=const: y over x, y=const: z over x, x=const: z over y
 
-    :param dataset:    The mesh which contains the data to plot
+    :param dataset:    The mesh or meshseries which contains the data to plot.
     :param var1:    Variable for the x-axis if var2 is given else for y-axis.
     :param var2:    Variable for the y-axis if var1 is given.
     :param ax:      The matplotlib axis to use for plotting, if None a new
@@ -116,11 +118,13 @@ def line(
     ax_: plt.Axes
     ax_ = plt.subplots(figsize=figsize)[1] if ax is None else ax
 
-    mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
+    is_meshseries = isinstance(dataset, Sequence)
+    mesh = dataset[0] if is_meshseries else dataset
     region_mesh = mesh.connectivity("all")
-    x_var, y_var = _normalize_vars(var1, var2, mesh)
+    default = ["time", "time"] if is_meshseries else ["x", "y", "z"]
+    x_var, y_var = _normalize_vars(var1, var2, mesh, default)
 
-    if isinstance(dataset, Sequence) and "color" not in kwargs:
+    if is_meshseries and "color" not in kwargs:
         color = kwargs.pop("colors", "tab10")
         colorlist = utils.colors_from_cmap(color, len(dataset))
         ax_.set_prop_cycle(color=colorlist)
@@ -136,7 +140,7 @@ def line(
     outer_bool = outer_legend is True or isinstance(outer_legend, tuple)
     loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
 
-    if sort and "time" not in [var1, var2]:
+    if sort and not is_meshseries:
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
         sort_ids = np.argsort(mesh.points[:, sort_idx])
     else:
@@ -161,7 +165,7 @@ def line(
     reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
     prop = {}
     kwargs.setdefault("clip_on", True)
-    if isinstance(dataset, Sequence) or only_points or len(reg_ids) <= 1:
+    if is_meshseries or only_points or len(reg_ids) <= 1:
         ax_.plot(x, y, **kwargs)
     else:
         kwargs.setdefault("linestyle", kwargs.pop("ls", "-"))

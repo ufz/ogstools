@@ -43,13 +43,13 @@ def heatmap(
         - vmin:         minimum value of the colorbar
         - vmax:         maximum value of the colorbar
         - num_levels:   Number of levels (approximation)
-        - log_scale:    If True, use logarithmic sclaing
+        - log_scaled:   If True, use logarithmic scaling
         - aspect:       Aspect ratio of the plt.Axes (y/x)
         - fontsize:     fontsize
 
     :returns: A figure with a heatmap
     """
-    log_scale = kwargs.get("log_scale", False)
+    log_scaled = kwargs.get("log_scaled", False)
     if fig is None and ax is None:
         fig, ax = plt.subplots(
             figsize=kwargs.get("figsize", (30, 10)), dpi=kwargs.get("dpi", 120)
@@ -64,7 +64,7 @@ def heatmap(
     ax.grid(which="minor", color="0.95", linestyle="--")
     ax.minorticks_on()
     vals = variable.magnitude.transform(data)
-    if log_scale:
+    if log_scaled:
         vals = data
         vals[vals > 0.0] = np.log10(vals[vals > 0.0])
     else:
@@ -78,7 +78,7 @@ def heatmap(
     y_vals = np.arange(vals.shape[0] + 1) if y_vals is None else y_vals
     ax.pcolormesh(x_vals, y_vals, vals, cmap=cmap, norm=norm, zorder=100)
     add_colorbars(fig, ax, variable, levels, cb_pad=0.02)
-    if log_scale:
+    if log_scaled:
         log_y_labels = [
             rf"$10^{{{t.get_text()}}}$" for t in fig.axes[-1].get_yticklabels()
         ]

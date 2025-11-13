@@ -9,11 +9,13 @@
 - `MeshSeries.scale` does not return a new MeshSeries, but changes the calling
   object.
 - `MeshSeries.read_interp` -> `MeshSeries.mesh_interp`
-- `MeshSeries.probe` -> `MeshSeries._probe`
+- `MeshSeries.probe` -> `MeshSeries.probe_vals`
 - `MeshSeries.extract_probe` -> `MeshSeries.probe`
 - `MeshSeries.aggregate_over_domain` -> `MeshSeries.aggregate_spatial`
 - `MeshSeries.aggregate_over_time` -> `MeshSeries.aggregate_temporal`
-- `MeshSeries.plot_domain_aggregate` -> `MeshSeries.plot_spatial_aggregate`
+- `MeshSeries.plot_domain_aggregate` -> `ms.plot_line(variable.max/mean/...)`
+- removed deprecated `MeshSeries.plot_probe` -> `probe = MeshSeries.probe(...); probe.plot_line(...)`
+- `Matrix.mean -> Matrix.tensor_mean`
 
 ## Deprecations
 
@@ -42,6 +44,8 @@
   - add option to plot legend outside of plots.
   - added support for continuous contourplots via `continuous_cmap=True`.
   - Allow user to set arrowsize parameter in contourf
+- Variable
+  - added aggregation methods `min`, `max`, `mean`, `median`, `sum`, `std`, `var`.
 
 ## Infrastructure
 

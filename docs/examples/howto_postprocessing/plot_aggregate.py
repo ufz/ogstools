@@ -78,4 +78,14 @@ fig = ot.plot.contourf(mesh, saturation)
 # of e.g. the max or mean value of a variable in the entire domain.
 
 # %%
-fig = mesh_series.plot_spatial_aggregate(saturation, np.mean)
+mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
+
+# %% [markdown]
+# Instead of calculating the array itself, you can also plot it directly by
+# using methods of the Variable which correspond to the equally named
+# ``numpy``-functions. The following are available:
+# ``min``, ``max``, ``mean``, ``median``, ``sum``, ``std``, ``var``.
+
+# %%
+fig = mesh_series.plot_line(saturation.std)
+fig.tight_layout()

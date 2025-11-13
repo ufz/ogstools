@@ -28,8 +28,9 @@ from tqdm import tqdm
 from typeguard import typechecked
 
 from ogstools import plot
-from ogstools._internal import deprecated
+from ogstools._internal import copy_function_signature, deprecated
 from ogstools.meshlib.data_processing import difference_pairwise
+from ogstools.plot.lineplots import line
 from ogstools.variables import Variable, _normalize_vars, u_reg
 
 from . import to_ip_mesh, to_ip_point_cloud
@@ -234,7 +235,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         ]:
             if len(keys) == 0:
                 continue
-            values = self._probe(points, keys, interp_method)
+            values = self.probe_values(points, keys, interp_method)
             for var, vals in zip(keys, values, strict=True):
                 name = var.output_name if isinstance(var, Variable) else var
                 data[name] = vals
@@ -683,49 +684,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         """
         return func(self.values(variable), axis=1)
 
-    def plot_spatial_aggregate(
-        self,
-        variable: Variable | str,
-        func: Callable,
-        ax: plt.Axes | None = None,
-        **kwargs: Any,
-    ) -> plt.Figure | None:
-        """
-        Plot the transient aggregated data over the domain per timestep.
-
-        :param variable:    The mesh variable to be aggregated.
-        :param func:        The aggregation function to apply. E.g. np.min,
-                            np.max, np.mean, np.median, np.sum, np.std, np.var
-        :param ax:          matplotlib axis to use for plotting
-
-        :returns:   A matplotlib Figure or None if plotting on existing axis.
-
-        Keyword arguments get passed to `matplotlib.pyplot.plot`
-        """
-        time_var, variable = _normalize_vars("time", variable, self.mesh(0))
-        values = self.aggregate_spatial(variable.magnitude, func)
-        x_values = self.timevalues
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = None
-        if "label" in kwargs:
-            label = kwargs.pop("label")
-            ylabel = func.__name__ + " " + variable.get_label()
-        else:
-            label = func.__name__
-            ylabel = variable.get_label()
-        ax.plot(x_values, values, label=label, **kwargs)
-        ax.set_axisbelow(True)
-        ax.grid(which="major", color="lightgrey", linestyle="-")
-        ax.grid(which="minor", color="0.95", linestyle="--")
-        ax.set_xlabel(time_var.get_label())
-        ax.set_ylabel(ylabel)
-        ax.legend()
-        ax.label_outer()
-        ax.minorticks_on()
-        return fig
-
     def _flatten_vectors(self, data: list[np.ndarray]) -> list[np.ndarray]:
         return [
             vals[..., i] if vals.ndim > 2 else vals
@@ -744,14 +702,17 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             idx += comp
         return original_list
 
-    def _probe(
+    def probe_values(
         self,
         points: np.ndarray | list,
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
         """
-        Probe the MeshSeries at observation points.
+        Return the sampled data of the MeshSeries at observation points.
+
+        Similar to :func:`~ogstools.meshlib.MeshSeries.probe` but returns the data
+        directly instead of creating a new MeshSeries.
 
         :param points:          The observation points to sample at.
         :param data_name:       Data to sample. If provided as a Variable, the
@@ -823,135 +784,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             result = self._restore_vectors(result, components)
         return result
 
-    @deprecated(
-        """
-    Please use the following code instead:
-        ms_pts = ot.MeshSeries.extract_probe(mesh_series, pts)
-        fig = ot.plot.line(ms_pts, "time", variable_of_interest)
-    """
-    )
-    def plot_probe(
-        self,
-        points: np.ndarray | list,
-        variable: Variable | str,
-        variable_abscissa: Variable | str | None = None,
-        labels: list[str] | str | None = None,
-        interp_method: Literal["nearest", "linear"] = "linear",
-        colors: list | None = None,
-        linestyles: list | None = None,
-        ax: plt.Axes | None = None,
-        fill_between: bool = False,
-        outer_legend: bool | tuple[float, float] = False,
-        **kwargs: Any,
-    ) -> plt.Figure | None:
-        """
-        Plot the transient variable on the observation points in the MeshSeries.
+    @copy_function_signature(line)
+    def plot_line(self, *args: Any, **kwargs: Any) -> Any:
+        return line(self, *args, **kwargs)
 
-        :param points:          The points to sample at.
-        :param variable:   The variable to be sampled.
-        :param labels:          The labels for each observation point.
-        :param interp_method:   Choose the interpolation method, defaults to
-                                `linear` for xdmf MeshSeries and
-                                `probefilter` for pvd MeshSeries.
-        :param interp_backend:  Interpolation backend for PVD MeshSeries.
-        :outer_legend: Draw legend on the right side outside of the plot area.
-                       By default False (no outer legend).
-                       User can pass a tuple of two floats (x, y), which will be
-                       passed to bbox_to_anchor parameter in Matplotlib legend
-                       call. True will pass the default values - (1.05, 1.0).
-
-        Keyword Arguments get passed to `matplotlib.pyplot.plot`
-        """
-        points = reshape_obs_points(points, self.mesh(0))
-        # Validate input for labels
-        if labels is None and "label" in kwargs:
-            # Assume user wanted to pass singular label for one obs pt
-            if isinstance(kwargs["label"], str):
-                labels = [kwargs.pop("label")]
-            elif isinstance(kwargs["label"], list):
-                labels = kwargs["label"]
-            else:
-                err_msg = (
-                    "Unrecognizable type for labels. Only list of strings "
-                    "or string are accaptable. "
-                )
-        if isinstance(labels, str):
-            labels = [labels]
-        if labels is not None and points.shape[0] != len(labels):
-            err_msg = (
-                "Mismatch between number of provided labels and"
-                " observation points."
-            )
-            raise RuntimeError(err_msg)
-        outer_bool = outer_legend is True or isinstance(outer_legend, tuple)
-        loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
-        variable = Variable.find(variable, self.mesh(0))
-        values = variable.magnitude.transform(
-            self._probe(points, variable.data_name, interp_method)
-        )
-        if values.shape[0] == 1:
-            values = values.ravel()
-        if variable_abscissa is None:
-            x_values = self.timevalues
-            x_label = f"time / {self.time_unit}"
-        else:
-            variable_abscissa = Variable.find(variable_abscissa, self.mesh(0))
-            x_values = variable_abscissa.magnitude.transform(
-                self._probe(points, variable_abscissa.data_name, interp_method)
-            )
-            x_unit_str = (
-                f" / {variable_abscissa.get_output_unit}"
-                if variable_abscissa.get_output_unit
-                else ""
-            )
-            x_label = (
-                variable_abscissa.output_name.replace("_", " ") + x_unit_str
-            )
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = None
-        if points.shape[0] > 1:
-            ax.set_prop_cycle(
-                plot.utils.get_style_cycler(len(points), colors, linestyles)
-            )
-        if fill_between:
-            ax.fill_between(
-                x_values,
-                np.min(values, axis=-1),
-                np.max(values, axis=-1),
-                label=labels,
-                **kwargs,
-            )
-        else:
-            ax.plot(x_values, values, label=labels, **kwargs)
-        legend_props = {
-            "facecolor": "white",
-            "framealpha": 1,
-            "prop": {"family": "monospace"},
-        }
-        if isinstance(outer_legend, bool) and outer_legend is True:
-            outer_legend = (1.05, 1.0)
-        if labels is not None and outer_bool:
-            legend_props.update(
-                {
-                    "loc": loc,
-                    "bbox_to_anchor": outer_legend,
-                    "borderaxespad": 0.0,
-                }
-            )
-        if labels is not None:
-            hdls, lbls = ax.get_legend_handles_labels()
-            ax.legend(**legend_props, handles=hdls, labels=lbls)
-        ax.set_axisbelow(True)
-        ax.grid(which="major", color="lightgrey", linestyle="-")
-        ax.grid(which="minor", color="0.95", linestyle="--")
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(variable.magnitude.get_label(plot.setup.label_split))
-        ax.label_outer()
-        ax.minorticks_on()
-        return fig
-
+    # TODO: make us of ot.plot.heatmaps
     def plot_time_slice(
         self,
         x: Literal["x", "y", "z", "time"],
@@ -1005,7 +842,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             raise KeyError(msg)
 
         var_z = Variable.find(variable, self.mesh(0))
-        var_x, var_y = _normalize_vars(x, y, self.mesh(0))
+        var_x, var_y = _normalize_vars(x, y, self.mesh(0), ["time", "time"])
         time_var = var_x if var_x.data_name == "time" else var_y
         unit = self.time_unit
         time_var.data_unit = time_var.output_unit = str(

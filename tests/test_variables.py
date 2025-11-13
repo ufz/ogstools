@@ -131,7 +131,7 @@ class TestPhysicalVariable:
         assert ov.stress.invariant_1.transform(sig) > 0
         assert ov.stress.invariant_2.transform(sig) > 0
         assert ov.stress.invariant_3.transform(sig) > 0
-        assert ov.stress.mean.transform(sig) > 0
+        assert ov.stress.tensor_mean.transform(sig) > 0
         assert ov.stress.deviator.magnitude.transform(sig) > 0
         assert ov.stress.deviator_invariant_1.transform(sig) > 0
         assert ov.stress.deviator_invariant_2.transform(sig) > 0
@@ -244,7 +244,7 @@ class TestPhysicalVariable:
         ms = bhe_mesh_series[bhe_type]
         index_combinations = index_gen(ov.BHE_Vector.BHE_COMPONENTS[bhe_type])
         temp = [
-            ms._probe((0, 0, 0), ov.temperature_BHE[1, idx])[0]
+            ms.probe_values((0, 0, 0), ov.temperature_BHE[1, idx])[0]
             for idx in index_combinations
         ]
         # initial vector is +1 for every component
@@ -262,7 +262,7 @@ class TestPhysicalVariable:
             for x in np.unique(lines.points[:, 0])
         ]
         for bhe_idx, pt in enumerate(pts):
-            vals = ms._probe(pt, ov.temperature_BHE[bhe_idx + 1, 0])
+            vals = ms.probe_values(pt, ov.temperature_BHE[bhe_idx + 1, 0])
             # model symmetric: first and last BHE have the same temperature
             last_val = [21.998526268, 22.10904857, 21.998526268][bhe_idx]
             np.testing.assert_almost_equal(vals, [21.85, last_val])
@@ -330,3 +330,18 @@ class TestPhysicalVariable:
         for r in unique_r:
             x = vals[radii == r]
             assert np.allclose(x, x[0], atol=0.4)
+
+    def test_aggregation(self):
+        """Check shape and basic expectations for one example."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        ms_bot = ms.transform(lambda mesh: mesh.clip("z", origin=(0, 0, 0)))
+        si = ov.saturation
+        np.testing.assert_allclose(si.max.transform(ms), 100, rtol=0.005)
+        np.testing.assert_allclose(si.min.transform(ms_bot), 0)
+        for var in [si.max, si.min, si.mean, si.median, si.sum, si.var, si.std]:
+            assert var.transform(ms_bot).shape == (len(ms),)
+        # as the total saturation in the domain increases per timestep
+        # (at least for the simulated timeframe) we expect the following
+        # quantities to be increasing per step
+        for var in [si.mean, si.median, si.sum, si.var, si.std]:
+            assert np.all(np.diff(var.transform(ms_bot)) >= 0)

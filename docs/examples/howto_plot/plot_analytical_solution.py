@@ -67,10 +67,10 @@ x_edge = results[::2].extract(
 )
 labels = [f"{tv:.1f} h" for tv in x_edge.timevalues]
 axs[0].plot([], [], "--k", label="analytical\nsolution")
-ot.plot.line(x_edge, temp, ax=axs[0], marker="o", labels=labels)
-ot.plot.line(x_edge, temp.anasol, ax=axs[0], ls="--")
-ot.plot.line(x_edge, temp.abs_error, ax=axs[1])
-ot.plot.line(x_edge, temp.rel_error, ax=axs[2])
+x_edge.plot_line("x", temp, ax=axs[0], marker="o", labels=labels)
+x_edge.plot_line("x", temp.anasol, ax=axs[0], ls="--")
+x_edge.plot_line("x", temp.abs_error, ax=axs[1])
+x_edge.plot_line("x", temp.rel_error, ax=axs[2])
 fig.tight_layout()
 
 # %% [markdown]
@@ -85,10 +85,10 @@ pts = np.asarray([[0.1, 0, 1], [0.3, 0, 1], [0.5, 0, 1]])
 probe = results.probe(pts)
 labels = ot.plot.utils.justified_labels(pts)
 axs[0].plot([], [], "--k", label="analytical\nsolution")
-ot.plot.line(probe, "time", temp, ax=axs[0], marker="o", labels=labels)
-ot.plot.line(probe, "time", temp.anasol, ax=axs[0], ls="--")
-ot.plot.line(probe, "time", temp.abs_error, ax=axs[1])
-ot.plot.line(probe, "time", temp.rel_error, ax=axs[2])
+probe.plot_line(temp, ax=axs[0], marker="o", labels=labels)
+probe.plot_line(temp.anasol, ax=axs[0], ls="--")
+probe.plot_line(temp.abs_error, ax=axs[1])
+probe.plot_line(temp.rel_error, ax=axs[2])
 fig.tight_layout()
 
 # %% [markdown]
