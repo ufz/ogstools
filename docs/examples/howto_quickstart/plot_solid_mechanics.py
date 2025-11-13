@@ -61,7 +61,7 @@ ot.plot.quiver(mesh, ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 # see: :py:func:`ogstools.variables.tensor_math.mean`
 
 # %%
-fig = ot.plot.contourf(mesh, ot.variables.stress.mean)
+fig = ot.plot.contourf(mesh, ot.variables.stress.tensor_mean)
 
 # %% [markdown]
 # Von Mises stress

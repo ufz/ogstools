@@ -13,7 +13,7 @@
 - `MeshSeries.extract_probe` -> `MeshSeries.probe`
 - `MeshSeries.aggregate_over_domain` -> `MeshSeries.aggregate_spatial`
 - `MeshSeries.aggregate_over_time` -> `MeshSeries.aggregate_temporal`
-- `MeshSeries.plot_domain_aggregate` -> `MeshSeries.plot_spatial_aggregate`
+- `Matrix.mean -> Matrix.tensor_mean`
 
 ## Deprecations
 
@@ -42,6 +42,8 @@
   - add option to plot legend outside of plots.
   - added support for continuous contourplots via `continuous_cmap=True`.
   - Allow user to set arrowsize parameter in contourf
+- Variable
+  - added aggregation methods `min`, `max`, `mean`, `median`, `sum`, `std`, `var`.
 
 ## Infrastructure
 

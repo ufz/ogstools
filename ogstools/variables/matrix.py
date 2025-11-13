@@ -172,7 +172,7 @@ class Matrix(Variable):
         )
 
     @property
-    def mean(self) -> Scalar:
+    def tensor_mean(self) -> Scalar:
         "A scalar variable as the mean value of the matrix."
         return Scalar.from_variable(
             self,

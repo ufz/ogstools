@@ -131,7 +131,7 @@ class TestPhysicalVariable:
         assert ov.stress.invariant_1.transform(sig) > 0
         assert ov.stress.invariant_2.transform(sig) > 0
         assert ov.stress.invariant_3.transform(sig) > 0
-        assert ov.stress.mean.transform(sig) > 0
+        assert ov.stress.tensor_mean.transform(sig) > 0
         assert ov.stress.deviator.magnitude.transform(sig) > 0
         assert ov.stress.deviator_invariant_1.transform(sig) > 0
         assert ov.stress.deviator_invariant_2.transform(sig) > 0
@@ -330,3 +330,18 @@ class TestPhysicalVariable:
         for r in unique_r:
             x = vals[radii == r]
             assert np.allclose(x, x[0], atol=0.4)
+
+    def test_aggregation(self):
+        """Check shape and basic expectations for one example."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        ms_bot = ms.transform(lambda mesh: mesh.clip("z", origin=(0, 0, 0)))
+        si = ov.saturation
+        np.testing.assert_allclose(si.max.transform(ms), 100, rtol=0.005)
+        np.testing.assert_allclose(si.min.transform(ms_bot), 0)
+        for var in [si.max, si.min, si.mean, si.median, si.sum, si.var, si.std]:
+            assert var.transform(ms_bot).shape == (len(ms),)
+        # as the total saturation in the domain increases per timestep
+        # (at least for the simulated timeframe) we expect the following
+        # quantities to be increasing per step
+        for var in [si.mean, si.median, si.sum, si.var, si.std]:
+            assert np.all(np.diff(var.transform(ms_bot)) >= 0)

@@ -250,6 +250,59 @@ class Variable:
         "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
 
+    def _agg(self, func: Callable, new_symbol: str | None) -> Self:
+        subclasses = Variable.__subclasses__()
+        vector = next(x for x in subclasses if x.__name__ == "Vector")
+        matrix = next(x for x in subclasses if x.__name__ == "Matrix")
+        index = -2 if isinstance(self, vector | matrix) else -1
+        return self.replace(
+            func=lambda x: func(self.func(x), axis=index),
+            output_name="_".join([self.output_name, func.__name__]),
+            symbol=new_symbol,
+        )
+
+    @property
+    def min(self) -> Self:
+        "A variable relating to minimum of this quantity."
+        return self._agg(np.min, f"{self.symbol}_{{min}}")
+
+    @property
+    def max(self) -> Self:
+        "A variable relating to maximum of this quantity."
+        return self._agg(np.max, f"{self.symbol}_{{max}}")
+
+    @property
+    def mean(self) -> Self:
+        "A variable relating to mean of this quantity."
+        return self._agg(np.mean, rf"\overline{{{self.symbol}}}")
+
+    @property
+    def median(self) -> Self:
+        "A variable relating to median of this quantity."
+        return self._agg(np.median, rf"med({self.symbol})")
+
+    @property
+    def sum(self) -> Self:
+        "A variable relating to sum of this quantity."
+        return self._agg(np.sum, rf"\sum{{{self.symbol}}}")
+
+    @property
+    def std(self) -> Self:
+        "A variable relating to standard deviation of this quantity."
+        return self._agg(np.std, f"SD({self.symbol})")
+
+    @property
+    def var(self) -> Self:
+        "A variable relating to variance of this quantity."
+
+        def square_unit(unit: str) -> str:
+            return "" if unit == "" else unit + "**2"
+
+        return self._agg(np.var, f"Var({self.symbol})").replace(
+            data_unit=square_unit(self.data_unit),
+            output_unit=square_unit(self.output_unit),
+        )
+
     @property
     def difference(self) -> Variable:
         "A variable relating to differences in this quantity."
