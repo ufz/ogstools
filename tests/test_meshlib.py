@@ -1098,16 +1098,13 @@ class TestUtils:
                 )
 
     @pytest.mark.tools()
-    def test_create_gml_meshes(self, tmp_path):
+    def test_add_from_gml(self, tmp_path):
         """Check, that the meshes generated from a Project + gml are correct."""
         prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
-        meshes = ot.Meshes.from_gml(
-            prj.meshpaths()[0], prj.gml_filepath(), tmp_path
-        )
-        prefix = "square_1x1_geometry_"
-        subdomain_names = [
-            prefix + name for name in ["bottom", "left", "right", "top"]
-        ]
+        meshes = ot.Meshes.from_files(prj.meshpaths())
+        if (gml_file := prj.gml_filepath()) is not None:
+            meshes.add_gml_subdomains(prj.meshpaths()[0], gml_file, tmp_path)
+        subdomain_names = ["bottom", "left", "right", "top"]
         assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
 
     def test_mfy_meshes_from_yaml(self, tmp_path):

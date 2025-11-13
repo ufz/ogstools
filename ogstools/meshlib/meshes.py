@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import os
 import tempfile
-from collections.abc import ItemsView, Iterator, KeysView, Sequence, ValuesView
+from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 import pyvista as pv
+from matplotlib import pyplot as plt
 
 from ogstools._internal import deprecated
 
@@ -25,7 +28,7 @@ from .subdomains import (
 )
 
 
-class Meshes:
+class Meshes(MutableMapping):
     """
     OGS input mesh. Refers to prj - file section <meshes>
     """
@@ -43,17 +46,6 @@ class Meshes:
         self.has_identified_subdomains: bool = False
         self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
 
-    @classmethod
-    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
-        """Initialize a Meshes object from a Sequence of existing files.
-
-        :param filepaths:   Sequence of Mesh files (.vtu)
-                            The first mesh is the domain mesh.
-                            All following meshes represent subdomains, and their
-                            points must align with points on the domain mesh.
-        """
-        return cls({Path(m).stem: pv.read(m) for m in filepaths})
-
     def __getitem__(self, key: str) -> pv.UnstructuredGrid:
         if key not in self._meshes:
             msg = f"Key {key!r} not found"
@@ -64,11 +56,25 @@ class Meshes:
         self.has_identified_subdomains = False
         self._meshes[key] = mesh
 
+    def __delitem__(self, key: str) -> None:
+        del self._meshes[key]
+
     def __len__(self) -> int:
         return len(self._meshes)
 
     def __iter__(self) -> Iterator[str]:
         yield from self._meshes
+
+    @classmethod
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+        """Initialize a Meshes object from a Sequence of existing files.
+
+        :param filepaths:   Sequence of Mesh files (.vtu)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their
+                            points must align with points on the domain mesh.
+        """
+        return cls({Path(m).stem: pv.read(m) for m in filepaths})
 
     @classmethod
     def from_yaml(cls, geometry_file: Path) -> Meshes:
@@ -146,75 +152,43 @@ class Meshes:
         meshes_obj.has_identified_subdomains = False
         return meshes_obj
 
-    @classmethod
-    def from_gml(
-        cls,
-        domain_path: Path,
+    def add_gml_subdomains(
+        self,
+        domain_path: Path,  # TODO: get from self?
         gml_path: Path,
         out_dir: Path | None = None,
         tolerance: float = 1e-12,
-    ) -> Meshes:
-        """Create Meshes from geometry definition in the gml file.
+    ) -> None:
+        """Add Meshes from geometry definition in the gml file to subdomains.
 
-        :param domain_path: Path to the domain mesh.
         :param gml_file:    Path to the gml file.
         :param out_dir:     Where to write the gml meshes (default: gml dir)
         :param tolerance:   search length for node search algorithm
-
-        :returns:           A Meshes object.
         """
         out_dir = gml_path.parent if out_dir is None else out_dir
+        prev_files = set(out_dir.glob("*.vtu"))
 
         cur_dir = Path.cwd()
         os.chdir(out_dir)
-
         from ogstools._find_ogs import cli
 
-        prev_files = set(out_dir.glob("*.vtu"))
         cli().constructMeshesFromGeometry(
             "-g", gml_path, "-m", domain_path, "-s", str(tolerance)
         )
-        vtu_files = sorted(set(out_dir.glob("*.vtu")).difference(prev_files))
         os.chdir(cur_dir)
-        return cls({file.stem: file for file in [domain_path] + vtu_files})
 
-    def keys(self) -> KeysView[str]:
-        """
-        Get the names of all meshes.
+        gml_meshes = sorted(set(out_dir.glob("*.vtu")).difference(prev_files))
+        for file in gml_meshes:
+            filename = str(file.stem)
+            prefix = f"{gml_path.stem}_geometry_"
+            prefix_offset = len(prefix) if filename.startswith(prefix) else 0
+            self[filename[prefix_offset:]] = pv.read(file)
 
-        :returns: All mesh names
-        """
-        return self._meshes.keys()
-
-    def values(self) -> ValuesView[pv.UnstructuredGrid]:
-        """
-        Get all Mesh objects (pyvista.UnstructuredGrid).
-
-        :returns: All Mesh objects
-        """
-        return self._meshes.values()
-
-    def items(self) -> ItemsView[str, pv.UnstructuredGrid]:
-        """
-        Get all meshnames-Mesh pairs.
-
-        Each item is a tuple of (name, Mesh)
-
-        :returns: All (name, Mesh) pairs
-        """
-        return self._meshes.items()
-
-    def pop(self, key: str) -> pv.UnstructuredGrid:
-        """
-        Remove a mesh by name and return it.
-
-        This removes the mesh from the internal dictionary.
-
-        :param key: The name of the mesh to remove
-
-        :returns: The Mesh object that was removed
-        """
-        return self._meshes.pop(key)
+    def sort(self) -> None:
+        "Sort the subdomains alphanumerically."
+        self._meshes = self._meshes
+        sorted_subdomains = dict(sorted(self.subdomains.items()))
+        self._meshes = {self.domain_name: self.domain} | sorted_subdomains
 
     @property
     def domain(self) -> pv.UnstructuredGrid:
@@ -419,7 +393,6 @@ class Meshes:
             if dry_run:
                 return [symlink for symlink, _ in files]
             for file_link, file in files:
-
                 if file_link.exists() or file_link.is_symlink():
                     file_link.unlink()
                 rel = os.path.relpath(file.parent, file_link.parent)
@@ -569,3 +542,59 @@ class Meshes:
             num_partitions, meshes_path, dry_run
         )
         return {1: serial_files} | parallel_files
+
+    def plot(self, **kwargs: Any) -> plt.Figure:
+        """Plot the domain mesh and the subdomains.
+
+        keyword arguments: see :func:`ogstools.plot.contourf`
+        """
+        self.sort()
+
+        from ogstools import plot
+
+        fontsize = kwargs.pop("fontsize", plot.setup.fontsize)
+        lw = kwargs.get("lw", kwargs.get("linewidth", 2))
+        show_edges = kwargs.pop("show_edges", True)
+
+        if len(np.unique(self.domain.cell_data.get("MaterialIDs", []))) > 1:
+            var = "MaterialIDs"
+        else:
+            var = "None"
+        cbar = kwargs.pop("cbar", var != "None")
+        fig = plot.contourf(
+            self.domain, var, show_edges=show_edges, cbar=cbar, **kwargs
+        )
+
+        if fig is None:
+            assert "fig" in kwargs, "Only provide ax together with fig."
+            fig = kwargs.get("fig")
+        assert isinstance(fig, plt.Figure)
+        ax: plt.Axes = fig.axes[0]
+
+        for i, (name, mesh) in enumerate(self.items()):
+            color = kwargs.get("color", plt.get_cmap("Set2")(i))
+
+            # TODO: 1D, 3D
+            if mesh.GetMaxSpatialDimension() == 1:
+                plot.line(
+                    mesh, ax=ax, label=name, lw=lw, color=color,
+                    fontsize=fontsize, clip_on=False
+                )  # fmt: skip
+            else:
+                if name == self.domain_name:
+                    ax.plot([], [], "s", label=name, c="lightgrey", ms=16 * lw)
+                else:
+                    axes = plot.utils.get_projection(self.domain)[:2]
+                    ax.plot(
+                        *mesh.points[:, axes].T, "o",
+                        label=name, clip_on=False, color=color, ms=8 * lw
+                    )  # fmt: skip
+
+        ax.legend(
+            loc="upper left",
+            bbox_to_anchor=(1.05, 1),
+            fontsize=0.9 * fontsize,
+            borderaxespad=0.0,
+            numpoints=1,
+        )
+        return fig

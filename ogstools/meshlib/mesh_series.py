@@ -711,7 +711,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             fig = None
         if "label" in kwargs:
             label = kwargs.pop("label")
-            ylabel = variable.get_label() + " " + func.__name__
+            ylabel = func.__name__ + " " + variable.get_label()
         else:
             label = func.__name__
             ylabel = variable.get_label()
@@ -746,7 +746,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
 
     def _probe(
         self,
-        points: np.ndarray,
+        points: np.ndarray | list,
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:

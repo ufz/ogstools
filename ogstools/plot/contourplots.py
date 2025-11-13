@@ -87,6 +87,8 @@ def add_colorbars(
     **kwargs: Any,
 ) -> None:
     """Add a colorbar to the matplotlib figure."""
+    if not kwargs.get("cbar", True):
+        return
     ticks = levels
     if variable.categoric or (len(levels) == 2):
         bounds = level_boundaries(levels)
@@ -199,7 +201,11 @@ def subplot(
     # Passing the data and not the mesh here purposely to ensure correct shape
     # of mask. Otherwise transform() might remove additional triangulated cells
     # due to those being part of the usual mask e.g. "pressure_active".
-    nan_mask = np.isnan(surf_tri.ptc()[variable.data_name])
+    nan_mask = np.isnan(
+        surf_tri.ptc().cell_data.get(
+            variable.data_name, np.zeros(surf_tri.n_cells)
+        )
+    )
     # Getting rid of extra dimension for vectors and matrices
     if len(nan_mask.shape) == 2:
         nan_mask = np.sum(nan_mask, axis=-1)
@@ -237,8 +243,8 @@ def subplot(
         else:
             ax.tripcolor(
                 x, y, tri, facecolors=values, mask=nan_mask,
-                cmap=cmap, norm=norm  # fmt: skip
-            )
+                cmap=cmap, norm=norm
+            )  # fmt: skip
             if variable.is_mask():
                 ax.tripcolor(
                     x, y, tri, facecolors=values, mask=(values == 1),
@@ -380,6 +386,7 @@ def label_sec_ax(
         secax.set_xticklabels(sec_labels)
         secax.set_xlabel(x2_var.get_label())
         utils.update_font_sizes(secax, fontsize)
+        # secax.tick_params(top=True)
 
 
 def draw_plot(
@@ -411,6 +418,9 @@ def draw_plot(
     if setup.combined_colorbar:
         _levels = combined_levels(np_meshes, variable, **kwargs)
     for i, j in [(r0, r1) for r0 in range(shape[0]) for r1 in range(shape[1])]:
+        # np_axs[i, j].tick_params(
+        #     direction="out", bottom=True, left=True, right=False, top=False
+        # )
         if "levels" in kwargs:
             _levels = np.asarray(kwargs.pop("levels"))
         elif not setup.combined_colorbar:
@@ -458,6 +468,7 @@ def contourf(
 
     Keyword Arguments:
         - arrowsize           scaling factor for arrowsize
+        - cbar:               If True (default), draw a colorbar
         - cb_labelsize:       colorbar labelsize
         - cb_loc:             colorbar location ('left' or 'right')
         - cb_pad:             colorbar padding
@@ -467,6 +478,8 @@ def contourf(
         - fontsize            size for labels and captions
         - levels:             user defined levels
         - log_scaled:         logarithmic scaling
+        - min_ax_aspect:         minimum axes aspect ratio
+        - max_ax_aspect:         maximum axes aspect ratio
         - show_edges:         show element edges
         - show_max:           mark the location of the maximum value
         - show_min:           mark the location of the minimum value
@@ -488,11 +501,13 @@ def contourf(
 
     variable = Variable.find(variable, _meshes[0])
     data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
-    if setup.min_ax_aspect is None and setup.max_ax_aspect is None:
+    min_ax_aspect = kwargs.get("min_ax_aspect", setup.min_ax_aspect)
+    max_ax_aspect = kwargs.get("max_ax_aspect", setup.max_ax_aspect)
+    if min_ax_aspect is None and max_ax_aspect is None:
         fig_aspect = np.mean(data_aspects)
     else:
         fig_aspect = np.mean(
-            np.clip(data_aspects, setup.min_ax_aspect, setup.max_ax_aspect)
+            np.clip(data_aspects, min_ax_aspect, max_ax_aspect)
         )
     ax_aspects = fig_aspect / data_aspects
     n_axs = shape[0] * shape[1]

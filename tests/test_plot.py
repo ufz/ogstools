@@ -15,6 +15,7 @@ from pyvista import examples as pv_examples
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.plot import contourf, utils
 
 
@@ -475,3 +476,24 @@ class TestPlotting:
             tmp_path / "test.png"
         )
         assert (tmp_path / "test.png").is_file()
+
+    # ### Testing model plot ###################################################
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 40})
+    @pytest.mark.parametrize(
+        "prj_file",
+        [
+            "Mechanics/Linear/EmbeddedAnchorSourceTerm/beam_two_material.prj",
+            "ThermoHydroMechanics/9percentWaterFreezingExpansion/UnitSquare.prj",
+            "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj",
+            "TH2M/H2/mcWhorter/mcWhorter_h2.prj",
+            "TH2M/H2M/Liakopoulos/liakopoulos_TH2M.prj",
+            "HydroMechanics/AnchorSourceTerm/two_anchors.prj",  # uses gml
+        ],
+        ids=lambda x: Path(x).stem,
+    )
+    def test_model_plot(self, prj_file: str):
+        # TODO: https://gitlab.opengeosys.org/ogs/ogs/-/issues/3518
+
+        prj = ot.Project(EXAMPLES_DIR / "prj" / prj_file)
+        return prj.plot_constraints(fontsize=26, min_ax_aspect=1.0)

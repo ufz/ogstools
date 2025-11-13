@@ -136,8 +136,10 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_det",
+            output_unit=self.output_unit + "^2",
             symbol=rf"\mathrm{{det}} {{{self.symbol}}}",
             func=lambda x: tensor_math.det(self.func(x)),
+            process_with_units=True,
         )
 
     @property

@@ -37,6 +37,7 @@
   - subdomains() -> subdomain, domain_name() -> domain_name (with setter)
 - Project
   - dependencies () return a list of referenced/needed files (meshes, xml includes, python scripts)
+  - plot_constrains() -> overview plot with boundary conditions and source terms
 - plot
   - add option to plot legend outside of plots.
   - added support for continuous contourplots via `continuous_cmap=True`.
