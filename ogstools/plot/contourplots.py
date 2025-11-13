@@ -185,7 +185,10 @@ def subplot(
 
     if variable.mask_used(mesh):
         var_mask = variable.get_mask().replace(cmap=grey_cmap)
-        subplot(mesh.threshold([0, 0], variable.mask), var_mask, ax, **kwargs)
+        subplot(
+            mesh.threshold([0, 0], scalars=variable.mask),
+            var_mask, ax, **kwargs,
+        )  # fmt: skip
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
 
     surf_tri = mesh.triangulate().extract_surface()

@@ -898,7 +898,9 @@ class TestUtils:
         mesh_func(n_edge_cells=n_cells, n_layers=n_layers, out_name=mesh_name)
         meshes = ot.Meshes.from_gmsh(mesh_name, log=False)
         layer: pv.UnstructuredGrid
-        layer = meshes["domain"].threshold([rand_id, rand_id], "MaterialIDs")
+        layer = meshes["domain"].threshold(
+            [rand_id, rand_id], scalars="MaterialIDs"
+        )
         # multi-dim test
         if meshes["domain"].volume:
             meshes["layer_surface"] = layer.extract_surface()

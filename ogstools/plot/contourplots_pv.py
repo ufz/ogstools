@@ -79,7 +79,9 @@ def contourf_pv(
     else:
         # Plot each region with its individual opacity
         for idx, matID in enumerate(np.unique(plot_mesh[plot_var.output_name])):
-            region = plot_mesh.threshold([matID, matID], plot_var.output_name)
+            region = plot_mesh.threshold(
+                [matID, matID], scalars=plot_var.output_name
+            )
             region[plot_var.output_name] = plot_var.transform(region)
             opacity_kwarg = (
                 {"opacity": opacities[matID]} if matID in opacities else {}

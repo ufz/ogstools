@@ -301,7 +301,8 @@ def remesh_with_triangles(
     # gmsh requires the domain ids to start at 1
     id_offset = 1 if 0 in mat_ids else 0
     region_edge_points = [
-        _ordered_edges(mesh.threshold([m, m], "MaterialIDs")) for m in (mat_ids)
+        _ordered_edges(mesh.threshold([m, m], scalars="MaterialIDs"))
+        for m in (mat_ids)
     ]
     for point in np.vstack(region_edge_points):
         gmsh.model.geo.addPoint(point[0], point[1], point[2])

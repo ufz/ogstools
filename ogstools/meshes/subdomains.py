@@ -104,7 +104,7 @@ def split_by_vertical_lateral_edges(
         np.invert(is_left) & np.invert(is_right)
     ).connectivity(largest=False)
     for reg_id in np.unique(top_bottom.cell_data.get("RegionId", [])):
-        subdomain = top_bottom.threshold([reg_id, reg_id], "RegionId")
+        subdomain = top_bottom.threshold([reg_id, reg_id], scalars="RegionId")
         subdomain.clear_data()
         subdomains.append(subdomain)
     return subdomains

@@ -112,7 +112,7 @@ def meshes_from_gmsh(
         if mesh.cell_sets == {}:
             subdomain = pv_mesh.extract_cells(
                 pv_cell_dims == group_dim
-            ).threshold([group_index, group_index], "gmsh:physical")
+            ).threshold([group_index, group_index], scalars="gmsh:physical")
         # for recent gmsh versions (allows cells belonging to multiple groups)
         else:
             group_cells = np.full(pv_mesh.number_of_cells, False)
@@ -129,7 +129,7 @@ def meshes_from_gmsh(
             and group_index == 1
             and 0 in pv_mesh["gmsh:physical"]
         ):
-            subdomain = pv_mesh.threshold([0, 0], "gmsh:physical")
+            subdomain = pv_mesh.threshold([0, 0], scalars="gmsh:physical")
         if subdomain.number_of_cells == 0:
             msg = f"Unexpectedly got an empty mesh in physical group: {name}."
             raise RuntimeError(msg)
