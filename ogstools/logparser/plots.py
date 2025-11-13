@@ -111,7 +111,7 @@ def plot_convergence(
     timesteps 0-1 and iteration 0-1 belongs to the first iteration of the first
     timestep. Thus we immediately read on which iteration a timestep converged
     and on which timestep the simulation ended. Per default logarithmic scaling
-    is used. Set `log_scale` to `False` to use linear scaling.
+    is used. Set `log_scaled` to `False` to use linear scaling.
 
     :param df:          Dataframe of a simulation log.
     :param metric:      Which metric / column of the Dataframe to plot.
@@ -129,7 +129,7 @@ def plot_convergence(
     names = {"dx": "absolute error", "dx_x": "relative error", "x": "residual"}
     symbol = str(metric).replace("_", " / ")
     err_var = Scalar(names[metric], cmap="viridis", symbol=symbol)
-    kwargs.setdefault("log_scale", True)
+    kwargs.setdefault("log_scaled", True)
     res = heatmap(errors, err_var, x_vals=x_vals, **kwargs)
     fig = kwargs.get("fig", res)
     ax = kwargs.get("ax", fig.axes[0])
