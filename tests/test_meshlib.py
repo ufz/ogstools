@@ -956,7 +956,7 @@ class TestUtils:
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         meshes.save(tmp_path)  # serial mesh only
         for name in meshes:
-            mesh = pv.read(tmp_path / f"{name}.vtu")
+            mesh = ot.mesh.read(tmp_path / f"{name}.vtu")
             for data in ["point_data", "cell_data", "field_data"]:
                 np.testing.assert_array_equal(
                     getattr(mesh, data).values(),

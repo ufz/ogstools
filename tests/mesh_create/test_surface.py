@@ -3,7 +3,7 @@ import pytest
 import pyvista as pv
 
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.mesh import create
+from ogstools.mesh import create, save
 
 meshpath = EXAMPLES_DIR / "meshlib"
 
@@ -34,7 +34,7 @@ class TestSurface:
         s = create.Surface(surface_mesh, 0)
         assert s.mesh.GetNumberOfPoints() > 0
 
-        pv.save_meshio(filename=s.filename, mesh=s.mesh)
+        save(filename=s.filename, mesh=s.mesh)
         s2 = create.Surface(s.filename, material_id=2)
         assert s2.mesh.GetNumberOfPoints() > 0
 

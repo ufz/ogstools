@@ -7,7 +7,6 @@ For this example we use an existing mesh file and add the required arrays.
 
 # %%
 import numpy as np
-import pyvista as pv
 
 import ogstools as ot
 from ogstools import examples
@@ -19,7 +18,7 @@ from ogstools import examples
 # A bulk mesh file is loaded. If it already contains old Material IDs
 # we delete them first.
 
-mesh: pv.UnstructuredGrid = pv.read(examples.mechanics_2D)
+mesh = ot.mesh.read(examples.mechanics_2D)
 mesh.cell_data.remove("MaterialIDs")
 
 
@@ -94,9 +93,7 @@ bentonite = mesh.extract_cells(mesh["MaterialIDs"] == 0)
 p0_new = -1e6 * mesh.points[:, 1]
 p0_new[bentonite["vtkOriginalPointIds"]] = -1.2e8
 mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
-# import pyvista as pv
-#
-# pv.save_meshio("bulk_mesh.vtu", mesh)
+# ot.mesh.save("bulk_mesh.vtu", mesh)
 
 fig = ot.plot.contourf(mesh, "initial_pressure")
 

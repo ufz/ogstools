@@ -1082,9 +1082,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
     def _save_vtu(
         self, new_pvd_fn: Path, fns: list[Path], ascii: bool = False
     ) -> None:
+        from ogstools.mesh import save
+
         for i, timestep in enumerate(self.timesteps):
             if ".vtu" in fns[i].name:
-                pv.save_meshio(
+                save(
                     Path(new_pvd_fn.parent, fns[i].name),
                     self.mesh(i),
                     binary=not ascii,
@@ -1093,7 +1095,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
                 newname = fns[i].name.replace(
                     ".xdmf", f"_ts_{timestep}_t_{self.timevalues[i]}.vtu"
                 )
-                pv.save_meshio(Path(new_pvd_fn.parent, newname), self.mesh(i))
+                save(Path(new_pvd_fn.parent, newname), self.mesh(i))
             else:
                 s = "File type not supported."
                 raise RuntimeError(s)

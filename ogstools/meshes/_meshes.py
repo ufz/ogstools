@@ -17,6 +17,7 @@ import pyvista as pv
 from matplotlib import pyplot as plt
 
 from ogstools._internal import deprecated
+from ogstools.mesh import save
 
 
 class Meshes(MutableMapping):
@@ -530,7 +531,7 @@ class Meshes(MutableMapping):
             set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
-                pv.save_meshio(mesh.filepath, mesh)
+                save(mesh.filepath, mesh)
 
         if not num_partitions:
             return serial_files

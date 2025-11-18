@@ -11,6 +11,8 @@ import numpy as np
 import pyvista as pv
 from typeguard import typechecked
 
+from ogstools.mesh.file_io import save
+
 
 class Surface:
     """
@@ -38,7 +40,7 @@ class Surface:
         elif isinstance(input, pv.DataObject):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
-            pv.save_meshio(self.filename, self.mesh, file_format="vtu")
+            save(self.filename, self.mesh, file_format="vtu")
 
         self.mesh.cell_data["MaterialIDs"] = (
             np.ones(self.mesh.n_cells) * self.material_id

@@ -13,6 +13,8 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
+from ogstools.mesh.file_io import save
+
 from .boundary_subset import Surface
 
 
@@ -233,5 +235,5 @@ class Raster:
         )
 
         pt = plane.triangulate()
-        pv.save_meshio(outfilevtu, pt)
+        save(outfilevtu, pt)
         return outfilevtu

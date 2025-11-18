@@ -52,7 +52,7 @@ ms = ot.MeshSeries(temp_dir / "2D_HT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """
 It is also possible to read the file directly with pyvista:
-ogs_sim_res = pv.read(
+ogs_sim_res = ot.mesh.read(
    temp_dir / "sim_2D_HT_model_ts_10_t_100000000000.000000.vtu"
 )
 """
