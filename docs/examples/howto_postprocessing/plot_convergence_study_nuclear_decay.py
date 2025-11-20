@@ -45,7 +45,7 @@ temp_path = Path(mkdtemp(prefix="nuclear_decay"))
 # %% [markdown]
 # Let's run the different simulations with increasingly fine spatial and
 # temporal discretization via ogs6py. The mesh and its boundaries are generated
-# easily via gmsh and :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh`.
+# easily via gmsh and :class:`~ogstools.Meshes`. :meth:`~ogstools.Meshes.from_gmsh`.
 # First some definitions:
 
 # %%
@@ -63,7 +63,9 @@ edge_cells = [5 * 2**i for i in range(n_refinements)]
 
 # %%
 for dt, n_cells in zip(time_step_sizes, edge_cells, strict=False):
-    ot.meshlib.rect(lengths=100.0, n_edge_cells=(n_cells, 1), out_name=msh_path)
+    ot.gmsh_tools.rect(
+        lengths=100.0, n_edge_cells=(n_cells, 1), out_name=msh_path
+    )
     meshes = ot.Meshes.from_gmsh(msh_path, log=False)
     mesh_path = temp_path / f"dt_{dt}_n_cells_{n_cells}"
     mesh_path.mkdir(parents=True, exist_ok=True)
@@ -95,7 +97,6 @@ for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
         mesh = mesh_series.mesh(ts)
         results["temperature"] += [np.max(mesh.point_data["temperature"])]
     max_T = ot.variables.temperature.transform(results["temperature"])
-    # times 2 due to symmetry, area of repo, to kW
     results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
     tv = np.asarray(mesh_series.timevalues)
     ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")

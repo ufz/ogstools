@@ -62,7 +62,7 @@ ms = ot.MeshSeries(temp_dir / "boxNeumann.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 """
 It is also possible to read the file directly with pyvista:
-ogs_sim_res = pv.read(temp_dir / "boxNeumann_ts_1_t_1.000000.vtu")
+ogs_sim_res = ot.mesh.read(temp_dir / "boxNeumann_ts_1_t_1.000000.vtu")
 """
 ogs_sim_res.plot(
     show_edges=True,

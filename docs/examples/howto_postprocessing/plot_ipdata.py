@@ -11,18 +11,17 @@ represented by one subsection of a cell.
 # %% [markdown]
 # For brevity of this example we wrap the entire workflow from meshing and
 # simulation to plotting in a parameterized function. The main function of
-# importance is :py:func:`~ogstools.meshlib.ip_mesh.to_ip_mesh`. We will use this
+# importance is :func:`~ogstools.mesh.to_ip_mesh`. We will use this
 # function to show the tessellated visualization of the integration point data
 # for different element and integration point orders and element types. Note,
 # you can also tessellate an entire MeshSeries via
-# :meth:`~ogstools.meshlib.mesh_series.MeshSeries.ip_tesselated`
+# :meth:`~ogstools.MeshSeries.ip_tesselated`
 
 from pathlib import Path
 from tempfile import mkdtemp
 
 import ogstools as ot
 from ogstools import examples
-from ogstools.meshlib.gmsh_meshing import rect
 
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
@@ -39,7 +38,7 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     case_path.mkdir(parents=True, exist_ok=True)
     gmsh_file = case_path / "mesh.msh"
 
-    rect(
+    ot.gmsh_tools.rect(
         lengths=1,
         n_edge_cells=6,
         structured_grid=quads,
@@ -58,8 +57,8 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     model.write_input()
     model.run_model(write_logs=True, args=f"-m {case_path} -o {case_path}")
     mesh = ot.MeshSeries(case_path / "mesh.pvd").mesh(-1)
-    int_pts = ot.meshlib.to_ip_point_cloud(mesh)
-    ip_mesh = ot.meshlib.to_ip_mesh(mesh)
+    int_pts = ot.mesh.to_ip_point_cloud(mesh)
+    ip_mesh = ot.mesh.to_ip_mesh(mesh)
 
     fig = ot.plot.contourf(mesh, ot.variables.stress)
     fig.axes[0].scatter(

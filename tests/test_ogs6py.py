@@ -35,8 +35,7 @@ from ogstools.examples import (
     prj_tunnel_trm,
     prj_tunnel_trm_withincludes,
 )
-from ogstools.meshlib.gmsh_BHE import BHE, gen_bhe_mesh
-from ogstools.meshlib.gmsh_meshing import cuboid
+from ogstools.meshes.gmsh_BHE import BHE, gen_bhe_mesh
 from ogstools.ogs6py import Project
 
 mapping = dict.fromkeys(range(32))
@@ -1518,7 +1517,9 @@ class TestiOGS:
         self, temp_dir: Path, num_threads: int, thread_type: str
     ) -> Project:
         meshname = temp_dir / "cuboid.msh"
-        cuboid(lengths=1.0, n_edge_cells=1, n_layers=1, out_name=meshname)
+        ot.gmsh_tools.cuboid(
+            lengths=1.0, n_edge_cells=1, n_layers=1, out_name=meshname
+        )
         meshes = ot.Meshes.from_gmsh(meshname, dim=[1, 3], log=False)
         meshes.save(temp_dir)
 

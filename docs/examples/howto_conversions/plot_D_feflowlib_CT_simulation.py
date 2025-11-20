@@ -67,7 +67,7 @@ fig.tight_layout()
 # %%
 # 5. Concentration difference plotted on the mesh.
 
-diff = ot.meshlib.difference(feflow_model.mesh, ogs_sim_res, concentration)
+diff = ot.mesh.difference(feflow_model.mesh, ogs_sim_res, concentration)
 diff_clipped = diff.clip_box([0.038, 0.045, 0, 0.01, 0, 0], invert=False)
 fig = ot.plot.contourf(diff_clipped, concentration.difference, fontsize=20)
 # %%

@@ -12,7 +12,6 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pyvista as pv
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_HT
@@ -34,7 +33,7 @@ fig = ot.plot.contourf(mesh, "P_TEMP", show_edges=True)
 # Further information can be found at https://docs.pyvista.org/version/stable/user-guide/simple.html.
 # For example it can be saved as a VTK Unstructured Grid File (\*.vtu).
 # This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
-pv.save_meshio(temp_dir / "HT_mesh.vtu", mesh)
+ot.mesh.save(temp_dir / "HT_mesh.vtu", mesh)
 # %%
 # 4. Run the FEFLOW model in OGS.
 feflow_model.setup_prj(end_time=1e11, time_stepping=[(1, 1e10)])

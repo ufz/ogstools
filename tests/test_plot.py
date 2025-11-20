@@ -22,6 +22,9 @@ from ogstools.plot import contourf, utils
 class TestPlotting:
     """Test case for plotting."""
 
+    def teardown_method(self, method):  # noqa: ARG002
+        ot.plot.setup.reset()
+
     # ### Testing Utils ########################################################
 
     @pytest.mark.parametrize(
@@ -114,7 +117,6 @@ class TestPlotting:
         self, var: ot.variables.Variable, kwargs: dict
     ) -> plt.Figure:
         """Test filled 2D contourplots via image comparison."""
-        ot.plot.setup.reset()
         ot.plot.setup.material_names = {
             i + 1: f"Layer {i+1}" for i in range(26)
         }
@@ -139,14 +141,14 @@ class TestPlotting:
         """Test creation of difference plots via image comparison."""
         ms = examples.load_meshseries_THM_2D_PVD()
         return contourf(
-            ot.meshlib.difference(ms[1], ms[0], var), var.difference, **kwargs
+            ot.mesh.difference(ms[1], ms[0], var), var.difference, **kwargs
         )
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_user_defined_ax(self) -> plt.Figure:
         """Test plotting with provided ax via image comparison."""
         ms = examples.load_meshseries_THM_2D_PVD()
-        diff = ot.meshlib.difference(ms[1], ms[0], ot.variables.temperature)
+        diff = ot.mesh.difference(ms[1], ms[0], ot.variables.temperature)
         fig, ax = plt.subplots(3, 1, figsize=(40, 30))
         contourf(ms[0], ot.variables.temperature, fig=fig, ax=ax[0])
         contourf(ms[1], ot.variables.temperature, fig=fig, ax=ax[1])

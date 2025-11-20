@@ -16,6 +16,8 @@
 - `MeshSeries.plot_domain_aggregate` -> `ms.plot_line(variable.max/mean/...)`
 - removed deprecated `MeshSeries.plot_probe` -> `probe = MeshSeries.probe(...); probe.plot_line(...)`
 - `Matrix.mean -> Matrix.tensor_mean`
+- `meshlib` has been renamed to `mesh` - classes to generate a new mesh (e.g.
+  Layer, LayerSet, Surface, ...) have been moved to a submodule `create`.
 
 ## Deprecations
 

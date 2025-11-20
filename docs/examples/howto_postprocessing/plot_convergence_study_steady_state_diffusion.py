@@ -46,7 +46,7 @@ result_paths = []
 
 # %% [markdown]
 # The meshes and their boundaries are generated easily via gmsh and
-# :class:`~ogstools.meshlib.meshes.Meshes`. :meth:`~ogstools.meshlib.meshes.Meshes.from_gmsh`.
+# :class:`~ogstools.Meshes`. :meth:`~ogstools.Meshes.from_gmsh`.
 # Then we run the different simulations with increasingly fine spatial
 # discretization via ogs6py and store the results for the convergence study.
 
@@ -58,7 +58,7 @@ for n_edge_cells in edge_cells:
     case_dir.mkdir(parents=True, exist_ok=True)
 
     msh_path = case_dir / "square.msh"
-    ot.meshlib.rect(
+    ot.gmsh_tools.rect(
         n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
     )
 

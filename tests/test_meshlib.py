@@ -14,7 +14,8 @@ from lxml import etree as ET
 import ogstools as ot
 from ogstools import examples
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.meshlib.meshes_from_yaml import meshes_from_yaml
+from ogstools.mesh import utils
+from ogstools.meshes._meshes_from_yaml import meshes_from_yaml
 
 
 def validate_msh_file(path: str) -> list[str]:
@@ -51,7 +52,7 @@ class TestUtils:
         "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
         mesh_path = tmp_path / "mesh.msh"
 
-        ot.meshlib.rect(
+        ot.gmsh_tools.rect(
             1, 1, structured_grid=quads, order=2, out_name=mesh_path
         )
 
@@ -381,7 +382,7 @@ class TestUtils:
         meshseries = examples.load_meshseries_THM_2D_PVD()
         mesh1 = meshseries.mesh(0)
         mesh2 = meshseries.mesh(-1)
-        mesh_diff = ot.meshlib.difference(mesh1, mesh2, "temperature")
+        mesh_diff = ot.mesh.difference(mesh1, mesh2, "temperature")
         # test, that no sampling occurs for equal topology
         np.testing.assert_array_equal(
             mesh_diff["temperature_difference"],
@@ -390,40 +391,38 @@ class TestUtils:
         # test same/different topology and scalar / vector variable
         for scaling in [1.0, 2.0]:
             for variable in ["temperature", "velocity"]:
-                mesh_diff = ot.meshlib.difference(
+                mesh_diff = ot.mesh.difference(
                     mesh1.scale(scaling), mesh2, variable
                 )
 
-        quad_tri_diff = ot.meshlib.difference(
+        quad_tri_diff = ot.mesh.difference(
             mesh1.triangulate(), mesh1, "temperature"
         )
         quad_tri_diff_vals = ot.variables.temperature.difference.transform(
             quad_tri_diff
         )
         np.testing.assert_allclose(quad_tri_diff_vals, 0.0, atol=1e-12)
-        mesh_diff = ot.meshlib.difference(
-            mesh1, mesh2, ot.variables.temperature
-        )
+        mesh_diff = ot.mesh.difference(mesh1, mesh2, ot.variables.temperature)
         assert isinstance(mesh_diff, pv.UnstructuredGrid)
-        mesh_diff = ot.meshlib.difference(mesh1, mesh2)
+        mesh_diff = ot.mesh.difference(mesh1, mesh2)
 
     def test_diff_pairwise(self):
         n = 5
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0)] * n
         meshes2 = [meshseries.mesh(-1)] * n
-        meshes_diff = ot.meshlib.difference_pairwise(
+        meshes_diff = ot.mesh.difference_pairwise(
             meshes1, meshes2, ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
         assert len(meshes_diff) == n
 
-        meshes_diff = ot.meshlib.difference_pairwise(meshes1, meshes2)
+        meshes_diff = ot.mesh.difference_pairwise(meshes1, meshes2)
 
     def test_diff_matrix_single(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
-        meshes_diff = ot.meshlib.difference_matrix(
+        meshes_diff = ot.mesh.difference_matrix(
             meshes1, variable=ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
@@ -433,13 +432,13 @@ class TestUtils:
             len(meshes1),
         )
 
-        meshes_diff = ot.meshlib.difference_matrix(meshes1)
+        meshes_diff = ot.mesh.difference_matrix(meshes1)
 
     def test_diff_matrix_unequal(self):
         meshseries = examples.load_meshseries_THM_2D_PVD()
         meshes1 = [meshseries.mesh(0), meshseries.mesh(-1)]
         meshes2 = [meshseries.mesh(0), meshseries.mesh(-1), meshseries.mesh(-1)]
-        meshes_diff = ot.meshlib.difference_matrix(
+        meshes_diff = ot.mesh.difference_matrix(
             meshes1, meshes2, ot.variables.temperature
         )
         assert isinstance(meshes_diff, np.ndarray)
@@ -447,7 +446,7 @@ class TestUtils:
             len(meshes1),
             len(meshes2),
         )
-        meshes_diff = ot.meshlib.difference_matrix(meshes1, meshes2)
+        meshes_diff = ot.mesh.difference_matrix(meshes1, meshes2)
 
     @pytest.mark.parametrize(
         ("ms", "var"),
@@ -465,7 +464,7 @@ class TestUtils:
             ),
         ],
     )
-    def test_diff_meshseries(self, ms, var):
+    def test_diff_meshseries(self, ms, var: ot.variables.Variable):
         """
         Tests using difference method:
             A) By computing difference with self -> zero.
@@ -533,10 +532,10 @@ class TestUtils:
     )
     def test_depth(self, mesh: pv.UnstructuredGrid):
         mesh = examples.load_mesh_mechanics_2D()
-        mesh["depth"] = ot.meshlib.depth(mesh, use_coords=True)
+        mesh["depth"] = ot.mesh.depth(mesh, use_coords=True)
         depth_idx = 2 if mesh.volume != 0.0 else 1
         assert np.all(mesh["depth"] == -mesh.points[..., depth_idx])
-        mesh["depth"] = ot.meshlib.depth(mesh)
+        mesh["depth"] = ot.mesh.depth(mesh)
         assert np.all(mesh["depth"] < -mesh.points[..., depth_idx])
 
     @pytest.mark.parametrize(
@@ -560,7 +559,7 @@ class TestUtils:
         mesh_path = tmp_path / "mesh.msh"
         sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
 
-        ot.meshlib.rect(
+        ot.gmsh_tools.rect(
             n_edge_cells=6,
             n_layers=2,
             structured_grid=quads,
@@ -581,7 +580,7 @@ class TestUtils:
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
         meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
         result = meshseries[-1]
-        int_pts = ot.meshlib.to_ip_point_cloud(result)
+        int_pts = ot.mesh.to_ip_point_cloud(result)
         ip_ms = meshseries.ip_tesselated()
         ip_mesh = ip_ms.mesh(-1)
         vals = ip_ms.probe_values(ip_mesh.center, sigma_ip.data_name)
@@ -603,7 +602,7 @@ class TestUtils:
         "Test reading of quadratic elements in xdmf."
 
         msh_path = tmp_path / "mesh.msh"
-        ot.meshlib.rect(
+        ot.gmsh_tools.rect(
             n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
         )
 
@@ -624,7 +623,7 @@ class TestUtils:
     def test_remesh_with_tri(self, tmp_path):
         mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
         msh_path = tmp_path / "tri_mesh.msh"
-        ot.meshlib.gmsh_meshing.remesh_with_triangles(mesh, msh_path)
+        ot.gmsh_tools.remesh_with_triangles(mesh, msh_path)
         assert len(
             ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
         ) == 1 + len(np.unique(mesh["MaterialIDs"]))
@@ -784,14 +783,14 @@ class TestUtils:
 
     def test_reshape_obs_points(self):
         points_x = (1,)
-        pts_x = ot.meshlib._utils.reshape_obs_points(points_x)
+        pts_x = utils.reshape_obs_points(points_x)
         assert pts_x.shape == (1, 3)
 
     def test_reshape_obs_points_mesh(self):
         ms = examples.load_meshseries_CT_2D_XDMF()
         mesh = ms.mesh(0)
         points = ((-150.0, 75.0), (-147.65625, 72.65625))
-        pts = ot.meshlib._utils.reshape_obs_points(points, mesh)
+        pts = utils.reshape_obs_points(points, mesh)
         np.testing.assert_equal(
             pts, np.asarray([[-150, 0, 75], [-147.65625, 0, 72.65625]])
         )
@@ -807,10 +806,8 @@ class TestUtils:
         assert ot.variables.pressure.mask in ms.cell_data
         assert ot.variables.temperature.data_name in ms.point_data
         assert ot.variables.temperature.mask not in ms.cell_data
-        m_diff_T = ot.meshlib.difference(
-            ms[-1], ms[0], ot.variables.temperature
-        )
-        m_diff_p = ot.meshlib.difference(ms[-1], ms[0], ot.variables.pressure)
+        m_diff_T = ot.mesh.difference(ms[-1], ms[0], ot.variables.temperature)
+        m_diff_p = ot.mesh.difference(ms[-1], ms[0], ot.variables.pressure)
         assert (
             np.count_nonzero(
                 np.isnan(
@@ -850,7 +847,7 @@ class TestUtils:
     def test_meshes_from_mesh_run(self, tmp_path):
         "Test using extracted boundaries for a simulation."
         mesh_path = tmp_path / "mesh.msh"
-        ot.meshlib.rect(n_edge_cells=(2, 4), out_name=mesh_path)
+        ot.gmsh_tools.rect(n_edge_cells=(2, 4), out_name=mesh_path)
         domain = ot.Meshes.from_gmsh(mesh_path)["domain"]
         # this is no good practice and only done for testing purposes
         # we recommend to define the boundaries as physical groups within gmsh
@@ -872,14 +869,16 @@ class TestUtils:
     @st.composite
     def meshing(draw: st.DrawFn):
         dim = draw(st.integers(min_value=2, max_value=3))
-        mesh_func = ot.meshlib.rect if dim == 2 else ot.meshlib.cuboid
+        mesh_func = ot.gmsh_tools.rect if dim == 2 else ot.gmsh_tools.cuboid
         n_cells = draw(st.tuples(*([st.integers(1, 3)] * dim)))
         n_layers = draw(st.integers(min_value=1, max_value=4))
         rand_id = draw(st.integers(min_value=0, max_value=n_layers - 1))
         return mesh_func, n_cells, n_layers, rand_id
 
     @pytest.mark.tools()
-    @example(meshing_data=(ot.meshlib.rect, (2, 2), 2, 0), failcase=True).xfail(
+    @example(
+        meshing_data=(ot.gmsh_tools.rect, (2, 2), 2, 0), failcase=True
+    ).xfail(
         # CLI version fails and doesn't write the new file, thus cannot be read
         raises=FileNotFoundError
     )
@@ -899,7 +898,9 @@ class TestUtils:
         mesh_func(n_edge_cells=n_cells, n_layers=n_layers, out_name=mesh_name)
         meshes = ot.Meshes.from_gmsh(mesh_name, log=False)
         layer: pv.UnstructuredGrid
-        layer = meshes["domain"].threshold([rand_id, rand_id], "MaterialIDs")
+        layer = meshes["domain"].threshold(
+            [rand_id, rand_id], scalars="MaterialIDs"
+        )
         # multi-dim test
         if meshes["domain"].volume:
             meshes["layer_surface"] = layer.extract_surface()
@@ -922,8 +923,10 @@ class TestUtils:
             m=domain_mesh.filepath,
             *serial_sub_paths,  # noqa: B026
         )
+        from ogstools.meshes.subdomains import identify_subdomains
+
         # actually meshes.subdomains, but here we let the domain mesh also get bulk ids
-        ot.meshlib.subdomains.identify_subdomains(domain_mesh, meshes.values())
+        identify_subdomains(domain_mesh, meshes.values())
 
         def _check(mesh_1, mesh_2, key: str):
             np.testing.assert_array_equal(mesh_1[key], mesh_2[key])
@@ -949,11 +952,11 @@ class TestUtils:
 
     def test_meshes_saving_reading(self, tmp_path):
         "Check, that saving+reading meshes equal the original."
-        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         meshes.save(tmp_path)  # serial mesh only
         for name in meshes:
-            mesh = pv.read(tmp_path / f"{name}.vtu")
+            mesh = ot.mesh.read(tmp_path / f"{name}.vtu")
             for data in ["point_data", "cell_data", "field_data"]:
                 np.testing.assert_array_equal(
                     getattr(mesh, data).values(),
@@ -971,7 +974,7 @@ class TestUtils:
         Checks: Return value of test object and that these files are existing.
         """
         "Checks the number of saved files"
-        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
         # additional clean folder (no gmsh file inside)
         meshes_path = Path(tmp_path / "meshes")
         meshes_path.mkdir()
@@ -1019,7 +1022,7 @@ class TestUtils:
         meshes1_path = Path(tmp_path / "meshes1")
         meshes1_path.mkdir()
 
-        ot.meshlib.rect(out_name=meshes1_path / "mesh.msh")
+        ot.gmsh_tools.rect(out_name=meshes1_path / "mesh.msh")
         meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
 
         files = meshes1.save(meshes1_path)
@@ -1063,7 +1066,7 @@ class TestUtils:
         Assumes:        Meshes contains  "left" and "right" named meshes
         Checks:         rename_subdomains_legacy works like rename_subdomains(+physical_group)
         """
-        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
         meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         left_mesh = meshes["left"]
         right_mesh = meshes["right"]
@@ -1081,7 +1084,7 @@ class TestUtils:
 
     def test_meshes_from_prj(self, tmp_path: Path):
         "Check, that the mesh paths generated from a Project are correct."
-        ot.meshlib.rect(out_name=tmp_path / "mesh.msh")
+        ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
         meshes_ref = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
         meshes_ref.save(tmp_path)
         prj = ot.Project(examples.prj_mechanics)
@@ -1430,7 +1433,7 @@ class TestUtils:
         assert len(groups) == 2
 
         # Check if convertible to vtk
-        meshes = ot.meshes_from_gmsh(msh_file, reindex=True, log=False)
+        meshes = ot.Meshes.from_gmsh(msh_file, reindex=True, log=False)
         assert meshes, "No meshes returned"
 
         assert "domain" in meshes, "No 'domain' mesh found"
@@ -1476,7 +1479,7 @@ class TestUtils:
         assert not unexpected, f"Unexpected extra groups: {unexpected}"
 
         # Check if convertible to vtk
-        meshes = ot.meshes_from_gmsh(msh_file, reindex=True, log=False)
+        meshes = ot.Meshes.from_gmsh(msh_file, reindex=True, log=False)
         assert meshes, "No meshes returned"
 
         # Build expected mesh keys: "domain" + prefixed group names

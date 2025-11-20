@@ -22,7 +22,7 @@ class TestConvergence:
             case_path = tmp_path / f"cells_{n_edge_cells}"
             case_path.mkdir(parents=True, exist_ok=True)
             msh_file = tmp_path / "square.msh"
-            ot.meshlib.gmsh_meshing.rect(
+            ot.gmsh_tools.rect(
                 n_edge_cells=n_edge_cells,
                 structured_grid=True,
                 out_name=msh_file,

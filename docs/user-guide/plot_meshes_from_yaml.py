@@ -5,7 +5,7 @@ Meshes from YAML
 .. sectionauthor:: Norbert Grunwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
 
 This example shows how to generate OGS-ready VTU meshes directly from a YAML
-geometry description using :meth:`~ogstools.meshlib.meshes.Meshes.from_yaml`.
+geometry description using :meth:`~ogstools.Meshes.from_yaml`.
 
 The YAML schema defines the mesh in terms of five top-level keys:
 
@@ -19,8 +19,8 @@ Together these building blocks allow you to describe arbitrary 2D geometries,
 assign regions and boundaries, and directly obtain a conforming triangular mesh.
 
 Internally, Gmsh is still used to build the geometry and generate a `.msh` file,
-but :meth:`~ogstools.meshlib.meshes.Meshes.from_yaml` converts the result
-immediately into a :class:`~ogstools.meshlib.meshes.Meshes` object with VTU
+but :meth:`~ogstools.Meshes.from_yaml` converts the result
+immediately into a :class:`~ogstools.Meshes` object with VTU
 submeshes (domain, boundaries, and groups) that can be used directly in OGS.
 
 """
@@ -45,8 +45,8 @@ print(yaml_content)
 # Mesh generation
 # ---------------
 
-# Using :meth:`~ogstools.meshlib.meshes.Meshes.from_yaml` we create
-# a :class:`~ogstools.meshlib.meshes.Meshes` container directly from
+# Using :meth:`~ogstools.Meshes.from_yaml` we create
+# a :class:`~ogstools.Meshes` container directly from
 # the YAML file.
 
 # Internally, a Gmsh `.msh` file is generated, but it is automatically

@@ -58,7 +58,7 @@ ot.plot.quiver(mesh, ax=fig.axes[0], variable=eigvecs[2], glyph_type="line")
 # %% [markdown]
 # We can also plot the mean of the principal stress, i.e. the magnitude of the
 # hydrostatic component of the stress tensor.
-# see: :py:func:`ogstools.variables.tensor_math.mean`
+# see: :func:`ogstools.variables.tensor_math.mean`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.stress.tensor_mean)
@@ -66,7 +66,7 @@ fig = ot.plot.contourf(mesh, ot.variables.stress.tensor_mean)
 # %% [markdown]
 # Von Mises stress
 # ----------------
-# see: :py:func:`ogstools.variables.tensor_math.von_mises`
+# see: :func:`ogstools.variables.tensor_math.von_mises`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.stress.von_Mises)
@@ -74,7 +74,7 @@ fig = ot.plot.contourf(mesh, ot.variables.stress.von_Mises)
 # %% [markdown]
 # octahedral shear stress
 # -----------------------
-# see: :py:func:`ogstools.variables.tensor_math.octahedral_shear`
+# see: :func:`ogstools.variables.tensor_math.octahedral_shear`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.stress.octahedral_shear)
@@ -117,7 +117,7 @@ for comp in ["rr", "tt", "pp"]:
 # calculated as the following:
 
 # %%
-mesh["pressure"] = ot.meshlib.p_fluid(mesh)
+mesh["pressure"] = ot.mesh.p_fluid(mesh)
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
@@ -126,15 +126,15 @@ fig = ot.plot.contourf(mesh, ot.variables.pressure)
 # correct the depth manually. Then the pressure is calculated correctly:
 
 # %%
-mesh["depth"] = ot.meshlib.depth(mesh, use_coords=True)
+mesh["depth"] = ot.mesh.depth(mesh, use_coords=True)
 fig = ot.plot.contourf(mesh, "depth")
-mesh["pressure"] = ot.meshlib.p_fluid(mesh)
+mesh["pressure"] = ot.mesh.p_fluid(mesh)
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
 # Dilantancy criterion
 # --------------------
-# see: :py:func:`ogstools.variables.mesh_dependent.dilatancy_critescu`
+# see: :func:`ogstools.variables.mesh_dependent.dilatancy_critescu`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_tot)
@@ -143,7 +143,7 @@ fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
 # %% [markdown]
 # Fluid pressure criterion
 # ------------------------
-# see: :py:func:`ogstools.variables.mesh_dependent.fluid_pressure_criterion`
+# see: :func:`ogstools.variables.mesh_dependent.fluid_pressure_criterion`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_crit)

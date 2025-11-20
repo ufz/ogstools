@@ -10,7 +10,7 @@ different meshing algorithms.
 from shutil import which
 
 import ogstools as ot
-from ogstools import meshlib as ml
+from ogstools.mesh import create
 
 tetgen_present = (
     which("tetgen") is not None
@@ -20,19 +20,21 @@ if tetgen_present:
 
     bounds = (-200, 210, -200, 210)
     args = {"bound2D": bounds, "amplitude": 100, "spread": 100, "n": 40}
-    surface1 = ml.Surface(ml.Gaussian2D(**args, height_offset=0), material_id=0)
-    surface2 = ml.Surface(
-        ml.Gaussian2D(**args, height_offset=-100), material_id=1
+    surface1 = create.Surface(
+        create.Gaussian2D(**args, height_offset=0), material_id=0
     )
-    surface3 = ml.Surface(
-        ml.Gaussian2D(**args, height_offset=-200), material_id=2
+    surface2 = create.Surface(
+        create.Gaussian2D(**args, height_offset=-100), material_id=1
     )
-
-    ls = ml.LayerSet(
-        [ml.Layer(surface1, surface2), ml.Layer(surface2, surface3)]
+    surface3 = create.Surface(
+        create.Gaussian2D(**args, height_offset=-200), material_id=2
     )
 
-    mesh = ml.to_region_tetraeder(ls, 40).mesh
+    ls = create.LayerSet(
+        [create.Layer(surface1, surface2), create.Layer(surface2, surface3)]
+    )
+
+    mesh = ls.to_region_tetraeder(40).mesh
 else:
     mesh = None
 

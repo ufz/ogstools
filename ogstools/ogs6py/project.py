@@ -1406,7 +1406,7 @@ class Project:
 
         from tempfile import mkdtemp
 
-        from ogstools.meshlib.meshes import Meshes
+        from ogstools.meshes import Meshes
 
         meshes = Meshes.from_files(self.meshpaths(mesh_dir))
         tmp_path = Path(mkdtemp(prefix="plot_constraints"))

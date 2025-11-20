@@ -19,7 +19,7 @@ from .unit_registry import u_reg
 from .variable import Scalar, Variable
 from .vector import BHE_Vector, Vector
 
-__all__ = ["u_reg"]
+__all__ = ["Matrix", "Scalar", "Variable", "Vector", "u_reg"]
 
 T_MASK = "temperature_active"
 H_MASK = "pressure_active"

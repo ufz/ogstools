@@ -20,7 +20,7 @@ The YAML schema defines materials with:
 Together with the built-in **process schemas** (e.g. ``TH2M_PT``),
 these building blocks allow you to construct full **Media** definitions
 including phases and components, and import them into an OGS project XML
-via :meth:`~ogstools.ogs6py.Project.set_media`.
+via :meth:`~ogstools.Project.set_media`.
 """
 
 # %%

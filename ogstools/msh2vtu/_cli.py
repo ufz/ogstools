@@ -8,8 +8,6 @@ import argparse
 import logging
 from pathlib import Path
 
-import pyvista as pv
-
 import ogstools as ot
 
 logging.basicConfig()  # Important, initializes root logger
@@ -84,7 +82,8 @@ def cli() -> int:
         # the order of nodes in cells. Using save_meshio uses a different
         # definition which from meshio, which is the same as in OGS.
         # usually use meshes.save()
-        pv.save_meshio(mesh_path, mesh, binary=not args.ascii)
+        # TODO: use Meshes.save
+        ot.mesh.save(mesh_path, mesh, binary=not args.ascii)
 
     logger.info("Finished.")
 

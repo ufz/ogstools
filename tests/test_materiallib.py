@@ -2018,7 +2018,7 @@ class TestOgstoolsInternalDB:
 
         mesh_path = tmp_path / "domain.msh"
 
-        ot.meshlib.rect(
+        ot.gmsh_tools.rect(
             (6, 4),
             5,
             n_layers=2,

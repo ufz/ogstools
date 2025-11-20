@@ -27,12 +27,12 @@ def layer_boundaries(
     mat_ids = np.unique(mesh.cell_data.get(layer_key, []))
     x_id, y_id = np.delete([0, 1, 2], projection)
     for mat_id in mat_ids:
-        m_i = mesh.threshold((mat_id, mat_id), layer_key)
+        m_i = mesh.threshold((mat_id, mat_id), scalars=layer_key)
         # the pyvista connectivity call adds RegionID cell data
         segments = m_i.extract_feature_edges().connectivity(largest=False)
         for reg_id in np.unique(segments.cell_data.get("RegionId", [])):
-            segment = segments.threshold((reg_id, reg_id), "RegionId")
-            edges = segment.extract_surface().strip(True, 10000)
+            segment = segments.threshold((reg_id, reg_id), scalars="RegionId")
+            edges = segment.extract_surface().strip(join=True, max_length=10000)
             x_b, y_b = edges.points[edges.lines % edges.n_points].T[
                 [x_id, y_id]
             ]

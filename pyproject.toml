@@ -342,7 +342,9 @@ extend-ignore = [
   # RUF005 should be disabled when using numpy, see
   # https://github.com/charliermarsh/ruff/issues/2142:
   "RUF005",
-  "PT009",  # can use unittest-assertion
+  "PT009",   # can use unittest-assertion
+  "PLC0415", # import-outside-top-level
+  "E402",    # module-import-not-at-top-of-file
 ]
 typing-modules = ["mypackage._compat.typing"]
 unfixable = [
@@ -364,3 +366,6 @@ reportAttributeAccessIssue = false
 reportOptionalMemberAccess = false
 reportArgumentType = false
 reportCallIssue = false
+
+[tool.pylint.messages_control]
+disable = ["C0415"] # import outside toplevel

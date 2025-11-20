@@ -4,7 +4,7 @@ Plot data of a sampling lines
 
 This example provides clean coding recipes for plotting data of meshes over
 sampling lines. We also present different ways to setup the sampling lines.
-For plotting we us the function :py:func:`ogstools.plot.line`.
+For plotting we us the function :func:`ogstools.plot.line`.
 """
 
 # %%

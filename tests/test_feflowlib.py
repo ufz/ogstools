@@ -8,16 +8,15 @@ import numpy as np
 import pytest
 import pyvista as pv
 
-import ogstools.meshlib as ml
+import ogstools as ot
 from ogstools import examples
-from ogstools.ogs6py import Project
 
 pytest.importorskip("ifm")
 
-import ifm_contrib as ifm  # noqa: E402 / because of ifm-skip
+import ifm_contrib as ifm
 
-from ogstools import FeflowModel  # noqa: E402 / because of ifm-skip
-from ogstools.feflowlib import (  # noqa: E402 / because of ifm-skip
+from ogstools import FeflowModel
+from ogstools.feflowlib import (
     _feflowlib,  # / because of ifm-skip
     _prj_tools,  # / because of ifm-skip
     _templates,  # / because of ifm-skip
@@ -98,7 +97,7 @@ class TestSimulation_Neumann:
         prjfile = self.temp_dir / "boxNeumann_test.prj"
         ssd_model = _templates.steady_state_diffusion(
             self.temp_dir / "sim_boxNeumann",
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
         )
         prj = _prj_tools.setup_prj_file(
             self.vtu_path,
@@ -129,7 +128,7 @@ class TestSimulation_Neumann:
         prjfile = self.temp_dir / "boxNeumann_test.prj"
         lqf_model = _templates.liquid_flow(
             self.temp_dir / "sim_boxNeumann",
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
@@ -144,7 +143,7 @@ class TestSimulation_Neumann:
         prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ms = ml.MeshSeries(self.temp_dir / "sim_boxNeumann.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "sim_boxNeumann.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
@@ -179,7 +178,7 @@ class TestSimulation_Robin:
         prjfile = self.temp_dir / "boxRobin_test.prj"
         ssd_model = _templates.steady_state_diffusion(
             str(self.temp_dir / "sim_boxRobin"),
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
         )
         prj = _prj_tools.setup_prj_file(
             self.vtu_path,
@@ -210,7 +209,7 @@ class TestSimulation_Robin:
         prjfile = self.temp_dir / "boxRobin_test.prj"
         lqf_model = _templates.liquid_flow(
             str(self.temp_dir / "sim_boxRobin"),
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
@@ -225,7 +224,7 @@ class TestSimulation_Robin:
         prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ms = ml.MeshSeries(self.temp_dir / "sim_boxRobin.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "sim_boxRobin.pvd")
         # Read the last timestep:
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
@@ -261,7 +260,7 @@ class TestSimulation_Well:
         prjfile = self.temp_dir / "boxWell_test.prj"
         ssd_model = _templates.steady_state_diffusion(
             str(self.temp_dir / "sim_boxWell"),
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
         )
         prj = _prj_tools.setup_prj_file(
             self.vtu_path,
@@ -291,7 +290,7 @@ class TestSimulation_Well:
         prjfile = self.temp_dir / "boxWell_test.prj"
         lqf_model = _templates.liquid_flow(
             str(self.temp_dir / "sim_boxWell"),
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
             end_time=int(1e8),
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
@@ -306,7 +305,7 @@ class TestSimulation_Well:
         prj.run_model(logfile=str(self.temp_dir / "out.log"))
 
         # Compare ogs simulation with FEFLOW simulation
-        ms = ml.MeshSeries(self.temp_dir / "sim_boxWell.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "sim_boxWell.pvd")
         # Read the last timestep:
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
@@ -481,7 +480,7 @@ class TestSimulation_HT:
         prjfile = self.temp_dir / "HT_Dirichlet.prj"
         prj = _templates.hydro_thermal(
             str(self.temp_dir / "sim_HT_Dirichlet"),
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
             dimension,
             end_time=1e11,
             time_stepping=[(1, 1e10)],
@@ -543,7 +542,7 @@ class TestSimulation_CT:
         prj = _templates.component_transport(
             self.temp_dir / "CT_2D_line",
             species,
-            Project(output_file=prjfile),
+            ot.Project(output_file=prjfile),
             dimension,
             fixed_out_times=[
                 2419200,
@@ -640,7 +639,7 @@ class TestFeflowModel:
             time_stepping=[(1, 10), (1, 100), (1, 1000), (1, 1e6), (1, 1e7)],
         )
         self.feflow_model_H.run()
-        ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "boxNeumann.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
@@ -649,7 +648,7 @@ class TestFeflowModel:
         )
         self.feflow_model_H.setup_prj(steady=True)
         self.feflow_model_H.run()
-        ms = ml.MeshSeries(self.temp_dir / "boxNeumann.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "boxNeumann.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
         np.testing.assert_allclose(
             ogs_sim_res["HEAD_OGS"],
@@ -666,7 +665,7 @@ class TestFeflowModel:
             time_stepping=[(1, 1e10)],
         )
         self.feflow_model_HT.run()
-        ms = ml.MeshSeries(self.temp_dir / "HT.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "HT.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
 
         np.testing.assert_allclose(
@@ -692,7 +691,7 @@ class TestFeflowModel:
             time_stepping=[(1, 1e10)],
         )
         self.feflow_model_HT_hetero.run()
-        ms = ml.MeshSeries(self.temp_dir / "HT_hetero.pvd")
+        ms = ot.MeshSeries(self.temp_dir / "HT_hetero.pvd")
         ogs_sim_res = ms.mesh(ms.timesteps[-1])
 
         """
