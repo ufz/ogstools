@@ -22,6 +22,7 @@ from ogstools.examples import (
     prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
+    prj_nuclear_decay,
     prj_pid_timestepping,
     prj_pid_timestepping_ref,
     prj_solid_inc_ref,
@@ -1618,3 +1619,24 @@ class TestiOGS:
         assert all(
             f.exists() for f in files
         ), f"Missing files: {[f for f in files if not f.exists()]}"
+
+    @pytest.mark.parametrize(
+        ("prjfile", "expected_output"),
+        [
+            (prj_3bhes_id_1U_2U_1U, "3bhes_id.pvd"),
+            (prj_heat_transport, "HTbhe_test.pvd"),
+            (prj_nuclear_decay, "stepsize__domain.xdmf"),
+            (prj_square_1e4_robin, "square_1x1_quad_1e4.pvd"),
+        ],
+    )
+    def test_get_output_file(self, tmp_path, prjfile, expected_output):
+        """
+        Test for `Project._get_output_file` s.t.:
+            (A): VTK output file
+            (B): VTK output file
+            (C): XDMF output file
+            (D): `{:meshname}` in output prefix
+        """
+        model = ot.Project(prjfile, output_dir=tmp_path)
+        output = model._get_output_file()
+        assert output == tmp_path / expected_output

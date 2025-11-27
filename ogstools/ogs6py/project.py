@@ -772,46 +772,62 @@ class Project:
                 )
         self.remove_element("./processes/process/initial_stress")
 
-    def _write_prj_to_pvd(self) -> None:
-        self.inputfile = self.prjfile
-        root = self._get_root(remove_blank_text=True, remove_comments=True)
-        prjstring = ET.tostring(root, pretty_print=True)
-        prjstring = (
-            str(prjstring)
-            .replace("\r", " ")
-            .replace("\n", " ")
-            .replace("--", "")
-        )
+    def _get_output_file(self) -> Path:
+        """Helper method to extract output filename from the project."""
         if self.tree is None:
             msg = "self.tree is empty."
             raise AttributeError(msg)
-        fn_type = self.tree.find("./time_loop/output/type").text
-        fn = None
-        if fn_type == "VTK":
-            fn = self.tree.find("./time_loop/output/prefix").text + ".pvd"
-            fn = self.output_dir / fn
-        elif fn_type == "XDMF":
-            prefix = self.tree.find("./time_loop/output/prefix").text
-            mesh = self.tree.find("./mesh")
-            if mesh is None:
-                mesh = self.tree.find("./meshes/mesh")
-            prefix = self.output_dir / prefix
-            if mesh is not None:
-                fn = str(prefix) + "_" + mesh.text.split(".vtu")[0] + ".xdmf"
-            else:
-                msg = "No mesh found"
-                raise AttributeError(msg)
-        if fn is not None:
-            tree_pvd = ET.parse(fn)
-            root_pvd = tree_pvd.getroot()
-            root_pvd.append(ET.Comment(prjstring))
-            tree_pvd.write(
-                fn,
-                encoding="ISO-8859-1",
-                xml_declaration=True,
-                pretty_print=True,
-            )
-            print("Project file written to output.")
+
+        mesh = self.tree.findtext("./mesh") or self.tree.findtext(
+            "./meshes/mesh"
+        )
+        if mesh is None:
+            msg = "Expected <mesh> definition."
+            raise AttributeError(msg)
+
+        fn_type = self.tree.findtext("./time_loop/output/type").strip()
+        prefix = self.tree.findtext("./time_loop/output/prefix", "")
+        prefix = prefix.replace("{:meshname}", Path(mesh).stem)
+
+        fn: Path
+        match fn_type:
+            case "VTK":
+                fn = self.output_dir / f"{prefix}.pvd"
+            case "XDMF":
+                fn = self.output_dir / f"{prefix}_{Path(mesh).stem}.xdmf"
+            case _:
+                msg = "Output file type unknown. Please use VTK/XDMF."
+                raise RuntimeError(msg)
+        return fn
+
+    def _write_prj_to_pvd(self) -> None:
+        self.inputfile = self.prjfile
+        root = self._get_root(remove_blank_text=True, remove_comments=True)
+        prjstring = (
+            ET.tostring(root)
+            .decode("utf-8", errors="ignore")
+            .replace("\r", " ")
+            .replace("\n", " ")
+            .replace("\t", " ")
+            .replace("--", "")
+        )
+
+        fn = self._get_output_file()
+        if not fn.exists():
+            msg = f"Specified output file not found: {fn}."
+            raise FileNotFoundError(msg)
+
+        tree_pvd = ET.parse(fn)
+        root_pvd = tree_pvd.getroot()
+        root_pvd.append(ET.Comment(prjstring))
+        tree_pvd.write(
+            fn,
+            encoding="ISO-8859-1",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+        print("Project file written to output.")
+        return
 
     def _failed_run_print_log_tail(
         self, write_logs: bool, tail_len: int = 10
