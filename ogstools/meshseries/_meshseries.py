@@ -1039,6 +1039,106 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             (ms_a.time_unit, ms_a.time_unit),
         )
 
+    @staticmethod
+    def compare(
+        ms_a: MeshSeries,
+        ms_b: MeshSeries,
+        variable: Variable | str | None = None,
+        point_data: bool = True,
+        cell_data: bool = True,
+        field_data: bool = True,
+        atol: float = 0.0,
+        *,
+        strict: bool = False,
+    ) -> bool:
+        """
+        Method to compare two ``ot.MeshSeries`` objects.
+
+        Returns ``True`` if they match within the tolerances,
+        otherwise ``False``.
+
+        :param ms_a:            The reference base MeshSeries for comparison.
+        :param ms_b:            The MeshSeries to compare against the reference.
+        :param variable:        The variable of interest. If not given, all
+                                point and cell data will be processed.
+        :param point_data:      Compare all point data if `variable` is None. Default is ``True``.
+        :param cell_data:       Compare all cell data if `variable` is None. Default is ``True``.
+        :param field_data:      Compare all field data if `variable` is None. Default is ``True``.
+        :param atol:            Absolute tolerance. Default is ``0.0``.
+        :param strict:          Raises an ``AssertionError``, if mismatch. Default is ``False``.
+        """
+        from ogstools.mesh.differences import _is_same_topology
+
+        def _check_data(
+            actual: np.ndarray, desired: int | float | np.ndarray, name: str
+        ) -> bool:
+            mask = np.isnan(actual)
+            if isinstance(desired, np.ndarray):
+                desired = desired[~mask]
+
+            if not np.allclose(
+                actual[~mask],
+                desired,
+                atol=atol,
+                rtol=0.0,
+                equal_nan=True,
+            ):
+                if not strict:
+                    return False
+                err_msg = f"{name} differs between MeshSeries."
+                raise AssertionError(err_msg)
+            return True
+
+        # Testing timevalues
+        if not _check_data(ms_a.timevalues, ms_b.timevalues, "timevalues"):
+            return False
+
+        # Testing topology
+        for mesh_a, mesh_b in zip(ms_a, ms_b, strict=True):
+            if not _is_same_topology(mesh_a, mesh_b):
+                if not strict:
+                    return False
+                err_msg = "The topologies of the MeshSeries objects are not identical."
+                raise AssertionError(err_msg)
+
+        # Testing data
+        ms_diff = MeshSeries.difference(ms_a, ms_b, variable)
+        if variable is not None:
+            if isinstance(variable, str):
+                variable = Variable(data_name=variable, output_name=variable)
+            return _check_data(
+                ms_diff[variable.difference.data_name], 0.0, variable.data_name
+            )
+
+        if point_data:
+            for key, arr in ms_diff.point_data.items():
+                if not _check_data(arr, 0.0, key):
+                    return False
+
+        if cell_data:
+            for key, arr in ms_diff.cell_data.items():
+                if key == "MaterialIDs":
+                    if not _check_data(
+                        ms_a.cell_data[key], ms_b.cell_data[key], key
+                    ):
+                        return False
+                    continue
+
+                if not _check_data(arr, 0.0, key):
+                    return False
+
+        if field_data:
+            if field_diff := set(ms_a.field_data) ^ set(ms_b.field_data):
+                if not strict:
+                    return False
+                msg = f"field_data {field_diff} not common in both MeshSeries."
+                raise AssertionError(msg)
+
+            for key, arr in ms_a.field_data.items():
+                if not _check_data(arr, ms_b.field_data[key], key):
+                    return False
+        return True
+
     @typechecked
     def extract(
         self,

@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import logging
 from itertools import product
 from warnings import warn
 
@@ -12,16 +13,29 @@ import pyvista as pv
 
 from ogstools.variables import Variable
 
+logger = logging.getLogger(__name__)
+
 
 def _is_same_topology(
     mesh_a: pv.UnstructuredGrid, mesh_b: pv.UnstructuredGrid
 ) -> bool:
-    return bool(
-        mesh_a.points.shape == mesh_b.points.shape
-        # and base_mesh.cells.shape == subtract_mesh.cells.shape
-        and np.all(np.equal(mesh_a.points, mesh_b.points))
-        # and np.all(np.equal(base_mesh.cells, subtract_mesh.cells))
-    )
+    # Checkout !151
+    if not np.array_equal(mesh_a.points, mesh_b.points):
+        return False
+
+    has_cells_a = hasattr(mesh_a, "cells")
+    has_cells_b = hasattr(mesh_b, "cells")
+
+    # both have no cells
+    if not has_cells_a and not has_cells_b:
+        return True
+
+    # only one has cells
+    if has_cells_a != has_cells_b:
+        logger.info("cells defined on only one mesh.")
+        return False
+
+    return np.array_equal(mesh_a.cells, mesh_b.cells)
 
 
 def _raw_differences_all_data(

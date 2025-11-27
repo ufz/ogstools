@@ -35,6 +35,7 @@
   - new functions for renaming domain and subdomains
   - can now be scaled spatially / temporally in the Constructor
   - added `interpolate` method, to interpolate the MeshSeries data on a new mesh
+  - added `compare` method to `ot.MeshSeries`.
 - Meshes
   - save function performs partmesh if number of partitions are given, with optional dry_run
     - create_partitioning() and create_metis if vtu files are already present
