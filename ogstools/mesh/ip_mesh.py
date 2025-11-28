@@ -22,51 +22,51 @@ def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
         if cell_type == pv.CellType.TRIANGLE:
             return [[0, 3, 6, 5], [1, 4, 6, 3], [2, 5, 6, 4]]
         if cell_type == pv.CellType.QUAD:
-            return [[0, 4, 8, 7], [1, 5, 8, 4], [2, 6, 8, 5], [3, 7, 8, 6]]
+            return [[0, 4, 8, 7], [3, 7, 8, 6], [1, 5, 8, 4], [2, 6, 8, 5]]
     if integration_order == 3:
         if cell_type == pv.CellType.TRIANGLE:
-            return [[0, 3, 5], [1, 4, 3], [2, 5, 4], [3, 4, 5]]
+            return [[3, 4, 5], [2, 5, 4], [0, 3, 5], [1, 4, 3]]
         if cell_type in [pv.CellType.QUAD, pv.CellType.QUADRATIC_QUAD]:
             return [
                 [0, 4, 12, 11],
-                [1, 5, 13, 8],
-                [2, 6, 14, 9],
+                [7, 11, 12, 15],
                 [3, 7, 15, 10],
                 [4, 8, 13, 12],
-                [5, 9, 14, 13],
-                [6, 10, 15, 14],
-                [7, 11, 12, 15],
                 [12, 13, 14, 15],
+                [6, 10, 15, 14],
+                [1, 5, 13, 8],
+                [5, 9, 14, 13],
+                [2, 6, 14, 9],
             ]
     if integration_order == 4:
         if cell_type in [pv.CellType.TRIANGLE, pv.CellType.QUADRATIC_TRIANGLE]:
             return [
-                [0, 3, 9, 8],
-                [1, 4, 10, 6],
-                [2, 5, 11, 7],
+                [9, 10, 11],
+                [5, 8, 9, 11],
                 [3, 6, 10, 9],
                 [4, 7, 11, 10],
-                [5, 8, 9, 11],
-                [9, 10, 11],
+                [1, 4, 10, 6],
+                [2, 5, 11, 7],
+                [0, 3, 9, 8],
             ]
         if cell_type in [pv.CellType.QUAD, pv.CellType.QUADRATIC_QUAD]:
             return [
-                [0, 4, 16, 15],
-                [1, 5, 17, 12],
                 [2, 6, 18, 13],
-                [3, 7, 19, 14],
-                [4, 8, 20, 16],
-                [5, 9, 21, 17],
-                [6, 10, 22, 18],
-                [7, 11, 23, 19],
-                [8, 12, 17, 20],
                 [9, 13, 18, 21],
-                [10, 14, 19, 22],
-                [11, 15, 16, 23],
-                [16, 20, 24, 23],
-                [17, 21, 24, 20],
+                [5, 9, 21, 17],
+                [1, 5, 17, 12],
+                [6, 10, 22, 18],
                 [18, 22, 24, 21],
+                [17, 21, 24, 20],
+                [8, 12, 17, 20],
+                [10, 14, 19, 22],
                 [19, 23, 24, 22],
+                [16, 20, 24, 23],
+                [4, 8, 20, 16],
+                [3, 7, 19, 14],
+                [7, 11, 23, 19],
+                [11, 15, 16, 23],
+                [0, 4, 16, 15],
             ]
     msg = f"Tessellation not implemented ({cell_type=}, {integration_order=})."
     raise TypeError(msg)
@@ -235,11 +235,15 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
         new_mesh = new_mesh.merge(_mesh)
     new_mesh = new_mesh.clean()
 
-    ordering = new_mesh.find_containing_cell(ip_mesh.points)
-    ip_data = {
-        k: v[np.argsort(ordering)] for k, v in ip_mesh.point_data.items()
-    }
-    new_mesh.cell_data.update(ip_data)
+    # if we add new cell_type / integration_order combination, the following
+    # helps, to bring the new_mesh's cells in the correct order:
+
+    # ordering = new_mesh.find_containing_cell(ip_mesh.points)
+    # order = np.argsort(ordering)
+    # if not np.all(np.diff(order) == 1):
+    #     print(np.argsort(ordering))
+
+    new_mesh.cell_data.update(ip_mesh.point_data)
 
     return new_mesh
 
