@@ -4,8 +4,10 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from collections.abc import Sequence
 from pathlib import Path
 from tempfile import mkdtemp
+from typing import Any
 
 import numpy as np
 import pyvista as pv
@@ -184,25 +186,32 @@ def tessellate(
     return pv.PolyData(np.reshape(points, (-1, 3)), faces=connectivity)
 
 
+def ip_metadata(mesh: pv.UnstructuredGrid) -> list[dict[str, Any]]:
+    "return the IntegrationPointMetaData in the mesh's field_data as a dict."
+
+    import json
+
+    if "IntegrationPointMetaData" not in mesh.field_data:
+        msg = "Required IntegrationPointMetaData not in mesh."
+        raise KeyError(msg)
+    data = bytes(mesh.field_data["IntegrationPointMetaData"]).decode("utf-8")
+    return json.loads(data)["integration_point_arrays"]
+
+
 def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     "Convert integration point data to a pyvista point cloud."
-    # ipDataToPointCloud can't handle this
-    bad_keys = [
-        "material_state_variable_ElasticStrain_ip",
-        "free_energy_density_ip",
-    ]
+    ip_keys = [arr["name"] for arr in ip_metadata(mesh)]
+    ip_len = max(len(mesh.field_data[key]) for key in ip_keys)
     _mesh = mesh.copy()
-    for key in bad_keys:
-        if key in _mesh.field_data:
+    # Filter data out, which is not on the entire mesh, i.e. material model
+    # dependent data when different material models are used within one mesh.
+    for key in ip_keys:
+        if len(_mesh.field_data[key]) != ip_len:
             _mesh.field_data.remove(key)
-    mesh_filepath = getattr(mesh, "filepath", None)
     tmp_dir = Path(mkdtemp())
-    parentpath = (
-        tmp_dir if mesh_filepath is None else Path(mesh_filepath).parent
-    )
     input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
+    output_file = tmp_dir / "ip_mesh.vtu"
     _mesh.save(input_file)
-    output_file = parentpath / "ip_mesh.vtu"
 
     from ogstools._find_ogs import cli
 
@@ -212,13 +221,8 @@ def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
 
 def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     "Create a mesh with cells centered around integration points."
-    meta = mesh.field_data["IntegrationPointMetaData"]
-    meta_str = "".join([chr(val) for val in meta])
-    integration_order = int(
-        meta_str.split('"integration_order":')[1].split(",")[0]
-    )
     ip_mesh = to_ip_point_cloud(mesh)
-
+    integration_order = int(ip_metadata(mesh)[0]["integration_order"])
     new_meshes: list[pv.PolyData] = []
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
@@ -238,3 +242,58 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     new_mesh.cell_data.update(ip_data)
 
     return new_mesh
+
+
+def ip_data_threshold(
+    mesh: pv.UnstructuredGrid,
+    value: int | Sequence[int],
+    scalars: str = "MaterialIDs",
+    invert: bool = False,
+) -> dict[str, np.ndarray]:
+    """Filters integration point data to match the threshold criterion.
+
+    Similar to ``pyvista``'s threshold filter, but only acting on the field data
+    and returning the modified field data dict.
+
+    :param mesh:    original mesh, needs to contain MaterialIDs and
+                    IntegratioPointMetaData.
+    :param value:   Single value or (min, max) to be used for the threshold.
+                    If a sequence, then length must be 2. If single value, it
+                    is used as the lower bound and selecting everything above.
+    :param scalars: Name of data to threshold on.
+    :param invert:  Invert the threshold results
+    """
+    #
+    value_bounds = (value, np.inf) if isinstance(value, int) else value
+    if len(value_bounds) != 2:
+        msg = "If given as a Sequence, length of value must be 2."
+        raise ValueError(msg)
+
+    result = mesh.copy()
+    # remove all nan data as ogs cli tools will throw errors if they exist
+    for data in [result.point_data, result.cell_data, result.field_data]:
+        nan_keys = [k for k, v in data.items() if np.all(np.isnan(v))]
+        for key in nan_keys:
+            del data[key]
+
+    mesh_ip = to_ip_point_cloud(result)
+    # in 2D there can be a floating point offset in the flat dimension resulting
+    # in the sampling not finding all points, thus we have to align the ip_mesh
+    # perfectly.
+    if mesh.GetMaxSpatialDimension() == 2:
+        pts = mesh.points
+        idx = np.squeeze(np.argwhere(np.all(np.isclose(pts, pts[0]), axis=0)))
+        mesh_ip.points[:, idx] = np.mean(result.points[:, idx])
+
+    data = mesh_ip.sample(result)[scalars]
+    condition = (data >= value_bounds[0]) & (data <= value_bounds[1])
+    if invert:
+        condition = np.invert(condition)
+    cells_to_keep = np.squeeze(np.argwhere(condition))
+    if len(cells_to_keep) == 0:
+        msg = "Threshold resulted in empty mesh."
+        raise ValueError(msg)
+    for arr in ip_metadata(result):
+        key = arr["name"]
+        result.field_data[key] = result.field_data[key][cells_to_keep]
+    return result.field_data

@@ -42,6 +42,9 @@
   - save function performs partmesh if number of partitions are given, with optional dry_run
     - create_partitioning() and create_metis if vtu files are already present
   - subdomains() -> subdomain, domain_name() -> domain_name (with setter)
+  - `plot` method displays domain mesh and subdomains (2D domain only for now)
+  - `remove_material` method removes specified material id from domain and
+    updates subdomains accordingly
 - Project
   - dependencies () return a list of referenced/needed files (meshes, xml includes, python scripts)
   - plot_constrains() -> overview plot with boundary conditions and source terms

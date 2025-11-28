@@ -1197,6 +1197,57 @@ class TestUtils:
         subdomain_names = ["bottom", "left", "right", "top"]
         assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
 
+    @pytest.mark.tools()
+    @settings(max_examples=30, deadline=500)
+    @given(
+        st.one_of(
+            st.integers(2, 13),
+            st.tuples(st.integers(1, 14), st.integers(1, 14))
+            .filter(lambda x: abs(x[1] - x[0]) < 13)
+            .map(sorted),
+        ),
+        st.booleans(),
+    )
+    def test_threshold_ip_data(self, mat_ids: tuple, invert: bool):
+        "Check length of thresholded ip data is correct."
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        thresh_ip_data = ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
+        thresh_n_cells = mesh.threshold(
+            mat_ids, scalars="MaterialIDs", invert=invert
+        ).n_cells
+
+        for arr in ot.mesh.ip_metadata(mesh):
+            n_ip = len(mesh[arr["name"]]) // mesh.n_cells
+            assert len(thresh_ip_data[arr["name"]]) == (thresh_n_cells * n_ip)
+
+    @pytest.mark.tools()
+    def test_remove_material(self):
+        """Check cells are removed drom domain and subdomains.
+
+        Also check, that completely empty subdomains are removed entirely."""
+        domain = examples.load_meshseries_THM_2D_PVD()[0]
+        meshes = ot.Meshes.from_mesh(domain)
+
+        x_mid = domain.center[0]
+        dom_n_cells_right = np.count_nonzero(
+            domain.cell_centers().points[:, 0] >= x_mid
+        )
+        assert dom_n_cells_right != domain.n_cells
+        top_n_cells_right = np.count_nonzero(
+            meshes["top"].cell_centers().points[:, 0] >= x_mid
+        )
+        left_n_cells = meshes["left"].n_cells
+
+        x = domain.cell_centers().points[:, 0]
+        domain["MaterialIDs"][(x <= x_mid)] = 99
+        meshes.remove_material(99)
+
+        assert "left" not in meshes
+        assert meshes["cut_boundary"].n_cells == left_n_cells
+        assert meshes["top"].n_cells == top_n_cells_right
+        assert meshes["bottom"].n_cells == top_n_cells_right
+        assert meshes.domain.n_cells == dom_n_cells_right
+
     def test_mfy_meshes_from_yaml(self, tmp_path):
         yaml_content = textwrap.dedent(
             """\
