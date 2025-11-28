@@ -202,6 +202,10 @@ class Meshes(MutableMapping):
         """
         return next(iter(self._meshes.values()))
 
+    @domain.setter
+    def domain(self, new_domain: pv.UnstructuredGrid) -> None:
+        self._meshes[self.domain_name] = new_domain
+
     @property
     def domain_name(self) -> str:
         """
