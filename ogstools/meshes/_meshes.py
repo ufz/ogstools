@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 from matplotlib import pyplot as plt
+from typing_extensions import Self
 
 from ogstools._internal import deprecated
 from ogstools.mesh import save
@@ -58,7 +59,7 @@ class Meshes(MutableMapping):
         yield from self._meshes
 
     @classmethod
-    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Self:
         """Initialize a Meshes object from a Sequence of existing files.
 
         :param filepaths:   Sequence of Mesh files (.vtu)
@@ -76,7 +77,7 @@ class Meshes(MutableMapping):
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
-    ) -> Meshes:
+    ) -> Self:
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
@@ -101,7 +102,7 @@ class Meshes(MutableMapping):
         return meshes_obj
 
     @classmethod
-    def from_yaml(cls, geometry_file: Path) -> Meshes:
+    def from_yaml(cls, geometry_file: Path) -> Self:
         """ """
 
         from ogstools.meshes._meshes_from_yaml import meshes_from_yaml
@@ -116,7 +117,7 @@ class Meshes(MutableMapping):
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
         domain_name: str = "domain",
-    ) -> Meshes:
+    ) -> Self:
         """Extract 1D boundaries of a 2D mesh.
 
         :param mesh:            The 2D domain
