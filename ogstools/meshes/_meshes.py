@@ -237,10 +237,13 @@ class Meshes(MutableMapping):
         items = list(self._meshes.items())
         return dict(items[1:])  # by convention: first mesh is domain
 
-    def identify_subdomain(self) -> None:
+    def identify_subdomain(self, include_domain: bool = False) -> None:
         from ogstools.meshes.subdomains import identify_subdomains
 
-        identify_subdomains(self.domain, list(self.subdomains.values()))
+        if include_domain:
+            identify_subdomains(self.domain, list(self.values()))
+        else:
+            identify_subdomains(self.domain, list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
