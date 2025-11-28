@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging as log
 import os
 import tempfile
 from collections.abc import Iterator, MutableMapping, Sequence
@@ -15,9 +16,12 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 from matplotlib import pyplot as plt
+from typing_extensions import Self
 
 from ogstools._internal import deprecated
 from ogstools.mesh import save
+
+logger = log.getLogger(__name__)
 
 
 class Meshes(MutableMapping):
@@ -58,7 +62,7 @@ class Meshes(MutableMapping):
         yield from self._meshes
 
     @classmethod
-    def from_files(cls, filepaths: Sequence[str | Path]) -> Meshes:
+    def from_files(cls, filepaths: Sequence[str | Path]) -> Self:
         """Initialize a Meshes object from a Sequence of existing files.
 
         :param filepaths:   Sequence of Mesh files (.vtu)
@@ -76,7 +80,7 @@ class Meshes(MutableMapping):
         reindex: bool = True,
         log: bool = True,
         meshname: str = "domain",
-    ) -> Meshes:
+    ) -> Self:
         """
         Generates pyvista unstructured grids from a gmsh mesh (.msh).
 
@@ -101,7 +105,7 @@ class Meshes(MutableMapping):
         return meshes_obj
 
     @classmethod
-    def from_yaml(cls, geometry_file: Path) -> Meshes:
+    def from_yaml(cls, geometry_file: Path) -> Self:
         """ """
 
         from ogstools.meshes._meshes_from_yaml import meshes_from_yaml
@@ -116,7 +120,7 @@ class Meshes(MutableMapping):
         mesh: pv.UnstructuredGrid,
         threshold_angle: float | None = 15.0,
         domain_name: str = "domain",
-    ) -> Meshes:
+    ) -> Self:
         """Extract 1D boundaries of a 2D mesh.
 
         :param mesh:            The 2D domain
@@ -201,6 +205,10 @@ class Meshes(MutableMapping):
         """
         return next(iter(self._meshes.values()))
 
+    @domain.setter
+    def domain(self, new_domain: pv.UnstructuredGrid) -> None:
+        self._meshes[self.domain_name] = new_domain
+
     @property
     def domain_name(self) -> str:
         """
@@ -232,10 +240,13 @@ class Meshes(MutableMapping):
         items = list(self._meshes.items())
         return dict(items[1:])  # by convention: first mesh is domain
 
-    def identify_subdomain(self) -> None:
+    def identify_subdomain(self, include_domain: bool = False) -> None:
         from ogstools.meshes.subdomains import identify_subdomains
 
-        identify_subdomains(self.domain, list(self.subdomains.values()))
+        if include_domain:
+            identify_subdomains(self.domain, list(self.values()))
+        else:
+            identify_subdomains(self.domain, list(self.subdomains.values()))
         self.has_identified_subdomains = True
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
@@ -596,3 +607,61 @@ class Meshes(MutableMapping):
             numpoints=1,
         )
         return fig
+
+    def remove_material(
+        self, mat_id: int | Sequence[int], tolerance: float = 1e-12
+    ) -> None:
+        """Remove material from meshes and update integration point data.
+
+        :param mat_id:      MaterialID/s to be removed from domain, subdomain
+                            elements, which only belonged to this material are
+                            also removed. If given as a sequence, then it must
+                            be of length 2 and all ids in between are removed.
+        :param tolerance:   Absolute distance threshold to check if subdomain
+                            nodes still have a corresponding domain node after
+                            removal of the designated material.
+        """
+        from scipy.spatial import KDTree as scikdtree
+
+        from ogstools._find_ogs import cli
+        from ogstools.mesh.ip_mesh import ip_data_threshold
+
+        mat_id = (mat_id, mat_id) if isinstance(mat_id, int) else mat_id
+
+        cut_material: pv.UnstructuredGrid = self.domain.threshold(
+            mat_id, scalars="MaterialIDs"
+        )
+        cut_material.clear_data()
+        cut_material.save(self._tmp_dir / "cut_material.vtu")
+
+        # pyvista's extract_feature_edges doesn't handle quadratic elements
+        cli().ExtractBoundary(
+            i=self._tmp_dir / "cut_material.vtu",
+            o=self._tmp_dir / "cut_boundary.vtu",
+        )
+        cut_boundary = pv.read(self._tmp_dir / "cut_boundary.vtu")
+
+        self["cut_boundary"] = cut_boundary
+
+        new_ip_data = ip_data_threshold(self.domain, mat_id, invert=True)
+        self.domain.field_data.update(new_ip_data)
+        self.domain = self.domain.threshold(
+            mat_id, scalars="MaterialIDs", invert=True
+        )
+
+        tree = scikdtree(self.domain.points)
+
+        for name, subdomain in self.subdomains.items():
+            distances = tree.query(subdomain.points)[0]
+            new_subdomain = subdomain.extract_points(
+                distances <= tolerance, adjacent_cells=False
+            )
+            if new_subdomain.n_cells == 0:
+                msg = (
+                    f"subdomain {name} has no remaining cells after removal of "
+                    f"material {mat_id}. Thus, it is removed from meshes."
+                )
+                logger.warning(msg)
+                self.pop(name)
+            else:
+                self[name] = new_subdomain

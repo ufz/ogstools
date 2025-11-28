@@ -125,7 +125,7 @@ def combined_levels(
     vmax = vmax if VMAX is None else VMAX
     if vmin == vmax:
         return np.array([vmin, nextafter(vmax, np.inf)])
-    if (
+    if variable.categoric or (
         all(val.is_integer() for val in unique_vals)
         and VMIN is None
         and VMAX is None

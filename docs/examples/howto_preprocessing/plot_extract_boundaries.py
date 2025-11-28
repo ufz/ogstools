@@ -25,8 +25,7 @@ domain = examples.load_meshseries_THM_2D_PVD()[0]
 
 # %%
 meshes = ot.Meshes.from_mesh(domain)
-boundaries = meshes.subdomains
-for name, mesh in boundaries.items():
+for name, mesh in meshes.subdomains.items():
     print(name, mesh)
 
 
@@ -34,10 +33,23 @@ for name, mesh in boundaries.items():
 # Let's display and save them:
 
 # %%
-fig = ot.plot.contourf(domain, ot.variables.material_id)
-colors = ["black", "grey", "lime", "yellow"]
-for i, (name, mesh) in enumerate(boundaries.items()):
-    ot.plot.line(mesh, ax=fig.axes[0], lw=2, annotate=name, color=colors[i])
+fig = meshes.plot()
 
 # %%
-meshes.save()  # optional provide a path
+meshes.save()  # optionally, provide a path
+
+# %% [markdown]
+# If you need to model an excavation or similar, the `Meshes` class provides
+# the useful method :meth:`~ogstools.Meshes.remove_material` which removes a
+# specified material from the domain and updates the boundary meshes
+# accordingly. The following example is only for demonstration and is not meant
+# to make practical sense.
+
+# %%
+x = domain.cell_centers().points[:, 0]
+mat_ids = domain["MaterialIDs"]
+mat_ids[(mat_ids <= 3) & (x < 0)] = 99
+meshes.remove_material(99)
+fig = meshes.plot()
+
+# %%

@@ -146,7 +146,7 @@ class Variable:
         :returns: A corresponding Variable preset or a new Variable of correct type.
         """
         data_keys: list[str] = list(
-            set().union(mesh.point_data, mesh.cell_data)
+            set().union(mesh.point_data, mesh.cell_data, mesh.field_data)
         )
         error_msg = f"{variable} not found in mesh. Available data names are {data_keys}. "
         var_name = variable if isinstance(variable, str) else variable.data_name
@@ -388,7 +388,9 @@ class Variable:
         "Get the data associated with a scalar or vector variable from a mesh."
         mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
         if self.data_name not in (
-            data_keys := set().union(mesh.point_data, mesh.cell_data)
+            data_keys := set().union(
+                mesh.point_data, mesh.cell_data, mesh.field_data
+            )
         ):
             if self.data_name in ["MaterialIDs", "None"]:
                 return np.full(mesh.number_of_cells, 0)

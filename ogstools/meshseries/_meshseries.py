@@ -203,7 +203,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             points = pts_or_mesh.points
             mesh = pts_or_mesh
         else:
-            points = pts_or_mesh
+            points = np.asarray(pts_or_mesh, dtype=float)
             mesh = pv.PolyData(np.asarray(points))
         if data_name is None:
             variables = list(set().union(self[0].point_data, self[0].cell_data))
@@ -472,7 +472,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         mesh1 = self.mesh(ts1, lazy_eval)
         mesh2 = self.mesh(ts2, lazy_eval)
         mesh = mesh1.copy(deep=True)
+        # TODO interpolate cell_data and field_data as well
         for key in mesh1.point_data:
+            if key not in mesh2.point_data:
+                msg = f"{key} not in timestep {ts2}."
+                warn(msg, RuntimeWarning, stacklevel=2)
+                continue
             if np.all(mesh1.point_data[key] == mesh2.point_data[key]):
                 continue
             dt = t_vals[ts2] - t_vals[ts1]
@@ -992,7 +997,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             if (func := self._mesh_func_opt) is None:
                 self._mesh_func_opt = lambda mesh: mesh.scale(spatial_factor)
             else:
-                self._mesh_func_opt = lambda mesh: func(mesh).scale(spatial_factor)  # type: ignore[misc]
+                self._mesh_func_opt = lambda mesh: func(mesh).scale(  # type: ignore[misc]
+                    spatial_factor
+                )
         self._mesh_cache = scaled_cache
         self.spatial_unit = spatial_unit
         self.time_unit = time_unit
