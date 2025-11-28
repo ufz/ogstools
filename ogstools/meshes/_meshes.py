@@ -575,8 +575,8 @@ class Meshes(MutableMapping):
             # TODO: 1D, 3D
             if mesh.GetMaxSpatialDimension() == 1:
                 plot.line(
-                    mesh, ax=ax, label=name, lw=lw, color=color,
-                    fontsize=fontsize, clip_on=False
+                    mesh, ax=ax, sort=False, label=name, lw=lw, color=color,
+                    fontsize=fontsize, clip_on=False,
                 )  # fmt: skip
             else:
                 if name == self.domain_name:

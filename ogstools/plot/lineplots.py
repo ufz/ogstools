@@ -94,6 +94,7 @@ def line(
 
     Keyword Arguments:
         - figsize:      figure size (default=[16, 10])
+        - dpi:          resolution of the figure
         - color:        color of the line
         - linewidth:    width of the line
         - linestyle:    style of the line
@@ -115,8 +116,9 @@ def line(
         msg = "Please provide ax as keyword argument only!"
         raise TypeError(msg)
     figsize = kwargs.pop("figsize", [16, 10])
+    dpi = kwargs.pop("dpi", None)
     ax_: plt.Axes
-    ax_ = plt.subplots(figsize=figsize)[1] if ax is None else ax
+    ax_ = plt.subplots(figsize=figsize, dpi=dpi)[1] if ax is None else ax
 
     is_meshseries = isinstance(dataset, Sequence)
     mesh = dataset[0] if is_meshseries else dataset

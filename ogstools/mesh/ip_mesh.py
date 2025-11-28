@@ -5,6 +5,7 @@
 #
 
 from pathlib import Path
+from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
@@ -194,8 +195,12 @@ def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     for key in bad_keys:
         if key in _mesh.field_data:
             _mesh.field_data.remove(key)
-    parentpath = Path() if mesh.filepath is None else mesh.filepath.parent
-    input_file = parentpath / "ipDataToPointCloud_input.vtu"
+    mesh_filepath = getattr(mesh, "filepath", None)
+    tmp_dir = Path(mkdtemp())
+    parentpath = (
+        tmp_dir if mesh_filepath is None else Path(mesh_filepath).parent
+    )
+    input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
     _mesh.save(input_file)
     output_file = parentpath / "ip_mesh.vtu"
 
