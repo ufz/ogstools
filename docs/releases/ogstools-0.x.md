@@ -27,6 +27,8 @@
 
 ## Bugfixes
 
+- plot.line seems to have been missing the very first point of a linesample, now fixed
+
 ## Features
 
 - MeshSeries

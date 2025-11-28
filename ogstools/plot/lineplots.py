@@ -10,8 +10,8 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pyvista as pv
 from matplotlib.figure import Figure
-from pyvista import DataSet
 
 from ogstools.plot import setup, utils
 from ogstools.variables import Variable, _normalize_vars
@@ -21,11 +21,8 @@ def _format_ax(
     ax: plt.Axes,
     x_var: Variable,
     y_var: Variable,
-    pure_spatial: bool,
-    kwargs: dict,
+    show_grid: bool,
 ) -> None:
-    show_grid = kwargs.pop("grid", True) and not pure_spatial
-
     if ax.get_xlabel() == "":
         ax.set_xlabel(x_var.get_label(setup.label_split))
     if ax.get_ylabel() == "":
@@ -36,11 +33,10 @@ def _format_ax(
         ax.grid(which="minor", color="0.95", linestyle="--")
         ax.minorticks_on()
 
-    if not pure_spatial:
-        ax.figure.tight_layout()
 
-
-def _separate_by_empty_cells(mesh: DataSet, *arrays: list[np.ndarray]) -> None:
+def _separate_by_empty_cells(
+    mesh: pv.DataSet, *arrays: list[np.ndarray]
+) -> None:
     if "vtkGhostType" not in mesh.cell_data:
         return
     mask = (
@@ -48,14 +44,12 @@ def _separate_by_empty_cells(mesh: DataSet, *arrays: list[np.ndarray]) -> None:
     )
     if not all(len(mask) == len(arr) for arr in arrays):
         return
-    # it seems that in doing ctp on PolyLines the direction of points
-    # is inverted or something similar, thus the reverse slicing
     for array in arrays:
-        array[mask[::-1]] = np.nan
+        array[mask] = np.nan
 
 
 def line(
-    dataset: DataSet | Sequence[DataSet],
+    dataset: pv.DataSet | Sequence[pv.DataSet],
     var1: str | Variable | None = None,
     var2: str | Variable | None = None,
     ax: plt.Axes | None = None,
@@ -85,7 +79,7 @@ def line(
     :param ax:      The matplotlib axis to use for plotting, if None a new
                     figure will be created.
     :param sort:    Automatically sort the values along the dimension of the
-                    mesh with the largest extent
+                    mesh with the largest extent (only for pointclouds).
     :outer_legend:  Draw legend to the right next to the plot area.
                     By default False (legend stays inside).
                     User can pass a tuple of two floats (x, y), which will be
@@ -102,7 +96,6 @@ def line(
         - grid:         if True, show grid
         - monospace:    if True, the legend uses a monospace font
         - loc:          location of the legend (default="upper right")
-        - annotate:     string to be annotate at the center of the mesh
         - clip_on:      If True, clip the output to stay within the Axes.
                         (default=False)
         - all other kwargs get passed to matplotlib's plot function
@@ -112,6 +105,8 @@ def line(
         contourplot, as matplotlib is calculating the best position against all
         the underlying cells.
     """
+
+    ##### prepare figure/ax ##################################################
     if isinstance(var1, plt.Axes) or isinstance(var2, plt.Axes):
         msg = "Please provide ax as keyword argument only!"
         raise TypeError(msg)
@@ -120,12 +115,14 @@ def line(
     ax_: plt.Axes
     ax_ = plt.subplots(figsize=figsize, dpi=dpi)[1] if ax is None else ax
 
+    ##### process variables ##################################################
     is_meshseries = isinstance(dataset, Sequence)
     mesh = dataset[0] if is_meshseries else dataset
-    region_mesh = mesh.connectivity("all")
     default = ["time", "time"] if is_meshseries else ["x", "y", "z"]
     x_var, y_var = _normalize_vars(var1, var2, mesh, default)
+    pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
 
+    ##### kwargs processing ##################################################
     if is_meshseries and "color" not in kwargs:
         color = kwargs.pop("colors", "tab10")
         colorlist = utils.colors_from_cmap(color, len(dataset))
@@ -133,73 +130,75 @@ def line(
     else:
         kwargs.setdefault("color", y_var.color)
         ax_.set_prop_cycle(linestyle=["-", "--", ":", "-."])
-    pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
     lw_scale = 4 if pure_spatial else 2.5
     kwargs.setdefault("linewidth", kwargs.pop("lw", None) or setup.linewidth)
+    kwargs.setdefault("clip_on", True)
     kwargs["linewidth"] *= lw_scale
     labels = kwargs.pop("labels", kwargs.pop("label", None))
-    annotation = kwargs.pop("annotate", None)
+    if labels:
+        kwargs["label"] = labels
     outer_bool = outer_legend is True or isinstance(outer_legend, tuple)
-    loc = "upper left" if outer_bool else kwargs.pop("loc", "upper right")
-
-    if sort and not is_meshseries:
-        sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
-        sort_ids = np.argsort(mesh.points[:, sort_idx])
+    if outer_bool:
+        loc = "upper left"
     else:
-        sort_ids = slice(None)
-    x = x_var.transform(dataset)[..., sort_ids]
-    y = y_var.transform(dataset)[..., sort_ids]
+        loc = kwargs.pop("loc", "upper right" if pure_spatial else "best")
+    fontsize = kwargs.pop("fontsize", setup.fontsize)
+    prop = {"size": fontsize}
+    if kwargs.pop("monospace", False):
+        prop["family"] = "monospace"
+    show_grid = kwargs.pop("grid", True) and not pure_spatial
+    _format_ax(ax_, x_var, y_var, show_grid)
+
+    ##### prepare data for plotting ##########################################
+    x = x_var.transform(dataset)
+    y = y_var.transform(dataset)
     if "vtkGhostType" in mesh.cell_data:
         _separate_by_empty_cells(mesh, x, y)
+    # transposing to get individual lines int the plot in the case of plotting
+    # linesamples for multiple timesteps or timeseries of multiple points
     if len(x.shape) < len(y.shape) and x.shape[0] != y.shape[0]:
         y = y.T
     if len(x.shape) > len(y.shape) and x.shape[0] != y.shape[0]:
         x = x.T
-    if labels:
-        kwargs["label"] = labels
-    _format_ax(ax_, x_var, y_var, pure_spatial, kwargs)
-    fontsize = kwargs.pop("fontsize", setup.fontsize)
-    monospace = kwargs.pop("monospace", False)
+
+    def sorted_point_ids(mesh: pv.DataSet) -> slice | np.ndarray:
+        if is_meshseries or not sort:
+            return slice(None)
+        sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
+        return np.argsort(mesh.points[:, sort_idx])
+
+    ##### plotting ###########################################################
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
     )
     only_points = cell_types in [{0}, {1}]
-    reg_ids = np.unique(region_mesh.cell_data.get("RegionId", []))
-    prop = {}
-    kwargs.setdefault("clip_on", True)
-    if is_meshseries or only_points or len(reg_ids) <= 1:
-        ax_.plot(x, y, **kwargs)
+    surf: pv.PolyData = mesh.extract_surface()
+    strip: pv.PolyData = surf.strip()
+
+    if is_meshseries or only_points or strip.n_cells <= 1:
+        sort_ids = sorted_point_ids(mesh)
+        ax_.plot(x[sort_ids], y[sort_ids], **kwargs)
     else:
         kwargs.setdefault("linestyle", kwargs.pop("ls", "-"))
-        pt_regions = region_mesh.ctp().point_data["RegionId"]
-        for reg_id in reg_ids:
-            idx = pt_regions == reg_id
-            label = kwargs.get("label") if reg_id == reg_ids[0] else None
-            ax_.plot(x[idx], y[idx], **{**kwargs, "label": label})
-    if annotation is not None:
-        style = {
-            "size": fontsize,
-            "backgroundcolor": "0.8",
-            "ha": "center",
-            "va": "center",
-        }
-        label_xy = utils.padded(ax_, mesh.center[0], mesh.center[1])
-        ax_.annotate(annotation, label_xy, **style)
-    prop["size"] = fontsize
-    if monospace:
-        prop["family"] = "monospace"
-    leg_prop: dict[str, Any] = {}
-    if outer_legend is True:
-        outer_legend = (1.05, 1.0)
-    if labels is not None and isinstance(outer_legend, tuple):
-        leg_prop.update(
-            {
-                "loc": loc,
-                "bbox_to_anchor": outer_legend,
-                "borderaxespad": 0.0,
-            }
-        )
+        orig_ids = np.arange(mesh.n_points, dtype=np.int32)
+        for cell_id, linestrip in enumerate(strip.cell):
+            sort_ids = strip.cell_data.get("vtkOriginalPointIds", orig_ids)[
+                linestrip.point_ids
+            ]
+            label = kwargs.get("label") if cell_id == 0 else None
+            ax_.plot(x[sort_ids], y[sort_ids], **{**kwargs, "label": label})
+
+    ##### leged and final formatting #########################################
     if labels is not None:
+        leg_prop: dict[str, Any] = {"loc": loc}
+        if outer_legend is True:
+            outer_legend = (1.05, 1.0)
+        if isinstance(outer_legend, tuple):
+            leg_prop["bbox_to_anchor"] = outer_legend
+            leg_prop["borderaxespad"] = 0.0
         ax_.legend(prop=prop, **leg_prop)
+
     utils.update_font_sizes(axes=ax_, fontsize=fontsize)
+    if not pure_spatial:
+        ax_.figure.tight_layout()
     return ax_.figure if ax is None else None
