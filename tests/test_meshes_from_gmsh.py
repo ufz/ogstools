@@ -18,7 +18,11 @@ from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
 
 import ogstools as ot
-from ogstools.examples import msh_geolayers_2d, msh_geoterrain_3d
+from ogstools.examples import (
+    load_meshseries_THM_2D_PVD,
+    msh_geolayers_2d,
+    msh_geoterrain_3d,
+)
 from ogstools.meshes.gmsh_converter import meshes_from_gmsh
 from ogstools.msh2vtu._cli import cli
 
@@ -346,3 +350,13 @@ def test_subdomains_3D():
         mesh = meshes[f"{name}"]
         assert ref_num_cells == mesh.number_of_cells
         np.testing.assert_allclose(ref_center, mesh.center)
+
+
+def test_remesh_with_tri(tmp_path):
+    mesh = load_meshseries_THM_2D_PVD().mesh(1)
+    msh_path = tmp_path / "tri_mesh.msh"
+    ot.gmsh_tools.remesh_with_triangles(mesh, msh_path)
+    assert len(
+        ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
+    ) == 1 + len(np.unique(mesh["MaterialIDs"]))
+    # boundaries are not assigned a physical tag in remesh_with_triangles
