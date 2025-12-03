@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from . import create
 from .cosim import from_simulator
 from .differences import difference, difference_matrix, difference_pairwise
 from .file_io import read, save
@@ -16,6 +17,7 @@ from .ip_mesh import (
 )
 
 __all__ = [
+    "create",
     "depth",
     "difference",
     "difference_matrix",
