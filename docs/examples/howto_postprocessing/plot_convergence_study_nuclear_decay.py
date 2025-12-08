@@ -91,22 +91,16 @@ fig, (ax1, ax2) = plt.subplots(figsize=(8, 8), nrows=2, sharex=True)
 ax2.plot(time, heat, lw=2, label="reference", color="k")
 
 for sim_result, dt in zip(sim_results, time_step_sizes, strict=False):
-    mesh_series = ot.MeshSeries(sim_result, time_unit="yrs")
-    results = {"heat_flux": [], "temperature": []}
-    for ts in mesh_series.timesteps:
-        mesh = mesh_series.mesh(ts)
-        results["temperature"] += [np.max(mesh.point_data["temperature"])]
-    max_T = ot.variables.temperature.transform(results["temperature"])
-    results["heat_flux"] += [np.max(mesh.point_data["heat_flux"][:, 0])]
-    tv = np.asarray(mesh_series.timevalues)
-    ax1.plot(tv, max_T, lw=1.5, label=f"{dt=}")
-    edges = np.append(0, tv)
+    ms = ot.MeshSeries(sim_result, time_unit="yrs")
+    max_T = ot.variables.temperature.max.transform(ms)
+    ax1.plot(ms.timevalues, max_T, lw=1.5, label=f"{dt=}")
+
+    edges = np.append(0, ms.timevalues)
     mean_t = 0.5 * (edges[1:] + edges[:-1])
     applied_heat = repo.heat(mean_t, time_unit="yrs", power_unit="kW")
     ax2.stairs(applied_heat, edges, lw=1.5, label=f"{dt=}", baseline=None)
-ax2.set_xlabel("time / yrs")
-ax1.set_ylabel("max T / °C")
-ax2.set_ylabel("heat / kW")
+ax1.set(ylabel="max T / °C")
+ax2.set(xlabel="time / yrs", ylabel="heat / kW")
 ax1.legend()
 ax2.legend()
 fig.show()
@@ -162,9 +156,9 @@ HTML(workflow.jupyter_to_html(report_name, show_input=False))
 # model behavior.
 
 # %%
-mesh_series = [ot.MeshSeries(sim_result) for sim_result in sim_results]
+ms = [ot.MeshSeries(sim_result) for sim_result in sim_results]
 evolution_metrics = studies.convergence.convergence_metrics_evolution(
-    mesh_series, ot.variables.temperature, units=["s", "yrs"]
+    ms, ot.variables.temperature, units=["s", "yrs"]
 )
 
 # %% [markdown]
