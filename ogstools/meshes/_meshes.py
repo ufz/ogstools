@@ -273,6 +273,18 @@ class Meshes(MutableMapping):
 
         self._meshes = {domain_name: domain_mesh} | new_subdomains
 
+    def modify_names(self, prefix: str = "", suffix: str = "") -> None:
+        """
+        Add prefix and/or suffix to names of meshes.
+        Separators (underscore, etc.) have to be provided by user
+        as part of prefix and/or suffix parameters.
+
+        :param prefix: Prefix to be added at the beginning of the mesh name
+        :param suffix: Suffix to be added after the mesh name
+        """
+        items = list(self._meshes.items())
+        self._meshes = {f"{prefix}{name}{suffix}": mesh for name, mesh in items}
+
     @deprecated(
         """
     Please rename the groups in the original meshes - containing physical_group OR (better)
@@ -283,12 +295,7 @@ class Meshes(MutableMapping):
         """
         Add to the name physical_group to restore legacy convention
         """
-        rename_map = {
-            name: f"physical_group_{name}"
-            for name in self.subdomains
-            if not name.startswith("physical_group_")
-        }
-        self.rename_subdomains(rename_map)
+        self.modify_names(prefix="physical_group_")
 
     @staticmethod
     def create_metis(
