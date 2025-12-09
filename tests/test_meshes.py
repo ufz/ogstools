@@ -269,6 +269,9 @@ def test_meshes_rename(tmp_path):
     meshes.rename_subdomains_legacy()
     assert meshes["physical_group_right"] == right_mesh
 
+    meshes.modify_names(prefix="prefix_", suffix="_suffix")
+    assert meshes["prefix_physical_group_right_suffix"] == right_mesh
+
 
 def test_meshes_from_prj(tmp_path: Path):
     "Check, that the mesh paths generated from a Project are correct."
