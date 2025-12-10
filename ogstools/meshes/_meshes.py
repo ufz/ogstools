@@ -62,15 +62,26 @@ class Meshes(MutableMapping):
         yield from self._meshes
 
     @classmethod
-    def from_files(cls, filepaths: Sequence[str | Path]) -> Self:
+    def from_files(
+        cls, filepaths: Sequence[str | Path], domain_key: str = "domain"
+    ) -> Self:
         """Initialize a Meshes object from a Sequence of existing files.
 
         :param filepaths:   Sequence of Mesh files (.vtu)
                             The first mesh is the domain mesh.
                             All following meshes represent subdomains, and their
                             points must align with points on the domain mesh.
+        :param domain_key:  String which is only in the domain filepath
+
         """
-        return cls({Path(m).stem: pv.read(m) for m in filepaths})
+        return cls(
+            {
+                Path(m).stem: pv.read(m)
+                for m in sorted(
+                    filepaths, key=lambda fp: str(fp).replace(domain_key, "")
+                )
+            }
+        )
 
     @classmethod
     def from_gmsh(
