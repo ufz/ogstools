@@ -14,7 +14,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyvista as pv
+
+from ogstools.mesh.file_io import read, save
 
 from .boundary import Layer, LocationFrame, Raster
 from .boundary_subset import Surface
@@ -91,23 +92,34 @@ class LayerSet(BoundarySet):
         ]
         return cls(layers=base_layer)
 
-    def create_raster(self, resolution: float) -> tuple[Path, Path]:
+    def create_raster(
+        self, resolution: float, margin: float = 0.0
+    ) -> tuple[Path, Path]:
         """
         Create raster representations for the LayerSet.
 
         This method generates raster files at a specified resolution for each layer's
         top and bottom boundaries and returns paths to the raster files.
+
+        :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
         """
         bounds = self.layers[0].top.mesh.bounds
         raster_set = self.create_rasters(resolution=resolution)
 
         locFrame = LocationFrame(
-            xmin=bounds[0], xmax=bounds[1], ymin=bounds[2], ymax=bounds[3]
+            xmin=bounds[0] * (1 + margin),
+            xmax=bounds[1] * (1 - margin),
+            ymin=bounds[2] * (1 + margin),
+            ymax=bounds[3] * (1 - margin),
         )
         # Raster needs to be finer then asc files. Otherwise Mesh2Raster fails
+        # TODO: it should also be possible to have a raster which is not
+        # aligned with the cardinal directions, OR do an automatic rotation, if
+        # the surfaces are rectangular, but rotated.
         raster = Raster(locFrame, resolution=resolution * 0.95)
         raster_vtu = Path(tempfile.mkstemp(".vtu", "raster")[1])
         raster.as_vtu(raster_vtu)
+
         rastered_layers_txt = Path(
             tempfile.mkstemp(".txt", "rastered_layers")[1]
         )
@@ -156,7 +168,9 @@ class LayerSet(BoundarySet):
 
         return LayerSet(layers=out)
 
-    def to_region_prism(self, resolution: float) -> RegionSet:
+    def to_region_prism(
+        self, resolution: float, margin: float = 0.0
+    ) -> RegionSet:
         """
         Convert a layered geological structure into a RegionSet using prism meshing.
 
@@ -165,6 +179,7 @@ class LayerSet(BoundarySet):
         tetrahedral elements.
 
         :param resolution: The desired resolution in [meter] for meshing. It must greater than 0.
+        :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
 
         :returns: A :class:`boundary_set.LayerSet` object containing the meshed representation of the geological structure.
 
@@ -178,7 +193,7 @@ class LayerSet(BoundarySet):
         """
 
         raster_vtu, rastered_layers_txt = self.create_raster(
-            resolution=resolution
+            resolution=resolution, margin=margin
         )
 
         outfile = Path(tempfile.mkstemp(".vtu", "region_prism")[1])
@@ -197,8 +212,10 @@ class LayerSet(BoundarySet):
                 for layer in self.layers
             )
         )
+        cli().NodeReordering(i=str(outfile), o=str(outfile))
+        cli().NodeReordering(i=str(outfile), o=str(outfile), m=2)
 
-        pv_mesh = pv.XMLUnstructuredGridReader(outfile).read()
+        pv_mesh = read(outfile)
         intermediate_vtu_ids = list(set(pv_mesh.cell_data["MaterialIDs"]))
         # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
         # up, but we number the layers from top to bottom
@@ -247,9 +264,18 @@ class LayerSet(BoundarySet):
         ]
         mesh = simple_meshes[0].merge(simple_meshes[1:], merge_points=True)
 
+        from ogstools._find_ogs import cli
+
+        tmp_dir = Path(tempfile.mkdtemp("to_region_simplified"))
+        save(outfile := (tmp_dir / "domain.vtu"), mesh)
+        cli().NodeReordering(i=str(outfile), o=str(outfile))
+        mesh = read(outfile)
+
         return RegionSet(input=mesh)
 
-    def to_region_tetraeder(self, resolution: int) -> RegionSet:
+    def to_region_tetraeder(
+        self, resolution: int, margin: float = 0.0
+    ) -> RegionSet:
         """
         Convert a layered geological structure to a tetrahedral meshed region.
 
@@ -257,6 +283,7 @@ class LayerSet(BoundarySet):
         into a tetrahedral meshed region using the specified `resolution`.
 
         :param resolution: The desired resolution for meshing.
+        :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
 
         :returns: A `RegionSet` object containing the tetrahedral meshed representation of the geological structure.
 
@@ -275,7 +302,7 @@ class LayerSet(BoundarySet):
         """
 
         raster_vtu, rastered_layers_txt1 = self.create_raster(
-            resolution=resolution
+            resolution=resolution, margin=margin
         )
 
         smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetraeder")[1])
@@ -319,26 +346,30 @@ class LayerSet(BoundarySet):
             )
         )
 
+        pv_mesh = read(outfile)
         region_attribute_name = "cell_scalars"
-
-        pv_mesh = pv.read(outfile)
-        if region_attribute_name:
-            pv_mesh.cell_data["MaterialIDs"] = pv_mesh.cell_data[
+        if region_attribute_name in pv_mesh.cell_data:
+            pv_mesh.cell_data["MaterialIDs"] = pv_mesh.cell_data.pop(
                 region_attribute_name
-            ]
+            )
 
-        intermediate_vtu_ids = sorted(
-            dict.fromkeys(pv_mesh.cell_data["MaterialIDs"])
-        )
-        # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
-        # up, but we number the layers from top to bottom
-        id_mapping = dict(
-            zip(intermediate_vtu_ids, materials_in_domain[::-1], strict=False)
-        )
-        new_ids = [
-            id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
-        ]
-        pv_mesh.cell_data["MaterialIDs"].setfield(new_ids, np.uint32)
+            intermediate_vtu_ids = sorted(
+                dict.fromkeys(pv_mesh.cell_data["MaterialIDs"])
+            )
+            # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
+            # up, but we number the layers from top to bottom
+            id_mapping = dict(
+                zip(
+                    intermediate_vtu_ids,
+                    materials_in_domain[::-1],
+                    strict=False,
+                )
+            )
+            new_ids = [
+                id_mapping[old_id]
+                for old_id in pv_mesh.cell_data["MaterialIDs"]
+            ]
+            pv_mesh.cell_data["MaterialIDs"].setfield(new_ids, np.uint32)
 
         return RegionSet(input=pv_mesh)
 
@@ -385,7 +416,8 @@ class LayerSet(BoundarySet):
         )
 
         region_attribute_name = "MaterialIDs"
-        pv_mesh = pv.read(outfile)
+
+        pv_mesh = read(outfile)
         if region_attribute_name not in pv_mesh.cell_data:
             pv_mesh.cell_data[region_attribute_name] = pv_mesh.cell_data[
                 region_attribute_name

@@ -12,7 +12,7 @@ import pyvista as pv
 
 def read(filename: Path | str) -> pv.UnstructuredGrid:
     "Read a single mesh from a filepath."
-    return pv.XMLUnstructuredGridReader(filename).read()
+    return pv.read(filename)
 
 
 def save(

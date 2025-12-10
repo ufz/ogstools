@@ -31,6 +31,48 @@ def named_boundaries(
     }
 
 
+def extract_surfaces(
+    mesh: pv.UnstructuredGrid, angle: float
+) -> dict[str, pv.UnstructuredGrid]:
+    """Extract the 2D surfaces of a 3D mesh.
+
+    :param mesh:    3D mesh to be split apart.
+    :param angle:   Tolerated angle (in degrees) between given normal and
+                    element normal.
+
+    :returns:   A list of meshes, as the result of splitting the mesh at its
+                edges.
+    """
+    from pathlib import Path
+    from tempfile import mkdtemp
+
+    from ogstools._find_ogs import cli
+    from ogstools.mesh.file_io import read, save
+
+    tmp_dir = Path(mkdtemp("extract_surfaces"))
+
+    directions = {
+        "bottom": ("0", "0", "1"),
+        "top": ("0", "0", "-1"),
+        "front": ("0", "1", "0"),
+        "back": ("0", "-1", "0"),
+        "left": ("1", "0", "0"),
+        "right": ("-1", "0", "0"),
+    }
+    save(tmp_dir / "domain.vtu", mesh)
+
+    for name, (x, y, z) in directions.items():
+        cli().ExtractSurface(
+            i=tmp_dir / "domain.vtu",
+            o=tmp_dir / f"{name}.vtu",
+            x=x,
+            y=y,
+            z=z,
+            a=angle,
+        )
+    return {name: read(tmp_dir / f"{name}.vtu") for name in directions}
+
+
 def split_by_threshold_angle(
     mesh: pv.UnstructuredGrid, threshold_angle: float
 ) -> list[pv.UnstructuredGrid]:
@@ -113,9 +155,9 @@ def split_by_vertical_lateral_edges(
 def extract_boundaries(
     mesh: pv.UnstructuredGrid, threshold_angle: float | None = 15.0
 ) -> dict[str, pv.UnstructuredGrid]:
-    """Extract 1D boundaries of a 2D mesh.
+    """Extract boundaries of a 2D or 3D mesh.
 
-    :param mesh:            The 2D domain
+    :param mesh:            The domain mesh
     :param threshold_angle: If None, the boundary will be split by the
                             assumption of vertical lateral boundaries. Otherwise
                             it represents the angle (in degrees) between
@@ -126,14 +168,19 @@ def extract_boundaries(
     """
 
     dim = mesh.GetMaxSpatialDimension()
-    assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
-    boundary = mesh.extract_feature_edges()
-    if threshold_angle is None:
-        subdomains = split_by_vertical_lateral_edges(boundary)
-    else:
-        subdomains = split_by_threshold_angle(boundary, threshold_angle)
-    identify_subdomains(mesh, subdomains)
-    return named_boundaries(subdomains)
+    if dim == 3:
+        return extract_surfaces(
+            mesh, 0.0 if threshold_angle is None else threshold_angle
+        )
+    if dim == 2:
+        boundary = mesh.extract_feature_edges()
+        if threshold_angle is None:
+            subdomains = split_by_vertical_lateral_edges(boundary)
+        else:
+            subdomains = split_by_threshold_angle(boundary, threshold_angle)
+        return named_boundaries(subdomains)
+    msg = f"mesh dim has to be 2 or 3, but is {dim}."
+    raise TypeError(msg)
 
 
 def identify_subdomains(

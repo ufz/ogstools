@@ -73,8 +73,8 @@ def contourf_pv(
     if opacities is None:
         plotter.add_mesh(
             plot_mesh, scalars=plot_var.output_name, show_scalar_bar=False,
-            show_edges=show_edges, cmap=cmap, culling=True,
-            categories=categoric, lighting=lighting, **kwargs
+            show_edges=show_edges, culling=kwargs.get("culling", "none"),
+            cmap=cmap, categories=categoric, lighting=lighting, **kwargs
         )  # fmt: skip
     else:
         # Plot each region with its individual opacity
@@ -128,8 +128,9 @@ def contourf_pv(
     # Finally, adding an invisible mesh solely for the scalarbar.
     plotter.add_mesh(
         plot_mesh, scalars=plot_var.output_name, show_edges=show_edges,
-        cmap=cmap, culling=True, categories=categoric, lighting=lighting,
-        scalar_bar_args=scalar_bar_args, opacity=0.0, **kwargs
+        cmap=cmap, culling=kwargs.get("culling", "none"), categories=categoric,
+        lighting=lighting, scalar_bar_args=scalar_bar_args, opacity=0.0,
+        **kwargs
     )  # fmt: skip
 
     plotter.show_axes()
