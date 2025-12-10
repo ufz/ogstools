@@ -1,5 +1,8 @@
 """Unit tests for meshlib."""
 
+import shutil
+from collections.abc import Callable
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -32,8 +35,61 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
+@pytest.mark.tools()
+def test_meshes_from_mesh_3D_simple(tmp_path):
+    "Test extracted boundaries from 3D mesh are correctly labeled."
+    mesh_path = tmp_path / "mesh.msh"
+    ot.gmsh_tools.cuboid(
+        lengths=[4, 3, 2], n_edge_cells=(2, 3, 4), out_name=mesh_path
+    )
+    domain = ot.Meshes.from_gmsh(mesh_path)["domain"]
+    # this is no good practice and only done for testing purposes
+    # we recommend to define the boundaries as physical groups within gmsh
+    meshes = ot.Meshes.from_mesh(domain)
+    assert np.all(meshes["left"].points[:, 0] == domain.bounds[0])
+    assert np.all(meshes["right"].points[:, 0] == domain.bounds[1])
+    assert np.all(meshes["front"].points[:, 1] == domain.bounds[2])
+    assert np.all(meshes["back"].points[:, 1] == domain.bounds[3])
+    assert np.all(meshes["bottom"].points[:, 2] == domain.bounds[4])
+    assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
+
+
+@pytest.mark.tools()
+@pytest.mark.xfail(
+    shutil.which("tetgen") is None, reason="Tetgen not installed"
+)
+@pytest.mark.parametrize(
+    "discretization",
+    [
+        lambda ls: ls.to_region_prism(resolution=400),
+        lambda ls: ls.to_region_simplified(xy_resolution=400, rank=3),
+        lambda ls: ls.to_region_tetraeder(resolution=800),
+    ],
+)
+def test_meshes_from_mesh_3D(discretization: Callable):
+    "Test extracted boundaries from 3D mesh are correctly labeled."
+    surfaces = [
+        ot.mesh.create.Surface(surf, material_id=mat_id)
+        for mat_id, surf in enumerate(examples.surface_paths)
+    ]
+    layers = [
+        ot.mesh.create.Layer(top=top, bottom=bottom, num_subdivisions=1)
+        for n, (top, bottom) in enumerate(pairwise(surfaces))
+    ]
+    layer_set = ot.mesh.create.LayerSet(layers=layers)
+    domain = discretization(layer_set).mesh
+    meshes = ot.Meshes.from_mesh(domain)
+    assert np.all(meshes["left"].points[:, 0] == domain.bounds[0])
+    assert np.all(meshes["right"].points[:, 0] == domain.bounds[1])
+    assert np.all(meshes["front"].points[:, 1] == domain.bounds[2])
+    assert np.all(meshes["back"].points[:, 1] == domain.bounds[3])
+
+    assert meshes["bottom"].bounds[4] == domain.bounds[4]
+    assert meshes["top"].bounds[5] == domain.bounds[5]
+
+
 @pytest.mark.system()
-def test_meshes_from_mesh_run(tmp_path):
+def test_meshes_from_mesh_2D_run(tmp_path):
     "Test using extracted boundaries for a simulation."
     mesh_path = tmp_path / "mesh.msh"
     ot.gmsh_tools.rect(n_edge_cells=(2, 4), out_name=mesh_path)

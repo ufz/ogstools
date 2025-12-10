@@ -121,9 +121,9 @@ class Meshes(MutableMapping):
         threshold_angle: float | None = 15.0,
         domain_name: str = "domain",
     ) -> Self:
-        """Extract 1D boundaries of a 2D mesh.
+        """Create Meshes by extract boundaries of domain mesh.
 
-        :param mesh:            The 2D domain
+        :param mesh:            The domain mesh
         :param threshold_angle: If None, the boundary will be split by the
                                 assumption of vertical lateral boundaries. Otherwise
                                 it represents the angle (in degrees) between
@@ -132,21 +132,9 @@ class Meshes(MutableMapping):
         :param domain_name:     The name of the domain mesh.
         :returns:               A Meshes object.
         """
-        from ogstools.meshes.subdomains import (
-            named_boundaries,
-            split_by_threshold_angle,
-            split_by_vertical_lateral_edges,
-        )
+        from ogstools.meshes.subdomains import extract_boundaries
 
-        dim = mesh.GetMaxSpatialDimension()
-        assert dim == 2, f"Expected a mesh of dim 2, but given mesh has {dim=}"
-        boundary = mesh.extract_feature_edges()
-        if threshold_angle is None:
-            subdomains = split_by_vertical_lateral_edges(boundary)
-        else:
-            subdomains = split_by_threshold_angle(boundary, threshold_angle)
-
-        sub_meshes_dict = named_boundaries(subdomains)
+        sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 
         meshes_dict = {domain_name: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)

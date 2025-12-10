@@ -37,9 +37,8 @@ layer_set1 = create.LayerSet(layers=[layer1, layer2, layer3])
 sm = layer_set1.to_region_simplified(xy_resolution=200, rank=3).mesh
 pm = layer_set1.to_region_prism(resolution=200).mesh
 vm = layer_set1.to_region_voxel(resolution=[200, 200, 50]).mesh
-tetgen_present = (
-    which("tetgen") is not None
-)  # an optional requirement (needs to be installed on system or via pip)
+# an optional requirement (needs to be installed on system or via pip)
+tetgen_present = which("tetgen") is not None
 if tetgen_present:
     tm = layer_set1.to_region_tetraeder(resolution=200).mesh
 else:
@@ -50,21 +49,21 @@ else:
 # ---------------
 
 # %%
-ot.plot.contourf(sm.scale([1, 1, 5]), ot.variables.material_id).show()
+ot.plot.contourf_pv(sm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Voxel mesh
 # ---------------
 
 # %%
-ot.plot.contourf(vm.scale([1, 1, 5]), ot.variables.material_id).show()
+ot.plot.contourf_pv(vm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Prism mesh
 # ---------------
 
 # %%
-ot.plot.contourf(pm.scale([1, 1, 5]), ot.variables.material_id).show()
+ot.plot.contourf_pv(pm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %% [markdown]
 # Tetraeder mesh
@@ -72,4 +71,4 @@ ot.plot.contourf(pm.scale([1, 1, 5]), ot.variables.material_id).show()
 
 # %%
 if tm:
-    ot.plot.contourf(tm.scale([1, 1, 5]), ot.variables.material_id).show()
+    ot.plot.contourf_pv(tm.scale([1, 1, 5]), ot.variables.material_id).show()
