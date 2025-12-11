@@ -66,7 +66,7 @@ class TestLayer:
             for top, bottom in layers
         ]
         ls1 = create.LayerSet(layers=base_layers)
-        tm = ls1.to_region_tetraeder(200)
+        tm = ls1.to_region_tetrahedron(200)
 
         # Prism mesh does not work when a surface is plane with height 0, limitation/bug of
         # CLI tool createIntermediateRasters

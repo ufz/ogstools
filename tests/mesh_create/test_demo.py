@@ -47,7 +47,7 @@ class TestDemo:
             == number_of_layers
         )
 
-        tm = layer_set.to_region_tetraeder(200)
+        tm = layer_set.to_region_tetrahedron(200)
         assert (
             len(Counter(tm.mesh.cell_data["MaterialIDs"]).keys())
             == number_of_layers

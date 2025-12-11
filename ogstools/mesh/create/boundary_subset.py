@@ -11,7 +11,7 @@ import numpy as np
 import pyvista as pv
 from typeguard import typechecked
 
-from ogstools.mesh.file_io import save
+from ogstools import mesh
 
 
 class Surface:
@@ -40,7 +40,7 @@ class Surface:
         elif isinstance(input, pv.DataObject):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
-            save(self.filename, self.mesh, file_format="vtu")
+            mesh.save(self.filename, self.mesh, file_format="vtu")
 
         self.mesh.cell_data["MaterialIDs"] = (
             np.ones(self.mesh.n_cells) * self.material_id
@@ -52,6 +52,8 @@ class Surface:
     def create_raster_file(self, resolution: float) -> Path:
         """
         Creates a raster file specific to resolution. If outfile is not specified, the extension is replaced by .asc
+
+        :param resolution: The resolution for raster creation.
 
         :returns the path and filename of the created file (.asc)
         """

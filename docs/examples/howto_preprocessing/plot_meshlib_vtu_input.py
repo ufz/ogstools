@@ -33,14 +33,14 @@ layer_set1 = create.LayerSet(layers=[layer1, layer2, layer3])
 
 # %%
 # From layerset creation of simplified meshes (sm), prism meshes (pm), voxel
-# meshes (vm), tetraeder mesh (tm) is possible.
+# meshes (vm), tetrahedron mesh (tm) is possible.
 sm = layer_set1.to_region_simplified(xy_resolution=200, rank=3).mesh
 pm = layer_set1.to_region_prism(resolution=200).mesh
 vm = layer_set1.to_region_voxel(resolution=[200, 200, 50]).mesh
 # an optional requirement (needs to be installed on system or via pip)
 tetgen_present = which("tetgen") is not None
 if tetgen_present:
-    tm = layer_set1.to_region_tetraeder(resolution=200).mesh
+    tm = layer_set1.to_region_tetrahedron(resolution=200).mesh
 else:
     tm = None
 

@@ -34,7 +34,7 @@ if tetgen_present:
         [create.Layer(surface1, surface2), create.Layer(surface2, surface3)]
     )
 
-    mesh = ls.to_region_tetraeder(40).mesh
+    mesh = ls.to_region_tetrahedron(40).mesh
 else:
     mesh = None
 

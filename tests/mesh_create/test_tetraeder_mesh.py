@@ -19,15 +19,11 @@ class TestTetraeder:
     )
     def yz(self):
         mesh1_df = create.dataframe_from_csv(
-            1,
-            self.layerset,
-            self.materialset,
-            self.surfacedata,
+            1, self.layerset, self.materialset, self.surfacedata
         )
         layer_set = create.LayerSet.from_pandas(mesh1_df)
-        tetraeder = layer_set.to_region_tetraeder(resolution=400)
+        mesh = layer_set.to_region_tetrahedron(resolution=400).mesh
 
-        mesh = tetraeder.mesh
         assert len(mesh.cell_data["MaterialIDs"]) > 0
         assert mesh.number_of_cells > 10000
         assert mesh.number_of_cells < 30000

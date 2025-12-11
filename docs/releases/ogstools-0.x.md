@@ -18,6 +18,7 @@
 - `Matrix.mean -> Matrix.tensor_mean`
 - `meshlib` has been renamed to `mesh` - classes to generate a new mesh (e.g.
   Layer, LayerSet, Surface, ...) have been moved to a submodule `create`.
+- `ot.mesh.create.LayerSet.to_region_tetraeder` -> `ot.mesh.create.LayerSet.to_region_tetrahedron`
 
 ## Deprecations
 
