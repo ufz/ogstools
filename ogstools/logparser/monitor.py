@@ -15,8 +15,8 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 from watchdog.observers import Observer
 
-from ogstools.logparser.log_file_handler import LogFileHandler
 from ogstools.logparser import regexes as log_regex
+from ogstools.logparser.log_file_handler import LogFileHandler
 
 
 class Monitor:
@@ -50,7 +50,7 @@ class Monitor:
             }
         )
         self._records: Queue = Queue()
-        self._status: Context = Context()
+        self._status: log_regex.Context = log_regex.Context()
         self.time_step_based_data = [
             "step_start_time",
             "step_size",
@@ -196,15 +196,21 @@ class Monitor:
         :param iteration_window_length: The length of the iteration window for the data.
         :param update_interval: The interval in seconds to update the plot.
         """
+
+        def clip(data: list, window_length: int) -> list:
+            if len(data) > window_length:
+                return data[-window_length:]
+            return data
+
         t0 = 0.0
         while True:
             item = self._records.get()
-            if isinstance(item, Termination):
+            if isinstance(item, log_regex.Termination):
                 print(
                     f"Consumer: Termination signal ({item}) received. Exiting."
                 )
                 break
-            if isinstance(item, TimeStepStart):
+            if isinstance(item, log_regex.TimeStepStart):
                 if time_window_length == 0:
                     new_row = {
                         "step_size": [item.step_size],
@@ -222,6 +228,7 @@ class Monitor:
                     time_step = self.data_source.data["time_step"] + [
                         item.time_step
                     ]
+                    # data needs to have correct size, but some fields are updated later
                     assembly_time = self.data_source.data["assembly_time"] + [0]
                     linear_solver_time = self.data_source.data[
                         "linear_solver_time"
@@ -232,53 +239,31 @@ class Monitor:
                     iteration_number = self.data_source.data[
                         "iteration_number"
                     ] + [0]
-                    step_size = (
-                        step_size[-time_window_length:]
-                        if len(step_size) > time_window_length
-                        else step_size
-                    )
-                    time_step = (
-                        time_step[-time_window_length:]
-                        if len(time_step) > time_window_length
-                        else time_step
-                    )
-                    assembly_time = (
-                        assembly_time[-time_window_length:]
-                        if len(assembly_time) > time_window_length
-                        else assembly_time
-                    )
-                    linear_solver_time = (
-                        linear_solver_time[-time_window_length:]
-                        if len(linear_solver_time) > time_window_length
-                        else linear_solver_time
-                    )
-                    step_start_time = (
-                        step_start_time[-time_window_length:]
-                        if len(step_start_time) > time_window_length
-                        else step_start_time
-                    )
-                    iteration_number = (
-                        iteration_number[-time_window_length:]
-                        if len(iteration_number) > time_window_length
-                        else iteration_number
-                    )
                     self.data_source.data = {
-                        "step_size": step_size,
-                        "time_step": time_step,
-                        "assembly_time": assembly_time,
-                        "linear_solver_time": linear_solver_time,
-                        "step_start_time": step_start_time,
-                        "iteration_number": iteration_number,
+                        "step_size": clip(step_size, time_window_length),
+                        "time_step": clip(time_step, time_window_length),
+                        "assembly_time": clip(
+                            assembly_time, time_window_length
+                        ),
+                        "linear_solver_time": clip(
+                            linear_solver_time, time_window_length
+                        ),
+                        "step_start_time": clip(
+                            step_start_time, time_window_length
+                        ),
+                        "iteration_number": clip(
+                            iteration_number, time_window_length
+                        ),
                     }
 
-            elif isinstance(item, AssemblyTime):
+            elif isinstance(item, log_regex.AssemblyTime):
                 index = len(self.data_source.data["assembly_time"]) - 1
                 new_time = (
                     self.data_source.data["assembly_time"][index]
                     + item.assembly_time
                 )
                 self.data_source.patch({"assembly_time": [(index, new_time)]})
-            elif isinstance(item, LinearSolverTime):
+            elif isinstance(item, log_regex.LinearSolverTime):
                 index = len(self.data_source.data["linear_solver_time"]) - 1
                 new_time = (
                     self.data_source.data["linear_solver_time"][index]
@@ -287,13 +272,13 @@ class Monitor:
                 self.data_source.patch(
                     {"linear_solver_time": [(index, new_time)]}
                 )
-            elif isinstance(item, IterationEnd):
+            elif isinstance(item, log_regex.IterationEnd):
                 index = len(self.data_source.data["iteration_number"]) - 1
                 iteration = item.iteration_number
                 self.data_source.patch(
                     {"iteration_number": [(index, iteration)]}
                 )
-            elif isinstance(item, IterationStart):
+            elif isinstance(item, log_regex.IterationStart):
                 iteration_offset = (
                     self.data_source_iter.data["iteration_number"][-1]
                     if self.data_source_iter.data["iteration_number"]
@@ -333,72 +318,24 @@ class Monitor:
                     dx_x_3 = self.data_source_iter.data["dx_x_3"] + [1]
                     dx_x_4 = self.data_source_iter.data["dx_x_4"] + [1]
                     dx_x_5 = self.data_source_iter.data["dx_x_5"] + [1]
-                    iteration_number = (
-                        iteration_number[-iteration_window_length:]
-                        if len(iteration_number) > iteration_window_length
-                        else iteration_number
-                    )
-                    vspan = (
-                        vspan[-iteration_window_length:]
-                        if len(vspan) > iteration_window_length
-                        else vspan
-                    )
-                    line_width = (
-                        line_width[-iteration_window_length:]
-                        if len(line_width) > iteration_window_length
-                        else line_width
-                    )
-                    dx_x = (
-                        dx_x[-iteration_window_length:]
-                        if len(dx_x) > iteration_window_length
-                        else dx_x
-                    )
-                    dx_x_0 = (
-                        dx_x_0[-iteration_window_length:]
-                        if len(dx_x_0) > iteration_window_length
-                        else dx_x_0
-                    )
-                    dx_x_1 = (
-                        dx_x_1[-iteration_window_length:]
-                        if len(dx_x_1) > iteration_window_length
-                        else dx_x_1
-                    )
-                    dx_x_2 = (
-                        dx_x_2[-iteration_window_length:]
-                        if len(dx_x_2) > iteration_window_length
-                        else dx_x_2
-                    )
-                    dx_x_3 = (
-                        dx_x_3[-iteration_window_length:]
-                        if len(dx_x_3) > iteration_window_length
-                        else dx_x_3
-                    )
-                    dx_x_4 = (
-                        dx_x_4[-iteration_window_length:]
-                        if len(dx_x_4) > iteration_window_length
-                        else dx_x_4
-                    )
-                    dx_x_5 = (
-                        dx_x_5[-iteration_window_length:]
-                        if len(dx_x_5) > iteration_window_length
-                        else dx_x_5
-                    )
                     self.data_source_iter.data = {
-                        "iteration_number": iteration_number,
-                        "vspan": vspan,
-                        "line_width": line_width,
-                        "dx_x": dx_x,
-                        "dx_x_0": dx_x_0,
-                        "dx_x_1": dx_x_1,
-                        "dx_x_2": dx_x_2,
-                        "dx_x_3": dx_x_3,
-                        "dx_x_4": dx_x_4,
-                        "dx_x_5": dx_x_5,
+                        "iteration_number": clip(
+                            iteration_number, iteration_window_length
+                        ),
+                        "vspan": clip(vspan, iteration_window_length),
+                        "line_width": clip(line_width, iteration_window_length),
+                        "dx_x": clip(dx_x, iteration_window_length),
+                        "dx_x_0": clip(dx_x_0, iteration_window_length),
+                        "dx_x_1": clip(dx_x_1, iteration_window_length),
+                        "dx_x_2": clip(dx_x_2, iteration_window_length),
+                        "dx_x_3": clip(dx_x_3, iteration_window_length),
+                        "dx_x_4": clip(dx_x_4, iteration_window_length),
+                        "dx_x_5": clip(dx_x_5, iteration_window_length),
                     }
-            elif isinstance(item, TimeStepConvergenceCriterion):
+            elif isinstance(item, log_regex.TimeStepConvergenceCriterion):
                 index = len(self.data_source_iter.data["iteration_number"]) - 1
                 self.data_source_iter.patch({"dx_x": [(index, item.dx_x)]})
-            elif isinstance(item, ComponentConvergenceCriterion):
+            elif isinstance(item, log_regex.ComponentConvergenceCriterion):
                 index = len(self.data_source_iter.data["iteration_number"]) - 1
                 self.data_source_iter.patch(
                     {f"dx_x_{item.component}": [(index, item.dx_x)]}
