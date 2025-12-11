@@ -16,17 +16,7 @@ from bokeh.plotting import figure
 from watchdog.observers import Observer
 
 from ogstools.logparser.log_file_handler import LogFileHandler
-from ogstools.logparser.regexes import (
-    AssemblyTime,
-    ComponentConvergenceCriterion,
-    Context,
-    IterationEnd,
-    IterationStart,
-    LinearSolverTime,
-    Termination,
-    TimeStepConvergenceCriterion,
-    TimeStepStart,
-)
+from ogstools.logparser import regexes as log_regex
 
 
 class Monitor:
@@ -217,12 +207,8 @@ class Monitor:
             if isinstance(item, TimeStepStart):
                 if time_window_length == 0:
                     new_row = {
-                        "step_size": [
-                            item.step_size,
-                        ],
-                        "time_step": [
-                            item.time_step,
-                        ],
+                        "step_size": [item.step_size],
+                        "time_step": [item.time_step],
                         "assembly_time": [0],
                         "linear_solver_time": [0],
                         "step_start_time": [item.step_start_time],
