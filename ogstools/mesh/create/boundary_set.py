@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ogstools.mesh.file_io import read, save
+from ogstools import mesh
 
 from .boundary import Layer, LocationFrame, Raster
 from .boundary_subset import Surface
@@ -101,6 +101,7 @@ class LayerSet(BoundarySet):
         This method generates raster files at a specified resolution for each layer's
         top and bottom boundaries and returns paths to the raster files.
 
+        :param resolution: The resolution for raster creation.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
         """
         bounds = self.layers[0].top.mesh.bounds
@@ -130,6 +131,8 @@ class LayerSet(BoundarySet):
     def create_rasters(self, resolution: float) -> list[Path]:
         """
         For each surface a (temporary) raster file with given resolution is created.
+
+        :param resolution: The resolution for raster creation.
         """
         rasters = [self.layers[0].top.create_raster_file(resolution=resolution)]
         for layer in self.layers:
@@ -215,7 +218,7 @@ class LayerSet(BoundarySet):
         cli().NodeReordering(i=str(outfile), o=str(outfile))
         cli().NodeReordering(i=str(outfile), o=str(outfile), m=2)
 
-        pv_mesh = read(outfile)
+        pv_mesh = mesh.read(outfile)
         intermediate_vtu_ids = list(set(pv_mesh.cell_data["MaterialIDs"]))
         # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
         # up, but we number the layers from top to bottom
@@ -262,18 +265,19 @@ class LayerSet(BoundarySet):
             )
             for layer in self.layers
         ]
-        mesh = simple_meshes[0].merge(simple_meshes[1:], merge_points=True)
+        merged_mesh = simple_meshes[0].merge(
+            simple_meshes[1:], merge_points=True
+        )
 
         from ogstools._find_ogs import cli
 
         tmp_dir = Path(tempfile.mkdtemp("to_region_simplified"))
-        save(outfile := (tmp_dir / "domain.vtu"), mesh)
+        mesh.save(outfile := (tmp_dir / "domain.vtu"), merged_mesh)
         cli().NodeReordering(i=str(outfile), o=str(outfile))
-        mesh = read(outfile)
 
-        return RegionSet(input=mesh)
+        return RegionSet(input=mesh.read(outfile))
 
-    def to_region_tetraeder(
+    def to_region_tetrahedron(
         self, resolution: int, margin: float = 0.0
     ) -> RegionSet:
         """
@@ -298,14 +302,14 @@ class LayerSet(BoundarySet):
         example:
             layer_set = LayerSet(...)
             resolution = 1  # Example resolution for meshing
-            region_set = layer_set.to_region_tetraeder(resolution)
+            region_set = layer_set.to_region_tetrahedron(resolution)
         """
 
         raster_vtu, rastered_layers_txt1 = self.create_raster(
             resolution=resolution, margin=margin
         )
 
-        smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetraeder")[1])
+        smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetrahedron")[1])
 
         from ogstools._find_ogs import cli
 
@@ -346,7 +350,7 @@ class LayerSet(BoundarySet):
             )
         )
 
-        pv_mesh = read(outfile)
+        pv_mesh = mesh.read(outfile)
         region_attribute_name = "cell_scalars"
         if region_attribute_name in pv_mesh.cell_data:
             pv_mesh.cell_data["MaterialIDs"] = pv_mesh.cell_data.pop(
@@ -417,7 +421,7 @@ class LayerSet(BoundarySet):
 
         region_attribute_name = "MaterialIDs"
 
-        pv_mesh = read(outfile)
+        pv_mesh = mesh.read(outfile)
         if region_attribute_name not in pv_mesh.cell_data:
             pv_mesh.cell_data[region_attribute_name] = pv_mesh.cell_data[
                 region_attribute_name

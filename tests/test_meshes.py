@@ -4,6 +4,7 @@ import shutil
 from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
@@ -14,6 +15,8 @@ from hypothesis import strategies as st
 import ogstools as ot
 from ogstools import examples
 from ogstools.definitions import EXAMPLES_DIR
+
+LS = ot.mesh.create.LayerSet
 
 
 @pytest.mark.parametrize("threshold_angle", [None, 20.0])
@@ -61,12 +64,14 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
 @pytest.mark.parametrize(
     "discretization",
     [
-        lambda ls: ls.to_region_prism(resolution=400),
-        lambda ls: ls.to_region_simplified(xy_resolution=400, rank=3),
-        lambda ls: ls.to_region_tetraeder(resolution=800),
+        lambda ls: cast(LS, ls).to_region_prism(resolution=400),
+        lambda ls: cast(LS, ls).to_region_simplified(xy_resolution=400, rank=3),
+        lambda ls: cast(LS, ls).to_region_tetrahedron(resolution=800),
     ],
 )
-def test_meshes_from_mesh_3D(discretization: Callable):
+def test_meshes_from_mesh_3D(
+    discretization: Callable[[LS], ot.mesh.create.RegionSet],
+):
     "Test extracted boundaries from 3D mesh are correctly labeled."
     surfaces = [
         ot.mesh.create.Surface(surf, material_id=mat_id)
