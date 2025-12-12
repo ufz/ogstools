@@ -8,17 +8,11 @@ meshpath = EXAMPLES_DIR / "meshlib"
 
 class TestPrismMesh:
     layerset = meshpath / "compose_geomodel/layersets.csv"
-    materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"
 
     @pytest.mark.tools()  # createLayeredMeshFromRasters
     def test_mesh_fine_xy_coarse_z(self):
-        mesh1_df = create.dataframe_from_csv(
-            1,
-            self.layerset,
-            self.materialset,
-            self.surfacedata,
-        )
+        mesh1_df = create.dataframe_from_csv(1, self.layerset, self.surfacedata)
         layer_set = create.LayerSet.from_pandas(mesh1_df)
         prism_mesh = layer_set.to_region_prism(resolution=200)
 
