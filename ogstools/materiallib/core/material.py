@@ -62,6 +62,19 @@ class Material:
         """
         return [p.name for p in self.properties]
 
+    def get_property(self, key: str) -> MaterialProperty:
+        """
+        Returns the property with the given name if available.
+        """
+        for p in self.properties:
+            if p.name == key:
+                return p
+        msg = (
+            f"No property with name {key} found. Available properties are: "
+            + ", ".join(self.property_names())
+        )
+        raise KeyError(msg)
+
     # -----------------------
     # Filters (dummy for now)
     # -----------------------

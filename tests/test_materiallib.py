@@ -253,6 +253,18 @@ class TestMaterialLib:
         assert "Viscosity" in names
         assert "Permeability" not in names
 
+    def test_material_get_property(self):
+        """get_property should return the correct property."""
+        mat = make_material(
+            {
+                "Density": {"type": "Constant", "value": 2500},
+                "Viscosity": {"type": "Constant", "value": 1.0},
+            }
+        )
+        assert mat.get_property("Density").value == 2500
+        with pytest.raises(KeyError, match="No property with name"):
+            mat.get_property("porosity")
+
 
 class TestMaterialManager:
     def test_materialdb_loads_yaml_files(self, tmp_path, write_yaml):
