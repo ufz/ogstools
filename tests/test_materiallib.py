@@ -12,15 +12,10 @@ from ogstools.materiallib.schema import process_schema, required_properties
 from ogstools.ogs6py import Project
 
 
-@pytest.fixture()
-def make_material():
+def make_material(properties: dict, name="test_material") -> Material:
     """Factory that builds a Material object directly from properties."""
-
-    def _make(properties: dict, name="test_material"):
-        raw_data = {"name": name, "properties": properties}
-        return Material(name=name, raw_data=raw_data)
-
-    return _make
+    raw_data = {"name": name, "properties": properties}
+    return Material(name=name, raw_data=raw_data)
 
 
 @pytest.fixture()
@@ -37,7 +32,7 @@ def write_yaml(tmp_path):
 
 
 @pytest.fixture()
-def example_materials(make_material):
+def example_materials():
     """Provide commonly used materials as dicts and as ready Material objects."""
     return {
         "granite": {
@@ -169,7 +164,7 @@ def make_filtered_db(write_yaml, tmp_path, monkeypatch):
 
 
 class TestMaterialLib:
-    def test_material_parses_properties_from_raw_data(self, make_material):
+    def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
         mat = make_material(
             {
@@ -185,7 +180,7 @@ class TestMaterialLib:
         assert any(p.name == "Density" for p in props)
         assert sum(p.name == "Permeability" for p in props) == 2
 
-    def test_material_property_names_returns_all_names(self, make_material):
+    def test_material_property_names_returns_all_names(self):
         """Material.property_names should return the names of all parsed properties."""
         mat = make_material(
             {
@@ -195,9 +190,7 @@ class TestMaterialLib:
         )
         assert set(mat.property_names()) == {"Density", "Viscosity"}
 
-    def test_material_filter_properties_returns_only_allowed(
-        self, make_material
-    ):
+    def test_material_filter_properties_returns_only_allowed(self):
         """Material.filter_properties should return a new Material with only allowed properties."""
         mat = make_material(
             {
@@ -210,9 +203,7 @@ class TestMaterialLib:
 
         assert filtered.property_names() == ["Density"]
 
-    def test_material_filter_properties_empty_set_returns_empty_material(
-        self, make_material
-    ):
+    def test_material_filter_properties_empty_set_returns_empty_material(self):
         """Material.filter_properties with empty allowed set should return a Material without properties."""
         mat = make_material(
             {
@@ -225,9 +216,7 @@ class TestMaterialLib:
         assert filtered.properties == []
         assert filtered.property_names() == []
 
-    def test_material_repr_contains_name_and_property_count(
-        self, make_material
-    ):
+    def test_material_repr_contains_name_and_property_count(self):
         """Material.__repr__ should show the material name and number of properties."""
         mat = make_material(
             {
@@ -240,7 +229,7 @@ class TestMaterialLib:
         assert "test_material" in text
         assert "2 properties" in text
 
-    def test_material_filter_process_respects_schema(self, make_material):
+    def test_material_filter_process_respects_schema(self):
         """Material.filter_process should keep only properties listed in the process schema."""
         mat = make_material(
             {
@@ -592,7 +581,7 @@ class TestMaterialManagerFilter:
             }
         ]
         with pytest.raises(
-            ValueError, match="Material 'not_here' not found in repository."
+            ValueError, match=r"Material 'not_here' not found in repository."
         ):
             db.filter(process="dummy", subdomains=subdomains, fluids={})
 
@@ -621,7 +610,7 @@ class TestMaterialManagerFilter:
 
         with pytest.raises(
             ValueError,
-            match="Fluid material 'not_in_db' not found in repository.",
+            match=r"Material 'not_in_db' not found in repository.",
         ):
             db.filter(process="dummy", subdomains=subdomains, fluids=fluids)
 
@@ -721,7 +710,7 @@ class TestMaterialManagerFilter:
             "DiffusionCoefficient",
         }
 
-    def test_filter_preserves_scope(self, make_material):
+    def test_filter_preserves_scope(self):
         """Filtering a Material must preserve extra fields like 'scope'."""
 
         # Material mit Phase- und Medium-Scoped thermal_conductivity
@@ -769,7 +758,7 @@ class TestMedia:
         db = material_manager.MaterialManager(data_dir=tmp_path)
         with pytest.raises(
             ValueError,
-            match="MediaSet can only be created from a filtered MaterialManager.",
+            match=r"MediaSet can only be created from a filtered MaterialManager.",
         ):
             MediaSet(db)
 
@@ -987,9 +976,7 @@ class TestMedia:
 
 
 class TestComponent:
-    def test_component_initializes_with_schema(
-        self, make_material, monkeypatch
-    ):
+    def test_component_initializes_with_schema(self, monkeypatch):
         """Component should initialize and filter properties according to schema."""
         mat = make_material(
             {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
@@ -1011,21 +998,21 @@ class TestComponent:
         assert comp.validate() is True
         assert [p.name for p in comp.properties] == ["Viscosity"]
 
-    def test_component_raises_if_schema_missing(self, make_material):
+    def test_component_raises_if_schema_missing(self):
         """Component should raise ValueError if process schema is not found."""
         mat = make_material(
             {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
         )
 
         with pytest.raises(
-            ValueError, match="No process schema found for 'no_such_process'."
+            ValueError, match=r"No process schema found for 'no_such_process'."
         ):
             component.Component(
                 mat, "AqueousLiquid", "Solvent", "no_such_process", 0.0
             )
 
     def test_component_inserts_diffusion_property_for_vapour_role(
-        self, make_material, monkeypatch
+        self, monkeypatch
     ):
         """Component should insert diffusion property when phase=Gas and role=Vapour."""
         mat = make_material({}, name="co2")
@@ -1041,9 +1028,7 @@ class TestComponent:
         assert any(p.name == "diffusion" for p in comp.properties)
         assert comp.D == 1.23e-5
 
-    def test_component_validate_raises_for_wrong_phase(
-        self, make_material, monkeypatch
-    ):
+    def test_component_validate_raises_for_wrong_phase(self, monkeypatch):
         """Component.validate should raise if phase type not in schema."""
         mat = make_material(
             {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
@@ -1063,13 +1048,11 @@ class TestComponent:
 
         with pytest.raises(
             ValueError,
-            match="Component 'water' is in a phase 'Gas' not allowed for process.",
+            match=r"Component 'water' is in a phase 'Gas' not allowed for process.",
         ):
             comp.validate()
 
-    def test_component_repr_contains_name_and_role(
-        self, make_material, monkeypatch
-    ):
+    def test_component_repr_contains_name_and_role(self, monkeypatch):
         """__repr__ should include component name and role."""
         mat = make_material(
             {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
@@ -1095,9 +1078,7 @@ class TestComponent:
 
 
 class TestComponents:
-    def test_components_initializes_aqueousliquid(
-        self, make_material, monkeypatch
-    ):
+    def test_components_initializes_aqueousliquid(self, monkeypatch):
         """Components should initialize Solute and Solvent for AqueousLiquid phase."""
         gas = make_material(
             {"Henry": {"type": "Constant", "value": 1.0}}, name="co2"
@@ -1122,7 +1103,7 @@ class TestComponents:
         assert comps.gas_component_obj.role == "Solute"
         assert comps.liquid_component_obj.role == "Solvent"
 
-    def test_components_initializes_gas(self, make_material, monkeypatch):
+    def test_components_initializes_gas(self, monkeypatch):
         """Components should initialize Carrier and Vapour for Gas phase."""
         gas = make_material(
             {"MolarMass": {"type": "Constant", "value": 28}}, name="N2"
@@ -1150,7 +1131,7 @@ class TestComponents:
         assert comps.gas_component_obj.role == "Carrier"
         assert comps.liquid_component_obj.role == "Vapour"
 
-    def test_components_raises_on_invalid_phase(self, make_material):
+    def test_components_raises_on_invalid_phase(self):
         """Components should raise ValueError if phase_type is not supported."""
         gas = make_material({}, name="co2")
         liquid = make_material({}, name="water")
@@ -1158,9 +1139,7 @@ class TestComponents:
         with pytest.raises(ValueError, match="Unsupported phase_type: Solid"):
             components.Components("Solid", gas, liquid, "dummy")
 
-    def test_components_repr_includes_phase_and_components(
-        self, make_material, monkeypatch
-    ):
+    def test_components_repr_includes_phase_and_components(self, monkeypatch):
         """__repr__ should include phase type and component details."""
         gas = make_material(
             {"Henry": {"type": "Constant", "value": 1.0}}, name="co2"
@@ -1187,7 +1166,7 @@ class TestComponents:
         assert "co2" in text or "water" in text
 
     def test_get_binary_diffusion_coefficient_reads_file(
-        self, make_material, tmp_path, monkeypatch
+        self, tmp_path, monkeypatch
     ):
         """get_binary_diffusion_coefficient should read coefficient from YAML file."""
         schema = {
@@ -1216,7 +1195,7 @@ class TestComponents:
         assert D == 1.9e-9
 
     def test_get_binary_diffusion_coefficient_unit_raises_if_missing(
-        self, make_material, tmp_path, monkeypatch
+        self, tmp_path, monkeypatch
     ):
         """get_binary_diffusion_coefficient should raise if YAML entry is missing."""
         diffusion_data = {"AqueousLiquid": {"water": {}}}
@@ -1240,7 +1219,7 @@ class TestComponents:
         )
 
     def test_get_binary_diffusion_coefficient_integration_fails_on_init(
-        self, make_material, tmp_path, monkeypatch
+        self, tmp_path, monkeypatch
     ):
         """Integration test: Components.__init__ should fail when diffusion coefficient is missing."""
         schema = {
@@ -1279,7 +1258,7 @@ class TestComponents:
         )
 
     def test_get_binary_diffusion_coefficient_integration_success(
-        self, make_material, tmp_path, monkeypatch
+        self, tmp_path, monkeypatch
     ):
         """Integration test: Components.__init__ should assign diffusion properties for both gas and vapour."""
         schema = {
@@ -1364,7 +1343,7 @@ class TestMedium:
 
         # MediaSet.validate_medium should now raise ValueError
         with pytest.raises(
-            ValueError, match="Medium 'region1' failed validation."
+            ValueError, match=r"Medium 'region1' failed validation."
         ):
             media.validate_medium(medium)
 
