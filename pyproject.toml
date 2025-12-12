@@ -240,7 +240,7 @@ pinned = [
 ]
 
 
-dev = ["pre-commit>=2.20", "build", "black==24.4.0"]
+dev = ["pre-commit>=2.20", "build", "black==24.4.0", "types-lxml>=2025.8.0",]
 test = ["coverage", "hypothesis", "pytest", "pytest-xdist", "pytest-dependency"]
 docs = [
   "livereload",
