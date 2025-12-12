@@ -4,28 +4,32 @@ name: opalinus_clay
 properties:
   biot_coefficient:
     - type: Constant
-      unit: 0.6
-      value: 1
+      value: 0.6
+      unit: 1
   bishops_effective_stress:
     - type: BishopsPowerLaw
-      unit: 1
       exponent: 1
+      unit: 1
   density:
     - type: Constant
-      unit: kg/m³
       value: 2600
+      unit: kg/m³
   permeability:
     - type: Constant
-      unit: m²
       value: 1.e-21
+      unit: m²
   poisson_ratio:
     - type: Constant
-      unit: 1
       value: 0.23
+      unit: 1
   porosity:
     - type: Constant
-      unit: 1
       value: 0.15
+      unit: 1
+  storage:
+    - type: Constant
+      value: 2e-10
+      unit: kg/(m²Pa)
   saturation:
     - type: SaturationVanGenuchten
       exponent: 0.2
@@ -34,15 +38,15 @@ properties:
       residual_liquid_saturation: 0.01
   specific_heat_capacity:
     - type: Constant
-      unit: J/(kg·K)
       value: 995
+      unit: J/(kg·K)
   thermal_conductivity:
     # Thermal conductivity of the individual phase (e.g. solid or fluid),
     # used in local energy balance equations of that phase.
     - type: Constant
-      scope: phase
-      unit: W/(m·K)
       value: 1.7
+      unit: W/(m·K)
+      scope: phase
     # Effective thermal conductivity of the full medium,
     # typically calculated from the phase conductivities using
     # porosity-weighted mixing models.
@@ -50,23 +54,35 @@ properties:
       mean_type: arithmetic_squareroot
       dry_thermal_conductivity: 1.36
       wet_thermal_conductivity: 1.7
-      scope: medium
       unit: W/(m·K)
+      scope: medium
     - type: EffectiveThermalConductivityPorosityMixing
-      scope: medium
       unit: W/(m·K)
+      scope: medium
+    - type: Constant
+      value: 1.7
+      unit: W/(m·K)
+      scope: medium
   thermal_expansivity:
     - type: Constant
-      unit: 1/K
       value: 1.7e-5
+      unit: 1/K
+  thermal_longitudinal_dispersivity:
+    - type: Constant
+      value: 0
+      unit: m
+  thermal_transversal_dispersivity:
+    - type: Constant
+      value: 0
+      unit: m
   tortuosity:
     - type: Constant
-      unit: 1
       value: 1
+      unit: 1
   youngs_modulus:
     - type: Constant
-      unit: Pa
       value: 6500000000
+      unit: Pa
   relative_permeability:
     - type: RelativePermeabilityVanGenuchten
       residual_liquid_saturation: 0.01

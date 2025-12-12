@@ -62,6 +62,19 @@ class Material:
         """
         return [p.name for p in self.properties]
 
+    def get_property(self, key: str) -> MaterialProperty:
+        """
+        Returns the property with the given name if available.
+        """
+        for p in self.properties:
+            if p.name == key:
+                return p
+        msg = (
+            f"No property with name {key} found. Available properties are: "
+            + ", ".join(self.property_names())
+        )
+        raise KeyError(msg)
+
     # -----------------------
     # Filters (dummy for now)
     # -----------------------
@@ -72,12 +85,30 @@ class Material:
         allowed = required_property_names(process_schema)
         return self.filter_properties(allowed)
 
-    def filter_properties(self, allowed: set[str]) -> Material:
+    def filter_properties(
+        self, allowed: set[str] | str, key: str = "name"
+    ) -> Material:
         """
         Return a new Material containing only the properties in 'allowed',
         preserving all extra fields (e.g. scope, unit).
+
+        :param allowed: values to filter for
+        :param key:     attribute to filter for (e.g. 'name' or 'type')
         """
-        filtered_props = [p for p in self.properties if p.name in allowed]
+        if isinstance(allowed, str):
+            allowed = {allowed}
+
+        def prop_attr(p: MaterialProperty, key: str) -> Any:
+            if key in ["name", "type", "value"]:
+                return getattr(p, key)
+            if key not in p.extra:
+                msg = f"Property {p.name} has no attribute called '{key}'."
+                raise KeyError(msg)
+            return p.extra[key]
+
+        filtered_props = [
+            p for p in self.properties if prop_attr(p, key) in allowed
+        ]
         logger.debug(
             "Material %s: filtered %d/%d properties (%s)",
             self.name,
