@@ -2022,52 +2022,55 @@ class TestOgstoolsInternalDB:
         meshes.save(tmp_path)
 
     @pytest.mark.system()
-    def test_media_project_import_and_run(self, tmp_path):
+    @pytest.mark.parametrize(
+        ("process", "input_prj"),
+        [
+            ("T", examples.prj_heat_conduction),
+            ("TH", examples.prj_heat_transport),
+            ("THM", examples.prj_THM_stationary),
+            ("TH2M_PT", examples.prj_th2m_phase_transition),
+        ],
+    )
+    def test_media_project_import_and_run(
+        self, tmp_path, process: str, input_prj: Path
+    ):
         """System test: build MediaSet from builtin DB, PRJ import media, and run OGS."""
 
-        # --- Setup: Materials and Schema ---
         db = material_manager.MaterialManager()
-        process = "TH2M_PT"
 
         subdomains = [
             {
-                "subdomain": "test_subdomain_1",
-                "material": "opalinus_clay",
-                "material_ids": [0],
-            },
-            {
-                "subdomain": "test_subdomain_2",
-                "material": "bentonite",
-                "material_ids": [1],
-            },
+                "subdomain": f"test_subdomain_{idx+1}",
+                "material": mat,
+                "material_ids": [idx],
+            }
+            for idx, mat in enumerate(["opalinus_clay", "bentonite"])
         ]
-        fluids = {"AqueousLiquid": "water", "Gas": "carbon_dioxide"}
+        fluids = {"AqueousLiquid": "water"}
+        if process == "TH2M_PT":
+            fluids["Gas"] = "carbon_dioxide"
 
-        # --- Build MediaSet ---
         filtered = db.filter(
             process=process, subdomains=subdomains, fluids=fluids
         )
+        if process != "TH2M_PT":
+            for db_dict in [filtered.materials_db, filtered.fluids]:
+                const_filtered = {
+                    name: mat.filter_properties("Constant", "type")
+                    for name, mat in db_dict.items()
+                }
+                db_dict.update(const_filtered)
         media = MediaSet(filtered)
 
-        # --- Prepare Project ---
         prj_file = tmp_path / "default.prj"
-
-        print(f"Prj file: {prj_file}")
-        model = Project(
-            output_file=prj_file, input_file=examples.prj_th2m_phase_transition
-        )
-
-        # inject <media> section
+        model = Project(input_file=input_prj, output_file=prj_file)
         model.set_media(media)
         model.write_input()
 
-        # Create mesh and export as VTU
         self.create_temporary_mesh(tmp_path)
 
-        # --- Run OGS ---
         model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
 
-        # --- Check run result ---
         if model.process is None:
             pytest.fail("OGS process did not start.")
 
@@ -2095,6 +2098,8 @@ class TestOgstoolsInternalDB:
         # --- Sanity checks ---
         text = prj_file.read_text()
         assert "<media>" in text
-        assert "AqueousLiquid" in text
-        assert "Gas" in text
         assert "opalinus_clay" not in text  # only IDs are exported
+        if "H" in process:
+            assert "AqueousLiquid" in text
+        if process == "TH2M_PT":
+            assert "Gas" in text

@@ -265,7 +265,7 @@ prj_tunnel_trm_withincludes = _prj_dir / "tunnel_trm_withincludes.prj"
 prj_trm_from_scratch = _prj_dir / "trm_from_scratch.prj"
 prj_include_solid = _prj_dir / "solid_inc.xml"
 prj_include_solid_ref = _prj_dir / "solid.xml"
-prj_heat_transport = _prj_dir / "HeatTransportBHE_ogs6py.prj"
+prj_heat_transport_bhe = _prj_dir / "HeatTransportBHE_ogs6py.prj"
 prj_heat_transport_bhe_simple = _prj_dir / "HeatTransportBHE_simple.prj"
 prj_staggered = _prj_dir / "hm1_3Dcube.prj"
 prj_staggered_ref = _prj_dir / "hm1_3Dcube_ref.prj"
@@ -288,7 +288,9 @@ prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
 prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
 prj_th2m_phase_transition = _prj_dir / "th2m_phase_transition.prj"
-
+prj_heat_transport = _prj_dir / "HeatTransportInStationaryFlow.prj"
+prj_heat_conduction = _prj_dir / "HeatConduction.prj"
+prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
 
 surface_paths = [
     _surface_dir / (file + ".vtu")

@@ -17,10 +17,22 @@ properties:
     - type: Constant
       value: 2.0e-5
       unit: 1/K
+  thermal_longitudinal_dispersivity:
+    - type: Constant
+      unit: m
+      value: 0
+  thermal_transversal_dispersivity:
+    - type: Constant
+      unit: m
+      value: 0
   porosity:
     - type: Constant
       value: 0.4
       unit: 1
+  storage:
+    - type: Constant
+      unit: kg/(m²Pa)
+      value: 2.5e-10
   permeability:
     - type: Constant
       value: 1.0e-20
@@ -37,7 +49,7 @@ properties:
       unit: 1
   biot_coefficient:
     - type: Constant
-      value: 1.0
+      value: 0.6
       unit: 1
   youngs_modulus:
     - type: Constant

@@ -18,7 +18,7 @@ from ogstools.examples import (
     prj_beier_sandbox_power_ref,
     prj_beier_sandbox_ref,
     prj_deactivate_replace,
-    prj_heat_transport,
+    prj_heat_transport_bhe,
     prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
@@ -1097,7 +1097,7 @@ class TestiOGS:
             error_tolerance="1e-16",
         )
         model.write_input()
-        self.compare(outfile, prj_heat_transport)
+        self.compare(outfile, prj_heat_transport_bhe)
 
     def test_replace_text(self, tmp_path: Path) -> NoReturn:
         prjfile = tmp_path / "tunnel_ogs6py_replace_text.prj"
@@ -1624,7 +1624,7 @@ class TestiOGS:
         ("prjfile", "expected_output"),
         [
             (prj_3bhes_id_1U_2U_1U, "3bhes_id.pvd"),
-            (prj_heat_transport, "HTbhe_test.pvd"),
+            (prj_heat_transport_bhe, "HTbhe_test.pvd"),
             (prj_nuclear_decay, "stepsize__domain.xdmf"),
             (prj_square_1e4_robin, "square_1x1_quad_1e4.pvd"),
         ],

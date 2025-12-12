@@ -4,8 +4,8 @@ name: opalinus_clay
 properties:
   biot_coefficient:
     - type: Constant
-      unit: 0.6
-      value: 1
+      unit: 1
+      value: 0.6
   bishops_effective_stress:
     - type: BishopsPowerLaw
       unit: 1
@@ -26,6 +26,10 @@ properties:
     - type: Constant
       unit: 1
       value: 0.15
+  storage:
+    - type: Constant
+      unit: kg/(m²Pa)
+      value: 2e-10
   saturation:
     - type: SaturationVanGenuchten
       exponent: 0.2
@@ -55,10 +59,22 @@ properties:
     - type: EffectiveThermalConductivityPorosityMixing
       scope: medium
       unit: W/(m·K)
+    - type: Constant
+      scope: medium
+      unit: W/(m·K)
+      value: 1.7
   thermal_expansivity:
     - type: Constant
       unit: 1/K
       value: 1.7e-5
+  thermal_longitudinal_dispersivity:
+    - type: Constant
+      unit: m
+      value: 0
+  thermal_transversal_dispersivity:
+    - type: Constant
+      unit: m
+      value: 0
   tortuosity:
     - type: Constant
       unit: 1

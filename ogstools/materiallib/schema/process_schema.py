@@ -6,18 +6,37 @@
 
 from typing import Any
 
+_T_PROPS = ["density", "specific_heat_capacity", "thermal_conductivity"]
+_TH_LIQUID = _T_PROPS + ["viscosity"]
+_TH_SOLID = _T_PROPS + ["storage"]
+_THM_SOLID = _TH_SOLID + ["thermal_expansivity"]
+_TH_MED_PROPS = [
+    "biot_coefficient",
+    "permeability",
+    "porosity",
+    "thermal_conductivity",
+    "thermal_longitudinal_dispersivity",
+    "thermal_transversal_dispersivity",
+]
 PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
     "SMALL_DEFORMATION": {
         "phases": [{"type": "Solid", "properties": ["density"]}],
         "properties": [],
     },
-    "HEAT_CONDUCTION": {
-        "phases": [],
-        "properties": [
-            "thermal_conductivity",
-            "density",
-            "specific_heat_capacity",
+    "HEAT_CONDUCTION": {"phases": [], "properties": _T_PROPS},
+    "TH": {
+        "phases": [
+            {"type": "AqueousLiquid", "properties": _TH_LIQUID},
+            {"type": "Solid", "properties": _TH_SOLID},
         ],
+        "properties": _TH_MED_PROPS,
+    },
+    "THM": {
+        "phases": [
+            {"type": "AqueousLiquid", "properties": _TH_LIQUID},
+            {"type": "Solid", "properties": _THM_SOLID},
+        ],
+        "properties": _TH_MED_PROPS,
     },
     "TH2M_PT": {
         "phases": [
@@ -76,6 +95,8 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
         ],
     },
 }
+# just an alias for practicality
+PROCESS_SCHEMAS["T"] = PROCESS_SCHEMAS["HEAT_CONDUCTION"]
 
 
 # PROCESS_SCHEMAS = {
