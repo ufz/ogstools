@@ -8,17 +8,11 @@ meshpath = EXAMPLES_DIR / "meshlib"
 
 class TestLayerSet:
     layerset = meshpath / "compose_geomodel/layersets.csv"
-    materialset = meshpath / "compose_geomodel/materialset.csv"
     surfacedata = meshpath / "mesh1/surface_data/"
 
     @pytest.mark.tools()  # createIntermediateRasters
     def test_create_with_3_intermediate(self):
-        mesh3_df = create.dataframe_from_csv(
-            3,
-            self.layerset,
-            self.materialset,
-            self.surfacedata,
-        )
+        mesh3_df = create.dataframe_from_csv(3, self.layerset, self.surfacedata)
         layer_set1 = create.LayerSet.from_pandas(mesh3_df)
         assert len(layer_set1.layers) == 4, "Expected 4 Layers in Layerset"
         raster_set_1_300 = layer_set1.create_rasters(resolution=300)
@@ -66,10 +60,7 @@ class TestLayerSet:
     @pytest.mark.tools()  # createIntermediateRasters
     def test_create_with_just1_intermediate(self):
         layerset2_df = create.dataframe_from_csv(
-            2,
-            self.layerset,
-            self.materialset,
-            self.surfacedata,
+            2, self.layerset, self.surfacedata
         )
         layer_set1 = create.LayerSet.from_pandas(layerset2_df)
         raster_set1 = layer_set1.create_rasters(300)

@@ -19,6 +19,9 @@
 - `meshlib` has been renamed to `mesh` - classes to generate a new mesh (e.g.
   Layer, LayerSet, Surface, ...) have been moved to a submodule `create`.
 - `ot.mesh.create.LayerSet.to_region_tetraeder` -> `ot.mesh.create.LayerSet.to_region_tetrahedron`
+- `ot.mesh.create.dataframe_from_csv` doesn't require a parameters .csv anymore,
+  but either a mapping of layer_id to surface files, or the directory containing
+  all surfaces files (in that case the layer_ids map to the sorted file list)
 
 ## Deprecations
 
