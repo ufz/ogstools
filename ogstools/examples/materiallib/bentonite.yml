@@ -19,20 +19,20 @@ properties:
       unit: 1/K
   thermal_longitudinal_dispersivity:
     - type: Constant
-      unit: m
       value: 0
+      unit: m
   thermal_transversal_dispersivity:
     - type: Constant
-      unit: m
       value: 0
+      unit: m
   porosity:
     - type: Constant
       value: 0.4
       unit: 1
   storage:
     - type: Constant
-      unit: kg/(m²Pa)
       value: 2.5e-10
+      unit: kg/(m²Pa)
   permeability:
     - type: Constant
       value: 1.0e-20
