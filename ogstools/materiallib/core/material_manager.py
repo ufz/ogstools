@@ -92,6 +92,23 @@ class MaterialManager:
         else:
             logger.debug("Using provided materials: %s", list(materials.keys()))
 
+    def set_material(self, file_path: str | Path) -> None:
+        """Write a material entry based of one yaml file."""
+        with Path(file_path).open(encoding="utf-8") as file:
+            raw_data = yaml.safe_load(file)
+
+            if not isinstance(raw_data, dict):
+                logger.debug("Skipping invalid YAML file: %s", file_path)
+                return
+
+            if "name" not in raw_data:
+                logger.debug("Skipping YAML file without 'name': %s", file_path)
+                return
+
+            name = raw_data["name"]
+            material = Material(name=name, raw_data=raw_data)
+            self.materials_db[material.name] = material
+
     # ------------------------------------------------------------
     # Loading
     # ------------------------------------------------------------
@@ -104,31 +121,19 @@ class MaterialManager:
             raise FileNotFoundError(msg)
 
         for file_path in yaml_files:
-            with file_path.open(encoding="utf-8") as file:
-                raw_data = yaml.safe_load(file)
-
-                if not isinstance(raw_data, dict):
-                    logger.debug("Skipping invalid YAML file: %s", file_path)
-                    continue
-
-                if "name" not in raw_data:
-                    logger.debug(
-                        "Skipping YAML file without 'name': %s", file_path
-                    )
-                    continue
-
-                name = raw_data["name"]
-                material = Material(name=name, raw_data=raw_data)
-                self.materials_db[material.name] = material
+            self.set_material(file_path)
 
     # ------------------------------------------------------------
     # Accessors
     # ------------------------------------------------------------
-    def get_material(self, name: str) -> Material | None:
+    def get_material(self, name: str) -> Material:
         """
         Retrieve a material from the repository by name.
         """
-        return self.materials_db.get(name)
+        if name not in self.materials_db:
+            msg = f"Material '{name}' not found in repository."
+            raise ValueError(msg)
+        return self.materials_db[name]
 
     def _list_materials(self) -> list[str]:
         return list(self.materials_db.keys())
@@ -179,10 +184,6 @@ class MaterialManager:
         for entry in subdomains:
             name = entry["material"]
             mat = self.get_material(name)
-            if mat is None:
-                msg = f"Material '{name}' not found in repository."
-                raise ValueError(msg)
-
             filtered_mat = mat.filter_process(schema)
 
             subdomain_name = entry["subdomain"]
@@ -205,10 +206,6 @@ class MaterialManager:
         fluid_materials: dict[str, Material] = {}
         for phase_type, mat_name in (fluids or {}).items():
             raw = self.get_material(mat_name)
-            if raw is None:
-                msg = f"Fluid material '{mat_name}' not found in repository."
-                raise ValueError(msg)
-
             fluid_materials[phase_type] = raw.filter_process(schema)
 
         return MaterialManager(
