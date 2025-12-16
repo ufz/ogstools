@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from queue import Queue
 
+import numpy as np
 from bokeh.io import output_notebook, push_notebook, show
 from bokeh.io.notebook import CommsHandle
 from bokeh.layouts import layout
@@ -349,7 +350,7 @@ class Monitor:
 
     def plot_log(
         self,
-        log_data: str | list[str] | list[list[str]] = "step_start_time",
+        log_data: str | list[list[str]] = "step_start_time",
         time_y_axis_type: str = "linear",
         time_window_length: int = 0,
         iteration_window_length: int = 0,
@@ -375,14 +376,13 @@ class Monitor:
             if len(log_data) == 0:
                 msg = "log_data list cannot be empty."
                 raise ValueError(msg)
-            rows = len(log_data)
+            try:
+                rows, cols = np.shape(log_data)
+            except ValueError:
+                print("log_data needs to be a list of lists.")
             if rows == 0:
                 msg = "log_data list cannot be empty."
                 raise ValueError(msg)
-            if not isinstance(log_data[0], list):
-                msg = "log_data needs to be a list of lists."
-                raise ValueError(msg)
-            cols = len(log_data[0])
             if cols == 0:
                 msg = "log_data list cannot be empty."
                 raise ValueError(msg)
