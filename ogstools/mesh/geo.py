@@ -22,6 +22,8 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
     vertical axis. Otherwise, the vertical distance to the top facing edges
     surfaces are returned.
     """
+    from scipy.spatial import KDTree
+
     if mesh.volume > 0:
         # prevents inner edge (from holes) to be detected as a top boundary
         edges = mesh.extract_surface().connectivity("point_seed", point_ids=[0])
@@ -62,13 +64,10 @@ def depth(mesh: pv.UnstructuredGrid, use_coords: bool = False) -> np.ndarray:
         are_non_vertical = np.asarray(edge_horizontal_extent) > 1e-12
         top_cells = are_above & are_non_vertical
     top = edges.extract_cells(top_cells)
-    eucl_distance_projected_top_points = np.sum(
-        np.abs(
-            np.delete(mesh.points[:, None] - top.points, vertical_dim, axis=-1)
-        ),
-        axis=-1,
-    )
-    matching_top = np.argmin(eucl_distance_projected_top_points, axis=-1)
+
+    tree = KDTree(np.delete(top.points, vertical_dim, axis=-1))
+    _, distances = tree.query(np.delete(mesh.points, vertical_dim, axis=-1))
+    matching_top = np.argmin(distances, axis=-1)
     return np.abs(
         mesh.points[..., vertical_dim] - top.points[matching_top, vertical_dim]
     )
