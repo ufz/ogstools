@@ -38,6 +38,31 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
         ],
         "properties": _TH_MED_PROPS,
     },
+    "HEAT_TRANSPORT_BHE": {
+        "phases": [
+            {
+                "type": "AqueousLiquid",
+                "properties": [
+                    "specific_heat_capacity",
+                    "density",
+                    "phase_velocity",
+                ],
+            },
+            {
+                "type": "Solid",
+                "properties": [
+                    "specific_heat_capacity",
+                    "density",
+                ],
+            },
+        ],
+        "properties": [
+            "porosity",
+            "thermal_conductivity",
+            "thermal_longitudinal_dispersivity",
+            "thermal_transversal_dispersivity",
+        ],
+    },
     "TH2M_PT": {
         "phases": [
             {
