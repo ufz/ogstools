@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 import yaml  # type: ignore[import]
+from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import examples
@@ -161,6 +162,27 @@ def make_filtered_db(write_yaml, tmp_path, monkeypatch):
         return db.filter(process="dummy", subdomains=subdomains, fluids=fluids)
 
     return _make
+
+
+def medium_properties_from_xml(xml_file: Path, medium_id: int) -> dict:
+    root = ET.parse(xml_file)
+    dict_of_props = {}
+    for medium in root.xpath(f"./media/medium[@id='{medium_id}']"):
+        for property in medium.findall("properties/"):
+            dict_of_props[property.findtext("name")] = property.findtext(
+                "value"
+            )
+        for phase in medium.findall("phases/"):
+            for phase_property in phase.findall("properties/"):
+                prop_name = "".join(
+                    (
+                        phase.findtext("type"),
+                        "_",
+                        phase_property.findtext("name"),
+                    )
+                )
+                dict_of_props[prop_name] = phase_property.findtext("value")
+    return dict_of_props
 
 
 class TestMaterialLib:
@@ -2004,6 +2026,43 @@ class TestOgstoolsInternalDB:
         assert "<media>" in text
         assert "AqueousLiquid" in text
         assert "Gas" in text
+
+    def test_media_import_with_builtin_BHE_schema(self, tmp_path):
+        """Integration: Project can import builtin DB + schema."""
+        db = material_manager.MaterialManager()
+        subdomains = [
+            {
+                "subdomain": "domain",
+                "material": "beier_sandbox_sand",
+                "material_ids": [0],
+            }
+        ]
+
+        fluids = {"AqueousLiquid": "beier_sandbox_water"}
+
+        filtered = db.filter(
+            process="HEAT_TRANSPORT_BHE", subdomains=subdomains, fluids=fluids
+        )
+        from ogstools.materiallib.core.media import MediaSet
+
+        media = MediaSet(filtered)
+
+        prj = Project()
+        prj.set_media(media)
+
+        xml_file = tmp_path / "internal_test.prj"
+        prj.write_input(xml_file)
+
+        df_ref = medium_properties_from_xml(
+            xml_file=examples.prj_beier_sandbox_ref, medium_id=0
+        )
+        df_mat = medium_properties_from_xml(xml_file=xml_file, medium_id=0)
+
+        for key, value in df_ref.items():
+            # skip if gas phase, didn't matter for the BHE process but is included in benchmark prjs of OGS
+            if "Gas" in key:
+                continue
+            assert df_mat[key] == value
 
     def create_temporary_mesh(self, tmp_path):
 

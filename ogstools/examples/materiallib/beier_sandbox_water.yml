@@ -1,0 +1,16 @@
+name: beier_sandbox_water
+group: liquid
+type: phase
+properties:
+  specific_heat_capacity:
+    - type: Constant
+      value: 4068
+      unit: J/(kg·K)
+  density:
+    - type: Constant
+      value: 992.92
+      unit: kg/m³
+  phase_velocity:
+    - type: Constant
+      value: 0 0 0
+      unit: m/s 

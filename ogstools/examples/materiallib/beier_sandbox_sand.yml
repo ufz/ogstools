@@ -1,0 +1,29 @@
+name: beier_sandbox_sand
+group: medium
+properties:
+  density:
+    - type: Constant
+      scope: phase
+      value: 1800
+      unit: kg/m³
+  specific_heat_capacity:
+    - type: Constant
+      scope: phase
+      value: 1778
+      unit: J/(kg·K)
+  thermal_conductivity:
+    - type: Constant
+      value: 2.78018
+      unit: W/(m·K)
+  porosity:
+    - type: Constant
+      value: 0
+      unit: 1
+  thermal_transversal_dispersivity:
+    - type: Constant
+      value: 0
+      unit: m
+  thermal_longitudinal_dispersivity:
+    - type: Constant
+      value: 0
+      unit: m
