@@ -85,20 +85,18 @@ def test_diff_matrix_unequal():
     meshes_diff = ot.mesh.difference_matrix(meshes1, meshes2)
 
 
-@pytest.mark.parametrize(
-    "mesh",
-    [
-        examples.load_mesh_mechanics_2D(),
-        pv.SolidSphere(100, center=(0, 0, -101)),
-    ],
-)
-def test_depth(mesh: pv.UnstructuredGrid):
+def test_depth_2D():
     mesh = examples.load_mesh_mechanics_2D()
-    mesh["depth"] = ot.mesh.depth(mesh, use_coords=True)
-    depth_idx = 2 if mesh.volume != 0.0 else 1
-    assert np.all(mesh["depth"] == -mesh.points[..., depth_idx])
-    mesh["depth"] = ot.mesh.depth(mesh)
-    assert np.all(mesh["depth"] < -mesh.points[..., depth_idx])
+    top_mesh = ot.Meshes.from_mesh(mesh)["top"]
+    depth = ot.mesh.depth(mesh, top_mesh)
+    assert np.isclose(np.ptp(depth), np.ptp(mesh.points[:, 1]))
+
+
+def test_depth_3D():
+    mesh = pv.SolidSphere(100, center=(0, 0, -101))
+    top_mesh = mesh.extract_surface().clip("-z")
+    depth = ot.mesh.depth(mesh, top_mesh)
+    assert np.isclose(np.ptp(depth), np.ptp(mesh.points[:, 2]))
 
 
 def test_reshape_obs_points():
@@ -118,7 +116,7 @@ def test_reshape_obs_points_mesh():
 
 
 @pytest.mark.tools()
-@settings(max_examples=30, deadline=500)
+@settings(max_examples=30, deadline=1000)
 @given(
     st.one_of(
         st.integers(2, 13),

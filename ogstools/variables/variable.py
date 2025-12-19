@@ -378,7 +378,11 @@ class Variable:
         mask_data = next(  # type: ignore[call-overload]
             (d for d in [mesh.point_data, mesh.cell_data] if self.mask in d), {}
         ).get(self.mask, [])
-        return not self.is_mask() and (len(mask_data) != 0)
+        return (
+            not self.is_mask()
+            and (len(mask_data) != 0)
+            and not np.all(mask_data == 1)
+        )
 
     def _get_data(
         self,
@@ -456,7 +460,6 @@ class Scalar(Variable):
 
 
 def _spatial_preset(axis: str, unit: PlainQuantity | str) -> Scalar:
-
     def get_pts(
         index: int,
     ) -> Callable[[pv.UnstructuredGrid | Sequence], np.ndarray]:
@@ -486,7 +489,6 @@ def _spatial_preset(axis: str, unit: PlainQuantity | str) -> Scalar:
 
 
 def _time_preset(unit: PlainQuantity | str) -> Scalar:
-
     if isinstance(unit, PlainQuantity):
         unit_str = str(unit) if unit.magnitude != 1 else unit.units
     else:

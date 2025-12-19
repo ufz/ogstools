@@ -106,29 +106,12 @@ for comp in ["rr", "tt", "pp"]:
 # %% [markdown]
 # Integrity criteria
 # ==================
-# Evaluating models regarding their integrity is often dependent on the
-# geometry, e.g. for a hypothetical water column proportional to the depth.
-# Presets which fall under this category make use of
-# :py:mod:`ogstools.variables.mesh_dependent`.
-
-# %% [markdown]
-# The hypothetical water column used in the integrity criteria would initially
-# use existing "pressure" data in the mesh, otherwise it is automatically
-# calculated as the following:
+# Evaluating models regarding their integrity is often dependent on the fluid
+# pressure. If not already present, we have to calculate it manually, e.g. as a
+# hypothetical water column proportional to the depth.
 
 # %%
-mesh["pressure"] = ot.mesh.p_fluid(mesh)
-fig = ot.plot.contourf(mesh, ot.variables.pressure)
-
-# %% [markdown]
-# But since this assumes that the top of the model is equal to the ground
-# surface, the resulting pressure is underestimated. In this case we have to
-# correct the depth manually. Then the pressure is calculated correctly:
-
-# %%
-mesh["depth"] = ot.mesh.depth(mesh, use_coords=True)
-fig = ot.plot.contourf(mesh, "depth")
-mesh["pressure"] = ot.mesh.p_fluid(mesh)
+mesh["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %% [markdown]
