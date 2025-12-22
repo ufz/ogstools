@@ -8,12 +8,5 @@ import logging
 
 """.. noindex::"""
 
-logging.basicConfig(
-    level=logging.INFO,  # could be DEBUG or WARNING later
-    format="%(levelname)s: %(message)s",
-)
-
-
-def set_log_level(level: str = "INFO") -> None:
-    """Change the global log level for materiallib."""
-    logging.getLogger().setLevel(level.upper())
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
