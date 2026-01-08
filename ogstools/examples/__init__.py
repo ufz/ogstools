@@ -27,109 +27,70 @@ _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
 _yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
-def load_meshseries_THM_2D_PVD(spatial_unit: unit = "m", time_unit: unit = "s"):
-    return MeshSeries(str(_meshseries_dir / "2D.pvd"), spatial_unit, time_unit)
+def load_meshseries_THM_2D_PVD():
+    return MeshSeries(str(_meshseries_dir / "2D.pvd"))
 
 
-def load_meshseries_CT_2D_XDMF(spatial_unit: unit = "m", time_unit: unit = "s"):
-    ms = MeshSeries(
-        str(_meshseries_dir / "elder.xdmf"), spatial_unit, time_unit
-    )
+def load_meshseries_CT_2D_XDMF():
+    ms = MeshSeries(str(_meshseries_dir / "elder.xdmf"))
     return ms.transform(lambda mesh: mesh.translate([0, -mesh.center[1], 0]))
 
 
-def load_meshseries_HT_2D_XDMF(spatial_unit: unit = "m", time_unit: unit = "s"):
+def load_meshseries_HT_2D_XDMF():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf"),
-        spatial_unit,
-        time_unit,
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf")
     )
 
 
-def load_meshseries_HT_2D_PVD(spatial_unit: unit = "m", time_unit: unit = "s"):
+def load_meshseries_HT_2D_PVD():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd"),
-        spatial_unit,
-        time_unit,
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd")
     )
 
 
-def load_meshseries_HT_2D_VTU(spatial_unit: unit = "m", time_unit: unit = "s"):
+def load_meshseries_HT_2D_VTU():
     return MeshSeries(
         str(
             _meshseries_dir
             / "2D_single_fracture_HT_2D_single_fracture"
             / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"
-        ),
-        spatial_unit,
-        time_unit,
+        )
     )
 
 
-def load_meshseries_BHE_3D_1P(spatial_unit: unit = "m", time_unit: unit = "s"):
+def load_meshseries_BHE_3D_1P():
     return MeshSeries(
         _meshseries_dir / "3D_BHE_sandwich" / "sandwich_1P.pvd",
-        spatial_unit,
-        time_unit,
     )
 
 
-def load_meshseries_BHE_3D_1U(spatial_unit: unit = "m", time_unit: unit = "s"):
-    return MeshSeries(
-        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_1U.pvd",
-        spatial_unit,
-        time_unit,
-    )
+def load_meshseries_BHE_3D_1U():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_1U.pvd")
 
 
-def load_meshseries_BHE_3D_2U(spatial_unit: unit = "m", time_unit: unit = "s"):
-    return MeshSeries(
-        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_2U.pvd",
-        spatial_unit,
-        time_unit,
-    )
+def load_meshseries_BHE_3D_2U():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_2U.pvd")
 
 
-def load_meshseries_BHE_3D_CXA(spatial_unit: unit = "m", time_unit: unit = "s"):
-    return MeshSeries(
-        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXA.pvd",
-        spatial_unit,
-        time_unit,
-    )
+def load_meshseries_BHE_3D_CXA():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXA.pvd")
 
 
-def load_meshseries_BHE_3D_CXC(spatial_unit: unit = "m", time_unit: unit = "s"):
-    return MeshSeries(
-        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd",
-        spatial_unit,
-        time_unit,
-    )
+def load_meshseries_BHE_3D_CXC():
+    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd")
 
 
-def load_meshseries_BHEs_3D(
-    kind: Literal["full", "line", "lines"],
-    ext: str,
-    spatial_unit: unit = "m",
-    time_unit: unit = "s",
-):
+def load_meshseries_BHEs_3D(kind: Literal["full", "line", "lines"], ext: str):
     name = {"full": "3bhes", "line": "3bhes_1", "lines": "3bhes_1_2_3"}[kind]
     if ext == ".xdmf":
         name = "3bhes_" + name
 
-    return MeshSeries(
-        (_meshseries_dir / "3D_BHEs" / name).with_suffix(ext),
-        spatial_unit,
-        time_unit,
-    )
+    return MeshSeries((_meshseries_dir / "3D_BHEs" / name).with_suffix(ext))
 
 
-def load_meshseries_HT_2D_paraview_XMF(
-    spatial_unit: unit = "m", time_unit: unit = "s"
-):
+def load_meshseries_HT_2D_paraview_XMF():
     return MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf"),
-        spatial_unit,
-        time_unit,
+        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")
     )
 
 
@@ -137,8 +98,6 @@ def load_meshseries_diffusion_3D(
     Tb=373.15,
     Ta=293.15,
     alpha=1e-6,
-    spatial_unit: unit = "m",
-    time_unit: unit = "s",
 ):
     timevalues = np.geomspace(1e3, 1e7, num=12)
     xg, yg, zg = (np.linspace(0, 1, num) for num in [40, 2, 2])
@@ -151,14 +110,13 @@ def load_meshseries_diffusion_3D(
             anasol.heat_conduction_temperature(x, tv, Tb, Ta, alpha) + offset
         )
         meshes += [mesh.copy()]
-    return MeshSeries.from_data(meshes, timevalues, spatial_unit, time_unit)
+    return MeshSeries.from_data(meshes, timevalues)
 
 
-def load_meshseries_PETSc_2D(spatial_unit: unit = "m", time_unit: unit = "s"):
+def load_meshseries_PETSc_2D():
     return MeshSeries(
         str(_meshseries_dir / "2D_PETSC" / "square_1e1_neumann.pvd"),
-        spatial_unit,
-        time_unit,
+        time_unit=("a", "a"),
     )
 
 

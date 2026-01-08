@@ -13,7 +13,7 @@ import numpy as np
 import ogstools as ot
 from ogstools import examples
 
-ms = examples.load_meshseries_CT_2D_XDMF(time_unit="yrs")
+ms = examples.load_meshseries_CT_2D_XDMF().scale(time="yrs")
 saturation = ot.variables.saturation
 
 # %% [markdown]

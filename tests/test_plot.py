@@ -184,7 +184,7 @@ class TestPlotting:
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 50})
     def test_spatial_aggregate(self):
         """Test creation of spatial aggregation plots via image comparison."""
-        mesh_series = examples.load_meshseries_THM_2D_PVD(time_unit="a")
+        mesh_series = examples.load_meshseries_THM_2D_PVD().scale(time="a")
         fig = mesh_series.plot_line(ot.variables.temperature.max)
         fig.tight_layout()
         return fig
@@ -382,7 +382,7 @@ class TestPlotting:
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     def test_lineplot_PETSC(self):
         """Test plot.line with PETSC results via image comparison."""
-        ms = examples.load_meshseries_PETSc_2D(time_unit=("a", "a"))
+        ms = examples.load_meshseries_PETSc_2D()
         points_coords = np.array([[0.3, 0.5, 0.0], [0.24, 0.21, 0.0]])
         labels = [f"{label} linear interpolated" for label in ["pt0", "pt1"]]
         probe = ms.probe(points_coords)

@@ -78,7 +78,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         self.spatial_unit = u_reg.Quantity(1, base_spatial)
         self.time_unit = u_reg.Quantity(1, base_time)
         if (self.spatial_unit != u_reg.Quantity(1, spatial_unit) or
-            self.time_unit != u_reg.Quantity(1, time_unit)):  # fmt: skip
+                self.time_unit != u_reg.Quantity(1, time_unit)):  # fmt: skip
             self.scale(spatial_unit, time_unit)
 
         if filepath is None:
@@ -925,7 +925,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         if self._mesh_func_opt is None:
             return lambda mesh: mesh
         return lambda mesh: pv.UnstructuredGrid(
-            self._mesh_func_opt(mesh), deep=True  # type: ignore[misc]
+            self._mesh_func_opt(mesh),  # type: ignore[misc]
+            deep=True,
         )
 
     def transform(
@@ -956,15 +957,19 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         self,
         spatial: int | float | str = 1.0,
         time: int | float | str = 1.0,
-    ) -> None:
+    ) -> MeshSeries:
         """Scale the spatial coordinates and timevalues.
 
         Useful to convert to other units, e.g. "m" to "km" or "s" to "a".
         Converts from SI units (i.e. 'm' and 's') to the given arguments.
+        Does not create a copy, but modifies the calling object.
+        If you want to have a scaled version without changing the original do
+
+        `ms_scaled = ms.copy().scale(...)`
 
         :param spatial: Float factor or str for target unit.
         :param time:    Float factor or str for target unit.
-        :returns:       None.
+        :returns:       The scaled MeshSeries.
         """
         Qty = u_reg.Quantity
 
@@ -1004,6 +1009,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         self.spatial_unit = spatial_unit
         self.time_unit = time_unit
         self._time_factor = self._time_factor * time_factor
+        return self
 
     @classmethod
     @typechecked

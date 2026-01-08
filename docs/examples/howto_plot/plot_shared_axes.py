@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import ogstools as ot
 from ogstools import examples
 
-meshseries = examples.load_meshseries_THM_2D_PVD(spatial_unit="km")
+meshseries = examples.load_meshseries_THM_2D_PVD().scale(spatial="km")
 mesh_0 = meshseries.mesh(0)
 mesh_1 = meshseries.mesh(1)
 temperature = ot.variables.temperature
