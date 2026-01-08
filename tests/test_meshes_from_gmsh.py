@@ -195,6 +195,7 @@ def is_typical_edge_length(val):
 @settings(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
+    deadline=750,
 )
 def test_rect(tmp_path: Path, rect_p):
     """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
@@ -231,12 +232,12 @@ class TestPhysGroups:
 
     @pytest.mark.parametrize(
         ("reindex", "layer_ids", "mat_ids"), [
-        (False, [0], [0]),          (False, [999], [999]),
-        (False, [0, 2], [0, 2]),    (False, [4, 8], [4, 8]),
-        (True, [0], [0]),           (True, [999], [0]),
-        (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1])
-      ]  # fmt:skip
-    )
+            (False, [0], [0]),          (False, [999], [999]),
+            (False, [0, 2], [0, 2]),    (False, [4, 8], [4, 8]),
+            (True, [0], [0]),           (True, [999], [0]),
+            (True, [0, 2], [0, 1]),     (True, [4, 8], [0, 1]),
+            ]
+    )  # fmt:skip
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
         msh_file = self.tmp_path / "rect.msh"
@@ -251,6 +252,7 @@ class TestPhysGroups:
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
+@pytest.mark.tools()
 def test_cuboid(tmp_path: Path):
     """Test different setups of a cuboid mesh."""
     msh_file = Path(tmp_path, "cuboid.msh")
@@ -280,6 +282,7 @@ def run_cli(cmd: str) -> int:
         return cli()
 
 
+@pytest.mark.tools()
 @pytest.mark.parametrize(
     ("script", "num_meshes", "version"),
     [

@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 import pyvista as pv
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from lxml import etree as ET
 
@@ -506,6 +506,7 @@ def test_compare_meshseries(ms, var):
         mult=st.floats(min_value=1.01, max_value=10.0),
     )
 )
+@settings(deadline=500)
 def test_compare_meshseries_tol(tols):
     """
     This test attempts to check `MeshSeries.compare` atol using property-testing

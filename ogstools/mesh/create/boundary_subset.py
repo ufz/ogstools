@@ -40,7 +40,7 @@ class Surface:
         elif isinstance(input, pv.DataObject):
             self.mesh = input
             self.filename = Path(tempfile.mkstemp(".vtu", "surface")[1])
-            mesh.save(self.filename, self.mesh, file_format="vtu")
+            mesh.save(self.filename, self.mesh)
 
         self.mesh.cell_data["MaterialIDs"] = (
             np.ones(self.mesh.n_cells) * self.material_id

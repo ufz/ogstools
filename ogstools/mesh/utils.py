@@ -4,8 +4,57 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from pathlib import Path
+from tempfile import mkdtemp
+
 import numpy as np
 import pyvista as pv
+
+from ogstools._find_ogs import cli
+
+
+def node_reordering(
+    mesh: pv.UnstructuredGrid, method: int = 1
+) -> pv.UnstructuredGrid:
+    """Reorders mesh nodes to make a mesh compatible with OGS6.
+
+    :param mesh: mesh whose nodes are to be reordered.
+    :param method:
+        0: Reversing order of nodes for all elements.\n
+        1: Reversing order of nodes unless it's perceived correct by OGS6
+           standards. This is the default selection.\n
+        2: Fixing node ordering issues between VTK and OGS6 (only applies
+           to prism-elements).\n
+        3: Re-ordering of mesh node vector such that all base nodes are
+           sorted before all nonlinear nodes.
+    """
+    tmp_file = Path(mkdtemp(prefix="node_reordering")) / "mesh.vtu"
+    mesh.save(tmp_file)
+    cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
+    return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
+def check_node_ordering(
+    mesh: pv.UnstructuredGrid, strict: bool = False
+) -> bool:
+    """Check conformity of node ordering with OGS.
+
+    :param mesh:    The node ordering of this mesh's cells is checked.
+    :param strict:  If True, raise a UserWarning if the node ordering is wrong,
+                    else return True if ordering is okay else False.
+    """
+    ordering_okay = all(
+        c1.point_ids == c2.point_ids
+        for c1, c2 in zip(mesh.cell, node_reordering(mesh).cell, strict=True)
+    )
+    if strict and not ordering_okay:
+        msg = (
+            "The provided mesh has a node ordering not conforming to OGS "
+            f"standards. To get a OGS conforming mesh, please use:"
+            f"{node_reordering.__module__}.{node_reordering.__name__}"
+        )
+        raise UserWarning(msg)
+    return ordering_okay
 
 
 def reindex_material_ids(mesh: pv.UnstructuredGrid) -> None:

@@ -15,13 +15,21 @@ def read(filename: Path | str) -> pv.UnstructuredGrid:
     return pv.read(filename)
 
 
-def save(
-    filename: Path | str, mesh: pv.UnstructuredGrid, **kwargs: Any
-) -> None:
-    """Save mesh to file using ``pyvista.save_meshio``.
+def save(filename: Path | str, mesh: pv.DataSet, **kwargs: Any) -> None:
+    """Save mesh to file.
 
-    Parameters
+    Supported are all file formats pyvista supports.
+    In case you want to save as a vtu-file and the given mesh is not a
+    `pv.UnstructuredGrid` it is cast to one prior to saving.
+
     :param filename:    Filename to save the mesh to
     :param mesh:        pyvista mesh
     """
-    pv.save_meshio(filename, mesh, **kwargs)
+    if (
+        Path(filename).suffix == ".vtu"
+        and not isinstance(mesh, pv.UnstructuredGrid)
+        and hasattr(mesh, "cast_to_unstructured_grid")
+    ):
+        mesh.cast_to_unstructured_grid().save(filename, **kwargs)
+    else:
+        mesh.save(filename, **kwargs)

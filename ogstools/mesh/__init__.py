@@ -4,7 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from . import create
+from . import create, utils
 from .cosim import from_simulator
 from .differences import difference, difference_matrix, difference_pairwise
 from .file_io import read, save
@@ -29,4 +29,5 @@ __all__ = [
     "save",
     "to_ip_mesh",
     "to_ip_point_cloud",
+    "utils",
 ]

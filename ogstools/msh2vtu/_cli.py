@@ -68,22 +68,15 @@ def cli() -> int:
     output_basename = (
         Path(args.filename).stem if args.prefix == "" else args.prefix
     )
+    meshes.modify_names(prefix=output_basename + "_")
 
-    for name, mesh in meshes.items():
+    for mesh in meshes.values():
         if args.delz:
             mesh.points[:, 2] = 0.0
         if args.swapxy:
             mesh.points[:, [0, 1]] = mesh.points[:, [1, 0]]
-        filename = f"{output_basename}_{name}.vtu"
-        logger.info("Writing mesh %s.", filename)
-        mesh_path = Path(args.output_path, filename)
-        # DO NOT use the default mesh.save method if you want to use the
-        # meshes for simulation with OGS. This uses the VTK definitions for
-        # the order of nodes in cells. Using save_meshio uses a different
-        # definition which from meshio, which is the same as in OGS.
-        # usually use meshes.save()
-        # TODO: use Meshes.save
-        ot.mesh.save(mesh_path, mesh, binary=not args.ascii)
+    logger.info("Writing meshes.")
+    meshes.save(args.output_path, True, binary=not args.ascii)
 
     logger.info("Finished.")
 
