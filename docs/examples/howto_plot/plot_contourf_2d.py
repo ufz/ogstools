@@ -15,7 +15,7 @@ import ogstools as ot
 from ogstools import examples
 
 ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
-ms = examples.load_meshseries_THM_2D_PVD(spatial_unit="km")
+ms = examples.load_meshseries_THM_2D_PVD().scale(spatial="km")
 mesh = ms.mesh(1)
 
 # %% [markdown]

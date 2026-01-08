@@ -6,8 +6,7 @@
 
 - removed the Mesh class entirely, MeshSeries is now a Sequence of native
   `pyvista.UnstructuredGrid`'s.
-- `MeshSeries.scale` does not return a new MeshSeries, but changes the calling
-  object.
+- `MeshSeries.scale` changes the calling object and returns it.
 - `MeshSeries.read_interp` -> `MeshSeries.mesh_interp`
 - `MeshSeries.probe` -> `MeshSeries.probe_vals`
 - `MeshSeries.extract_probe` -> `MeshSeries.probe`
