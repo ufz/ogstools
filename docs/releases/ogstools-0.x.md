@@ -22,6 +22,9 @@
 - `ot.mesh.create.dataframe_from_csv` doesn't require a parameters .csv anymore,
   but either a mapping of layer_id to surface files, or the directory containing
   all surfaces files (in that case the layer_ids map to the sorted file list)
+- `ot.mesh.geo.depth` now requires top_mesh as an argument.
+- `ot.mesh.geo.p_fluid` was removed. See the `Stress analysis` example for how
+  to calculate fluid pressure now.
 
 ## Deprecations
 

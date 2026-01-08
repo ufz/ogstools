@@ -39,6 +39,16 @@ fig = meshes.plot()
 meshes.save()  # optionally, provide a path
 
 # %% [markdown]
+# By having the top mesh as a boundary, you can calculate a depth-based water
+# column as an initial conditions or for calculations of integrity criteria
+
+# %%
+depth = ot.mesh.depth(meshes.domain, meshes["top"])
+meshes.domain.point_data["pressure"] = 1000 * 9.81 * depth
+fig = ot.plot.contourf(meshes.domain, "pressure")
+
+
+# %% [markdown]
 # If you need to model an excavation or similar, the `Meshes` class provides
 # the useful method :meth:`~ogstools.Meshes.remove_material` which removes a
 # specified material from the domain and updates the boundary meshes

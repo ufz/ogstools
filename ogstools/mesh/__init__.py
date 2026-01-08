@@ -8,7 +8,7 @@ from . import create
 from .cosim import from_simulator
 from .differences import difference, difference_matrix, difference_pairwise
 from .file_io import read, save
-from .geo import depth, p_fluid
+from .geo import depth
 from .ip_mesh import (
     ip_data_threshold,
     ip_metadata,
@@ -25,7 +25,6 @@ __all__ = [
     "from_simulator",
     "ip_data_threshold",
     "ip_metadata",
-    "p_fluid",
     "read",
     "save",
     "to_ip_mesh",
