@@ -368,6 +368,7 @@ def test_mfy_radioactive(tmp_path):
     assert 4000 < domain.n_cells < 8000, "Wrong number of cells"
 
 
+@pytest.mark.tools()
 def test_mfy_hlw_repository(tmp_path):
     # Load YAML geometry definition directly from file
 
@@ -411,16 +412,15 @@ def test_mfy_hlw_repository(tmp_path):
 
     missing_meshes = expected_meshes - set(meshes.keys())
     unexpected_meshes = set(meshes.keys()) - expected_meshes
-    assert not missing_meshes, f"Missing expected meshes: {missing_meshes}"
-    assert (
-        not unexpected_meshes
-    ), f"Unexpected extra meshes: {unexpected_meshes}"
+    assert not missing_meshes, f"{missing_meshes=}"
+    assert not unexpected_meshes, f"{unexpected_meshes=}"
 
     domain = meshes["domain"]
     assert 3000 < domain.n_points < 4000, "Wrong number of points"
     assert 5000 < domain.n_cells < 7000, "Wrong number of cells"
 
 
+@pytest.mark.tools()
 def test_mfy_hlw_repository_meshes_container():
     meshes = ot.Meshes.from_yaml(examples.example_hlw)
 

@@ -20,6 +20,7 @@ from typing_extensions import Self
 
 from ogstools._internal import deprecated
 from ogstools.mesh import save
+from ogstools.mesh.utils import check_node_ordering
 
 logger = log.getLogger(__name__)
 
@@ -74,6 +75,7 @@ class Meshes(MutableMapping):
         :param domain_key:  String which is only in the domain filepath
 
         """
+        check_node_ordering(pv.read(filepaths[0]), strict=True)
         return cls(
             {
                 Path(m).stem: pv.read(m)
@@ -134,6 +136,8 @@ class Meshes(MutableMapping):
     ) -> Self:
         """Create Meshes by extract boundaries of domain mesh.
 
+        The provided mesh must be already conforming to OGS standards.
+
         :param mesh:            The domain mesh
         :param threshold_angle: If None, the boundary will be split by the
                                 assumption of vertical lateral boundaries. Otherwise
@@ -144,6 +148,8 @@ class Meshes(MutableMapping):
         :returns:               A Meshes object.
         """
         from ogstools.meshes.subdomains import extract_boundaries
+
+        check_node_ordering(mesh, strict=True)
 
         sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 
@@ -496,6 +502,7 @@ class Meshes(MutableMapping):
         overwrite: bool = False,
         num_partitions: int | Sequence[int] | None = None,
         dry_run: bool = False,
+        **kwargs: Any,
     ) -> list[Path] | dict[int, list[Path]]:
         """
         Save all meshes.
@@ -548,7 +555,7 @@ class Meshes(MutableMapping):
             set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
-                save(mesh.filepath, mesh)
+                save(mesh.filepath, mesh, **kwargs)
 
         if not num_partitions:
             return serial_files
