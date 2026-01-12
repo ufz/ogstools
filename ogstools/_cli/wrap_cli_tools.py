@@ -72,7 +72,7 @@ class CLI_ON_PATH:
             if len(key) == 1:
                 yield f"-{key}"
             else:
-                yield f"--{key}"
+                yield f"--{key.replace('_', '-')}"
 
             # Pass value if not bool
             if not isinstance(v, bool):

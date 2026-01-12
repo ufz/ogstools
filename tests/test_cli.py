@@ -30,3 +30,13 @@ def test_hide_cli_stdout(capfd, stdout):
     ot.cli().checkMesh(mechanics_2D, stdout=stdout)
     captured = capfd.readouterr()
     assert ("info" in captured.out) == (stdout is None)
+
+
+@pytest.mark.tools()
+def test_dashed_args(tmp_path, capfd):
+    os.environ["OGS_BIN_PATH"] = str(Path(shutil.which("ogs")).parent)
+    ot._find_ogs.cli().NodeReordering(
+        i=mechanics_2D, o=tmp_path / "test.vtu", log_level="info"
+    )
+    captured = capfd.readouterr()
+    assert "PARSE ERROR" not in captured.err
