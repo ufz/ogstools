@@ -53,6 +53,7 @@
     updates subdomains accordingly
   - `modify_names` method extends mesh names with prefix and/or suffix
   - `Meshes.from_mesh` now also works for 3D domain meshes
+  - now checks datatypes of MaterialIDs, bulk_node_ids, bulk_element_ids and coordinates upon saving
 - Project
   - dependencies () return a list of referenced/needed files (meshes, xml includes, python scripts)
   - plot_constrains() -> overview plot with boundary conditions and source terms
