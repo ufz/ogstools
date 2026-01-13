@@ -12,6 +12,8 @@ import pyvista as pv
 
 from ogstools._find_ogs import cli
 
+from .file_io import save
+
 
 def node_reordering(
     mesh: pv.UnstructuredGrid, method: int = 1
@@ -29,7 +31,7 @@ def node_reordering(
            sorted before all nonlinear nodes.
     """
     tmp_file = Path(mkdtemp(prefix="node_reordering")) / "mesh.vtu"
-    mesh.save(tmp_file)
+    save(tmp_file, mesh)
     cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
@@ -55,6 +57,32 @@ def check_node_ordering(
         )
         raise UserWarning(msg)
     return ordering_okay
+
+
+def check_datatypes(
+    mesh: pv.UnstructuredGrid, strict: bool = False, name: str = ""
+) -> bool:
+    mat_ids = mesh.cell_data.get("MaterialIDs", np.int32(0))
+    elem_ids = mesh.cell_data.get("bulk_element_ids", np.uint64(0))
+    node_ids = mesh.point_data.get("bulk_node_ids", np.uint64(0))
+    type_map = {
+        mesh.points.dtype: ("Point coordinates", np.double),
+        mat_ids.dtype: ("'MaterialIDs'", np.int32),
+        elem_ids.dtype: ("'bulk_element_ids'", np.uint64),
+        node_ids.dtype: ("'bulk_node_ids'", np.uint64),
+    }
+    for datatype, (name, ref_type) in type_map.items():
+        if datatype != ref_type:
+            msg = (
+                f"{name} datatype needs to be {ref_type} for OGS, "
+                f"but instead it is {datatype}. "
+            )
+            if name != "":
+                msg += f"Error raised by mesh with {name=}"
+            if strict:
+                raise TypeError(msg)
+            return False
+    return True
 
 
 def reindex_material_ids(mesh: pv.UnstructuredGrid) -> None:

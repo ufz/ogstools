@@ -20,7 +20,7 @@ from typing_extensions import Self
 
 from ogstools._internal import deprecated
 from ogstools.mesh import save
-from ogstools.mesh.utils import check_node_ordering
+from ogstools.mesh.utils import check_datatypes, check_node_ordering
 
 logger = log.getLogger(__name__)
 
@@ -554,6 +554,7 @@ class Meshes(MutableMapping):
 
             set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
+                check_datatypes(mesh, strict=True, name=name)
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
                 save(mesh.filepath, mesh, **kwargs)
 
