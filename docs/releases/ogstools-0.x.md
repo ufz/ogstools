@@ -34,6 +34,7 @@
 ## Bugfixes
 
 - plot.line seems to have been missing the very first point of a linesample, now fixed
+- cli dashed arguments now work as expected
 
 ## Features
 
