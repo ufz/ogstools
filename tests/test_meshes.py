@@ -46,6 +46,37 @@ def test_meshes_from_mesh_fail():
     ot.Meshes.from_mesh(ot.mesh.utils.node_reordering(mesh, method=0))
 
 
+@pytest.mark.parametrize(
+    "load_meshseries",
+    [
+        examples.load_meshseries_THM_2D_PVD,
+        examples.load_meshseries_HT_2D_XDMF,
+        examples.load_meshseries_diffusion_3D,
+    ],
+)
+def test_datatypes(load_meshseries):
+    "Test `check_datatypes` actually fails with erroneous data."
+    domain: pv.UnstructuredGrid = load_meshseries()[0]
+    meshes = ot.Meshes.from_mesh(domain)
+    meshes.identify_subdomain()
+
+    domain["MaterialIDs"] = np.zeros(domain.n_cells, dtype=np.int64)
+    meshes["top"].points = np.astype(meshes["top"].points, np.float32)
+    meshes["bottom"].points = np.astype(meshes["bottom"].points, np.float32)
+    meshes["left"]["bulk_node_ids"] = np.astype(
+        meshes["left"]["bulk_node_ids"], np.int32
+    )
+    meshes["right"]["bulk_element_ids"] = np.astype(
+        meshes["right"]["bulk_element_ids"], np.int32
+    )
+    for name, mesh in meshes.items():
+        if name in ["front", "back"]:
+            continue
+        with pytest.raises(TypeError):
+            ot.mesh.utils.check_datatypes(mesh, strict=True, name=name)
+        assert not ot.mesh.utils.check_datatypes(mesh, strict=False)
+
+
 @pytest.mark.tools()
 def test_meshes_from_mesh_3D_simple(tmp_path):
     "Test extracted boundaries from 3D mesh are correctly labeled."
