@@ -466,7 +466,7 @@ class TestLogparser_Version2:
         records = parse_file(original_file)
         df_records = pd.DataFrame(records)
         df_tsit = time_step_vs_iterations(df_records)
-        assert len(df_tsit) == 2
+        assert len(df_tsit) == 3
         df_ats = analysis_time_step(df_records)
         assert len(df_ats) == 3
         df_acni = analysis_convergence_newton_iteration(df_records)
