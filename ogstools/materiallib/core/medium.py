@@ -5,8 +5,10 @@
 #
 
 import logging
+from pathlib import Path
 from typing import Any
 
+import ogstools.definitions as defs
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .material import Material
@@ -43,10 +45,14 @@ class Medium:
         name: str = "NO_NAME_GIVEN",
         fluids: dict[str, Material] | None = None,
         process: str = "",
+        data_dir: Path | str | None = None,
     ):
         self.material_id = material_id
         self.material = material
         self.name = name
+        self.data_dir = (
+            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+        )
 
         if fluids is not None:
             checked_fluids = {}
@@ -102,6 +108,7 @@ class Medium:
                         phase_type="Solid",
                         solid_material=self.material,
                         process=self.process,
+                        data_dir=self.data_dir,
                     )
 
                 # -------------------
@@ -133,6 +140,7 @@ class Medium:
                             gas_material=self.fluids.get("Gas"),
                             liquid_material=self.fluids.get("AqueousLiquid"),
                             process=self.process,
+                            data_dir=self.data_dir,
                         )
 
                     else:
@@ -145,6 +153,7 @@ class Medium:
                                 phase_type="Gas",
                                 gas_material=self.fluids["Gas"],
                                 process=self.process,
+                                data_dir=self.data_dir,
                             )
 
                         elif phase_type == "AqueousLiquid":
@@ -155,6 +164,7 @@ class Medium:
                                 phase_type="AqueousLiquid",
                                 liquid_material=self.fluids["AqueousLiquid"],
                                 process=self.process,
+                                data_dir=self.data_dir,
                             )
 
                 # -------------------
