@@ -286,8 +286,8 @@ class TestPhysicalVariable:
             variable: ov.Variable, vmin: float, vmax: float
         ) -> None:
             vals = variable.transform(ms)
-            assert vmin <= np.min(vals)
-            assert vmax >= np.max(vals)
+            assert vmin <= np.nanmin(vals)
+            assert vmax >= np.nanmax(vals)
 
         check_limits(ov.temperature, 7.9, 50)
         check_limits(ov.pressure, 0, 8)
@@ -344,3 +344,23 @@ class TestPhysicalVariable:
         # quantities to be increasing per step
         for var in [si.mean, si.median, si.sum, si.var, si.std]:
             assert np.all(np.diff(var.transform(ms_bot)) >= 0)
+
+    def test_get_data_mask(self):
+        def _check_masked_data(ms_check, actual):
+            desired = ms_check.point_data[var.data_name]
+            for i, mesh in enumerate(ms_check):
+                mask = np.asarray(mesh.ctp(False)[var.mask] == 0)
+                desired[i, mask] = np.nan
+            assert np.array_equal(actual, desired, equal_nan=True)
+
+        ms_a = examples.load_meshseries_THM_2D_PVD()
+        var = ov.pressure.replace(output_unit=ov.pressure.data_unit)
+
+        # Mask differs with time
+        _check_masked_data(ms_a, var.transform(ms_a))
+
+        # Mask time-invariant
+        ms_b = ms_a.copy(deep=True)
+        mask_a = ms_a.cell_data[var.mask]
+        ms_b.cell_data[var.mask] = np.broadcast_to(mask_a[-1], mask_a.shape)
+        _check_masked_data(ms_b, var.transform(ms_b))
