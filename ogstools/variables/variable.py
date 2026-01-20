@@ -390,28 +390,37 @@ class Variable:
         masked: bool = True,
     ) -> np.ndarray:
         "Get the data associated with a scalar or vector variable from a mesh."
-        mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
+        mesh0 = dataset[0] if isinstance(dataset, Sequence) else dataset
         if self.data_name not in (
             data_keys := set().union(
-                mesh.point_data, mesh.cell_data, mesh.field_data
+                mesh0.point_data, mesh0.cell_data, mesh0.field_data
             )
         ):
             if self.data_name in ["MaterialIDs", "None"]:
-                return np.full(mesh.number_of_cells, 0)
+                return np.full(mesh0.number_of_cells, 0)
             msg = (
                 f"Data name {self.data_name} not found in mesh. "
                 f"Available data names are {', '.join(data_keys)}. "
             )
             raise KeyError(msg)
+
+        output_dataset = dataset[self.data_name]  # type: ignore[call-overload]
         if masked and self.mask_used(dataset):
-            mask = np.asarray(mesh.ctp(False)[self.mask] == 0)
-            output_dataset = dataset[self.data_name]  # type: ignore[call-overload]
-            if isinstance(dataset, Sequence):
-                output_dataset[:, mask] = np.nan
-            else:
-                output_dataset[mask] = np.nan
-            return output_dataset
-        return dataset[self.data_name]  # type: ignore[call-overload]
+            mask0 = np.asarray(mesh0.ctp(False)[self.mask] == 0)
+            if not isinstance(dataset, Sequence):
+                output_dataset[mask0] = np.nan
+                return output_dataset
+
+            if np.all(dataset[self.mask] == mesh0[self.mask]):  # type: ignore[call-overload]
+                # Masks are time-invariant
+                output_dataset[:, mask0] = np.nan
+                return output_dataset
+
+            # Masks differ with time
+            for i, _mesh in enumerate(dataset):
+                mask = np.asarray(_mesh.ctp(False)[self.mask] == 0)
+                output_dataset[i, mask] = np.nan
+        return output_dataset
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"
