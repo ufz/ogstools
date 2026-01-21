@@ -19,8 +19,7 @@ from matplotlib import pyplot as plt
 from typing_extensions import Self
 
 from ogstools._internal import deprecated
-from ogstools.mesh import save
-from ogstools.mesh.utils import check_datatypes, check_node_ordering
+from ogstools.mesh import check_datatypes, save
 
 logger = log.getLogger(__name__)
 
@@ -75,7 +74,6 @@ class Meshes(MutableMapping):
         :param domain_key:  String which is only in the domain filepath
 
         """
-        check_node_ordering(pv.read(filepaths[0]), strict=True)
         return cls(
             {
                 Path(m).stem: pv.read(m)
@@ -148,8 +146,6 @@ class Meshes(MutableMapping):
         :returns:               A Meshes object.
         """
         from ogstools.meshes.subdomains import extract_boundaries
-
-        check_node_ordering(mesh, strict=True)
 
         sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 

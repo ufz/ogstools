@@ -44,7 +44,7 @@ def meshes_from_gmsh(
 
     :returns: A dictionary of names and corresponding meshes
     """
-    from ogstools.mesh.utils import node_reordering
+    from ogstools.mesh import node_reordering
 
     logger.setLevel(logging.INFO if log else logging.ERROR)
 

@@ -38,14 +38,6 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
-@pytest.mark.xfail(raises=UserWarning, reason="wrong node ordering.")
-def test_meshes_from_mesh_fail():
-    mesh = examples.load_meshseries_THM_2D_PVD()[0]
-    # intentionally reversing the node order with method 0 to trigger the check
-    # in Meshes.from_mesh for wrong node ordering
-    ot.Meshes.from_mesh(ot.mesh.utils.node_reordering(mesh, method=0))
-
-
 @pytest.mark.parametrize(
     "load_meshseries",
     [
@@ -73,8 +65,8 @@ def test_datatypes(load_meshseries):
         if name in ["front", "back"]:
             continue
         with pytest.raises(TypeError):
-            ot.mesh.utils.check_datatypes(mesh, strict=True, name=name)
-        assert not ot.mesh.utils.check_datatypes(mesh, strict=False)
+            ot.mesh.check_datatypes(mesh, strict=True, name=name)
+        assert not ot.mesh.check_datatypes(mesh, strict=False)
 
 
 @pytest.mark.tools()
@@ -122,7 +114,7 @@ def test_meshes_from_mesh_3D(
     ]
     layer_set = ot.mesh.create.LayerSet(layers=layers)
     domain = discretization(layer_set).mesh
-    meshes = ot.Meshes.from_mesh(ot.mesh.utils.node_reordering(domain))
+    meshes = ot.Meshes.from_mesh(ot.mesh.node_reordering(domain))
     assert np.all(meshes["left"].points[:, 0] == domain.bounds[0])
     assert np.all(meshes["right"].points[:, 0] == domain.bounds[1])
     assert np.all(meshes["front"].points[:, 1] == domain.bounds[2])

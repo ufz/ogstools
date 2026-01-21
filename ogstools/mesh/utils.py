@@ -36,29 +36,6 @@ def node_reordering(
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
 
-def check_node_ordering(
-    mesh: pv.UnstructuredGrid, strict: bool = False
-) -> bool:
-    """Check conformity of node ordering with OGS.
-
-    :param mesh:    The node ordering of this mesh's cells is checked.
-    :param strict:  If True, raise a UserWarning if the node ordering is wrong,
-                    else return True if ordering is okay else False.
-    """
-    ordering_okay = all(
-        c1.point_ids == c2.point_ids
-        for c1, c2 in zip(mesh.cell, node_reordering(mesh).cell, strict=True)
-    )
-    if strict and not ordering_okay:
-        msg = (
-            "The provided mesh has a node ordering not conforming to OGS "
-            f"standards. To get a OGS conforming mesh, please use:"
-            f"{node_reordering.__module__}.{node_reordering.__name__}"
-        )
-        raise UserWarning(msg)
-    return ordering_okay
-
-
 def check_datatypes(
     mesh: pv.UnstructuredGrid, strict: bool = False, name: str = ""
 ) -> bool:

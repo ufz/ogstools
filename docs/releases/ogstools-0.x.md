@@ -38,6 +38,9 @@
 
 ## Features
 
+- mesh
+  - you can correct node ordering of a mesh to comply with OGS standards via
+    `ot.mesh.node_reordering`
 - MeshSeries
   - has now has difference method.
   - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
