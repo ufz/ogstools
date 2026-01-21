@@ -525,7 +525,7 @@ class Meshes(MutableMapping):
                             then it returns
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
-        meshes_path = meshes_path or self._tmp_dir
+        meshes_path = self._tmp_dir if meshes_path is None else meshes_path
         meshes_path = Path(meshes_path)
 
         if isinstance(num_partitions, int):
@@ -550,7 +550,7 @@ class Meshes(MutableMapping):
 
             set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
-                check_datatypes(mesh, strict=True, name=name)
+                check_datatypes(mesh, strict=True, meshname=name)
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
                 save(mesh.filepath, mesh, **kwargs)
 
