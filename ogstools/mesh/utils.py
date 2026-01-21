@@ -37,7 +37,7 @@ def node_reordering(
 
 
 def check_datatypes(
-    mesh: pv.UnstructuredGrid, strict: bool = False, name: str = ""
+    mesh: pv.UnstructuredGrid, strict: bool = False, meshname: str = ""
 ) -> bool:
     mat_ids = mesh.cell_data.get("MaterialIDs", np.int32(0))
     elem_ids = mesh.cell_data.get("bulk_element_ids", np.uint64(0))
@@ -54,8 +54,8 @@ def check_datatypes(
                 f"{name} datatype needs to be {ref_type} for OGS, "
                 f"but instead it is {datatype}. "
             )
-            if name != "":
-                msg += f"Error raised by mesh with {name=}"
+            if meshname != "":
+                msg += f"Error raised by mesh with {meshname=}"
             if strict:
                 raise TypeError(msg)
             return False
