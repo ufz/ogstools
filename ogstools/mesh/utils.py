@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import subprocess
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -34,6 +35,33 @@ def node_reordering(
     save(tmp_file, mesh)
     cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
     return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
+def validate(
+    mesh: pv.UnstructuredGrid | Path | str, strict: bool = False
+) -> bool:
+    """Check conformity of mesh with OGS.
+
+    :param mesh:    pyvista mesh or path to the mesh file.
+    :param strict:  If True, raise a UserWarning if checkMesh returns an error.
+    """
+    if isinstance(mesh, pv.DataSet):
+        mesh_file = str(Path(mkdtemp(prefix="validate")) / "mesh.vtu")
+        save(mesh_file, mesh)
+    else:
+        mesh_file = str(mesh)
+
+    ret = subprocess.run(
+        ["checkMesh", mesh_file, "-v"], stdout=subprocess.PIPE, check=False
+    )
+    msg = ret.stdout.decode("utf-8")
+    is_valid = "No errors found." in msg
+    if not is_valid:
+        print(msg)
+    if strict and not is_valid:
+        msg = "Provided mesh is not compliant with OGS."
+        raise UserWarning(msg)
+    return is_valid
 
 
 def check_datatypes(

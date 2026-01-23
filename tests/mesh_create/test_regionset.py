@@ -6,7 +6,7 @@ from itertools import pairwise
 import pytest
 
 from ogstools.definitions import EXAMPLES_DIR
-from ogstools.mesh import create
+from ogstools.mesh import create, validate
 from ogstools.mesh.create import LayerSet
 
 
@@ -92,10 +92,11 @@ def layerset_example_surfs() -> create.LayerSet:
 @pytest.mark.parametrize(
     "discretization",
     [
-        lambda ls: ls.to_region_simplified(200, 3),
-        lambda ls: ls.to_region_tetrahedron(200),
-        lambda ls: ls.to_region_prism(200),
-        lambda ls: ls.to_region_voxel([200, 200, 50]),
+        lambda ls: ls.to_region_simplified(200, 2),
+        lambda ls: ls.to_region_simplified(400, 3),
+        lambda ls: ls.to_region_tetrahedron(500),
+        lambda ls: ls.to_region_prism(400),
+        lambda ls: ls.to_region_voxel([300, 300, 50]),
     ],
 )
 def test_allcompare(discretization, layerset_example_surfs: create.LayerSet):
@@ -104,6 +105,7 @@ def test_allcompare(discretization, layerset_example_surfs: create.LayerSet):
     assert (
         len(Counter(mesh.cell_data["MaterialIDs"]).keys()) == number_of_layers
     )
+    assert validate(mesh, strict=True)
 
 
 @pytest.mark.tools()  # createLayeredMeshFromRasters

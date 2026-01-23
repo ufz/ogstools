@@ -1,5 +1,7 @@
 """Unit tests for meshlib."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 import pyvista as pv
@@ -137,3 +139,23 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
     for arr in ot.mesh.ip_metadata(mesh):
         n_ip = len(mesh[arr["name"]]) // mesh.n_cells
         assert len(thresh_ip_data[arr["name"]]) == (thresh_n_cells * n_ip)
+
+
+@pytest.mark.parametrize("strict", [True, False])
+@pytest.mark.parametrize(
+    "mesh",
+    [
+        examples.load_mesh_mechanics_2D(),
+        examples.load_mesh_mechanics_3D_cylinder(),
+        examples.load_meshseries_THM_2D_PVD()[0],
+    ],
+)
+def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
+    assert ot.mesh.validate(mesh, strict=strict)
+    # intentionally reversing the node order with method 0
+    wrong_mesh = ot.mesh.node_reordering(mesh, method=0)
+    if strict:
+        with pytest.raises(UserWarning, match="not compliant with OGS"):
+            ot.mesh.validate(wrong_mesh, strict=strict)
+    else:
+        assert not ot.mesh.validate(wrong_mesh, strict=strict)
