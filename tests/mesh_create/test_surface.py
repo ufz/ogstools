@@ -39,23 +39,15 @@ class TestSurface:
         assert s2.mesh.GetNumberOfPoints() > 0
 
     def testsurface_from_file_invalid(self):
-        """
-        OK if file can be loaded - if not it raises an exception
-        """
+        """OK if file can be loaded - if not it raises an exception"""
         with pytest.raises(
             ValueError, match=r".*notexisting.vtu does not exist."
         ):
-            create.Surface(
-                meshpath / "mesh1/surface_data/notexisting.vtu",
-                0,
-            )
+            create.Surface(meshpath / "mesh1/surface_data/notexisting.vtu", 0)
 
     @pytest.mark.tools()
     def testsurface_to_raster(self):
-        s1 = create.Surface(
-            meshpath / "mesh1/surface_data/00_KB.vtu",
-            0,
-        )
+        s1 = create.Surface(meshpath / "mesh1/surface_data/00_KB.vtu", 0)
         outfile = s1.create_raster_file(10)
 
         with outfile.open() as f:
