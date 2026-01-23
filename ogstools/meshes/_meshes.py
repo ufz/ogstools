@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 from typing_extensions import Self
 
 from ogstools._internal import deprecated
-from ogstools.mesh import check_datatypes, save
+from ogstools.mesh import check_datatypes, save, utils
 
 logger = log.getLogger(__name__)
 
@@ -498,6 +498,7 @@ class Meshes(MutableMapping):
         overwrite: bool = False,
         num_partitions: int | Sequence[int] | None = None,
         dry_run: bool = False,
+        validate: bool = True,
         **kwargs: Any,
     ) -> list[Path] | dict[int, list[Path]]:
         """
@@ -553,6 +554,8 @@ class Meshes(MutableMapping):
                 check_datatypes(mesh, strict=True, meshname=name)
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
                 save(mesh.filepath, mesh, **kwargs)
+            if validate:
+                utils.validate(self.domain.filepath, strict=True)
 
         if not num_partitions:
             return serial_files

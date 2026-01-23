@@ -249,6 +249,7 @@ class TestPhysGroups:
         )
         meshes = meshes_from_gmsh(msh_file, reindex=reindex, log=False)
         mesh = meshes["domain"]
+        ot.mesh.validate(mesh)
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
@@ -272,6 +273,7 @@ def test_cuboid(tmp_path: Path):
             out_name=msh_file, msh_version=version,
         )  # fmt: skip
         meshes = meshes_from_gmsh(msh_file, log=False)
+        ot.mesh.validate(meshes["domain"])
         assert len(meshes) == {1: 7, 2: 9}[n_layers]
 
 
@@ -359,7 +361,6 @@ def test_remesh_with_tri(tmp_path):
     mesh = load_meshseries_THM_2D_PVD().mesh(1)
     msh_path = tmp_path / "tri_mesh.msh"
     ot.gmsh_tools.remesh_with_triangles(mesh, msh_path)
-    assert len(
-        ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
-    ) == 1 + len(np.unique(mesh["MaterialIDs"]))
+    meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
+    assert len(meshes) == 1 + len(np.unique(mesh["MaterialIDs"]))
     # boundaries are not assigned a physical tag in remesh_with_triangles
