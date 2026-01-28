@@ -4,6 +4,8 @@
 #            http://www.opengeosys.org/project/license
 #
 
+from __future__ import annotations
+
 import time
 from pathlib import Path
 from queue import Queue
@@ -52,6 +54,8 @@ class Monitor:
         )
         self._records: Queue = Queue()
         self._status: log_regex.Context = log_regex.Context()
+        self._observer: Observer | None = None
+        self._log_file_handler: LogFileHandler | None = None
         self.time_step_based_data = [
             "step_start_time",
             "step_size",
@@ -103,14 +107,23 @@ class Monitor:
         :param log_file: The path to the log file to monitor.
         """
 
-        self._observer = Observer()
+        # Stop any previous observer before creating a new one
+        if hasattr(self, "_observer") and self._observer is not None:
+            self._observer.stop()
+            self._observer.join()
+
+        # Reset context for fresh run
+        self._status = log_regex.Context()
+
+        observer = Observer()
+        self._observer = observer
         self._log_file_handler = LogFileHandler(
             log_file,
             queue=self._records,
             status=self._status,
             stop_callback=lambda: (
                 print("Stop Observer"),
-                self._observer.stop(),
+                observer.stop(),
             ),
         )
 
@@ -408,6 +421,6 @@ class Monitor:
             iteration_window_length,
             update_interval,
         )
-
+        assert self._observer
         self._observer.join()
         print("Observer stopped.")

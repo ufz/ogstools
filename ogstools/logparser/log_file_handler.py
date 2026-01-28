@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
+import threading
 from collections.abc import Callable
 from pathlib import Path
 from queue import Queue
@@ -46,6 +47,8 @@ class LogFileHandler(FileSystemEventHandler):
         self.line_limit = line_limit
 
         self._file_read: bool = False
+        self._stopped: bool = False
+        self._lock = threading.Lock()
         self.num_lines_read: int = 0
         # real time monitoring is only working for log version 2 and serial logs or parallel sim without (ogs --parallel_log)
         self.patterns: list = normalize_regex(
@@ -63,44 +66,67 @@ class LogFileHandler(FileSystemEventHandler):
         self.process()
 
     def process(self) -> None:
-        if not self._file_read:
-            try:
-                self._file: Any = self.file_name.open("r")
-                self._file.seek(0, 0)
-                self._file_read = True
-            except FileNotFoundError:
-                print(f"File not found yet: {self.file_name}")
+        with self._lock:
+            if self._stopped:
                 return
 
-        # print(f"{self.file_name} has been modified.")
-        while True:
-            line = self._file.readline()
-            num_lines_current = self.num_lines_read + 1
-            if not line or not line.endswith("\n"):
-                break  # Wait for complete line before processing
+            if not self._file_read:
+                try:
+                    self._file: Any = self.file_name.open("r")
+                    self._file.seek(0, 0)
+                    self._file_read = True
+                except FileNotFoundError:
+                    print(f"File not found yet: {self.file_name}")
+                    return
 
-            log_entry: Log | Termination | None = parse_line(
-                self.patterns,
-                line,
-                parallel_log=False,
-                number_of_lines_read=num_lines_current,
-            )
+            # print(f"{self.file_name} has been modified.")
+            while True:
+                file_pos_before = self._file.tell()
+                line = self._file.readline()
+                file_pos_after = self._file.tell()
+                num_lines_current = self.num_lines_read + 1
+                if not line or not line.endswith("\n"):
+                    break  # Wait for complete line before processing
 
-            if log_entry:
-                assert isinstance(log_entry, Log | Termination)
-                self.queue.put(log_entry)
-                self.status.update(log_entry)
+                # Debug: print lines containing "Iteration"
+                if "Iteration" in line:
+                    print(
+                        f"DEBUG handler={id(self)} file={id(self._file)} LINE {num_lines_current} pos {file_pos_before}->{file_pos_after}: {line.strip()}"
+                    )
 
-            if isinstance(log_entry, Termination):
-                print("===== Termination =====")
-                self.queue.put(log_entry)
-                self.status.update(log_entry)
-                self.stop_callback()
-                self._file.close()
-                break
+                log_entry: Log | Termination | None = parse_line(
+                    self.patterns,
+                    line,
+                    parallel_log=False,
+                    number_of_lines_read=num_lines_current,
+                )
 
-            if self.line_limit > 0 and self.num_lines_read > self.line_limit:
-                self.stop_callback()
-                self._file.close()
-                break
-            self.num_lines_read = self.num_lines_read + 1
+                # Debug: print what was parsed for Iteration lines
+                if "Iteration" in line:
+                    print(
+                        f"DEBUG PARSED: {type(log_entry).__name__ if log_entry else 'None'}"
+                    )
+
+                if log_entry:
+                    assert isinstance(log_entry, Log | Termination)
+                    self.queue.put(log_entry)
+                    self.status.update(log_entry)
+
+                if isinstance(log_entry, Termination):
+                    print("===== Termination =====")
+                    self.queue.put(log_entry)
+                    self.status.update(log_entry)
+                    self._stopped = True
+                    self._file.close()
+                    self.stop_callback()
+                    break
+
+                if (
+                    self.line_limit > 0
+                    and self.num_lines_read > self.line_limit
+                ):
+                    self._stopped = True
+                    self._file.close()
+                    self.stop_callback()
+                    break
+                self.num_lines_read = self.num_lines_read + 1

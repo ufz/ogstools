@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-from dataclasses import dataclass
+import threading
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -91,6 +92,7 @@ class Context:
     iteration_step_status: StepStatus = StepStatus.NOT_STARTED
     simulation_status: StepStatus = StepStatus.NOT_STARTED
     sequential_consistency: bool = True
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def __str__(self) -> str:
         return (
