@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -92,7 +92,10 @@ class Context:
     iteration_step_status: StepStatus = StepStatus.NOT_STARTED
     simulation_status: StepStatus = StepStatus.NOT_STARTED
     sequential_consistency: bool = True
-    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+
+    def __post_init__(self) -> None:
+        # Lock is not a dataclass field to avoid issues with asdict/deepcopy/pickle
+        self._lock = threading.Lock()
 
     def __str__(self) -> str:
         return (
@@ -111,6 +114,31 @@ class Context:
             f"iteration={self.iteration_number!r}, iteration_step_status={self.iteration_step_status!r}, "
             f"simulation_status={self.simulation_status!r})"
         )
+
+    def __getstate__(self) -> dict:
+        """Exclude lock from pickling (locks can't be pickled)."""
+        state = self.__dict__.copy()
+        del state["_lock"]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore lock after unpickling."""
+        self.__dict__.update(state)
+        self._lock = threading.Lock()
+
+    def __deepcopy__(self, memo: dict) -> "Context":
+        """Create a deep copy with a new lock (locks can't be deepcopied)."""
+        import copy
+
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == "_lock":
+                setattr(result, k, threading.Lock())
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     def update(self, x: Log | Termination) -> None:
         if isinstance(x, SimulationStartTime):
