@@ -215,8 +215,6 @@ class LayerSet(BoundarySet):
                 for layer in self.layers
             )
         )
-        cli().NodeReordering(i=str(outfile), o=str(outfile))
-        cli().NodeReordering(i=str(outfile), o=str(outfile), m=2)
 
         pv_mesh = mesh.read(outfile)
         intermediate_vtu_ids = list(set(pv_mesh.cell_data["MaterialIDs"]))

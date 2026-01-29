@@ -38,14 +38,22 @@
 
 ## Features
 
+- mesh
+
+  - added `ot.mesh.node_reordering` to fix node ordering of a mesh to comply with OGS standards
+  - added `ot.mesh.validate` to check, whether a mesh complies with OGS standards
+
 - MeshSeries
+
   - has now has difference method.
   - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
   - new functions for renaming domain and subdomains
   - can now be scaled spatially / temporally in the Constructor
   - added `interpolate` method, to interpolate the MeshSeries data on a new mesh
   - added `compare` method to `ot.MeshSeries`.
+
 - Meshes
+
   - save function performs partmesh if number of partitions are given, with optional dry_run
     - create_partitioning() and create_metis if vtu files are already present
   - subdomains() -> subdomain, domain_name() -> domain_name (with setter)
@@ -55,14 +63,20 @@
   - `modify_names` method extends mesh names with prefix and/or suffix
   - `Meshes.from_mesh` now also works for 3D domain meshes
   - now checks datatypes of MaterialIDs, bulk_node_ids, bulk_element_ids and coordinates upon saving
+
 - Project
+
   - dependencies () return a list of referenced/needed files (meshes, xml includes, python scripts)
   - plot_constrains() -> overview plot with boundary conditions and source terms
+
 - plot
+
   - add option to plot legend outside of plots.
   - added support for continuous contourplots via `continuous_cmap=True`.
   - Allow user to set arrowsize parameter in contourf
+
 - Variable
+
   - added aggregation methods `min`, `max`, `mean`, `median`, `sum`, `std`, `var`.
 
 ## Infrastructure

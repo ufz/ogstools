@@ -44,7 +44,7 @@ def meshes_from_gmsh(
 
     :returns: A dictionary of names and corresponding meshes
     """
-    from ogstools.mesh.utils import node_reordering
+    from ogstools.mesh import node_reordering
 
     logger.setLevel(logging.INFO if log else logging.ERROR)
 
@@ -67,7 +67,6 @@ def meshes_from_gmsh(
     mesh.cell_sets = None
     pv_mesh: pv.UnstructuredGrid = pv.from_meshio(mesh).clean()
     pv_mesh = node_reordering(pv_mesh, 1)
-    pv_mesh = node_reordering(pv_mesh, 2)
     mesh.cell_sets = read_cells
 
     # Code without workaround:

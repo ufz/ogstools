@@ -6,33 +6,24 @@ For this example we create meshes from pyvista surfaces. See other examples for
 different meshing algorithms.
 """
 
-# Define a simple surface
+from itertools import pairwise
 from shutil import which
 
 import ogstools as ot
 from ogstools.mesh import create
 
-tetgen_present = (
-    which("tetgen") is not None
-)  # an optional requirement (needs to be installed on system or via pip)
+# an optional requirement (needs to be installed on system or via pip)
+tetgen_present = which("tetgen") is not None
 
 if tetgen_present:
-
     bounds = (-200, 210, -200, 210)
     args = {"bound2D": bounds, "amplitude": 100, "spread": 100, "n": 40}
-    surface1 = create.Surface(
-        create.Gaussian2D(**args, height_offset=0), material_id=0
-    )
-    surface2 = create.Surface(
-        create.Gaussian2D(**args, height_offset=-100), material_id=1
-    )
-    surface3 = create.Surface(
-        create.Gaussian2D(**args, height_offset=-200), material_id=2
-    )
-
-    ls = create.LayerSet(
-        [create.Layer(surface1, surface2), create.Layer(surface2, surface3)]
-    )
+    gaussians = [
+        create.Gaussian2D(**args, height_offset=h) for h in [0, -100, -200]
+    ]
+    surfaces = [create.Surface(g, mat_id) for mat_id, g in enumerate(gaussians)]
+    layers = [create.Layer(sf1, sf2) for sf1, sf2 in pairwise(surfaces)]
+    ls = create.LayerSet(layers)
 
     mesh = ls.to_region_tetrahedron(40).mesh
 else:

@@ -15,8 +15,10 @@ from .ip_mesh import (
     to_ip_mesh,
     to_ip_point_cloud,
 )
+from .utils import check_datatypes, node_reordering, validate
 
 __all__ = [
+    "check_datatypes",
     "create",
     "depth",
     "difference",
@@ -25,9 +27,11 @@ __all__ = [
     "from_simulator",
     "ip_data_threshold",
     "ip_metadata",
+    "node_reordering",
     "read",
     "save",
     "to_ip_mesh",
     "to_ip_point_cloud",
     "utils",
+    "validate",
 ]

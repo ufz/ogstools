@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import subprocess
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -36,31 +37,35 @@ def node_reordering(
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
 
-def check_node_ordering(
-    mesh: pv.UnstructuredGrid, strict: bool = False
+def validate(
+    mesh: pv.UnstructuredGrid | Path | str, strict: bool = False
 ) -> bool:
-    """Check conformity of node ordering with OGS.
+    """Check conformity of mesh with OGS.
 
-    :param mesh:    The node ordering of this mesh's cells is checked.
-    :param strict:  If True, raise a UserWarning if the node ordering is wrong,
-                    else return True if ordering is okay else False.
+    :param mesh:    pyvista mesh or path to the mesh file.
+    :param strict:  If True, raise a UserWarning if checkMesh returns an error.
     """
-    ordering_okay = all(
-        c1.point_ids == c2.point_ids
-        for c1, c2 in zip(mesh.cell, node_reordering(mesh).cell, strict=True)
+    if isinstance(mesh, pv.DataSet):
+        mesh_file = str(Path(mkdtemp(prefix="validate")) / "mesh.vtu")
+        save(mesh_file, mesh)
+    else:
+        mesh_file = str(mesh)
+
+    ret = subprocess.run(
+        ["checkMesh", mesh_file, "-v"], stdout=subprocess.PIPE, check=False
     )
-    if strict and not ordering_okay:
-        msg = (
-            "The provided mesh has a node ordering not conforming to OGS "
-            f"standards. To get a OGS conforming mesh, please use:"
-            f"{node_reordering.__module__}.{node_reordering.__name__}"
-        )
+    msg = ret.stdout.decode("utf-8")
+    is_valid = "No errors found." in msg
+    if not is_valid:
+        print(msg)
+    if strict and not is_valid:
+        msg = "Provided mesh is not compliant with OGS."
         raise UserWarning(msg)
-    return ordering_okay
+    return is_valid
 
 
 def check_datatypes(
-    mesh: pv.UnstructuredGrid, strict: bool = False, name: str = ""
+    mesh: pv.UnstructuredGrid, strict: bool = False, meshname: str = ""
 ) -> bool:
     mat_ids = mesh.cell_data.get("MaterialIDs", np.int32(0))
     elem_ids = mesh.cell_data.get("bulk_element_ids", np.uint64(0))
@@ -77,8 +82,8 @@ def check_datatypes(
                 f"{name} datatype needs to be {ref_type} for OGS, "
                 f"but instead it is {datatype}. "
             )
-            if name != "":
-                msg += f"Error raised by mesh with {name=}"
+            if meshname != "":
+                msg += f"Error raised by mesh with {meshname=}"
             if strict:
                 raise TypeError(msg)
             return False

@@ -19,8 +19,7 @@ from matplotlib import pyplot as plt
 from typing_extensions import Self
 
 from ogstools._internal import deprecated
-from ogstools.mesh import save
-from ogstools.mesh.utils import check_datatypes, check_node_ordering
+from ogstools.mesh import check_datatypes, save, utils
 
 logger = log.getLogger(__name__)
 
@@ -75,7 +74,6 @@ class Meshes(MutableMapping):
         :param domain_key:  String which is only in the domain filepath
 
         """
-        check_node_ordering(pv.read(filepaths[0]), strict=True)
         return cls(
             {
                 Path(m).stem: pv.read(m)
@@ -148,8 +146,6 @@ class Meshes(MutableMapping):
         :returns:               A Meshes object.
         """
         from ogstools.meshes.subdomains import extract_boundaries
-
-        check_node_ordering(mesh, strict=True)
 
         sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 
@@ -502,6 +498,7 @@ class Meshes(MutableMapping):
         overwrite: bool = False,
         num_partitions: int | Sequence[int] | None = None,
         dry_run: bool = False,
+        validate: bool = True,
         **kwargs: Any,
     ) -> list[Path] | dict[int, list[Path]]:
         """
@@ -529,7 +526,7 @@ class Meshes(MutableMapping):
                             then it returns
                             A dict, with keys representing the number of partitions and values A list of Paths (like above)
         """
-        meshes_path = meshes_path or self._tmp_dir
+        meshes_path = self._tmp_dir if meshes_path is None else meshes_path
         meshes_path = Path(meshes_path)
 
         if isinstance(num_partitions, int):
@@ -554,9 +551,11 @@ class Meshes(MutableMapping):
 
             set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
-                check_datatypes(mesh, strict=True, name=name)
+                check_datatypes(mesh, strict=True, meshname=name)
                 set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
                 save(mesh.filepath, mesh, **kwargs)
+            if validate:
+                utils.validate(self.domain.filepath, strict=True)
 
         if not num_partitions:
             return serial_files
