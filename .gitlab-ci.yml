@@ -28,7 +28,7 @@ cache:
   - pip install -i https://gmsh.info/python-packages-dev-nox --upgrade --force-reinstall "gmsh<4.15.dev"
 
 .pip-setup-activate: &pip-setup-activate
-  - python -m venv .venv --upgrade-deps
+  - python3.13 -m venv .venv --upgrade-deps
   - source .venv/bin/activate
 
 .conda-setup-activate: &conda-setup-activate
