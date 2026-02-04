@@ -391,6 +391,21 @@ class TestPlotting:
         fig.tight_layout()
         return fig
 
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize("var2", ["CellMidpoints", "z"])
+    def test_lineplot_cell_and_point_data(self, var2: str):
+        """Test the plot.line for CellData vs.PointData via image comparison."""
+        mesh = examples.load_meshseries_BHE_3D_1U()[-1]
+        bhe_lines_mesh: pv.UnstructuredGrid = mesh.extract_cells_by_type(
+            pv.CellType.LINE
+        )
+        bhe_lines_mesh.cell_data["CellMidpoints"] = (
+            bhe_lines_mesh.cell_centers().points[:, 2]
+        )
+        fig = ot.plot.line(bhe_lines_mesh, var1="CellMidpoints", var2=var2)
+        fig.tight_layout()
+        return fig
+
     # ### Testing animation ####################################################
 
     @pytest.mark.parametrize(
