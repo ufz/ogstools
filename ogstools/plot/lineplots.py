@@ -117,10 +117,18 @@ def line(
 
     ##### process variables ##################################################
     is_meshseries = isinstance(dataset, Sequence)
-    mesh = dataset[0] if is_meshseries else dataset
+    mesh: pv.DataSet = dataset[0] if is_meshseries else dataset
     default = ["time", "time"] if is_meshseries else ["x", "y", "z"]
     x_var, y_var = _normalize_vars(var1, var2, mesh, default)
     pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
+
+    # prefer point data over cell data
+    x_cell_data = (x_var.data_name in mesh.cell_data) and (
+        x_var.data_name not in mesh.point_data
+    )
+    y_cell_data = (y_var.data_name in mesh.cell_data) and (
+        y_var.data_name not in mesh.point_data
+    )
 
     ##### kwargs processing ##################################################
     if is_meshseries and "color" not in kwargs:
@@ -161,11 +169,14 @@ def line(
     if len(x.shape) > len(y.shape) and x.shape[0] != y.shape[0]:
         x = x.T
 
-    def sorted_point_ids(mesh: pv.DataSet) -> slice | np.ndarray:
+    def sorted_ids(
+        mesh: pv.DataSet, use_cells: bool = False
+    ) -> slice | np.ndarray:
         if is_meshseries or not sort:
             return slice(None)
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
-        return np.argsort(mesh.points[:, sort_idx])
+        mesh_ = mesh.cell_centers() if use_cells else mesh
+        return np.argsort(mesh_.points[:, sort_idx])
 
     ##### plotting ###########################################################
     cell_types = np.unique(
@@ -176,8 +187,25 @@ def line(
     strip: pv.PolyData = surf.strip()
 
     if is_meshseries or only_points or strip.n_cells <= 1:
-        sort_ids = sorted_point_ids(mesh)
-        ax_.plot(x[sort_ids], y[sort_ids], **kwargs)
+        x_sort_ids = sorted_ids(mesh=mesh, use_cells=x_cell_data)
+        if x_cell_data == y_cell_data:
+            # pure cell or point data
+            ax_.plot(x[x_sort_ids], y[x_sort_ids], **kwargs)
+        elif x_cell_data or y_cell_data:
+            # mixed point data and cell data - special case
+            y_sort_ids = sorted_ids(mesh=mesh, use_cells=y_cell_data)
+
+            def prepare_data(data: np.ndarray, use_cells: bool) -> np.ndarray:
+                if use_cells:
+                    return np.repeat(data, 2)
+                return np.concatenate(
+                    [[data[0]], np.repeat(data[1:-1], 2), [data[-1]]]
+                )
+
+            x_plot_vals = prepare_data(x[x_sort_ids], x_cell_data)
+            y_plot_vals = prepare_data(y[y_sort_ids], y_cell_data)
+
+            ax_.plot(x_plot_vals, y_plot_vals, **kwargs)
     else:
         kwargs.setdefault("linestyle", kwargs.pop("ls", "-"))
         orig_ids = np.arange(mesh.n_points, dtype=np.int32)
