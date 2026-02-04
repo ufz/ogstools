@@ -437,7 +437,7 @@ class Meshes(MutableMapping):
             ]
             domain_files = [
                 Path(f"{domain_file.stem}_{file_part}{num_partitions}.bin")
-                for file_part in file_names[2:]
+                for file_part in file_names
             ]
 
             return subdomain_file_paths + domain_files
