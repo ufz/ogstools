@@ -153,7 +153,7 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
 def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
     assert ot.mesh.validate(mesh, strict=strict)
     # intentionally reversing the node order with method 0
-    wrong_mesh = ot.mesh.node_reordering(mesh, method=0)
+    wrong_mesh = mesh.copy().extract_surface().flip_faces()
     if strict:
         with pytest.raises(UserWarning, match="not compliant with OGS"):
             ot.mesh.validate(wrong_mesh, strict=strict)
