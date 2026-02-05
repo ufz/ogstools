@@ -52,6 +52,8 @@ from ogstools.ogs6py.properties import (
     property_dict,
 )
 
+default_name = "default.prj"
+
 
 class Project(StorageBase):
     """Class for handling an OGS6 project.
@@ -108,9 +110,9 @@ class Project(StorageBase):
             self.prjfile = Path(output_file)
         elif input_file is not None:
             self.prjfile = Path(input_file)
-            self._bind_to_path(Path(input_file).parent)
+            # self._bind_to_path(Path(input_file))
         else:
-            self.prjfile = self._next_target / "project.prj"
+            self.prjfile = self._next_target / default_name
 
         if input_file is not None:
             input_file = Path(input_file)
@@ -165,15 +167,15 @@ class Project(StorageBase):
     @classmethod
     def from_folder(cls, folder: Path | str) -> Self:
         """
-        Load Project from a folder containing a project.prj file.
+        Load Project from a folder containing a default.prj file.
 
         :param folder: Path to the project folder.
         :returns:      A Project instance loaded from the folder.
         """
         folder = Path(folder)
-        prj_file = folder / "project.prj"
+        prj_file = folder / default_name
         if not prj_file.exists():
-            msg = f"No project.prj found in {folder}"
+            msg = f"No default.prj found in {folder}"
             raise FileNotFoundError(msg)
         project = cls(input_file=prj_file)
         project._bind_to_path(folder)
@@ -189,7 +191,7 @@ class Project(StorageBase):
         :returns:          A Project instance restored from disk.
         """
         project_folder = StorageBase.saving_path() / "Project" / project_id
-        project_file = project_folder / "project.prj"
+        project_file = project_folder / default_name
 
         if not project_file.exists():
             msg = f"No project found at {project_file}"
@@ -257,7 +259,7 @@ class Project(StorageBase):
                 setattr(new, k, copy.deepcopy(v, memo))
 
         new._reset_save_state()
-        new.prjfile = new._next_target / "project.prj"
+        new.prjfile = new._next_target / default_name
         assert isinstance(new.prjfile, Path)
 
         # Create new Geo with the copied tree and preserve source_path
@@ -1263,7 +1265,7 @@ class Project(StorageBase):
     def _save_impl(
         self, dry_run: bool = False, keep_includes: bool = False
     ) -> list[Path]:
-        prj_file = self.next_target / "project.prj"
+        prj_file = self.next_target / default_name
         self.prjfile = prj_file
 
         files: list[Path] = [prj_file]

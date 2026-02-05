@@ -309,10 +309,13 @@ class StorageBase(abc.ABC):
         :param overwrite:   If True, allow overwriting existing files.
         :returns:           List of paths created/modified.
         """
-        if child.active_target and child.active_target.exists():
+        if child.is_saved:
             child.link(link_target, dry_run)
             return []  # because no files are created
-        return child.save(dry_run=dry_run, overwrite=overwrite)  # type: ignore[attr-defined]
+
+        files = child.save(dry_run=dry_run, overwrite=overwrite)  # type: ignore[attr-defined]
+        child.link(link_target, dry_run)
+        return files
 
     def __str__(self) -> str:
         id_str = f"id: {self._id}\n"
