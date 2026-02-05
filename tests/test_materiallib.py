@@ -5,12 +5,11 @@ import yaml  # type: ignore[import]
 from lxml import etree as ET
 
 import ogstools as ot
-from ogstools import examples
+from ogstools import Project, examples
 from ogstools.materiallib.core import component, components, material_manager
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.materiallib.schema import process_schema, required_properties
-from ogstools.ogs6py import Project
 
 
 def make_material(properties: dict, name="test_material") -> Material:
@@ -2090,9 +2089,7 @@ class TestOgstoolsInternalDB:
             ("TH2M_PT", examples.prj_th2m_phase_transition),
         ],
     )
-    def test_media_project_import_and_run(
-        self, tmp_path, process: str, input_prj: Path
-    ):
+    def test_media_project_import_and_run(self, process: str, input_prj: Path):
         """System test: build MediaSet from builtin DB, PRJ import media, and run OGS."""
 
         db = material_manager.MaterialManager()
@@ -2120,42 +2117,25 @@ class TestOgstoolsInternalDB:
                 }
                 db_dict.update(const_filtered)
         media = MediaSet(filtered)
+        prj = Project(input_file=input_prj).copy()
+        prj.set_media(media)
 
-        prj_file = tmp_path / "default.prj"
-        model = Project(input_file=input_prj, output_file=prj_file)
-        model.set_media(media)
-        model.write_input()
-
-        self.create_temporary_mesh(tmp_path)
-
-        model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-
-        if model.process is None:
-            pytest.fail("OGS process did not start.")
-
-        rc = (
-            model.process.returncode
-            if model.process.poll() is not None
-            else model.process.wait()
+        # Create mesh
+        rect = ot.gmsh_tools.rect(
+            (6, 4),
+            5,
+            n_layers=2,
+            structured_grid=True,
+            order=1,
+            jiggle=0.06,
         )
-        if rc != 0:
-            log = Path(model.logfile)
-            tail = (
-                log.read_text(encoding="utf-8").splitlines()[-80:]
-                if log.exists()
-                else []
-            )
-            pytest.fail(
-                f"OGS exited with code {rc}.\n"
-                + (
-                    "Log tail:\n" + "\n".join(tail)
-                    if tail
-                    else "No logfile found."
-                )
-            )
+        meshes = ot.Meshes.from_gmsh(rect)
 
-        # --- Sanity checks ---
-        text = prj_file.read_text()
+        model = ot.Model(prj, meshes)
+        sim = model.run()
+
+        assert sim.status == ot.Simulation.Status.done
+        text = prj.prjfile.read_text()
         assert "<media>" in text
         assert "opalinus_clay" not in text  # only IDs are exported
         if "H" in process:
