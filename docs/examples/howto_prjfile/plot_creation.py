@@ -20,8 +20,8 @@ output_dir = Path(mkdtemp())
 prj = ot.Project(output_file=output_dir / "mechanics_new.prj")
 
 # %%
-# Define geometry and/or meshes:
-prj.geometry.add_geometry(filename="square_1x1.gml")
+# Define geometry and/or meshes, we expect the gml to be in the same folder like the prj file:
+prj.geometry.add_geometry(file_pathname=EXAMPLES_DIR / "prj" / "square_1x1.gml")
 prj.mesh.add_mesh(filename="square_1x1_quad_1e2.vtu")
 
 # %%
@@ -153,17 +153,7 @@ prj.linear_solvers.add_lin_solver(
 )
 
 # %%
-mesh_dir = EXAMPLES_DIR / "prj"
-fig = prj.plot_constraints(mesh_dir, fontsize=26)
-
+m = ot.Model(project=prj, meshes=EXAMPLES_DIR / "prj")
+fig = m.plot_constraints()
 # %%
-# Write project file to disc:
-prj.write_input()
-
-# %%
-# Execute file and pipe output to logfile out.log:
-prj.run_model(logfile="out.log", args=f"-m {mesh_dir} -o {output_dir}")
-
-# %% [markdown]
-# If the desired OGS version is not in PATH, a separate path containing the OGS binary can be specified.
-# `model.run_model(path="~/github/ogs/build_mkl/bin")`
+m.run()
