@@ -6,6 +6,8 @@
 
 from functools import reduce
 from itertools import chain
+from pathlib import Path
+from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
@@ -43,9 +45,6 @@ def extract_surfaces(
     :returns:   A list of meshes, as the result of splitting the mesh at its
                 edges.
     """
-    from pathlib import Path
-    from tempfile import mkdtemp
-
     from ogstools._find_ogs import cli
     from ogstools.mesh.file_io import read, save
 
@@ -59,7 +58,7 @@ def extract_surfaces(
         "left": ("1", "0", "0"),
         "right": ("-1", "0", "0"),
     }
-    save(tmp_dir / "domain.vtu", mesh)
+    save(mesh, tmp_dir / "domain.vtu")
 
     for name, (x, y, z) in directions.items():
         cli().ExtractSurface(
