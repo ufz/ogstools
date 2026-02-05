@@ -108,7 +108,7 @@ class Project(StorageBase):
             self.prjfile = Path(output_file)
         elif input_file is not None:
             self.prjfile = Path(input_file)
-            self._bind_to_path(input_file.parent)
+            self._bind_to_path(Path(input_file).parent)
         else:
             self.prjfile = self._next_target / "project.prj"
 

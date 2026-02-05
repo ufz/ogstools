@@ -235,5 +235,5 @@ class Raster:
         )
 
         pt = plane.triangulate()
-        mesh.save(outfilevtu, pt)
+        mesh.save(pt, outfilevtu)
         return outfilevtu

@@ -93,8 +93,7 @@ bentonite = mesh.extract_cells(mesh["MaterialIDs"] == 0)
 p0_new = -1e6 * mesh.points[:, 1]
 p0_new[bentonite["vtkOriginalPointIds"]] = -1.2e8
 mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
-# ot.mesh.save("bulk_mesh.vtu", mesh)
+
 
 fig = ot.plot.contourf(mesh, "initial_pressure")
-
 fig = ot.plot.contourf(mesh, "initial_pressure_second-variant")

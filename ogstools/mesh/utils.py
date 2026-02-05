@@ -32,7 +32,7 @@ def node_reordering(
            sorted before all nonlinear nodes.
     """
     tmp_file = Path(mkdtemp(prefix="node_reordering")) / "mesh.vtu"
-    save(tmp_file, mesh)
+    save(mesh, tmp_file)
     cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
@@ -47,7 +47,7 @@ def validate(
     """
     if isinstance(mesh, pv.DataSet):
         mesh_file = str(Path(mkdtemp(prefix="validate")) / "mesh.vtu")
-        save(mesh_file, mesh)
+        save(mesh, mesh_file)
     else:
         mesh_file = str(mesh)
 
