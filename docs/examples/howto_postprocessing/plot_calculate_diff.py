@@ -20,9 +20,6 @@ from ogstools import examples
 
 # sphinx_gallery_start_ignore
 
-from pathlib import Path
-from tempfile import mkdtemp
-
 
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
@@ -31,28 +28,21 @@ ot.plot.setup.show_element_edges = True
 def custom_mesh(lengths: int, element_order: int, quads: bool):
     "Creates a custom mesh and runs a Mechanics simulation on it."
 
-    tmp_dir = Path(mkdtemp())
-    mesh_path = tmp_dir / "mesh.msh"
-
-    ot.gmsh_tools.rect(
+    rect = ot.gmsh_tools.rect(
         lengths=lengths,
         n_edge_cells=21,
         structured_grid=quads,
         order=element_order,
-        out_name=mesh_path,
     )
+    meshes = ot.Meshes.from_gmsh(rect)
 
-    meshes = ot.Meshes.from_gmsh(mesh_path)
-    meshes.save(tmp_dir)
-
-    model = ot.Project(
-        output_file=tmp_dir / "default.prj", input_file=examples.prj_mechanics
-    )
+    prj = ot.Project(input_file=examples.prj_mechanics).copy()
     if element_order == 2:
-        model.replace_text(4, ".//integration_order")
-    model.write_input()
-    model.run_model(write_logs=True, args=f"-m {tmp_dir} -o {tmp_dir}")
-    return ot.MeshSeries(tmp_dir / "mesh.pvd").mesh(-1)
+        prj.replace_text(4, ".//integration_order")
+
+    model = ot.Model(prj, meshes)
+    sim = model.run()
+    return sim.result.mesh(-1)
 
 
 # sphinx_gallery_end_ignore
