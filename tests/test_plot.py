@@ -404,6 +404,7 @@ class TestPlotting:
         )
         fig = ot.plot.line(bhe_lines_mesh, var1="CellMidpoints", var2=var2)
         fig.tight_layout()
+        fig.get_axes()[0].set_xlim(0, 3)
         return fig
 
     # ### Testing animation ####################################################
