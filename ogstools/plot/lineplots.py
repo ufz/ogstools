@@ -197,7 +197,9 @@ def line(
 
             def prepare_data(data: np.ndarray, use_cells: bool) -> np.ndarray:
                 if use_cells:
+                    # repeat the cell data to map it to the start and end point of the cell
                     return np.repeat(data, 2)
+                # only repeat inner points
                 return np.concatenate(
                     [[data[0]], np.repeat(data[1:-1], 2), [data[-1]]]
                 )
