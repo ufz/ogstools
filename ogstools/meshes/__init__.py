@@ -3,7 +3,3 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
-
-from ._meshes import Meshes
-
-__all__ = ["Meshes"]
