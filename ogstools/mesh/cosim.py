@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -15,9 +16,9 @@ import pyvista as pv
 def from_simulator(
     simulation: Any,
     name: str,
-    node_properties: list[str] | None = None,
-    cell_properties: list[str] | None = None,
-    field_properties: list[str] | None = None,
+    node_properties: Sequence[str] | None = None,
+    cell_properties: Sequence[str] | None = None,
+    field_properties: Sequence[str] | None = None,
 ) -> pv.UnstructuredGrid:
     """
     Constructs a pyvista mesh from a running simulation. It always contains points (geometry) and cells (topology)
