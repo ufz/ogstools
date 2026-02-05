@@ -10,9 +10,9 @@ from typing import Literal
 import numpy as np
 import pyvista as pv
 
+import ogstools as ot
 from ogstools.definitions import EXAMPLES_DIR
 from ogstools.mesh.file_io import read
-from ogstools.meshseries import MeshSeries
 
 from . import analytical_solutions as anasol
 
@@ -28,28 +28,28 @@ _yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
 def load_meshseries_THM_2D_PVD():
-    return MeshSeries(str(_meshseries_dir / "2D.pvd"))
+    return ot.MeshSeries(str(_meshseries_dir / "2D.pvd"))
 
 
 def load_meshseries_CT_2D_XDMF():
-    ms = MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    ms = ot.MeshSeries(str(_meshseries_dir / "elder.xdmf"))
     return ms.transform(lambda mesh: mesh.translate([0, -mesh.center[1], 0]))
 
 
 def load_meshseries_HT_2D_XDMF():
-    return MeshSeries(
+    return ot.MeshSeries(
         str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf")
     )
 
 
 def load_meshseries_HT_2D_PVD():
-    return MeshSeries(
+    return ot.MeshSeries(
         str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd")
     )
 
 
 def load_meshseries_HT_2D_VTU():
-    return MeshSeries(
+    return ot.MeshSeries(
         str(
             _meshseries_dir
             / "2D_single_fracture_HT_2D_single_fracture"
@@ -59,25 +59,33 @@ def load_meshseries_HT_2D_VTU():
 
 
 def load_meshseries_BHE_3D_1P():
-    return MeshSeries(
+    return ot.MeshSeries(
         _meshseries_dir / "3D_BHE_sandwich" / "sandwich_1P.pvd",
     )
 
 
 def load_meshseries_BHE_3D_1U():
-    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_1U.pvd")
+    return ot.MeshSeries(
+        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_1U.pvd"
+    )
 
 
 def load_meshseries_BHE_3D_2U():
-    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_2U.pvd")
+    return ot.MeshSeries(
+        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_2U.pvd"
+    )
 
 
 def load_meshseries_BHE_3D_CXA():
-    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXA.pvd")
+    return ot.MeshSeries(
+        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXA.pvd"
+    )
 
 
 def load_meshseries_BHE_3D_CXC():
-    return MeshSeries(_meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd")
+    return ot.MeshSeries(
+        _meshseries_dir / "3D_BHE_sandwich" / "sandwich_CXC.pvd"
+    )
 
 
 def load_meshseries_BHEs_3D(kind: Literal["full", "line", "lines"], ext: str):
@@ -85,11 +93,11 @@ def load_meshseries_BHEs_3D(kind: Literal["full", "line", "lines"], ext: str):
     if ext == ".xdmf":
         name = "3bhes_" + name
 
-    return MeshSeries((_meshseries_dir / "3D_BHEs" / name).with_suffix(ext))
+    return ot.MeshSeries((_meshseries_dir / "3D_BHEs" / name).with_suffix(ext))
 
 
 def load_meshseries_HT_2D_paraview_XMF():
-    return MeshSeries(
+    return ot.MeshSeries(
         str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")
     )
 
@@ -110,11 +118,11 @@ def load_meshseries_diffusion_3D(
             anasol.heat_conduction_temperature(x, tv, Tb, Ta, alpha) + offset
         )
         meshes += [mesh.copy()]
-    return MeshSeries.from_data(meshes, timevalues)
+    return ot.MeshSeries.from_data(meshes, timevalues)
 
 
 def load_meshseries_PETSc_2D():
-    return MeshSeries(
+    return ot.MeshSeries(
         str(_meshseries_dir / "2D_PETSC" / "square_1e1_neumann.pvd"),
         time_unit=("a", "a"),
     )
@@ -137,28 +145,21 @@ def load_mesh_mechanics_3D_sphere():
     return read(_meshseries_dir / "mechanics_3D_sphere.vtu")
 
 
-def load_meshes_liquid_flow_simple():
-    # In this example, we create the domain mesh (a 10x2 rectangle) and the boundary meshes for the simulation
+def load_meshes_simple_lf():
+    # In this example, we create the domain mesh (a 12x4 rectangle) and the boundary meshes for the simulation
     # We also set the boundary condition (prescribed pressure) on the left and right boundary meshes.
-    from pathlib import Path
-
-    import ogstools as ot
-
-    workingdir = Path()
-    gmsh_file = workingdir / "rect_10_2.msh"
-
-    ot.gmsh_tools.rect(
-        lengths=(10, 2),
-        n_edge_cells=(10, 4),
-        n_layers=2,
-        structured_grid=True,
-        order=1,
-        mixed_elements=False,
-        jiggle=0.0,
-        out_name=gmsh_file,
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(
+            lengths=(12, 4),
+            n_edge_cells=(12, 4),
+            n_layers=2,
+            structured_grid=True,
+            order=1,
+            mixed_elements=False,
+            jiggle=0.0,
+        ),
+        log=False,
     )
-
-    meshes = ot.Meshes.from_gmsh(gmsh_file)
 
     # Add data array 'pressure' to the left and right meshes boundary meshes
     points_shape = np.shape(meshes["left"].points)
@@ -168,14 +169,23 @@ def load_meshes_liquid_flow_simple():
     return meshes
 
 
-def load_model_liquid_flow_simple():
-    from ogstools import Project
+def load_project_simple_lf() -> ot.Project:
+    return ot.Project(EXAMPLES_DIR / "prj" / "SimpleLF.prj").copy()
 
-    prj_file = EXAMPLES_DIR / "prj" / "SimpleLF.prj"
-    prj = Project(prj_file)
-    meshes = load_meshes_liquid_flow_simple()
 
-    return prj, meshes
+def load_model_liquid_flow_simple() -> ot.Model:
+    """
+    new prj, new meshes obj
+    """
+    prj_file = load_project_simple_lf()
+    meshes = load_meshes_simple_lf()
+    return ot.Model(project=prj_file, meshes=meshes)
+
+
+def load_simulation_smalldeformation() -> ot.Simulation:
+    return ot.Simulation.from_folder(
+        EXAMPLES_DIR / "simulation" / "small_deformation"
+    )
 
 
 msh_geolayers_2d = _msh_dir / "geolayers_2d.msh"
