@@ -1,7 +1,5 @@
 """Unit tests for convergence studies."""
 
-from shutil import rmtree
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -15,34 +13,24 @@ class TestConvergence:
     """Test case for convergent meshes."""
 
     @pytest.mark.system()
-    def test_steady_state_diffusion(self, tmp_path):
+    def test_steady_state_diffusion(self):
         sim_results = []
         edge_cells = [2**i for i in range(3, 6)]
+        simulations = []
         for n_edge_cells in edge_cells:
-            case_path = tmp_path / f"cells_{n_edge_cells}"
-            case_path.mkdir(parents=True, exist_ok=True)
-            msh_file = tmp_path / "square.msh"
-            ot.gmsh_tools.rect(
-                n_edge_cells=n_edge_cells,
-                structured_grid=True,
-                out_name=msh_file,
+            meshes = ot.Meshes.from_gmsh(
+                ot.gmsh_tools.rect(
+                    n_edge_cells=n_edge_cells, structured_grid=True
+                )
             )
-            meshes = ot.Meshes.from_gmsh(msh_file)
-            meshes.save(case_path)
-
-            model = ot.Project(
-                output_file=tmp_path / "default.prj",
-                input_file=prj_steady_state_diffusion,
-            )
+            prj = ot.Project(input_file=prj_steady_state_diffusion).copy()
             prefix = "steady_state_diffusion_" + str(n_edge_cells)
-            model.replace_text(prefix, ".//prefix")
-            model.write_input()
-            ogs_args = f"-m {case_path} -o {tmp_path}"
-            model.run_model(write_logs=False, args=ogs_args)
-            sim_results += [
-                ot.MeshSeries(str(tmp_path / (prefix + ".pvd"))).mesh(-1)
-            ]
+            prj.replace_text(prefix, ".//prefix")
+            model = ot.Model(prj, meshes)
+            sim_c = model.controller()
+            simulations.append((prefix, sim_c))
 
+        sim_results = [sc[1].run().result[-1] for sc in simulations]
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
         np.testing.assert_array_less(0.0, spacing)
@@ -75,5 +63,3 @@ class TestConvergence:
         _ = convergence.plot_convergence(metrics, variable)
         _ = convergence.plot_convergence_errors(metrics)
         plt.close()
-
-        rmtree(tmp_path)
