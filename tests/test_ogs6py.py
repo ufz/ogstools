@@ -2,7 +2,6 @@ import platform
 import shutil
 import tempfile
 from pathlib import Path
-from typing import NoReturn
 
 import pytest
 from lxml import etree as ET
@@ -37,7 +36,6 @@ from ogstools.examples import (
     prj_tunnel_trm_withincludes,
 )
 from ogstools.meshes.gmsh_BHE import BHE, gen_bhe_mesh
-from ogstools.ogs6py import Project
 
 mapping = dict.fromkeys(range(32))
 
@@ -63,12 +61,12 @@ class TestiOGS:
                 assert to_unix(line1) == to_unix(line2)
 
     @pytest.fixture(scope="session")
-    def shared_prj(self, tmpdir_factory: pytest.TempdirFactory) -> str:
+    def shared_prj(self, tmpdir_factory: pytest.TempdirFactory) -> Path:
         return Path(tmpdir_factory.mktemp("test_ogs6py")) / "shared.prj"
 
     @pytest.mark.dependency(name="tunnel_ogs6py_prj_file")
-    def test_buildfromscratch(self, shared_prj: str) -> str:
-        model = Project(output_file=shared_prj, OMP_NUM_THREADS=4)
+    def test_buildfromscratch(self, shared_prj: Path) -> str:
+        model = ot.Project(output_file=shared_prj, OMP_NUM_THREADS=4)
         model.mesh.add_mesh("Decovalex-0-simplified-plain-with-p0-plain.vtu")
         model.mesh.add_mesh("Decovalex-0-Boundary-Top-mapped-plain.vtu")
         model.mesh.add_mesh("Decovalex-0-Boundary-Left-mapped-plain.vtu")
@@ -807,9 +805,9 @@ class TestiOGS:
         model.write_input()
         self.compare(shared_prj, prj_trm_from_scratch)
 
-    def test_buildfromscratch_bhe(self, tmp_path: Path) -> NoReturn:
+    def test_buildfromscratch_bhe(self, tmp_path: Path) -> None:
         outfile = tmp_path / "HeatTransportBHE_ogs6py.prj"
-        model = Project(output_file=outfile)
+        model = ot.Project(output_file=outfile)
         model.mesh.add_mesh(filename="mesh.vtu")
         model.mesh.add_mesh(filename="mesh_inflowsf.vtu")
         model.mesh.add_mesh(filename="mesh_bottomsf.vtu")
@@ -1099,18 +1097,18 @@ class TestiOGS:
         model.write_input()
         self.compare(outfile, prj_heat_transport_bhe)
 
-    def test_replace_text(self, tmp_path: Path) -> NoReturn:
+    def test_replace_text(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_text.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_text("tunnel_replace", xpath="./time_loop/output/prefix")
         model.write_input()
         root = ET.parse(prjfile)
         find = root.findall("./time_loop/output/prefix")
         assert find[0].text == "tunnel_replace"
 
-    def test_timedependenthet_param(self, tmp_path: Path) -> NoReturn:
+    def test_timedependenthet_param(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "timedephetparam.prj"
-        model = Project(
+        model = ot.Project(
             input_file=prj_time_dep_het_param, output_file=prjfile, verbose=True
         )
         model.parameters.add_parameter(
@@ -1143,17 +1141,17 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_time_dep_het_param_ref)
 
-    def test_python_st(self, tmp_path: Path) -> NoReturn:
+    def test_python_st(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "python_st.prj"
-        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model = ot.Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.geometry.add_geometry("beier_sandbox.gml")
         model.python_script.set_pyscript("simulationX_test.py")
         model.write_input()
         self.compare(prjfile, prj_beier_sandbox_ref)
 
-    def test_bhe_modify(self, tmp_path: Path) -> NoReturn:
+    def test_bhe_modify(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "modify_bhe.prj"
-        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model = ot.Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.processes.set_bhe_type(bhe_id=0, bhe_type="2U")
         model.processes.set_bhe_component(
             bhe_id=0,
@@ -1165,9 +1163,11 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_beier_sandbox_power_ref)
 
-    def test_bhe_ids(self, tmp_path: Path) -> NoReturn:
+    def test_bhe_ids(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "bhe_ids.prj"
-        model = Project(input_file=prj_3bhes_id_1U_2U_1U, output_file=prjfile)
+        model = ot.Project(
+            input_file=prj_3bhes_id_1U_2U_1U, output_file=prjfile
+        )
         model.processes.set_bhe_component(
             bhe_id="0,2",
             comp_type="borehole",
@@ -1177,9 +1177,9 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_3bhes_id_1U_2U_1U_ref)
 
-    def test_robin_bc(self, tmp_path: Path) -> NoReturn:
+    def test_robin_bc(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "robin_bc.prj"
-        model = Project(input_file=prj_square_1e4_robin, output_file=prjfile)
+        model = ot.Project(input_file=prj_square_1e4_robin, output_file=prjfile)
         model.process_variables.add_bc(
             process_variable_name="temperature",
             geometrical_set="square_1x1_geometry",
@@ -1191,9 +1191,9 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_square_1e4_robin_ref)
 
-    def test_staggered(self, tmp_path: Path) -> NoReturn:
+    def test_staggered(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "staggered.prj"
-        model = Project(input_file=prj_staggered, output_file=prjfile)
+        model = ot.Project(input_file=prj_staggered, output_file=prjfile)
         model.processes.set_process(
             name="HM",
             type="HYDRO_MECHANICS",
@@ -1247,9 +1247,9 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_staggered_ref)
 
-    def test_PID_controller(self, tmp_path: Path) -> NoReturn:
+    def test_PID_controller(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "pid_timestepping.prj"
-        model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
+        model = ot.Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.media.add_property(
             medium_id="0",
             name="relative_permeability",
@@ -1272,9 +1272,9 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_pid_timestepping_ref)
 
-    def test_add_output(self, tmp_path: Path) -> NoReturn:
+    def test_add_output(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "beier_sandbox_add_output.prj"
-        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model = ot.Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.time_loop.add_output(
             type="VTK",
             prefix="new_output",
@@ -1286,15 +1286,15 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_beier_sandbox_add_output_ref)
 
-    def test_output_init(self, tmp_path: Path) -> NoReturn:
+    def test_output_init(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "beier_sandbox_output.prj"
-        model = Project(input_file=prj_beier_sandbox, output_file=prjfile)
+        model = ot.Project(input_file=prj_beier_sandbox, output_file=prjfile)
         model.write_input()
         self.compare(prjfile, prj_beier_sandbox)
 
-    def test_deactivate_replace(self, tmp_path: Path) -> NoReturn:
+    def test_deactivate_replace(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "deactivate_replace.prj"
-        model = Project(input_file=prj_pid_timestepping, output_file=prjfile)
+        model = ot.Project(input_file=prj_pid_timestepping, output_file=prjfile)
         model.deactivate_property("viscosity", phase="AqueousLiquid")
         model.deactivate_parameter("p0")
         model.replace_parameter(
@@ -1306,16 +1306,16 @@ class TestiOGS:
         model.write_input()
         self.compare(prjfile, prj_deactivate_replace)
 
-    def test_empty_replace(self, tmp_path: Path) -> NoReturn:
+    def test_empty_replace(self, tmp_path: Path) -> None:
         inputfile = prj_tunnel_trm
         prjfile = Path(tmp_path / "tunnel_ogs6py_empty_replace.prj")
-        model = Project(input_file=inputfile, output_file=prjfile)
+        model = ot.Project(input_file=inputfile, output_file=prjfile)
         model.write_input()
         self.compare(inputfile, prjfile)
 
-    def test_replace_phase_property(self, tmp_path: Path) -> NoReturn:
+    def test_replace_phase_property(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_phase_property.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_phase_property_value(
             mediumid=0, phase="Solid", name="thermal_expansivity", value=5
         )
@@ -1326,9 +1326,9 @@ class TestiOGS:
         )
         assert find[0].text == "5"
 
-    def test_replace_medium_property(self, tmp_path: Path) -> NoReturn:
+    def test_replace_medium_property(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_medium_property.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_medium_property_value(
             mediumid=0, name="porosity", value=42
         )
@@ -1339,18 +1339,18 @@ class TestiOGS:
         )
         assert find[0].text == "42"
 
-    def test_replace_parameter(self, tmp_path: Path) -> NoReturn:
+    def test_replace_parameter(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_parameter.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_parameter_value(name="E", value=32)
         model.write_input()
         root = ET.parse(prjfile)
         find = root.findall("./parameters/parameter[name='E']/value")
         assert find[0].text == "32"
 
-    def test_replace_mesh(self, tmp_path: Path) -> NoReturn:
+    def test_replace_mesh(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_mesh.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_mesh(
             oldmesh="tunnel_inner.vtu", newmesh="tunnel_inner_new.vtu"
         )
@@ -1376,9 +1376,9 @@ class TestiOGS:
         assert find[8].text == "tunnel_inner_new"
         assert find[13].text == "tunnel_inner_new"
 
-    def test_add_entry(self, tmp_path: Path) -> NoReturn:
+    def test_add_entry(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_add_entry.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.add_element(tag="geometry", parent_xpath=".", text="geometry.gml")
         model.write_input()
         root = ET.parse(prjfile)
@@ -1386,9 +1386,9 @@ class TestiOGS:
         assert find[0].text == "geometry.gml"
 
     @pytest.mark.dependency(depends=["tunnel_ogs6py_prj_file"])
-    def test_add_block(self, shared_prj: str) -> NoReturn:
+    def test_add_block(self, shared_prj: str) -> None:
         prjfile = Path(shared_prj).parent / "tunnel_ogs6py_add_block.prj"
-        model = Project(input_file=shared_prj, output_file=prjfile)
+        model = ot.Project(input_file=shared_prj, output_file=prjfile)
         model.add_block(
             "parameter",
             parent_xpath="./parameters",
@@ -1400,9 +1400,9 @@ class TestiOGS:
         find = root.findall("./parameters/parameter[name='mu']/value")
         assert find[0].text == "0.001"
 
-    def test_remove_element(self, tmp_path: Path) -> NoReturn:
+    def test_remove_element(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_remove_element.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.remove_element(xpath="./parameters/parameter[name='E']")
         model.write_input()
         root = ET.parse(prjfile)
@@ -1411,10 +1411,10 @@ class TestiOGS:
 
     def test_replace_block_by_include(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> NoReturn:
+    ) -> None:
         monkeypatch.chdir(tmp_path)
         prjfile = "tunnel_ogs6py_solid_inc.prj"
-        model = Project(input_file=prj_tunnel_trm, output_file=prjfile)
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_block_by_include(
             xpath="./media/medium/phases/phase[type='Solid']",
             filename="solid.xml",
@@ -1426,8 +1426,8 @@ class TestiOGS:
         ]:
             self.compare(file, ref_file)
 
-    def test_property_dataframe(self) -> NoReturn:
-        model = Project(input_file=prj_tunnel_trm)
+    def test_property_dataframe(self) -> None:
+        model = ot.Project(input_file=prj_tunnel_trm)
         p_df = model.property_dataframe()
         assert p_df.shape[0] == 12
         assert p_df.shape[1] == 5
@@ -1446,10 +1446,10 @@ class TestiOGS:
 
     def test_replace_property_in_include(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> NoReturn:
+    ) -> None:
         monkeypatch.chdir(tmp_path)
         prjfile = "tunnel_ogs6py_includetest.prj"
-        model = Project(
+        model = ot.Project(
             input_file=prj_tunnel_trm_withincludes, output_file=prjfile
         )
         model.replace_phase_property_value(
@@ -1472,8 +1472,10 @@ class TestiOGS:
     )
     def test_wrong_run_args(
         self, tmp_path: Path, path: str | None, container: str | None, err: str
-    ) -> NoReturn:
-        model = Project(input_file=prj_tunnel_trm, output_file=prj_tunnel_trm)
+    ) -> None:
+        model = ot.Project(
+            input_file=prj_tunnel_trm, output_file=prj_tunnel_trm
+        )
         (tmp_path / str(container)).touch()
         with tempfile.NamedTemporaryFile(suffix=container, dir=tmp_path) as sif:
             is_suffix = isinstance(container, str) and container[0] == "."
@@ -1485,8 +1487,10 @@ class TestiOGS:
         platform.system() == "Windows",
         reason="Singularity is not available on Windows.",
     )
-    def test_singularity_not_found(self) -> NoReturn:
-        model = Project(input_file=prj_tunnel_trm, output_file=prj_tunnel_trm)
+    def test_singularity_not_found(self) -> None:
+        model = ot.Project(
+            input_file=prj_tunnel_trm, output_file=prj_tunnel_trm
+        )
         singularity_not_found = r"The Singularity executable was not found.*"
         with (
             tempfile.TemporaryDirectory() as sing_dir,
@@ -1500,10 +1504,6 @@ class TestiOGS:
             # Singularity executable not found in path:
             with pytest.raises(RuntimeError, match=singularity_not_found):
                 model.run_model(path=sing_dir, container_path=sif.name)
-
-    @pytest.fixture()
-    def temp_dir(self, tmp_path: Path) -> Path:
-        return tmp_path
 
     @pytest.fixture(params=[1, 2, 4, 8])
     def num_threads(self, request: pytest.FixtureRequest) -> int:
