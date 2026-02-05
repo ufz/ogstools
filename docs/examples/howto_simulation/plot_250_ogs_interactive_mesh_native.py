@@ -20,10 +20,12 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 
 """
 
+# %%
 # Imports and definitions
 # =======================
+
+import tempfile
 from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
 from ogs import OGSMesh
@@ -37,10 +39,7 @@ from ogstools.examples import load_model_liquid_flow_simple
 # ================
 # We will start with a simple liquid flow project.
 
-working_dir = Path(mkdtemp())
-prj, meshes = load_model_liquid_flow_simple()
-prj.write_input(working_dir / "LiquidFlowSimple.prj")
-_ = meshes.save(working_dir)
+model = load_model_liquid_flow_simple()
 
 
 # %%
@@ -51,15 +50,17 @@ _ = meshes.save(working_dir)
 # For further details search for OGSSimulation in https://doxygen.opengeosys.org/search.html?query=OGSSimulation.
 
 
-sim3_result_dir = working_dir / "sim3"
-sim3_result_dir.mkdir(exist_ok=True)
+model.save()
+sim_output = Path(tempfile.mkdtemp("interactive_mesh"))
 arguments = [
     "",
-    str(working_dir / "LiquidFlowSimple.prj"),
+    str(model.project.prjfile),
+    "-m",
+    str(model.meshes.active_target),
     "-o",
-    str(sim3_result_dir),
+    str(sim_output),
 ]
-sim3 = OGSSimulation(arguments)  # we will restart the same simulation as above
+sim3 = OGSSimulation(arguments)
 
 # %%
 # Mesh Interface
@@ -126,7 +127,7 @@ sim3.close()
 # %%
 # Visualization
 
-ms3 = ot.MeshSeries(sim3_result_dir / "LiquidFlow_Simple.pvd")
+ms3 = ot.MeshSeries(sim_output / model.project.meshseries_file())
 # !paraview {ms.filepath} # for interactive exploration
 # Time slice over x
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
