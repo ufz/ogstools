@@ -827,7 +827,6 @@ class Meshes(MutableMapping, StorageBase):
             mat_id, scalars="MaterialIDs"
         )
         cut_material.clear_data()
-
         cut_material_file = Mesh.save(cut_material)
 
         # pyvista's extract_feature_edges doesn't handle quadratic elements

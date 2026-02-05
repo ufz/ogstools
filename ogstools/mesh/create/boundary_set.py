@@ -270,7 +270,7 @@ class LayerSet(BoundarySet):
         from ogstools._find_ogs import cli
 
         tmp_dir = Path(tempfile.mkdtemp("to_region_simplified"))
-        mesh.save(outfile := (tmp_dir / "domain.vtu"), merged_mesh)
+        mesh.save(merged_mesh, outfile := (tmp_dir / "domain.vtu"))
         cli().NodeReordering(i=str(outfile), o=str(outfile))
 
         return RegionSet(input=mesh.read(outfile))
