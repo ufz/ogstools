@@ -22,23 +22,17 @@ In this guide, we will show how to:
 # %%
 # Imports and definitions
 # =======================
-from pathlib import Path
-from tempfile import mkdtemp
-
 from ogs import OGSMesh
-from ogs.OGSSimulator import OGSSimulation
 
 from ogstools.examples import load_model_liquid_flow_simple
 
 # %%
 # Select a Project
 # ================
-# We will start with a simple liquid flow example.
+# We will start with a simple liquid flow example and set the OGS execution to interactive.
 
-working_dir = Path(mkdtemp())
-prj, meshes = load_model_liquid_flow_simple()
-prj.write_input(working_dir / "LiquidFlowSimple.prj")
-_ = meshes.save(working_dir)
+model = load_model_liquid_flow_simple()
+model.execution.interactive = True
 
 
 # %%
@@ -48,30 +42,21 @@ _ = meshes.save(working_dir)
 # possible argument are documented under
 # https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
 
-sim1_result_dir = working_dir / "sim1"
-sim1_result_dir.mkdir(exist_ok=True)
-arguments = [
-    "",
-    str(working_dir / "LiquidFlowSimple.prj"),
-    "-o",
-    str(sim1_result_dir),
-]
-# extend like this: ,"-m", str(mesh_dir), "-l debug", -o", str(output_dir)]
 
 # %%
-# By constructing a OGSSimulation object we start OpenGeoSys and it runs time step 0
-sim1 = OGSSimulation(arguments)
+# By constructing a SimulationController object we start OpenGeoSys and it (only!) runs time step 0.
+simc_1 = model.controller()
 
 # %%
-print(f"The current simulation time is: {sim1.current_time()} s.")
-print(f"The end time defined is: {sim1.end_time()} s.")
+print(f"The current simulation time is: {simc_1.current_time} s.")
+print(f"The end time defined is: {simc_1.end_time} s.")
 
 
 # %%
 # Advance the simulation by a one step
 # ====================================
-status = sim1.execute_time_step()
-print(f"The current simulation time is: {sim1.current_time()} s.")
+status = simc_1.execute_time_step()
+print(f"The current simulation time is: {simc_1.current_time} s.")
 
 # %%
 # Basic simulation loop
@@ -82,18 +67,18 @@ print(f"The current simulation time is: {sim1.current_time()} s.")
 
 while (
     # Here, the condition is when simulation reaches the end time:
-    sim1.current_time()
-    < sim1.end_time()
+    simc_1.current_time
+    < simc_1.end_time
 ):
 
     # Add here your specific code with mesh manipulation:
-    my_mesh: OGSMesh = sim1.mesh("domain")
-    sim1.execute_time_step()
+    my_mesh: OGSMesh = simc_1.mesh("domain")
+    simc_1.execute_time_step()
 
-# Alternatively, run the entire simulation without interaction:
-sim1.execute_simulation()
-# Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments):
-sim1.close()
+
+# %%
+sim = simc_1.run()
+print(sim)
 
 
 # %%
