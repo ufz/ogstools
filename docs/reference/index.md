@@ -1,7 +1,10 @@
 # API reference
 
-```{eval-rst}
-.. include:: ogstools.rst
+```{toctree}
+---
+maxdepth: 4
+---
+ogstools
 ```
 
 ```{toctree}
