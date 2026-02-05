@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ogstools.ogs6py import Project
+    from ogstools import Project
 
 from collections.abc import Generator
 from dataclasses import dataclass, field
