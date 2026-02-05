@@ -498,4 +498,5 @@ class TestPlotting:
         # TODO: https://gitlab.opengeosys.org/ogs/ogs/-/issues/3518
 
         prj = ot.Project(EXAMPLES_DIR / "prj" / prj_file)
-        return prj.plot_constraints(fontsize=26, min_ax_aspect=1.0)
+        model = ot.Model(prj)
+        return model.plot_constraints(fontsize=26, min_ax_aspect=1.0)

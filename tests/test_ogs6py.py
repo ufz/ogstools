@@ -1514,27 +1514,36 @@ class TestiOGS:
         return request.param
 
     @pytest.fixture()
-    def cuboid_model(
+    def cuboid_model2(
         self, temp_dir: Path, num_threads: int, thread_type: str
-    ) -> Project:
-        meshname = temp_dir / "cuboid.msh"
-        ot.gmsh_tools.cuboid(
-            lengths=1.0, n_edge_cells=1, n_layers=1, out_name=meshname
-        )
-        meshes = ot.Meshes.from_gmsh(meshname, dim=[1, 3], log=False)
-        meshes.save(temp_dir)
+    ) -> ot.Model:
 
+        meshes = ot.Meshes.from_gmsh(
+            ot.gmsh_tools.cuboid(lengths=1.0, n_edge_cells=1, n_layers=1),
+            dim=[1, 3],
+            log=False,
+        )
         kwargs = {thread_type: num_threads}
-        return Project(
+        prj = ot.Project(
             input_file=prj_aniso_expansion,
             output_file=temp_dir / "test_asm_threads.prj",
             **kwargs,
         )
+        execution = ot.Execution(
+            sim_output=temp_dir,
+            logfile=temp_dir / "cuboid.log",
+            write_logs=True,
+            background=True,
+        )
+
+        model = ot.Model(prj, meshes, execution=execution)
+        model._next_target = temp_dir  # use only in testing!
+        return model
 
     @pytest.fixture()
     def bhe_model(
         self, temp_dir: Path, num_threads: int, thread_type: str
-    ) -> Project:
+    ) -> ot.Project:
         vtu_file = temp_dir / "bhe_simple.vtu"
         gen_bhe_mesh(
             length=5, width=5, layer=[20], groundwater=[],
