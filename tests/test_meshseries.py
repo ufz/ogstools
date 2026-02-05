@@ -26,25 +26,29 @@ def test_meshseries_xdmf():
 
 
 @pytest.mark.system()
-@pytest.mark.parametrize("quads", [True, False])
+@pytest.mark.parametrize("quads", [True, False], ids=["quads", "no quads"])
 def test_read_quadratic_xdmf(tmp_path, quads):
     "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
-    mesh_path = tmp_path / "mesh.msh"
-
-    ot.gmsh_tools.rect(1, 1, structured_grid=quads, order=2, out_name=mesh_path)
-
-    meshes = ot.Meshes.from_gmsh(mesh_path)
-    meshes.save(tmp_path)
-
-    model = ot.Project(
-        output_file=tmp_path / "default.prj",
-        input_file=examples.prj_mechanics,
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(1, 1, structured_grid=quads, order=2)
     )
-    model.replace_text("XDMF", xpath="./time_loop/output/type")
-    model.replace_text(4, xpath=".//integration_order")
-    model.write_input()
-    model.run_model(write_logs=False, args=f"-m {tmp_path} -o {tmp_path}")
-    ot.MeshSeries(tmp_path / "mesh_domain.xdmf").mesh(0)
+
+    prj1 = ot.Project(input_file=examples.prj_mechanics).copy("prj1.prj")
+    prj1.replace_text("XDMF", xpath="./time_loop/output/type")
+    prj1.replace_text(4, xpath=".//integration_order")
+
+    model = ot.Model(prj1, meshes)
+    # private function call allowed because it is guaranteed the path is empty
+    model._next_target = tmp_path  # use only in testing!
+    sim1 = model.run("new1", overwrite=True)
+    print(sim1.log_file)
+    ms_domain = sim1.result
+    if quads:
+        # 4 corners, 4 between corners, 1 center
+        assert ms_domain[-1].number_of_points == 8
+    else:  # triangles
+        # 4 corners, 4 between corners, 1 center, 4 between corner and center
+        assert ms_domain[-1].number_of_points == 13
 
 
 @pytest.mark.parametrize(
@@ -553,34 +557,29 @@ def test_compare_meshseries_tol(tols):
     ],
 )
 @pytest.mark.system()
-def test_ip_tesselated(tmp_path, elem_order, quads, intpt_order, mixed):
+def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     "Test creation of integration point meshes."
-
-    mesh_path = tmp_path / "mesh.msh"
     sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
 
-    ot.gmsh_tools.rect(
+    rect = ot.gmsh_tools.rect(
         n_edge_cells=6,
         n_layers=2,
         structured_grid=quads,
         order=elem_order,
-        out_name=mesh_path,
         mixed_elements=mixed,
         jiggle=0.01,
     )
-    meshes = ot.Meshes.from_gmsh(mesh_path)
-    meshes.save(tmp_path)
+    meshes = ot.Meshes.from_gmsh(rect)
+    prj = ot.Project(input_file=examples.prj_mechanics).copy()
+    prj.replace_text(intpt_order, xpath=".//integration_order")
 
-    model = ot.Project(
-        output_file=tmp_path / "default.prj",
-        input_file=examples.prj_mechanics,
-    )
-    model.replace_text(intpt_order, xpath=".//integration_order")
-    model.write_input()
-    model.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
-    meshseries = ot.MeshSeries(tmp_path / "mesh.pvd")
-    result = meshseries[-1]
-    int_pts = ot.mesh.to_ip_point_cloud(result)
+    # ToDo log prj.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
+    model = ot.Model(prj, meshes)
+    model._next_target = tmp_path  # use only in testing!
+    meshseries = model.run().result
+    mesh_last = meshseries[-1]
+    int_pts = ot.mesh.to_ip_point_cloud(mesh_last)
+
     ip_ms = meshseries.ip_tesselated()
     ip_mesh = ip_ms.mesh(-1)
     vals = ip_ms.probe_values(ip_mesh.center, sigma_ip.data_name)
@@ -603,12 +602,9 @@ def test_reader():
 def test_xdmf_quadratic(tmp_path):
     "Test reading of quadratic elements in xdmf."
 
-    msh_path = tmp_path / "mesh.msh"
-    ot.gmsh_tools.rect(
-        n_edge_cells=6, structured_grid=False, order=2, out_name=msh_path
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(n_edge_cells=6, structured_grid=False, order=2)
     )
-
-    meshes = ot.Meshes.from_gmsh(msh_path)
     meshes.save(tmp_path)
 
     model = ot.Project(
@@ -682,7 +678,7 @@ def test_save_pvd_mesh_series(tmp_path):
     # Smoke test for ascii output
     ms.save(tmp_path / "test_ascii.pvd", ascii=True)
 
-    ms.save(tmp_path / file_name, deep=False)
+    ms.save(tmp_path / file_name, deep=False, overwrite=True)
     tree = ET.parse(tmp_path / file_name)
     num_slices = len(ms.timevalues)
     num_slices_test = len(tree.findall("./Collection/DataSet"))
@@ -712,6 +708,7 @@ def test_save_xdmf_mesh_series(tmp_path):
     for m in ms_test:
         assert "test" in m.filepath.name
 
+    file_name = "test_shallow.pvd"
     ms.save(tmp_path / file_name, deep=False)
     tree = ET.parse(tmp_path / file_name)
     num_slices = len(ms.timevalues)
