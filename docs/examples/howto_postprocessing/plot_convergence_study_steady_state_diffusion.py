@@ -40,9 +40,9 @@ import ogstools as ot
 from ogstools import examples, workflow
 from ogstools.studies import convergence
 
-tmp_path = Path(mkdtemp(suffix="steady_state_diffusion"))
+tmp_path = Path(mkdtemp(prefix="steady_state_diffusion"))
 report_name = str(tmp_path / "report.ipynb")
-result_paths = []
+
 
 # %% [markdown]
 # The meshes and their boundaries are generated easily via gmsh and
@@ -53,36 +53,37 @@ result_paths = []
 # %%
 refinements = 6
 edge_cells = [2**i for i in range(refinements)]
+simulations_control = []
+
 for n_edge_cells in edge_cells:
-    case_dir = tmp_path / f"cells_{n_edge_cells}"
-    case_dir.mkdir(parents=True, exist_ok=True)
-
-    msh_path = case_dir / "square.msh"
-    ot.gmsh_tools.rect(
-        n_edge_cells=n_edge_cells, structured_grid=True, out_name=msh_path
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(n_edge_cells=n_edge_cells, structured_grid=True),
+        log=False,
     )
 
-    meshes = ot.Meshes.from_gmsh(msh_path, log=False)
-    meshes.save(case_dir)
-
-    model = ot.Project(
-        output_file=tmp_path / "default.prj",
-        input_file=examples.prj_steady_state_diffusion,
-    )
+    prj = ot.Project(input_file=examples.prj_steady_state_diffusion).copy()
     prefix = "steady_state_diffusion_" + str(n_edge_cells)
-    model.replace_text(prefix, ".//prefix")
-    model.write_input()
-    ogs_args = f"-m {case_dir} -o {tmp_path}"
-    model.run_model(write_logs=False, args=ogs_args)
-    result_paths += [str(tmp_path / (prefix + ".pvd"))]
+    prj.replace_text(prefix, ".//prefix")
+
+    model = ot.Model(prj, meshes)
+
+    case_dir = tmp_path / f"cells_{n_edge_cells}"
+    model.save(case_dir)
+    sim_c = model.controller()
+    simulations_control.append(sim_c)
+
+simulations = [sim.run() for sim in simulations_control]
 
 # %% [markdown]
 # Here we calculate the analytical solution on one of the meshes:
 
 # %%
 analytical_solution_path = tmp_path / "analytical_solution.vtu"
+sim_last: ot.Simulation = simulations[-1]
+
+
 solution = examples.anasol.diffusion_head_analytical(
-    ot.MeshSeries(result_paths[-1]).mesh(0)
+    simulations[-1].result.mesh(0)
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
@@ -97,6 +98,7 @@ solution.save(analytical_solution_path)
 # see a quadratic convergence behavior.
 
 # %%
+result_paths = [sim.result.filepath for sim in simulations]
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,
