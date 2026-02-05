@@ -12,6 +12,16 @@ import gmsh
 import numpy as np
 import pyvista as pv
 
+from ogstools.core.storage import _date_temp_path
+
+
+def optional_default_file(
+    filepath: Path | str | None, class_id: str, suffix: str
+) -> Path:
+    filepath = Path(filepath) if filepath else _date_temp_path(class_id, suffix)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    return filepath
+
 
 def _line(
     geo: type[gmsh.model.geo],
@@ -38,10 +48,10 @@ def rect(
     order: int = 1,
     mixed_elements: bool = False,
     jiggle: float = 0.0,
-    out_name: Path | str = Path("rect.msh"),
+    out_name: Path | str | None = None,
     msh_version: float | None = None,
     layer_ids: list | None = None,
-) -> None:
+) -> Path:
     """
     Generates a rectangular mesh using gmsh.
 
@@ -56,6 +66,7 @@ def rect(
     :param msh_version: Version of the GMSH mesh file format. Default is None (use the default version).
     :param layer_ids: List of layer IDs for the physical groups. If None, the IDs will be generated automatically.
     """
+    out_name = optional_default_file(out_name, "gmsh_rect", ".msh")
 
     if not all(
         1e-5 <= length <= 1e9
@@ -146,6 +157,7 @@ def rect(
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
     gmsh.finalize()
+    return Path(out_name)
 
 
 def _square(
@@ -185,9 +197,11 @@ def cuboid(
     structured_grid: bool = True,
     order: int = 1,
     mixed_elements: bool = False,
-    out_name: Path = Path("unit_cube.msh"),
+    out_name: Path | str | None = None,
     msh_version: float | None = None,
-) -> None:
+) -> Path:
+    out_name = optional_default_file(out_name, "gmsh_cuboid", ".msh")
+
     gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)
     if msh_version is not None:
@@ -256,6 +270,7 @@ def cuboid(
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(out_name))
     gmsh.finalize()
+    return out_name
 
 
 def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
@@ -278,10 +293,10 @@ def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
 
 def remesh_with_triangles(
     mesh: pv.UnstructuredGrid,
-    output_file: Path | str = Path() / "tri_mesh.msh",
+    output_file: Path | str | None = None,
     size_factor: float = 1.0,
     order: int = 1,
-) -> None:
+) -> Path:
     """Discretizes a given Mesh with triangles and saves as gmsh .msh.
 
     Requires the mesh to be 2D and to contain 'MaterialIDs in the cell data.
@@ -291,7 +306,7 @@ def remesh_with_triangles(
     :param size_factor: A factor to scale the element sizes.
     :param order:       The element order (1=linear, 2=quadratic, ...)
     """
-
+    output_file = optional_default_file(output_file, "gmsh_remesh", ".msh")
     gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)
     gmsh.clear()
@@ -351,4 +366,4 @@ def remesh_with_triangles(
     gmsh.model.mesh.setOrder(order)
     gmsh.write(str(output_file))
     gmsh.finalize()
-    return
+    return output_file
