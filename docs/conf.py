@@ -47,7 +47,6 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
     "reference/modules.rst",
-    "reference/ogstools.rst",
     "examples/**/README.rst",
     "examples/README.rst",
     "user-guide/README.rst",
@@ -103,6 +102,16 @@ html_theme_options = {
 }
 
 nitpick_ignore_regex = [("py:class", r".*")]
+
+# Resolve ambiguous cross-references by preferring top-level API imports
+# When Model and Simulation are referenced, prefer ogstools.Model over ogstools.core.model.Model
+autodoc_type_aliases = {
+    "Model": "ogstools.Model",
+    "Simulation": "ogstools.Simulation",
+}
+
+# Configure autosummary to prefer the top-level API imports
+intersphinx_disabled_reftypes = []
 
 show_authors = True
 
@@ -186,7 +195,7 @@ def custom_gen_binder_url(fpath, binder_conf, _gallery_conf):
 
 
 # Monkey-patching the Sphinx-Gallery binder url
-from sphinx_gallery import interactive_example as ie  # noqa: E402
+from sphinx_gallery import interactive_example as ie
 
 ie.gen_binder_url = custom_gen_binder_url
 
