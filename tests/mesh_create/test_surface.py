@@ -34,7 +34,7 @@ class TestSurface:
         s = create.Surface(surface_mesh, 0)
         assert s.mesh.GetNumberOfPoints() > 0
 
-        save(filename=s.filename, mesh=s.mesh)
+        save(mesh=s.mesh, filename=s.filename)
         s2 = create.Surface(s.filename, material_id=2)
         assert s2.mesh.GetNumberOfPoints() > 0
 
