@@ -69,7 +69,6 @@ class Model(StorageBase):
                 self.project = Project.from_folder(project_path)
             else:
                 self.project = Project(input_file=project_path)
-                self.project.prjfile = project_path
 
         if isinstance(meshes, Meshes):
             self.meshes = meshes
@@ -200,15 +199,6 @@ class Model(StorageBase):
             self.project, self.next_target / "project", dry_run, overwrite
         )
 
-
-        # Project always needs to be saved first (if not yet), then linked
-        #if (
-        #    not self.project.active_target
-        #    or not self.project.active_target.exists()
-        #):
-        #    files += self.project.save(dry_run=dry_run, overwrite=overwrite)
-        #self.project.link(self.next_target / "project", dry_run)
-
         files += self._save_or_link_child(
             self.execution,
             self.next_target / "execution.yaml",
@@ -300,6 +290,7 @@ class Model(StorageBase):
         :returns:           A SimulationController for managing the simulation.
         """
 
+        # ToDo Could also check if Model differs between the saved Model and the provided object
         if not self.is_saved:
             self._propagate_target()
             self._save_impl(overwrite=overwrite, dry_run=dry_run)

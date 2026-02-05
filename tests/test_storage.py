@@ -243,7 +243,7 @@ class TestStorage:
 
     def test_sim_save_load_roundtrip(self):
         # ToDo example ot.Simulation()
-        prj1 = ot.Project(input_file=prj_mechanics)
+        prj1 = ot.Project(input_file=prj_mechanics).copy()
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
         m = ot.Model(prj1, meshes1)
         sim1 = m.run()
@@ -345,6 +345,9 @@ class TestStorage:
     def test_storage_multi_model_multi_sim(self, tmp_path, save_strategy):
         ot.StorageBase.Userpath = tmp_path
         prj_pvd = ot.Project(input_file=prj_mechanics)
+        # prj_pvd.save(tmp_path / "mechanics")
+        # prj_test = ot.Project.from_folder(tmp_path/"mechanics")
+        prj_test = prj_pvd.copy(tmp_path / "mechanics")
         prj_xdmf = ot.Project(input_file=prj_mechanics).copy()
         prj_xdmf.replace_text("XDMF", xpath="./time_loop/output/type")
 
@@ -366,6 +369,8 @@ class TestStorage:
         model_pvd_rect10 = ot.Model(prj_pvd, meshes_rect10)
         model_xdmf_rect10 = ot.Model(prj_xdmf, meshes=meshes_rect10)
         model_xdmf_rect12 = ot.Model(prj_xdmf, meshes=meshes_rect12)
+        ot.Model(prj_test, meshes_rect12).save(tmp_path / "model_test1")
+        ot.Model(prj_test, meshes_rect12).save(tmp_path / "model_test2")
 
         sim_default = model_pvd_rect10.run(id="sim_default")
         sim_highres = model_pvd_rect12.run(id="sim_highres")
@@ -428,10 +433,10 @@ class TestStorage:
         In both cases, the same file paths should be returned.
         """
 
-        # Test Project - folder with project.prj inside
+        # Test Project - folder with default.prj inside
         prj = ot.Project(input_file=prj_mechanics)
         files = prj.save(tmp_path / "test", overwrite=True, dry_run=dry_run)
-        assert files[0] == tmp_path / "test" / "project.prj"
+        assert files[0] == tmp_path / "test" / "default.prj"
         assert_files_saved(files, expected_count=1, dry_run=dry_run)
 
         # Test Execution - single YAML file
