@@ -11,6 +11,7 @@ Its main functionalities include creating and altering OGS6 input files as well 
 """
 
 import copy
+import difflib
 import os
 import shutil
 import subprocess
@@ -19,11 +20,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
 import pandas as pd
-import psutil
 from lxml import etree as ET
+from typing_extensions import Self
 
+from ogstools.core.storage import StorageBase
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
     curves,
@@ -52,7 +53,7 @@ from ogstools.ogs6py.properties import (
 )
 
 
-class Project:
+class Project(StorageBase):
     """Class for handling an OGS6 project.
 
     In this class everything for an OGS6 project can be specified.
@@ -61,11 +62,12 @@ class Project:
     def __init__(
         self,
         input_file: str | Path | None = None,
-        output_file: str | Path = "default.prj",
+        output_file: str | Path | None = None,
         output_dir: str | Path = Path(),
         logfile: str | Path = "out.log",
         verbose: bool = False,
         xml_string: str | None = None,
+        id: str | None = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -85,6 +87,7 @@ class Project:
                 execution to restrict number of OMP Threads
         """
         sys.setrecursionlimit(10000)
+        super().__init__("Project", "", id=id)
         self.logfile = Path(logfile)
         self.process: None | subprocess.Popen = None
         self.runtime_start: float = 0.0
@@ -97,13 +100,22 @@ class Project:
         self.verbose = verbose
         self.threads: int | None = kwargs.get("OMP_NUM_THREADS")
         self.asm_threads: int = kwargs.get("OGS_ASM_THREADS", self.threads)
-        self.inputfile: Path | None = None
+        self.input_file: Path | None = None
         self.folder: Path = Path()
-        self.prjfile = Path(output_file)
+
+        if output_file:
+            # Legacy: output_file sets prjfile for write_input()
+            self.prjfile = Path(output_file)
+        elif input_file is not None:
+            self.prjfile = Path(input_file)
+            self._bind_to_path(input_file.parent)
+        else:
+            self.prjfile = self._next_target / "project.prj"
+
         if input_file is not None:
             input_file = Path(input_file)
             if input_file.is_file():
-                self.inputfile = input_file
+                self.input_file = input_file
                 self.folder = input_file.parent
                 _ = self._get_root()
                 if self.verbose is True:
@@ -112,7 +124,7 @@ class Project:
                 msg = f"Input project file {input_file} not found."
                 raise FileNotFoundError(msg)
         else:
-            self.inputfile = None
+            self.input_file = None
             self.root = ET.Element("OpenGeoSysProject")
             parse = ET.XMLParser(remove_blank_text=True, huge_tree=True)
             tree_string = ET.tostring(self.root, pretty_print=True)
@@ -121,9 +133,24 @@ class Project:
             root = ET.fromstring(xml_string)
             self.tree = ET.ElementTree(root)
         self.geometry = geo.Geo(self.tree)
+        # If loading from file, set the geometry source path
+        if (
+            self.input_file is not None
+            and self.geometry.has_geometry
+            and self.geometry.filename
+        ):
+            gml_path = Path(self.input_file).parent / self.geometry.filename
+            assert gml_path.exists()
+            self.geometry._active_target = gml_path
+
         self.mesh = mesh.Mesh(self.tree)
         self.processes = processes.Processes(self.tree)
         self.python_script = python_script.PythonScript(self.tree)
+        # If loading from file, set the python_script source path
+        if self.input_file is not None and self.python_script.filename:
+            py_path = Path(self.input_file).parent / self.python_script.filename
+            if py_path.exists():
+                self.python_script._active_target = py_path
         self.media = media.Media(self.tree)
         self.time_loop = timeloop.TimeLoop(self.tree)
         self.local_coordinate_system = (
@@ -134,6 +161,151 @@ class Project:
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
+
+    @classmethod
+    def from_folder(cls, folder: Path | str) -> Self:
+        """
+        Load Project from a folder containing a project.prj file.
+
+        :param folder: Path to the project folder.
+        :returns:      A Project instance loaded from the folder.
+        """
+        folder = Path(folder)
+        prj_file = folder / "project.prj"
+        if not prj_file.exists():
+            msg = f"No project.prj found in {folder}"
+            raise FileNotFoundError(msg)
+        project = cls(input_file=prj_file)
+        project._bind_to_path(folder)
+        return project
+
+    @classmethod
+    def from_id(cls, project_id: str) -> Self:
+        """
+        Load Project from the user storage path using its ID.
+        StorageBase.Userpath must be set.
+
+        :param project_id: The unique ID of the Project to load.
+        :returns:          A Project instance restored from disk.
+        """
+        project_folder = StorageBase.saving_path() / "Project" / project_id
+        project_file = project_folder / "project.prj"
+
+        if not project_file.exists():
+            msg = f"No project found at {project_file}"
+            raise FileNotFoundError(msg)
+
+        project = cls(input_file=project_file)
+        project._bind_to_path(project_folder)
+        project._id = project_id
+        return project
+
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        base_repr = super().__repr__()
+
+        if self.user_specified_id:
+            construct = f'{cls_name}.from_id("{self._id}")'
+        elif self.is_saved:
+            construct = f"{cls_name}.from_folder({str(self.active_target)!r})"
+        else:
+            # Show comprehensive view of object's data
+            attrs = []
+            if self.input_file:
+                attrs.append(f"input_file={str(self.input_file)!r}")
+            if self.output_dir != Path():
+                attrs.append(f"output_dir={str(self.output_dir)!r}")
+            if self.logfile != Path("out.log"):
+                attrs.append(f"logfile={str(self.logfile)!r}")
+            if self.verbose:
+                attrs.append(f"verbose={self.verbose!r}")
+
+            attrs_str = ", ".join(attrs) if attrs else ""
+            construct = f"{cls_name}({attrs_str})"
+
+        return f"{construct}\n{base_repr}"
+
+    def __str__(self) -> str:
+        base_repr = super().__str__()
+        if self.input_file:
+            dependencies = ",".join(
+                str(self.dependencies(include_meshes=False))
+            )
+        else:
+            dependencies = None
+        lines = [
+            f"{base_repr}",
+            f"   Input file: {self.input_file!r}\n"
+            f"   Dependencies: {dependencies!r}",
+        ]
+
+        return "\n".join(lines)
+
+    def __deepcopy__(self, memo: dict) -> Self:
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+
+        skip_attrs = self._SAVE_STATE_ATTRS + (
+            "prjfile",
+            "process",
+            "geometry",
+            "python_script",
+        )
+        for k, v in self.__dict__.items():
+            if k not in skip_attrs:
+                setattr(new, k, copy.deepcopy(v, memo))
+
+        new._reset_save_state()
+        new.prjfile = new._next_target / "project.prj"
+        assert isinstance(new.prjfile, Path)
+
+        # Create new Geo with the copied tree and preserve source_path
+        new.geometry = copy.deepcopy(self.geometry)
+        if self.geometry.filename:
+            new.geometry._next_target = (
+                new._next_target / self.geometry.filename
+            )
+
+        # Create new PythonScript with the copied tree and preserve source_path
+        new.python_script = copy.deepcopy(self.python_script)
+        if self.python_script.filename:
+            new.python_script._next_target = (
+                new._next_target / self.python_script.filename
+            )
+        return new
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Project):
+            return NotImplemented
+
+        self._remove_empty_elements()
+        other._remove_empty_elements()
+
+        c14n_a = ET.tostring(self.tree, method="c14n")
+        c14n_b = ET.tostring(other.tree, method="c14n")
+        if c14n_a == c14n_b:
+            return True
+
+        text_a = c14n_a.decode("utf-8")
+        text_b = c14n_b.decode("utf-8")
+
+        # Split into lines to get a readable diff
+        lines_a = text_a.splitlines(keepends=True)
+        lines_b = text_b.splitlines(keepends=True)
+
+        diff = difflib.unified_diff(
+            lines_a,
+            lines_b,
+            fromfile=str(self.active_target),
+            tofile=str(self.active_target),
+        )
+
+        print("Files differ (canonical XML):")
+        for line in diff:
+            # difflib already prefixes lines with -/+/@
+            sys.stdout.write(line)
+        return False
 
     def _replace_blocks_by_includes(self) -> None:
         for i, file in enumerate(self.include_files):
@@ -165,8 +337,8 @@ class Project:
             huge_tree=True,
         )
         if self.tree is None:
-            if self.inputfile is not None:
-                self.tree = ET.parse(str(self.inputfile), parser)
+            if self.input_file is not None:
+                self.tree = ET.parse(str(self.input_file), parser)
             else:
                 msg = "No inputfile given. Can't build XML tree."
                 raise RuntimeError(msg)
@@ -207,11 +379,61 @@ class Project:
             if (entry is not None) and (len(entry.getchildren()) == 0):
                 entry.getparent().remove(entry)
 
-    @staticmethod
     def dependencies(
+        self,
+        include_meshes: bool = True,
+        include_python_file: bool = True,
+        include_xml_includes: bool = True,
+    ) -> list[Path]:
+
+        return Project._dependencies(
+            self.tree, include_meshes, include_python_file, include_xml_includes
+        )
+
+    @staticmethod
+    def _dependencies(
+        root: ET._Element,
+        include_meshes: bool = True,
+        include_python_file: bool = True,
+        include_xml_includes: bool = True,
+    ) -> list[Path]:
+        # root = tree.getroot()
+        if include_xml_includes:
+            xml_files = [
+                Path(elem.get("file"))
+                for elem in root.findall(".//include")
+                if elem.get("file")
+            ]
+        else:
+            xml_files = []
+
+        if include_meshes:
+            mesh_files = [
+                Path(m.text)
+                for xpath in ["./mesh", "./meshes/mesh", "./geometry"]
+                for m in root.findall(xpath)
+            ]
+        else:
+            mesh_files = []
+
+        if include_python_file:
+            python_files = [
+                Path(m.text) for m in root.findall("./python_script") if m.text
+            ]
+        else:
+            python_files = []
+
+        # combine, make unique, preserve order
+        return list(dict.fromkeys(xml_files + mesh_files + python_files))
+
+    @staticmethod
+    def dependencies_of_file(
         input_file: str | Path,
         mesh_dir: str | Path | None = None,
         check: bool = False,
+        include_meshes: bool = True,
+        include_python_file: bool = True,
+        include_xml_includes: bool = True,
     ) -> list[Path]:
         """
         Searches a (partial) project file for included files (e.g. xml snippets, meshes (vtu,gml), python scripts)
@@ -233,35 +455,18 @@ class Project:
         mesh_dir = Path(mesh_dir).absolute()
 
         tree = ET.parse(input_file)
-        root = tree.getroot()
-        xml_files = [
-            input_file.parent / Path(elem.get("file"))
-            for elem in root.findall(".//include")
-            if elem.get("file")
-        ]
-
-        mesh_files = [
-            mesh_dir / m.text
-            for xpath in ["./mesh", "./meshes/mesh", "./geometry"]
-            for m in root.findall(xpath)
-        ]
-
-        python_files = [
-            input_file.parent / m.text
-            for xpath in ["./python_script"]
-            for m in root.findall(xpath)
-        ]
-
-        # combine, make unique, preserve order
-        files = list(dict.fromkeys(xml_files + mesh_files + python_files))
-
+        files = Project._dependencies(
+            tree,
+            include_meshes,
+            include_python_file,
+            include_xml_includes,
+        )
         if check:
             missing_files = [file for file in files if not file.exists()]
             if len(missing_files) > 0:
-                missing_files_str = ", ".join(missing_files)
+                missing_files_str = ", ".join(str(missing_files))
                 msg = f"The following files are missing: {missing_files_str}."
                 raise FileExistsError(msg)
-
         return files
 
     @staticmethod
@@ -801,7 +1006,7 @@ class Project:
         return fn
 
     def _write_prj_to_pvd(self) -> None:
-        self.inputfile = self.prjfile
+        self.input_file = self.prjfile
         root = self._get_root(remove_blank_text=True, remove_comments=True)
         prjstring = (
             ET.tostring(root)
@@ -831,15 +1036,17 @@ class Project:
 
     def _failed_run_print_log_tail(
         self, write_logs: bool, tail_len: int = 10
-    ) -> None:
+    ) -> str:
         msg = "OGS execution was not successful."
         if write_logs is False:
             msg += " Please set write_logs to True to obtain more information."
         else:
             print(f"Last {tail_len} line of the log:")
             with self.logfile.open() as lf:
-                print("".join(lf.readlines()[-tail_len:]))
-        raise RuntimeError(msg)
+                last_lines = "".join(lf.readlines()[-tail_len:])
+                msg += last_lines
+
+        return msg
 
     def run_model(
         self,
@@ -849,9 +1056,8 @@ class Project:
         container_path: Path | str | None = None,
         wrapper: Any | None = None,
         write_logs: bool = True,
-        write_prj_to_pvd: bool = True,
         background: bool = False,
-    ) -> None:
+    ) -> "subprocess.Popen":
         """Command to run OGS.
 
         Runs OGS with the project file specified as output_file.
@@ -944,15 +1150,14 @@ class Project:
             args = f" -o {self.output_dir}"
         elif args is not None and "-o" not in args:
             args += f" -o {self.output_dir}"
+
         if args is not None:
             argslist = args.split(" ")
-            output_dir_flag = False
-            for entry in argslist:
-                if output_dir_flag is True:
-                    self.output_dir = Path(entry)
-                    output_dir_flag = False
-                if "-o" in entry:
-                    output_dir_flag = True
+            if "-o" in argslist:
+                index = argslist.index("-o")
+                if index + 1 < len(argslist):
+                    self.output_dir = Path(argslist[index + 1])
+
             cmd += f"{args} "
         #        if write_logs is True:
         #            cmd += f"{self.prjfile} > {self.logfile}"
@@ -982,69 +1187,37 @@ class Project:
                 stderr=subprocess.STDOUT,
                 env=env,
             )
-        if background:
-            return
-        self.process.wait()
-        self.runtime_end = time.time()
-        if self.process.returncode == 0 and not background and write_prj_to_pvd:
-            self._write_prj_to_pvd()
-        print(self.status)
-        if self.process.returncode != 0:
-            self._failed_run_print_log_tail(write_logs)
+        if not background:
+            self.process.wait()
 
-    @property
-    def status(self) -> str:
-        ":returns string: describes the status of the model execution."
-        message = f"Simulation: {self.prjfile}"
-        if self.process is None:
-            stat_str = "not yet started."
-        else:
-            match self.process.poll():
-                case None:
-                    runtime = time.time() - self.runtime_start
-                    stat_str = f"running for {runtime} s."
-                case 0:
-                    runtime = self.runtime_end - self.runtime_start
-                    stat_str = "finished successfully."
-                    # no way of getting the runtime for background runs
-                    if runtime > 0:
-                        stat_str += f"\nExecution took {runtime} s"
-                case code:
-                    stat_str = f"terminated with error code {code}."
-        return "\n".join([message, "Status: " + stat_str])
+        return self.process
 
-    def terminate_run(self) -> bool:
-        """Aborts simulation if it is running.
-
-        :returns bool:  True if the run was terminated successfully,
-                        False otherwise.
-
-        """
-        if self.process is None:
-            print("Simulation has not been started.")
-            return False
-        try:
-            parent = psutil.Process(self.process.pid)
-            for child in parent.children(recursive=True):
-                child.kill()
-            parent.kill()
-            # Wait shortly, so the process is actually killed before continuing
-            time.sleep(0.01)
-            return True
-        except psutil.NoSuchProcess:
-            print("Simulation has already finished.")
-            return False
+    def _propagate_target(self) -> None:
+        """Propagate save target to geometry and python_script files."""
+        if self.geometry.filename and not self.geometry.user_specified_target:
+            self.geometry._next_target = (
+                self.next_target / self.geometry.filename
+            )
+        if (
+            self.python_script.filename
+            and not self.python_script.user_specified_target
+        ):
+            self.python_script._next_target = (
+                self.next_target / self.python_script.filename
+            )
 
     def write_input(
-        self, prjfile_path: None | Path = None, keep_includes: bool = False
+        self,
+        prjfile_path: None | Path | str = None,
+        keep_includes: bool = False,
     ) -> None:
         """Writes the projectfile to disk.
 
         :param prjfile_path: Path to write the project file to. If not specified, the initialised path is used.
         :param keep_includes:
         """
-        if prjfile_path is not None:
-            self.prjfile = prjfile_path
+        prjfile_path = Path(prjfile_path) if prjfile_path else self.prjfile
+        prjfile_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.tree is not None:
             self._remove_empty_elements()
@@ -1061,7 +1234,7 @@ class Project:
             if self.verbose is True:
                 display.Display(self.tree)
             self.tree.write(
-                self.prjfile,
+                prjfile_path,
                 encoding="ISO-8859-1",
                 xml_declaration=True,
                 pretty_print=True,
@@ -1259,17 +1432,6 @@ class Project:
         """Public API: import MediaSet into this Project."""
         _ProjectMediaImporter(self).set_media(media_set)
 
-    def gml_filepath(self, mesh_dir: Path | None = None) -> Path | None:
-        """Returns the filepath gml file if given in the Project.
-
-        :param mesh_dir:    Path to the meshes directory (default: input dir)
-        """
-        mesh_dir = self.folder if mesh_dir is None else mesh_dir
-        gm = self._get_root().find("./geometry")
-        if gm is None or gm.text is None:
-            return None
-        return mesh_dir / gm.text
-
     def meshpaths(self, mesh_dir: Path | None = None) -> list[Path]:
         """Returns the filepaths to the given meshes in the Project.
 
@@ -1410,49 +1572,3 @@ class Project:
                     label += self._format_constraint(entry, process_var)
             labels[mesh_name] = label
         return labels
-
-    # TODO move into Model class when available
-    def plot_constraints(
-        self, mesh_dir: Path | None = None, **kwargs: Any
-    ) -> plt.Figure:
-        """Plot the meshes with annotated boundary conditions and source terms.
-
-        keyword arguments: see :func:`~ogstools.plot.contourf`
-        """
-
-        from tempfile import mkdtemp
-
-        from ogstools.meshes import Meshes
-
-        meshes = Meshes.from_files(self.meshpaths(mesh_dir))
-        tmp_path = Path(mkdtemp(prefix="plot_constraints"))
-        if (gml_file := self.gml_filepath(mesh_dir)) is not None:
-            meshes.add_gml_subdomains(
-                self.meshpaths(mesh_dir)[0], gml_file, tmp_path
-            )
-
-        constraints = self.constraints_labels()
-        unused = set(meshes.subdomains.keys()) - set(constraints.keys())
-        for subdomain in unused:
-            meshes.pop(subdomain)
-
-        from ogstools.plot import setup
-
-        loc = kwargs.pop("loc", "upper left")
-        bbox = kwargs.pop("bbox_to_anchor", (1.05, 1))
-        fontsize = kwargs.get("fontsize", setup.fontsize)
-        leg_fontsize = kwargs.get("leg_fontsize", 0.9 * fontsize)
-
-        fig = meshes.plot(**kwargs, loc=loc, bbox_to_anchor=bbox)
-        ax: plt.Axes = fig.axes[0]
-
-        handles, labels = ax.get_legend_handles_labels()
-        for meshname, label in constraints.items():
-            idx = labels.index(meshname)
-            labels[idx] = label
-        ax.legend(
-            handles, labels, loc=loc, fontsize=leg_fontsize,
-            bbox_to_anchor=bbox, borderaxespad=0.0, numpoints=1,
-        )  # fmt: skip
-
-        return fig
