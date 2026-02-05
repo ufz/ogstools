@@ -459,4 +459,6 @@ def test_mfy_hlw_repository_meshes_container():
 
     # Test saving (writes temporary VTUs)
     files = meshes.save()
+    # ToDo Issue 170
+    # assert meshes.validate()
     assert all(f.exists() for f in files)

@@ -127,13 +127,14 @@ def test_meshes_from_mesh_3D(
 @pytest.mark.system()
 def test_meshes_from_mesh_2D_run(tmp_path):
     "Test using extracted boundaries for a simulation."
-    mesh_path = tmp_path / "mesh.msh"
-    ot.gmsh_tools.rect(n_edge_cells=(2, 4), out_name=mesh_path)
-    domain = ot.Meshes.from_gmsh(mesh_path)["domain"]
+    domain = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=(2, 4)))[
+        "domain"
+    ]
     # this is no good practice and only done for testing purposes
     # we recommend to define the boundaries as physical groups within gmsh
     meshes = ot.Meshes.from_mesh(domain)
     meshes.save(tmp_path)
+    assert meshes.validate()
 
     model = ot.Project(
         input_file=examples.prj_mechanics,
@@ -171,6 +172,7 @@ def meshing(draw: st.DrawFn):
 )
 def test_identify_subdomains(tmp_path, meshing_data, failcase):
     "Testing parity between py and C++ (CLI) implementation."
+    from ogstools.meshes.subdomains import identify_subdomains
 
     mesh_func, n_cells, n_layers, rand_id = meshing_data
     path = Path(tmp_path / f"{mesh_func.__name__}_{n_layers}_{n_cells}")
@@ -196,15 +198,19 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
         m.cell_data.pop("bulk_element_ids", None)
 
     serial_sub_paths = meshes.save(path, overwrite=True)
+    # ToDo Issue 170 , if not failcase:
+    # assert meshes.validate()
     domain_mesh = meshes.domain
+
+    # Filter out meta.yaml from serial_sub_paths
+    vtu_paths = [p for p in serial_sub_paths if p.suffix == ".vtu"]
 
     ot.cli().identifySubdomains(
         f=True,
         o=path / "new_",
         m=domain_mesh.filepath,
-        *serial_sub_paths,  # noqa: B026
+        *vtu_paths,  # noqa: B026
     )
-    from ogstools.meshes.subdomains import identify_subdomains
 
     # actually meshes.subdomains, but here we let the domain mesh also get bulk ids
     identify_subdomains(domain_mesh, meshes.values())
@@ -232,13 +238,14 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
             _check(mesh, cli_subdomain, "bulk_element_ids")
 
 
-def test_meshes_saving_reading(tmp_path):
+def test_meshes_saving_reading():
     "Check, that saving+reading meshes equal the original."
-    ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
-    meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-    meshes.save(tmp_path)  # serial mesh only
+    meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
+    files = meshes.save()  # serial mesh only
+    assert meshes.validate()
+    p = files[0].parent
     for name in meshes:
-        mesh = ot.mesh.read(tmp_path / f"{name}.vtu")
+        mesh = ot.mesh.read(p / f"{name}.vtu")
         for data in ["point_data", "cell_data", "field_data"]:
             np.testing.assert_array_equal(
                 getattr(mesh, data).values(),
@@ -248,8 +255,10 @@ def test_meshes_saving_reading(tmp_path):
 
 @pytest.mark.tools()  # partmesh
 @pytest.mark.parametrize("partition", [None, 1, 2, 4])
-@pytest.mark.parametrize("dry_run", [False, True])
-def test_meshes_save_parallel(tmp_path, partition, dry_run):
+@pytest.mark.parametrize(
+    "dry_run", [False, True], ids=["normal run", "dry run"]
+)
+def test_meshes_save_parallel(partition, dry_run):
     """
     Test object: Meshes.save()
     Use Case: Stores Meshes object and optionally performs partitioning
@@ -257,38 +266,34 @@ def test_meshes_save_parallel(tmp_path, partition, dry_run):
     Checks: Return value of test object and that these files are existing.
     """
     "Checks the number of saved files"
-    ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
-    # additional clean folder (no gmsh file inside)
-    meshes_path = Path(tmp_path / "meshes")
-    meshes_path.mkdir()
-    meshes = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-    files = meshes.save(meshes_path, num_partitions=partition, dry_run=dry_run)
+    meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
+    meshes.num_partitions = partition
+    files = meshes.save(dry_run=dry_run)
+    if not dry_run:
+        assert meshes.validate()
     if partition:
-        f1 = files[1]
-        # Mesh contains domain, left, right, top, bottom
-        assert len(f1) == 5  # checking the serial mesh
-        # Each boundary (4*) 8 and domain 8
         if partition > 1:
-            assert len(files[partition]) == 40
+            # Each boundary (4*) 8 and domain 8 and 5 original(serial) + 1 yaml
+            assert len(files) == 40 + 5 + 1
         else:  # partition==1
-            assert len(files[partition]) == 5
+            # * 2 because original and symlinks + 1 yaml
+            assert len(files) == 5 * 2 + 1
     else:  # partition == None
-        assert len(files) == 5
+        assert len(files) == 5 + 1  # 5 original + 1 yaml
 
     if dry_run:
-        assert not any(meshes_path.iterdir())  # still empty folder
+        meshes_path = meshes.next_target
+        assert not meshes_path.exists() or not any(meshes_path.iterdir())
     else:
-        if partition:
-            partition_files = [file for lst in files.values() for file in lst]
-        else:
-            partition_files = files
-        for file in partition_files:
+        for file in files:
             assert file.exists()
 
 
 @pytest.mark.parametrize("partition", [1, 2, 4])
-@pytest.mark.parametrize("default_metis", [True, False])
-@pytest.mark.parametrize("dry_run", [True, False])
+@pytest.mark.parametrize(
+    "default_metis", [True, False], ids=["metis", "no-metis"]
+)
+@pytest.mark.parametrize("dry_run", [True, False], ids=["dry_run", "normal"])
 def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
     """
     Test object: lower level: Meshes.partmesh_prepare() and Meshes.partmesh()
@@ -297,15 +302,10 @@ def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
     Checks: If partition files are generated.
     """
     # Setup
-    meshes1_path = Path(tmp_path / "meshes1")
-    meshes1_path.mkdir()
+    meshes1 = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
+    files = meshes1.save()
 
-    ot.gmsh_tools.rect(out_name=meshes1_path / "mesh.msh")
-    meshes1 = ot.Meshes.from_gmsh(meshes1_path / "mesh.msh", log=False)
-
-    files = meshes1.save(meshes1_path)
-
-    meshes2 = Path(tmp_path / "meshes2")
+    meshes2 = Path(tmp_path / f"meshes2_{partition}_metis_{default_metis}")
     meshes2.mkdir()
     # End of setup
 
@@ -321,12 +321,19 @@ def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
     if default_metis:
         basefile = None
 
+    # Filter out meta.yaml from subdomain files
+    subdomain_files = [f for f in files[1:] if f.suffix == ".vtu"]
+
     files = ot.Meshes.create_partitioning(
-        partition, files[0], files[1:], metis_file=basefile, dry_run=dry_run
+        partition,
+        files[0],
+        subdomain_files,
+        metis_file=basefile,
+        dry_run=dry_run,
     )
 
     if partition == 1:
-        assert len(files) == 5  # 4 subdomains + domain
+        assert len(files) == 5  # 4 subdomains + domain (no yaml in partitions)
     else:
         assert len(files) == 40  # subdomains(4)*8 + 8(domain)
 
@@ -365,13 +372,14 @@ def test_meshes_rename(tmp_path):
     assert meshes["prefix_physical_group_right_suffix"] == right_mesh
 
 
-def test_meshes_from_prj(tmp_path: Path):
+def test_meshes_from_prj():
     "Check, that the mesh paths generated from a Project are correct."
-    ot.gmsh_tools.rect(out_name=tmp_path / "mesh.msh")
-    meshes_ref = ot.Meshes.from_gmsh(tmp_path / "mesh.msh", log=False)
-    meshes_ref.save(tmp_path)
+    meshes_ref = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
+    written_files = meshes_ref.save()
+    assert len(written_files) == 6  # 5 VTU meshes + meta.yaml
+
     prj = ot.Project(examples.prj_mechanics)
-    meshes = ot.Meshes.from_files(prj.meshpaths(tmp_path))
+    meshes = ot.Meshes.from_files(prj.meshpaths(written_files[0].parent))
     assert meshes.domain_name == meshes_ref.domain_name
     for name, name_ref in zip(sorted(meshes), sorted(meshes_ref), strict=True):
         assert name == name_ref
@@ -387,7 +395,7 @@ def test_add_from_gml(tmp_path):
     """Check, that the meshes generated from a Project + gml are correct."""
     prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
     meshes = ot.Meshes.from_files(prj.meshpaths())
-    if (gml_file := prj.gml_filepath()) is not None:
+    if (gml_file := prj.geometry.active_target) is not None:
         meshes.add_gml_subdomains(prj.meshpaths()[0], gml_file, tmp_path)
     subdomain_names = ["bottom", "left", "right", "top"]
     assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
