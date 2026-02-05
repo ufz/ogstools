@@ -362,7 +362,6 @@ class TestLogparser_Version2:
         assert (
             records.qsize() == num_expected
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
-        # new_file.unlink() no clean up necessary
 
         assert status.process_step_status == StepStatus.TERMINATED
         assert status.time_step_status == StepStatus.TERMINATED

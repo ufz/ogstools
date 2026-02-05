@@ -2,8 +2,6 @@
 Meshes from YAML
 ================
 
-.. sectionauthor:: Norbert Grunwald (Helmholtz Centre for Environmental Research GmbH - UFZ)
-
 This example shows how to generate OGS-ready VTU meshes directly from a YAML
 geometry description using :meth:`~ogstools.Meshes.from_yaml`.
 
