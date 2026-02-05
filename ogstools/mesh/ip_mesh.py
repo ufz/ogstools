@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from tempfile import mkdtemp
@@ -188,9 +189,6 @@ def tessellate(
 
 def ip_metadata(mesh: pv.UnstructuredGrid) -> list[dict[str, Any]]:
     "return the IntegrationPointMetaData in the mesh's field_data as a dict."
-
-    import json
-
     if "IntegrationPointMetaData" not in mesh.field_data:
         msg = "Required IntegrationPointMetaData not in mesh."
         raise KeyError(msg)
