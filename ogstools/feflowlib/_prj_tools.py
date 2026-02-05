@@ -12,7 +12,7 @@ import numpy as np
 import pyvista as pv
 from typing_extensions import NotRequired, Unpack
 
-from ogstools.ogs6py import Project
+from ogstools import Project
 
 from ._tools import get_dimension
 

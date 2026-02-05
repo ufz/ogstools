@@ -196,13 +196,18 @@ class Model(StorageBase):
             self.meshes, self.next_target / "meshes", dry_run, overwrite
         )
 
+        files += self._save_or_link_child(
+            self.project, self.next_target / "project", dry_run, overwrite
+        )
+
+
         # Project always needs to be saved first (if not yet), then linked
-        if (
-            not self.project.active_target
-            or not self.project.active_target.exists()
-        ):
-            files += self.project.save(dry_run=dry_run, overwrite=overwrite)
-        self.project.link(self.next_target / "project", dry_run)
+        #if (
+        #    not self.project.active_target
+        #    or not self.project.active_target.exists()
+        #):
+        #    files += self.project.save(dry_run=dry_run, overwrite=overwrite)
+        #self.project.link(self.next_target / "project", dry_run)
 
         files += self._save_or_link_child(
             self.execution,
