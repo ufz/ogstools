@@ -240,10 +240,8 @@ class TestPhysGroups:
     )  # fmt:skip
     def test_phys_groups(self, reindex: bool, layer_ids: list, mat_ids: list):
         """Test different setups of physical groups."""
-        msh_file = self.tmp_path / "rect.msh"
-        ot.gmsh_tools.rect(
+        msh_file = ot.gmsh_tools.rect(
             n_layers=len(layer_ids),
-            out_name=msh_file,
             layer_ids=layer_ids,
             mixed_elements=True,
         )
