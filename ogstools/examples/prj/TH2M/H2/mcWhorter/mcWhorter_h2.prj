@@ -16,20 +16,9 @@
             </constitutive_relation>
             <jacobian_assembler>
                 <type>CentralDifferences</type>
-                <component_magnitudes>
-                   1.0 1.0 1.0 1.0
-                   1.0 1.0 1.0 1.0
-                   1.0 1.0 1.0 1.0
-                   1.0 1.0 1.0 1.0
-                   1.0 1.0 1.0 1.0
-                </component_magnitudes>
-                <relative_epsilons>
-                   1e-03 1e-03 1e-03 1e-03
-                   1e-03 1e-03 1e-03 1e-03
-                   1e-06 1e-06 1e-06 1e-06
-                   1e-08 1e-08 1e-08 1e-08
-                   1e-08 1e-08 1e-08 1e-08
-                </relative_epsilons>
+                <epsilons>
+                   1e-03 1e-06 1e-08
+                </epsilons>
             </jacobian_assembler>
             <reference_temperature>temperature_ic</reference_temperature>
             <process_variables>

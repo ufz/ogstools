@@ -267,9 +267,9 @@ def test_meshes_save_parallel(tmp_path, partition, dry_run):
         f1 = files[1]
         # Mesh contains domain, left, right, top, bottom
         assert len(f1) == 5  # checking the serial mesh
-        # Each boundary (4*) 8 and domain 6
+        # Each boundary (4*) 8 and domain 8
         if partition > 1:
-            assert len(files[partition]) == 38
+            assert len(files[partition]) == 40
         else:  # partition==1
             assert len(files[partition]) == 5
     else:  # partition == None
@@ -328,7 +328,7 @@ def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
     if partition == 1:
         assert len(files) == 5  # 4 subdomains + domain
     else:
-        assert len(files) == 38  # subdomains(4)*8 + 6(domain)
+        assert len(files) == 40  # subdomains(4)*8 + 8(domain)
 
     for file in files:
         if dry_run:

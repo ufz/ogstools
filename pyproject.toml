@@ -37,6 +37,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3 :: Only",
   "Operating System :: OS Independent",
 ]
@@ -165,7 +166,7 @@ pinned = [
   "nbformat==5.10.4",
   "nest-asyncio==1.6.0",
   "numpy==2.2.6",
-  "ogs==6.5.6",
+  "ogs==6.5.7",
   "overrides==7.7.0",
   "packaging==25.0",
   "pandas==2.3.0",
@@ -259,7 +260,7 @@ docs = [
   "pagefind[extended]",
 ]
 feflow = ["ifm_contrib>=0.2.4"]
-ogs = ["ogs>=6.5.6"]
+ogs = ["ogs>=6.5.7"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
