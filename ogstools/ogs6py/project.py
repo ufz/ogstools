@@ -889,6 +889,23 @@ class Project(StorageBase):
         for key, val in args.items():
             self.replace_text(val, xpath=property_db[key])
 
+    def meshseries_file(self) -> Path:
+        if self.tree is None:
+            msg = "self.tree is empty."
+            raise AttributeError(msg)
+
+        fn_type = self.tree.find("./time_loop/output/type").text
+        if fn_type == "VTK":
+            return self.tree.find("./time_loop/output/prefix").text + ".pvd"
+
+        if fn_type == "XDMF":
+            prefix = self.tree.find("./time_loop/output/prefix").text
+            mesh = self.tree.find("./mesh") or self.tree.find("./meshes/mesh")
+            return str(prefix) + "_" + mesh.text.split(".vtu")[0] + ".xdmf"
+
+        msg = "No mesh found"
+        raise AttributeError(msg)
+
     def restart(
         self,
         restart_suffix: str = "_restart",
@@ -1242,6 +1259,63 @@ class Project(StorageBase):
         else:
             msg = "No tree has been build."
             raise RuntimeError(msg)
+
+    def _save_impl(
+        self, dry_run: bool = False, keep_includes: bool = False
+    ) -> list[Path]:
+        prj_file = self.next_target / "project.prj"
+        self.prjfile = prj_file
+
+        files: list[Path] = [prj_file]
+
+        if dry_run:
+            files += self.geometry._save_impl(dry_run=dry_run)
+            files += self.python_script._save_impl(dry_run=dry_run)
+            return files
+
+        self.next_target.mkdir(parents=True, exist_ok=True)
+        self.write_input(prj_file, keep_includes=keep_includes)
+        files += self.geometry._save_impl(dry_run=dry_run)
+        if self.geometry.filename:
+            self.geometry._active_target = self.geometry._next_target
+        files += self.python_script._save_impl(dry_run=dry_run)
+        if self.python_script.filename:
+            self.python_script._active_target = self.python_script._next_target
+
+        return files
+
+    def save(
+        self,
+        target: Path | str | None = None,
+        overwrite: bool | None = None,
+        dry_run: bool = False,
+        archive: bool = False,
+        keep_includes: bool = False,
+        id: str | None = None,
+    ) -> list[Path]:
+        # TODO: referenced files
+        """
+        Saves the project file and referenced files (except meshes)
+
+        :param target:      Optional path to the project folder. If None, a temporary folder will be used.
+
+        :param overwrite:   If True, existing prj file(s) will be overwritten.
+                            If False, an error is raised if any file already exists.
+
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files.
+
+        :param archive:     If True: The folder specified by path contains no symlinks. It copies all referenced data (which might take time and space).
+
+        :param id:          Optional identifier. Mutually exclusive with target.
+
+        :returns:           A list of Paths pointing to the saved prj file(s)
+        """
+
+        user_defined = self._pre_save(target, overwrite, dry_run, id=id)
+        files = self._save_impl(dry_run, keep_includes)
+        self._post_save(user_defined, archive, dry_run)
+        return files
 
     def _property_df_move_elastic_properties_to_mpl(
         self, newtree: ET._ElementTree, root: ET._Element
