@@ -6,30 +6,37 @@
 
 from __future__ import annotations
 
+import copy
 import logging as log
 import os
-import tempfile
 from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pyvista as pv
+import yaml
 from matplotlib import pyplot as plt
 from typing_extensions import Self
 
+import ogstools.mesh as Mesh
 from ogstools._internal import deprecated
-from ogstools.mesh import check_datatypes, save, utils
+from ogstools.core.storage import StorageBase
+from ogstools.mesh import check_datatypes, utils
 
 logger = log.getLogger(__name__)
 
 
-class Meshes(MutableMapping):
+class Meshes(MutableMapping, StorageBase):
     """
     OGS input mesh. Refers to prj - file section <meshes>
     """
 
-    def __init__(self, meshes: dict[str, pv.UnstructuredGrid]) -> None:
+    def __init__(
+        self,
+        meshes: dict[str, pv.UnstructuredGrid],
+        id: str | None = None,
+    ) -> None:
         """
         Initialize a Meshes object.
             :param meshes:      List of Mesh objects (pyvista UnstructuredGrid)
@@ -38,9 +45,93 @@ class Meshes(MutableMapping):
                                 If needed, the domain mesh itself can also be added again as a subdomain.
             :returns:           A Meshes object
         """
+        super().__init__("Meshes", "", id)
         self._meshes = meshes
         self.has_identified_subdomains: bool = False
-        self._tmp_dir = Path(tempfile.mkdtemp("meshes"))
+        self.num_partitions: int | Sequence[int] | None = None
+
+    @classmethod
+    def from_folder(cls, filepath: str | Path) -> Meshes:
+        """
+        Create a Meshes object from a folder of already save Meshes.
+        Reverse of .save. It need a meta.yaml file in the specified folder.
+        """
+        filepath = Path(filepath)
+        import yaml
+
+        meta_file_path = filepath / "meta.yaml"
+
+        assert meta_file_path.exists()
+        with Path(meta_file_path).open("r") as f:
+            restored_data = yaml.safe_load(f)
+
+        mesh_names = list(restored_data["meshes"])
+        has_identified_subdomain = restored_data["has_identified_subdomains"]
+        num_partitions = restored_data["num_partitions"]
+
+        meshes = cls.from_files(
+            [filepath / (mesh + ".vtu") for mesh in mesh_names],
+            domain_key=mesh_names[0],
+        )
+        meshes.has_identified_subdomains = has_identified_subdomain
+        meshes.num_partitions = num_partitions
+
+        return meshes
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Meshes):
+            return NotImplemented
+
+        # Quick structural checks first
+        if (
+            len(self._meshes) != len(other._meshes)
+            or self.has_identified_subdomains != other.has_identified_subdomains
+            or self.num_partitions != other.num_partitions
+            or len(self.subdomains) != len(other.subdomains)
+            # TODO: use mesh compare
+            # or self.domain != other.domain
+            or self.domain_name != other.domain_name
+        ):
+            return False
+
+        for key, mesh1 in self.subdomains.items():
+            mesh2 = other.subdomains[key]
+
+            mesh2.active_scalars_name = None
+            mesh1.active_scalars_name = None
+            if mesh1.point_data != mesh2.point_data:
+                return False
+            if mesh1.cell_data != mesh2.cell_data:
+                return False
+
+            # TODO: when merge with MeshSeries compare
+            if mesh1 != mesh2:  # or mesh1.equal(mesh2) if you have that
+                return False
+
+        self.domain.active_scalars_name = None
+        other.domain.active_scalars_name = None
+        if self.domain.cell_data != other.domain.cell_data:
+            return False
+        if self.domain.point_data != other.domain.point_data:
+            return False
+
+        return True
+
+    def __deepcopy__(self, memo: dict) -> Meshes:
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Deep-copy each mesh explicitly (pyvista objects are mutable)
+        meshes_copy = {
+            name: mesh.copy(deep=True) for name, mesh in self._meshes.items()
+        }
+
+        new = self.__class__(meshes=meshes_copy)
+        new.has_identified_subdomains = self.has_identified_subdomains
+        new.num_partitions = copy.deepcopy(self.num_partitions, memo)
+
+        memo[id(self)] = new
+        return new
 
     def __getitem__(self, key: str) -> pv.UnstructuredGrid:
         if key not in self._meshes:
@@ -74,7 +165,8 @@ class Meshes(MutableMapping):
         :param domain_key:  String which is only in the domain filepath
 
         """
-        return cls(
+
+        meshes = cls(
             {
                 Path(m).stem: pv.read(m)
                 for m in sorted(
@@ -82,6 +174,65 @@ class Meshes(MutableMapping):
                 )
             }
         )
+        meshes._bind_to_path(Path(filepaths[0]).parent)
+        return meshes
+
+    @classmethod
+    def from_file(cls, meta_file: str | Path) -> Self:
+        """
+        Restore a Meshes object from a meta.yaml file.
+
+        :param meta_file: Path to the meta.yaml file written by Meshes.save()
+        :returns:         A restored Meshes object
+        """
+        meta_file = Path(meta_file)
+        if not meta_file.exists():
+            msg = f"Meta file does not exist: {meta_file}"
+            raise FileNotFoundError(msg)
+
+        base_path = meta_file.parent
+
+        with meta_file.open("r") as f:
+            restored_data = yaml.safe_load(f)
+
+        mesh_names = restored_data.get("meshes", [])
+        if not mesh_names:
+            msg = "meta.yaml does not contain any mesh entries"
+            raise ValueError(msg)
+
+        meshes = cls.from_files(
+            [base_path / f"{name}.vtu" for name in mesh_names],
+            domain_key=mesh_names[0],
+        )
+
+        meshes.has_identified_subdomains = restored_data.get(
+            "has_identified_subdomains", False
+        )
+        meshes.num_partitions = restored_data.get("num_partitions", None)
+
+        return meshes
+
+    @classmethod
+    def from_id(cls, meshes_id: str) -> Self:
+        """
+        Load Meshes from the user storage path using its ID. Storage.UserPath must be set
+
+        :param meshes_id: The unique ID of the Meshes object to load.
+        :returns:         A Meshes instance restored from disk.
+        """
+        meshes_folder = StorageBase.saving_path() / "Meshes" / meshes_id
+        if not meshes_folder.exists():
+            msg = f"No meshes found at {meshes_folder}"
+            raise FileNotFoundError(msg)
+
+        meta_file = meshes_folder / "meta.yaml"
+        if not meta_file.exists():
+            msg = f"Missing meta.yaml in meshes folder: {meshes_folder}"
+            raise FileNotFoundError(msg)
+
+        meshes = cls.from_file(meta_file)
+        meshes._id = meshes_id
+        return meshes
 
     @classmethod
     def from_gmsh(
@@ -167,12 +318,15 @@ class Meshes(MutableMapping):
         :param out_dir:     Where to write the gml meshes (default: gml dir)
         :param tolerance:   search length for node search algorithm
         """
+        from ogstools._find_ogs import cli
+
         out_dir = gml_path.parent if out_dir is None else out_dir
         prev_files = set(out_dir.glob("*.vtu"))
 
         cur_dir = Path.cwd()
         os.chdir(out_dir)
-        from ogstools._find_ogs import cli
+        assert gml_path.exists()
+        assert domain_path.exists()
 
         cli().constructMeshesFromGeometry(
             "-g", gml_path, "-m", domain_path, "-s", str(tolerance)
@@ -191,6 +345,106 @@ class Meshes(MutableMapping):
         self._meshes = self._meshes
         sorted_subdomains = dict(sorted(self.subdomains.items()))
         self._meshes = {self.domain_name: self.domain} | sorted_subdomains
+
+    def _save_impl(self, dry_run: bool, **kwargs: Any) -> list[Path]:
+        active_path = Path(self.next_target)
+
+        if isinstance(self.num_partitions, int):
+            self.num_partitions = [self.num_partitions]
+        serial_files = [active_path / f"{name}.vtu" for name in self._meshes]
+        meta_file = active_path / "meta.yaml"
+
+        if not dry_run:
+            active_path.mkdir(parents=True, exist_ok=True)
+
+            if not self.has_identified_subdomains:
+                self.identify_subdomain()
+
+            set_pv_attr = getattr(pv, "set_new_attribute", setattr)
+            for name, mesh in self._meshes.items():
+                check_datatypes(mesh, strict=True, meshname=name)
+                filepath = active_path / f"{name}.vtu"
+                set_pv_attr(mesh, "filepath", filepath)
+                Mesh.save(mesh, filepath, **kwargs)
+
+            meta_dict = {
+                "meshes": list(self._meshes.keys()),
+                "has_identified_subdomains": self.has_identified_subdomains,
+                "num_partitions": self.num_partitions,
+            }
+
+            yaml_string = yaml.dump(meta_dict)
+
+            with meta_file.open("w") as f:
+                f.write(yaml_string)
+
+        if not self.num_partitions:
+            return serial_files + [meta_file]
+
+        parallel_files = self._partmesh_save_all(
+            self.num_partitions, active_path, dry_run
+        )
+        flattened_parallel_files = [
+            file for partition in parallel_files.values() for file in partition
+        ]
+
+        return serial_files + [meta_file] + flattened_parallel_files
+
+    def save(
+        self,
+        path: Path | str | None = None,
+        overwrite: bool | None = None,
+        dry_run: bool = False,
+        archive: bool = False,
+        id: str | None = None,
+        **kwargs: Any,
+    ) -> list[Path]:
+        """
+        Save all meshes. If num_partitions is specified (e.g. obj.num_partition = [2,3]) is also create paritioned meshes for each partition.
+
+        This function will perform identifySubdomains, if not yet been done.
+
+        :param path:        Optional path to the folder where meshes
+                            should be saved. If None, a temporary folder will be used.
+
+        :param overwrite:   If True, existing mesh files will be overwritten.
+                            If False, an error is raised if any file already exists.
+
+        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
+                            If False: Writes files and returns the list of created files.
+
+        :param archive:     If True: The folder specified by path contains no symlinks. It copies all referenced data (which might take time and space).
+
+        :param id:          Optional identifier. Mutually exclusive with path.
+
+        :returns:           A list of Paths pointing to the saved mesh files (including files for partitions).
+        """
+
+        user_defined = self._pre_save(path, overwrite, dry_run, id=id)
+        files = self._save_impl(dry_run, **kwargs)
+        self._post_save(user_defined, archive, dry_run)
+        return files
+
+    def _propagate_target(self) -> None:
+        pass
+
+    def validate(self, strict: bool = True) -> bool:
+        """
+        Validate all meshes for conformity with OGS requirements.
+
+        Meshes must be saved before validation can be performed.
+
+        :param strict: If True, raise a UserWarning if validation fails.
+        :returns: True if all meshes pass validation, False otherwise.
+        :raises ValueError: If meshes have not been saved yet.
+        """
+        if not self.is_saved:
+            msg = "Meshes must be saved before validation."
+            raise ValueError(msg)
+        return all(
+            utils.validate(mesh.filepath, strict=strict)
+            for mesh in self._meshes.values()
+        )
 
     @property
     def domain(self) -> pv.UnstructuredGrid:
@@ -492,79 +746,6 @@ class Meshes(MutableMapping):
 
         return parallel_files
 
-    def save(
-        self,
-        meshes_path: Path | str | None = None,
-        overwrite: bool = False,
-        num_partitions: int | Sequence[int] | None = None,
-        dry_run: bool = False,
-        validate: bool = True,
-        **kwargs: Any,
-    ) -> list[Path] | dict[int, list[Path]]:
-        """
-        Save all meshes.
-
-        This function will perform identifySubdomains, if not yet been done.
-
-        :param meshes_path: Optional path to the directory where meshes
-                            should be saved. It must already exist (will not be created).
-                            If None, a temporary directory will be used.
-
-        :param overwrite:   If True, existing mesh files will be overwritten.
-                            If False, an error is raised if any file already exists.
-
-        :param num_partitions:  List of integers or a single integer that indicate the number of partitions
-                            similar to the OGS binary tool partmesh.
-                            The serial mesh will always be generated
-                            Example 1: num_partitions = [1,2,4,8,16]
-                            Example 2: num_partitions = 2
-
-        :param dry_run:     If True: Writes no files, but returns the list of files expected to be created
-                            If False: Writes files and returns the list of created files
-
-        :returns:           A list of Paths pointing to the saved mesh files, if num_partitions are given (also just [1]),
-                            then it returns
-                            A dict, with keys representing the number of partitions and values A list of Paths (like above)
-        """
-        meshes_path = self._tmp_dir if meshes_path is None else meshes_path
-        meshes_path = Path(meshes_path)
-
-        if isinstance(num_partitions, int):
-            num_partitions = [num_partitions]
-        serial_files = [meshes_path / f"{name}.vtu" for name in self._meshes]
-
-        if not dry_run:
-            meshes_path.mkdir(parents=True, exist_ok=True)
-
-            if not self.has_identified_subdomains:
-                self.identify_subdomain()
-
-            output_files = [
-                meshes_path / f"{name}.vtu" for name in self._meshes
-            ]
-            existing_files = [f for f in output_files if f.exists()]
-            if existing_files and not overwrite:
-                existing_list = "\n".join(str(f) for f in existing_files)
-                msg = f"The following mesh files already exist:{existing_list}. Set `overwrite=True` to overwrite them, or choose a different `meshes_path`."
-
-                raise FileExistsError(msg)
-
-            set_pv_attr = getattr(pv, "set_new_attribute", setattr)
-            for name, mesh in self._meshes.items():
-                check_datatypes(mesh, strict=True, meshname=name)
-                set_pv_attr(mesh, "filepath", meshes_path / f"{name}.vtu")
-                save(mesh.filepath, mesh, **kwargs)
-            if validate:
-                utils.validate(self.domain.filepath, strict=True)
-
-        if not num_partitions:
-            return serial_files
-
-        parallel_files = self._partmesh_save_all(
-            num_partitions, meshes_path, dry_run
-        )
-        return {1: serial_files} | parallel_files
-
     def plot(self, **kwargs: Any) -> plt.Figure:
         """Plot the domain mesh and the subdomains.
 
@@ -637,6 +818,7 @@ class Meshes(MutableMapping):
         from scipy.spatial import KDTree as scikdtree
 
         from ogstools._find_ogs import cli
+        from ogstools.core.storage import _date_temp_path
         from ogstools.mesh.ip_mesh import ip_data_threshold
 
         mat_id = (mat_id, mat_id) if isinstance(mat_id, int) else mat_id
@@ -645,14 +827,17 @@ class Meshes(MutableMapping):
             mat_id, scalars="MaterialIDs"
         )
         cut_material.clear_data()
-        cut_material.save(self._tmp_dir / "cut_material.vtu")
+
+        cut_material_file = Mesh.save(cut_material)
 
         # pyvista's extract_feature_edges doesn't handle quadratic elements
+        boundary_file = _date_temp_path("Mesh_boundary", "vtu")
+        boundary_file.parent.mkdir(exist_ok=True, parents=True)
         cli().ExtractBoundary(
-            i=self._tmp_dir / "cut_material.vtu",
-            o=self._tmp_dir / "cut_boundary.vtu",
+            i=str(cut_material_file),
+            o=str(boundary_file),
         )
-        cut_boundary = pv.read(self._tmp_dir / "cut_boundary.vtu")
+        cut_boundary = pv.read(boundary_file)
 
         self["cut_boundary"] = cut_boundary
 
@@ -678,3 +863,50 @@ class Meshes(MutableMapping):
                 self.pop(name)
             else:
                 self[name] = new_subdomain
+
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        base_repr = super().__repr__()
+
+        if self.user_specified_id:
+            construct = f'{cls_name}.from_id("{self._id}")'
+        elif self.is_saved:
+            construct = f"{cls_name}.from_folder({str(self.active_target)!r})"
+        else:
+            mesh_info = {
+                name: f"<Mesh: {mesh.n_points} points, {mesh.n_cells} cells>"
+                for name, mesh in self._meshes.items()
+            }
+            construct = (
+                f"{cls_name}(\n"
+                f"  meshes={mesh_info},\n"
+                f"  has_identified_subdomains={self.has_identified_subdomains},\n"
+                f"  num_partitions={self.num_partitions}\n"
+                f")"
+            )
+
+        return f"{construct}\n{base_repr}"
+
+    def __str__(self) -> str:
+        base_repr = super().__str__()
+
+        lines = [
+            f"{base_repr}",
+            f"  Domain: {self.domain_name} "
+            f"(cells={self.domain.n_cells}, points={self.domain.n_points})",
+        ]
+        if self.subdomains:
+            lines.append("  Subdomains:")
+            for name, mesh in self.subdomains.items():
+                lines.append(
+                    f"    - {name} (cells={mesh.n_cells}, points={mesh.n_points})"
+                )
+        else:
+            lines.append("  Subdomains: none")
+
+        lines.append(
+            f"  Identified subdomains: {self.has_identified_subdomains}"
+        )
+        lines.append(f"  Number of partitions: {self.num_partitions}")
+
+        return "\n".join(lines)
