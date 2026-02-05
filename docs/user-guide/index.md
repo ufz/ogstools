@@ -107,9 +107,15 @@ See the following tool descriptions:
 ```{toctree}
 ---
 maxdepth: 0
-glob: 0
 ---
-../auto_user-guide/plot*
-../user-guide/*
-
+../auto_user-guide/index
+docker
+feflowlib
+logparser
+meshlib
+nuclearwasteheat
+run_simulation
+studies
+third-party
+variables
 ```
