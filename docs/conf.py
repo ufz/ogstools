@@ -210,6 +210,7 @@ sphinx_gallery_conf = {
     "subsection_order": ExplicitOrder(
         [
             "examples/howto_quickstart",
+            "examples/howto_framework",
             "examples/howto_preprocessing",
             "examples/howto_prjfile",
             "examples/howto_simulation",
