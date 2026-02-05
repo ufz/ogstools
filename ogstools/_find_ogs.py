@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import importlib.util
 import os
 import platform
 import subprocess
@@ -52,8 +53,6 @@ def check_path() -> None:
 
 
 def has_ogs_wheel(verbose: bool = False) -> bool:
-    import importlib.util
-
     if verbose:
         print("OGS wheel: ", importlib.util.find_spec("ogs"), ".\n")
     return importlib.util.find_spec("ogs") is not None
@@ -63,8 +62,6 @@ def has_exclusive_ogs_in_path(verbose: bool = False) -> bool:
     """
     Has one or more ogs in PATH that were not added by wheel
     """
-    import importlib.util
-
     ogs_executables = find_all_executables("ogs")
     all_outside_python_env = [
         x for x in ogs_executables if is_outside_python_env(x)
