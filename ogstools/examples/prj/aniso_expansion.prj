@@ -144,7 +144,7 @@
                     <timesteps>
                         <pair>
                             <repeat>1</repeat>
-                            <delta_t>1000000</delta_t>
+                            <delta_t>10000</delta_t>
                         </pair>
                     </timesteps>
                 </time_stepping>
