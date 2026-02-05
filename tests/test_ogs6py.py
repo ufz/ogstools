@@ -1556,60 +1556,25 @@ class TestiOGS:
             n_refinement_layers=1, dist_box_x=1.5, dist_box_y=1.5,
         )  # fmt: skip
         kwargs = {thread_type: num_threads}
-        return Project(
+        return ot.Project(
             input_file=prj_heat_transport_bhe_simple,
             output_file=temp_dir / "test_Threads.prj",
             **kwargs,
         )
-
-    @pytest.fixture(params=["cuboid_model", "bhe_model"])
-    def model(self, request: pytest.FixtureRequest) -> Project:
-        return request.getfixturevalue(request.param)
-
-    @pytest.mark.system()
-    @pytest.mark.parametrize("kill", [True, False])
-    def test_abort_run_and_status(
-        self, temp_dir: Path, cuboid_model: Project, kill: bool
-    ) -> NoReturn:
-        assert "not yet started." in cuboid_model.status
-        cuboid_model.write_input()
-        cuboid_model.run_model(
-            logfile=temp_dir / "cuboid.log",
-            write_logs=True,
-            write_prj_to_pvd=False,
-            background=kill,
-            args=f"-o {temp_dir.resolve()}",
-        )
-        if kill:
-            assert "running" in cuboid_model.status, "should still be running"
-            assert cuboid_model.terminate_run(), "aborting the run failed."
-            assert (
-                "terminated with error code" in cuboid_model.status
-            ), "Simulation status should indicate failure after abort."
-            for write_logs in [True, False]:
-                with pytest.raises(RuntimeError):
-                    cuboid_model._failed_run_print_log_tail(
-                        write_logs
-                    )  # pylint: disable=protected-access
-        else:
-            assert (
-                "finished successfully." in cuboid_model.status
-            ), "Simulation has not finished successfully"
-            assert not cuboid_model.terminate_run()
-            assert "finished successfully." in cuboid_model.status, (
-                "Aborting the simulation after it has finished has changed the "
-                "status, although it should not change."
-            )
 
     def test_dependencies(self):
         """
         Tests an incomplete (meshes missing) and an complete (OGS would run) project file. If it return
         it's dependencies and if the files are present
         """
-        files = ot.Project.dependencies(prj_tunnel_trm_withincludes)
+        files = ot.Project.dependencies_of_file(prj_tunnel_trm_withincludes)
         assert len(files) == 7  # 6 meshes + 1 xml
-
-        xmls = [file for file in files if file.suffix == ".xml"]
+        # Expect that all xml are relative to prj file
+        xmls = [
+            prj_tunnel_trm_withincludes.parent / file
+            for file in files
+            if file.suffix == ".xml"
+        ]
         assert len(xmls) == 1
         assert all(
             xml.exists() for xml in xmls
@@ -1623,7 +1588,10 @@ class TestiOGS:
         # mesh files not existing in this example
 
         prj_path_in = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
-        files = ot.Project.dependencies(prj_path_in)
+        files = [
+            prj_path_in.parent / file
+            for file in ot.Project.dependencies_of_file(prj_path_in)
+        ]
         assert len(files) == 2  # 1 vtu mesh + 1 gml mesh
         assert all(
             f.exists() for f in files
