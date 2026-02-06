@@ -217,9 +217,9 @@ class StorageBase(abc.ABC):
 
         :raises FileNotFoundError: If the root path does not exist.
         """
-        root = Path(root).resolve()
+        root = Path(root)
         if not root.exists():
-            msg = f"{root} does not exist"
+            msg = f"{root.resolve()} does not exist"
             raise FileNotFoundError(msg)
 
         def _materialize(path: Path) -> None:
