@@ -122,7 +122,7 @@ The implemented features are covering pre-processing, setup and execution of sim
 
 Preprocessing for OGS includes mesh creation, adaptation, conversion, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). OGSTools further provides a material management component that allows process-specific material definitions to be assembled from structured YAML sources and translated into OGS-compatible project file entries. This enables a consistent, database-like handling of material parameters across workflows, test cases, and educational examples, while separating physical model definitions from project file syntax. In addition, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
 
-The simulation execution part covers running simulations with the OGS Core via command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
+The simulation execution part covers running simulations with the `OGS` Core via command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
 
 Postprocessing includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
@@ -149,45 +149,9 @@ For scalability and parallelization all 3 workflows use the workflow management 
 The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate, how users can set up, adjust, execute, and analyse simulations.
 They can be downloaded, executed, and adapted in an interactive environment for further exploration. With `OGSTools` code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
-The code transformation of the Mandel-Cryer effect benchmark, based on a simplified merge request[^2], demonstrates that using predefined plotting utilities reduces technical overhead.
+## Example
 
-Sections of the benchmark without OGSTools :
 
-```python
-# Mandel-Cryer effect benchmark
-# Load the result
-pvdfile = vtuIO.PVDIO("results_MandelCryerStaggered.pvd", dim=3)
-fields = pvdfile.get_point_field_names()
-time = pvdfile.timesteps
-
-# Define observation points
-observation_points = {"center": (0, 0, 0)}
-pressure = pvdfile.read_time_series("pressure", observation_points)
-
-# Plot pressure over time
-fig, ax1 = plt.subplots(figsize=(10, 8))
-ax1.plot(time, pressure["center"], color="tab:orange")
-ax1.set_ylabel("Pressure (Pa)", fontsize=20)
-ax1.set_xlabel("Time (s)", fontsize=20)
-ax1.set_xlim(0, t_end)
-ax1.set_ylim(0, 1500)
-ax1.grid()
-fig.supxlabel("Pressure at center of sphere")
-plt.show()
-```
-
-By abstracting away lower-level plotting code, users can focus more directly on the physical interpretation of the benchmark results. Sections of the benchmark with OGSTools:
-
-```python
-# Mandel-Cryer effect benchmark without OGSTools
-import ogstools as ot
-
-ms = ot.MeshSeries("results_MandelCryerStaggered.pvd")
-
-# Plot pressure over time
-center_point = [0, 0, 0]
-fig = ms.plot_probe(center_point, ot.variables.pressure, labels=["Center"])
-```
 
 ## Acknowledgements
 
