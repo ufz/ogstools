@@ -270,11 +270,24 @@ class TestStorage:
         assert gml_file
         assert gml_file.exists()
 
-    def test_storage_project_python_script(self, tmp_path):
-        """Test that python_script files are saved inside the project folder."""
-        # uses python_script
+    @pytest.fixture(
+        params=["input_file", "from_folder"],
+    )
+    def prj_file_with_python_script(self, request, tmp_path):
+        """Create a nuclear_decay Project either directly or via from_folder."""
         prj_file = EXAMPLES_DIR / "prj" / "nuclear_decay.prj"
-        prj = ot.Project(prj_file)
+        if request.param == "from_folder":
+            prj_orig = ot.Project(prj_file)
+            prj_orig.save(tmp_path / "saved_prj")
+            prj_orig.python_script.save()
+            return ot.Project.from_folder(tmp_path / "saved_prj")
+        return ot.Project(prj_file)
+
+    def test_storage_project_python_script(
+        self, tmp_path, prj_file_with_python_script
+    ):
+        """Test that python_script files are saved inside the project folder."""
+        prj = prj_file_with_python_script
 
         # Verify python_script is loaded correctly
         assert prj.python_script.filename == "decay_boundary_conditions.py"
@@ -291,7 +304,7 @@ class TestStorage:
         assert py_file.exists()
         assert py_file.name == "decay_boundary_conditions.py"
 
-        original_py = prj_file.parent / "decay_boundary_conditions.py"
+        original_py = EXAMPLES_DIR / "prj" / "decay_boundary_conditions.py"
         assert py_file.read_bytes() == original_py.read_bytes()
 
     def test_storage_model_1(self, tmp_path):
