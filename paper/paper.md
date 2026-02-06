@@ -38,12 +38,12 @@ authors:
   orcid: 0000-0003-3304-4838
   equal-contrib: true
   affiliation: 2, 1
-- name: Jörg Buchwald
-  orcid: 0000-0001-5174-3603
-  equal-contrib: true
-  affiliation: 1
 - name: Norbert Grunwald
   orcid: 0000-0002-5264-2246
+  equal-contrib: true
+  affiliation: 1
+- name: Jörg Buchwald
+  orcid: 0000-0001-5174-3603
   equal-contrib: true
   affiliation: 1
 
