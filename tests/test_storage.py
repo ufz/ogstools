@@ -374,8 +374,8 @@ class TestStorage:
         elif save_strategy == "target":
             prj_pvd.save(target=tmp_path / "pvd")
             prj_xdmf.save(target=tmp_path / "xdmf")
-            meshes_rect12.save(path=tmp_path / "rect12")
-            meshes_rect10.save(path=tmp_path / "rect10")
+            meshes_rect12.save(target=tmp_path / "rect12")
+            meshes_rect10.save(target=tmp_path / "rect10")
 
         prj_pvd_unsaved = ot.Project(input_file=prj_mechanics)
         model_pvd_rect12 = ot.Model(prj_pvd_unsaved, meshes=meshes_rect12)
