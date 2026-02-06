@@ -246,7 +246,7 @@ class Model(StorageBase):
 
     def run(
         self,
-        sim_output: Path | str | None = None,
+        target: Path | str | None = None,
         overwrite: bool | None = None,
         id: str | None = None,
     ) -> "Simulation":
@@ -256,17 +256,15 @@ class Model(StorageBase):
         This is a convenience method that starts the simulation and blocks
         until it completes. For stepwise control, use start() instead.
 
-        :param sim_output:  Optional path where simulation output (results,
-                            logs) should be written. If None, uses a default location.
+        :param target:      Optional path for the resulting Simulation.
+                            If None, uses a default location.
         :param overwrite:   If True, overwrite existing output directory.
         :param id:          Optional identifier for the resulting Simulation.
         :returns:           A :class:`ogstools.Simulation` object containing the completed
                             simulation results and metadata.
         """
-        sim_controller = self.controller(
-            sim_output=sim_output, overwrite=overwrite
-        )
-        return sim_controller.run(target=sim_output, id=id)
+        sim_controller = self.controller(sim_output=None, overwrite=overwrite)
+        return sim_controller.run(target=target, id=id)
 
     def controller(
         self,
