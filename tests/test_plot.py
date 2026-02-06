@@ -294,10 +294,14 @@ class TestPlotting:
     ) -> plt.Figure:
         """Test plot.line from sampled profile data via image comparison."""
         mesh = examples.load_meshseries_THM_2D_PVD().mesh(-1)
+        if var is ot.variables.material_id:
+            mesh.set_active_scalars("MaterialIDs", preference="cell")
         mesh.points[:, 2] = 0
         obs_pts = np.reshape(mesh.center * 2, (2, 3))
         obs_pts[:, ids] = np.reshape(mesh.bounds[view], (len(ids), 2)).T
         sample = func(mesh).sample_over_line(obs_pts[0], obs_pts[1])
+        if var is ot.variables.material_id:
+            sample = sample.point_data_to_cell_data()
         if var is not None:
             sample[var.data_name][sample[var.data_name] == 0.0] = np.nan
         fig = ot.plot.line(sample, var1=var, label=f"{name}-sampling line")
@@ -405,6 +409,23 @@ class TestPlotting:
         fig = ot.plot.line(bhe_lines_mesh, var1="CellMidpoints", var2=var2)
         fig.tight_layout()
         fig.get_axes()[0].set_xlim(0, 3)
+        return fig
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        "var2", [ot.variables.displacement["x"], ot.variables.material_id]
+    )
+    def test_lineplot_cell_and_point_data_splitted_line(
+        self, var2: ot.variables.Variable
+    ):
+        """Test the plot.line for CellData vs.PointData via image comparison."""
+        mesh = examples.load_mesh_mechanics_2D()
+        # see example Plot data of sampling lines
+        pts = np.linspace([120, -460, 0], [120, -800, 0], 100)
+        sample_1 = pv.lines_from_points(pts).sample(mesh)
+        fig = ot.plot.line(sample_1, var1="y", var2=var2)
+        fig.tight_layout()
+        fig.get_axes()[0].set_xlim(-810, -440)
         return fig
 
     # ### Testing animation ####################################################
