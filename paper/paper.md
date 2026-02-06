@@ -72,7 +72,7 @@ ______________________________________________________________________
 
 `OGSTools` (`OpenGeoSys` Tools) is a Python library for streamlined usage of `OpenGeoSys 6` (OGS) - a software for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
 `OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users with different levels of expertise.
-The libraries' functionalities are designed to be used in complex automated workflows (including pre- and post-processing), the OGS benchmark gallery, the OGS test-suite, and in automating repetitive tasks in the model development cycle.
+The libraries' functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
 
 ## Statement of need
 
@@ -114,17 +114,17 @@ Further, it enables the transfer of years of experience in maintaining the OGS' 
 For the centralized approach, preceding work from `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
 
 To address `The Need for a Versioned Data Analysis Software Environment` \[@Blomer2014\] `OGSTools` provides additionally a pinned environment, updated at least once per release.
-While reproducibility requires environments with pinned dependencies, `OGSTools` is additionally tested with the latest dependencies, to receive early warnings of breaking changes and to support the long-term sustainability of the codebase.
-
-To support broad adoption within the OGS user community, the library is deliberately integrated at key points of interest, such as the official OGS benchmarks, executable test cases, and further contexts where previously used libraries were employed.
+While reproducibility requires environments with pinned dependencies, `OGSTools` is additionally tested with the latest dependencies, to receive early warnings of breaking changes and to support the long-term sustainability of the codebase. To support broad adoption within the OGS user community, the library is deliberately integrated at key points of interest, such as the official OGS benchmarks, executable test cases, and further contexts where previously used libraries were employed.
 
 ## Features
 
-The implemented features are covering (1) pre-processing, (2) setup and execution of simulations, and (3) post-processing.
+The implemented features are covering pre-processing, setup and execution of simulations, and post-processing.
 
-Preprocessing (1) for OGS includes mesh creation, adaptation, conversion, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). OGSTools further provides a material management component that allows process-specific material definitions to be assembled from structured YAML sources and translated into OGS-compatible project file entries. This enables a consistent, database-like handling of material parameters across workflows, test cases, and educational examples, while separating physical model definitions from project file syntax. In addition, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
+Preprocessing for OGS includes mesh creation, adaptation, conversion, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). OGSTools further provides a material management component that allows process-specific material definitions to be assembled from structured YAML sources and translated into OGS-compatible project file entries. This enables a consistent, database-like handling of material parameters across workflows, test cases, and educational examples, while separating physical model definitions from project file syntax. In addition, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
 
-Postprocessing (3) includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
+The simulation execution part covers running simulations with the OGS Core via command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
+
+Postprocessing includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
 It offers functionalities for the comparison of numerical simulation results with experimental data or analytical solutions.
 Just as preprocessing and analysis are essential for single simulations, tooling becomes critical for efficiently handling ensemble runs.
