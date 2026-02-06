@@ -27,6 +27,21 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 
 
 @pytest.mark.system()
+def test_simulation_simple(tmp_path, good_model):
+    sim = good_model.run()
+    sim.save(tmp_path / "sim_good_model")
+    ms = sim.result
+    assert ms[-1]
+
+
+@pytest.mark.system()
+def test_simulation_simple2(tmp_path, good_model):
+    sim = good_model.run(tmp_path / "Simulation" / "sim_good_model")
+    sim.save()
+    assert sim.result
+
+
+@pytest.mark.system()
 @pytest.mark.parametrize("do_kill", [False, True], ids=["no-kill", "kill"])
 @pytest.mark.parametrize(
     "interactive", [False], ids=["native"]
