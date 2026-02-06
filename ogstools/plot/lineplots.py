@@ -161,6 +161,8 @@ def line(
     x = x_var.transform(dataset)
     y = y_var.transform(dataset)
     if "vtkGhostType" in mesh.cell_data:
+        x = x.astype(float)
+        y = y.astype(float)
         _separate_by_empty_cells(mesh, x, y)
     # transposing to get individual lines int the plot in the case of plotting
     # linesamples for multiple timesteps or timeseries of multiple points
