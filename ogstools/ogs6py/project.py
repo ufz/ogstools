@@ -1213,14 +1213,11 @@ class Project(StorageBase):
 
     def _propagate_target(self) -> None:
         """Propagate save target to geometry and python_script files."""
-        if self.geometry.filename and not self.geometry.user_specified_target:
+        if self.geometry.filename:
             self.geometry._next_target = (
                 self.next_target / self.geometry.filename
             )
-        if (
-            self.python_script.filename
-            and not self.python_script.user_specified_target
-        ):
+        if self.python_script.filename:
             self.python_script._next_target = (
                 self.next_target / self.python_script.filename
             )
