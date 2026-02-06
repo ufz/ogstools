@@ -61,14 +61,13 @@ for n_edge_cells in edge_cells:
         log=False,
     )
 
-    prj = ot.Project(input_file=examples.prj_steady_state_diffusion).copy()
+    prj = ot.Project(input_file=examples.prj_steady_state_diffusion).copy(
+        tmp_path / f"cells_{n_edge_cells}"
+    )
     prefix = "steady_state_diffusion_" + str(n_edge_cells)
     prj.replace_text(prefix, ".//prefix")
 
     model = ot.Model(prj, meshes)
-
-    case_dir = tmp_path / f"cells_{n_edge_cells}"
-    model.save(case_dir)
     sim_c = model.controller()
     simulations_control.append(sim_c)
 
@@ -81,13 +80,12 @@ simulations = [sim.run() for sim in simulations_control]
 analytical_solution_path = tmp_path / "analytical_solution.vtu"
 sim_last: ot.Simulation = simulations[-1]
 
-
 solution = examples.anasol.diffusion_head_analytical(
     simulations[-1].result.mesh(0)
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
-solution.save(analytical_solution_path)
+analytical_solution_path = ot.mesh.save(solution)
 
 # %% [markdown]
 # Hydraulic pressure convergence

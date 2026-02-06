@@ -54,9 +54,8 @@ print(sim)
 # a look into the API.
 # The subsequent code would work but for clarity we recommend saving 2 different states of the prj object into 2 different files.
 
-import copy
-
-prj2 = copy.deepcopy(prj)
+# Either tell that you are going to change prj object (prj.copy) OR do prj.save() after you have changed but before you run the simulation.
+prj2 = prj.copy()
 
 
 # %%
@@ -72,9 +71,7 @@ prj2.replace_phase_property_value(
 
 # %% [markdown]
 # After modifying the Project you can execute the model in the same way as
-# before. You have to save beforehand. The changes
-# will not be reflected in the simulation otherwise.
-# prj.save()
+# before. You have to prj.save(new_name) here, or beforehand by prj2.copy.
 
 model2 = ot.Model(prj2, meshes=model.meshes)
 sim = model2.run()
