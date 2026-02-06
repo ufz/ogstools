@@ -214,6 +214,9 @@ def line(
     else:
         kwargs.setdefault("linestyle", kwargs.pop("ls", "-"))
         orig_ids = np.arange(mesh.n_points, dtype=np.int32)
+        if x_cell_data or y_cell_data:
+            msg = "Plotting CellData for interrupted lines currently not supported! Convert CellData to PointData to use this function."
+            raise ValueError(msg)
         for cell_id, linestrip in enumerate(strip.cell):
             sort_ids = strip.cell_data.get("vtkOriginalPointIds", orig_ids)[
                 linestrip.point_ids
