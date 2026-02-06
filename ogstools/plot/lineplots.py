@@ -192,6 +192,9 @@ def line(
             # pure cell or point data
             ax_.plot(x[x_sort_ids], y[x_sort_ids], **kwargs)
         elif x_cell_data or y_cell_data:
+            if mesh.n_cells != mesh.n_points - 1:
+                msg = "Line Plot of CellData vs. PointData for cells with inner points currently not supported!"
+                raise ValueError(msg)
             # mixed point data and cell data - special case
             y_sort_ids = sorted_ids(mesh=mesh, use_cells=y_cell_data)
 
