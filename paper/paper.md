@@ -136,29 +136,18 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
 ## Applications
 
-`OGSTools` library is designed to aid users in the implementation of complex workflows and has been an integral part of several scientific projects utilizing them.
-
-### AREHS
+### Workflows
 
 The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) project \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
-\[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results.
-This workflow covers all necessary steps from a structured layered model and geological parameters over the simulation with OGS to the resulting figures shown in \[@Zill2024\] and \[@Silbermann2025\].
-It is composed as a Snakemake workflow and all material is available on \[@arehs2024\].
-
-### OpenWorkflow
-
-`OpenWorkFlow` \[@openworkflow2023\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany.
-Automated workflows as a piece of the planned scientific computational basis for investigating repository-induced physical and chemical processes in different geological setting are essential for transparent and reproducible simulation results.
-OGS together with `OGSTools` has been used in a study of thermal repository dimensioning - named `ThEDi`. `ThEDi` focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded.
-The fully automated workflow generates the simulation models based on geometric and material data, runs and analyses the simulations.
-For scalability and parallelization the workflow is embedded optionally within the workflow management `Snakemake`.
-The workflow components are implemented reusing `OGSTools` functionalities.
+\[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results. For the reproducibility all material is available on \[@arehs2024\].
+`OpenWorkFlow` \[@openworkflow2023\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi` is a study, that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded.
+`OGS-GIScape` is a workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models or conduct scenario analyses to study the groundwater flow and the associated environmental impact due to changes in groundwater resources. The outcome of the models could be used for the management of groundwater resources.
+For scalability and parallelization all 3 workflows use the workflow management `Snakemake`. The rules are implemented using `OGSTools`.
 
 ### OpenGeoSys benchmarks
 
 The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate, how users can set up, adjust, execute, and analyse simulations.
-They can be downloaded, executed, and adapted in an interactive environment for further exploration.
-With `OGSTools` code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
+They can be downloaded, executed, and adapted in an interactive environment for further exploration. With `OGSTools` code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
 The code transformation of the Mandel-Cryer effect benchmark, based on a simplified merge request[^2], demonstrates that using predefined plotting utilities reduces technical overhead.
 
@@ -199,16 +188,6 @@ ms = ot.MeshSeries("results_MandelCryerStaggered.pvd")
 center_point = [0, 0, 0]
 fig = ms.plot_probe(center_point, ot.variables.pressure, labels=["Center"])
 ```
-
-### OGS-GIScape
-
-`OGS-GIScape` is a `Snakemake`-based workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models or conduct scenario analyses to study the groundwater flow and the associated environmental impact due to changes in groundwater resources.
-Furthermore, the outcome of the models could be used for the management of groundwater resources.
-
-An important part of the NGM creation is the geometric model (mesh).
-It is build using geographic information system (GIS) tools at the landscape scale and combining various meshing tools.
-The workflow also comprises the parametrization of the geometric model with physical parameters as well as defining boundary conditions, for instance groundwater recharge at the top of the computational domain or the integration of rivers.
-For these workflow steps it is mainly necessary to change parts of the OGS project file which is done with `OGSTools`.
 
 ## Acknowledgements
 
