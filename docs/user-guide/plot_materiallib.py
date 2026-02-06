@@ -2,8 +2,6 @@
 Materials and Media
 ===================
 
-.. sectionauthor:: Norbert Grunwald
-
 NB! Works for HEAT_CONDUCTION and TH2M (with Phase Transitions) only so far.
 
 This example shows how to build OpenGeoSys media definitions directly

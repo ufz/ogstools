@@ -30,7 +30,7 @@ import click
 def cli(geometry_file: Path, output: Path) -> None:
     """Generate a Gmsh mesh (.msh) from a YAML geometry file and save VTUs."""
     try:
-        from ogstools.meshes import Meshes
+        from ogstools import Meshes
 
         meshes = Meshes.from_yaml(geometry_file)
         meshes.save(output)

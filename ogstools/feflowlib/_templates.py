@@ -5,7 +5,7 @@
 #
 from pathlib import Path
 
-from ogstools.ogs6py import Project
+from ogstools import Project
 
 
 def create_prj_template(

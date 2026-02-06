@@ -13,7 +13,7 @@ import ifm_contrib as ifm
 import numpy as np
 import pyvista as pv
 
-from ogstools.ogs6py import Project
+from ogstools import Project
 
 from . import _tools
 from ._feflowlib import convert_properties_mesh

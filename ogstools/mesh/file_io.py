@@ -15,21 +15,45 @@ def read(filename: Path | str) -> pv.UnstructuredGrid:
     return pv.read(filename)
 
 
-def save(filename: Path | str, mesh: pv.DataSet, **kwargs: Any) -> None:
+from ogstools.core.storage import _date_temp_path
+
+
+def save(
+    mesh: pv.DataSet, filename: Path | str | None = None, **kwargs: Any
+) -> Path:
     """Save mesh to file.
 
     Supported are all file formats pyvista supports.
     In case you want to save as a vtu-file and the given mesh is not a
     `pv.UnstructuredGrid` it is cast to one prior to saving.
 
-    :param filename:    Filename to save the mesh to
     :param mesh:        pyvista mesh
+    :param filename:    Filepath to save the mesh to
+
+    :return:            Filepath to saved mesh
     """
+    if filename:
+        filename = Path(filename)
+        set_pv_attr = getattr(pv, "set_new_attribute", setattr)
+        set_pv_attr(mesh, "filepath", filename)
+        outname = Path(filename)
+    else:
+        existing = getattr(mesh, "filepath", None)
+        if existing:
+            outname = Path(existing)
+        else:
+            # invent a generic filename
+            outname = _date_temp_path("Mesh", "vtu")
+            outname.parent.mkdir(exist_ok=True, parents=True)
+            mesh.filepath = outname
+
     if (
-        Path(filename).suffix == ".vtu"
+        outname.suffix == ".vtu"
         and not isinstance(mesh, pv.UnstructuredGrid)
         and hasattr(mesh, "cast_to_unstructured_grid")
     ):
-        mesh.cast_to_unstructured_grid().save(filename, **kwargs)
+        mesh.cast_to_unstructured_grid().save(outname, **kwargs)
     else:
-        mesh.save(filename, **kwargs)
+        mesh.save(outname, **kwargs)
+
+    return outname

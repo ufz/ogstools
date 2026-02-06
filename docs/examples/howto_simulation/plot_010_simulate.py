@@ -1,6 +1,6 @@
 """
-Run a simulation - from a Project file
-======================================
+Run a simulation
+================
 
 OGSTools is a Python library designed to simplify the process of running
 simulations with the OpenGeoSys (OGS) framework. The `Project` class is a core
@@ -19,7 +19,7 @@ Features:
 - display and export parameter settings
 
 In this guide, we will walk you through the process of using the `Project` class
-to run a simple simulation from an existing model setup.
+and then run a simple simulation from an existing model setup.
 Assuming you have prepared a model with your mesh and a project file you can
 use the following setup, to run it from python.
 """
@@ -37,12 +37,13 @@ prj_path_out = results_dir / "simple_mechanics_modified.prj"
 prj = ot.Project(
     input_file=prj_path_in, output_file=prj_path_out, output_dir=results_dir
 )
-prj.write_input()
-# as the current working directory of this notebook is not the same as the
-# directory of the prj-file and the meshes, we have to tell OGS via the flag
-# "-m", that the meshes are in the same directory as the input_file
-# "-o" sets the output_directory
-prj.run_model(args=f"-m {prj_path_in.parent} -o {results_dir}")
+
+model = ot.Model(prj, meshes=EXAMPLES_DIR / "prj")
+sim = model.run()
+# Optionally save the simulation data
+sim.save()
+print(sim)
+
 
 # %% [markdown]
 # Manipulating the Project
@@ -51,41 +52,37 @@ prj.run_model(args=f"-m {prj_path_in.parent} -o {results_dir}")
 # way to parametrize simulations. Below are some methods, which change
 # different parts of the model definition. For more detailed information have
 # a look into the API.
+# The subsequent code would work but for clarity we recommend saving 2 different states of the prj object into 2 different files.
+
+# Either tell that you are going to change prj object (prj.copy) OR do prj.save() after you have changed but before you run the simulation.
+prj2 = prj.copy()
+
 
 # %%
-prj.replace_parameter_value(name="E", value=1e9)
+prj2.replace_parameter_value(name="E", value=1e9)
 # You can achieve the same via the `replace_text` method:
-prj.replace_text(1e9, xpath="./parameters/parameter[name='E']/value")
+prj2.replace_text(1e9, xpath="./parameters/parameter[name='E']/value")
 # Let's also replace the output prefix of the result
-prj.replace_text("E=1e9", xpath="./time_loop/output/prefix")
+prj2.replace_text("E=1e9", xpath="./time_loop/output/prefix")
 # The density of a phase can also be changed
-prj.replace_phase_property_value(
+prj2.replace_phase_property_value(
     mediumid=0, phase="Solid", name="density", value="42"
 )
 
 # %% [markdown]
 # After modifying the Project you can execute the model in the same way as
-# before. You have to run the `write_input` method beforehand again. The changes
-# will not be reflected in the simulation otherwise. This step will be
-# automated in the future.
+# before. You have to prj.save(new_name) here, or beforehand by prj2.copy.
 
-# %% [markdown]
-# Background execution
-# ====================
-# To execute a simulation in the background, so that your python environment is
-# not frozen until the simulation finishes, you can set `background` to True.
+model2 = ot.Model(prj2, meshes=model.meshes)
+sim = model2.run()
+print(sim)
 
 # %%
-prj.write_input()
-prj.run_model(background=True, args=f"-m {prj_path_in.parent} -o {results_dir}")
-print(prj.status)
+# Alternatively, for more control
+simc = model2.controller()  # this call is not blocking
+simc.terminate()  # do something while the simulation is running
+simc.run()  # this call is blocking, it waits for the simulation to finish
 
-# %% [markdown]
-# If you want to abort the simulation for any reason, use the following command:
-
-# %%
-prj.terminate_run()
-print(prj.status)
 
 # %% [markdown]
 # Creating a Project from scratch

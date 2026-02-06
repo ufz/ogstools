@@ -17,8 +17,6 @@ represented by one subsection of a cell.
 # you can also tessellate an entire MeshSeries via
 # :meth:`~ogstools.MeshSeries.ip_tesselated`
 
-from pathlib import Path
-from tempfile import mkdtemp
 
 import ogstools as ot
 from ogstools import examples
@@ -33,30 +31,23 @@ sigma_ip = ot.variables.stress.replace(
 
 def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
 
-    tmp_dir = Path(mkdtemp())
-    case_path = tmp_dir / f"case_{elem_order}_{quads}_{intpt_order}"
-    case_path.mkdir(parents=True, exist_ok=True)
-    gmsh_file = case_path / "mesh.msh"
-
-    ot.gmsh_tools.rect(
-        lengths=1,
-        n_edge_cells=6,
-        structured_grid=quads,
-        order=elem_order,
-        out_name=gmsh_file,
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(
+            lengths=1,
+            n_edge_cells=6,
+            structured_grid=quads,
+            order=elem_order,
+        ),
+        log=False,
     )
 
-    meshes = ot.Meshes.from_gmsh(gmsh_file, log=False)
-    meshes.save(case_path)
-
-    model = ot.Project(
-        output_file=tmp_dir / "default.prj",
+    prj = ot.Project(
         input_file=examples.prj_mechanics,
-    )
-    model.replace_text(intpt_order, xpath=".//integration_order")
-    model.write_input()
-    model.run_model(write_logs=True, args=f"-m {case_path} -o {case_path}")
-    mesh = ot.MeshSeries(case_path / "mesh.pvd").mesh(-1)
+    ).copy()
+    prj.replace_text(intpt_order, xpath=".//integration_order")
+    model = ot.Model(prj, meshes)
+    sim = model.run()
+    mesh = sim.result.mesh(-1)
     int_pts = ot.mesh.to_ip_point_cloud(mesh)
     ip_mesh = ot.mesh.to_ip_mesh(mesh)
 

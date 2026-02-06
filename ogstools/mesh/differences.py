@@ -73,9 +73,6 @@ def difference(
         sub_mesh = subtract_mesh
         mask = None
     else:
-        base_mesh.point_data["TOPOLOGY_MASK"] = np.ones_like(
-            base_mesh.number_of_points
-        )
         msg = """
         The topologies of base_mesh and subtract_mesh aren't identical.
         In order to compute difference, subtract_mesh will be spatially
@@ -83,7 +80,7 @@ def difference(
         """
         warn(msg, RuntimeWarning, stacklevel=2)
         sub_mesh = base_mesh.sample(subtract_mesh)
-        mask = sub_mesh["TOPOLOGY_MASK"] == 0.0
+        mask = sub_mesh["vtkValidPointMask"] == 0
 
     if variable is None:
         return _raw_differences_all_data(base_mesh, sub_mesh)

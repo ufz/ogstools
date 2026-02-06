@@ -21,6 +21,7 @@ from typeguard import typechecked
 
 from ogstools import plot
 from ogstools._internal import copy_function_signature, deprecated
+from ogstools.core.storage import StorageBase
 from ogstools.mesh.utils import reshape_obs_points
 from ogstools.plot.lineplots import line
 from ogstools.variables import Variable, _normalize_vars, u_reg
@@ -28,7 +29,7 @@ from ogstools.variables import Variable, _normalize_vars, u_reg
 from .data_dict import DataDict
 
 
-class MeshSeries(Sequence[pv.UnstructuredGrid]):
+class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
@@ -38,6 +39,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         filepath: str | Path | None = None,
         spatial_unit: str | Sequence[str] = "m",
         time_unit: str | Sequence[str] = "s",
+        id: str | None = None,
     ) -> None:
         """
         Initialize a MeshSeries object
@@ -55,6 +57,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
             would read in the spatial data in meters and convert to kilometers
             and read in the timevalues in years and convert to days.
         """
+        # TODO: if filepath extension = Path(filepath).suffix to also support xdmf
+        super().__init__("MeshSeries", file_ext="pvd", id=id)
         self._time_factor = 1.0
         self._epsilon = 1.0e-6
         self._mesh_cache: dict[float, pv.UnstructuredGrid] = {}
@@ -135,6 +139,40 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         )
         new_ms.dim = meshes[0].GetMaxSpatialDimension()
         return new_ms
+
+    @classmethod
+    def from_id(cls, meshseries_id: str) -> MeshSeries:
+        """
+        Load MeshSeries from the user storage path using its ID.
+        StorageBase.Userpath must be set.
+
+        :param meshseries_id: The unique ID of the MeshSeries to load.
+        :returns:             A MeshSeries instance restored from disk.
+        """
+        # Try .pvd first, then .xdmf
+        pvd_file = (
+            StorageBase.saving_path()
+            / "MeshSeries"
+            / f"{meshseries_id}"
+            / "ms.pvd"
+        )
+        xdmf_file = (
+            StorageBase.saving_path()
+            / "MeshSeries"
+            / f"{meshseries_id}"
+            / "ms.xdmf"
+        )
+
+        if pvd_file.exists():
+            meshseries = cls(filepath=pvd_file)
+        elif xdmf_file.exists():
+            meshseries = cls(filepath=xdmf_file)
+        else:
+            msg = f"No MeshSeries found at {pvd_file} or {xdmf_file}"
+            raise FileNotFoundError(msg)
+
+        meshseries._id = meshseries_id
+        return meshseries
 
     def extend(self, mesh_series: MeshSeries) -> None:
         """
@@ -262,14 +300,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         """
         return self._extract_probe(mesh, data_name, "linear")
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MeshSeries):
+            return NotImplemented
+        # TODO:: Field data is currently not copied, to not break copy/eq - contract -> False
+        return MeshSeries.compare(self, other, field_data=False)
+
     def __deepcopy__(self, memo: dict) -> MeshSeries:
         # Deep copy is the default when using self.copy()
         # For shallow copy: self.copy(deep=False)
-        cls = self.__class__
-        self_copy = cls.__new__(cls)
+        self_copy = self.__class__(self.filepath)
         memo[id(self)] = self_copy
         for key, value in self.__dict__.items():
-            if key != "_pvd_reader" and key != "_xdmf_reader":
+            if key == "_next_target" or key == "id":
+                pass
+            elif key != "_pvd_reader" and key != "_xdmf_reader":
                 if isinstance(value, pv.UnstructuredGrid):
                     # For PyVista objects use their own copy method
                     setattr(self_copy, key, value.copy(deep=True))
@@ -282,19 +327,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
                 # stored in reader, deep copy doesn't work for _pvd_reader
                 # and _xdmf_reader
                 setattr(self_copy, key, shallowcopy(value))
+
         return self_copy
-
-    def copy(self, deep: bool = True) -> MeshSeries:
-        """
-        Create a copy of MeshSeries object.
-        Deep copy is the default.
-
-        :param deep: switch to choose between deep (default) and shallow
-                     (self.copy(deep=False)) copy.
-
-        :returns: Copy of self.
-        """
-        return deepcopy(self) if deep else shallowcopy(self)
 
     @overload
     def __getitem__(self, index: int) -> pv.UnstructuredGrid: ...
@@ -1087,6 +1121,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         ) -> bool:
             mask = np.isnan(actual)
             if isinstance(desired, np.ndarray):
+                if len(actual) != len(desired):
+                    return False
                 desired = desired[~mask]
 
             if not np.allclose(
@@ -1200,15 +1236,15 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         for i, timestep in enumerate(self.timesteps):
             if ".vtu" in fns[i].name:
                 save(
-                    Path(new_pvd_fn.parent, fns[i].name),
                     self.mesh(i),
+                    Path(new_pvd_fn.parent, fns[i].name),
                     binary=not ascii,
                 )
             elif ".xdmf" in fns[i].name:
                 newname = fns[i].name.replace(
                     ".xdmf", f"_ts_{timestep}_t_{self.timevalues[i]}.vtu"
                 )
-                save(Path(new_pvd_fn.parent, newname), self.mesh(i))
+                save(self.mesh(i), Path(new_pvd_fn.parent, newname))
             else:
                 s = "File type not supported."
                 raise RuntimeError(s)
@@ -1253,8 +1289,26 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         return cast(Path, filename)
 
     def save(
-        self, filename: str, deep: bool = True, ascii: bool = False
-    ) -> None:
+        self,
+        target: Path | str | None = None,
+        deep: bool = True,
+        ascii: bool = False,
+        overwrite: bool | None = None,
+        dry_run: bool = False,
+        archive: bool = False,
+        id: str | None = None,
+    ) -> list[Path]:
+        user_defined = self._pre_save(target, overwrite, dry_run, id=id)
+        files = self._save_impl(deep=deep, ascii=ascii, dry_run=dry_run)
+        self._post_save(user_defined, archive, dry_run)
+        return files
+
+    def _save_impl(
+        self,
+        deep: bool = True,
+        ascii: bool = False,
+        dry_run: bool = False,
+    ) -> list[Path]:
         """
         Save mesh series to disk.
 
@@ -1264,7 +1318,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         :param ascii: Specifies if ascii or binary format should be used,
                       defaults to binary (False) - True for ascii.
         """
-        fn = Path(filename)
+        fn = self.next_target
+        fn.parent.mkdir(parents=True, exist_ok=True)
         fns = [
             self._check_path(self.mesh(t).filepath)
             for t in np.arange(len(self.timevalues), dtype=int)
@@ -1272,11 +1327,23 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
         if ".pvd" in fn.name:
             if deep is True:
                 fns = self._rename_vtufiles(fn, fns)
+                if dry_run:
+                    # For dry_run, return paths where files would be written
+                    fns_written = [fn.parent / f.name for f in fns]
+                    return [fn] + fns_written
                 self._save_vtu(fn, fns, ascii=ascii)
+                # Update fns to actual written paths
+                fns = [fn.parent / f.name for f in fns]
+            if dry_run:
+                fns_written = [fn.parent / f.name for f in fns]
+                return [fn] + fns_written
             self._save_pvd(fn, fns)
         else:
             s = "Currently the save method is implemented for PVD/VTU only."
             raise RuntimeError(s)
+
+        # Return both the PVD file and all VTU files
+        return [fn] + fns
 
     @deprecated(
         """
@@ -1306,3 +1373,34 @@ class MeshSeries(Sequence[pv.UnstructuredGrid]):
                 else:
                     msg = "array type unknown"
                     raise RuntimeError(msg)
+
+    def _propagate_target(self) -> None:
+        pass
+
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+
+        if self._id and self.user_specified_target:
+            construct = f'{cls_name}.from_id("{self._id}")'
+        else:
+            filepath = self.active_target or self.next_target
+            filepath_str = str(filepath) if filepath is not None else None
+
+            construct = (
+                f"{cls_name}("
+                f"filepath={filepath_str!r}, "
+                f"spatial_unit={str(self.spatial_unit.units)!r}, "
+                f"time_unit={str(self.time_unit.units)!r}"
+                f")"
+            )
+
+        base_repr = super().__repr__()
+
+        return (
+            f"{construct}\n"
+            f"{base_repr}\n"
+            f"data_type={self._data_type!r}\n"
+            f"num_timesteps={len(self.timevalues)}\n"
+            f"dim={getattr(self, 'dim', None)!r}\n"
+            f"cached_meshes={len(self._mesh_cache)}\n"
+        )

@@ -1,0 +1,8 @@
+has_identified_subdomains: true
+meshes:
+- domain
+- bottom
+- top
+- right
+- left
+num_partitions: null

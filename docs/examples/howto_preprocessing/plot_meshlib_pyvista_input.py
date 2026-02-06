@@ -6,6 +6,7 @@ For this example we create meshes from pyvista surfaces. See other examples for
 different meshing algorithms.
 """
 
+# %%
 from itertools import pairwise
 from shutil import which
 

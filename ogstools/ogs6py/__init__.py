@@ -3,7 +3,3 @@
 #            See accompanying file LICENSE.txt or
 #            http://www.opengeosys.org/project/license
 #
-
-from .project import Project
-
-__all__ = ["Project"]

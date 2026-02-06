@@ -21,25 +21,19 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 # Imports and definitions
 # =======================
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
 from time import sleep  # For simulation pause / interrupt
 
 import numpy as np
 
 import ogstools as ot
 from ogstools.examples import load_model_liquid_flow_simple
-from ogstools.simulation import SimulationController
 
 # %%
 # Select a Project
 # ===================
 # We will start with a simple liquid flow project.
-working_dir = Path(mkdtemp())
-prj, meshes = load_model_liquid_flow_simple()
-prj.write_input(working_dir / "LiquidFlowSimple.prj")
-_ = meshes.save(working_dir)
-
+model = load_model_liquid_flow_simple()
+model.execution.interactive = True
 
 # %%
 # Read and write in situ meshes
@@ -61,25 +55,15 @@ _ = meshes.save(working_dir)
 # 2. Boundary conditions are dynamically adjusted during runtime
 
 
-sim2_result_dir = working_dir / "sim2"
-sim2_result_dir.mkdir(exist_ok=True)
-arguments = [
-    "",
-    str(working_dir / "LiquidFlowSimple.prj"),
-    "-o",
-    str(sim2_result_dir),
-]
-sim2 = SimulationController(
-    arguments
-)  # we will restart the same simulation as above into new folder
-domain_mesh = ot.mesh.from_simulator(sim2, "domain", ["pressure"])
+sim_c = model.controller()
+domain_mesh = sim_c.mesh("domain", ["pressure"])
 
 # Let us store the mesh of a time step to compare it later
 previous_domain_mesh_pressure = domain_mesh.point_data["pressure"]
 domain_mesh_pressure = previous_domain_mesh_pressure
 
 # Later, we will dynamically modify the left boundary mesh
-left_mesh = ot.mesh.from_simulator(sim2, "left", ["pressure"])
+left_mesh = sim_c.mesh("left", ["pressure"])
 
 steady_state_threshold = 0.1 * len(previous_domain_mesh_pressure)  # constant
 delta = steady_state_threshold + 1e-10  # to be computed for each time step
@@ -96,15 +80,15 @@ delta = steady_state_threshold + 1e-10  # to be computed for each time step
 
 
 while (
-    sim2.current_time() < sim2.end_time()
-    and not sim2.is_interrupted()
+    sim_c.current_time < sim_c.end_time
+    and not sim_c.is_interrupted
     # any other stopping condition based on the mesh, log, ...
     # e.g. # `delta > steady_state_threshold``
 ):
 
     previous_domain_mesh_pressure = domain_mesh.point_data["pressure"].copy()
 
-    sim2.execute_time_step()
+    sim_c.execute_time_step()
     sleep(0.01)  # Must have, if you want to pause the simulation
 
     # --------------- until here minimal loop -------------------------------
@@ -140,12 +124,10 @@ fig = ot.plot.contourf(domain_mesh, "pressure")
 # %%
 # Continue the ("paused") simulation
 # ==================================
-sim2.execute_time_step()
-# Or run over multiple steps (see while loop above)
-sim2.execute_simulation()
-# Necessary to close, otherwise you can not reinitialize simulation with same prj-file (arguments)
-sim2.close()
-
+sim_c.execute_time_step()
+# Or run over multiple steps (see while loop above) until end_time
+# Run closes the simulation (no more access via SimulationController).
+sim = sim_c.run()
 
 # %%
 # Visualization
@@ -153,7 +135,7 @@ sim2.close()
 
 # We visualize how the dynamically updated boundary conditions affected the pressure field.
 # Changes in boundary conditions can be clearly observed.
-ms = ot.MeshSeries(sim2_result_dir / "LiquidFlow_Simple.pvd")
+ms = sim.result
 # !paraview {ms.filepath} # for interactive exploration
 # Time slice over x
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
