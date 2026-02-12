@@ -92,4 +92,24 @@ df_ts_it
 # You can directly use
 # ``plot``
 # <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.plot.html>`_ from pandas.
-df_ts_it.plot(grid=True)
+ax = df_ts_it.plot(
+    y="iteration_number", xlabel="time_step", grid=True, legend=False
+)
+df_ts_it.plot(
+    y="step_start_time",
+    xlabel="time_step",
+    ax=ax,
+    secondary_y=True,
+    grid=True,
+    legend=False,
+)
+ax.set_ylabel("iteration number")
+ax.yaxis.label.set_color("C0")  # colour matches the left line
+ax.tick_params(axis="y", colors="C0")
+ax_right = ax.right_ax
+ax_right.set_ylabel("simulation time")
+ax_right.yaxis.label.set_color("C1")
+ax_right.tick_params(axis="y", colors="C1")
+lines, labels = ax.get_legend_handles_labels()
+lines2, labels2 = ax_right.get_legend_handles_labels()
+ax.legend(lines + lines2, labels + labels2, loc="upper left")
