@@ -70,7 +70,7 @@ affiliations:
 date: 17 March 2025
 bibliography: paper.bib
 
-______________________________________________________________________
+---
 
 ## Summary
 
@@ -200,3 +200,5 @@ The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usabili
 [^2]: https://www.opengeosys.org/stable/docs/processes/liquid-flow/liquidflow/
 [^3]: https://www.opengeosys.org/6.5.7/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
 [^4]: https://ogstools.opengeosys.org/stable/auto_examples/howto_quickstart/plot_framework_short.html
+
+## References
