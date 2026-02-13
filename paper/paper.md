@@ -70,31 +70,28 @@ ______________________________________________________________________
 
 ## Summary
 
-`OGSTools` (`OpenGeoSys` Tools) is a Python library for streamlined usage of `OpenGeoSys 6` (OGS) - a software for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
-`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and tailored defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users with different levels of expertise.
-The libraries' functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
+`OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) - a software package for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
+`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and sensible defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users.
+The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
 
 ## Statement of need
 
 ### Development efficiency
 
-Modellers of OGS iteratively run simulations, analyse results, and refine their models with the goal to enhance the accuracy, efficiency and reliability of the simulation results.
-To improve efficiency, repetitive steps in the model development cycle should be formalized and implemented - in the case of OGSTools as a Python library.
+Modellers of OGS iteratively run simulations, analyse results, and refine their models with the goal to improve the accuracy, efficiency and reliability of the simulation results.
+To improve efficiency, repetitive steps in the model development cycle should be formalised. Python was chosen as the formalisation language because it matches the existing expertise of the user base.
 The Python library introduced here serves as a central platform to collect and improve common functionalities needed by modellers of OGS.
 
 ### Complex workflows
 
 A workflow is a structured sequence of steps, that processes data and executes computations to achieve a specific goal \[@diercks2022workflows\].
-In our scientific research, workflows need to integrate multiple steps—such as geological data preprocessing, ensemble simulations with OGS, domain-specific analysis and visualization—into complex and fully automated and therefore reproducible sequences.
+In our scientific research, workflows need to integrate multiple steps—such as geological data preprocessing, ensemble simulations with OGS, domain-specific analysis and visualization—into complex, fully automated, and therefore reproducible sequences.
 Typically, one specific workflow is implemented to answer one specific scientific question.
 Workflow-based approaches have been proven to adhere to the `FAIR principles` \[@goble2020fair\], \[@Wilkinson_2025\]. The typical approach is to use existing workflow management software that covers domain-independent parts like dependency graph description, computational efficiency, data management, execution control, multi-user collaboration and data provenance \[@Bilke2025\].
-When building upon the Python ecosystem, Python-based workflow managers such as `Snakemake` \[@Köster2012\] and `AiiDA` \[@Huber2020\] are a natural choice.
-
-The usage of workflow managers shifts the actual development to the workflow components.
+Building on the Python ecosystem, our goal is an integrated solution in which all components, including the Python-based workflow managers like `Snakemake` \[@Köster2012\] and `AiiDA` \[@Huber2020\], function together.
 Common and frequently used functionality found within workflow components is made reusable and provided in this Python library.
 It focuses on functionalities directly related to (1) the OGS core simulator and its specific input and output data, (2) domain-specific definitions in geo-science, (3) finite element modelling (FEM), and (4) numerical computation.
-The workflow components are constructed from generic Python libraries, OGSTools, and integration code tailored to the respective workflow manager chosen.
-To ensure integration of the library's functionalities with the workflow management software, a list of functional and non-functional requirements (e.g., thread safety), imposed by workflow management software, is maintained and regularly validated through continuous testing.
+The workflow components are constructed from generic Python libraries, OGSTools, and integration code for the respective workflow manager chosen.
 
 ### Test suite
 
@@ -106,25 +103,24 @@ OGS is already being used in academic courses and teaching environments. With Ju
 
 ### Centralization of Python-related development
 
-Previously, the code base for Python-related tasks in OGS was fragmented, with components that were often developed for specific use cases, with varying degrees of standardization and sharing.
+Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardization.
 The lack of centralization led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
 With `OGSTools`, reusable Python code is now centralized under the professional maintenance of the core developer team of OGS.
-It ensures better collaboration, standardized practices, and improved code quality.
-Further, it enables the transfer of years of experience in maintaining the OGS' core \[@Bilke2019\] to the pre- and post-processing code.
-For the centralized approach, preceding work from `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
+Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
+For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
 
-To address `The Need for a Versioned Data Analysis Software Environment` \[@Blomer2014\] `OGSTools` provides additionally a pinned environment, updated at least once per release.
+To address `The Need for a Versioned Data Analysis Software Environment` \[@Blomer2014\] `OGSTools` additionally provides a pinned environment, updated at least once per release.
 While reproducibility requires environments with pinned dependencies, `OGSTools` is additionally tested with the latest dependencies, to receive early warnings of breaking changes and to support the long-term sustainability of the codebase. To support broad adoption within the OGS user community, the library is deliberately integrated at key points of interest, such as the official OGS benchmarks, executable test cases, and further contexts where previously used libraries were employed.
 
 ## Features
 
 The implemented features are covering pre-processing, setup and execution of simulations, and post-processing.
 
-Preprocessing for OGS includes mesh creation, adaptation, conversion, as well as defining boundary conditions, source terms, and generating project files (OGS specific XML-Files). OGSTools further provides a material management component that allows process-specific material definitions to be assembled from structured YAML sources and translated into OGS-compatible project file entries. This enables a consistent, database-like handling of material parameters across workflows, test cases, and educational examples, while separating physical model definitions from project file syntax. In addition, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
+Pre-processing for OGS includes mesh creation, adaptation, conversion, as well as defining boundary conditions, source terms, and generating project files (OGS-specific XML files). OGSTools further provides a material management component that allows process-specific material definitions to be assembled from structured YAML sources and translated into OGS-compatible project file entries. This allows a consistent, database-like handling of material parameters across workflows, test cases, and educational examples, while separating physical model definitions from project file syntax. In addition, a `FEFLOW` converter (from `FEFLOW` models to OGS models) is integrated \[@Heinze2025\]. The converter uses the geometric and material data of FEFLOW models to generate OGS-suitable meshes and definitions for H, HT and HC processes.
 
-The simulation execution part covers running simulations with the `OGS` Core via command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
+The simulation execution part covers running simulations with the `OGS` core the via command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
 
-Postprocessing includes domain specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
+Post-processing includes domain-specific evaluation and visualization of simulation results, for temporal and spatial distribution analysis.
 `OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
 It offers functionalities for the comparison of numerical simulation results with experimental data or analytical solutions.
 Just as preprocessing and analysis are essential for single simulations, tooling becomes critical for efficiently handling ensemble runs.
@@ -138,16 +134,16 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
 ### Workflows
 
-The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) project \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
-\[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results. For the reproducibility all material is available on \[@arehs2024\].
-`OpenWorkFlow` \[@openworkflow2023\], is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi` is a study, that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded.
-`OGS-GIScape` is a workflow for creating, simulating and analysing numerical groundwater models (NGM). OGS-GIScape enables scientists to investigate complex environmental models or conduct scenario analyses to study the groundwater flow and the associated environmental impact due to changes in groundwater resources. The outcome of the models could be used for the management of groundwater resources.
-For scalability and parallelization all 3 workflows use the workflow management `Snakemake`. The rules are implemented using `OGSTools`.
+The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
+\[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of an automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results. For reproducibility all material is available at \[@arehs2024\].
+`OpenWorkFlow` \[@openworkflow2023\] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi` is a study, that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded.
+`OGS-GIScape` is a workflow for creating, simulating and analysing numerical groundwater models. OGS-GIScape helps scientists to investigate complex environmental models or conduct scenario analyses to study the groundwater flow and the associated environmental impact due to changes in groundwater resources. The outcome of the models could be used for the management of groundwater resources.
+For scalability and parallelization all mentioned workflows use the workflow management software `Snakemake`. The rules are implemented using `OGSTools`.
 
 ### OpenGeoSys benchmarks
 
 The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate, how users can set up, adjust, execute, and analyse simulations.
-They can be downloaded, executed, and adapted in an interactive environment for further exploration. With `OGSTools` code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
+They can be downloaded, executed, and adapted in an interactive environment for further exploration. With `OGSTools`, code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
 ## Example
 
@@ -155,8 +151,7 @@ They can be downloaded, executed, and adapted in an interactive environment for 
 
 ## Acknowledgements
 
-This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung`(BASE), and `OpenWorkflow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
+This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkflow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
 The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under (grant \[Grant Number\]) by `Deutsche Forschungsgemeinschaft` (DFG)
 
 [^1]: https://ogstools.opengeosys.org
-[^2]: https://gitlab.opengeosys.org/ogs/ogs/-/merge_requests/5171
