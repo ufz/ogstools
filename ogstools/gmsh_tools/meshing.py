@@ -294,8 +294,9 @@ def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
 def remesh_with_triangles(
     mesh: pv.UnstructuredGrid,
     output_file: Path | str | None = None,
-    size_factor: float = 1.0,
-    order: int = 1,
+    refinement: dict | None = None,
+    local_ref: list[dict] | dict | None = None,
+    mesh_opts: dict | None = None,
 ) -> Path:
     """Discretizes a given Mesh with triangles and saves as gmsh .msh.
 
@@ -303,8 +304,21 @@ def remesh_with_triangles(
 
     :param mesh:        The mesh which shall be discretized with triangles
     :param output_file: The full filepath to the resulting file
-    :param size_factor: A factor to scale the element sizes.
-    :param order:       The element order (1=linear, 2=quadratic, ...)
+    :param refinement: specification for refinement of region edges
+
+        You can provide a dict with the following data:
+        - 'SizeMin': Minimum element size (default: median point distance)
+        - 'SizeMax': Maximum element size (default: 3 * median point distance)
+        - 'DistMin': Distance until which SizeMin is used (default: 0)
+        - 'DistMax': Distance after which SizeMax is used (default: 3 * median point distance)
+    :param local_ref: specification/s of local refinement
+
+        Allows the same refinement options as in `refinement`, but the dict
+        has to contain an entry named 'pts' which provides the points around
+        which the refinement is performed.
+    :param mesh_opts: Meshing options. Will be passed to
+        `gmsh.option.setNumber(f"Mesh.{key}", value)`. Additionally pass
+        'order' to set the element order (1=linear, 2=quadratic, ...).
     """
     output_file = optional_default_file(output_file, "gmsh_remesh", ".msh")
     gmsh.initialize(["-noenv"])
@@ -319,8 +333,10 @@ def remesh_with_triangles(
         _ordered_edges(mesh.threshold([m, m], scalars="MaterialIDs"))
         for m in (mat_ids)
     ]
-    for point in np.vstack(region_edge_points):
+    point_stack = np.vstack(region_edge_points)
+    for point in point_stack:
         gmsh.model.geo.addPoint(point[0], point[1], point[2])
+
     region_lengths = [len(pts) for pts in region_edge_points]
     region_start_tag = np.cumsum([0] + region_lengths) + 1
     for tag_0, tag_1 in pairwise(region_start_tag):
@@ -329,6 +345,8 @@ def remesh_with_triangles(
         gmsh.model.geo.addLine(tag_1 - 1, tag_0)
 
     field = gmsh.model.mesh.field
+    ref = refinement if isinstance(refinement, dict) else {}
+    mdists = []
     for index, points in enumerate(region_edge_points):
         mat_id = mat_ids[index] + id_offset
         line_tags = range(region_start_tag[index], region_start_tag[index + 1])
@@ -337,33 +355,80 @@ def remesh_with_triangles(
         gmsh.model.addPhysicalGroup(
             dim=2, tags=[mat_id], name=f"Layer {mat_id}"
         )
-        f1, f2 = (2 * mat_id, 2 * mat_id + 1)
+        f_1, f_2 = (2 * mat_id, 2 * mat_id + 1)
         distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
-        DEFAULT_SIZE = 6  # pylint: disable=C0103
-        min_elem_size = size_factor * np.min(distances) * DEFAULT_SIZE
-        max_elem_size = size_factor * np.max(distances) * DEFAULT_SIZE
-        field.add("Distance", f1)
-        field.setNumbers(f1, "CurvesList", line_tags)
-        field.add("Threshold", f2)
-        field.setNumber(f2, "IField", f1)
-        field.setNumber(f2, "SizeMin", min_elem_size)
-        field.setNumber(f2, "SizeMax", max_elem_size)
-        field.setNumber(f2, "DistMin", min_elem_size)
-        field.setNumber(f2, "DistMax", 3 * max_elem_size)
+        mdist = np.median(distances)
+        mdists.append(mdist)
+        field.add("Distance", f_1)
+        field.setNumbers(f_1, "CurvesList", line_tags)
+        field.add("Threshold", f_2)
+        field.setNumber(f_2, "IField", f_1)
+        field.setNumber(f_2, "SizeMin", ref.get("SizeMin", mdist))
+        field.setNumber(f_2, "SizeMax", ref.get("SizeMax", mdist * 3))
+        field.setNumber(f_2, "DistMin", ref.get("DistMin", 0))
+        field.setNumber(f_2, "DistMax", ref.get("DistMax", mdist * 3))
 
-    field.add("Min", tag=f2 + 1)
-    field.setNumbers(f2 + 1, "FieldsList", (mat_ids * 2 + 1).tolist())
-    field.setAsBackgroundMesh(f2 + 1)
+    f_min = f_2 + 1
+    field.add("Min", tag=f_min)
+    field.setNumbers(f_min, "FieldsList", (mat_ids * 2 + 1).tolist())
+
+    if local_ref is None:
+        field.setAsBackgroundMesh(f_min)
+    else:
+        from scipy.spatial import KDTree
+
+        ref_pts_ = local_ref if isinstance(local_ref, list) else [local_ref]
+        for subdomain_id, ref in enumerate(ref_pts_):
+            if one_pt := np.asarray(ref["pts"]).ndim == 1:
+                mdist = np.median(mdists)
+            else:
+                distances = np.linalg.norm(np.diff(ref["pts"], axis=0), axis=1)
+                mdist = np.median(distances)
+
+            tree = KDTree(point_stack)
+            # as the boundaries in the gmsh geometry of different regions may
+            # overlap, we have to find more then one closest neighbour.
+            # Otherwise the size field might not have an effect, due the later
+            # call of removeAllDuplicates.
+            pt_dists, pt_ids = tree.query(ref["pts"], k=2)
+            if np.isscalar(pt_ids):
+                pt_ids_ = [pt_ids]
+            elif np.asarray(pt_ids).ndim == 1:
+                matches = np.isclose(pt_dists, pt_dists[0])
+                pt_ids_ = np.asarray(pt_ids)[matches]
+            else:
+                matches = np.isclose(pt_dists.T, pt_dists[:, 0]).T
+                pt_ids_ = np.asarray(pt_ids)[matches]
+
+            f_1 = f_min + subdomain_id * 2 + 1
+            f_2 = f_1 + 1
+            field.add("Distance", f_1)
+            list_type = "PointsList" if one_pt else "CurvesList"
+            field.setNumbers(f_1, list_type, pt_ids_)
+            field.add("Threshold", f_2)
+            field.setNumber(f_2, "IField", f_1)
+            field.setNumber(f_2, "SizeMin", ref.get("SizeMin", mdist))
+            field.setNumber(f_2, "SizeMax", ref.get("SizeMax", mdist * 3))
+            field.setNumber(f_2, "DistMin", ref.get("DistMin", 0))
+            field.setNumber(f_2, "DistMax", ref.get("DistMax", mdist * 3))
+        f4 = f_2 + 1
+        field.add("Min", tag=f4)
+        field.setNumbers(f4, "FieldsList", list(range(f_min, f4, 2)))
+        field.setAsBackgroundMesh(f4)
 
     gmsh.model.geo.removeAllDuplicates()
     gmsh.model.geo.synchronize()
-    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-    gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
-    gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
-
+    opts = {} if mesh_opts is None else mesh_opts
+    opts.setdefault("SecondOrderIncomplete", 1)
+    opts.setdefault("MeshSizeExtendFromBoundary", 0)
+    opts.setdefault("MeshSizeFromPoints", 0)
+    opts.setdefault("MeshSizeFromCurvature", 0)
+    opts.setdefault("Smoothing", 1)
+    opts.setdefault("Algorithm", 0)
+    for setting, value in opts.items():
+        gmsh.option.setNumber(f"Mesh.{setting}", value)
     gmsh.model.mesh.generate(dim=2)
-    gmsh.model.mesh.setOrder(order)
+    gmsh.model.mesh.setOrder(opts.get("order", 1))
     gmsh.write(str(output_file))
     gmsh.finalize()
     return output_file
