@@ -147,6 +147,42 @@ They can be downloaded, executed, and adapted in an interactive environment for 
 
 ## Example
 
+The following example shows a complete `OGS` Liquid Flow [^2] simulation workflow, adapted to 2D from [^3].
+First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `pyvista` functionality.
+After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualized. An extended version of this example is available in the OGSTools documentation [^4].
+
+```python
+import numpy as np
+import ogstools as ot
+from ogstools.examples import load_project_simple_lf
+
+# 1. Pre-processing: Load example Project and construct input meshes
+project = load_project_simple_lf()
+meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect((8,4),8,2))
+# Set boundary conditions on the pyvista meshes
+num_points = meshes["left"].n_points
+meshes["left"].point_data["pressure"] = np.full(num_points, 2.9e7)
+meshes["right"].point_data["pressure"] = np.full(num_points, 3.1e7)
+model = ot.Model(project=project, meshes=meshes)
+# Visualize setup with boundary conditions (Figure 1)
+model.plot_constraints()
+
+# 2. Run: Execute Simulation
+sim = model.run()
+
+# 3. Post-processing: Analyse results
+# Plot final pressure distribution (Figure 2)
+ot.plot.contourf(sim.result[-1], "pressure")
+# Plot convergence behaviour (Figure 3)
+sim.log.plot_convergence()
+
+# 4. Store: Save Simulation
+sim.save(id = "mysim", archive=True)
+```
+
+![Initial boundary conditions.\label{fig:bc}](figures/figure1_boundary_conditions.png){width=80%}
+![Resulting convergence metrics.\label{fig:convergence}](figures/figure2_convergence.png){width=80%}
+![Resulting pressure distribution.\label{fig:pressure}](figures/figure3_final_pressure_distribution.png){width=80%}
 
 
 ## Acknowledgements
@@ -155,3 +191,6 @@ This work has been supported by multiple funding sources, including `AREHS` unde
 The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under (grant \[Grant Number\]) by `Deutsche Forschungsgemeinschaft` (DFG)
 
 [^1]: https://ogstools.opengeosys.org
+[^2]: https://www.opengeosys.org/stable/docs/processes/liquid-flow/liquidflow/
+[^3]: https://www.opengeosys.org/6.5.7/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
+[^4]: https://ogstools.opengeosys.org/stable/auto_examples/howto_quickstart/plot_framework_short.html
