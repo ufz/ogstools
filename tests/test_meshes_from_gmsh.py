@@ -355,10 +355,24 @@ def test_subdomains_3D():
         np.testing.assert_allclose(ref_center, mesh.center)
 
 
-def test_remesh_with_tri(tmp_path):
-    mesh = load_meshseries_THM_2D_PVD().mesh(1)
+def test_remesh_with_tri(tmp_path: Path):
     msh_path = tmp_path / "tri_mesh.msh"
-    ot.gmsh_tools.remesh_with_triangles(mesh, msh_path)
+    mesh = load_meshseries_THM_2D_PVD().mesh(1)
+    repo = (
+        mesh.threshold(12, "MaterialIDs")
+        .extract_feature_edges()
+        .clip_box([2800, 3900, -860, 0, 6.7e3, 6.7e3], invert=False)
+    )
+    top_pt = [3140, 100, 6.7e3]
+    local_ref = [
+        {"pts": repo.points, "SizeMin": 10, "SizeMax": 100, "DistMax": 200},
+        {"pts": top_pt, "SizeMin": 10, "SizeMax": 100, "DistMax": 500},
+    ]
+    ref = {"SizeMin": 200}
+
+    ot.gmsh_tools.remesh_with_triangles(
+        mesh, msh_path, refinement=ref, local_ref=local_ref
+    )
     meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
     assert len(meshes) == 1 + len(np.unique(mesh["MaterialIDs"]))
     # boundaries are not assigned a physical tag in remesh_with_triangles

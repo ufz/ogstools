@@ -115,6 +115,10 @@
 - added `ot.mesh.node_reordering` to fix node ordering of a mesh to comply with OGS standards
 - added `ot.mesh.validate` to check, whether a mesh complies with OGS standards
 
+### gmsh_tools
+
+- added more control over the discretization for `remesh_with_triangles`.
+
 ### MeshSeries
 
 - Now has a difference method.
