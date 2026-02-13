@@ -70,7 +70,7 @@ ______________________________________________________________________
 
 ## Summary
 
-`OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) - a software package for simulating thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
+`OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) - a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
 `OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and sensible defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users.
 The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
 
@@ -180,9 +180,11 @@ sim.log.plot_convergence()
 sim.save(id = "mysim", archive=True)
 ```
 
-![Initial boundary conditions.\label{fig:bc}](figures/figure1_boundary_conditions.png){width=80%}
-![Resulting convergence metrics.\label{fig:convergence}](figures/figure2_convergence.png){width=80%}
-![Resulting pressure distribution.\label{fig:pressure}](figures/figure3_final_pressure_distribution.png){width=80%}
+![Initial boundary conditions.](figures/figure1_boundary_conditions.png){#fig:bc width="80%"}
+
+![Resulting convergence metrics.](figures/figure2_convergence.png){#fig:convergence width="80%"}
+
+![Resulting pressure distribution.](figures/figure3_final_pressure_distribution.png){#fig:pressure width="80%"}
 
 
 ## Acknowledgements
