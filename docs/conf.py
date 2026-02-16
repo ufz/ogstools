@@ -65,7 +65,7 @@ html_css_files = ["ogstools.css"]
 html_context = {"default_mode": "light"}
 
 # Set up the version switcher.  The versions.json is stored in the doc repo.
-if os.environ.get("CI_MERGE_REQUEST_IID", False):
+if os.environ.get("CI_MERGE_REQUEST_IID"):
     switcher_version = f"!{os.environ['CI_MERGE_REQUEST_IID']}"
 elif ".dev" in version:
     switcher_version = "dev"
