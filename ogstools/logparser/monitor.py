@@ -11,11 +11,17 @@ from pathlib import Path
 from queue import Queue
 
 import numpy as np
-from bokeh.io import output_notebook, push_notebook, show
-from bokeh.io.notebook import CommsHandle
-from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure
+
+try:
+    from bokeh.io import output_notebook, push_notebook, show
+    from bokeh.io.notebook import CommsHandle
+    from bokeh.layouts import layout
+    from bokeh.models import ColumnDataSource
+    from bokeh.plotting import figure
+
+except ImportError as e:
+    msg = "Monitor() requires extra dependency 'bokeh'. Install with: pip install ogstools[monitor] or pip install bokeh"
+    raise RuntimeError(msg) from e
 from watchdog.observers import Observer
 
 from ogstools.logparser import regexes as log_regex
