@@ -101,7 +101,9 @@ class Project(StorageBase):
         self.output_dir = Path(output_dir)  # default -> current dir
         self.verbose = verbose
         self.threads: int | None = kwargs.get("OMP_NUM_THREADS")
-        self.asm_threads: int = kwargs.get("OGS_ASM_THREADS", self.threads)
+        self.asm_threads: int | None = kwargs.get(
+            "OGS_ASM_THREADS", self.threads
+        )
         self.input_file: Path | None = None
         self.folder: Path = Path()
 

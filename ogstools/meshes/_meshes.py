@@ -402,7 +402,7 @@ class Meshes(MutableMapping, StorageBase):
         **kwargs: Any,
     ) -> list[Path]:
         """
-        Save all meshes. If num_partitions is specified (e.g. obj.num_partition = [2,3]) is also create paritioned meshes for each partition.
+        Save all meshes. If num_partitions is specified (e.g. obj.num_partition = [2,3]) is also create partitioned meshes for each partition.
 
         This function will perform identifySubdomains, if not yet been done.
 
