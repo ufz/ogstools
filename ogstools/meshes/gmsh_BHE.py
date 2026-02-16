@@ -1307,7 +1307,7 @@ def gen_bhe_mesh(
 
         # delete zero-volume elements
         # 1 for line elements --> BHE's are the reason
-        elem_tags, node_tags = mesh.getElementsByType(1)
+        elem_tags, _node_tags = mesh.getElementsByType(1)
         elem_qualities = mesh.getElementQualities(
             elementTags=elem_tags, qualityName="volume"
         )

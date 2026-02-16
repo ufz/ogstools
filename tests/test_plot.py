@@ -168,7 +168,7 @@ class TestPlotting:
         """Test plotting with provided fig but not ax via image comparison."""
         ot.plot.setup.combined_colorbar = False
         ms = examples.load_meshseries_THM_2D_PVD()
-        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
+        fig, _ax = plt.subplots(2, 1, figsize=(40, 20))
         contourf([ms[0], ms[1]], ot.variables.temperature, fig=fig)
         return fig
 

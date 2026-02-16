@@ -136,7 +136,7 @@ def split_by_vertical_lateral_edges(
     assert dim == 1, f"Expected a mesh of dim 1, but given mesh has {dim=}"
     subdomains = []
     centers = mesh.cell_centers().points
-    axis_1, axis_2 = axis_ids_2D(mesh)
+    axis_1, _axis_2 = axis_ids_2D(mesh)
     is_left = centers[:, axis_1] == mesh.bounds[axis_1 * 2]
     is_right = centers[:, axis_1] == mesh.bounds[axis_1 * 2 + 1]
     subdomains.append(mesh.extract_cells(is_left))

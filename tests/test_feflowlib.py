@@ -344,7 +344,7 @@ class TestConverter:
     def test_geometry(self):
         "Test if geometry can be converted correctly."
         doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
-        points, cells, celltypes = _feflowlib.points_and_cells(doc)
+        points, _cells, celltypes = _feflowlib.points_and_cells(doc)
         assert len(points) == 3228
         assert len(celltypes) == 6260
         assert celltypes[0] == pv.CellType.TRIANGLE
@@ -352,7 +352,7 @@ class TestConverter:
     def test_toymodel_mesh_conversion(self):
         "Test if geometry of a toymodel is converted correctly."
         # 1. Test if geometry is fine
-        points, cells, celltypes = _feflowlib.points_and_cells(self.doc)
+        points, _cells, celltypes = _feflowlib.points_and_cells(self.doc)
         assert len(points) == 6768
         assert len(celltypes) == 11462
         assert celltypes[0] == pv.CellType.WEDGE
