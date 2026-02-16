@@ -68,7 +68,7 @@ class SimulationController(abc.ABC):
         :param overwrite:   If True, overwrite existing output directory.
         """
         self.model_ref = model_ref
-        self.result = Result(sim_output=sim_output)
+        self.result = Result(sim_output)
         self.result._pre_save(overwrite=overwrite)
         self.result.next_target.mkdir(parents=True, exist_ok=True)
 
@@ -126,10 +126,12 @@ class SimulationController(abc.ABC):
         sim = Simulation(self.model_ref, result=self.result)
         if id:
             sim.id = id
+            return sim
         if target:
             sim._next_target = Path(target)
             sim.user_specified_target = True
-            sim._propagate_target()
+
+        sim._propagate_target()
         return sim
 
     @property

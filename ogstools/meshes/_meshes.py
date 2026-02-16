@@ -392,7 +392,7 @@ class Meshes(MutableMapping, StorageBase):
 
     def save(
         self,
-        path: Path | str | None = None,
+        target: Path | str | None = None,
         overwrite: bool | None = None,
         dry_run: bool = False,
         archive: bool = False,
@@ -404,7 +404,7 @@ class Meshes(MutableMapping, StorageBase):
 
         This function will perform identifySubdomains, if not yet been done.
 
-        :param path:        Optional path to the folder where meshes
+        :param target:      Optional path to the folder where meshes
                             should be saved. If None, a temporary folder will be used.
 
         :param overwrite:   If True, existing mesh files will be overwritten.
@@ -420,7 +420,7 @@ class Meshes(MutableMapping, StorageBase):
         :returns:           A list of Paths pointing to the saved mesh files (including files for partitions).
         """
 
-        user_defined = self._pre_save(path, overwrite, dry_run, id=id)
+        user_defined = self._pre_save(target, overwrite, dry_run, id=id)
         files = self._save_impl(dry_run, **kwargs)
         self._post_save(user_defined, archive, dry_run)
         return files
