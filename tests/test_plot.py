@@ -63,10 +63,7 @@ class TestPlotting:
             (*[1e6, 1e6 + 12, 6], ["0", "2", "4", "6", "8", "10", "12"], "1e+06"),
         ],
     )  # fmt: skip
-    def test_ticklabels(
-        self, lower: float, upper: float, n_ticks: int,
-        ref_labels: list, ref_offset: str | None,
-    ):  # fmt: skip
+    def test_ticklabels(self, lower: float, upper: float, n_ticks: int, ref_labels: list, ref_offset: str | None,):  # fmt: skip
         """Check for equality of ticklabels and expected labels."""
         levels = ot.plot.compute_levels(lower, upper, n_ticks=n_ticks)
         labels, offset = ot.plot.contourplots.get_ticklabels(levels)
@@ -478,7 +475,7 @@ class TestPlotting:
     # TODO: we could use pytest-pyvista to do the same checks for the pyvista
     # plots as pyvista-mpl is doing for the matplotlib plots.
 
-    @pytest.fixture()
+    @pytest.fixture
     def pv_plotter(self):
         plotter = pv.Plotter(off_screen=True)
         yield plotter

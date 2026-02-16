@@ -24,8 +24,7 @@ def validate_msh_file(path: str) -> list[str]:
 
 
 def test_mfy_meshes_from_yaml(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: [0.0, 0.0], char_length: 0.1 }
@@ -44,8 +43,7 @@ def test_mfy_meshes_from_yaml(tmp_path):
         Domain:
             dim: 2
             entities: [s0]
-    """
-    )
+    """)
 
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
@@ -63,8 +61,7 @@ def test_mfy_meshes_from_yaml(tmp_path):
 
 
 def test_mfy_with_parameters(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters:
         a: 2
         b: "a * 3"
@@ -73,8 +70,7 @@ def test_mfy_with_parameters(tmp_path):
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     msh_file = meshes_from_yaml(yaml_file, tmp_path)
@@ -82,16 +78,14 @@ def test_mfy_with_parameters(tmp_path):
 
 
 def test_mfy_with_list_coords(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: ["1+1", 2], char_length: 0.1 }
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     msh_file = meshes_from_yaml(yaml_file, tmp_path)
@@ -99,16 +93,14 @@ def test_mfy_with_list_coords(tmp_path):
 
 
 def test_mfy_invalid_type(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: [{foo: bar}, 0], char_length: 0.1 }
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
 
@@ -117,8 +109,7 @@ def test_mfy_invalid_type(tmp_path):
 
 
 def test_mfy_invalid_expression(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters:
         bad: "foo + bar"
     points:
@@ -126,8 +117,7 @@ def test_mfy_invalid_expression(tmp_path):
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     with pytest.raises(ValueError, match="Failed to evaluate parameter"):
@@ -135,16 +125,14 @@ def test_mfy_invalid_expression(tmp_path):
 
 
 def test_mfy_point_without_coords(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { char_length: 0.1 }
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     with pytest.raises(ValueError, match="Incomplete point definition"):
@@ -152,8 +140,7 @@ def test_mfy_point_without_coords(tmp_path):
 
 
 def test_mfy_surface_without_loops(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: [0.0, 0.0], char_length: 0.1 }
@@ -166,8 +153,7 @@ def test_mfy_surface_without_loops(tmp_path):
         Domain:
             dim: 2
             entities: [s0]
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     with pytest.raises(ValueError, match="has no 'loop' or 'loops'"):
@@ -175,8 +161,7 @@ def test_mfy_surface_without_loops(tmp_path):
 
 
 def test_mfy_unsupported_group_dim(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: [0,0], char_length: 0.1 }
@@ -188,8 +173,7 @@ def test_mfy_unsupported_group_dim(tmp_path):
         TestGroup:
             dim: 3
             entities: [l0]
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     with pytest.raises(
@@ -199,8 +183,7 @@ def test_mfy_unsupported_group_dim(tmp_path):
 
 
 def test_mfy_arc_line(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points:
         p0: { coords: [1,0], char_length: 0.1 }
@@ -210,8 +193,7 @@ def test_mfy_arc_line(tmp_path):
         a0: { start: p0, end: p1, center: c0 }
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     msh_file = meshes_from_yaml(yaml_file, tmp_path)
@@ -219,15 +201,13 @@ def test_mfy_arc_line(tmp_path):
 
 
 def test_mfy_empty_blocks(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters: {}
     points: {}
     lines: {}
     surfaces: {}
     groups: {}
-    """
-    )
+    """)
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
     msh_file = meshes_from_yaml(yaml_file, tmp_path)
@@ -236,8 +216,7 @@ def test_mfy_empty_blocks(tmp_path):
 
 @pytest.mark.tools()  # NodeReordering
 def test_mfy_radioactive(tmp_path):
-    yaml_content = textwrap.dedent(
-        """\
+    yaml_content = textwrap.dedent("""\
     parameters:
         radius_dot: 2.0
         radius_inner: 2.5
@@ -331,8 +310,7 @@ def test_mfy_radioactive(tmp_path):
         Foreground:
             dim: 2
             entities: [s1, s2, s3, s4]
-        """
-    )
+        """)
 
     yaml_file = tmp_path / "geom.yml"
     yaml_file.write_text(yaml_content)
@@ -369,7 +347,7 @@ def test_mfy_radioactive(tmp_path):
     assert 4000 < domain.n_cells < 8000, "Wrong number of cells"
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_mfy_hlw_repository(tmp_path):
     # Load YAML geometry definition directly from file
 
@@ -421,7 +399,7 @@ def test_mfy_hlw_repository(tmp_path):
     assert 5000 < domain.n_cells < 7000, "Wrong number of cells"
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_mfy_hlw_repository_meshes_container():
     meshes = ot.Meshes.from_yaml(examples.example_hlw)
 

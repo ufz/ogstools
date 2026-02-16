@@ -117,7 +117,7 @@ def test_reshape_obs_points_mesh():
     )
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @settings(max_examples=30, deadline=1600)
 @given(
     st.one_of(

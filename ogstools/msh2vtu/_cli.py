@@ -23,15 +23,13 @@ def argparser() -> argparse.ArgumentParser:
             .strip()
         )
 
-    parser = argparse.ArgumentParser(
-        description="""
+    parser = argparse.ArgumentParser(description="""
             Convert a gmsh mesh (.msh) to unstructured grid files (.vtu).
 
             Prepares a Gmsh-mesh for use in OGS by extracting domain-, boundary-
             and physical group-submeshes, and saves them in vtu-format. Note,
             that all mesh entities should belong to physical groups.
-        """
-    )
+        """)
     add_arg = parser.add_argument
     add_arg("filename", help=get_help("filename"))
     add_arg(

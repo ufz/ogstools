@@ -1513,7 +1513,7 @@ class TestiOGS:
     def thread_type(self, request: pytest.FixtureRequest) -> int:
         return request.param
 
-    @pytest.fixture()
+    @pytest.fixture
     def cuboid_model2(
         self, temp_dir: Path, num_threads: int, thread_type: str
     ) -> ot.Model:
@@ -1540,7 +1540,7 @@ class TestiOGS:
         model._next_target = temp_dir  # use only in testing!
         return model
 
-    @pytest.fixture()
+    @pytest.fixture
     def bhe_model(
         self, temp_dir: Path, num_threads: int, thread_type: str
     ) -> ot.Project:

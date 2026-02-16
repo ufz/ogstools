@@ -70,7 +70,7 @@ With `pip install ogstools` an OGS wheel (it installs ogs binaries and tools) is
 
 If you want to use a self-compiled or custom-built version of OGS instead of the one provided by pip, follow these steps:
 
-1. Install OGSTools without \[ogs\]
+1. Install OGSTools without [ogs]
 
 ```bash
 pip install ogstools

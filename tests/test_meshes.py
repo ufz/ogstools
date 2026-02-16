@@ -70,7 +70,7 @@ def test_datatypes(load_meshseries):
         assert not ot.mesh.check_datatypes(mesh, strict=False)
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_meshes_from_mesh_3D_simple(tmp_path):
     "Test extracted boundaries from 3D mesh are correctly labeled."
     mesh_path = tmp_path / "mesh.msh"
@@ -89,7 +89,7 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
     assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @pytest.mark.xfail(
     shutil.which("tetgen") is None, reason="Tetgen not installed"
 )
@@ -125,7 +125,7 @@ def test_meshes_from_mesh_3D(
     assert meshes["top"].bounds[5] == domain.bounds[5]
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_meshes_from_mesh_2D_run(tmp_path):
     "Test using extracted boundaries for a simulation."
     domain = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=(2, 4)))[
@@ -160,7 +160,7 @@ def meshing(draw: st.DrawFn):
     return mesh_func, n_cells, n_layers, rand_id
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @example(meshing_data=(ot.gmsh_tools.rect, (2, 2), 2, 0), failcase=True).xfail(
     # CLI version fails and doesn't write the new file, thus cannot be read
     raises=FileNotFoundError
@@ -255,7 +255,7 @@ def test_meshes_saving_reading():
             )
 
 
-@pytest.mark.tools()  # partmesh
+@pytest.mark.tools  # partmesh
 @pytest.mark.parametrize("partition", [None, 1, 2, 4])
 @pytest.mark.parametrize(
     "dry_run", [False, True], ids=["normal run", "dry run"]
@@ -395,7 +395,7 @@ def test_meshes_from_prj():
             )
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_add_from_gml(tmp_path):
     """Check, that the meshes generated from a Project + gml are correct."""
     prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
@@ -406,7 +406,7 @@ def test_add_from_gml(tmp_path):
     assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_remove_material():
     """Check cells are removed drom domain and subdomains.
 

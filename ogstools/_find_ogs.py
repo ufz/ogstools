@@ -127,7 +127,7 @@ def status(verbose: bool = False) -> bool:
     }
 
     msg = error_mapping.get(
-        (ogs_wheel, ogs_in_specified_path, ogs_in_global_path), None
+        (ogs_wheel, ogs_in_specified_path, ogs_in_global_path)
     )
 
     if msg and verbose:

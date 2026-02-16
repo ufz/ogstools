@@ -21,7 +21,7 @@ def _load_geometry_from_yaml(path: Path) -> dict[str, Any]:
 
 
 def _make_eval_context(
-    params: dict[str, Any]
+    params: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Prepare context for simple_eval with math constants and functions."""
     names = {

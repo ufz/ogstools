@@ -1350,12 +1350,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # Return both the PVD file and all VTU files
         return [fn] + fns
 
-    @deprecated(
-        """
+    @deprecated("""
     Please use `del meshseries.field_data[key]` or, if you want to keep the
     data in the last timestep: `del meshseries[:-1].field_data[key]`.
-    """
-    )
+    """)
     def remove_array(
         self, name: str, data_type: str = "field", skip_last: bool = False
     ) -> None:

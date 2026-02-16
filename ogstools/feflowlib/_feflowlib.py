@@ -397,7 +397,7 @@ def update_geometry(
     :returns: mesh
     """
     MaterialIDs = _material_ids_from_selections(doc)
-    (point_data, cell_data) = _point_and_cell_data(MaterialIDs, doc)
+    point_data, cell_data = _point_and_cell_data(MaterialIDs, doc)
     for pt_data in point_data:
         arr = point_data[pt_data].tolist()
         mesh.point_data.update({pt_data: arr})

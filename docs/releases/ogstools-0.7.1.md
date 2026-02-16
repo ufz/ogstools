@@ -40,7 +40,7 @@
 
 ## Bugfixes
 
-- `plot`: Fixed contour plots with very small value ranges (\< 1e-12) to display correctly
+- `plot`: Fixed contour plots with very small value ranges (< 1e-12) to display correctly
 - `Project`
   - `run_model` : Fix execution of wrapper commands (e.g. source MKL)
   - Add the missing tag outputs to allow multiple output definitions

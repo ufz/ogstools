@@ -542,12 +542,10 @@ class Meshes(MutableMapping, StorageBase):
         items = list(self._meshes.items())
         self._meshes = {f"{prefix}{name}{suffix}": mesh for name, mesh in items}
 
-    @deprecated(
-        """
+    @deprecated("""
     Please rename the groups in the original meshes - containing physical_group OR (better)
     Use the shorter names (without "physical_group") -> renaming in prj-files and scripts necessary.
-    """
-    )
+    """)
     def rename_subdomains_legacy(self) -> None:
         """
         Add to the name physical_group to restore legacy convention

@@ -10,7 +10,7 @@ OGSTools is for OpenGeoSys users and developers aiming to effectively automate t
 
 ## Functionality and unique features
 
-OGSTools consists of features designed specifically for [OpenGeoSys](https://www.opengeosys.org) but can be applied broadly across multiple [OpenGeoSys](https://www.opengeosys.org)-specific projects. The functionality is grouped  thematically into sub-libraries that are developed to collaborate with each other.
+OGSTools consists of features designed specifically for [OpenGeoSys](https://www.opengeosys.org) but can be applied broadly across multiple [OpenGeoSys](https://www.opengeosys.org)-specific projects. The functionality is grouped thematically into sub-libraries that are developed to collaborate with each other.
 
 ## Versatility and Flexibility
 

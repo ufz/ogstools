@@ -37,7 +37,7 @@ def test_box_boundaries(make_layerset: Callable[[int], LayerSet]):
     assert len(bounds) == 6
 
 
-@pytest.mark.tools()  # Layers2Grid
+@pytest.mark.tools  # Layers2Grid
 def test_to_region_voxel(make_layerset: Callable[[int], LayerSet]):
     layerset = make_layerset(1)
     mesh_fine = layerset.to_region_voxel(resolution=[200, 200, 50]).mesh
@@ -46,7 +46,7 @@ def test_to_region_voxel(make_layerset: Callable[[int], LayerSet]):
     assert mesh_fine.number_of_points > mesh_coarse.number_of_points
 
 
-@pytest.mark.tools()  # createLayeredMeshFromRasters
+@pytest.mark.tools  # createLayeredMeshFromRasters
 def test_to_region_prism(make_layerset: Callable[[int], LayerSet]):
     layerset = make_layerset(1)
     mesh_fine = layerset.to_region_prism(resolution=200).mesh
@@ -62,7 +62,7 @@ def test_to_region_prism(make_layerset: Callable[[int], LayerSet]):
     ), "5 surfaces require a multiple of 5 points"
 
 
-@pytest.mark.tools()  # createTetgenSmeshFromRasters
+@pytest.mark.tools  # createTetgenSmeshFromRasters
 @pytest.mark.xfail(
     shutil.which("tetgen") is None, reason="Tetgen not installed"
 )
@@ -74,7 +74,7 @@ def test_to_region_tetrahedron(make_layerset: Callable[[int], LayerSet]):
     assert mesh.number_of_cells < 30000
 
 
-@pytest.fixture()
+@pytest.fixture
 def layerset_example_surfs() -> create.LayerSet:
     names = ["00_KB", "01_q", "02_krl", "03_S3"]
     mat_ids = [0, 5, 2, 3]
@@ -87,7 +87,7 @@ def layerset_example_surfs() -> create.LayerSet:
     return create.LayerSet(layers)
 
 
-@pytest.mark.tools()  # multiple tools
+@pytest.mark.tools  # multiple tools
 @pytest.mark.xfail(
     shutil.which("tetgen") is None, reason="Tetgen not installed"
 )
@@ -111,7 +111,7 @@ def test_allcompare(discretization, layerset_example_surfs: create.LayerSet):
     assert validate(mesh, strict=True)
 
 
-@pytest.mark.tools()  # createLayeredMeshFromRasters
+@pytest.mark.tools  # createLayeredMeshFromRasters
 def test_to_region_prism_docu():
     bounds = (-200, 210, -200, 210)
     args = {"bound2D": bounds, "amplitude": 100, "spread": 100, "n": 40}

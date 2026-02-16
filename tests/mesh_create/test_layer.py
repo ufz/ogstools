@@ -14,7 +14,7 @@ from ogstools.mesh import create
 meshpath = EXAMPLES_DIR / "meshlib"
 
 
-@pytest.mark.tools()  # Mesh2Raster
+@pytest.mark.tools  # Mesh2Raster
 class TestLayer:
     def test_intermediate_1(self):
         """Create a layer from vtu input"""
@@ -60,7 +60,7 @@ class TestLayer:
 
 
 class TestRaster:
-    @pytest.mark.tools()  # generateGeometry
+    @pytest.mark.tools  # generateGeometry
     def testgmlwrite(self):
         """
         Checks if GML is created and its content (some parts)

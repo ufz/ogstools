@@ -9,7 +9,7 @@ import ogstools as ot
 from ogstools import examples
 
 
-@pytest.fixture()
+@pytest.fixture
 def failing_model() -> ot.Model:
 
     msh_file = ot.gmsh_tools.cuboid(lengths=1.0, n_edge_cells=1, n_layers=1)
@@ -18,7 +18,7 @@ def failing_model() -> ot.Model:
     return ot.Model(prj, meshes, id="failing_model")
 
 
-@pytest.fixture()
+@pytest.fixture
 def good_model() -> ot.Model:
     return examples.load_model_liquid_flow_simple().copy(id="good_model")
 
@@ -43,7 +43,7 @@ def test_simulation_simple2(tmp_path, good_model):
     assert sim.meshseries
 
 
-@pytest.mark.system()
+@pytest.mark.system
 @pytest.mark.parametrize("do_kill", [False, True], ids=["no-kill", "kill"])
 @pytest.mark.parametrize(
     "interactive", [False], ids=["native"]

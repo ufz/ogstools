@@ -45,7 +45,7 @@ The tool, to generate generic BHE meshes for multiple cases with simple inputs w
 
 - in propertylib, Scalars get default color and linestyle properties that can be used in for plotting
 
-## \[meshlib\] timevalue of min or max over timeseries
+## [meshlib] timevalue of min or max over timeseries
 
 - This feature enables the visualization of when a minimum or maximum of a property happens at any point in a mesh.
 - It uses the existing MeshSeries.aggregate function which can now be called with two additional "func" arguments: "min_time" and "max_time".

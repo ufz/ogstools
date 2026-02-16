@@ -255,7 +255,7 @@ class TestPhysGroups:
         assert np.all(np.unique(mesh["MaterialIDs"]) == mat_ids)
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_cuboid(tmp_path: Path):
     """Test different setups of a cuboid mesh."""
     msh_file = Path(tmp_path, "cuboid.msh")
@@ -286,7 +286,7 @@ def run_cli(cmd: str) -> int:
         return cli()
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @pytest.mark.parametrize(
     ("script", "num_meshes", "version"),
     [
