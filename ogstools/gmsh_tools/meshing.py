@@ -236,7 +236,7 @@ def cuboid(
             dy=0,
             dz=dz / n_layers,
             numElements=[nz],
-            recombine=recombine,  # fmt: skip
+            recombine=recombine,
         )
         top_tag = abs(newEntities[0][1])
         vol_tag = abs(newEntities[1][1])

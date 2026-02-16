@@ -114,10 +114,7 @@ class Meshes(MutableMapping, StorageBase):
         other.domain.active_scalars_name = None
         if self.domain.cell_data != other.domain.cell_data:
             return False
-        if self.domain.point_data != other.domain.point_data:
-            return False
-
-        return True
+        return self.domain.point_data == other.domain.point_data
 
     def __deepcopy__(self, memo: dict) -> Meshes:
         if id(self) in memo:

@@ -75,7 +75,7 @@ class TestRaster:
             match = re.search(pattern=pattern, string=lines[4])
             if match:
                 y_value = float(match.group(1))
-                assert x.ymin == pytest.approx(y_value), 0.0001
+                assert x.ymin == pytest.approx(y_value)
             else:
                 pytest.fail("Pattern not found in file.")
 

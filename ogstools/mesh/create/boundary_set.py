@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-import os
 import subprocess
 import tempfile
 from abc import ABC, abstractmethod
@@ -337,9 +336,7 @@ class LayerSet(BoundarySet):
             raise ValueError(m) from e
 
         outfile = smesh_file.with_suffix(".1.vtk")
-        if not outfile.exists():
-            path = outfile.parent
-            os.listdir(path)
+        assert outfile.exists()
 
         materials_in_domain: list[int] = list(
             chain.from_iterable(

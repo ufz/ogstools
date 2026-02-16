@@ -168,8 +168,14 @@ class Variable:
             if data_key == f"{variable.output_name}_difference":
                 return variable.difference
             if data_key.rsplit("_")[0] in [
-                "min", "max", "mean", "median", "sum", "std", "var",
-            ]:  # fmt:skip
+                "min",
+                "max",
+                "mean",
+                "median",
+                "sum",
+                "std",
+                "var",
+            ]:
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
