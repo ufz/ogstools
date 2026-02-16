@@ -61,6 +61,8 @@ class Project(StorageBase):
     In this class everything for an OGS6 project can be specified.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         input_file: str | Path | None = None,

@@ -37,6 +37,8 @@ class Model(StorageBase):
     initialized from existing folder structures following OGSTools conventions.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         project: Project | Path | str,

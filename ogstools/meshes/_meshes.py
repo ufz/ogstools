@@ -32,6 +32,8 @@ class Meshes(MutableMapping, StorageBase):
     OGS input mesh. Refers to prj - file section <meshes>
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         meshes: dict[str, pv.UnstructuredGrid],

@@ -109,6 +109,8 @@ class StorageBase(abc.ABC):
     - save(): Public save method (usually delegates to base implementation)
     """
 
+    __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
+
     Userpath = Path("storage")  # relative paths or None
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter

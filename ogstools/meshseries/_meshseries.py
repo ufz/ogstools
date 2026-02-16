@@ -34,6 +34,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         filepath: str | Path | None = None,

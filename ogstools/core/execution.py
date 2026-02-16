@@ -23,6 +23,8 @@ class Execution(StorageBase):
     is executed, including parallelization, containerization, and logging options.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         interactive: bool = False,
