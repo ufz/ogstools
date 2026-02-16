@@ -434,7 +434,7 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
         if "P_DECA" in cell_data
     ]
     if not species:
-        ValueError(
+        raise ValueError(
             """No species are found. This could be due to the fact that no porosity
             values for species are assigned."""
         )

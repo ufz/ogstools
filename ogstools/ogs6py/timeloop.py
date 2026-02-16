@@ -145,15 +145,15 @@ class TimeLoop(build_tree.BuildTree):
         if "process_count" in args:
             try:
                 process = procs_sub[int(args["process_count"])]
-            except KeyError:
+            except KeyError as err:
                 msg = "Process count out of bounds."
-                KeyError(msg)
+                raise KeyError(msg) from err
         else:
             try:
                 process = procs_sub[-1]
-            except KeyError:
+            except KeyError as err:
                 msg = "Process reference not found."
-                KeyError(msg)
+                raise KeyError(msg) from err
         if "type" not in args:
             msg = "No type given."
             raise KeyError(msg)
@@ -392,15 +392,15 @@ class TimeLoop(build_tree.BuildTree):
         if "process_count" in args:
             try:
                 process = procs_sub[int(args["process_count"])]
-            except KeyError:
+            except KeyError as err:
                 msg = "Process count out of bounds."
-                KeyError(msg)
+                raise KeyError(msg) from err
         else:
             try:
                 process = procs_sub[-1]
-            except KeyError:
+            except KeyError as err:
                 msg = "Process reference not found."
-                KeyError(msg)
+                raise KeyError(msg) from err
         if process is None:
             msg = "Could not find any associated process"
             raise AttributeError(msg)
