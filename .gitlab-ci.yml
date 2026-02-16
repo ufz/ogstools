@@ -423,7 +423,7 @@ code_quality_ruff (R):
   needs: []
   script:
     # Use same ruff as in .pre-commit-config.yaml
-    - uvx ruff==0.4.5 check --output-format=gitlab --exit-zero > ruff-code-quality-report.json
+    - uvx ruff==0.15.1 check --output-format=gitlab --exit-zero > ruff-code-quality-report.json
   artifacts:
     reports:
       codequality: ruff-code-quality-report.json
@@ -433,7 +433,7 @@ code_quality_mypy (R):
   needs: []
   script:
     # Use same mypy as in .pre-commit-config.yaml
-    - uvx mypy==1.4.1 ogstools > mypy-output.txt || true
+    - uvx mypy==1.19.1 ogstools > mypy-output.txt || true
     - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
     - test -f mypy-code-quality-report.json || echo "[]" > mypy-code-quality-report.json
     - cat mypy-code-quality-report.json || true
