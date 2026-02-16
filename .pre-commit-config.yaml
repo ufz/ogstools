@@ -1,7 +1,7 @@
 exclude: EXPERIMENTAL/.*|.*\.msh|.*template.md
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -18,12 +18,12 @@ repos:
       - id: trailing-whitespace
         exclude: ^ogstools/examples/
   - repo: https://github.com/psf/black
-    rev: 24.4.0
+    rev: 26.1.0
     hooks:
       - id: black
         args: [--config=./pyproject.toml]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
         name: pyupgrade
@@ -37,28 +37,28 @@ repos:
         args: [--py310-plus]
   # black-formats code blocks in documentation files
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.14.0
+    rev: 1.20.0
     hooks:
       - id: "blacken-docs"
         additional_dependencies:
           - black==23.3.0 # keep in sync with black hook
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.4.5" # keep in sync with code_quality_ruff-job
+    rev: "v0.15.1" # keep in sync with code_quality_ruff-job
     hooks:
       - id: ruff
         args: ["--show-fixes", "--fix"]
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.1
+    rev: 0.9.0
     hooks:
       - id: nbstripout
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
+    rev: 1.9.1
     hooks:
       # Use same versions as above
       - id: nbqa-ruff
         additional_dependencies: [ruff==v0.0.277]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.4.1" # keep in sync with code_quality_mypy-job
+    rev: "v1.19.1" # keep in sync with code_quality_mypy-job
     hooks:
       - id: mypy
         files: ogstools
@@ -66,7 +66,7 @@ repos:
         additional_dependencies:
           - types-PyYAML
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.5"
+    rev: "v2.4.1"
     hooks:
       - id: codespell
         additional_dependencies:
@@ -84,6 +84,6 @@ repos:
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.16
+    rev: 1.0.0
     hooks:
       - id: mdformat
