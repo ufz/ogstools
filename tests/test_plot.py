@@ -96,7 +96,8 @@ class TestPlotting:
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        pytest.raises(KeyError, ot.plot.contourf, mesh, "missing_data")
+        with pytest.raises(KeyError):
+            ot.plot.contourf(mesh, "missing_data")
 
     var_params: ClassVar[list[tuple[ot.variables.Variable, dict]]] = [
         (ot.variables.material_id, {}),

@@ -108,7 +108,8 @@ class TestPhysicalVariable:
         """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
         #  not working for arrays (only works for meshes)
-        pytest.raises(TypeError, ov.dilatancy_alkan.transform, sig)
+        with pytest.raises(TypeError):
+            ov.dilatancy_alkan.transform(sig)
         mesh = examples.load_mesh_mechanics_2D()
         mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
         assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
@@ -177,7 +178,8 @@ class TestPhysicalVariable:
         assert ov.Variable.find("scalar", mesh) == ov.Scalar("scalar")
         assert ov.Variable.find("vector", mesh) == ov.Vector("vector")
         assert ov.Variable.find("matrix", mesh) == ov.Matrix("matrix")
-        pytest.raises(KeyError, ov.Variable.find, "test", mesh)
+        with pytest.raises(KeyError):
+            ov.Variable.find("test", mesh)
         # testcase with str matching output_name of the predefined Variables
         mesh = examples.load_meshseries_HT_2D_XDMF()[0]
         darcy = ov.Variable.find("darcy_velocity", mesh)
