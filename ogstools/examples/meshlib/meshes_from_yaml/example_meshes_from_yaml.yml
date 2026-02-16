@@ -3,7 +3,6 @@ parameters:
   radius_edz: 0.5
   some_other_param: 1.5
 
-# Punkte des Modells
 points:
   p00: { coords: [0.0, 0.0], char_length: 0.3 }
   p01: { coords: ["radius_tunnel * radius_edz", 0.0], char_length: 0.3 }
@@ -19,7 +18,7 @@ points:
   p11: { coords: [2.5, 4.5], char_length: 0.1 }
   p12: { coords: [2.0, 4.5], char_length: 0.1 }
 
-# Linien und Bögen
+# Lines and curves
 lines:
   l00: { start: p00, end: p01 }
   l01: { start: p01, end: p02 }
@@ -29,17 +28,16 @@ lines:
   l05: { start: p07, end: p08 }
   l06: { start: p08, end: p00 }
 
-  # Kreisbögen
+  # Circular arcs
   a00: { start: p07, end: p05, center: p06 }
   a01: { start: p08, end: p04, center: p06 }
 
-  # Loch
+  # Hole
   h00: { start: p09, end: p10 }
   h01: { start: p10, end: p11 }
   h02: { start: p11, end: p12 }
   h03: { start: p12, end: p09 }
 
-# Flächen
 surfaces:
   s0:
     loops:
@@ -49,7 +47,6 @@ surfaces:
     loops:
       - [a01, l04, "-a00", l05]
 
-# Gruppen
 groups:
   Domain:
     dim: 2

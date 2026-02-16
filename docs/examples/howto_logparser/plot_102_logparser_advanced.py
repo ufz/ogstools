@@ -72,7 +72,7 @@ df_ts[["output_time", "assembly_time"]].boxplot()
 #
 # Save and load records
 # ~~~~~~~~~~~~~~~~~~~~~
-# We recommend saving the records by any of these methodes http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
+# We recommend saving the records by any of these methods http://pandas.pydata.org/pandas-docs/stable/user_guide/io.html.
 # For example with HDF:
 # ```python
 # df_records.to_hdf("anyfilename.csv")
