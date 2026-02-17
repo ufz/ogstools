@@ -85,7 +85,7 @@ class Simulation(StorageBase):
 
         super().__init__("Simulation")
         self.model = model
-        self._result = result
+        self.result = result
         result._bind_to_path(result.next_target)
 
         self._log: Log | None = None
@@ -96,7 +96,7 @@ class Simulation(StorageBase):
         Create a full deep copy of this Simulation, including model and result.
         """
         new_model = deepcopy(self.model, memo)
-        new_result = deepcopy(self._result, memo)
+        new_result = deepcopy(self.result, memo)
         new_sim = Simulation(new_model, new_result)
         new_sim._meshseries = (
             deepcopy(self._meshseries, memo) if self._meshseries else None
@@ -143,7 +143,7 @@ class Simulation(StorageBase):
             model_construct = self._component_repr(
                 self.model, "Model", "from_folder"
             )
-            result_construct = self._component_repr(self._result, "Result")
+            result_construct = self._component_repr(self.result, "Result")
 
             construct = (
                 f"{cls}(model={model_construct}, "
@@ -164,7 +164,7 @@ class Simulation(StorageBase):
         lines = [
             base_str,
             f"  {self._component_status_str(self.model, 'Model')}",
-            f"  {self._component_status_str(self._result, 'Result')}",
+            f"  {self._component_status_str(self.result, 'Result')}",
             f"  Log file: {self._format_path(self.log_file)}",
             f"  MeshSeries: {self._format_path(self.meshseries_file)}",
             f"  {self.status_str}",
@@ -174,7 +174,7 @@ class Simulation(StorageBase):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Simulation):
             return False
-        return self.model == other.model and self._result == other._result
+        return self.model == other.model and self.result == other.result
 
     @property
     def status(self) -> SimulationStatus:
@@ -239,15 +239,15 @@ class Simulation(StorageBase):
             f"{self.model.execution.ogs_bin_path}"
             f" {self.model.project.prjfile}"
             f" -m {self.model.meshes.active_target}"
-            f" -o {self._result.next_target}"
+            f" -o {self.result.next_target}"
         )
 
     @property
     def log_file(self) -> Path:
         """Get the absolute path to the log file."""
         if self.is_saved and self.active_target is not None:
-            return self.active_target / "result" / self._result._log_filename
-        return self._result.log_file
+            return self.active_target / "result" / self.result._log_filename
+        return self.result.log_file
 
     @property
     def log(self) -> Log:
@@ -269,7 +269,7 @@ class Simulation(StorageBase):
 
         :returns: Path to the mesh series file (pvd, xdmf, etc.).
         """
-        return self._result.next_target / self.model.project.meshseries_file()
+        return self.result.next_target / self.model.project.meshseries_file()
 
     @property
     def meshseries(self) -> MeshSeries:
@@ -294,9 +294,9 @@ class Simulation(StorageBase):
             self.model._next_target = self.next_target / "model"
             self.model._propagate_target()
 
-        if not self._result.user_specified_target:
-            self._result._next_target = self.next_target / "result"
-            self._result._propagate_target()
+        if not self.result.user_specified_target:
+            self.result._next_target = self.next_target / "result"
+            self.result._propagate_target()
 
     def _save_impl(
         self, dry_run: bool = False, overwrite: bool | None = None
@@ -307,7 +307,7 @@ class Simulation(StorageBase):
         )
 
         files += self._save_or_link_child(
-            self._result, self.next_target / "result", dry_run, overwrite
+            self.result, self.next_target / "result", dry_run, overwrite
         )
 
         self.materialize_symlink(self.next_target / "result", recursive=True)
