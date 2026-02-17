@@ -1062,15 +1062,16 @@ class Project(StorageBase):
         print("Project file written to output.")
         return
 
+    @staticmethod
     def _failed_run_print_log_tail(
-        self, write_logs: bool, tail_len: int = 10
+        write_logs: bool, logfile: Path | None = None, tail_len: int = 10
     ) -> str:
         msg = "OGS execution was not successful."
         if write_logs is False:
             msg += " Please set write_logs to True to obtain more information."
-        else:
+        elif logfile is not None:
             print(f"Last {tail_len} line of the log:")
-            with self.logfile.open() as lf:
+            with logfile.open() as lf:
                 last_lines = "".join(lf.readlines()[-tail_len:])
                 msg += last_lines
 

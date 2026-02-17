@@ -16,6 +16,7 @@ from ogstools.core.simulation_controller import SimulationStatus
 from ogstools.core.storage import StorageBase
 from ogstools.logparser.log import Log
 from ogstools.meshseries._meshseries import MeshSeries
+from ogstools.ogs6py.project import Project
 
 
 class Simulation(StorageBase):
@@ -225,8 +226,8 @@ class Simulation(StorageBase):
             if self.meshseries_file.exists():
                 return "Status: completed successfully (results available)"
             return "Status: completed successfully (results pending)"
-        last_lines = self.model.project._failed_run_print_log_tail(
-            self.model.execution.write_logs
+        last_lines = Project._failed_run_print_log_tail(
+            self.model.execution.write_logs, self.log_file
         )
         return f"Status: terminated with error\n{last_lines}"
 
