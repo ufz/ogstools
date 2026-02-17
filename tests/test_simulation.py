@@ -1,5 +1,7 @@
 """Unit tests for meshlib."""
 
+import subprocess
+
 import matplotlib.pyplot as plt
 import pytest
 
@@ -106,6 +108,34 @@ def test_parallel_runs():
     assert sims[0].status == sim_c1.Status.done
     assert sims[1].status == sim_c2.Status.done
     assert sims[0].result == sims[1].result
+
+
+@pytest.mark.system()
+def test_simulation_cmd_reproduces_result(tmp_path, good_model):
+    """Run a simulation, save as archive, delete original, re-run via cmd."""
+    import shutil
+
+    sim = good_model.run()
+    sim.save(tmp_path / "sim_original", archive=True)
+
+    # Delete where the first simulation was computed so cmd can reuse the path
+    original_result_path = sim._result.next_target
+    shutil.rmtree(original_result_path)
+    original_result_path.mkdir()
+
+    ret = subprocess.run(
+        sim.cmd, shell=True, capture_output=True, text=True, check=False
+    )
+    assert ret.returncode == 0, ret.stderr
+
+    assert ret.stdout != sim.log_file.read_text()
+
+    ms_archived = sim.result
+    ms_rerun = ot.MeshSeries(
+        original_result_path / sim.model.project.meshseries_file()
+    )
+    ms_rerun.save(tmp_path / "rerun_meshseries/ms.pvd")
+    assert ms_archived == ms_rerun
 
 
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})

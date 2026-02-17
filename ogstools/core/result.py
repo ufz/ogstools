@@ -36,9 +36,15 @@ class Result(StorageBase):
         else:
             self.sim_output = self.next_target
 
-        self.log_file = self.sim_output / "log.txt"
+        self._log_filename = "log.txt"
 
         self.next_target.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def log_file(self) -> Path:
+        """Get the path to the log file, following the current target location."""
+        assert self.active_target
+        return self.active_target / self._log_filename
 
     def _save_impl(self, dry_run: bool = False) -> list[Path]:
 
@@ -54,7 +60,6 @@ class Result(StorageBase):
 
     def _propagate_target(self) -> None:
         self.sim_output = self.next_target
-        self.log_file = self.next_target / self.log_file.name
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):

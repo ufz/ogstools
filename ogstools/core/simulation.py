@@ -74,15 +74,12 @@ class Simulation(StorageBase):
         self,
         model: Model,
         result: Result,
-        log_file: Path | str | None = None,
     ) -> None:
         """
         Initialize a Simulation object.
 
         :param model:       The :class:`ogstools.Model` used for this simulation.
         :param result:      The Result object containing simulation output.
-        :param log_file:    Optional path to the log file. If None, derives
-                            the path from the result directory and project settings.
         """
 
         super().__init__("Simulation")
@@ -90,10 +87,6 @@ class Simulation(StorageBase):
         self._result = result
         result._bind_to_path(result.next_target)
 
-        if log_file is None:
-            self.log_file = result.log_file
-        else:
-            self.log_file = Path(log_file)
         self._log: Log | None = None
         self._meshseries: MeshSeries | None = None
 
@@ -103,7 +96,7 @@ class Simulation(StorageBase):
         """
         new_model = deepcopy(self.model, memo)
         new_result = deepcopy(self._result, memo)
-        new_sim = Simulation(new_model, new_result, log_file=self.log_file)
+        new_sim = Simulation(new_model, new_result)
         new_sim._meshseries = (
             deepcopy(self._meshseries, memo) if self._meshseries else None
         )
@@ -153,8 +146,9 @@ class Simulation(StorageBase):
 
             construct = (
                 f"{cls}(model={model_construct}, "
-                f"result={result_construct}, "
-                f"log_file={str(self.log_file)!r})"
+                f"result={result_construct})\n"
+                f"log_file={str(self.log_file)!r}\n"
+                f"meshseries_file={str(self.meshseries_file)!r}"
             )
 
         save_hint = (
@@ -245,6 +239,13 @@ class Simulation(StorageBase):
             f" -m {self.model.meshes.active_target}"
             f" -o {self._result.next_target}"
         )
+
+    @property
+    def log_file(self) -> Path:
+        """Get the absolute path to the log file."""
+        if self.is_saved and self.active_target is not None:
+            return self.active_target / "result" / self._result._log_filename
+        return self._result.log_file
 
     @property
     def log(self) -> Log:
