@@ -45,14 +45,13 @@ class OGSNativeController(SimulationController):
             model_ref=model_ref, sim_output=sim_output, overwrite=overwrite
         )
         assert self.result.log_file
-        args_list = [
+        self._args_list = [
             "-m",
             str(model_ref.meshes.active_target),
             "-o",
             str(self.result.next_target),
         ]
-        self._args_list = args_list
-        args_str = " ".join(args_list)
+        args_str = " ".join(self._args_list)
 
         self.process = model_ref.project.run_model(
             args=args_str,
@@ -65,12 +64,6 @@ class OGSNativeController(SimulationController):
 
         self.runtime_start = time.time()
         self.runtime_end: float | None = None
-
-    @property
-    def cmd(self) -> str:
-        """Get the full command used to run the simulation."""
-        args_str = " ".join(f"{arg!s}" for arg in self._args_list)
-        return str(self.model_ref.execution.ogs_bin_path) + " " + args_str
 
     def terminate(self) -> bool:
         """
