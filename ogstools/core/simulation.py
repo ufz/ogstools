@@ -165,6 +165,7 @@ class Simulation(StorageBase):
             base_str,
             f"  {self._component_status_str(self.model, 'Model')}",
             f"  {self._component_status_str(self._result, 'Result')}",
+            f"  Log file: {self._format_path(self.log_file)}",
             f"  MeshSeries: {self._format_path(self.meshseries_file)}",
             f"  {self.status_str}",
         ]
