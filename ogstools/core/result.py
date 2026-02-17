@@ -31,20 +31,21 @@ class Result(StorageBase):
         super().__init__("Result")
 
         if sim_output:
-            self.sim_output = Path(sim_output)
             self._bind_to_path(sim_output)
-        else:
-            self.sim_output = self.next_target
 
         self._log_filename = "log.txt"
 
         self.next_target.mkdir(parents=True, exist_ok=True)
 
     @property
+    def sim_output(self) -> Path:
+        """Get the path to the simulation output directory."""
+        return self.active_target or self.next_target
+
+    @property
     def log_file(self) -> Path:
         """Get the path to the log file, following the current target location."""
-        base = self.active_target or self.next_target
-        return base / self._log_filename
+        return self.sim_output / self._log_filename
 
     def _save_impl(self, dry_run: bool = False) -> list[Path]:
 
@@ -59,7 +60,7 @@ class Result(StorageBase):
         return [self.next_target]
 
     def _propagate_target(self) -> None:
-        self.sim_output = self.next_target
+        pass
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
