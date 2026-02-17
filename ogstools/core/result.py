@@ -43,8 +43,8 @@ class Result(StorageBase):
     @property
     def log_file(self) -> Path:
         """Get the path to the log file, following the current target location."""
-        assert self.active_target
-        return self.active_target / self._log_filename
+        base = self.active_target or self.next_target
+        return base / self._log_filename
 
     def _save_impl(self, dry_run: bool = False) -> list[Path]:
 

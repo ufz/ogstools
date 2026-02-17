@@ -129,13 +129,10 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     assert ret.returncode == 0, ret.stderr
 
     assert ret.stdout != sim.log_file.read_text()
-
-    ms_archived = sim.result
     ms_rerun = ot.MeshSeries(
         original_result_path / sim.model.project.meshseries_file()
     )
-    ms_rerun.save(tmp_path / "rerun_meshseries/ms.pvd")
-    assert ms_archived == ms_rerun
+    assert sim.result == ms_rerun
 
 
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})

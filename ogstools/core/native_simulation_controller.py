@@ -44,7 +44,6 @@ class OGSNativeController(SimulationController):
         super().__init__(
             model_ref=model_ref, sim_output=sim_output, overwrite=overwrite
         )
-        assert self.result.log_file
         self._args_list = [
             "-m",
             str(model_ref.meshes.active_target),
@@ -55,7 +54,7 @@ class OGSNativeController(SimulationController):
 
         self.process = model_ref.project.run_model(
             args=args_str,
-            logfile=self.result.log_file,
+            logfile=self.result.next_target / "log.txt",
             write_logs=model_ref.execution.write_logs,
             background=True,
             wrapper=model_ref.execution.wrapper,
