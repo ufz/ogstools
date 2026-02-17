@@ -151,7 +151,7 @@ print(f"Simulation status: {sim.status_str}")
 # You can index it like a list to get results at specific timesteps:
 
 # Get the final timestep and plot pressure distribution
-fig = ot.plot.contourf(sim.result[-1], "pressure")
+fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
 
 # %% [markdown]
 # **MeshSeries capabilities:**

@@ -47,7 +47,7 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     prj.replace_text(intpt_order, xpath=".//integration_order")
     model = ot.Model(prj, meshes)
     sim = model.run()
-    mesh = sim.result.mesh(-1)
+    mesh = sim.meshseries.mesh(-1)
     int_pts = ot.mesh.to_ip_point_cloud(mesh)
     ip_mesh = ot.mesh.to_ip_mesh(mesh)
 

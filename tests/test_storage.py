@@ -319,9 +319,9 @@ class TestStorage:
         assert files_dry == files
         sim = model_1_1.run()
         sim.save(tmp_path / "y", overwrite=True, archive=True)
-        ms = sim.result
+        ms = sim.meshseries
         ms.save(tmp_path / "my_ms.pvd", overwrite=True)
-        assert sim.result.filepath.exists()
+        assert sim.meshseries.filepath.exists()
 
     def test_storage_sim(self, tmp_path):
         model = load_simulation_smalldeformation()
@@ -389,7 +389,7 @@ class TestStorage:
         sim_highres = model_pvd_rect12.run(id="sim_highres")
 
         sim_xdmf = model_xdmf_rect10.run(id="sim_xdmf")
-        assert sim_xdmf.result
+        assert sim_xdmf.meshseries
         sim_xdmf_2 = model_xdmf_rect10.run()
         sim_xdmf_highres = model_xdmf_rect12.run()
 
@@ -403,7 +403,7 @@ class TestStorage:
 
         # different meshes make subtle differences
         ms_diff_rect = ot.MeshSeries.difference(
-            sim_highres.result, sim_default.result
+            sim_highres.meshseries, sim_default.meshseries
         )
         m_diff_12_displacement = abs(
             ms_diff_rect[-1].point_data["displacement"]
@@ -413,20 +413,20 @@ class TestStorage:
 
         # execution of same model should give identical result
         ms_diff_run = ot.MeshSeries.difference(
-            sim_xdmf.result, sim_xdmf_2.result
+            sim_xdmf.meshseries, sim_xdmf_2.meshseries
         )
         assert np.all(ms_diff_run[-1].point_data["displacement"] == 0)
 
         # same result with just other output format
         ms_diff_12_outputformat = ot.MeshSeries.difference(
-            sim_default.result, sim_xdmf.result
+            sim_default.meshseries, sim_xdmf.meshseries
         )
         assert np.all(
             ms_diff_12_outputformat[-1].point_data["displacement"] == 0
         )
 
         ms_diff_10_outputformat = ot.MeshSeries.difference(
-            sim_highres.result, sim_xdmf_highres.result
+            sim_highres.meshseries, sim_xdmf_highres.meshseries
         )
         assert np.all(
             ms_diff_10_outputformat[-1].point_data["displacement"] == 0

@@ -42,7 +42,7 @@ def test_read_quadratic_xdmf(tmp_path, quads):
     model._next_target = tmp_path  # use only in testing!
     sim1 = model.run("new1", overwrite=True)
     print(sim1.log_file)
-    ms_domain = sim1.result
+    ms_domain = sim1.meshseries
     if quads:
         # 4 corners, 4 between corners, 1 center
         assert ms_domain[-1].number_of_points == 8
@@ -576,7 +576,7 @@ def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     # ToDo log prj.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
     model = ot.Model(prj, meshes)
     model._next_target = tmp_path  # use only in testing!
-    meshseries = model.run().result
+    meshseries = model.run().meshseries
     mesh_last = meshseries[-1]
     int_pts = ot.mesh.to_ip_point_cloud(mesh_last)
 

@@ -53,7 +53,7 @@ print(f"Simulation status: {sim.status_str}")
 # ==============================
 
 # Plot final pressure distribution
-ot.plot.contourf(sim.result[-1], "pressure")
+ot.plot.contourf(sim.meshseries[-1], "pressure")
 
 # Plot convergence behavior
 sim.log.plot_convergence()

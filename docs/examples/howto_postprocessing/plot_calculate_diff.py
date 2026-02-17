@@ -42,7 +42,7 @@ def custom_mesh(lengths: int, element_order: int, quads: bool):
 
     model = ot.Model(prj, meshes)
     sim = model.run()
-    return sim.result.mesh(-1)
+    return sim.meshseries.mesh(-1)
 
 
 # sphinx_gallery_end_ignore

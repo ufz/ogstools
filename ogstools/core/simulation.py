@@ -272,9 +272,9 @@ class Simulation(StorageBase):
         return self._result.next_target / self.model.project.meshseries_file()
 
     @property
-    def result(self) -> MeshSeries:
+    def meshseries(self) -> MeshSeries:
         """
-        Access the result mesh series of this simulation.
+        Access the mesh series of this simulation.
 
         Lazily loads the mesh series on first access.
 

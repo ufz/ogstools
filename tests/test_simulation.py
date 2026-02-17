@@ -107,7 +107,7 @@ def test_parallel_runs():
     sims = [simc.run() for simc in [sim_c1, sim_c2]]
     assert sims[0].status == sim_c1.Status.done
     assert sims[1].status == sim_c2.Status.done
-    assert sims[0].result == sims[1].result
+    assert sims[0].meshseries == sims[1].meshseries
 
 
 @pytest.mark.system()
