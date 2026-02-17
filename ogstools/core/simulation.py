@@ -290,9 +290,11 @@ class Simulation(StorageBase):
     def _propagate_target(self) -> None:
         if not self.model.user_specified_target:
             self.model._next_target = self.next_target / "model"
+            self.model._propagate_target()
 
         if not self._result.user_specified_target:
             self._result._next_target = self.next_target / "result"
+            self._result._propagate_target()
 
     def _save_impl(
         self, dry_run: bool = False, overwrite: bool | None = None

@@ -169,10 +169,13 @@ class Model(StorageBase):
 
         if not self.meshes.user_specified_target:
             self.meshes._next_target = self.next_target / "meshes"
+            self.meshes._propagate_target()
         if not self.project.user_specified_target:
             self.project._next_target = self.next_target / "project"
+            self.project._propagate_target()
         if not self.execution.user_specified_target:
             self.execution._next_target = self.next_target / "execution.yaml"
+            self.execution._propagate_target()
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Model):
