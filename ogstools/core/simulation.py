@@ -237,6 +237,16 @@ class Simulation(StorageBase):
         return f"Status: terminated with error\n{last_lines}"
 
     @property
+    def cmd(self) -> str:
+        """Get the full command used to run the simulation."""
+        return (
+            f"{self.model.execution.ogs_bin_path}"
+            f" {self.model.project.prjfile}"
+            f" -m {self.model.meshes.active_target}"
+            f" -o {self._result.next_target}"
+        )
+
+    @property
     def log(self) -> Log:
         """
         Access the parsed log file of this simulation.
