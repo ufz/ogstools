@@ -10,6 +10,7 @@ from ogstools.mesh import create, validate
 from ogstools.mesh.create import LayerSet
 
 
+@pytest.mark.tools()  # NodeReordering
 @pytest.mark.parametrize("dim", [2, 3])
 def test_to_region_simplified(
     dim: int, make_layerset: Callable[[int], LayerSet]
@@ -29,6 +30,7 @@ def test_to_region_simplified(
     assert coarseXY_fineZ.number_of_points > coarseXYZ.number_of_points
 
 
+@pytest.mark.tools()  # NodeReordering
 def test_box_boundaries(make_layerset: Callable[[int], LayerSet]):
     mesh_fineXY_coarseZ = make_layerset(1).to_region_simplified(300, 3)
     bounds = mesh_fineXY_coarseZ.box_boundaries()
@@ -99,6 +101,7 @@ def layerset_example_surfs() -> create.LayerSet:
         lambda ls: ls.to_region_voxel([300, 300, 50]),
     ],
 )
+@pytest.mark.tools()  # checkMesh
 def test_allcompare(discretization, layerset_example_surfs: create.LayerSet):
     number_of_layers = len(layerset_example_surfs.layers)
     mesh = discretization(layerset_example_surfs).mesh

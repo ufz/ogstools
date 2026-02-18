@@ -95,6 +95,7 @@ def test_abort_run_and_status(
 
 
 # ToDo: Issue #3589 + Console capture not thread safe - Test interactive
+@pytest.mark.tools()  # NodeReordering
 def test_parallel_runs():
     """Simulations can run in parallel (native) or sequentially (interactive)."""
     model = examples.load_model_liquid_flow_simple()
@@ -135,6 +136,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     assert sim.meshseries == ms_rerun
 
 
+@pytest.mark.tools()  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_simulation_log_convergence() -> plt.Figure:
     model = examples.load_model_liquid_flow_simple()
@@ -142,6 +144,7 @@ def test_simulation_log_convergence() -> plt.Figure:
     return sim.log.plot_convergence()
 
 
+@pytest.mark.tools()  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_simulation_log_convergence_order() -> plt.figure:
     model = examples.load_model_liquid_flow_simple()

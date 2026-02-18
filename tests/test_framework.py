@@ -77,6 +77,7 @@ def test_framework_prj():
     assert model == model_from_repr
 
 
+@pytest.mark.tools()  # NodeReordering
 def test_framework_model():
     from ogstools.examples import load_model_liquid_flow_simple
 
@@ -103,6 +104,7 @@ def test_framework_model():
     assert model == model_from_repr
 
 
+@pytest.mark.tools()  # NodeReordering
 def test_framework_meshes():
     from ogstools.examples import load_meshes_simple_lf
 
@@ -125,6 +127,7 @@ def test_framework_meshes():
     assert meshes_1 == meshes_from_repr
 
 
+@pytest.mark.tools()  # NodeReordering
 @pytest.mark.parametrize(
     "interactive", [False, True], ids=["native", "interactive"]
 )
@@ -148,6 +151,7 @@ def test_framework_simulation(interactive):
     assert sim_from_repr.log_file
 
 
+@pytest.mark.tools()  # NodeReordering
 @pytest.mark.parametrize(
     "interactive", [False, True], ids=["native", "interactive"]
 )
@@ -216,65 +220,70 @@ def assert_framework_object_contract(
     ("factory", "mutate"),
     [
         # 0 Meshes
-        (
+        pytest.param(
             load_meshes_simple_lf,
             lambda m: setattr(m, "domain_name", m.domain_name + "_other"),
+            marks=pytest.mark.tools(),
+            id="Meshes",
         ),
         # 1 Project
-        (
+        pytest.param(
             load_project_simple_lf,
             lambda p: p.replace_text(4, ".//integration_order"),
+            id="Project",
         ),
         # 2 Execution
-        (
+        pytest.param(
             lambda: load_model_liquid_flow_simple().execution,
             lambda m: setattr(m, "interactive", not m.interactive),
+            marks=pytest.mark.tools(),
+            id="Execution",
         ),
         # 3 Model (objects)
-        (
+        pytest.param(
             load_model_liquid_flow_simple,
             lambda m: setattr(
                 m.execution, "interactive", not m.execution.interactive
             ),
+            marks=pytest.mark.tools(),
+            id="Model(objects)",
         ),
-        # 4Model (prj_file)
-        (
+        # 4 Model (prj_file)
+        pytest.param(
             model_liquid_flow_simple_prjfile,
             lambda m: setattr(
                 m.execution, "interactive", not m.execution.interactive
             ),
+            id="Model(prj-file)",
         ),
         # 5 Model (from folder)
         # Issue #3589
-        # (
+        # pytest.param(
         #    lambda: simulation_run_liquid_flow_simple_folder(),
         #    None,
+        #    id="Model(folder)",
         # ),
         # 6 Simulation
         # immutable or at least intended as snapshot
-        (
+        pytest.param(
             load_simulation_smalldeformation,
             None,
+            id="Simulation",
         ),
         # 7 Simulation run (immutable or at least intended as snapshot)
-        (simulation_run, None),
+        pytest.param(
+            simulation_run,
+            None,
+            marks=pytest.mark.system(),
+            id="Simulation(run)",
+        ),
         # 8 MeshSeries
-        (
+        pytest.param(
             load_meshseries_CT_2D_XDMF,
             # lambda ms: ms.scale("km"),
             lambda ms: ms.extend(ms),
+            id="MeshSeries",
         ),
-    ],
-    ids=[
-        "Meshes",
-        "Project",
-        "Execution",
-        "Model(objects)",
-        "Model(prj-file)",
-        ##"Model(folder)", Issue #3589
-        "Simulation",
-        "Simulation(run)",
-        "MeshSeries",
     ],
 )
 def test_framework_objects(factory, mutate):
@@ -284,14 +293,27 @@ def test_framework_objects(factory, mutate):
 @pytest.mark.parametrize(
     ("cls_name", "factory"),
     [
-        ("Project", load_project_simple_lf),
-        ("Execution", lambda: Execution(mpi_ranks=4)),
-        ("Meshes", load_meshes_simple_lf),
-        ("Model", load_model_liquid_flow_simple),
-        ("MeshSeries", load_meshseries_CT_2D_XDMF),
-        ("Simulation", load_simulation_smalldeformation),
+        pytest.param("Project", load_project_simple_lf, id="Project"),
+        pytest.param(
+            "Execution", lambda: Execution(mpi_ranks=4), id="Execution"
+        ),
+        pytest.param(
+            "Meshes",
+            load_meshes_simple_lf,
+            marks=pytest.mark.tools(),
+            id="Meshes",
+        ),
+        pytest.param(
+            "Model",
+            load_model_liquid_flow_simple,
+            marks=pytest.mark.tools(),
+            id="Model",
+        ),
+        pytest.param("MeshSeries", load_meshseries_CT_2D_XDMF, id="MeshSeries"),
+        pytest.param(
+            "Simulation", load_simulation_smalldeformation, id="Simulation"
+        ),
     ],
-    ids=["Project", "Execution", "Meshes", "Model", "MeshSeries", "Simulation"],
 )
 def test_from_id_roundtrip(cls_name, factory):
     """

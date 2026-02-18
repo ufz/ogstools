@@ -527,7 +527,11 @@ class TestPlotting:
             "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj",
             "TH2M/H2/mcWhorter/mcWhorter_h2.prj",
             "TH2M/H2M/Liakopoulos/liakopoulos_TH2M.prj",
-            "HydroMechanics/AnchorSourceTerm/two_anchors.prj",  # uses gml
+            pytest.param(
+                "HydroMechanics/AnchorSourceTerm/two_anchors.prj",
+                marks=pytest.mark.tools(),  # constructMeshesFromGeometry
+                id="two_anchors",
+            ),
         ],
         ids=lambda x: Path(x).stem,
     )

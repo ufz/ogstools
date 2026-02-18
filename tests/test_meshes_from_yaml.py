@@ -234,6 +234,7 @@ def test_mfy_empty_blocks(tmp_path):
     assert msh_file.exists()
 
 
+@pytest.mark.tools()  # NodeReordering
 def test_mfy_radioactive(tmp_path):
     yaml_content = textwrap.dedent(
         """\
