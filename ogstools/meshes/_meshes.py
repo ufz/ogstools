@@ -360,11 +360,13 @@ class Meshes(MutableMapping, StorageBase):
             if not self.has_identified_subdomains:
                 self.identify_subdomain()
 
-            set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
                 check_datatypes(mesh, strict=True, meshname=name)
                 filepath = active_path / f"{name}.vtu"
-                set_pv_attr(mesh, "filepath", filepath)
+                if hasattr(mesh, "filepath"):
+                    mesh.filepath = filepath
+                else:
+                    pv.set_new_attribute(mesh, "filepath", filepath)
                 Mesh.save(mesh, filepath, **kwargs)
 
             meta_dict = {

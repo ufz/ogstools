@@ -470,15 +470,20 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             mesh = self.mesh_func(pv_mesh)
             if lazy_eval:
                 self._mesh_cache[timevalue] = mesh
-        set_pv_attr = getattr(pv, "set_new_attribute", setattr)
-        if self._data_type == ".pvd":
-            set_pv_attr(
-                mesh, "filepath", Path(self.timestep_files[data_timestep])
-            )
-        else:
-            set_pv_attr(mesh, "filepath", self.filepath)
-        set_pv_attr(mesh, "spatial_unit", self.spatial_unit)
-        set_pv_attr(mesh, "time_unit", self.time_unit)
+        filepath = (
+            Path(self.timestep_files[data_timestep])
+            if self._data_type == ".pvd"
+            else self.filepath
+        )
+        for attr, val in [
+            ("filepath", filepath),
+            ("spatial_unit", self.spatial_unit),
+            ("time_unit", self.time_unit),
+        ]:
+            if hasattr(mesh, attr):
+                setattr(mesh, attr, val)
+            else:
+                pv.set_new_attribute(mesh, attr, val)
         return mesh
 
     def rawdata_file(self) -> Path | None:
