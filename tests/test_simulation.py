@@ -32,7 +32,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 def test_simulation_simple(tmp_path, good_model):
     sim = good_model.run()
     sim.save(tmp_path / "sim_good_model")
-    ms = sim.result
+    ms = sim.meshseries
     assert ms[-1]
 
 
@@ -40,7 +40,7 @@ def test_simulation_simple(tmp_path, good_model):
 def test_simulation_simple2(tmp_path, good_model):
     sim = good_model.run(tmp_path / "Simulation" / "sim_good_model")
     sim.save()
-    assert sim.result
+    assert sim.meshseries
 
 
 @pytest.mark.system()
@@ -119,7 +119,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     sim.save(tmp_path / "sim_original", archive=True)
 
     # Delete where the first simulation was computed so cmd can reuse the path
-    original_result_path = sim._result.next_target
+    original_result_path = sim.result.next_target
     shutil.rmtree(original_result_path)
     original_result_path.mkdir()
 
@@ -132,7 +132,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     ms_rerun = ot.MeshSeries(
         original_result_path / sim.model.project.meshseries_file()
     )
-    assert sim.result == ms_rerun
+    assert sim.meshseries == ms_rerun
 
 
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})

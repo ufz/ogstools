@@ -30,7 +30,7 @@ class TestConvergence:
             sim_c = model.controller()
             simulations.append((prefix, sim_c))
 
-        sim_results = [sc[1].run().result[-1] for sc in simulations]
+        sim_results = [sc[1].run().meshseries[-1] for sc in simulations]
         topology = sim_results[-3]
         spacing = convergence.add_grid_spacing(topology)["grid_spacing"]
         np.testing.assert_array_less(0.0, spacing)
