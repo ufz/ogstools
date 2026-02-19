@@ -81,7 +81,6 @@ tests (arch - conda) (R):
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
@@ -102,7 +101,6 @@ tests (arch - conda - ogs wheel release) (M):
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
@@ -176,7 +174,6 @@ tests (arch - conda - ogs custom latest) (M):
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
