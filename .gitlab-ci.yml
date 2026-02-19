@@ -6,8 +6,8 @@ stages:
 
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
-  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10-feflow-10.0
+  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0
+  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12-feflow-10.0
   ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
 
 workflow:
@@ -236,7 +236,7 @@ tests (mac - pip) (R):
     - *regression-rules
   needs: []
   before_script:
-    - python() { python3.10 "$@"; } # alias don't work in non-interactive shells
+    - python() { python3.12 "$@"; } # alias don't work in non-interactive shells
     - *pip-setup-activate
     - pip install -e ".[ogs,pinned,test]"
   script:
@@ -415,7 +415,7 @@ user container image:
       allow_failure: true
     - if: $CI_COMMIT_TAG
       variables:
-        DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10:$CI_COMMIT_TAG
+        DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12:$CI_COMMIT_TAG
       allow_failure: true
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -423,7 +423,7 @@ user container image:
     - docker push $DOCKER_USER_IMAGE
 
 code_quality_ruff (R):
-  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
   needs: []
   script:
     # Use same ruff as in .pre-commit-config.yaml
@@ -433,7 +433,7 @@ code_quality_ruff (R):
       codequality: ruff-code-quality-report.json
 
 code_quality_mypy (R):
-  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
   needs: []
   script:
     # Use same mypy as in .pre-commit-config.yaml

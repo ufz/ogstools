@@ -211,7 +211,7 @@ Now you are inside the container. For example, you can open a new terminal (`Ter
 If you are familiar with [Docker](https://www.docker.com), you can also start the container manually, e.g. with:
 
 ```bash
-docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10 /bin/bash
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12 /bin/bash
 # Other container are available! e.g. registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
 # Inside the container:
 make setup_devcontainer # creates a virtual env and install ogstools
@@ -228,7 +228,7 @@ ______________________________________________________________________
 To prevent these issues we recommend running via [Apptainer](https://apptainer.org):
 
 ```bash
-apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10
+apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12
 # Inside the container:
 make setup_devcontainer
 source .venv-devcontainer/bin/activate

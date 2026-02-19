@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:3.10-bookworm
+FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
 
 # FEFLOW, instructions from https://download.feflow.com/download/FEFLOW/linux/
 ENV \

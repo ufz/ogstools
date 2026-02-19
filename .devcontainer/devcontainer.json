@@ -6,7 +6,7 @@
   // "build": {
   //   "dockerfile": "Dockerfile"
   // },
-  "image": "registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0",
+  "image": "registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/devcontainers/features/git-lfs:1": {}
