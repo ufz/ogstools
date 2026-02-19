@@ -33,7 +33,7 @@ def test_read_quadratic_xdmf(tmp_path, quads):
         ot.gmsh_tools.rect(1, 1, structured_grid=quads, order=2)
     )
 
-    prj1 = ot.Project(input_file=examples.prj_mechanics).copy("prj1.prj")
+    prj1 = ot.Project(input_file=examples.prj_mechanics).copy()
     prj1.replace_text("XDMF", xpath="./time_loop/output/type")
     prj1.replace_text(4, xpath=".//integration_order")
 

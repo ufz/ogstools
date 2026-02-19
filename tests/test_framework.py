@@ -15,6 +15,7 @@ from ogstools import (
     Project,
     Result,
     Simulation,
+    StorageBase,
 )
 from ogstools.examples import (
     EXAMPLES_DIR,
@@ -53,8 +54,10 @@ def simulation_run() -> Simulation:
     return model.run()
 
 
-def test_framework_prj():
+def test_framework_prj(tmp_path):
     from ogstools.examples import load_project_simple_lf
+
+    StorageBase.Userpath = tmp_path / "framework_prj"
 
     model = load_project_simple_lf()
     assert not model.user_specified_target
