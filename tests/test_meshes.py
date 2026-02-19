@@ -38,7 +38,7 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
-@pytest.mark.tools()  # ExtractSurface
+@pytest.mark.tools  # ExtractSurface
 @pytest.mark.parametrize(
     "load_meshseries",
     [
@@ -239,7 +239,7 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
             _check(mesh, cli_subdomain, "bulk_element_ids")
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_meshes_saving_reading():
     "Check, that saving+reading meshes equal the original."
     meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
@@ -291,7 +291,7 @@ def test_meshes_save_parallel(partition, dry_run):
             assert file.exists()
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize("partition", [1, 2, 4])
 @pytest.mark.parametrize(
     "default_metis", [True, False], ids=["metis", "no-metis"]
@@ -347,7 +347,7 @@ def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
             assert file.exists()
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_meshes_rename(tmp_path):
     """
     Test object:    Meshes.rename_subdomains() and Meshes.rename_subdomains_legacy()
@@ -376,7 +376,7 @@ def test_meshes_rename(tmp_path):
     assert meshes["prefix_physical_group_right_suffix"] == right_mesh
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_meshes_from_prj():
     "Check, that the mesh paths generated from a Project are correct."
     meshes_ref = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)

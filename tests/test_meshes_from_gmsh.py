@@ -27,7 +27,7 @@ from ogstools.meshes.gmsh_converter import meshes_from_gmsh
 from ogstools.msh2vtu._cli import cli
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
     gmsh.initialize(["-noenv"])
     gmsh.model.add("multiple_groups_per_element_2")
@@ -82,7 +82,7 @@ def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
     assert meshes["left_2"].bounds[3] == 50
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_multiple_groups_per_element(tmp_path: Path):
     """Test correct conversion, if element are assigned to multiple groups."""
     gmsh.initialize(["-noenv"])
@@ -184,7 +184,7 @@ def is_typical_edge_length(val):
 
 
 # below the minimum
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 @example(rect_p=RectInput(edge_length=9e-6)).xfail(raises=ValueError)
 # above the maximum
 @example(rect_p=RectInput(edge_length=2e9)).xfail(raises=ValueError)
@@ -226,7 +226,7 @@ def test_rect(tmp_path: Path, rect_p):
     assert n_meshes == 4 + rect_p.n_layers, msg
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 class TestPhysGroups:
     tmp_path = Path(mkdtemp())
 
@@ -315,7 +315,7 @@ def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
             raise ValueError(msg) from None
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_subdomains_2D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
     meshes = meshes_from_gmsh(msh_geolayers_2d, log=False)
@@ -342,7 +342,7 @@ def test_subdomains_2D():
         np.testing.assert_allclose(ref_center, mesh.center)
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_subdomains_3D():
     "Test explicitly the correct number of cells and coordinates in subdomains"
     meshes = meshes_from_gmsh(msh_geoterrain_3d, log=False)
@@ -361,7 +361,7 @@ def test_subdomains_3D():
         np.testing.assert_allclose(ref_center, mesh.center)
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_remesh_with_tri(tmp_path: Path):
     msh_path = tmp_path / "tri_mesh.msh"
     mesh = load_meshseries_THM_2D_PVD().mesh(1)

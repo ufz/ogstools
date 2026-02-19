@@ -218,7 +218,7 @@ class TestStorage:
         assert files1 != files2
         assert prj1 == prj2
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     def test_model_save_load_roundtrip(self):
 
         meshes = ot.Meshes.from_gmsh(rect())
@@ -231,7 +231,7 @@ class TestStorage:
         assert files1 != files3
         assert model1 == model2
 
-    @pytest.mark.tools()  # NodeReordering, checkMesh
+    @pytest.mark.tools  # NodeReordering, checkMesh
     def test_meshes_save_load_roundtrip(self):
         meshes1 = ot.Meshes.from_gmsh(rect())
         files1 = meshes1.save()
@@ -248,7 +248,7 @@ class TestStorage:
         meshes3 = ot.Meshes.from_gmsh(rect(lengths=11))
         assert meshes3 != meshes1
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     def test_sim_save_load_roundtrip(self):
         # ToDo example ot.Simulation()
         prj1 = ot.Project(input_file=prj_mechanics).copy()
@@ -315,7 +315,7 @@ class TestStorage:
         original_py = EXAMPLES_DIR / "prj" / "decay_boundary_conditions.py"
         assert py_file.read_bytes() == original_py.read_bytes()
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     def test_storage_model_1(self, tmp_path):
         prj1 = ot.Project(input_file=prj_mechanics, output_file="mechanics")
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
@@ -323,7 +323,7 @@ class TestStorage:
         assert_files_saved(files_dry, dry_run=True)
         files = prj1.save(tmp_path / "vtk", overwrite=True)
         model_1_1 = ot.Model(prj1, meshes1, id="model_1_1")
-        files_overwrite = model_1_1.save("m", overwrite=True)
+        files_overwrite = model_1_1.save(tmp_path / "m")
         assert_files_saved(files_overwrite)
         assert files_dry == files
         sim = model_1_1.run()
@@ -340,7 +340,7 @@ class TestStorage:
         model.save(overwrite=True)
         assert model.active_target.exists()
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     def test_storage_model(self, tmp_path):
         model = load_model_liquid_flow_simple()
         model.save(tmp_path / "mytest", overwrite=True)
@@ -348,7 +348,7 @@ class TestStorage:
         model.save(overwrite=True)
         assert model.active_target.exists()
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     def test_storage_meshes(self, tmp_path):
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
         meshes1.id = "meshes1"
@@ -362,7 +362,7 @@ class TestStorage:
         meshseries1.save(tmp_path / "new_meshseries.pvd", overwrite=True)
         meshseries1.save(overwrite=True)
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.parametrize(
         "save_strategy",
         ["no", "id", "target", "empty"],
@@ -450,7 +450,7 @@ class TestStorage:
         # 5 meshes (1 domain + 4 sub) + 1 meta
         assert len(files) == 6
 
-    @pytest.mark.tools()  # NodeReordering
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.parametrize("dry_run", [False, True])
     def test_save_returns_written_files(self, tmp_path, dry_run):
         """Test that all _save_impl methods return the actual written file paths.

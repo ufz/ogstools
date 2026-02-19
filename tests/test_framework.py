@@ -77,7 +77,7 @@ def test_framework_prj():
     assert model == model_from_repr
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 def test_framework_model():
     from ogstools.examples import load_model_liquid_flow_simple
 
@@ -104,9 +104,11 @@ def test_framework_model():
     assert model == model_from_repr
 
 
-@pytest.mark.tools()  # NodeReordering
-def test_framework_meshes():
+@pytest.mark.tools  # NodeReordering
+def test_framework_meshes(tmp_path):
     from ogstools.examples import load_meshes_simple_lf
+
+    StorageBase.Userpath = tmp_path / "test_framework_meshes"
 
     meshes_1 = load_meshes_simple_lf()
     meshes_1.id = "meshes_1"
@@ -127,7 +129,7 @@ def test_framework_meshes():
     assert meshes_1 == meshes_from_repr
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize(
     "interactive", [False, True], ids=["native", "interactive"]
 )
@@ -151,7 +153,7 @@ def test_framework_simulation(interactive):
     assert sim_from_repr.log_file
 
 
-@pytest.mark.tools()  # NodeReordering
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize(
     "interactive", [False, True], ids=["native", "interactive"]
 )
@@ -286,7 +288,8 @@ def assert_framework_object_contract(
         ),
     ],
 )
-def test_framework_objects(factory, mutate):
+def test_framework_objects(tmp_path, factory, mutate):
+    StorageBase.Userpath = tmp_path / "test_framework_objects"
     assert_framework_object_contract(factory=factory, mutate=mutate)
 
 
@@ -315,12 +318,12 @@ def test_framework_objects(factory, mutate):
         ),
     ],
 )
-def test_from_id_roundtrip(cls_name, factory):
+def test_from_id_roundtrip(tmp_path, cls_name, factory):
     """
     Test that objects can be saved with an ID and reloaded using from_id().
     Also verifies that __repr__() shows from_id() and can be used to reconstruct.
     """
-
+    StorageBase.Userpath = tmp_path / "from_id_roundtrip"
     # Create object and make a copy to avoid overwrite issues
     obj_original = factory()
     test_id = f"test_{cls_name.lower()}_id"

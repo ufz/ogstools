@@ -141,7 +141,7 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
         assert len(thresh_ip_data[arr["name"]]) == (thresh_n_cells * n_ip)
 
 
-@pytest.mark.tools()  # checkMesh
+@pytest.mark.tools  # checkMesh
 @pytest.mark.parametrize("strict", [True, False])
 @pytest.mark.parametrize(
     "mesh",
