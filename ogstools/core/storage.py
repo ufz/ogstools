@@ -286,8 +286,8 @@ class StorageBase(abc.ABC):
         :param name: Display name for the component.
         :returns:    Formatted status string.
         """
-        if obj.is_saved:
-            return f"{name}: saved to {self._format_path(obj.active_target)}"
+        if obj.active_target:  # is_saved
+            return f"{name}: saved to {self._format_path(obj.active_target.absolute())}"
         return f"{name}: not saved (planned to {self._format_path(obj.next_target)})"
 
     def _save_or_link_child(
