@@ -81,7 +81,7 @@ analytical_solution_path = tmp_path / "analytical_solution.vtu"
 sim_last: ot.Simulation = simulations[-1]
 
 solution = examples.anasol.diffusion_head_analytical(
-    simulations[-1].result.mesh(0)
+    simulations[-1].meshseries[0]
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
@@ -96,7 +96,7 @@ analytical_solution_path = ot.mesh.save(solution)
 # see a quadratic convergence behavior.
 
 # %%
-result_paths = [sim.result.filepath for sim in simulations]
+result_paths = [sim.meshseries_file for sim in simulations]
 convergence.run_convergence_study(
     output_name=report_name,
     mesh_paths=result_paths,

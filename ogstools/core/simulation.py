@@ -16,6 +16,7 @@ from ogstools.core.simulation_controller import SimulationStatus
 from ogstools.core.storage import StorageBase
 from ogstools.logparser.log import Log
 from ogstools.meshseries._meshseries import MeshSeries
+from ogstools.ogs6py.project import Project
 
 
 class Simulation(StorageBase):
@@ -74,26 +75,19 @@ class Simulation(StorageBase):
         self,
         model: Model,
         result: Result,
-        log_file: Path | str | None = None,
     ) -> None:
         """
         Initialize a Simulation object.
 
         :param model:       The :class:`ogstools.Model` used for this simulation.
         :param result:      The Result object containing simulation output.
-        :param log_file:    Optional path to the log file. If None, derives
-                            the path from the result directory and project settings.
         """
 
         super().__init__("Simulation")
         self.model = model
-        self._result = result
+        self.result = result
         result._bind_to_path(result.next_target)
 
-        if log_file is None:
-            self.log_file = result.log_file
-        else:
-            self.log_file = Path(log_file)
         self._log: Log | None = None
         self._meshseries: MeshSeries | None = None
 
@@ -102,8 +96,8 @@ class Simulation(StorageBase):
         Create a full deep copy of this Simulation, including model and result.
         """
         new_model = deepcopy(self.model, memo)
-        new_result = deepcopy(self._result, memo)
-        new_sim = Simulation(new_model, new_result, log_file=self.log_file)
+        new_result = deepcopy(self.result, memo)
+        new_sim = Simulation(new_model, new_result)
         new_sim._meshseries = (
             deepcopy(self._meshseries, memo) if self._meshseries else None
         )
@@ -149,12 +143,13 @@ class Simulation(StorageBase):
             model_construct = self._component_repr(
                 self.model, "Model", "from_folder"
             )
-            result_construct = self._component_repr(self._result, "Result")
+            result_construct = self._component_repr(self.result, "Result")
 
             construct = (
                 f"{cls}(model={model_construct}, "
-                f"result={result_construct}, "
-                f"log_file={str(self.log_file)!r})"
+                f"result={result_construct})\n"
+                f"log_file={str(self.log_file)!r}\n"
+                f"meshseries_file={str(self.meshseries_file)!r}"
             )
 
         save_hint = (
@@ -169,7 +164,8 @@ class Simulation(StorageBase):
         lines = [
             base_str,
             f"  {self._component_status_str(self.model, 'Model')}",
-            f"  {self._component_status_str(self._result, 'Result')}",
+            f"  {self._component_status_str(self.result, 'Result')}",
+            f"  Log file: {self._format_path(self.log_file)}",
             f"  MeshSeries: {self._format_path(self.meshseries_file)}",
             f"  {self.status_str}",
         ]
@@ -178,7 +174,7 @@ class Simulation(StorageBase):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Simulation):
             return False
-        return self.model == other.model and self._result == other._result
+        return self.model == other.model and self.result == other.result
 
     @property
     def status(self) -> SimulationStatus:
@@ -231,10 +227,27 @@ class Simulation(StorageBase):
             if self.meshseries_file.exists():
                 return "Status: completed successfully (results available)"
             return "Status: completed successfully (results pending)"
-        last_lines = self.model.project._failed_run_print_log_tail(
-            self.model.execution.write_logs
+        last_lines = Project._failed_run_print_log_tail(
+            self.model.execution.write_logs, self.log_file
         )
         return f"Status: terminated with error\n{last_lines}"
+
+    @property
+    def cmd(self) -> str:
+        """Get the full command used to run the simulation."""
+        return (
+            f"{self.model.execution.ogs_bin_path}"
+            f" {self.model.project.prjfile}"
+            f" -m {self.model.meshes.active_target}"
+            f" -o {self.result.next_target}"
+        )
+
+    @property
+    def log_file(self) -> Path:
+        """Get the absolute path to the log file."""
+        if self.is_saved and self.active_target is not None:
+            return self.active_target / "result" / self.result._log_filename
+        return self.result.log_file
 
     @property
     def log(self) -> Log:
@@ -256,12 +269,12 @@ class Simulation(StorageBase):
 
         :returns: Path to the mesh series file (pvd, xdmf, etc.).
         """
-        return self._result.next_target / self.model.project.meshseries_file()
+        return self.result.next_target / self.model.project.meshseries_file()
 
     @property
-    def result(self) -> MeshSeries:
+    def meshseries(self) -> MeshSeries:
         """
-        Access the result mesh series of this simulation.
+        Access the mesh series of this simulation.
 
         Lazily loads the mesh series on first access.
 
@@ -279,9 +292,11 @@ class Simulation(StorageBase):
     def _propagate_target(self) -> None:
         if not self.model.user_specified_target:
             self.model._next_target = self.next_target / "model"
+            self.model._propagate_target()
 
-        if not self._result.user_specified_target:
-            self._result._next_target = self.next_target / "result"
+        if not self.result.user_specified_target:
+            self.result._next_target = self.next_target / "result"
+            self.result._propagate_target()
 
     def _save_impl(
         self, dry_run: bool = False, overwrite: bool | None = None
@@ -292,10 +307,10 @@ class Simulation(StorageBase):
         )
 
         files += self._save_or_link_child(
-            self._result, self.next_target / "result", dry_run, overwrite
+            self.result, self.next_target / "result", dry_run, overwrite
         )
 
-        self.materialize_symlinks_recursive(self.next_target / "result")
+        self.materialize_symlink(self.next_target / "result", recursive=True)
         return files
 
     def save(

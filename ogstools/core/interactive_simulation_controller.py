@@ -106,7 +106,7 @@ class OGSInteractiveController(SimulationController):
         )
 
         # TODO: Apply all model execution parameters
-        args = [
+        self._args_list = [
             "",
             str(model_ref.project.prjfile),
             "-m",
@@ -116,12 +116,11 @@ class OGSInteractiveController(SimulationController):
             "-l",
             model_ref.execution.log_level,
         ]
-        self._args = args
 
         try:
             if self._capture:
                 self._capture.start()
-            self.sim = OGSSimulation(args)
+            self.sim = OGSSimulation(self._args_list)
             if self.sim is None:
                 # TODO:: Issue #3589 - OGSSimulation cannot be initialized multiple times in parallel
                 msg = (
@@ -145,11 +144,6 @@ class OGSInteractiveController(SimulationController):
     def status(self) -> SimulationStatus:
         """Get the current simulation status."""
         return self._status
-
-    @property
-    def cmd(self) -> str:
-        """Get the full command used to run the simulation."""
-        return str(self.model_ref.execution.ogs_bin_path) + " ".join(self._args)
 
     def terminate(self) -> bool:
         """

@@ -68,6 +68,7 @@ class SimulationController(abc.ABC):
         :param overwrite:   If True, overwrite existing output directory.
         """
         self.model_ref = model_ref
+        self._args_list: list[str] = []
         self.result = Result(sim_output)
         self.result._pre_save(overwrite=overwrite)
         self.result.next_target.mkdir(parents=True, exist_ok=True)
@@ -164,9 +165,14 @@ class SimulationController(abc.ABC):
         )
 
     @property
-    @abc.abstractmethod
     def cmd(self) -> str:
         """Get the full command used to run the simulation."""
+        return (
+            f"{self.model_ref.execution.ogs_bin_path}"
+            f" {self.model_ref.project.prjfile}"
+            f" -m {self.model_ref.meshes.active_target}"
+            f" -o {self.result.next_target}"
+        )
 
     def error_report(self) -> str:
         """

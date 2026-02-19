@@ -1,5 +1,7 @@
 """Unit tests for meshlib."""
 
+import subprocess
+
 import matplotlib.pyplot as plt
 import pytest
 
@@ -30,7 +32,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 def test_simulation_simple(tmp_path, good_model):
     sim = good_model.run()
     sim.save(tmp_path / "sim_good_model")
-    ms = sim.result
+    ms = sim.meshseries
     assert ms[-1]
 
 
@@ -38,7 +40,7 @@ def test_simulation_simple(tmp_path, good_model):
 def test_simulation_simple2(tmp_path, good_model):
     sim = good_model.run(tmp_path / "Simulation" / "sim_good_model")
     sim.save()
-    assert sim.result
+    assert sim.meshseries
 
 
 @pytest.mark.system()
@@ -105,7 +107,32 @@ def test_parallel_runs():
     sims = [simc.run() for simc in [sim_c1, sim_c2]]
     assert sims[0].status == sim_c1.Status.done
     assert sims[1].status == sim_c2.Status.done
-    assert sims[0].result == sims[1].result
+    assert sims[0].meshseries == sims[1].meshseries
+
+
+@pytest.mark.system()
+def test_simulation_cmd_reproduces_result(tmp_path, good_model):
+    """Run a simulation, save as archive, delete original, re-run via cmd."""
+    import shutil
+
+    sim = good_model.run()
+    sim.save(tmp_path / "sim_original", archive=True)
+
+    # Delete where the first simulation was computed so cmd can reuse the path
+    original_result_path = sim.result.next_target
+    shutil.rmtree(original_result_path)
+    original_result_path.mkdir()
+
+    ret = subprocess.run(
+        sim.cmd, shell=True, capture_output=True, text=True, check=False
+    )
+    assert ret.returncode == 0, ret.stderr
+
+    assert ret.stdout != sim.log_file.read_text()
+    ms_rerun = ot.MeshSeries(
+        original_result_path / sim.model.project.meshseries_file()
+    )
+    assert sim.meshseries == ms_rerun
 
 
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})

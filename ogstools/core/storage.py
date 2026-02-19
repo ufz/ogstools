@@ -206,14 +206,15 @@ class StorageBase(abc.ABC):
         """Get the path where this object will be saved next."""
         return self._next_target
 
-    def materialize_symlinks_recursive(self, root: Path | str) -> None:
+    @staticmethod
+    def materialize_symlink(root: Path | str, recursive: bool = False) -> None:
         """
-        Replace all symlinks with actual copies of their targets.
+        Replace symlinks with actual copies of their targets.
 
-        Recursively traverses the directory tree and materializes all
-        symlinks, creating a standalone copy of the data.
-
-        :param root: Path to the root directory to process.
+        :param root: Path to process.
+        :param recursive: If True, recursively traverse the directory tree
+            and materialize all symlinks. If False, only materialize the
+            root path itself.
 
         :raises FileNotFoundError: If the root path does not exist.
         """
@@ -223,10 +224,6 @@ class StorageBase(abc.ABC):
             raise FileNotFoundError(msg)
 
         def _materialize(path: Path) -> None:
-            """
-            Replace a single path if it is a symlink.
-            If folder, recurse into its contents.
-            """
             if path.is_symlink():
                 target = path.resolve(strict=True)
                 path.unlink()
@@ -234,11 +231,12 @@ class StorageBase(abc.ABC):
                     shutil.copytree(
                         target, path, symlinks=False, copy_function=shutil.copy2
                     )
-                    for child in path.iterdir():
-                        _materialize(child)
+                    if recursive:
+                        for child in path.iterdir():
+                            _materialize(child)
                 else:
                     shutil.copy2(target, path)
-            elif path.is_dir():
+            elif recursive and path.is_dir():
                 for child in list(path.iterdir()):
                     _materialize(child)
 
@@ -412,7 +410,7 @@ class StorageBase(abc.ABC):
         self.is_link = False
 
         if archive:
-            self.materialize_symlinks_recursive(self.next_target)
+            self.materialize_symlink(self.next_target, recursive=True)
 
     def link(self, new_target: Path, dry_run: bool) -> None:
         """

@@ -107,12 +107,12 @@ class Project(StorageBase):
 
         if output_file:
             # Legacy: output_file sets prjfile for write_input()
-            self.prjfile = Path(output_file)
+            self._prj_filename = Path(output_file).name
+            self._bind_to_path(Path(output_file).parent)
         elif input_file is not None:
-            self.prjfile = Path(input_file)
-            # self._bind_to_path(Path(input_file))
+            self._prj_filename = Path(input_file).name
         else:
-            self.prjfile = self._next_target / default_name
+            self._prj_filename = default_name
 
         if input_file is not None:
             input_file = Path(input_file)
@@ -163,6 +163,15 @@ class Project(StorageBase):
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
+
+    @property
+    def prjfile(self) -> Path:
+        """Get the path to the project file, following the current target."""
+        if self.active_target:
+            return self.active_target / self._prj_filename
+        if self.input_file:
+            return self.input_file
+        return self._next_target / self._prj_filename
 
     @classmethod
     def from_folder(cls, folder: Path | str) -> Self:
@@ -259,7 +268,7 @@ class Project(StorageBase):
                 setattr(new, k, copy.deepcopy(v, memo))
 
         new._reset_save_state()
-        new.prjfile = new._next_target / default_name
+        new._prj_filename = default_name
         assert isinstance(new.prjfile, Path)
 
         # Create new Geo with the copied tree and preserve source_path
@@ -1053,15 +1062,16 @@ class Project(StorageBase):
         print("Project file written to output.")
         return
 
+    @staticmethod
     def _failed_run_print_log_tail(
-        self, write_logs: bool, tail_len: int = 10
+        write_logs: bool, logfile: Path | None = None, tail_len: int = 10
     ) -> str:
         msg = "OGS execution was not successful."
         if write_logs is False:
             msg += " Please set write_logs to True to obtain more information."
-        else:
+        elif logfile is not None:
             print(f"Last {tail_len} line of the log:")
-            with self.logfile.open() as lf:
+            with logfile.open() as lf:
                 last_lines = "".join(lf.readlines()[-tail_len:])
                 msg += last_lines
 
@@ -1262,8 +1272,8 @@ class Project(StorageBase):
     def _save_impl(
         self, dry_run: bool = False, keep_includes: bool = False
     ) -> list[Path]:
-        prj_file = self.next_target / default_name
-        self.prjfile = prj_file
+        self._prj_filename = default_name
+        prj_file = self.next_target / self._prj_filename
 
         files: list[Path] = [prj_file]
 

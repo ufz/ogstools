@@ -135,7 +135,7 @@ sim = sim_c.run()
 
 # We visualize how the dynamically updated boundary conditions affected the pressure field.
 # Changes in boundary conditions can be clearly observed.
-ms = sim.result
+ms = sim.meshseries
 # !paraview {ms.filepath} # for interactive exploration
 # Time slice over x
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
