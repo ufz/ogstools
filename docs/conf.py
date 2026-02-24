@@ -263,7 +263,9 @@ nitpick_ignore_regex = [
     ("py:data", r"typing\..*"),
     ("py:data", "Ellipsis"),
     # watchdog is a third-party package without intersphinx inventory.
+    # sphinx_autodoc_typehints emits both fully-qualified and short names.
     ("py:class", r"watchdog\..*"),
+    ("py:class", r"(Dir|File)(Created|Modified)Event"),
 ]
 
 # feflowlib is optional
