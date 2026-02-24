@@ -34,13 +34,9 @@ version = release = ogstools.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
-<<<<<<< HEAD
-    "sphinx.ext.autodoc.typehints",
-=======
-    "sphinx.ext.intersphinx",
-    "sphinx_autodoc_typehints",
->>>>>>> 01f15eed (Fix sphinx warnings)
+    "sphinx.ext.intersphinx",    
     "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
     "sphinxarg.ext",
     "sphinxcontrib.apidoc",
     "sphinxcontrib.mermaid",
@@ -125,6 +121,13 @@ intersphinx_disabled_reftypes = []
 intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "pyvista": ("https://docs.pyvista.org/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pint": ("https://pint.readthedocs.io/en/stable/", None),
+    "pillow": ("https://pillow.readthedocs.io/en/stable/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "lxml": ("https://lxml.de/apidoc/", None),
 }
 
 show_authors = True
@@ -266,6 +269,10 @@ nitpick_ignore_regex = [
     # sphinx_autodoc_typehints emits both fully-qualified and short names.
     ("py:class", r"watchdog\..*"),
     ("py:class", r"(Dir|File)(Created|Modified)Event"),
+    # numpy.array is a function, not a class; no inventory entry exists.
+    ("py:class", "numpy.array"),
+    # meshio has no Sphinx docs site with objects.inv.
+    ("py:class", r"meshio\..*"),
 ]
 
 # feflowlib is optional
