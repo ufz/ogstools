@@ -6,8 +6,8 @@
 
 
 from .boundary import LocationFrame, Raster
-from .boundary_set import Layer, LayerSet, Surface
-from .boundary_subset import Gaussian2D
+from .boundary_set import Layer, LayerSet
+from .boundary_subset import Gaussian2D, Surface
 from .dataframe import dataframe_from_csv
 from .region import RegionSet
 

@@ -16,8 +16,7 @@ import pandas as pd
 
 from ogstools import mesh
 
-from .boundary import Layer, LocationFrame, Raster
-from .boundary_subset import Surface
+from .boundary import Layer
 from .region import RegionSet
 
 
@@ -72,6 +71,8 @@ class LayerSet(BoundarySet):
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> "LayerSet":
         """Create a LayerSet from a Pandas DataFrame."""
+        from .boundary_subset import Surface
+
         Row = namedtuple("Row", ["material_id", "mesh", "resolution"])
         surfaces = [
             Row(
@@ -103,6 +104,9 @@ class LayerSet(BoundarySet):
         :param resolution: The resolution for raster creation.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
         """
+
+        from .boundary import LocationFrame, Raster
+
         bounds = self.layers[0].top.mesh.bounds
         raster_set = self.create_rasters(resolution=resolution)
 
