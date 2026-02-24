@@ -176,14 +176,14 @@ class LayerSet(BoundarySet):
         """
         Convert a layered geological structure into a RegionSet using prism meshing.
 
-        This function takes a :class:`boundary_set.LayerSet` and converts it into a :class:`region.RegionSet` object using prism or tetrahedral meshing technique.
+        This function takes a :class:`LayerSet` and converts it into a :class:`RegionSet` object using prism or tetrahedral meshing technique.
         The function will use prism elements for meshing if possible; otherwise, it will use
         tetrahedral elements.
 
         :param resolution: The desired resolution in [meter] for meshing. It must greater than 0.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
 
-        :returns: A :class:`boundary_set.LayerSet` object containing the meshed representation of the geological structure.
+        :returns: A :class:`RegionSet` object containing the meshed representation of the geological structure.
 
         raises:
             ValueError: If an error occurs during the meshing process.
@@ -238,8 +238,8 @@ class LayerSet(BoundarySet):
         This function converts a layered geological structure represented by a `LayerSet` into a
         simplified meshed region using the specified `xy_resolution` and `rank`.
 
-        :param xy_resolution (float):   The desired spatial resolution of the mesh in the XY plane.
-        :param rank (int):              The rank of the mesh (2 for 2D, 3 for 3D).
+        :param xy_resolution: The desired spatial resolution of the mesh in the XY plane.
+        :param rank: The rank of the mesh (2 for 2D, 3 for 3D).
 
         :returns: A `RegionSet` object containing the simplified meshed representation of the geological structure.
 

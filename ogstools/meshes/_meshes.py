@@ -41,11 +41,12 @@ class Meshes(MutableMapping, StorageBase):
     ) -> None:
         """
         Initialize a Meshes object.
-            :param meshes:      List of Mesh objects (pyvista UnstructuredGrid)
-                                The first mesh is the domain mesh.
-                                All following meshes represent subdomains, and their points must align with points on the domain mesh.
-                                If needed, the domain mesh itself can also be added again as a subdomain.
-            :returns:           A Meshes object
+
+        :param meshes:      List of Mesh objects (pyvista UnstructuredGrid)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their points must align with points on the domain mesh.
+                            If needed, the domain mesh itself can also be added again as a subdomain.
+        :returns:           A Meshes object
         """
         super().__init__("Meshes", "", id)
         self._meshes = meshes

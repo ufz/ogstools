@@ -109,14 +109,14 @@ class Layer(Boundary):
         `resolution`, `rank`, and bounding `bounds`.
 
 
-        :param resolution (float):  The desired spatial resolution of the mesh in units of the geological structure.
-                                    Be cautious with very high resolutions, as they may lead to distorted or incomplete meshes,
-                                    making them unsuitable for further analysis.
-        :param rank (int):          he rank of the mesh (2 for 2D, 3 for 3D). The mesh dimensionality must be consistent
-                                    with the provided `bounds`.
-        :param bounds (list[float]):    A list of bounding values [min_x, max_x, min_y, max_y] for 2D mesh or
-                                        [min_x, max_x, min_y, max_y, min_z, max_z] for 3D mesh.
-                                        The `bounds` define the region of the geological structure that will be meshed.
+        :param resolution: The desired spatial resolution of the mesh in units of the geological structure.
+                           Be cautious with very high resolutions, as they may lead to distorted or incomplete meshes,
+                           making them unsuitable for further analysis.
+        :param rank: The rank of the mesh (2 for 2D, 3 for 3D). The mesh dimensionality must be consistent
+                     with the provided `bounds`.
+        :param bounds: A list of bounding values [min_x, max_x, min_y, max_y] for 2D mesh or
+                       [min_x, max_x, min_y, max_y, min_z, max_z] for 3D mesh.
+                       The `bounds` define the region of the geological structure that will be meshed.
 
         :returns: A simplified unstructured grid mesh representing the layer.
 

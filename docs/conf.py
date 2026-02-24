@@ -34,7 +34,12 @@ version = release = ogstools.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
+<<<<<<< HEAD
     "sphinx.ext.autodoc.typehints",
+=======
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
+>>>>>>> 01f15eed (Fix sphinx warnings)
     "sphinx.ext.viewcode",
     "sphinxarg.ext",
     "sphinxcontrib.apidoc",
@@ -118,6 +123,11 @@ autodoc_type_aliases = {
 
 # Configure autosummary to prefer the top-level API imports
 intersphinx_disabled_reftypes = []
+
+intersphinx_mapping = {
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+}
 
 show_authors = True
 
@@ -240,6 +250,22 @@ sphinx_gallery_conf = {
     },
 }
 
+suppress_warnings = [
+    "config.cache",
+    # Third-party packages (numpy, PIL) expose internal types that sphinx_autodoc_typehints
+    # cannot import; suppress until upstream fixes are available.
+    "sphinx_autodoc_typehints.guarded_import",
+    # pint's PlainUnit has forward references to 'Unit' which isn't resolvable here.
+    "sphinx_autodoc_typehints.forward_reference",
+]
+
+nitpick_ignore_regex = [
+    # sphinx_autodoc_typehints emits cross-references for typing builtins that
+    # Sphinx cannot resolve as inventory entries.
+    ("py:data", r"typing\..*"),
+    ("py:data", "Ellipsis"),
+]
+
 # feflowlib is optional
 try:
     import ifm_contrib as ifm  # noqa: F401
@@ -251,9 +277,7 @@ except ImportError:
     apidoc_excluded_paths.append("../**/feflowlib/**")
     apidoc_excluded_paths.append("../docs/releases/ogstools-*.md")
     sphinx_gallery_conf["ignore_pattern"] = r".*_feflowlib_*"
-
-
-suppress_warnings = ["config.cache"]
+    suppress_warnings.extend(["toc.excluded", "myst.xref_missing"])
 
 # warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning)
 
