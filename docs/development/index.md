@@ -223,8 +223,6 @@ Please also be aware of [file permission issues](../user-guide/docker.md#running
 
 All available containers are located in the [OGSTools container registry](https://gitlab.opengeosys.org/ogs/tools/ogstools/container_registry/).
 
-______________________________________________________________________
-
 To prevent these issues we recommend running via [Apptainer](https://apptainer.org):
 
 ```bash

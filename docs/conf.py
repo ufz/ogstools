@@ -8,12 +8,10 @@
 
 import os
 import re
-import warnings
 from datetime import datetime
 
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
-from sphinx.deprecation import RemovedInSphinx90Warning
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 import ogstools
@@ -249,7 +247,7 @@ except ImportError:
 
 suppress_warnings = ["config.cache"]
 
-warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning)
+# warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning)
 
 
 def hide_sg_links(app, pagename, _templatename, _context, _doctree):

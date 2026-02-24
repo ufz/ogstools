@@ -185,7 +185,7 @@ def line(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
     )
     only_points = cell_types in [{0}, {1}]
-    surf: pv.PolyData = mesh.extract_surface()
+    surf: pv.PolyData = mesh.extract_surface(algorithm="dataset_surface")
     strip: pv.PolyData = surf.strip()
 
     if is_meshseries or only_points or strip.n_cells <= 1:
