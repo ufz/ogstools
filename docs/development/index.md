@@ -246,3 +246,11 @@ pytest
 - Update authors on Zenodo release.
 - Update Zenodo badge in repo.
 - On https://github.com/conda-forge/ogstools-feedstock create a new issue with the title `@conda-forge-admin, please update version`
+
+# Developers using OGSTools
+
+Packages that use OGSTools and Sphinx for their documentation can add an [intersphinx](https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html) mapping into their conf.py file:
+
+```python
+intersphinx_mapping = {"ogstools": ("https://ogstools.opengeosys.org/", None)}
+```
