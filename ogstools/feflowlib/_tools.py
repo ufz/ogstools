@@ -100,7 +100,7 @@ def extract_point_boundary_conditions(
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     boundary_mesh = (
-        mesh.extract_surface()
+        mesh.extract_surface(algorithm="dataset_surface")
         if get_dimension(mesh) == 3
         else mesh.extract_feature_edges()
     )
@@ -173,7 +173,7 @@ def extract_cell_boundary_conditions(
     if mesh.volume != 0:
         # get the topsurface since there are the cells of interest
         topsurf = get_specific_surface(
-            mesh.extract_surface(),
+            mesh.extract_surface(algorithm="dataset_surface"),
             lambda normals: np.arccos(
                 normals[:, 2] / np.linalg.norm(normals, axis=1)
             )

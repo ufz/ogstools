@@ -130,7 +130,12 @@ def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
     """
     Calculate the data aspect ratio of a 2D mesh.
     """
-    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
+    mean_normal = np.abs(
+        np.mean(
+            mesh.extract_surface(algorithm="dataset_surface").cell_normals,
+            axis=0,
+        )
+    )
     projection = int(np.argmax(mean_normal))
     x_id, y_id = 2 * np.delete([0, 1, 2], projection)
     lims = mesh.bounds
@@ -167,7 +172,12 @@ def get_projection(
     :returns: x_id, y_id, projection, mean_normal
 
     """
-    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
+    mean_normal = np.abs(
+        np.mean(
+            mesh.extract_surface(algorithm="dataset_surface").cell_normals,
+            axis=0,
+        )
+    )
     projection = int(np.argmax(mean_normal))
     x_id, y_id = np.delete([0, 1, 2], projection)
     return x_id, y_id, projection, mean_normal

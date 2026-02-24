@@ -32,7 +32,9 @@ def layer_boundaries(
         segments = m_i.extract_feature_edges().connectivity(largest=False)
         for reg_id in np.unique(segments.cell_data.get("RegionId", [])):
             segment = segments.threshold((reg_id, reg_id), scalars="RegionId")
-            edges = segment.extract_surface().strip(join=True, max_length=10000)
+            edges = segment.extract_surface(algorithm="dataset_surface").strip(
+                join=True, max_length=10000
+            )
             x_b, y_b = edges.points[edges.lines % edges.n_points].T[
                 [x_id, y_id]
             ]
@@ -66,7 +68,12 @@ def shape_on_top(
     contour: Callable[[np.ndarray], np.ndarray],
     scaling: float = 1.0,
 ) -> None:
-    normal = np.abs(np.mean(surf.extract_surface().cell_normals, axis=0))
+    normal = np.abs(
+        np.mean(
+            surf.extract_surface(algorithm="dataset_surface").cell_normals,
+            axis=0,
+        )
+    )
     projection = int(np.argmax(normal))
 
     XYZ = surf.extract_feature_edges().points

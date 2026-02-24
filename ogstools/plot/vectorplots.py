@@ -31,7 +31,12 @@ def _vectorfield(
     """
     if (n_pts := setup.num_streamline_interp_pts) is None:
         return (np.zeros(1),) * 5
-    mean_normal = np.abs(np.mean(mesh.extract_surface().cell_normals, axis=0))
+    mean_normal = np.abs(
+        np.mean(
+            mesh.extract_surface(algorithm="dataset_surface").cell_normals,
+            axis=0,
+        )
+    )
     if projection is None:
         projection = int(np.argmax(mean_normal))
     i_id, j_id = np.delete([0, 1, 2], projection)

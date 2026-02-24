@@ -49,7 +49,7 @@ class RegionSet:
             u_min, u_max, v_min, v_max, w_min, w_max = mesh.box_boundaries()
         """
         assert isinstance(self.mesh, pv.UnstructuredGrid)
-        surface = self.mesh.extract_surface()
+        surface = self.mesh.extract_surface(algorithm="dataset_surface")
         u_max = to_boundary(surface, lambda normals: normals[:, 0] > 0.5)
         u_min = to_boundary(surface, lambda normals: normals[:, 0] < -0.5)
         v_max = to_boundary(surface, lambda normals: normals[:, 1] > 0.5)

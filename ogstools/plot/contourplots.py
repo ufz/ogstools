@@ -191,7 +191,7 @@ def subplot(
         )  # fmt: skip
         mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
 
-    surf_tri = mesh.triangulate().extract_surface()
+    surf_tri = mesh.triangulate().extract_surface(algorithm="dataset_surface")
     # Get rid of 1D elements in the mesh
     surf_tri = surf_tri.extract_cells_by_type(pv.CellType.TRIANGLE)
     x_id, y_id, projection, _ = utils.get_projection(mesh)
