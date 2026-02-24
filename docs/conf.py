@@ -8,7 +8,15 @@
 
 import os
 import re
+import warnings
 from datetime import datetime
+
+# myst-nb and sphinx-autodoc-typehints use deprecated Sphinx API that will be removed
+# in Sphinx 10. Suppress until those packages release fixes.
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="myst_nb")
+warnings.filterwarnings(
+    "ignore", category=DeprecationWarning, module="sphinx_autodoc_typehints"
+)
 
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper

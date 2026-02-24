@@ -36,6 +36,7 @@ def from_simulator(
         :returns:               A Mesh (Pyvista Unstructured Grid) object
 
     """
+
     from ogs import OGSMesh
     from ogs.OGSMesh import MeshItemType
     from vtk.util import numpy_support
