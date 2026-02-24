@@ -180,14 +180,14 @@ class LayerSet(BoundarySet):
         """
         Convert a layered geological structure into a RegionSet using prism meshing.
 
-        This function takes a :class:`LayerSet` and converts it into a :class:`RegionSet` object using prism or tetrahedral meshing technique.
+        This function takes a :class:`~ogstools.mesh.create.LayerSet` and converts it into a :class:`~ogstools.mesh.create.RegionSet` object using prism or tetrahedral meshing technique.
         The function will use prism elements for meshing if possible; otherwise, it will use
         tetrahedral elements.
 
         :param resolution: The desired resolution in [meter] for meshing. It must greater than 0.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
 
-        :returns: A :class:`RegionSet` object containing the meshed representation of the geological structure.
+        :returns: A :class:`~ogstools.mesh.create.RegionSet` object containing the meshed representation of the geological structure.
 
         raises:
             ValueError: If an error occurs during the meshing process.

@@ -112,8 +112,6 @@ html_theme_options = {
     ],
 }
 
-nitpick_ignore_regex = [("py:class", r".*")]
-
 # Resolve ambiguous cross-references by preferring top-level API imports
 # When Model and Simulation are referenced, prefer ogstools.Model over ogstools.core.model.Model
 autodoc_type_aliases = {
@@ -264,6 +262,8 @@ nitpick_ignore_regex = [
     # Sphinx cannot resolve as inventory entries.
     ("py:data", r"typing\..*"),
     ("py:data", "Ellipsis"),
+    # watchdog is a third-party package without intersphinx inventory.
+    ("py:class", r"watchdog\..*"),
 ]
 
 # feflowlib is optional
