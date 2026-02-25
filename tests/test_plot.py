@@ -63,7 +63,14 @@ class TestPlotting:
             (*[1e6, 1e6 + 12, 6], ["0", "2", "4", "6", "8", "10", "12"], "1e+06"),
         ],
     )  # fmt: skip
-    def test_ticklabels(self, lower: float, upper: float, n_ticks: int, ref_labels: list, ref_offset: str | None,):  # fmt: skip
+    def test_ticklabels(
+        self,
+        lower: float,
+        upper: float,
+        n_ticks: int,
+        ref_labels: list,
+        ref_offset: str | None,
+    ):
         """Check for equality of ticklabels and expected labels."""
         levels = ot.plot.compute_levels(lower, upper, n_ticks=n_ticks)
         labels, offset = ot.plot.contourplots.get_ticklabels(levels)
@@ -163,6 +170,7 @@ class TestPlotting:
         contourf(ms[1], ot.variables.displacement, fig=fig, ax=ax[1])
         return fig
 
+    @pytest.mark.filterwarnings("ignore:This is not a good practice:Warning")
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_user_defined_fig(self) -> plt.Figure:
         """Test plotting with provided fig but not ax via image comparison."""

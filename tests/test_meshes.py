@@ -371,7 +371,8 @@ def test_meshes_rename(tmp_path):
     with pytest.raises(KeyError, match="Invalid subdomain names"):
         meshes.rename_subdomains({"does_not_exist": "foo"})
 
-    meshes.rename_subdomains_legacy()
+    with pytest.deprecated_call():
+        meshes.rename_subdomains_legacy()
     assert meshes["physical_group_right"] == right_mesh
 
     meshes.modify_names(prefix="prefix_", suffix="_suffix")

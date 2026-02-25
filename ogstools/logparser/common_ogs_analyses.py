@@ -216,6 +216,9 @@ def convergence_order_per_ts_iteration(
     """
     errors = errors_per_ts_iteration(df)
     values = errors[1:] - errors[:-1] if n == 4 else errors
+    assert np.all(
+        values[:-1] != 0
+    ), "Cannot compute convergence order: zero error values."
     log_ratios = np.log10(np.abs(values[1:] / values[:-1]))
     orders = log_ratios[1:] / log_ratios[:-1]
     orders = np.vstack((np.full((2, orders.shape[1]), np.nan), orders))
