@@ -366,7 +366,7 @@ def test_remesh_with_tri(tmp_path: Path):
     msh_path = tmp_path / "tri_mesh.msh"
     mesh = load_meshseries_THM_2D_PVD().mesh(1)
     repo = (
-        mesh.threshold(12, "MaterialIDs")
+        mesh.threshold(12, scalars="MaterialIDs")
         .extract_feature_edges()
         .clip_box([2800, 3900, -860, 0, 6.7e3, 6.7e3], invert=False)
     )

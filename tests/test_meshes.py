@@ -187,7 +187,9 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
     )
     # multi-dim test
     if meshes["domain"].volume:
-        meshes["layer_surface"] = layer.extract_surface()
+        meshes["layer_surface"] = layer.extract_surface(
+            algorithm="dataset_surface"
+        )
     meshes["layer_edges"] = layer.extract_feature_edges()
     meshes["layer_points"] = layer.extract_points(
         range(layer.n_points), include_cells=False

@@ -351,7 +351,7 @@ class TestPhysicalVariable:
         def _check_masked_data(ms_check, actual):
             desired = ms_check.point_data[var.data_name]
             for i, mesh in enumerate(ms_check):
-                mask = np.asarray(mesh.ctp(False)[var.mask] == 0)
+                mask = np.asarray(mesh.ctp(pass_cell_data=False)[var.mask] == 0)
                 desired[i, mask] = np.nan
             assert np.array_equal(actual, desired, equal_nan=True)
 

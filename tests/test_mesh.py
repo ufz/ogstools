@@ -93,8 +93,8 @@ def test_depth_2D():
 
 
 def test_depth_3D():
-    mesh = pv.SolidSphere(100, center=(0, 0, -101))
-    top_mesh = mesh.extract_surface().clip("-z")
+    mesh = pv.SolidSphere(outer_radius=100, center=(0, 0, -101))
+    top_mesh = mesh.extract_surface(algorithm="dataset_surface").clip("-z")
     depth = ot.mesh.depth(mesh, top_mesh)
     assert np.isclose(np.ptp(depth), np.ptp(mesh.points[:, 2]))
 
@@ -152,7 +152,9 @@ def test_reshape_obs_points_mesh():
 def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
     assert ot.mesh.validate(mesh, strict=strict)
     # intentionally reversing the node order with method 0
-    wrong_mesh = mesh.copy().extract_surface().flip_faces()
+    wrong_mesh = (
+        mesh.copy().extract_surface(algorithm="dataset_surface").flip_faces()
+    )
     if strict:
         with pytest.raises(UserWarning, match="not compliant with OGS"):
             ot.mesh.validate(wrong_mesh, strict=strict)

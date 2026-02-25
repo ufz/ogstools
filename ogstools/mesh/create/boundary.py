@@ -227,7 +227,7 @@ class Raster:
         abs_resolution = ceil(i_size / self.resolution)
 
         plane = pv.Plane(
-            centroid,
+            center=centroid,
             i_size=i_size,
             j_size=j_size,
             i_resolution=abs_resolution,

@@ -189,7 +189,9 @@ def subplot(
             mesh.threshold([0, 0], scalars=variable.mask),
             var_mask, ax, **kwargs,
         )  # fmt: skip
-        mesh = mesh.ctp(True).threshold(value=[1, 1], scalars=variable.mask)
+        mesh = mesh.ctp(pass_cell_data=True).threshold(
+            value=[1, 1], scalars=variable.mask
+        )
 
     surf_tri = mesh.triangulate().extract_surface(algorithm="dataset_surface")
     # Get rid of 1D elements in the mesh
@@ -376,7 +378,7 @@ def label_sec_ax(
             max(tick, mesh.bounds[2 * sec_id] + 1e-6),
             mesh.bounds[2 * sec_id + 1] - 1e-6,
         )
-        sec_mesh = mesh.slice("xyz"[sec_id], origin)
+        sec_mesh = mesh.slice("xyz"[sec_id], origin=origin)
         if sec_mesh.n_cells:
             sec_labels += [f"{sec_mesh.bounds[2 * projection]:.1f}"]
         else:
