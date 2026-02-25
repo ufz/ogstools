@@ -246,7 +246,7 @@ def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     interest, context = (["iteration_number"], ["time_step", "step_start_time"])
     _check_input(df_new, interest, context)
     df_new["step_start_time"] = df_new["step_start_time"].ffill()
-    df_iter = df_new.pivot_table(interest, context, aggfunc=np.max, sort=False)
+    df_iter = df_new.pivot_table(interest, context, aggfunc="max", sort=False)
     # this trick handles the case when the data is one element short
     # which might be the case if the simulation is still running.
     iterations = np.zeros(len(df_time))
