@@ -34,7 +34,7 @@ version = release = ogstools.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",    
+    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinxarg.ext",
@@ -114,6 +114,24 @@ autodoc_type_aliases = {
     "Model": "ogstools.Model",
     "Simulation": "ogstools.Simulation",
 }
+
+
+def _fixup_module_name(module: str) -> str:
+    """Map pandas internal modules to the public top-level package.
+
+    sphinx_autodoc_typehints derives cross-reference targets from
+    ``annotation.__module__``.  For pandas types like ``DataFrame`` that
+    lives in ``pandas.core.frame``, this produces
+    ``pandas.core.frame.DataFrame`` which is absent from the pandas
+    intersphinx inventory.  Remapping the module to ``pandas`` yields
+    ``pandas.DataFrame`` which resolves correctly.
+    """
+    if module.startswith("pandas.core"):
+        return "pandas"
+    return module
+
+
+typehints_fixup_module_name = _fixup_module_name
 
 # Configure autosummary to prefer the top-level API imports
 intersphinx_disabled_reftypes = []
