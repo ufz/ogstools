@@ -115,7 +115,7 @@ def test_parallel_runs():
     assert sims[0].meshseries == sims[1].meshseries
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     """Run a simulation, save as archive, delete original, re-run via cmd."""
     import shutil

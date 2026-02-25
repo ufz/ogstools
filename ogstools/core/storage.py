@@ -13,6 +13,7 @@ import errno
 import inspect
 import shutil
 import tempfile
+import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -449,10 +450,24 @@ class StorageBase(abc.ABC):
             pass
 
         new_target.parent.mkdir(parents=True, exist_ok=True)
-        new_target.symlink_to(
-            Path(self.active_target.absolute()),
-            target_is_directory=not self.is_file,
-        )
+        try:
+            new_target.symlink_to(
+                Path(self.active_target.absolute()),
+                target_is_directory=not self.is_file,
+            )
+        except OSError:
+            warnings.warn(
+                f"Could not create symlink at {new_target}. Falling back to copy. "
+                "To enable symlinks on Windows, either activate Developer Mode "
+                "(Settings > Update & Security > For developers) or grant the "
+                "'Create symbolic links' privilege (Local Security Policy > Local Policies > "
+                "User Rights Assignment > Create symbolic links).",
+                stacklevel=2,
+            )
+            if self.is_file:
+                shutil.copy2(self.active_target, new_target)
+            else:
+                shutil.copytree(self.active_target, new_target)
         self.is_link = True
         return
 
