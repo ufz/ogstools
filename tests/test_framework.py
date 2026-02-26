@@ -15,7 +15,6 @@ from ogstools import (
     Project,
     Result,
     Simulation,
-    StorageBase,
 )
 from ogstools.examples import (
     EXAMPLES_DIR,
@@ -54,10 +53,8 @@ def simulation_run() -> Simulation:
     return model.run()
 
 
-def test_framework_prj(tmp_path):
+def test_framework_prj():
     from ogstools.examples import load_project_simple_lf
-
-    StorageBase.Userpath = tmp_path / "framework_prj"
 
     model = load_project_simple_lf()
     assert not model.user_specified_target
@@ -108,10 +105,8 @@ def test_framework_model():
 
 
 @pytest.mark.tools  # NodeReordering
-def test_framework_meshes(tmp_path):
+def test_framework_meshes():
     from ogstools.examples import load_meshes_simple_lf
-
-    StorageBase.Userpath = tmp_path / "test_framework_meshes"
 
     meshes_1 = load_meshes_simple_lf()
     meshes_1.id = "meshes_1"
@@ -307,8 +302,7 @@ def assert_framework_object_contract(
         ),
     ],
 )
-def test_framework_objects(tmp_path, factory, mutate):
-    StorageBase.Userpath = tmp_path / "test_framework_objects"
+def test_framework_objects(factory, mutate):
     assert_framework_object_contract(factory=factory, mutate=mutate)
 
 
@@ -337,12 +331,11 @@ def test_framework_objects(tmp_path, factory, mutate):
         ),
     ],
 )
-def test_from_id_roundtrip(tmp_path, cls_name, factory):
+def test_from_id_roundtrip(cls_name, factory):
     """
     Test that objects can be saved with an ID and reloaded using from_id().
     Also verifies that __repr__() shows from_id() and can be used to reconstruct.
     """
-    StorageBase.Userpath = tmp_path / "from_id_roundtrip"
     # Create object and make a copy to avoid overwrite issues
     obj_original = factory()
     test_id = f"test_{cls_name.lower()}_id"

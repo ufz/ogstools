@@ -10,9 +10,7 @@ from ogstools import examples
 
 
 @pytest.fixture
-def failing_model(tmp_path) -> ot.Model:
-    ot.StorageBase.Userpath = tmp_path
-
+def failing_model() -> ot.Model:
     msh_file = ot.gmsh_tools.cuboid(lengths=1.0, n_edge_cells=1, n_layers=1)
     meshes = ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
     prj = ot.Project(input_file=examples.prj_aniso_expansion).copy()
@@ -22,8 +20,7 @@ def failing_model(tmp_path) -> ot.Model:
 
 
 @pytest.fixture
-def good_model(tmp_path) -> ot.Model:
-    ot.StorageBase.Userpath = tmp_path
+def good_model() -> ot.Model:
     return examples.load_model_liquid_flow_simple().copy(id="good_model")
 
 

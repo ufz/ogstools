@@ -202,8 +202,8 @@ class TestStorage:
             pytest.param(ot.MeshSeries, id="MeshSeries"),
         ],
     )
-    def test_state_machine(self, tmp_path, test_class):
-        ot.StorageBase.Userpath = tmp_path
+    def test_state_machine(self, tmp_path, monkeypatch, test_class):
+        monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
         m = ProjectMachine
         m.temp = tmp_path
         m.TestClass = test_class
@@ -365,10 +365,12 @@ class TestStorage:
     @pytest.mark.tools  # NodeReordering
     @pytest.mark.parametrize(
         "save_strategy",
-        ["no", "id", "target", "empty"],
+        ["id", "target", None],
     )
-    def test_storage_multi_model_multi_sim(self, tmp_path, save_strategy):
-        ot.StorageBase.Userpath = tmp_path
+    def test_storage_multi_model_multi_sim(
+        self, tmp_path, monkeypatch, save_strategy
+    ):
+        monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
         prj_pvd = ot.Project(input_file=prj_mechanics)
         # prj_pvd.save(tmp_path / "mechanics")
         # prj_test = ot.Project.from_folder(tmp_path/"mechanics")
