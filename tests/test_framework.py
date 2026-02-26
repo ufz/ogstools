@@ -134,7 +134,15 @@ def test_framework_meshes(tmp_path):
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize(
-    "interactive", [False, True], ids=["native", "interactive"]
+    "interactive",
+    [
+        False,
+        pytest.param(
+            True,
+            marks=pytest.mark.xdist_group("interactive_serial"),
+        ),
+    ],
+    ids=["native", "interactive"],
 )
 def test_framework_simulation(interactive):
     """
@@ -158,7 +166,15 @@ def test_framework_simulation(interactive):
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize(
-    "interactive", [False, True], ids=["native", "interactive"]
+    "interactive",
+    [
+        False,
+        pytest.param(
+            True,
+            marks=pytest.mark.xdist_group("interactive_serial"),
+        ),
+    ],
+    ids=["native", "interactive"],
 )
 def test_framework_simulation_controller(interactive):
     """
