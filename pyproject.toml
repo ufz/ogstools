@@ -334,7 +334,8 @@ docs = [
 feflow = ["ifm_contrib>=0.2.4"]
 ogs = ["ogs>=6.5.7"]
 monitor = ["bokeh>=3.6.0", "ipykernel>5"]
-all = ["ogstools[ogs,monitor,dev,docs,test]"]
+# all features (not extra for developer tasks (test,docs,dev,...))
+all = ["ogstools[ogs,monitor]"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

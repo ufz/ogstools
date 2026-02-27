@@ -20,7 +20,8 @@ Create a virtual environment, activate it and install required packages:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[pinned,dev,test,docs]"
+pip install -e ".[pinned]"
+# Or pip install -e."[all,dev,test,docs]"  when you change the Python environment
 
 # enable basic style checks once
 pre-commit install
