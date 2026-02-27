@@ -370,6 +370,7 @@ class TestStorage:
     def test_storage_multi_model_multi_sim(
         self, tmp_path, monkeypatch, save_strategy
     ):
+        tmp_path = tmp_path / (save_strategy or "none")
         monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
         prj_pvd = ot.Project(input_file=prj_mechanics)
         # prj_pvd.save(tmp_path / "mechanics")
@@ -400,12 +401,17 @@ class TestStorage:
         ot.Model(prj_test, meshes_rect12).save(tmp_path / "model_test2")
 
         sim_default = model_pvd_rect10.run(id="sim_default")
+        assert sim_default.status == ot.Simulation.Status.done
         sim_highres = model_pvd_rect12.run(id="sim_highres")
+        assert sim_highres.status == ot.Simulation.Status.done
 
         sim_xdmf = model_xdmf_rect10.run(id="sim_xdmf")
+        assert sim_xdmf.status == ot.Simulation.Status.done
         assert sim_xdmf.meshseries
         sim_xdmf_2 = model_xdmf_rect10.run()
+        assert sim_xdmf_2.status == ot.Simulation.Status.done
         sim_xdmf_highres = model_xdmf_rect12.run()
+        assert sim_xdmf_2.status == ot.Simulation.Status.done
 
         assert not model_pvd_rect10.user_specified_target
         assert not sim_default.is_saved
