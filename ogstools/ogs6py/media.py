@@ -259,12 +259,26 @@ class Media(build_tree.BuildTree):
             )
 
     def _build_mpl_tree(self, args: dict) -> ET.Element:
+        medium: ET.Element | None = None
+        medium_id: str | None = args.get("medium_id")
         if "medium_id" not in args:
             args["medium_id"] = "0"
-        medium = None
-        for entry in self.media.findall("./medium"):
-            if entry.get("id") == args["medium_id"]:
-                medium = entry
+
+        if medium_id not in (None, "None"):
+            medium = self.media.find(f"./medium[@id='{args['medium_id']}']")
+        else:
+            _media = self.media.findall("./medium")
+            if len(_media) == 0:
+                pass
+            elif len(_media) > 1:
+                msg = "Multiple media found but no id provided!"
+                raise IndexError(msg)
+            else:
+                medium = _media[0]
+                assert (
+                    medium.attrib.get("id", "0") == "0"
+                ), "Expected id='0' when no `medium_id` is given"
+
         if medium is None:
             medium = self.populate_tree(
                 self.media, "medium", attr={"id": args["medium_id"]}
