@@ -61,6 +61,8 @@ class Project(StorageBase):
     In this class everything for an OGS6 project can be specified.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         input_file: str | Path | None = None,
@@ -101,7 +103,9 @@ class Project(StorageBase):
         self.output_dir = Path(output_dir)  # default -> current dir
         self.verbose = verbose
         self.threads: int | None = kwargs.get("OMP_NUM_THREADS")
-        self.asm_threads: int = kwargs.get("OGS_ASM_THREADS", self.threads)
+        self.asm_threads: int | None = kwargs.get(
+            "OGS_ASM_THREADS", self.threads
+        )
         self.input_file: Path | None = None
         self.folder: Path = Path()
 
@@ -246,7 +250,7 @@ class Project(StorageBase):
             dependencies = None
         lines = [
             f"{base_repr}",
-            f"   Input file: {self.input_file!r}\n"
+            f"   Input file: {self._format_path(self.input_file)}\n"
             f"   Dependencies: {dependencies!r}",
         ]
 
@@ -257,11 +261,16 @@ class Project(StorageBase):
         new = cls.__new__(cls)
         memo[id(self)] = new
 
-        skip_attrs = self._SAVE_STATE_ATTRS + (
-            "prjfile",
-            "process",
-            "geometry",
-            "python_script",
+        # lxml does not honour Python's deepcopy memo for cached element
+        # references, so subobjects sharing self.tree must be re-initialized
+        # from new.tree rather than deep-copied.
+        tree_backed = {
+            k
+            for k, v in self.__dict__.items()
+            if getattr(v, "tree", None) is self.tree
+        }
+        skip_attrs = (
+            self._SAVE_STATE_ATTRS + ("prjfile", "process") + tuple(tree_backed)
         )
         for k, v in self.__dict__.items():
             if k not in skip_attrs:
@@ -271,19 +280,15 @@ class Project(StorageBase):
         new._prj_filename = default_name
         assert isinstance(new.prjfile, Path)
 
-        # Create new Geo with the copied tree and preserve source_path
-        new.geometry = copy.deepcopy(self.geometry)
-        if self.geometry.filename:
-            new.geometry._next_target = (
-                new._next_target / self.geometry.filename
-            )
+        for k in tree_backed:
+            old_v = getattr(self, k)
+            new_v = type(old_v)(new.tree)
+            if isinstance(old_v, StorageBase):
+                new_v._active_target = old_v._active_target
+                if hasattr(old_v, "filename") and old_v.filename:
+                    new_v._next_target = new._next_target / old_v.filename
+            setattr(new, k, new_v)
 
-        # Create new PythonScript with the copied tree and preserve source_path
-        new.python_script = copy.deepcopy(self.python_script)
-        if self.python_script.filename:
-            new.python_script._next_target = (
-                new._next_target / self.python_script.filename
-            )
         return new
 
     def __eq__(self, other: object) -> bool:
@@ -1257,6 +1262,12 @@ class Project(StorageBase):
                 ET.fromstring(self.tree_string, parser=parse)
             )
             ET.indent(self.tree, space="    ")
+            # Re-initialize tree-backed subobjects so their cached element
+            # references remain valid after the tree was replaced.
+            for v in self.__dict__.values():
+                if hasattr(v, "tree") and not isinstance(v, ET._ElementTree):
+                    v.tree = self.tree
+                    v.root = self.tree.getroot()
             if self.verbose is True:
                 display.Display(self.tree)
             self.tree.write(

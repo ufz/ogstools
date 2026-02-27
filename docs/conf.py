@@ -11,9 +11,15 @@ import re
 import warnings
 from datetime import datetime
 
+# myst-nb and sphinx-autodoc-typehints use deprecated Sphinx API that will be removed
+# in Sphinx 10. Suppress until those packages release fixes.
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="myst_nb")
+warnings.filterwarnings(
+    "ignore", category=DeprecationWarning, module="sphinx_autodoc_typehints"
+)
+
 import pyvista
 from pyvista.plotting.utilities.sphinx_gallery import DynamicScraper
-from sphinx.deprecation import RemovedInSphinx90Warning
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 import ogstools
@@ -28,8 +34,9 @@ version = release = ogstools.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autodoc.typehints",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
     "sphinxarg.ext",
     "sphinxcontrib.apidoc",
     "sphinxcontrib.mermaid",
@@ -65,7 +72,7 @@ html_css_files = ["ogstools.css"]
 html_context = {"default_mode": "light"}
 
 # Set up the version switcher.  The versions.json is stored in the doc repo.
-if os.environ.get("CI_MERGE_REQUEST_IID", False):
+if os.environ.get("CI_MERGE_REQUEST_IID"):
     switcher_version = f"!{os.environ['CI_MERGE_REQUEST_IID']}"
 elif ".dev" in version:
     switcher_version = "dev"
@@ -101,8 +108,6 @@ html_theme_options = {
     ],
 }
 
-nitpick_ignore_regex = [("py:class", r".*")]
-
 # Resolve ambiguous cross-references by preferring top-level API imports
 # When Model and Simulation are referenced, prefer ogstools.Model over ogstools.core.model.Model
 autodoc_type_aliases = {
@@ -110,8 +115,38 @@ autodoc_type_aliases = {
     "Simulation": "ogstools.Simulation",
 }
 
+
+def _fixup_module_name(module: str) -> str:
+    """Map pandas internal modules to the public top-level package.
+
+    sphinx_autodoc_typehints derives cross-reference targets from
+    ``annotation.__module__``.  For pandas types like ``DataFrame`` that
+    lives in ``pandas.core.frame``, this produces
+    ``pandas.core.frame.DataFrame`` which is absent from the pandas
+    intersphinx inventory.  Remapping the module to ``pandas`` yields
+    ``pandas.DataFrame`` which resolves correctly.
+    """
+    if module.startswith("pandas.core"):
+        return "pandas"
+    return module
+
+
+typehints_fixup_module_name = _fixup_module_name
+
 # Configure autosummary to prefer the top-level API imports
 intersphinx_disabled_reftypes = []
+
+intersphinx_mapping = {
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "pyvista": ("https://docs.pyvista.org/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pint": ("https://pint.readthedocs.io/en/stable/", None),
+    "pillow": ("https://pillow.readthedocs.io/en/stable/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "lxml": ("https://lxml.de/apidoc/", None),
+}
 
 show_authors = True
 
@@ -234,6 +269,30 @@ sphinx_gallery_conf = {
     },
 }
 
+suppress_warnings = [
+    "config.cache",
+    # Third-party packages (numpy, PIL) expose internal types that sphinx_autodoc_typehints
+    # cannot import; suppress until upstream fixes are available.
+    "sphinx_autodoc_typehints.guarded_import",
+    # pint's PlainUnit has forward references to 'Unit' which isn't resolvable here.
+    "sphinx_autodoc_typehints.forward_reference",
+]
+
+nitpick_ignore_regex = [
+    # sphinx_autodoc_typehints emits cross-references for typing builtins that
+    # Sphinx cannot resolve as inventory entries.
+    ("py:data", r"typing\..*"),
+    ("py:data", "Ellipsis"),
+    # watchdog is a third-party package without intersphinx inventory.
+    # sphinx_autodoc_typehints emits both fully-qualified and short names.
+    ("py:class", r"watchdog\..*"),
+    ("py:class", r"(Dir|File)(Created|Modified)Event"),
+    # numpy.array is a function, not a class; no inventory entry exists.
+    ("py:class", "numpy.array"),
+    # meshio has no Sphinx docs site with objects.inv.
+    ("py:class", r"meshio\..*"),
+]
+
 # feflowlib is optional
 try:
     import ifm_contrib as ifm  # noqa: F401
@@ -245,11 +304,9 @@ except ImportError:
     apidoc_excluded_paths.append("../**/feflowlib/**")
     apidoc_excluded_paths.append("../docs/releases/ogstools-*.md")
     sphinx_gallery_conf["ignore_pattern"] = r".*_feflowlib_*"
+    suppress_warnings.extend(["toc.excluded", "myst.xref_missing"])
 
-
-suppress_warnings = ["config.cache"]
-
-warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning)
+# warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning)
 
 
 def hide_sg_links(app, pagename, _templatename, _context, _doctree):

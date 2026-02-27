@@ -216,6 +216,9 @@ def convergence_order_per_ts_iteration(
     """
     errors = errors_per_ts_iteration(df)
     values = errors[1:] - errors[:-1] if n == 4 else errors
+    assert np.all(
+        values[:-1] != 0
+    ), "Cannot compute convergence order: zero error values."
     log_ratios = np.log10(np.abs(values[1:] / values[:-1]))
     orders = log_ratios[1:] / log_ratios[:-1]
     orders = np.vstack((np.full((2, orders.shape[1]), np.nan), orders))
@@ -246,7 +249,7 @@ def model_and_clock_time(df: pd.DataFrame) -> pd.DataFrame:
     interest, context = (["iteration_number"], ["time_step", "step_start_time"])
     _check_input(df_new, interest, context)
     df_new["step_start_time"] = df_new["step_start_time"].ffill()
-    df_iter = df_new.pivot_table(interest, context, aggfunc=np.max, sort=False)
+    df_iter = df_new.pivot_table(interest, context, aggfunc="max", sort=False)
     # this trick handles the case when the data is one element short
     # which might be the case if the simulation is still running.
     iterations = np.zeros(len(df_time))

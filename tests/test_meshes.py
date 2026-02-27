@@ -38,6 +38,7 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
+@pytest.mark.tools  # ExtractSurface
 @pytest.mark.parametrize(
     "load_meshseries",
     [
@@ -69,7 +70,7 @@ def test_datatypes(load_meshseries):
         assert not ot.mesh.check_datatypes(mesh, strict=False)
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_meshes_from_mesh_3D_simple(tmp_path):
     "Test extracted boundaries from 3D mesh are correctly labeled."
     mesh_path = tmp_path / "mesh.msh"
@@ -88,7 +89,7 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
     assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @pytest.mark.xfail(
     shutil.which("tetgen") is None, reason="Tetgen not installed"
 )
@@ -124,7 +125,7 @@ def test_meshes_from_mesh_3D(
     assert meshes["top"].bounds[5] == domain.bounds[5]
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_meshes_from_mesh_2D_run(tmp_path):
     "Test using extracted boundaries for a simulation."
     domain = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=(2, 4)))[
@@ -159,7 +160,7 @@ def meshing(draw: st.DrawFn):
     return mesh_func, n_cells, n_layers, rand_id
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @example(meshing_data=(ot.gmsh_tools.rect, (2, 2), 2, 0), failcase=True).xfail(
     # CLI version fails and doesn't write the new file, thus cannot be read
     raises=FileNotFoundError
@@ -186,7 +187,9 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
     )
     # multi-dim test
     if meshes["domain"].volume:
-        meshes["layer_surface"] = layer.extract_surface()
+        meshes["layer_surface"] = layer.extract_surface(
+            algorithm="dataset_surface"
+        )
     meshes["layer_edges"] = layer.extract_feature_edges()
     meshes["layer_points"] = layer.extract_points(
         range(layer.n_points), include_cells=False
@@ -238,6 +241,7 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
             _check(mesh, cli_subdomain, "bulk_element_ids")
 
 
+@pytest.mark.tools  # NodeReordering
 def test_meshes_saving_reading():
     "Check, that saving+reading meshes equal the original."
     meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
@@ -253,7 +257,7 @@ def test_meshes_saving_reading():
             )
 
 
-@pytest.mark.tools()  # partmesh
+@pytest.mark.tools  # partmesh
 @pytest.mark.parametrize("partition", [None, 1, 2, 4])
 @pytest.mark.parametrize(
     "dry_run", [False, True], ids=["normal run", "dry run"]
@@ -289,6 +293,7 @@ def test_meshes_save_parallel(partition, dry_run):
             assert file.exists()
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.parametrize("partition", [1, 2, 4])
 @pytest.mark.parametrize(
     "default_metis", [True, False], ids=["metis", "no-metis"]
@@ -344,6 +349,7 @@ def test_meshes_partmesh_file_only(tmp_path, partition, default_metis, dry_run):
             assert file.exists()
 
 
+@pytest.mark.tools  # NodeReordering
 def test_meshes_rename(tmp_path):
     """
     Test object:    Meshes.rename_subdomains() and Meshes.rename_subdomains_legacy()
@@ -365,13 +371,15 @@ def test_meshes_rename(tmp_path):
     with pytest.raises(KeyError, match="Invalid subdomain names"):
         meshes.rename_subdomains({"does_not_exist": "foo"})
 
-    meshes.rename_subdomains_legacy()
+    with pytest.deprecated_call():
+        meshes.rename_subdomains_legacy()
     assert meshes["physical_group_right"] == right_mesh
 
     meshes.modify_names(prefix="prefix_", suffix="_suffix")
     assert meshes["prefix_physical_group_right_suffix"] == right_mesh
 
 
+@pytest.mark.tools  # NodeReordering
 def test_meshes_from_prj():
     "Check, that the mesh paths generated from a Project are correct."
     meshes_ref = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
@@ -390,7 +398,7 @@ def test_meshes_from_prj():
             )
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_add_from_gml(tmp_path):
     """Check, that the meshes generated from a Project + gml are correct."""
     prj = ot.Project(EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
@@ -401,7 +409,7 @@ def test_add_from_gml(tmp_path):
     assert list(meshes.keys()) == ["square_1x1_quad_1e2"] + subdomain_names
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_remove_material():
     """Check cells are removed drom domain and subdomains.
 

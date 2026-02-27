@@ -8,7 +8,7 @@ import ogstools as ot
 from ogstools.examples import mechanics_2D
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @pytest.mark.skipif(
     shutil.which("identifySubdomains") is None, reason="binaries missing."
 )
@@ -20,7 +20,7 @@ def test_hide_cli_stderr(capfd, stderr):
     assert ("PARSE ERROR" in captured.err) == (stderr is None)
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 @pytest.mark.skipif(
     shutil.which("checkMesh") is None, reason="binaries missing."
 )
@@ -32,7 +32,7 @@ def test_hide_cli_stdout(capfd, stdout):
     assert ("info" in captured.out) == (stdout is None)
 
 
-@pytest.mark.tools()
+@pytest.mark.tools
 def test_dashed_args(tmp_path, capfd):
     os.environ["OGS_BIN_PATH"] = str(Path(shutil.which("ogs")).parent)
     ot._find_ogs.cli().NodeReordering(

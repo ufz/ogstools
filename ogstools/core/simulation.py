@@ -28,6 +28,8 @@ class Simulation(StorageBase):
     Simulations can be saved, loaded, and analyzed after completion.
     """
 
+    __hash__ = None
+
     Status = SimulationStatus
 
     @classmethod

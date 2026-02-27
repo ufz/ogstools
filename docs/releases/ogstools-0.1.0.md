@@ -6,7 +6,7 @@ The second release of the `ogstools`-package brings lots of new library function
 
 [`feflowlib`](../user-guide/feflowlib.md) is a new package for accessing FEFLOW easily in `pyvista`.
 
-[`meshlib`](../user-guide/meshlib.md) is a new package for efficient mesh generation from surfaces. It can be used to create meshes from  {ref}`PyVista surfaces <sphx_glr_auto_examples_howto_preprocessing_plot_meshlib_pyvista_input.py>` and from {ref}`.vtu surface files <sphx_glr_auto_examples_howto_preprocessing_plot_meshlib_vtu_input.py>`.
+[`meshlib`](../user-guide/meshlib.md) is a new package for efficient mesh generation from surfaces. It can be used to create meshes from {ref}`PyVista surfaces <sphx_glr_auto_examples_howto_preprocessing_plot_meshlib_pyvista_input.py>` and from {ref}`.vtu surface files <sphx_glr_auto_examples_howto_preprocessing_plot_meshlib_vtu_input.py>`.
 
 ______________________________________________________________________
 

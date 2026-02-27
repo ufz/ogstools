@@ -140,7 +140,7 @@ print(f"Simulation status: {sim.status_str}")
 # **MeshSeries** (:py:class:`~ogstools.MeshSeries`)
 #   Access simulation results at different timesteps for visualization.
 #
-# **Log** (:py:class:`~ogstools.logparser.Log`)
+# **Log** (:py:class:`~ogstools.logparser.log.Log`)
 #   Parse and analyze the simulation log (convergence, timing, errors).
 
 # %%

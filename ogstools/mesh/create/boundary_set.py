@@ -4,7 +4,6 @@
 #            http://www.opengeosys.org/project/license
 #
 
-import os
 import subprocess
 import tempfile
 from abc import ABC, abstractmethod
@@ -17,8 +16,7 @@ import pandas as pd
 
 from ogstools import mesh
 
-from .boundary import Layer, LocationFrame, Raster
-from .boundary_subset import Surface
+from .boundary import Layer
 from .region import RegionSet
 
 
@@ -73,6 +71,8 @@ class LayerSet(BoundarySet):
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> "LayerSet":
         """Create a LayerSet from a Pandas DataFrame."""
+        from .boundary_subset import Surface
+
         Row = namedtuple("Row", ["material_id", "mesh", "resolution"])
         surfaces = [
             Row(
@@ -104,6 +104,9 @@ class LayerSet(BoundarySet):
         :param resolution: The resolution for raster creation.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
         """
+
+        from .boundary import LocationFrame, Raster
+
         bounds = self.layers[0].top.mesh.bounds
         raster_set = self.create_rasters(resolution=resolution)
 
@@ -177,14 +180,14 @@ class LayerSet(BoundarySet):
         """
         Convert a layered geological structure into a RegionSet using prism meshing.
 
-        This function takes a :class:`boundary_set.LayerSet` and converts it into a :class:`region.RegionSet` object using prism or tetrahedral meshing technique.
+        This function takes a :class:`~ogstools.mesh.create.LayerSet` and converts it into a :class:`~ogstools.mesh.create.RegionSet` object using prism or tetrahedral meshing technique.
         The function will use prism elements for meshing if possible; otherwise, it will use
         tetrahedral elements.
 
         :param resolution: The desired resolution in [meter] for meshing. It must greater than 0.
         :param margin: ratio by which to shrink the raster boundary (0.01 == 1%)
 
-        :returns: A :class:`boundary_set.LayerSet` object containing the meshed representation of the geological structure.
+        :returns: A :class:`~ogstools.mesh.create.RegionSet` object containing the meshed representation of the geological structure.
 
         raises:
             ValueError: If an error occurs during the meshing process.
@@ -239,8 +242,8 @@ class LayerSet(BoundarySet):
         This function converts a layered geological structure represented by a `LayerSet` into a
         simplified meshed region using the specified `xy_resolution` and `rank`.
 
-        :param xy_resolution (float):   The desired spatial resolution of the mesh in the XY plane.
-        :param rank (int):              The rank of the mesh (2 for 2D, 3 for 3D).
+        :param xy_resolution: The desired spatial resolution of the mesh in the XY plane.
+        :param rank: The rank of the mesh (2 for 2D, 3 for 3D).
 
         :returns: A `RegionSet` object containing the simplified meshed representation of the geological structure.
 
@@ -337,9 +340,7 @@ class LayerSet(BoundarySet):
             raise ValueError(m) from e
 
         outfile = smesh_file.with_suffix(".1.vtk")
-        if not outfile.exists():
-            path = outfile.parent
-            os.listdir(path)
+        assert outfile.exists()
 
         materials_in_domain: list[int] = list(
             chain.from_iterable(

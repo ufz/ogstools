@@ -168,8 +168,14 @@ class Variable:
             if data_key == f"{variable.output_name}_difference":
                 return variable.difference
             if data_key.rsplit("_")[0] in [
-                "min", "max", "mean", "median", "sum", "std", "var",
-            ]:  # fmt:skip
+                "min",
+                "max",
+                "mean",
+                "median",
+                "sum",
+                "std",
+                "var",
+            ]:
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
@@ -406,7 +412,7 @@ class Variable:
 
         output_dataset = dataset[self.data_name]  # type: ignore[call-overload]
         if masked and self.mask_used(dataset):
-            mask0 = np.asarray(mesh0.ctp(False)[self.mask] == 0)
+            mask0 = np.asarray(mesh0.ctp(pass_cell_data=False)[self.mask] == 0)
             if not isinstance(dataset, Sequence):
                 output_dataset[mask0] = np.nan
                 return output_dataset
@@ -418,7 +424,9 @@ class Variable:
 
             # Masks differ with time
             for i, _mesh in enumerate(dataset):
-                mask = np.asarray(_mesh.ctp(False)[self.mask] == 0)
+                mask = np.asarray(
+                    _mesh.ctp(pass_cell_data=False)[self.mask] == 0
+                )
                 output_dataset[i, mask] = np.nan
         return output_dataset
 

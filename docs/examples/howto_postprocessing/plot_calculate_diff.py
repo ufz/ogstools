@@ -11,7 +11,6 @@ This example shows how to calculate differences between meshes.
 
 # sphinx_gallery_thumbnail_number = 2
 # pylint: disable=wrong-import-position, wrong-import-order
-# ruff: noqa: E402,I001
 
 # sphinx_gallery_end_ignore
 

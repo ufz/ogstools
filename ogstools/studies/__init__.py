@@ -6,7 +6,6 @@
 
 """Convergence study."""
 
-
 from . import convergence
 
 __all__ = [

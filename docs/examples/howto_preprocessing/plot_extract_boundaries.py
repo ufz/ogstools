@@ -6,7 +6,7 @@ There are situations, when you have a 2D domain mesh, but not the corresponding
 boundary meshes (e.g. when extracting a slice from a 3D model). But you need
 them to properly set boundary conditions. For those cases `ogstools` provides a
 function to generate the individual boundary meshes from the domain mesh or from
-a contiuous boundary mesh.
+a continuous boundary mesh.
 """
 
 # %%

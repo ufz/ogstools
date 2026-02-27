@@ -100,7 +100,7 @@ def extract_point_boundary_conditions(
     assign_bulk_ids(mesh)
     # extract mesh since boundary condition are on the surface ?! (not safe!)
     boundary_mesh = (
-        mesh.extract_surface()
+        mesh.extract_surface(algorithm="dataset_surface")
         if get_dimension(mesh) == 3
         else mesh.extract_feature_edges()
     )
@@ -173,7 +173,7 @@ def extract_cell_boundary_conditions(
     if mesh.volume != 0:
         # get the topsurface since there are the cells of interest
         topsurf = get_specific_surface(
-            mesh.extract_surface(),
+            mesh.extract_surface(algorithm="dataset_surface"),
             lambda normals: np.arccos(
                 normals[:, 2] / np.linalg.norm(normals, axis=1)
             )
@@ -278,9 +278,9 @@ def get_material_properties_of_H_model(
     }
 
     parameter_mapping = {}
-    for parameter in possible_parameter_mapping:
+    for parameter, value in possible_parameter_mapping.items():
         if parameter in mesh.cell_data:
-            parameter_mapping[parameter] = possible_parameter_mapping[parameter]
+            parameter_mapping[parameter] = value
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in parameter_mapping.items():
@@ -319,9 +319,9 @@ def get_material_properties_of_HT_model(
     }
 
     parameter_mapping = {}
-    for parameter in possible_parameter_mapping:
+    for parameter, value in possible_parameter_mapping.items():
         if parameter in mesh.cell_data:
-            parameter_mapping[parameter] = possible_parameter_mapping[parameter]
+            parameter_mapping[parameter] = value
 
     material_properties: defaultdict = defaultdict(dict)
     for parameter_feflow, parameter_ogs in parameter_mapping.items():
@@ -357,9 +357,9 @@ def get_material_properties_of_CT_model(
         "P_CONDY": "permeability_Y",
         "P_CONDZ": "permeability_Z",
     }
-    for perme in possible_permeability:
+    for perme, value in possible_permeability.items():
         if perme in mesh.cell_data:
-            parameters_mapping[perme] = possible_permeability[perme]
+            parameters_mapping[perme] = value
 
     feflow_species_parameter = [
         cell_data
@@ -434,8 +434,6 @@ def get_species(mesh: pv.UnstructuredGrid) -> list:
         if "P_DECA" in cell_data
     ]
     if not species:
-        ValueError(
-            """No species are found. This could be due to the fact that no porosity
-            values for species are assigned."""
-        )
+        msg = "No species are found. This could be due to the fact that no porosity values for species are assigned."
+        raise ValueError(msg)
     return species

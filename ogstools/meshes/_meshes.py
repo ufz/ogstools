@@ -32,6 +32,8 @@ class Meshes(MutableMapping, StorageBase):
     OGS input mesh. Refers to prj - file section <meshes>
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         meshes: dict[str, pv.UnstructuredGrid],
@@ -39,11 +41,12 @@ class Meshes(MutableMapping, StorageBase):
     ) -> None:
         """
         Initialize a Meshes object.
-            :param meshes:      List of Mesh objects (pyvista UnstructuredGrid)
-                                The first mesh is the domain mesh.
-                                All following meshes represent subdomains, and their points must align with points on the domain mesh.
-                                If needed, the domain mesh itself can also be added again as a subdomain.
-            :returns:           A Meshes object
+
+        :param meshes:      List of Mesh objects (pyvista UnstructuredGrid)
+                            The first mesh is the domain mesh.
+                            All following meshes represent subdomains, and their points must align with points on the domain mesh.
+                            If needed, the domain mesh itself can also be added again as a subdomain.
+        :returns:           A Meshes object
         """
         super().__init__("Meshes", "", id)
         self._meshes = meshes
@@ -112,10 +115,7 @@ class Meshes(MutableMapping, StorageBase):
         other.domain.active_scalars_name = None
         if self.domain.cell_data != other.domain.cell_data:
             return False
-        if self.domain.point_data != other.domain.point_data:
-            return False
-
-        return True
+        return self.domain.point_data == other.domain.point_data
 
     def __deepcopy__(self, memo: dict) -> Meshes:
         if id(self) in memo:
@@ -360,11 +360,13 @@ class Meshes(MutableMapping, StorageBase):
             if not self.has_identified_subdomains:
                 self.identify_subdomain()
 
-            set_pv_attr = getattr(pv, "set_new_attribute", setattr)
             for name, mesh in self._meshes.items():
                 check_datatypes(mesh, strict=True, meshname=name)
                 filepath = active_path / f"{name}.vtu"
-                set_pv_attr(mesh, "filepath", filepath)
+                if hasattr(mesh, "filepath"):
+                    mesh.filepath = filepath
+                else:
+                    pv.set_new_attribute(mesh, "filepath", filepath)
                 Mesh.save(mesh, filepath, **kwargs)
 
             meta_dict = {
@@ -400,7 +402,7 @@ class Meshes(MutableMapping, StorageBase):
         **kwargs: Any,
     ) -> list[Path]:
         """
-        Save all meshes. If num_partitions is specified (e.g. obj.num_partition = [2,3]) is also create paritioned meshes for each partition.
+        Save all meshes. If num_partitions is specified (e.g. obj.num_partition = [2,3]) is also create partitioned meshes for each partition.
 
         This function will perform identifySubdomains, if not yet been done.
 
@@ -540,12 +542,10 @@ class Meshes(MutableMapping, StorageBase):
         items = list(self._meshes.items())
         self._meshes = {f"{prefix}{name}{suffix}": mesh for name, mesh in items}
 
-    @deprecated(
-        """
+    @deprecated("""
     Please rename the groups in the original meshes - containing physical_group OR (better)
     Use the shorter names (without "physical_group") -> renaming in prj-files and scripts necessary.
-    """
-    )
+    """)
     def rename_subdomains_legacy(self) -> None:
         """
         Add to the name physical_group to restore legacy convention

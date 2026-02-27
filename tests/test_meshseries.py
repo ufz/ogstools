@@ -25,7 +25,7 @@ def test_meshseries_xdmf():
     assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
 
-@pytest.mark.system()
+@pytest.mark.system
 @pytest.mark.parametrize("quads", [True, False], ids=["quads", "no quads"])
 def test_read_quadratic_xdmf(tmp_path, quads):
     "Test reading quadratic xdmf meshes. Tests the special case with a mesh with only 1 cell. Doesn't work with native meshio."
@@ -33,7 +33,7 @@ def test_read_quadratic_xdmf(tmp_path, quads):
         ot.gmsh_tools.rect(1, 1, structured_grid=quads, order=2)
     )
 
-    prj1 = ot.Project(input_file=examples.prj_mechanics).copy("prj1.prj")
+    prj1 = ot.Project(input_file=examples.prj_mechanics).copy()
     prj1.replace_text("XDMF", xpath="./time_loop/output/type")
     prj1.replace_text(4, xpath=".//integration_order")
 
@@ -481,7 +481,7 @@ def test_compare_meshseries(ms, var):
     assert not ot.MeshSeries.compare(ms_scaled, ms, var)
     with pytest.raises(
         AssertionError,
-        match="The topologies of the MeshSeries objects are not identical.",
+        match=r"The topologies of the MeshSeries objects are not identical\.",
     ):
         ot.MeshSeries.compare(ms_scaled, ms, var, strict=True)
 
@@ -491,7 +491,7 @@ def test_compare_meshseries(ms, var):
     assert not ot.MeshSeries.compare(ms, ms_time_shifted, var)
     with pytest.raises(
         AssertionError,
-        match="timevalues differs between MeshSeries.",
+        match=r"timevalues differs between MeshSeries\.",
     ):
         ot.MeshSeries.compare(ms_time_shifted, ms, var, strict=True)
     return
@@ -556,7 +556,7 @@ def test_compare_meshseries_tol(tols):
         (2, True, 4, False),
     ],
 )
-@pytest.mark.system()
+@pytest.mark.system
 def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     "Test creation of integration point meshes."
     sigma_ip = ot.variables.stress.replace(data_name="sigma_ip")
@@ -598,7 +598,7 @@ def test_reader():
     assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_xdmf_quadratic(tmp_path):
     "Test reading of quadratic elements in xdmf."
 

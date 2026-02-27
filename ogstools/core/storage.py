@@ -13,6 +13,7 @@ import errno
 import inspect
 import shutil
 import tempfile
+import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -108,6 +109,8 @@ class StorageBase(abc.ABC):
     - _save_impl(): Actual save logic
     - save(): Public save method (usually delegates to base implementation)
     """
+
+    __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
     Backup = False
@@ -284,8 +287,8 @@ class StorageBase(abc.ABC):
         :param name: Display name for the component.
         :returns:    Formatted status string.
         """
-        if obj.is_saved:
-            return f"{name}: saved to {self._format_path(obj.active_target)}"
+        if obj.active_target:  # is_saved
+            return f"{name}: saved to {self._format_path(obj.active_target.absolute())}"
         return f"{name}: not saved (planned to {self._format_path(obj.next_target)})"
 
     def _save_or_link_child(
@@ -447,10 +450,24 @@ class StorageBase(abc.ABC):
             pass
 
         new_target.parent.mkdir(parents=True, exist_ok=True)
-        new_target.symlink_to(
-            Path(self.active_target.absolute()),
-            target_is_directory=not self.is_file,
-        )
+        try:
+            new_target.symlink_to(
+                Path(self.active_target.absolute()),
+                target_is_directory=not self.is_file,
+            )
+        except OSError:
+            warnings.warn(
+                f"Could not create symlink at {new_target}. Falling back to copy. "
+                "To enable symlinks on Windows, either activate Developer Mode "
+                "(Settings > Update & Security > For developers) or grant the "
+                "'Create symbolic links' privilege (Local Security Policy > Local Policies > "
+                "User Rights Assignment > Create symbolic links).",
+                stacklevel=2,
+            )
+            if self.is_file:
+                shutil.copy2(self.active_target, new_target)
+            else:
+                shutil.copytree(self.active_target, new_target)
         self.is_link = True
         return
 

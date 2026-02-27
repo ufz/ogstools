@@ -20,7 +20,8 @@ Create a virtual environment, activate it and install required packages:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[pinned,dev,test,docs]"
+pip install -e ".[pinned]"
+# Or pip install -e."[all,dev,test,docs]"  when you change the Python environment
 
 # enable basic style checks once
 pre-commit install
@@ -211,7 +212,7 @@ Now you are inside the container. For example, you can open a new terminal (`Ter
 If you are familiar with [Docker](https://www.docker.com), you can also start the container manually, e.g. with:
 
 ```bash
-docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10 /bin/bash
+docker run --rm -it -v $PWD:$PWD -w $PWD registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12 /bin/bash
 # Other container are available! e.g. registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
 # Inside the container:
 make setup_devcontainer # creates a virtual env and install ogstools
@@ -223,12 +224,10 @@ Please also be aware of [file permission issues](../user-guide/docker.md#running
 
 All available containers are located in the [OGSTools container registry](https://gitlab.opengeosys.org/ogs/tools/ogstools/container_registry/).
 
-______________________________________________________________________
-
 To prevent these issues we recommend running via [Apptainer](https://apptainer.org):
 
 ```bash
-apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10
+apptainer shell docker://registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12
 # Inside the container:
 make setup_devcontainer
 source .venv-devcontainer/bin/activate
@@ -248,3 +247,11 @@ pytest
 - Update authors on Zenodo release.
 - Update Zenodo badge in repo.
 - On https://github.com/conda-forge/ogstools-feedstock create a new issue with the title `@conda-forge-admin, please update version`
+
+# Developers using OGSTools
+
+Packages that use OGSTools and Sphinx for their documentation can add an [intersphinx](https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html) mapping into their conf.py file:
+
+```python
+intersphinx_mapping = {"ogstools": ("https://ogstools.opengeosys.org/", None)}
+```

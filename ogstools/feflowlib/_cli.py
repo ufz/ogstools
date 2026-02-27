@@ -60,7 +60,7 @@ logger.setLevel(log.INFO)
 
 def feflow_converter(input: str, output: str, case: str, BC: str) -> int:
     """
-    This function summarizes main functionality of the feflowlib. It show examplary how a
+    This function summarizes main functionality of the feflowlib. It show exemplary how a
     workflow could look like to achieve the conversion of FEFLOW data to a vtu-file.
 
     :param input: input path to FEFLOW data

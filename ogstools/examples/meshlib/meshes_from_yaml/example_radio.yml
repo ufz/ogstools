@@ -11,7 +11,6 @@ parameters:
   box_size : "radius_outer * 2.2"
   center : "box_size / 2"
 
-# Punkte des Modells
 points:
  
   b00: { coords: [0.0, 0.0], char_length: 0.3 }

@@ -64,9 +64,13 @@ class TestPlotting:
         ],
     )  # fmt: skip
     def test_ticklabels(
-        self, lower: float, upper: float, n_ticks: int,
-        ref_labels: list, ref_offset: str | None,
-    ):  # fmt: skip
+        self,
+        lower: float,
+        upper: float,
+        n_ticks: int,
+        ref_labels: list,
+        ref_offset: str | None,
+    ):
         """Check for equality of ticklabels and expected labels."""
         levels = ot.plot.compute_levels(lower, upper, n_ticks=n_ticks)
         labels, offset = ot.plot.contourplots.get_ticklabels(levels)
@@ -99,7 +103,8 @@ class TestPlotting:
     def test_missing_data(self):
         """Test missing data in mesh."""
         mesh = pv_examples.load_uniform()
-        pytest.raises(KeyError, ot.plot.contourf, mesh, "missing_data")
+        with pytest.raises(KeyError):
+            ot.plot.contourf(mesh, "missing_data")
 
     var_params: ClassVar[list[tuple[ot.variables.Variable, dict]]] = [
         (ot.variables.material_id, {}),
@@ -165,12 +170,13 @@ class TestPlotting:
         contourf(ms[1], ot.variables.displacement, fig=fig, ax=ax[1])
         return fig
 
+    @pytest.mark.filterwarnings("ignore:This is not a good practice:Warning")
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_user_defined_fig(self) -> plt.Figure:
         """Test plotting with provided fig but not ax via image comparison."""
         ot.plot.setup.combined_colorbar = False
         ms = examples.load_meshseries_THM_2D_PVD()
-        fig, ax = plt.subplots(2, 1, figsize=(40, 20))
+        fig, _ax = plt.subplots(2, 1, figsize=(40, 20))
         contourf([ms[0], ms[1]], ot.variables.temperature, fig=fig)
         return fig
 
@@ -478,7 +484,7 @@ class TestPlotting:
     # TODO: we could use pytest-pyvista to do the same checks for the pyvista
     # plots as pyvista-mpl is doing for the matplotlib plots.
 
-    @pytest.fixture()
+    @pytest.fixture
     def pv_plotter(self):
         plotter = pv.Plotter(off_screen=True)
         yield plotter
@@ -527,7 +533,11 @@ class TestPlotting:
             "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj",
             "TH2M/H2/mcWhorter/mcWhorter_h2.prj",
             "TH2M/H2M/Liakopoulos/liakopoulos_TH2M.prj",
-            "HydroMechanics/AnchorSourceTerm/two_anchors.prj",  # uses gml
+            pytest.param(
+                "HydroMechanics/AnchorSourceTerm/two_anchors.prj",
+                marks=pytest.mark.tools(),  # constructMeshesFromGeometry
+                id="two_anchors",
+            ),
         ],
         ids=lambda x: Path(x).stem,
     )

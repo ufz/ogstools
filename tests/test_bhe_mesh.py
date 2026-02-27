@@ -186,7 +186,7 @@ def case_5(mesh_type: str) -> Meshes:
 
 
 class TestBHE:
-    @pytest.mark.tools()
+    @pytest.mark.tools
     @pytest.mark.parametrize("mesh_type", ["structured", "prism"])
     @pytest.mark.parametrize(
         ("model", "max_id"),

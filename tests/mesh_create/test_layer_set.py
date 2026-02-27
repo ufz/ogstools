@@ -20,12 +20,12 @@ def test_compose_invalid(make_layerset: Callable[[int], LayerSet]):
     make_layerset(20)
 
 
-@pytest.mark.tools()  # createIntermediateRasters
+@pytest.mark.tools  # createIntermediateRasters
 def test_create_with_1_intermediate(make_layerset: Callable[[int], LayerSet]):
     assert len(make_layerset(2).create_rasters(300)) == 9
 
 
-@pytest.mark.tools()  # createIntermediateRasters
+@pytest.mark.tools  # createIntermediateRasters
 def test_create_with_3_intermediate(make_layerset: Callable[[int], LayerSet]):
     layer_set = make_layerset(3)
     raster_set = layer_set.create_rasters(resolution=300)
@@ -36,7 +36,7 @@ def test_create_with_3_intermediate(make_layerset: Callable[[int], LayerSet]):
     ), f"Index of base layer 02_krl is 2 (preceding base layers) + 1 intermediate layer in layer 1 and + 2 intermediate layer in layer 2. The name is {raster_set[5]}"
 
 
-@pytest.mark.tools()  # createIntermediateRasters
+@pytest.mark.tools  # createIntermediateRasters
 def test_create_with_no_intermediate():
     resolution = 300
     names = ["00_KB", "01_q", "02_krl"]

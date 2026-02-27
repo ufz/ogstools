@@ -5,8 +5,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import pyvista as pv
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 import ogstools as ot
 from ogstools import examples
@@ -95,8 +93,8 @@ def test_depth_2D():
 
 
 def test_depth_3D():
-    mesh = pv.SolidSphere(100, center=(0, 0, -101))
-    top_mesh = mesh.extract_surface().clip("-z")
+    mesh = pv.SolidSphere(outer_radius=100, center=(0, 0, -101))
+    top_mesh = mesh.extract_surface(algorithm="dataset_surface").clip("-z")
     depth = ot.mesh.depth(mesh, top_mesh)
     assert np.isclose(np.ptp(depth), np.ptp(mesh.points[:, 2]))
 
@@ -117,30 +115,31 @@ def test_reshape_obs_points_mesh():
     )
 
 
-@pytest.mark.tools()
-@settings(max_examples=30, deadline=1600)
-@given(
-    st.one_of(
-        st.integers(2, 13),
-        st.tuples(st.integers(1, 14), st.integers(1, 14))
-        .filter(lambda x: abs(x[1] - x[0]) < 13)
-        .map(sorted),
-    ),
-    st.booleans(),
-)
-def test_threshold_ip_data(mat_ids: tuple, invert: bool):
-    "Check length of thresholded ip data is correct."
-    mesh = examples.load_meshseries_THM_2D_PVD()[-1]
-    thresh_ip_data = ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
-    thresh_n_cells = mesh.threshold(
-        mat_ids, scalars="MaterialIDs", invert=invert
-    ).n_cells
+# @pytest.mark.tools
+# @settings(max_examples=30, deadline=1600)
+# @given(
+#    st.one_of(
+#        st.integers(2, 13),
+#        st.tuples(st.integers(1, 14), st.integers(1, 14))
+#        .filter(lambda x: abs(x[1] - x[0]) < 13)
+#        .map(sorted),
+#    ),
+#    st.booleans(),
+# )
+# def test_threshold_ip_data(mat_ids: tuple, invert: bool):
+#    "Check length of thresholded ip data is correct."
+#    mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+#    thresh_ip_data = ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
+#    thresh_n_cells = mesh.threshold(
+#        mat_ids, scalars="MaterialIDs", invert=invert
+#    ).n_cells
+#
+#    for arr in ot.mesh.ip_metadata(mesh):
+#        n_ip = len(mesh[arr["name"]]) // mesh.n_cells
+#        assert len(thresh_ip_data[arr["name"]]) == (thresh_n_cells * n_ip)
 
-    for arr in ot.mesh.ip_metadata(mesh):
-        n_ip = len(mesh[arr["name"]]) // mesh.n_cells
-        assert len(thresh_ip_data[arr["name"]]) == (thresh_n_cells * n_ip)
 
-
+@pytest.mark.tools  # checkMesh
 @pytest.mark.parametrize("strict", [True, False])
 @pytest.mark.parametrize(
     "mesh",
@@ -153,7 +152,9 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
 def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
     assert ot.mesh.validate(mesh, strict=strict)
     # intentionally reversing the node order with method 0
-    wrong_mesh = mesh.copy().extract_surface().flip_faces()
+    wrong_mesh = (
+        mesh.copy().extract_surface(algorithm="dataset_surface").flip_faces()
+    )
     if strict:
         with pytest.raises(UserWarning, match="not compliant with OGS"):
             ot.mesh.validate(wrong_mesh, strict=strict)

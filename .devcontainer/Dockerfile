@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:3.10-bookworm
+FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
 
 # FEFLOW, instructions from https://download.feflow.com/download/FEFLOW/linux/
 ENV \
@@ -22,3 +22,6 @@ ENV \
     PYTHONPATH=/opt/feflow/10.0/python \
     LD_LIBRARY_PATH=/opt/feflow/10.0/lib64:/opt/feflow/10.0/qt/lib64 \
     FEFLOW100_ROOT=/opt/feflow/10.0
+
+# HACK: feflow bundled python clashes with system install
+RUN rm -rf /opt/feflow/10.0/lib64/libpython3.12.so*

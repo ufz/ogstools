@@ -45,7 +45,7 @@ class TestSurface:
         ):
             create.Surface(meshpath / "mesh1/surface_data/notexisting.vtu", 0)
 
-    @pytest.mark.tools()
+    @pytest.mark.tools
     def testsurface_to_raster(self):
         s1 = create.Surface(meshpath / "mesh1/surface_data/00_KB.vtu", 0)
         outfile = s1.create_raster_file(10)

@@ -4,7 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from lxml import etree as ET
 
@@ -22,7 +22,7 @@ class BuildTree:
         self.tree = tree
 
     @staticmethod
-    def _convertargs(args: dict[str, str]) -> None:
+    def _convertargs(args: dict[str, Any]) -> None:
         for item, value in args.items():
             if not isinstance(value, list | dict):
                 args[item] = str(value)

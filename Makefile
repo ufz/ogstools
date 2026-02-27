@@ -9,7 +9,7 @@ setup:  ## Setup a virtual environment and install all development dependencies
 		uv run pre-commit install; \
 	else \
 		python -m venv .venv --upgrade-deps; \
-		.venv/bin/pip install -e .[pinned,dev,test,docs]; \
+		.venv/bin/pip install -e .[pinned]; \
 		.venv/bin/pre-commit install; \
 	fi
 	@echo
@@ -41,7 +41,7 @@ clone:
 # Hint for custom ogs: .venv/bin/pip install -v ./.ogs --config-settings=cmake.define.OGS_BUILD_PROCESSES="HeatConduction;ThermoRichardsMechanics;SmallDeformation;SteadyStateDiffusion"
 pip_setup_latest:
 	python -m venv .venv --upgrade-deps
-	.venv/bin/pip install -e .[dev,test,docs]
+	.venv/bin/pip install -e .[dev,test,docs,monitor]
 	.venv/bin/pip uninstall ogs -y
 	.venv/bin/pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre
 
@@ -59,7 +59,7 @@ pip_setup_headless:  ## Install gmsh without X11 dependencies
 setup_devcontainer:  ## Internal usage [CI]
 	rm -rf .venv-devcontainer
 	python -m venv .venv-devcontainer --upgrade-deps
-	.venv-devcontainer/bin/pip install -e .[ogs,dev,test,docs,feflow,pinned]
+	.venv-devcontainer/bin/pip install -e .[feflow,pinned]
 	.venv-devcontainer/bin/pip uninstall gmsh -y
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh==4.13.1.dev1
 
@@ -126,6 +126,6 @@ requirement:
 	echo "Activating virtual environment and installing packages"; \
 	. $$venv_dir/bin/activate && pip install .[ogs] && pip freeze -l > requirements/requirements_py$$version.txt && \
 	echo "Activating virtual environment and installing packages"; \
-	. $$venv_dir/bin/activate && pip install .[dev,tests,doc,ogs] && pip freeze -l > requirements/requirements_allextras_py$$version.txt && \
+	. $$venv_dir/bin/activate && pip install .[all,dev,docs,test] && pip freeze -l > requirements/requirements_allextras_py$$version.txt && \
 	echo "Deleting virtual environment"; \
 	rm -r $$venv_dir

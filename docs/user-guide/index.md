@@ -50,7 +50,7 @@ The latest release of ogstools can be installed from [PyPI](https://pypi.org/pro
 `pip`:
 
 ```bash
-pip install ogstools[ogs]
+pip install ogstools[all]
 ```
 
 :::{admonition} Install development version
@@ -59,7 +59,7 @@ pip install ogstools[ogs]
 You can also install the latest development version with `pip` (requires also [`git`](https://git-scm.com)):
 
 ```bash
-pip install "ogstools[ogs] @ git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git"
+pip install "ogstools[all] @ git+https://gitlab.opengeosys.org/ogs/tools/ogstools.git"
 ```
 
 :::
@@ -70,7 +70,7 @@ With `pip install ogstools` an OGS wheel (it installs ogs binaries and tools) is
 
 If you want to use a self-compiled or custom-built version of OGS instead of the one provided by pip, follow these steps:
 
-1. Install OGSTools without \[ogs\]
+1. Install OGSTools without [ogs]
 
 ```bash
 pip install ogstools

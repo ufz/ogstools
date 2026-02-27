@@ -19,7 +19,7 @@ is a:
 Install the latest version of ogstools:
 
 ```bash
-pip install ogstools
+pip install ogstools[all]
 ```
 
 For further details see the [User Guide](https://ogstools.opengeosys.org/stable/user-guide/index.html).

@@ -46,6 +46,8 @@ class Surface:
             np.ones(self.mesh.n_cells) * self.material_id
         ).astype(np.int32)
 
+    __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
+
     def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
 

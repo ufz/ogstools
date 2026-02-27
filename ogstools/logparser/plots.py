@@ -92,7 +92,7 @@ def plot_convergence_order(
     kwargs.setdefault("vmin", 0)
     kwargs.setdefault("vmax", 2)
     res = heatmap(orders, order_var, x_vals=x_vals, **kwargs)
-    fig = kwargs.get("fig", res)
+    fig: plt.Figure = kwargs.get("fig", res)
     ax = kwargs.get("ax", fig.axes[0])
     return _format_fig(fig, ax, x_ticks, y_ticks, x_label=x_metric)
 
@@ -131,6 +131,6 @@ def plot_convergence(
     err_var = Scalar(names[metric], cmap="viridis", symbol=symbol)
     kwargs.setdefault("log_scaled", True)
     res = heatmap(errors, err_var, x_vals=x_vals, **kwargs)
-    fig = kwargs.get("fig", res)
+    fig: plt.Figure = kwargs.get("fig", res)
     ax = kwargs.get("ax", fig.axes[0])
     return _format_fig(fig, ax, x_ticks, y_ticks, x_label=x_metric)

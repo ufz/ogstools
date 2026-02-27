@@ -1,5 +1,8 @@
 # OGSTools 0.8.0 Release Notes
 
+Python 3.11-3.14
+OGS 6.5.7
+
 # Breaking changes
 
 ## API breaking changes
@@ -162,8 +165,15 @@
 
 ## Infrastructure
 
+- Drop Python 3.10 support
+- Add Python 3.14 support
+- Updated pinned environment
+- Test with container from 3.10 to 3.12
+- Dependency and tooling update
+- Use Intersphinx for 3rd party package documentation reference
 - Gallery example figures are now tested against hashes which avoids
   unexpectedly changing figures.
+- Monitor (Bokeh) is optional dependency
 
 ## Documentation
 

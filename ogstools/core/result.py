@@ -18,6 +18,8 @@ class Result(StorageBase):
     (meshes, logs, etc.) and provides access to simulation outputs.
     """
 
+    __hash__ = None
+
     def __init__(
         self,
         sim_output: Path | str | None = None,

@@ -18,7 +18,7 @@ def make_material(properties: dict, name="test_material") -> Material:
     return Material(name=name, raw_data=raw_data)
 
 
-@pytest.fixture()
+@pytest.fixture
 def write_yaml(tmp_path):
     """Write a dict to a YAML file in tmp_path and return the path."""
 
@@ -31,7 +31,7 @@ def write_yaml(tmp_path):
     return _write
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_materials():
     """Provide commonly used materials as dicts and as ready Material objects."""
     return {
@@ -67,7 +67,7 @@ def example_materials():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def make_db(write_yaml, tmp_path):
     """Factory that creates a MaterialManager from a dict of materials by writing them to tmp_path."""
 
@@ -79,13 +79,13 @@ def make_db(write_yaml, tmp_path):
     return _make
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_schema():
     """Provide a minimal schema requiring only a 'Density' property and no phases."""
     return {"properties": ["Density"], "phases": []}
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_materials():
     """Provide a minimal set of default materials (clay + water)."""
     return {
@@ -100,7 +100,7 @@ def default_materials():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_schema():
     """Provide a minimal process schema requiring Density and one AqueousLiquid phase."""
     return {
@@ -109,19 +109,19 @@ def default_schema():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_subdomains():
     """Provide a single subdomain definition pointing to clay."""
     return [{"subdomain": "region1", "material": "clay", "material_ids": [1]}]
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_fluids():
     """Provide a single fluid definition mapping AqueousLiquid -> water."""
     return {"AqueousLiquid": "water"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def make_filtered_db(write_yaml, tmp_path, monkeypatch):
     """Factory that builds a filtered MaterialManager with arbitrary materials, schema, and fluids.
 
@@ -2079,7 +2079,7 @@ class TestOgstoolsInternalDB:
         meshes = ot.Meshes.from_gmsh(mesh_path)
         meshes.save(tmp_path)
 
-    @pytest.mark.system()
+    @pytest.mark.system
     @pytest.mark.parametrize(
         ("process", "input_prj"),
         [

@@ -65,7 +65,7 @@ def heatmap(
     ax.minorticks_on()
     vals = variable.magnitude.transform(data)
     if log_scaled:
-        vals = data
+        vals = data.copy()
         vals[vals > 0.0] = np.log10(vals[vals > 0.0])
     else:
         vals = data

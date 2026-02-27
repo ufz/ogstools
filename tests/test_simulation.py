@@ -9,16 +9,17 @@ import ogstools as ot
 from ogstools import examples
 
 
-@pytest.fixture()
+@pytest.fixture
 def failing_model() -> ot.Model:
-
     msh_file = ot.gmsh_tools.cuboid(lengths=1.0, n_edge_cells=1, n_layers=1)
     meshes = ot.Meshes.from_gmsh(msh_file, dim=[1, 3], log=False)
     prj = ot.Project(input_file=examples.prj_aniso_expansion).copy()
-    return ot.Model(prj, meshes, id="failing_model")
+    model = ot.Model(prj, meshes)
+    model.id = "failing_model"
+    return model
 
 
-@pytest.fixture()
+@pytest.fixture
 def good_model() -> ot.Model:
     return examples.load_model_liquid_flow_simple().copy(id="good_model")
 
@@ -28,7 +29,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
     return request.getfixturevalue(request.param)
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_simulation_simple(tmp_path, good_model):
     sim = good_model.run()
     sim.save(tmp_path / "sim_good_model")
@@ -36,14 +37,14 @@ def test_simulation_simple(tmp_path, good_model):
     assert ms[-1]
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_simulation_simple2(tmp_path, good_model):
     sim = good_model.run(tmp_path / "Simulation" / "sim_good_model")
     sim.save()
     assert sim.meshseries
 
 
-@pytest.mark.system()
+@pytest.mark.system
 @pytest.mark.parametrize("do_kill", [False, True], ids=["no-kill", "kill"])
 @pytest.mark.parametrize(
     "interactive", [False], ids=["native"]
@@ -95,6 +96,7 @@ def test_abort_run_and_status(
 
 
 # ToDo: Issue #3589 + Console capture not thread safe - Test interactive
+@pytest.mark.tools  # NodeReordering
 def test_parallel_runs():
     """Simulations can run in parallel (native) or sequentially (interactive)."""
     model = examples.load_model_liquid_flow_simple()
@@ -110,7 +112,7 @@ def test_parallel_runs():
     assert sims[0].meshseries == sims[1].meshseries
 
 
-@pytest.mark.system()
+@pytest.mark.system
 def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     """Run a simulation, save as archive, delete original, re-run via cmd."""
     import shutil
@@ -135,6 +137,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     assert sim.meshseries == ms_rerun
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_simulation_log_convergence() -> plt.Figure:
     model = examples.load_model_liquid_flow_simple()
@@ -142,6 +145,7 @@ def test_simulation_log_convergence() -> plt.Figure:
     return sim.log.plot_convergence()
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_simulation_log_convergence_order() -> plt.figure:
     model = examples.load_model_liquid_flow_simple()

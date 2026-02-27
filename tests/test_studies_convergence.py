@@ -12,7 +12,7 @@ from ogstools.studies import convergence
 class TestConvergence:
     """Test case for convergent meshes."""
 
-    @pytest.mark.system()
+    @pytest.mark.system
     def test_steady_state_diffusion(self):
         sim_results = []
         edge_cells = [2**i for i in range(3, 6)]

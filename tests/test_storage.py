@@ -194,11 +194,16 @@ class TestStorage:
 
     @pytest.mark.parametrize(
         "test_class",
-        [ot.Project, ot.Meshes, ot.Model, ot.Simulation, ot.MeshSeries],
-        ids=["Project", "Meshes", "Model", "Simulation", "MeshSeries"],
+        [
+            pytest.param(ot.Project, id="Project"),
+            pytest.param(ot.Meshes, marks=pytest.mark.tools(), id="Meshes"),
+            pytest.param(ot.Model, marks=pytest.mark.tools(), id="Model"),
+            pytest.param(ot.Simulation, id="Simulation"),
+            pytest.param(ot.MeshSeries, id="MeshSeries"),
+        ],
     )
-    def test_state_machine(self, tmp_path, test_class):
-        ot.StorageBase.Userpath = tmp_path
+    def test_state_machine(self, tmp_path, monkeypatch, test_class):
+        monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
         m = ProjectMachine
         m.temp = tmp_path
         m.TestClass = test_class
@@ -213,6 +218,7 @@ class TestStorage:
         assert files1 != files2
         assert prj1 == prj2
 
+    @pytest.mark.tools  # NodeReordering
     def test_model_save_load_roundtrip(self):
 
         meshes = ot.Meshes.from_gmsh(rect())
@@ -225,6 +231,7 @@ class TestStorage:
         assert files1 != files3
         assert model1 == model2
 
+    @pytest.mark.tools  # NodeReordering, checkMesh
     def test_meshes_save_load_roundtrip(self):
         meshes1 = ot.Meshes.from_gmsh(rect())
         files1 = meshes1.save()
@@ -241,6 +248,7 @@ class TestStorage:
         meshes3 = ot.Meshes.from_gmsh(rect(lengths=11))
         assert meshes3 != meshes1
 
+    @pytest.mark.tools  # NodeReordering
     def test_sim_save_load_roundtrip(self):
         # ToDo example ot.Simulation()
         prj1 = ot.Project(input_file=prj_mechanics).copy()
@@ -307,6 +315,7 @@ class TestStorage:
         original_py = EXAMPLES_DIR / "prj" / "decay_boundary_conditions.py"
         assert py_file.read_bytes() == original_py.read_bytes()
 
+    @pytest.mark.tools  # NodeReordering
     def test_storage_model_1(self, tmp_path):
         prj1 = ot.Project(input_file=prj_mechanics, output_file="mechanics")
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
@@ -314,7 +323,7 @@ class TestStorage:
         assert_files_saved(files_dry, dry_run=True)
         files = prj1.save(tmp_path / "vtk", overwrite=True)
         model_1_1 = ot.Model(prj1, meshes1, id="model_1_1")
-        files_overwrite = model_1_1.save("m", overwrite=True)
+        files_overwrite = model_1_1.save(tmp_path / "m")
         assert_files_saved(files_overwrite)
         assert files_dry == files
         sim = model_1_1.run()
@@ -331,6 +340,7 @@ class TestStorage:
         model.save(overwrite=True)
         assert model.active_target.exists()
 
+    @pytest.mark.tools  # NodeReordering
     def test_storage_model(self, tmp_path):
         model = load_model_liquid_flow_simple()
         model.save(tmp_path / "mytest", overwrite=True)
@@ -338,6 +348,7 @@ class TestStorage:
         model.save(overwrite=True)
         assert model.active_target.exists()
 
+    @pytest.mark.tools  # NodeReordering
     def test_storage_meshes(self, tmp_path):
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
         meshes1.id = "meshes1"
@@ -351,12 +362,16 @@ class TestStorage:
         meshseries1.save(tmp_path / "new_meshseries.pvd", overwrite=True)
         meshseries1.save(overwrite=True)
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.parametrize(
         "save_strategy",
-        ["no", "id", "target", "empty"],
+        ["id", "target", None],
     )
-    def test_storage_multi_model_multi_sim(self, tmp_path, save_strategy):
-        ot.StorageBase.Userpath = tmp_path
+    def test_storage_multi_model_multi_sim(
+        self, tmp_path, monkeypatch, save_strategy
+    ):
+        tmp_path = tmp_path / (save_strategy or "none")
+        monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
         prj_pvd = ot.Project(input_file=prj_mechanics)
         # prj_pvd.save(tmp_path / "mechanics")
         # prj_test = ot.Project.from_folder(tmp_path/"mechanics")
@@ -386,12 +401,17 @@ class TestStorage:
         ot.Model(prj_test, meshes_rect12).save(tmp_path / "model_test2")
 
         sim_default = model_pvd_rect10.run(id="sim_default")
+        assert sim_default.status == ot.Simulation.Status.done
         sim_highres = model_pvd_rect12.run(id="sim_highres")
+        assert sim_highres.status == ot.Simulation.Status.done
 
         sim_xdmf = model_xdmf_rect10.run(id="sim_xdmf")
+        assert sim_xdmf.status == ot.Simulation.Status.done
         assert sim_xdmf.meshseries
         sim_xdmf_2 = model_xdmf_rect10.run()
+        assert sim_xdmf_2.status == ot.Simulation.Status.done
         sim_xdmf_highres = model_xdmf_rect12.run()
+        assert sim_xdmf_2.status == ot.Simulation.Status.done
 
         assert not model_pvd_rect10.user_specified_target
         assert not sim_default.is_saved
@@ -411,25 +431,31 @@ class TestStorage:
         assert np.all(m_diff_12_displacement < 1e-3)
         assert not np.all(m_diff_12_displacement == 0)
 
-        # execution of same model should give identical result
+        # execution of same model should give identical (close to machine precision) result
+        max_tolerance = 1e-12
+
         ms_diff_run = ot.MeshSeries.difference(
             sim_xdmf.meshseries, sim_xdmf_2.meshseries
         )
-        assert np.all(ms_diff_run[-1].point_data["displacement"] == 0)
+        assert np.all(
+            abs(ms_diff_run[-1].point_data["displacement"]) <= max_tolerance
+        )
 
         # same result with just other output format
         ms_diff_12_outputformat = ot.MeshSeries.difference(
             sim_default.meshseries, sim_xdmf.meshseries
         )
         assert np.all(
-            ms_diff_12_outputformat[-1].point_data["displacement"] == 0
+            abs(ms_diff_12_outputformat[-1].point_data["displacement"])
+            <= max_tolerance
         )
 
         ms_diff_10_outputformat = ot.MeshSeries.difference(
             sim_highres.meshseries, sim_xdmf_highres.meshseries
         )
         assert np.all(
-            ms_diff_10_outputformat[-1].point_data["displacement"] == 0
+            abs(ms_diff_10_outputformat[-1].point_data["displacement"])
+            <= max_tolerance
         )
 
         files = [
@@ -438,6 +464,7 @@ class TestStorage:
         # 5 meshes (1 domain + 4 sub) + 1 meta
         assert len(files) == 6
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.parametrize("dry_run", [False, True])
     def test_save_returns_written_files(self, tmp_path, dry_run):
         """Test that all _save_impl methods return the actual written file paths.

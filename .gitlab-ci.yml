@@ -6,8 +6,8 @@ stages:
 
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.10-feflow-10.0
-  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10-feflow-10.0
+  DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0
+  DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12-feflow-10.0
   ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
 
 workflow:
@@ -74,17 +74,17 @@ tests (arch - conda) (R):
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[pinned]"
     - *pip-setup-extra-headless
   script:
     - pytest -n auto
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
+      - PYTHON_VERSION: "3.14"
 
 tests (arch - conda - ogs wheel release) (M):
   stage: maintenance
@@ -94,17 +94,17 @@ tests (arch - conda - ogs wheel release) (M):
   needs: []
   before_script:
     - *conda-setup-activate
-    - pip install -e ".[ogs,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
+    - pip install -e ".[all,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - pytest -n auto --hypothesis-profile ci
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
-      - PYTHON_VERSION: "3.10"
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
+      - PYTHON_VERSION: "3.14"
 
 tests (arch - pip - ogs latest) (M):
   stage: maintenance
@@ -177,6 +177,7 @@ tests (arch - conda - ogs custom latest) (M):
       - PYTHON_VERSION: "3.11"
       - PYTHON_VERSION: "3.12"
       - PYTHON_VERSION: "3.13"
+      - PYTHON_VERSION: "3.14"
 
 tests (arch - pip - no OGS) (R):
   stage: test
@@ -184,7 +185,7 @@ tests (arch - pip - no OGS) (R):
   needs: []
   before_script:
     - *pip-setup-activate
-    - pip install -e .[pinned,test]
+    - pip install -e .[pinned]
     - *pip-setup-extra-headless
   script:
     - python -c "import ogstools as ot; ot.status(verbose=True)"
@@ -221,7 +222,9 @@ tests (win - pip) (R):
   before_script:
     - python -m venv .venv
     - .venv\Scripts\Activate.ps1
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[pinned]"
+    - python --version
+    - pip list
   script:
     - pytest
 
@@ -232,9 +235,9 @@ tests (mac - pip) (R):
     - *regression-rules
   needs: []
   before_script:
-    - python() { python3.10 "$@"; } # alias don't work in non-interactive shells
+    - python() { python3.12 "$@"; } # alias don't work in non-interactive shells
     - *pip-setup-activate
-    - pip install -e ".[ogs,pinned,test]"
+    - pip install -e ".[pinned]"
   script:
     - pytest
 
@@ -291,7 +294,7 @@ docs preview (M):
   before_script:
     - *pip-setup-activate
     - *pip-install-ogs-latest
-    - pip install -e .[ogs,docs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
+    - pip install -e .[all,docs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
   script:
     - make docs SPHINXOPTS="--keep-going -n -j 4 --warning-file sphinx_warnings.log"
@@ -329,7 +332,7 @@ setup maintainer (M):
     - *pip-setup-activate
     - *pip-install-ogs-latest
   script:
-    - pip install -e .[dev,test,docs,feflow,ogs] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
+    - pip install -e .[dev,test,docs,all] --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple git+https://github.com/red5alex/ifm_contrib.git@py-314
     - *pip-setup-extra-headless
 
 setup developer (R):
@@ -342,7 +345,7 @@ setup developer (R):
     - *pip-setup-activate
     - *pip-install-ogs-latest
   script:
-    - pip install -e .[ogs,pinned,dev,test,docs]
+    - pip install -e .[pinned]
     - *pip-setup-extra-headless
 
 pages-tag:
@@ -411,7 +414,7 @@ user container image:
       allow_failure: true
     - if: $CI_COMMIT_TAG
       variables:
-        DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.10:$CI_COMMIT_TAG
+        DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12:$CI_COMMIT_TAG
       allow_failure: true
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -419,21 +422,21 @@ user container image:
     - docker push $DOCKER_USER_IMAGE
 
 code_quality_ruff (R):
-  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
   needs: []
   script:
     # Use same ruff as in .pre-commit-config.yaml
-    - uvx ruff==0.4.5 check --output-format=gitlab --exit-zero > ruff-code-quality-report.json
+    - uvx ruff==0.15.1 check --output-format=gitlab --exit-zero > ruff-code-quality-report.json
   artifacts:
     reports:
       codequality: ruff-code-quality-report.json
 
 code_quality_mypy (R):
-  image: ghcr.io/astral-sh/uv:python3.10-bookworm-slim
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
   needs: []
   script:
     # Use same mypy as in .pre-commit-config.yaml
-    - uvx mypy==1.4.1 ogstools > mypy-output.txt || true
+    - uvx mypy==1.19.1 ogstools > mypy-output.txt || true
     - uvx mypy-to-codeclimate mypy-output.txt mypy-code-quality-report.json || true
     - test -f mypy-code-quality-report.json || echo "[]" > mypy-code-quality-report.json
     - cat mypy-code-quality-report.json || true

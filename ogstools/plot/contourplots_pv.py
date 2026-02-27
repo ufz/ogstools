@@ -66,7 +66,7 @@ def contourf_pv(
 
     plot_mesh[plot_var.output_name] = plot_var.transform(mesh)
     if plot_var.mask_used(plot_mesh):
-        plot_mesh = plot_mesh.ctp(True).threshold(
+        plot_mesh = plot_mesh.ctp(pass_cell_data=True).threshold(
             value=[1, 1], scalars=variable_.mask
         )
 

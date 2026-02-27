@@ -21,6 +21,8 @@ class PythonScript(build_tree.BuildTree, StorageBase):
     enabling proper save/copy operations.
     """
 
+    __hash__ = None
+
     def __init__(self, tree: ET.ElementTree) -> None:
         """
         Initialize a PythonScript object.

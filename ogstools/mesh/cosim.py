@@ -25,17 +25,18 @@ def from_simulator(
     and optionally the given node-based or cell-based properties
     Properties must be added afterwards
 
-        :param simulator:       Initialized and not finalized simulator object
-        :param name:            Name of the submesh (e.g. domain, left, ... )
-        :param node_properties: Given properties will be added to the mesh
-                                None or [] -> no properties will be added
+    :param simulator:       Initialized and not finalized simulator object
+    :param name:            Name of the submesh (e.g. domain, left, ... )
+    :param node_properties: Given properties will be added to the mesh
+                            None or [] -> no properties will be added
 
-        :param cell_properties: Given properties will be added to the mesh
-                                None or [] -> no properties will be added
+    :param cell_properties: Given properties will be added to the mesh
+                            None or [] -> no properties will be added
 
-        :returns:               A Mesh (Pyvista Unstructured Grid) object
+    :returns:               A Mesh (Pyvista Unstructured Grid) object
 
     """
+
     from ogs import OGSMesh
     from ogs.OGSMesh import MeshItemType
     from vtk.util import numpy_support

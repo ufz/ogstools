@@ -4,7 +4,7 @@
 
 Supports Python: 3.10, 3.11, 3.12.
 
-First release after integration of ogs6py. The state of ogs6py corresponds to the functionality of  [v.403 of ogs6py](https://github.com/joergbuchwald/ogs6py/releases/tag/v.403) (only light API changes, see Features/Project file)
+First release after integration of ogs6py. The state of ogs6py corresponds to the functionality of [v.403 of ogs6py](https://github.com/joergbuchwald/ogs6py/releases/tag/v.403) (only light API changes, see Features/Project file)
 
 ## OGS
 
@@ -76,7 +76,7 @@ prj.write_input()
 - support for combining replacement- and build-method commands
 - breaking changes: some methods renamed closer to project file tags:
 
-* `add_process_variable()` split-up into `add_secondary_variable()` and  `add_process_variable()`
+* `add_process_variable()` split-up into `add_secondary_variable()` and `add_process_variable()`
 * `geo.add_geom()` -> `geometry.add_geometry()`, `timeloop` -> `time_loop` etc.
 
 - support for more MPL properties
@@ -101,7 +101,7 @@ mesh = ot.Mesh.read(test_shapefile)
 
 - Mesh can be remeshed with triangle
   ![Mesh_triangle](https://ogstools.opengeosys.org/0.4.0/_images/sphx_glr_plot_remeshing_002.png)
-- MeshSeries has a performant algorithm for integration point tessellation called `MeshSeries.ip_tesselated()` -  [example for analyzing integration point data](https://ogstools.opengeosys.org/0.4.0/auto_examples/howto_postprocessing/plot_ipdata.html#sphx-glr-auto-examples-howto-postprocessing-plot-ipdata-py)
+- MeshSeries has a performant algorithm for integration point tessellation called `MeshSeries.ip_tesselated()` - [example for analyzing integration point data](https://ogstools.opengeosys.org/0.4.0/auto_examples/howto_postprocessing/plot_ipdata.html#sphx-glr-auto-examples-howto-postprocessing-plot-ipdata-py)
 - MeshSeries allows multidimensional indexing on ndarrays <https://numpy.org/doc/stable/user/basics.indexing.html>
 
 ```python
