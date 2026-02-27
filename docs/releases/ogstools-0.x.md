@@ -53,6 +53,11 @@ OGS 6.5.7
 - `Project.inputfile` renamed to `Project.input_file`
 - `Project` implements `__eq__()`, `__deepcopy__()`, `__repr__()`, and `__str__()`
 
+### Logfile Parser
+
+- Add monitor for live logfile parsing in a Jupyter notebook
+- `step_start_time` column added to `time_step_vs_iterations()` analysis
+
 ### Other API Changes
 
 - `Matrix.mean` -> `Matrix.tensor_mean`
