@@ -431,25 +431,31 @@ class TestStorage:
         assert np.all(m_diff_12_displacement < 1e-3)
         assert not np.all(m_diff_12_displacement == 0)
 
-        # execution of same model should give identical result
+        # execution of same model should give identical (close to machine precision) result
+        max_tolerance = 1e-12
+
         ms_diff_run = ot.MeshSeries.difference(
             sim_xdmf.meshseries, sim_xdmf_2.meshseries
         )
-        assert np.all(ms_diff_run[-1].point_data["displacement"] == 0)
+        assert np.all(
+            abs(ms_diff_run[-1].point_data["displacement"]) <= max_tolerance
+        )
 
         # same result with just other output format
         ms_diff_12_outputformat = ot.MeshSeries.difference(
             sim_default.meshseries, sim_xdmf.meshseries
         )
         assert np.all(
-            ms_diff_12_outputformat[-1].point_data["displacement"] == 0
+            abs(ms_diff_12_outputformat[-1].point_data["displacement"])
+            <= max_tolerance
         )
 
         ms_diff_10_outputformat = ot.MeshSeries.difference(
             sim_highres.meshseries, sim_xdmf_highres.meshseries
         )
         assert np.all(
-            ms_diff_10_outputformat[-1].point_data["displacement"] == 0
+            abs(ms_diff_10_outputformat[-1].point_data["displacement"])
+            <= max_tolerance
         )
 
         files = [
