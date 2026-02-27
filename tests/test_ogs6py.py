@@ -1617,3 +1617,43 @@ class TestiOGS:
         model = ot.Project(prjfile, output_dir=tmp_path)
         output = model._get_output_file()
         assert output == tmp_path / expected_output
+
+    def test_media_add_property(self, shared_prj: Path) -> None:
+        model = ot.Project(output_file=shared_prj)
+        model.add_element(
+            "./media",
+            tag="medium",
+        )
+        model.media.add_property(name="check", type="Constant", value="check")
+        root = model._get_root()
+
+        assert len(root.findall("./media/medium")) == 1
+        val = root.findtext(
+            "./media/medium/properties/property[name='check']/value"
+        )
+        assert val == "check"
+
+    def test_media_add_property_failures(self, shared_prj: Path) -> None:
+        model = ot.Project(output_file=shared_prj)
+        model.add_element(
+            "./media",
+            tag="medium",
+            attrib_list=["id"],
+            attrib_value_list=["4"],
+        )
+        with pytest.raises(
+            AssertionError, match="Expected id='0' when no `medium_id` is given"
+        ):
+            model.media.add_property(
+                name="check", type="Constant", value="check"
+            )
+        model.add_element(
+            "./media",
+            tag="medium",
+        )
+        with pytest.raises(
+            IndexError, match="Multiple media found but no id provided!"
+        ):
+            model.media.add_property(
+                name="check", type="Constant", value="check"
+            )
