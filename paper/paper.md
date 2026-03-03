@@ -78,6 +78,16 @@ bibliography: paper.bib
 `OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and sensible defaults for OGS users and developers. By connecting OGS to the ecosystem of Python, the entry threshold to the OGS platform is lowered for users.
 The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
 
+## State of the field
+
+### Decentralized code
+Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardization.
+The lack of centralization led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
+With `OGSTools`, reusable Python code is now centralized under the professional maintenance of the core developer team of OGS.
+Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
+For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
+
+
 ## Statement of need
 
 ### Development efficiency
@@ -107,11 +117,6 @@ OGS is already being used in academic courses and teaching environments. With Ju
 
 ### Centralization of Python-related development
 
-Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardization.
-The lack of centralization led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
-With `OGSTools`, reusable Python code is now centralized under the professional maintenance of the core developer team of OGS.
-Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
-For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
 
 To address `The Need for a Versioned Data Analysis Software Environment` \[@Blomer2014\] `OGSTools` additionally provides a pinned environment, updated at least once per release.
 While reproducibility requires environments with pinned dependencies, `OGSTools` is additionally tested with the latest dependencies, to receive early warnings of breaking changes and to support the long-term sustainability of the codebase. To support broad adoption within the OGS user community, the library is deliberately integrated at key points of interest, such as the official OGS benchmarks, executable test cases, and further contexts where previously used libraries were employed.
