@@ -9,6 +9,7 @@ from typing import Any
 _T_PROPS = ["density", "specific_heat_capacity", "thermal_conductivity"]
 _TH_LIQUID = _T_PROPS + ["viscosity"]
 _TH_SOLID = _T_PROPS + ["storage"]
+_TM_SOLID = _T_PROPS + ["thermal_expansivity"]
 _THM_SOLID = _TH_SOLID + ["thermal_expansivity"]
 _TH_MED_PROPS = [
     "biot_coefficient",
@@ -31,6 +32,10 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
         ],
         "properties": _TH_MED_PROPS,
     },
+    "TM": {
+        "phases": [{"type": "Solid", "properties": _TM_SOLID}],
+        "properties": [],
+    },
     "THM": {
         "phases": [
             {"type": "AqueousLiquid", "properties": _TH_LIQUID},
@@ -50,10 +55,7 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
             },
             {
                 "type": "Solid",
-                "properties": [
-                    "specific_heat_capacity",
-                    "density",
-                ],
+                "properties": ["specific_heat_capacity", "density"],
             },
         ],
         "properties": [
