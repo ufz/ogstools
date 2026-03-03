@@ -164,9 +164,8 @@ from ogstools.examples import load_project_simple_lf
 project = load_project_simple_lf()
 meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect((8,4),8,2))
 # Set boundary conditions on the pyvista meshes
-num_points = meshes["left"].n_points
-meshes["left"].point_data["pressure"] = np.full(num_points, 2.9e7)
-meshes["right"].point_data["pressure"] = np.full(num_points, 3.1e7)
+meshes["left"].point_data["pressure"] = 2.9e7
+meshes["right"].point_data["pressure"] = 3.1e7
 model = ot.Model(project=project, meshes=meshes)
 # Visualize setup with boundary conditions (Figure 1)
 model.plot_constraints()
