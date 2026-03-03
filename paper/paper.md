@@ -195,6 +195,10 @@ sim.save(id = "mysim", archive=True)
 ![Resulting pressure distribution.](figures/figure3_final_pressure_distribution.png){#fig:pressure width="80%"}
 
 
+## AI usage disclosure
+
+Generative AI tools have been used in the writing of this manuscript for grammar and spelling corrections. The use of Large Language Models (LLMs) for code implementation, documentation, testing and intermediate reviews is permitted. However, all contributions have to pass through a strict review process by the human maintainers and authors.
+
 ## Acknowledgements
 
 This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkflow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
