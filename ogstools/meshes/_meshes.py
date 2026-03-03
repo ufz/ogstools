@@ -363,7 +363,9 @@ class Meshes(MutableMapping, StorageBase):
             for name, mesh in self._meshes.items():
                 check_datatypes(mesh, strict=True, meshname=name)
                 filepath = active_path / f"{name}.vtu"
-                if hasattr(mesh, "filepath"):
+                if not hasattr(pv, "set_new_attribute") or hasattr(
+                    mesh, "filepath"
+                ):
                     mesh.filepath = filepath
                 else:
                     pv.set_new_attribute(mesh, "filepath", filepath)

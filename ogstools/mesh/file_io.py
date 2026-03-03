@@ -34,7 +34,7 @@ def save(
     """
     if filename:
         filename = Path(filename)
-        if hasattr(mesh, "filepath"):
+        if not hasattr(pv, "set_new_attribute") or hasattr(mesh, "filepath"):
             mesh.filepath = filename
         else:
             pv.set_new_attribute(mesh, "filepath", filename)
@@ -47,7 +47,9 @@ def save(
             # invent a generic filename
             outname = _date_temp_path("Mesh", "vtu")
             outname.parent.mkdir(exist_ok=True, parents=True)
-            if hasattr(mesh, "filepath"):
+            if not hasattr(pv, "set_new_attribute") or hasattr(
+                mesh, "filepath"
+            ):
                 mesh.filepath = outname
             else:
                 pv.set_new_attribute(mesh, "filepath", outname)
