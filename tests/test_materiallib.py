@@ -2085,6 +2085,7 @@ class TestOgstoolsInternalDB:
         [
             ("T", examples.prj_heat_conduction),
             ("TH", examples.prj_heat_transport),
+            ("TM", examples.prj_TM_square),
             ("THM", examples.prj_THM_stationary),
             ("TH2M_PT", examples.prj_th2m_phase_transition),
         ],

@@ -260,6 +260,7 @@ prj_th2m_phase_transition = _prj_dir / "th2m_phase_transition.prj"
 prj_heat_transport = _prj_dir / "HeatTransportInStationaryFlow.prj"
 prj_heat_conduction = _prj_dir / "HeatConduction.prj"
 prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
+prj_TM_square = _prj_dir / "TM_square.prj"
 
 surface_paths = [
     _surface_dir / (file + ".vtu")

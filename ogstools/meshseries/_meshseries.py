@@ -482,7 +482,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             ("spatial_unit", self.spatial_unit),
             ("time_unit", self.time_unit),
         ]:
-            if hasattr(mesh, attr):
+            if not hasattr(pv, "set_new_attribute") or hasattr(mesh, attr):
                 setattr(mesh, attr, val)
             else:
                 pv.set_new_attribute(mesh, attr, val)
