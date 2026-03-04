@@ -1467,7 +1467,7 @@ class TestiOGS:
         [
             ("no/dir", None, r"The specified path is not a directory.*"),
             (None, "dummy", r"The specific container-path is not a file.*"),
-            (None, ".x", r"The specific file is not a Singularity container.*"),
+            (None, ".x", r"The specific file is not a Apptainer container.*"),
         ],
     )
     def test_wrong_run_args(
@@ -1485,24 +1485,24 @@ class TestiOGS:
 
     @pytest.mark.skipif(
         platform.system() == "Windows",
-        reason="Singularity is not available on Windows.",
+        reason="Apptainer is not available on Windows.",
     )
-    def test_singularity_not_found(self) -> None:
+    def test_apptainer_not_found(self) -> None:
         model = ot.Project(
             input_file=prj_tunnel_trm, output_file=prj_tunnel_trm
         )
-        singularity_not_found = r"The Singularity executable was not found.*"
+        apptainer_not_found = r"The Apptainer executable was not found.*"
         with (
             tempfile.TemporaryDirectory() as sing_dir,
             tempfile.NamedTemporaryFile(suffix=".sif") as sif,
         ):
-            # Singularity executable not found without path:
-            if shutil.which("singularity") is None:
-                with pytest.raises(RuntimeError, match=singularity_not_found):
+            # Apptainer executable not found without path:
+            if shutil.which("apptainer") is None:
+                with pytest.raises(RuntimeError, match=apptainer_not_found):
                     model.run_model(container_path=sif.name)
 
-            # Singularity executable not found in path:
-            with pytest.raises(RuntimeError, match=singularity_not_found):
+            # Apptainer executable not found in path:
+            with pytest.raises(RuntimeError, match=apptainer_not_found):
                 model.run_model(path=sing_dir, container_path=sif.name)
 
     @pytest.fixture(params=[1, 2, 4, 8])
