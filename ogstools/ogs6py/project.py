@@ -1099,7 +1099,7 @@ class Project(StorageBase):
         :param logfile: Name of the file to write STDOUT of ogs
         :param path:    Path of the directory in which the ogs executable can be found.
                        If ``container_path`` is given: Path to the directory in which the
-                       Singularity executable can be found.
+                       Apptainer executable can be found.
         :param args:   additional arguments for the ogs executable
         :param container_path:   Path of the OGS container file.
         :param wrapper:          add a wrapper command. E.g. mpirun
@@ -1121,9 +1121,12 @@ class Project(StorageBase):
                 msg = """The specific container-path is not a file. \
                         Please provide a path to the OGS container."""
                 raise RuntimeError(msg)
-            if str(container_path.suffix).lower() != ".sif":
-                msg = """The specific file is not a Singularity container. \
-                        Please provide a *.sif file containing OGS."""
+            supported = [".sif", ".squashfs"]
+            if str(container_path.suffix).lower() not in supported:
+                msg = (
+                    "The specific file is not a Apptainer container. Please "
+                    f"provide a container file of these formats: {supported}"
+                )
                 raise RuntimeError(msg)
 
         if path is None:
@@ -1137,7 +1140,7 @@ class Project(StorageBase):
             if not path.is_dir():
                 if container_path is not None:
                     msg = """The specified path is not a directory. \
-                            Please provide a directory containing the Singularity executable."""
+                            Please provide a directory containing the Apptainer executable."""
                     raise RuntimeError(msg)
                 msg = """The specified path is not a directory. \
                         Please provide a directory containing the OGS executable."""
@@ -1150,13 +1153,13 @@ class Project(StorageBase):
             self.logfile = Path(logfile)
         if container_path is not None:
             if sys.platform == "win32":
-                msg = """Running OGS in a Singularity container is only possible in Linux.\
+                msg = """Running OGS in a Apptainer container is only possible in Linux.\
                         See https://sylabs.io/guides/3.0/user-guide/installation.html\
                         for Windows solutions."""
                 raise RuntimeError(msg)
-            ogs_path = ogs_path / "singularity"
+            ogs_path = ogs_path / "apptainer"
             if shutil.which(str(ogs_path)) is None:
-                msg = """The Singularity executable was not found.\
+                msg = """The Apptainer executable was not found.\
                         See https://www.opengeosys.org/docs/userguide/basics/container/\
                         for installation instructions."""
                 raise RuntimeError(msg)
@@ -1176,9 +1179,9 @@ class Project(StorageBase):
         cmd += f"{ogs_path} "
         if container_path is not None:
             if wrapper is not None:
-                cmd = "singularity exec " + f"{container_path} " + wrapper + " "
+                cmd = "apptainer exec " + f"{container_path} " + wrapper + " "
             else:
-                cmd = "singularity exec " + f"{container_path} " + "ogs "
+                cmd = "apptainer exec " + f"{container_path} " + "ogs "
         # TODO: use argparse here
         if args is None:
             args = f" -o {self.output_dir}"
@@ -1197,6 +1200,7 @@ class Project(StorageBase):
         #            cmd += f"{self.prjfile} > {self.logfile}"
         #        else:
         cmd += f"{self.prjfile}"
+
         if sys.platform == "win32":
             executable = "C:\\Windows\\System32\\cmd.exe"
         else:

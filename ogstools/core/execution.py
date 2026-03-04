@@ -44,7 +44,7 @@ class Execution(StorageBase):
 
         :param interactive:     If True, use interactive mode for stepwise control.
         :param args:            Additional command-line arguments for OGS.
-        :param container_path:  Path to a container (e.g., Docker, Singularity).
+        :param container_path:  Path to a container (e.g., Docker, Apptainer).
         :param wrapper:         Custom wrapper command for execution.
         :param mpi_ranks:       Number of MPI ranks for parallel execution.
         :param ogs_bin_path:    Path to the OGS binary. Defaults to "ogs".
