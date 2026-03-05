@@ -7,6 +7,7 @@
 import typing
 from copy import deepcopy
 from pathlib import Path
+from typing import overload
 
 from typing_extensions import Self
 
@@ -341,3 +342,111 @@ class Simulation(StorageBase):
         files = self._save_impl(dry_run=dry_run, overwrite=overwrite)
         self._post_save(user_defined, archive, dry_run)
         return files
+
+    @overload
+    def restart(
+        self,
+        restart_suffix: str = "_restart",
+        zero_displacement: bool = False,
+        initialize_porosity_from_medium_property: bool = False,
+        *,
+        t_initial: float,
+        t_end: float,
+        initial_dt: float | None = None,
+    ) -> Model: ...
+
+    @overload
+    def restart(
+        self,
+        restart_suffix: str = "_restart",
+        zero_displacement: bool = False,
+        initialize_porosity_from_medium_property: bool = False,
+        *,
+        timevalues: list,
+    ) -> Model: ...
+
+    def restart(
+        self,
+        restart_suffix: str = "_restart",
+        zero_displacement: bool = False,
+        initialize_porosity_from_medium_property: bool = False,
+        *,
+        t_initial: float | None = None,
+        t_end: float | None = None,
+        initial_dt: float | None = None,
+        timevalues: list | None = None,
+    ) -> Model:
+        """
+        Prepares the PRJ file for a restart run.
+
+        Supports two mutually exclusive modes:
+        - Time-range mode: use ``t_initial`` and ``t_end`` (optionally ``initial_dt``).
+        - Explicit-times mode: use ``timevalues`` only.
+
+        The method reads the last written time step from the PVD referenced in
+        the PRJ and updates initial conditions, output prefix, and time control
+        blocks accordingly.
+        If ``zero_displacement`` is True, displacement initial conditions are set to zero.
+        ``restart_suffix`` is appended to the output prefix.
+
+        ``t_initial``/``t_end`` and ``timevalues`` must not be used together.
+        All time-scheme control arguments are keyword-only.
+
+        :param restart_suffix:      appended to the output prefix. Default: "_restart"
+        :param zero_displacement:   set displacement initial conditions to zero. Default is False.
+        :param t_initial:           restart interval start time (time-range mode)
+        :param t_end:               restart interval end time (time-range mode)
+        :param initial_dt:          initial time step (time-range mode)
+        :param timevalues:          explicit list of restart times (explicit-times mode)
+        :return:                    None
+        """
+
+        def _get_target_file(time: float) -> Path:
+            """new domain mesh"""
+            index = mesh_series.closest_timestep(time)
+            target_diff = abs(mesh_series.timevalues[index] - time)
+            if (target_diff) > 1e-6:
+                msg = f"Output data file corresponding to timestep: {time} not found! Target: {target_diff} away"
+                raise FileNotFoundError(msg)
+            return mesh_series[index]
+
+        model_restart = self.model.copy()
+        prj = model_restart.project
+        mesh_series = self.meshseries
+        new_meshes = model_restart.meshes
+
+        if (t_initial is None and t_end is None) == (timevalues is None):
+            msg = "Exactly one of timevalues or (t_initial, t_end, Optional[initial_dt]) must be provided."
+            raise TypeError(msg)
+
+        if timevalues is None:
+            prj._set_timescheme(
+                t_initial=t_initial, t_end=t_end, initial_dt=initial_dt
+            )
+        else:
+            assert len(timevalues) > 0
+            prj._set_timescheme(timevalues=timevalues)
+            t_initial = timevalues[0]
+
+        assert t_initial is not None
+        new_bulk_mesh = _get_target_file(t_initial)
+
+        root = prj._get_root()
+        old_bulk_mesh = root.findtext("./mesh") or root.findtext(
+            "./meshes/mesh"
+        )
+        output_prefix = root.findtext("./time_loop/output/prefix")
+
+        assert old_bulk_mesh is not None, "Expected <mesh> definition."
+        assert (
+            output_prefix is not None
+        ), "Expected time_loop/output/prefix definition."
+
+        prj.set(output_prefix=output_prefix + restart_suffix)
+        prj._process_initial_conditions_for_restart(
+            old_bulk_mesh,
+            zero_displacement,
+            initialize_porosity_from_medium_property,
+        )
+        new_meshes.domain = new_bulk_mesh
+        return model_restart

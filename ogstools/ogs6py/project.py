@@ -883,11 +883,14 @@ class Project(StorageBase):
     def set(self, **args: str | int) -> None:
         """
         Sets directly a uniquely defined property.
-        List of properties is given in the dictory below.
+        List of properties is given in the dictionary below.
         """
         property_db = {
             "t_initial": "./time_loop/processes/process/time_stepping/t_initial",
             "t_end": "./time_loop/processes/process/time_stepping/t_end",
+            "n_steps": "./time_loop/processes/process/time_stepping/n_steps",
+            "initial_dt": "./time_loop/processes/process/time_stepping/initial_dt",
+            "dt_guess": "./time_loop/processes/process/time_stepping/dt_guess",
             "output_prefix": "./time_loop/output/prefix",
             "reltols": "./time_loop/processes/process/convergence_criterion/reltols",
             "abstols": "./time_loop/processes/process/convergence_criterion/abstols",
@@ -922,93 +925,135 @@ class Project(StorageBase):
         msg = "No mesh found"
         raise AttributeError(msg)
 
-    def restart(
+    def _set_timescheme(
         self,
-        restart_suffix: str = "_restart",
+        *,
+        timevalues: list | None = None,
         t_initial: float | None = None,
         t_end: float | None = None,
-        zero_displacement: bool = False,
+        initial_dt: float | None = None,
     ) -> None:
-        """Prepares the project file for a restart.
-
-        Takes the last time step from the PVD file mentioned in the PRJ file.
-        Sets initial conditions accordingly.
-
-        :param restart_suffix:    suffix by which the output prefix is appended
-        :param t_initial:         first time step, takes the last from previous simulation if None
-        :param t_end:             last time step, the same as in previous run if None
-        :param zero_displacement: sets the initial displacement to zero if True
         """
+        Updates the timescheme.
 
-        root_prj = self._get_root()
-        filetype = root_prj.find("./time_loop/output/type").text
-        pvdfile = root_prj.find("./time_loop/output/prefix").text + ".pvd"
-        pvdfile = self.output_dir / pvdfile
-        if filetype != "VTK":
-            msg = "Output file type unknown. Please use VTK."
-            raise RuntimeError(msg)
-        tree = ET.parse(pvdfile)
-        xpath = "./Collection/DataSet"
-        root_pvd = tree.getroot()
-        find_xpath = root_pvd.findall(xpath)
-        lastfile = find_xpath[-1].attrib["file"]
-        last_time = find_xpath[-1].attrib["timestep"]
-        try:
-            bulk_mesh = root_prj.find("./mesh").text
-        except AttributeError:
-            try:
-                bulk_mesh = root_prj.find("./meshes/mesh").text
-            except AttributeError:
-                print("Can't find bulk mesh.")
-        self.replace_mesh(bulk_mesh, lastfile)
-        root_prj.find("./time_loop/output/prefix").text = (
-            root_prj.find("./time_loop/output/prefix").text + restart_suffix
+        If ``timevalues`` are provided, they replace the existing time step
+        sequence directly. Otherwise, a new sequence is constructed from the
+        given ``t_initial``, ``t_end``, and optional ``initial_dt``. Existing
+        time-step pairs in the PRJ are removed or overwritten accordingly.
+        All arguments are keyword-only.
+
+        :param timevalues:      explicit list of restart times
+        :param t_initial:       start time for the reconstructed time sequence
+        :param t_end:           end time for the reconstructed time sequence
+        :param initial_dt:      initial step size used
+        """
+        if timevalues is not None:
+            self.set(n_steps=len(timevalues) - 1)
+            pairs = self.time_loop._generate_timepairs(timevalues)
+            self.remove_element(
+                xpath="./time_loop/processes/process/time_stepping/timesteps/pair"
+            )
+            for pair in pairs:
+                self.add_block(
+                    blocktag="pair",
+                    parent_xpath="./time_loop/processes/process/time_stepping/timesteps",
+                    taglist=["repeat", "delta_t"],
+                    textlist=[pair["repeat"], pair["delta_t"]],
+                )
+            t_initial, t_end = timevalues[0], timevalues[-1]
+            initial_dt = timevalues[1] - timevalues[0]
+
+        if t_initial is None or t_end is None or initial_dt is None:
+            msg = "Time parameters must not be None"
+            raise AssertionError(msg)
+        assert initial_dt > 0, "initial_dt must be positive"
+        assert t_initial < t_end, "t_end must be greater than t_initial"
+        self.set(
+            t_initial=str(t_initial),
+            t_end=str(t_end),
+            initial_dt=str(initial_dt),
+            dt_guess=str(initial_dt),
         )
-        t_initials = root_prj.findall(
-            "./time_loop/processes/process/time_stepping/t_initial"
+        return
+
+    def _process_initial_conditions_for_restart(
+        self,
+        meshname: Path,
+        zero_displacement: bool,
+        initialize_porosity_from_medium_property: bool = False,
+    ) -> None:
+        """
+        Helper method to add `initialize_porosity_from_medium_property` if needed and
+        add relevant mesh referenced initial conditions (as MeshNode).
+
+        :param meshname:            reference mesh
+        :param zero_displacement:   If ``True``, sets `displacement` parameter to zero.
+        :param initialize_porosity_from_medium_property: If True, force-fully adds `initialize_porosity_from_medium_property`
+        """
+        _skip_porosity_fix = [
+            "TH2M",
+            "ComponentTransport",
+            "RICHARDS_MECHANICS",
+            "HYDRO_MECHANICS_WITH_LIE",
+            "ThermoRichardsMechanics",
+            "RichardsComponentTransport",
+        ]
+
+        root = self._get_root()
+        self.remove_element("./processes/process/initial_stress")
+        process_type = root.findtext("./processes/process/type")
+        should_check_porosity = (
+            process_type not in _skip_porosity_fix
+            or initialize_porosity_from_medium_property
         )
-        t_ends = root_prj.findall(
-            "./time_loop/processes/process/time_stepping/t_end"
+        has_nonconstant_porosity = root.xpath(
+            "./media/medium/properties/property[name='porosity' and type!='Constant']"
         )
-        for i, t0 in enumerate(t_initials):
-            if t_initial is None:
-                t0.text = last_time
-            else:
-                t0.text = str(t_initial)
-            if t_end is not None:
-                t_ends[i].text = str(t_end)
-        process_vars = root_prj.findall(
-            "./process_variables/process_variable/name"
+        if should_check_porosity and has_nonconstant_porosity:
+            self.add_element(
+                "./processes/process",
+                tag="initialize_porosity_from_medium_property",
+                text="false",
+            )
+            print(
+                "Initialize Porosity from medium: `<initialize_porosity_from_medium_property>false</>`"
+            )
+
+        all_process_variables = root.findall(
+            "./process_variables/process_variable"
         )
-        ic_names = root_prj.findall(
-            "./process_variables/process_variable/initial_condition"
-        )
-        for i, process_var in enumerate(process_vars):
-            if process_var.text == "displacement" and zero_displacement is True:
+        for pv in all_process_variables:
+            process_var = pv.findtext("name")
+            if process_var is None:
+                continue
+
+            ic = pv.find("initial_condition")
+            if ic is None:
+                continue
+
+            if process_var == "displacement" and zero_displacement is True:
                 print(
                     "Please make sure that epsilon_ip is removed from the VTU file before you run OGS."
                 )
                 zero = {"1": "0", "2": "0 0", "3": "0 0 0"}
-                cpnts = root_prj.find(
+                cpnts = root.find(
                     "./process_variables/process_variable[name='displacement']/components"
                 ).text
                 self.replace_parameter(
-                    name=ic_names[i].text,
+                    name=ic.text,
                     parametertype="Constant",
                     taglist=["values"],
                     textlist=[zero[cpnts]],
                 )
             else:
-                self.replace_parameter(
-                    name=ic_names[i].text,
-                    parametertype="MeshNode",
-                    taglist=["mesh", "field_name"],
-                    textlist=[
-                        lastfile.split("/")[-1].replace(".vtu", ""),
-                        process_var.text,
-                    ],
+                ic.text = f"{ic.text}_{process_var}"
+                self.parameters.add_parameter(
+                    name=ic.text,
+                    type="MeshNode",
+                    mesh=Path(meshname).stem,
+                    field_name=process_var,
                 )
-        self.remove_element("./processes/process/initial_stress")
+        return
 
     def _get_output_file(self) -> Path:
         """Helper method to extract output filename from the project."""
@@ -1091,7 +1136,7 @@ class Project(StorageBase):
         wrapper: Any | None = None,
         write_logs: bool = True,
         background: bool = False,
-    ) -> "subprocess.Popen":
+    ) -> subprocess.Popen:
         """Command to run OGS.
 
         Runs OGS with the project file specified as output_file.

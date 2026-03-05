@@ -1,0 +1,184 @@
+[32minfo:[m This is OpenGeoSys-6 version 6.5.6-566-ge8bec94b. Log version: 2, Log level: info.
+[32minfo:[m OGS starts on 2026-02-26 20:12:42+0530 in serial mode / Python embedded mode.
+[33m[1mwarning:[m OMP_NUM_THREADS is not set, falling back to: 16
+[32minfo:[m Eigen use 16 threads
+[32minfo:[m Reading project file sim_restart/model/project/default.prj.
+[32minfo:[m readRasters ...
+[32minfo:[m readRasters done
+[32minfo:[m ConstantParameter: E
+[32minfo:[m ConstantParameter: nu
+[32minfo:[m ConstantParameter: zero
+[32minfo:[m ConstantParameter: initial_displacement
+[32minfo:[m ConstantParameter: shear_stress
+[32minfo:[m Configure mesh 'bottom' for boundary condition or source term.
+[32minfo:[m Configure mesh 'left' for boundary condition or source term.
+[32minfo:[m Configure mesh 'right' for boundary condition or source term.
+[32minfo:[m No source terms for process variable 'displacement' found.
+[33m[1mwarning:[m There are 2 porous medium definitions in the project file but only -1 different values in the MaterialIDs vector/data_array in the mesh.
+[32minfo:[m Threads used for ParallelVectorMatrixAssembler: 1.
+[32minfo:[m SmallDeformation process initializeSubmeshOutput().
+[32minfo:[m Initialize processes.
+[32minfo:[m Checking correct model evaluation order in the constitutive setting.
+[32minfo:[m Model evaluation order is correct.
+[32minfo:[m Time step #0 started. Time: 0. Step size: 0.
+[32minfo:[m [time] Output of timestep 0 took 0.00123759 s.
+[32minfo:[m Time step #0 took 0.00136335 s.
+[32minfo:[m OpenGeoSys is now initialized.
+[32minfo:[m Time step #1 started. Time: 1. Step size: 1.
+[32minfo:[m Solving process #0 started.
+[32minfo:[m Iteration #1 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.0005268 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 3.0307e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 42/10000
+[32minfo:[m 	 residual: 6.953415e-03
+
+[32minfo:[m [time] Linear solver took 0.000139653 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=2.0432e-01, |x|=2.0432e-01, |dx|/|x|=1.0000e+00
+[32minfo:[m Convergence criterion, component 1: |dx|=3.4677e-01, |x|=3.4677e-01, |dx|/|x|=1.0000e+00
+[32minfo:[m [time] Iteration #1 took 0.00072779 s.
+[32minfo:[m Iteration #2 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000327886 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 3.0203e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 35/10000
+[32minfo:[m 	 residual: 9.786676e-03
+
+[32minfo:[m [time] Linear solver took 0.000104195 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=3.3109e-04, |x|=2.0445e-01, |dx|/|x|=1.6194e-03
+[32minfo:[m Convergence criterion, component 1: |dx|=4.6822e-04, |x|=3.4675e-01, |dx|/|x|=1.3503e-03
+[32minfo:[m [time] Iteration #2 took 0.000487256 s.
+[32minfo:[m Iteration #3 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000286727 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 2.5901e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 38/10000
+[32minfo:[m 	 residual: 7.622151e-03
+
+[32minfo:[m [time] Linear solver took 0.000117187 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=8.2398e-06, |x|=2.0445e-01, |dx|/|x|=4.0302e-05
+[32minfo:[m Convergence criterion, component 1: |dx|=5.1237e-06, |x|=3.4675e-01, |dx|/|x|=1.4776e-05
+[32minfo:[m [time] Iteration #3 took 0.000451202 s.
+[32minfo:[m Iteration #4 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000284463 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 2.5306e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 44/10000
+[32minfo:[m 	 residual: 9.004160e-03
+
+[32minfo:[m [time] Linear solver took 0.000124986 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=5.5147e-08, |x|=2.0445e-01, |dx|/|x|=2.6974e-07
+[32minfo:[m Convergence criterion, component 1: |dx|=7.2656e-08, |x|=3.4675e-01, |dx|/|x|=2.0953e-07
+[32minfo:[m [time] Iteration #4 took 0.000453756 s.
+[32minfo:[m Iteration #5 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000268139 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 2.5973e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 38/10000
+[32minfo:[m 	 residual: 9.345177e-03
+
+[32minfo:[m [time] Linear solver took 0.000110732 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=1.7376e-10, |x|=2.0445e-01, |dx|/|x|=8.4987e-10
+[32minfo:[m Convergence criterion, component 1: |dx|=1.5169e-10, |x|=3.4675e-01, |dx|/|x|=4.3747e-10
+[32minfo:[m [time] Iteration #5 took 0.000426476 s.
+[32minfo:[m [time] Solving process #0 took 0.00256449 s in time step #1
+[32minfo:[m [time] Time step #1 took 0.00274756 s.
+[32minfo:[m [time] Output of timestep 1 took 0.00234223 s.
+[32minfo:[m Time step #2 started. Time: 2. Step size: 1.
+[32minfo:[m Solving process #0 started.
+[32minfo:[m Iteration #1 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000409942 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 3.2814e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 47/10000
+[32minfo:[m 	 residual: 9.379445e-03
+
+[32minfo:[m [time] Linear solver took 0.000137904 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=3.3771e-12, |x|=2.0445e-01, |dx|/|x|=1.6518e-11
+[32minfo:[m Convergence criterion, component 1: |dx|=7.9597e-12, |x|=3.4675e-01, |dx|/|x|=2.2955e-11
+[32minfo:[m [time] Iteration #1 took 0.000608845 s.
+[32minfo:[m [time] Solving process #0 took 0.000623688 s in time step #2
+[32minfo:[m [time] Time step #2 took 0.000805965 s.
+[32minfo:[m [time] Output of timestep 2 took 0.00231019 s.
+[32minfo:[m Time step #3 started. Time: 3. Step size: 1.
+[32minfo:[m Solving process #0 started.
+[32minfo:[m Iteration #1 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000324866 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 3.44e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 37/10000
+[32minfo:[m 	 residual: 9.130714e-03
+
+[32minfo:[m [time] Linear solver took 0.000121901 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=4.0908e-14, |x|=2.0445e-01, |dx|/|x|=2.0009e-13
+[32minfo:[m Convergence criterion, component 1: |dx|=3.4217e-14, |x|=3.4675e-01, |dx|/|x|=9.8677e-14
+[32minfo:[m [time] Iteration #1 took 0.000512545 s.
+[32minfo:[m [time] Solving process #0 took 0.000544483 s in time step #3
+[32minfo:[m [time] Time step #3 took 0.000760854 s.
+[32minfo:[m [time] Output of timestep 3 took 0.0024536 s.
+[32minfo:[m Time step #4 started. Time: 4. Step size: 1.
+[32minfo:[m Solving process #0 started.
+[32minfo:[m Iteration #1 started.
+[32minfo:[m Number of threads: 1
+[32minfo:[m [time] Assembly took 0.000358819 s.
+[32minfo:[m [time] Applying Dirichlet BCs took 3.4014e-05 s.
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver compute()
+[32minfo:[m -> compute with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m ------------------------------------------------------------------
+[32minfo:[m *** Eigen solver solve()
+[32minfo:[m -> solve with Eigen iterative linear solver CG (precon DIAGONAL)
+[32minfo:[m 	 iteration: 41/10000
+[32minfo:[m 	 residual: 9.676721e-03
+
+[32minfo:[m [time] Linear solver took 0.000127631 s.
+[32minfo:[m Convergence criterion, component 0: |dx|=9.2369e-16, |x|=2.0445e-01, |dx|/|x|=4.5179e-15
+[32minfo:[m Convergence criterion, component 1: |dx|=8.9811e-16, |x|=3.4675e-01, |dx|/|x|=2.5900e-15
+[32minfo:[m [time] Iteration #1 took 0.000552441 s.
+[32minfo:[m [time] Solving process #0 took 0.000585115 s in time step #4
+[32minfo:[m [time] Time step #4 took 0.000799228 s.
+[32minfo:[m [time] Output of timestep 4 took 0.00248832 s.
+[32minfo:[m The whole computation of the time stepping took 4 steps, in which
+	 the accepted steps are 4, and the rejected steps are 0.
