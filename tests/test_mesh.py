@@ -21,9 +21,9 @@ def test_diff_two_meshes():
         mesh_diff["temperature_difference"],
         mesh1["temperature"] - mesh2["temperature"],
     )
-    # test same/different topology and scalar / vector variable
+    # same / different topology, scalar / vector variable, point / cell data
     for scaling in [1.0, 2.0]:
-        for variable in ["temperature", "velocity"]:
+        for variable in ["temperature", "velocity", "effective_pressure"]:
             mesh_diff = ot.mesh.difference(
                 mesh1.scale(scaling), mesh2, variable
             )
