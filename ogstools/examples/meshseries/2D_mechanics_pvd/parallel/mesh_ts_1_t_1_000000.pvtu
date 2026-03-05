@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<VTKFile type="PUnstructuredGrid" version="1.0" byte_order="LittleEndian" header_type="UInt64" compressor="vtkZLibDataCompressor">
+  <PUnstructuredGrid GhostLevel="1">
+    <FieldData>
+      <DataArray type="Int8" Name="IntegrationPointMetaData" NumberOfTuples="247" format="binary" RangeMin="34" RangeMax="125">
+        AQAAAAAAAAAAgAAAAAAAAPcAAAAAAAAAdQAAAAAAAAA=eF6lzLEKwzAMhOF30ZyloZNfpRThNBcjqCUju4MJfvd67dIOHe9++E4SbUgem5hysbk4usdeKdzOj2i+wymsC2nMoEBVUo4shebzyhuc7eCH5WIKbRO4juUHgVLlOcNfyOEAQ+Gp8w6t0vo38DLu4w0vjFsB
+      </DataArray>
+      <DataArray type="Int8" Name="OGS_VERSION" NumberOfTuples="25" format="binary" RangeMin="45" RangeMax="121">
+        AQAAAAAAAAAAgAAAAAAAABkAAAAAAAAAIQAAAAAAAAA=eF4z0zPVM9c1NLHUTTdNMTKxTDMw10vJLCqpBABLHAa9
+      </DataArray>
+      <DataArray type="Float64" Name="epsilon_ip" NumberOfComponents="4" NumberOfTuples="156" format="binary" RangeMin="0.010878968339602266" RangeMax="0.18229673104570168">
+        AQAAAAAAAAAAgAAAAAAAAIATAAAAAAAAXgUAAAAAAAA=eF6l1/s71FkYAHCUQjelh+TSJE2MiLRCU1+SjUVRaW2h1NI8roOpwUwxMWuGxIxxGePyxSIZDDXCsocll41dJWqVR9t6SqVcKlkybT/sc75/wDm/fn54n/Oe9z3P++ZESp1OPEoGMiu9+1rm2ZjS/6fmtdfs76ZFWA6idxVHJLHShCDBmZNWyCiD/umVg8nbmVJk5wYXXbvqmg0qRpOmFPdvQt/bHFuVV4IjOzmq1tbWkweEO0MSdraVQv9MpsTs+FKC7LdWO7otncwGa1ey8VhRPfT1Wuyt+8KKkV3ocM+BVcUFH8xSq1ztiPzxRQ2FNHsRsseZGv1xS+M6mK9du7p0kQ9djZkySOZmILvJq5C7/AE6ZiZasGKUiKAvDn5SBL/mIruCPshreiUAc18mvPuf50Pv6VG+Lf8zA9kTUlXzfXUPYw8f+JtlZGZCH75iXvDCU4DscR/s5ujHC8HTi+Hyzid10NP3UDcLAqqRnbfbOQrvqwUPZBQXJVEBdN+hsEbxFk1kt9APbz4QVAaGr5BaF+gtRH+8sXmXlVaO7LbsfQZzxdeBZfyGdyZuadBHLx/8oGyfj+zP/MkWf6fHgUZqc90GhRS66AJDKXnFCYDqSYZLkbwzEjCtbkaVnymEvpnPTdyQXIihukOnhEPZyMBKJtSymbPE/+Rkw6LRHM4gu3hPb8ulmxJg68KPbGLWQs9UMl0XfKQa2evNhAmKMhzQd0SXcrhE/ZJdPvY/kZQju8/+Ie0nTXFAM2ubhDlJ1O/jrvd1K8+nIvvA7TnDIg8BMPTUkhvFE/lbTvWYkoZKkb3TOsK08xEOXDrNFzrMxdA9T1OvTbtykf3YyghLtSk2Zvo8cMjdjYjfPiP+EiZGdxcNhQhQcTBucbRlaiwVuuyo1z0dSjSyP3SK3a1tXQKi5j/SOuqboFNk7ik/GB0GqK51Ic+ob64KLFfM8PVUu6BLbMj5hrvzMFS3PeJ0irE2Hzi0R1b1bSyCPmKt7tNxAEf23BW6Uy1VOHjWP09Z5UHUL4O0TfejSgmy2zlWaA4wcRC6Bui9jGmATvJOGjAOv4nslgEXN09WsoDoxD7mP4/Sod8YdYvWbRYiu4mZ6kmbd3lAbbt0T/7qGugG8tlkzjEpsifo6ViLewJA5HzhoZDvy6E7KTT8fP1TkL1tlm5Y/XW+cw6vNLCpr4Z++gqu+rhJhOy4klP8i6IagK9j3JXVE+/fLtqB8bMvIbuiV/NgszQDUHaRvUcS5UR/sNNzzv4kRPZdZQPj8u8qgTKNFF1j0Ai95bW3FacVR/bpQBZ1r14mUBkxsbc2JuLHvljc8j45AdkHJo5E6YVygU3crv0BjcR8qmxO+zmAUYXs+KZD/v/q54IY2t06MTsJ+q8xt+4HuvOR3TKroC5CPwd4jqWHjHddg34qy73zvdAPoHr+nUm71lkethDfMRbgRewHDSHabx73n8VQ3T2w261btxhMNNPZQWUZ0O2nBKyhAiayV/zYUSYwycJIyzw+X150hc6X9a66pxKM7Dg/oVZxMh2za/dLHfYj7hdTYbZsiyMNoLp2G21jUTsf264fpRLTFwzdxDFinRMjDkP1RsFgW+tzOuZMmmGzBMT+NGT0hiduDEX2G8bC7t6xc9i3kty/RtSZ0C/c4dRHxF1F9p3ntTuslBPBCEnGu94TD903TBHaUMlBdo0HBVFvP7FA7hrtz9OriPpSD/IZ1/omEtkLyxudrb/urT7KSSC7gAd9wou6PGUTuls/1B3dKikFkyQ1ebepAPr6pqfnon+LBKiuM/Qy08JYBnSGj1sttUqgb/tl61IXOQjZ/wMZox+q
+        <InformationKey name="L2_NORM_RANGE" location="vtkDataArray" length="2">
+          <Value index="0">
+            0.01087896834
+          </Value>
+          <Value index="1">
+            0.18229673105
+          </Value>
+        </InformationKey>
+      </DataArray>
+      <DataArray type="Float64" Name="free_energy_density_ip" NumberOfTuples="156" format="binary" RangeMin="1899.2787225573175" RangeMax="340199.9170398681">
+        AQAAAAAAAAAAgAAAAAAAAOAEAAAAAAAA6gEAAAAAAAA=eF5lxUtM0gEAB+AtpDGnsyxFl9Ayx8o2RXOtDXHga2uac8tNZtMw5zR8JCYSmLqWOht4calzq7lShkXiZgeciDAwUQx04pCyQ4CirqeSoWjU/f/7Lp+gqbqBR7ZzBIQT70wFW1Y24IKnl/vpo15Yvu2/4he74VUh1V8yuwc7FezYjCMnXNLT7U6iaOHMonjycK0B5lmGlOF7C/BIccGmpsMI1yt9jabaQzjLKTrM027AoyFt93XcEC5x2/DfCWGOlUO8iPS6Rp7ngcuNz3+5+B/hqKYzM3aJAy5z0SZOCP/AgqXOqpVvPji6ixVtVczD3vmc29KfP2D1qR6RrdQKN19IYL4LrsHU87sx4ow5uJ7fd0Ny/Qi2tIephkxnucRXr9HCfNp1DnGLSjduq/wCNyg6Cw3mIPzq4GZrsnQGlrNOXqLrfsOkJxZZQscnOLuStvxW7IUpfam39ts98IHqc1yraB/27oy7i6nH8MU5I7O02QdPPx7jJjp2YL3V9eHZIwMc07sbMJ/WwOn/atRtdhMc6fmaLA1dgHPrXIwtuwaejVAFwtVmOJ8dSM9ueQOvxw2+19+dhHkpjfdoYy9gCosx8MDxEi5cvPq9Lk0JT5llobJzJniLPcJkkJfhY8lDOqliE/4P4Xd2QA==
+      </DataArray>
+      <DataArray type="Float64" Name="sigma_ip" NumberOfComponents="4" NumberOfTuples="156" format="binary" RangeMin="232337.8627669878" RangeMax="4273900.719956269">
+        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
+        <InformationKey name="L2_NORM_RANGE" location="vtkDataArray" length="2">
+          <Value index="0">
+            232337.86277
+          </Value>
+          <Value index="1">
+            4273900.72
+          </Value>
+        </InformationKey>
+      </DataArray>
+    </FieldData>
+    <PPointData>
+      <PDataArray type="Float64" Name="MaterialForces" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="NodalForces" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="displacement" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="epsilon" NumberOfComponents="4"/>
+      <PDataArray type="Float64" Name="sigma" NumberOfComponents="4"/>
+    </PPointData>
+    <PCellData>
+      <PDataArray type="Int32" Name="MaterialIDs"/>
+      <PDataArray type="Float64" Name="epsilon_avg" NumberOfComponents="4"/>
+      <PDataArray type="Float64" Name="free_energy_density_avg"/>
+      <PDataArray type="Float64" Name="principal_stress_values" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_1" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_2" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_3" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="sigma_avg" NumberOfComponents="4"/>
+      <PDataArray type="UInt8" Name="vtkGhostType"/>
+    </PCellData>
+    <PPoints>
+      <PDataArray type="Float64" Name="Points" NumberOfComponents="3"/>
+    </PPoints>
+    <Piece Source="mesh_ts_1_t_1_000000_0.vtu"/>
+    <Piece Source="mesh_ts_1_t_1_000000_1.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>

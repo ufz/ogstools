@@ -22,6 +22,7 @@ from typeguard import typechecked
 from ogstools import plot
 from ogstools._internal import copy_function_signature, deprecated
 from ogstools.core.storage import StorageBase
+from ogstools.mesh import read
 from ogstools.mesh.utils import reshape_obs_points
 from ogstools.plot.lineplots import line
 from ogstools.variables import Variable, _normalize_vars, u_reg
@@ -100,6 +101,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     for dataset in self._pvd_reader.datasets
                 ]
                 self._timevalues = np.asarray(self._pvd_reader.time_values)
+                self.skip_pvtu2vtu = False
             case ".xdmf" | ".xmf":
                 from .xdmf_reader import XDMFReader
 
@@ -461,7 +463,19 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             match self._data_type:
                 case ".pvd":
-                    pv_mesh = self._read_pvd(data_timestep)
+                    suffix = self.timestep_files[data_timestep].split(".")[-1]
+                    if suffix == "pvtu" and not self.skip_pvtu2vtu:
+                        from ogstools._find_ogs import cli
+                        from ogstools.core.storage import _date_temp_path
+
+                        tmp_path = _date_temp_path("pvtu2vtu", "vtu")
+                        tmp_path.parent.mkdir(parents=True)
+                        cli().pvtu2vtu(
+                            i=self.timestep_files[data_timestep], o=tmp_path
+                        )
+                        pv_mesh = read(tmp_path)
+                    else:
+                        pv_mesh = self._read_pvd(data_timestep)
                 case ".xdmf":
                     pv_mesh = self._read_xdmf(data_timestep)
                 case ".vtu":

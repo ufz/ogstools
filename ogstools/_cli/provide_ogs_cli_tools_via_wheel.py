@@ -54,6 +54,7 @@ binaries_list = [
     "ogs",
     "OGS2VTK",
     "partmesh",
+    "pvtu2vtu",
     "PVD2XDMF",
     "queryMesh",
     "Raster2Mesh",
