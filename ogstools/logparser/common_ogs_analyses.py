@@ -188,6 +188,21 @@ def time_step_vs_iterations(df: pd.DataFrame) -> pd.DataFrame:
     return pt
 
 
+def time_step_vs_step_size_and_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Return a pivot table mapping each time_step to its last recorded
+    step_size and step_start_time.
+
+    :param df:    The logs/records dataframe.
+    """
+    interest = ["step_size", "step_start_time"]
+    context = ["time_step"]
+    _check_input(df, interest, context)
+    pt = df.pivot_table(interest, context, aggfunc="last")
+    _check_output(pt, interest, context)
+    return pt
+
+
 @typechecked
 def errors_per_ts_iteration(
     df: pd.DataFrame, metric: Literal["dx", "x", "dx_x"] = "dx"

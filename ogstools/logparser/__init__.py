@@ -17,6 +17,7 @@ from .common_ogs_analyses import (
     fill_ogs_context,
     model_and_clock_time,
     time_step_vs_iterations,
+    time_step_vs_step_size_and_time,
 )
 from .log_parser import parse_file, read_version
 from .plots import plot_convergence, plot_convergence_order
@@ -38,4 +39,5 @@ __all__ = [
     "plot_convergence_order",
     "read_version",
     "time_step_vs_iterations",
+    "time_step_vs_step_size_and_time",
 ]

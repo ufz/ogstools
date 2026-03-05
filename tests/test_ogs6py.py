@@ -11,6 +11,7 @@ from ogstools.definitions import EXAMPLES_DIR
 from ogstools.examples import (
     prj_3bhes_id_1U_2U_1U,
     prj_3bhes_id_1U_2U_1U_ref,
+    prj_3bhes_id_restart_ic_ref,
     prj_aniso_expansion,
     prj_beier_sandbox,
     prj_beier_sandbox_add_output_ref,
@@ -1657,3 +1658,71 @@ class TestiOGS:
             model.media.add_property(
                 name="check", type="Constant", value="check"
             )
+
+    def test_generate_timepairs(self):
+        prj = ot.Project()
+        expected_timevalues = [0.0, 60.0, 120.0, 180.0]
+        pairs = prj.time_loop._generate_timepairs(expected_timevalues)
+        assert pairs == [{"repeat": 3, "delta_t": 60.0}]
+
+    def test_set_timescheme_time_range(self):
+        prj = ot.Project(prj_heat_transport_bhe)
+        root = prj._get_root()
+        new_timevalues = [12, 20, 25, 30, 40, 48]
+        initial_dt = new_timevalues[1] - new_timevalues[0]
+        prj._set_timescheme(
+            t_initial=new_timevalues[0],
+            t_end=new_timevalues[-1],
+            initial_dt=initial_dt,
+        )
+        assert root.findtext(
+            "./time_loop/processes/process/time_stepping/t_initial"
+        ) == str(new_timevalues[0])
+        assert root.findtext(
+            "./time_loop/processes/process/time_stepping/t_end"
+        ) == str(new_timevalues[-1])
+
+    def test_set_timescheme_explicit(self):
+        def _get_timepairs():
+            return [
+                {
+                    "repeat": pair.findtext("repeat"),
+                    "delta_t": pair.findtext("delta_t"),
+                }
+                for pair in root.findall(
+                    "./time_loop/processes/process/time_stepping/timesteps/pair"
+                )
+            ]
+
+        prj = ot.Project(prj_3bhes_id_1U_2U_1U)
+        root = prj._get_root()
+        original_pairs = _get_timepairs()
+        new_timevalues = [10, 20, 25, 30, 40, 50]
+        prj._set_timescheme(timevalues=new_timevalues)
+        new_pairs = _get_timepairs()
+
+        assert original_pairs != new_pairs
+        assert new_pairs == [
+            {"repeat": "1", "delta_t": "10.0"},
+            {"repeat": "2", "delta_t": "5.0"},
+            {"repeat": "2", "delta_t": "10.0"},
+        ]
+        assert root.findtext(
+            "./time_loop/processes/process/time_stepping/t_initial"
+        ) == str(new_timevalues[0])
+        assert root.findtext(
+            "./time_loop/processes/process/time_stepping/t_end"
+        ) == str(new_timevalues[-1])
+
+    def test_process_initial_conditions_for_restart(
+        self,
+        tmp_path,
+    ) -> None:
+        ref_prj = prj_3bhes_id_restart_ic_ref
+
+        prj = ot.Project(prj_3bhes_id_1U_2U_1U)
+        prj._process_initial_conditions_for_restart(
+            meshname="testing123", zero_displacement=False
+        )
+        prj.write_input(tmp_path / "default.prj")
+        assert prj == ot.Project(ref_prj)

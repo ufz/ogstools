@@ -6,6 +6,7 @@
 
 from typing import Any
 
+import numpy as np
 from lxml import etree as ET
 
 from ogstools.ogs6py import build_tree
@@ -34,6 +35,27 @@ class TimeLoop(build_tree.BuildTree):
             if self.time_loop.findall(".outputs") == []
             else self.time_loop.findall(".outputs")[0]
         )
+
+    def _generate_timepairs(self, timevalues: list) -> list:
+        """
+        Reconstructs (repeat, delta_t) time-step pairs from a list of time values.
+
+        :param timevalues:      time-values
+        """
+        diffs = np.diff(timevalues)
+        if diffs.size == 0:
+            return []
+
+        run_starts = np.concatenate(
+            ([0], np.nonzero(diffs[1:] != diffs[:-1])[0] + 1)
+        )
+        run_ends = np.concatenate((run_starts[1:], [diffs.size]))
+        repeats = run_ends - run_starts
+        values = diffs[run_starts]
+        return [
+            {"repeat": int(r), "delta_t": float(v)}
+            for r, v in zip(repeats, values, strict=False)
+        ]
 
     def add_process(self, **args: Any) -> None:
         """

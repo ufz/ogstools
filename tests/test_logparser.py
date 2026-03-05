@@ -32,6 +32,7 @@ from ogstools.logparser import (
     parse_file,
     read_version,
     time_step_vs_iterations,
+    time_step_vs_step_size_and_time,
 )
 from ogstools.logparser.log_file_handler import (
     LogFileHandler,
@@ -471,3 +472,43 @@ class TestLogparser_Version2:
         assert len(df_ats) == 3
         df_acni = analysis_convergence_newton_iteration(df_records)
         assert len(df_acni) == 10
+
+    def test_time_step_vs_step_size_and_time(self):
+        df_logs = pd.DataFrame(parse_file(serial_v2_coupled_ht))
+        df_ts = time_step_vs_step_size_and_time(df_logs)
+        assert len(df_ts) == 3
+        assert all(df_ts["step_size"] == [0.0, 1000.0, 1000.0])
+        assert all(df_ts["step_start_time"] == [0.0, 1000.0, 2000.0])
+
+    @pytest.mark.parametrize(
+        ("logfile", "timestep", "expected_time", "expected_step_size"),
+        [
+            (
+                log_adaptive_timestepping,
+                5,
+                0.72687999999999997,
+                0.20908800000000002,
+            ),
+            (
+                log_adaptive_timestepping,
+                40,
+                4.7004435886308817,
+                0.00019047529768645433,
+            ),
+            (serial_v2_coupled_ht, 1, 1000, 1000),
+        ],
+    )
+    def test_time_step_vs_step_size_and_time_at_ts(
+        self, logfile, timestep, expected_time, expected_step_size
+    ):
+        df_logs = pd.DataFrame(parse_file(logfile))
+        df_ts = time_step_vs_step_size_and_time(df_logs)
+
+        # The example logs are old, time step #0 doesn't exist for them -- comparing (ts-1)
+        # only exception is `serial_v2_coupled_ht`
+        if logfile != serial_v2_coupled_ht:
+            timestep -= 1
+
+        assert len(df_ts) >= timestep
+        assert df_ts["step_size"].iloc[timestep + 1] == expected_step_size
+        assert df_ts["step_start_time"].iloc[timestep] == expected_time

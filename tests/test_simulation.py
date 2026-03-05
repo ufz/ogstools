@@ -151,3 +151,56 @@ def test_simulation_log_convergence_order() -> plt.figure:
     model = examples.load_model_liquid_flow_simple()
     sim = model.run()
     return sim.log.plot_convergence_order()
+
+
+def test_mock_model_restart() -> None:
+    sim_dir = examples.EXAMPLES_DIR / "simulation/restart/sim"
+    sim = ot.Simulation.from_folder(sim_dir)
+    prj_ref = ot.Project(sim_dir / "model/project/ref.prj")
+    new_timevalues = [2, 3, 4]
+    model_restart = sim.restart(timevalues=new_timevalues)
+    model_restart.save()
+
+    assert prj_ref == model_restart.project
+
+
+def test_restart_error_cases():
+    sim = ot.Simulation.from_folder(
+        examples.EXAMPLES_DIR / "simulation/restart/sim"
+    )
+    # TypeError if both timevalues and (t_initial, t_end) are given
+    with pytest.raises(TypeError):
+        sim.restart(
+            timevalues=[1, 2, 3, 4],
+            t_initial=1,
+            t_end=4,
+            initial_dt=1,
+        )
+    # AssertionError if the input timevalues is []
+    with pytest.raises(AssertionError):
+        sim.restart(
+            timevalues=[],
+        )
+    # AssertionError if the timevalues are not sorted
+    with pytest.raises(AssertionError):
+        sim.restart(
+            timevalues=[4, 5, 2, 1],
+        )
+    return
+
+
+def test_model_restart(tmp_path) -> None:
+    model = ot.examples.load_model_liquid_flow_simple().copy()
+    sim = model.run()
+    sim.save(tmp_path / "entire_run")
+
+    ms_full = sim.meshseries
+    timestep_break = int(ms_full.timevalues.size / 2)
+    new_timevalues = ms_full.timevalues[timestep_break:]
+
+    model_restart = sim.restart(timevalues=new_timevalues)
+    sim_restart = model_restart.run()
+
+    ms_restart = sim_restart.meshseries
+    assert all(ms_restart.timevalues == new_timevalues)
+    assert ot.MeshSeries.compare(ms_full[timestep_break:], ms_restart)
