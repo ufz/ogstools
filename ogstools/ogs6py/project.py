@@ -1157,11 +1157,7 @@ class Project(StorageBase):
         wrapper: Any | None = None,
         write_logs: bool = True,
         background: bool = False,
-<<<<<<< HEAD
-    ) -> subprocess.Popen:
-=======
     ) -> Monitor:
->>>>>>> 885ca06d (add bokeh log plotting functionality)
         """Command to run OGS.
 
         Runs OGS with the project file specified as output_file.

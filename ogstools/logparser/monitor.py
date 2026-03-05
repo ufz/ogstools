@@ -33,7 +33,7 @@ class Monitor:
     A class to manage the data source for monitoring logs in Bokeh.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, notebook_execution: bool = True) -> None:
         self.data_source = ColumnDataSource(
             data={
                 "time_step": [],
@@ -106,6 +106,7 @@ class Monitor:
             "dx_x_4": "Relative convergence dx_x_4",
             "dx_x_5": "Relative convergence dx_x_5",
         }
+        self.notebook_execution = notebook_execution
 
     def start_log_file_handler(self, log_file: Path) -> None:
         """
@@ -222,7 +223,7 @@ class Monitor:
                 return data[-window_length:]
             return data
 
-        t0 = 0.0
+        t0 = time.time()
         while True:
             item = self._records.get()
             if isinstance(item, log_regex.Termination):
@@ -364,8 +365,12 @@ class Monitor:
             t_tmp = time.time()
             if t_tmp - t0 > update_interval:
                 t0 = t_tmp
-                push_notebook(handle=handle_line_chart)
-        push_notebook(handle=handle_line_chart)
+                if self.notebook_execution is True:
+                    push_notebook(handle=handle_line_chart)
+                else:
+                    break
+        if self.notebook_execution is True:
+            push_notebook(handle=handle_line_chart)
 
     def plot_log(
         self,
