@@ -79,11 +79,20 @@ def difference(
         resampled.
         """
         warn(msg, RuntimeWarning, stacklevel=2)
-        sub_mesh = base_mesh.sample(subtract_mesh)
+        # sample will always interpolate to point_data. Thus, for proper
+        # comparison of cell_data, we will have to convert cell_data to
+        # point_data of the base mesh and the sub_mesh
+        sub_mesh = base_mesh.sample(
+            subtract_mesh.ctp(),
+            pass_cell_data=False,
+            pass_point_data=False,
+            pass_field_data=False,
+        )
         mask = sub_mesh["vtkValidPointMask"] == 0
 
+    base_mesh_ = base_mesh if is_same_topology else base_mesh.ctp()
     if variable is None:
-        return _raw_differences_all_data(base_mesh, sub_mesh)
+        return _raw_differences_all_data(base_mesh_, sub_mesh)
     if isinstance(variable, str):
         variable = Variable(data_name=variable, output_name=variable)
 
@@ -92,7 +101,7 @@ def difference(
     diff_mesh.clear_cell_data()
     outname = variable.difference.output_name
     vals = np.asarray(
-        [variable.transform(mesh) for mesh in [base_mesh, sub_mesh]]
+        [variable.transform(mesh) for mesh in [base_mesh_, sub_mesh]]
     )
     diff_mesh[outname] = np.empty(vals.shape[1:])
     diff_mesh[outname] = vals[0] - vals[1]

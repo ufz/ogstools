@@ -297,20 +297,22 @@ def remesh_with_triangles(
     refinement: dict | None = None,
     local_ref: list[dict] | dict | None = None,
     mesh_opts: dict | None = None,
+    extract_regions: bool = False,
 ) -> Path:
     """Discretizes a given Mesh with triangles and saves as gmsh .msh.
 
-    Requires the mesh to be 2D and to contain 'MaterialIDs in the cell data.
+    Requires the mesh to be 2D and to contain `MaterialIDs` in the cell data.
 
     :param mesh:        The mesh which shall be discretized with triangles
     :param output_file: The full filepath to the resulting file
     :param refinement: specification for refinement of region edges
 
         You can provide a dict with the following data:
-        - 'SizeMin': Minimum element size (default: median point distance)
-        - 'SizeMax': Maximum element size (default: 3 * median point distance)
-        - 'DistMin': Distance until which SizeMin is used (default: 0)
-        - 'DistMax': Distance after which SizeMax is used (default: 3 * median point distance)
+        - 'SizeMin':  Minimum element size (default: median point distance)
+        - 'SizeMax':  Maximum element size (default: 3 * median point distance)
+        - 'DistMin':  Distance until which SizeMin is used (default: 0)
+        - 'DistMax':  Distance after which SizeMax is used (default: 3 * median point distance)
+        - 'Sampling': Sampling number (resolution for field evaluation)
     :param local_ref: specification/s of local refinement
 
         Allows the same refinement options as in `refinement`, but the dict
@@ -319,6 +321,8 @@ def remesh_with_triangles(
     :param mesh_opts: Meshing options. Will be passed to
         `gmsh.option.setNumber(f"Mesh.{key}", value)`. Additionally pass
         'order' to set the element order (1=linear, 2=quadratic, ...).
+    :param extract_regions: If True, each region (MaterialIDs) of the new mesh
+        will be saved as an individual mesh in addition to the domain mesh.
     """
     output_file = optional_default_file(output_file, "gmsh_remesh", ".msh")
     gmsh.initialize(["-noenv"])
@@ -353,7 +357,9 @@ def remesh_with_triangles(
         gmsh.model.geo.addCurveLoop(line_tags, tag=mat_id)
         gmsh.model.geo.addPlaneSurface([mat_id], tag=mat_id)
         gmsh.model.addPhysicalGroup(
-            dim=2, tags=[mat_id], name=f"Layer {mat_id}"
+            dim=2,
+            tags=[mat_id],
+            name=f"Region {mat_id}" if extract_regions else "",
         )
         f_1, f_2 = (2 * mat_id, 2 * mat_id + 1)
         distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
@@ -363,6 +369,8 @@ def remesh_with_triangles(
         field.setNumbers(f_1, "CurvesList", line_tags)
         field.add("Threshold", f_2)
         field.setNumber(f_2, "IField", f_1)
+        if "sampling" in ref:
+            field.setNumber(f_1, "Sampling", ref["sampling"])
         field.setNumber(f_2, "SizeMin", ref.get("SizeMin", mdist))
         field.setNumber(f_2, "SizeMax", ref.get("SizeMax", mdist * 3))
         field.setNumber(f_2, "DistMin", ref.get("DistMin", 0))
@@ -403,8 +411,13 @@ def remesh_with_triangles(
             f_1 = f_min + subdomain_id * 2 + 1
             f_2 = f_1 + 1
             field.add("Distance", f_1)
-            list_type = "PointsList" if one_pt else "CurvesList"
-            field.setNumbers(f_1, list_type, pt_ids_)
+            if one_pt:
+                field.setNumbers(f_1, "PointsList", pt_ids_)
+            else:
+                field.setNumbers(f_1, "PointsList", pt_ids_[1:])
+                field.setNumbers(f_1, "CurvesList", pt_ids_[1:])
+            if not one_pt and "Sampling" in ref:
+                field.setNumber(f_1, "Sampling", ref["Sampling"])
             field.add("Threshold", f_2)
             field.setNumber(f_2, "IField", f_1)
             field.setNumber(f_2, "SizeMin", ref.get("SizeMin", mdist))

@@ -273,8 +273,10 @@ def subplot(
             surf_tri,
             ax,
             variable,
-            kwargs.get("arrowsize", setup.arrowsize),
             projection,
+            kwargs.get("arrowsize", setup.arrowsize),
+            kwargs.get("density", 1.5),
+            kwargs.get("streamlinewidth", 2.5),
         )
 
     ax.margins(0, 0)  # otherwise it shrinks the plot content

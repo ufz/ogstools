@@ -375,11 +375,17 @@ def test_remesh_with_tri(tmp_path: Path):
         {"pts": repo.points, "SizeMin": 10, "SizeMax": 100, "DistMax": 200},
         {"pts": top_pt, "SizeMin": 10, "SizeMax": 100, "DistMax": 500},
     ]
-    ref = {"SizeMin": 200}
+    refinement = {"SizeMin": 200}
 
     ot.gmsh_tools.remesh_with_triangles(
-        mesh, msh_path, refinement=ref, local_ref=local_ref
+        mesh, msh_path, refinement, local_ref, extract_regions=True
     )
     meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
     assert len(meshes) == 1 + len(np.unique(mesh["MaterialIDs"]))
+
+    ot.gmsh_tools.remesh_with_triangles(
+        mesh, msh_path, refinement, local_ref, extract_regions=False
+    )
+    meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
+    assert len(meshes) == 1
     # boundaries are not assigned a physical tag in remesh_with_triangles

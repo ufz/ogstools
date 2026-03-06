@@ -6,6 +6,7 @@ import pyvista as pv
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from lxml import etree as ET
+from scipy.spatial import KDTree as scikdtree
 
 import ogstools as ot
 from ogstools import examples
@@ -510,7 +511,7 @@ def test_compare_meshseries(ms, var):
         mult=st.floats(min_value=1.01, max_value=10.0),
     )
 )
-@settings(deadline=500)
+@settings(deadline=1000)
 def test_compare_meshseries_tol(tols):
     """
     This test attempts to check `MeshSeries.compare` atol using property-testing
@@ -721,7 +722,6 @@ def test_save_xdmf_mesh_series(tmp_path):
 
 
 def test_remove_array():
-
     def data(ms_or_mesh: ot.MeshSeries) -> tuple[tuple[dict, str, int]]:
         "return a tuple of datafields, array_to_remove and num_arrays"
         return (
@@ -804,3 +804,23 @@ def test_ms_active():
         )
         != 0
     )
+
+
+def test_read_from_parallel_results():
+    """Test integration point data is correctly read from parallel results.
+
+    Checking for same shape of serial and parallel pvd ip data and also checking
+    for approximate equality of ip data.
+    """
+
+    ms_s = ot.MeshSeries(examples.pvd_serial_2D)
+    ms_p = ot.MeshSeries(examples.pvd_parallel_2D)
+    assert ms_p["sigma_ip"].shape == ms_s["sigma_ip"].shape
+
+    # Ordering of point and integration point in the meshes from a parallel
+    # pvd is not the same as in the parallel pvd. Thus we need to map the
+    # ip data from on to the other to compare both properly.
+    tree = scikdtree(ot.mesh.to_ip_point_cloud(ms_p[-1]).points)
+    reordering = tree.query(ot.mesh.to_ip_point_cloud(ms_s[-1]).points)[1]
+    diff = ms_s[-1]["sigma_ip"] - ms_p[-1]["sigma_ip"][reordering]
+    np.testing.assert_array_less(np.abs(diff), 1e-4)

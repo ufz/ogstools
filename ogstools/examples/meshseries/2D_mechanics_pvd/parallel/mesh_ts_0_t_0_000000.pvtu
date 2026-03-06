@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<VTKFile type="PUnstructuredGrid" version="1.0" byte_order="LittleEndian" header_type="UInt64" compressor="vtkZLibDataCompressor">
+  <PUnstructuredGrid GhostLevel="1">
+    <FieldData>
+      <DataArray type="Int8" Name="IntegrationPointMetaData" NumberOfTuples="247" format="binary" RangeMin="34" RangeMax="125">
+        AQAAAAAAAAAAgAAAAAAAAPcAAAAAAAAAdQAAAAAAAAA=eF6lzLEKwzAMhOF30ZyloZNfpRThNBcjqCUju4MJfvd67dIOHe9++E4SbUgem5hysbk4usdeKdzOj2i+wymsC2nMoEBVUo4shebzyhuc7eCH5WIKbRO4juUHgVLlOcNfyOEAQ+Gp8w6t0vo38DLu4w0vjFsB
+      </DataArray>
+      <DataArray type="Int8" Name="OGS_VERSION" NumberOfTuples="25" format="binary" RangeMin="45" RangeMax="121">
+        AQAAAAAAAAAAgAAAAAAAABkAAAAAAAAAIQAAAAAAAAA=eF4z0zPVM9c1NLHUTTdNMTKxTDMw10vJLCqpBABLHAa9
+      </DataArray>
+      <DataArray type="Float64" Name="epsilon_ip" NumberOfComponents="4" NumberOfTuples="156" format="binary" RangeMin="0" RangeMax="0">
+        AQAAAAAAAAAAgAAAAAAAAIATAAAAAAAAHAAAAAAAAAA=eF7twTEBAAAAwqD1T20KP6AAAAAAgJcBE4AAAQ==
+        <InformationKey name="L2_NORM_RANGE" location="vtkDataArray" length="2">
+          <Value index="0">
+            0
+          </Value>
+          <Value index="1">
+            0
+          </Value>
+        </InformationKey>
+      </DataArray>
+      <DataArray type="Float64" Name="free_energy_density_ip" NumberOfTuples="156" format="binary" RangeMin="0" RangeMax="0">
+        AQAAAAAAAAAAgAAAAAAAAOAEAAAAAAAAEgAAAAAAAAA=eF5jYBgFo2AUjILhCQAE4AAB
+      </DataArray>
+      <DataArray type="Float64" Name="sigma_ip" NumberOfComponents="4" NumberOfTuples="156" format="binary" RangeMin="0" RangeMax="0">
+        AQAAAAAAAAAAgAAAAAAAAIATAAAAAAAAHAAAAAAAAAA=eF7twTEBAAAAwqD1T20KP6AAAAAAgJcBE4AAAQ==
+        <InformationKey name="L2_NORM_RANGE" location="vtkDataArray" length="2">
+          <Value index="0">
+            0
+          </Value>
+          <Value index="1">
+            0
+          </Value>
+        </InformationKey>
+      </DataArray>
+    </FieldData>
+    <PPointData>
+      <PDataArray type="Float64" Name="MaterialForces" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="NodalForces" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="displacement" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="epsilon" NumberOfComponents="4"/>
+      <PDataArray type="Float64" Name="sigma" NumberOfComponents="4"/>
+    </PPointData>
+    <PCellData>
+      <PDataArray type="Int32" Name="MaterialIDs"/>
+      <PDataArray type="Float64" Name="epsilon_avg" NumberOfComponents="4"/>
+      <PDataArray type="Float64" Name="free_energy_density_avg"/>
+      <PDataArray type="Float64" Name="principal_stress_values" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_1" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_2" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="principal_stress_vector_3" NumberOfComponents="3"/>
+      <PDataArray type="Float64" Name="sigma_avg" NumberOfComponents="4"/>
+      <PDataArray type="UInt8" Name="vtkGhostType"/>
+    </PCellData>
+    <PPoints>
+      <PDataArray type="Float64" Name="Points" NumberOfComponents="3"/>
+    </PPoints>
+    <Piece Source="mesh_ts_0_t_0_000000_0.vtu"/>
+    <Piece Source="mesh_ts_0_t_0_000000_1.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>
