@@ -167,12 +167,7 @@ class SimulationController(abc.ABC):
     @property
     def cmd(self) -> str:
         """Get the full command used to run the simulation."""
-        return (
-            f"{self.model_ref.execution.ogs_bin_path}"
-            f" {self.model_ref.project.prjfile}"
-            f" -m {self.model_ref.meshes.active_target}"
-            f" -o {self.result.next_target}"
-        )
+        return f"{self.model_ref.cmd} -o {self.result.next_target}"
 
     def error_report(self) -> str:
         """

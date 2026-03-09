@@ -6,6 +6,7 @@
 
 
 import contextlib
+import subprocess
 import time
 import typing
 from pathlib import Path
@@ -44,22 +45,25 @@ class OGSNativeController(SimulationController):
         super().__init__(
             model_ref=model_ref, sim_output=sim_output, overwrite=overwrite
         )
-        self._args_list = [
-            "-m",
-            str(model_ref.meshes.active_target),
-            "-o",
-            str(self.result.next_target),
-        ]
-        args_str = " ".join(self._args_list)
-
-        self.process = model_ref.project.run_model(
-            args=args_str,
-            logfile=self.result.next_target / "log.txt",
-            write_logs=model_ref.execution.write_logs,
-            background=True,
-            wrapper=model_ref.execution.wrapper,
-            container_path=model_ref.execution.container_path,
-        )
+        exe = model_ref.execution
+        logfile = self.result.next_target / "log.txt"
+        if exe.write_logs:
+            with logfile.open("w") as logf:
+                self.process = subprocess.Popen(
+                    self.cmd,
+                    shell=True,
+                    stdout=logf,
+                    stderr=subprocess.STDOUT,
+                    env=exe.env,
+                )
+        else:
+            self.process = subprocess.Popen(
+                self.cmd,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+                env=exe.env,
+            )
 
         self.runtime_start = time.time()
         self.runtime_end: float | None = None

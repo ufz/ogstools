@@ -192,7 +192,8 @@ class Model(StorageBase):
     def _save_impl(
         self, dry_run: bool = False, overwrite: bool | None = None
     ) -> list[Path]:
-        self.meshes.num_partitions = self.execution.mpi_ranks
+        if self.execution.mpi_ranks is not None:
+            self.meshes.add_partitions(self.execution.mpi_ranks)
 
         files: list[Path] = []
 
@@ -394,6 +395,32 @@ class Model(StorageBase):
 
         memo[id(self)] = new
         return new
+
+    @property
+    def cmd(self) -> str:
+        """Get the base OGS command (without output path)."""
+        exe = self.execution
+        meshes_path = self.meshes.active_target or self.meshes.next_target
+        if exe.mpi_ranks is not None and exe.mpi_ranks > 1:
+            meshes_path = meshes_path / "partition" / str(exe.mpi_ranks)
+        parts = []
+        if exe.wrapper:
+            parts.append(exe.wrapper)
+        if prefix := exe.container_prefix:
+            parts.append(prefix)
+        if exe.mpi_ranks is not None and exe.mpi_ranks > 1:
+            parts += [exe.mpi_wrapper, str(exe.mpi_ranks)]
+        parts.append(exe.ogs_resolved_path)
+        parts += [
+            str(self.project.prjfile),
+            "-m",
+            str(meshes_path),
+            "-l",
+            exe.log_level,
+        ]
+        if exe.args is not None:
+            parts.append(str(exe.args))
+        return " ".join(parts)
 
     def plot_constraints(self, **kwargs: typing.Any) -> plt.Figure:
         """Plot the meshes with annotated boundary conditions and source terms.

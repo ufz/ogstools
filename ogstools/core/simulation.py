@@ -238,12 +238,7 @@ class Simulation(StorageBase):
     @property
     def cmd(self) -> str:
         """Get the full command used to run the simulation."""
-        return (
-            f"{self.model.execution.ogs_bin_path}"
-            f" {self.model.project.prjfile}"
-            f" -m {self.model.meshes.active_target}"
-            f" -o {self.result.next_target}"
-        )
+        return f"{self.model.cmd} -o {self.result.next_target}"
 
     @property
     def log_file(self) -> Path:
