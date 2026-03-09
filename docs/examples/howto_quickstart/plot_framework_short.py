@@ -14,8 +14,6 @@ This is a condensed version of the OGSTools workflow.
 import tempfile
 from pathlib import Path
 
-import numpy as np
-
 import ogstools as ot
 from ogstools.examples import (
     load_meshes_simple_lf,
@@ -28,14 +26,6 @@ from ogstools.examples import (
 
 project = load_project_simple_lf()
 meshes = load_meshes_simple_lf()
-
-# Set initial conditions
-meshes["right"].point_data["pressure"] = np.full(
-    np.shape(meshes["left"].points)[0], 3.1e7
-)
-
-# Visualize mesh topology
-fig = meshes.plot()
 
 model = ot.Model(project=project, meshes=meshes)
 # Visualize setup with boundary conditions
@@ -53,10 +43,10 @@ print(f"Simulation status: {sim.status_str}")
 # ==============================
 
 # Plot final pressure distribution
-ot.plot.contourf(sim.meshseries[-1], "pressure")
+fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
 
 # Plot convergence behavior
-sim.log.plot_convergence()
+fig = sim.log.plot_convergence()
 
 # %%
 # 4. Store: Save Simulation
