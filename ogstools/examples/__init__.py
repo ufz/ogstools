@@ -162,9 +162,8 @@ def load_meshes_simple_lf():
     )
 
     # Add data array 'pressure' to the left and right meshes boundary meshes
-    points_shape = np.shape(meshes["left"].points)
-    meshes["left"].point_data["pressure"] = np.full(points_shape[0], 2.9e7)
-    meshes["right"].point_data["pressure"] = np.full(points_shape[0], 3e7)
+    meshes["left"].point_data["pressure"] = 2.9e7
+    meshes["right"].point_data["pressure"] = 3.1e7
 
     return meshes
 
