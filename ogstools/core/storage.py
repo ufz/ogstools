@@ -32,9 +32,12 @@ def _backup_move(src: Path, dst: Path) -> None:
 
 
 def _date_temp_path(
-    class_id: str, suffix: str | None = None, id: str | None = None
+    class_id: str,
+    suffix: str | None = None,
+    id: str | None = None,
+    temp: Path | None = None,
 ) -> Path:
-    dir = tempfile.gettempdir()
+    dir = temp or Path(tempfile.gettempdir()) / "ogstools"
 
     suffix = "." + suffix if suffix else ""
     if not id:
@@ -42,7 +45,7 @@ def _date_temp_path(
 
     if suffix:
         return Path(dir) / class_id / id / ("default" + suffix)
-    return Path(dir) / class_id / (id + suffix)
+    return Path(dir) / class_id / id
 
 
 def _temp_id() -> str:
@@ -113,6 +116,7 @@ class StorageBase(abc.ABC):
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
+    Temppath = None
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter
     _SAVE_STATE_ATTRS = (
@@ -524,7 +528,7 @@ class StorageBase(abc.ABC):
 
     def _date_temp_path(self) -> Path:
         suffix = self._ext
-        return _date_temp_path(self.class_id, suffix, self._id)
+        return _date_temp_path(self.class_id, suffix, self._id, self.Temppath)
 
     def _reset_save_state(self) -> None:
         """
