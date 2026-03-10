@@ -201,6 +201,26 @@ class TestMaterialLib:
         assert mat.name == "granite"
         assert "Density" in mat.property_names()
 
+    def test_material_to_file_roundtrip(self, tmp_path, write_yaml):
+        """Material.to_file should write YAML that can be loaded with Material.from_file."""
+        source = write_yaml(
+            "water.yml",
+            {
+                "name": "water",
+                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
+            },
+        )
+        mat = Material.from_file(source)
+        assert mat is not None
+
+        target = tmp_path / "water_copy.yml"
+        mat.to_file(target)
+        copied = Material.from_file(target)
+
+        assert copied is not None
+        assert copied.name == "water"
+        assert copied.get_property("Viscosity").value == 1.0
+
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
         mat = make_material(

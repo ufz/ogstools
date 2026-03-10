@@ -56,6 +56,13 @@ class Material:
 
         return cls(name=name, raw_data=raw_data)
 
+    def to_file(self, file_path: str | Path) -> None:
+        """Write this Material to a YAML file."""
+        output_data = dict(self.raw)
+        output_data["name"] = self.name
+        with Path(file_path).open("w", encoding="utf-8") as file:
+            yaml.safe_dump(output_data, file, sort_keys=False)
+
     def _parse_properties(self) -> None:
         block = self.raw.get("properties", {})
         if not block:
