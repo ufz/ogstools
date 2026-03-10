@@ -199,7 +199,7 @@ class TestMaterialLib:
 
         assert mat is not None
         assert mat.name == "granite"
-        assert "Density" in mat.property_names()
+        assert "Density" in mat
 
     def test_material_to_file_roundtrip(self, tmp_path, write_yaml):
         """Material.to_file should write YAML that can be loaded with Material.from_file."""
@@ -219,7 +219,9 @@ class TestMaterialLib:
 
         assert copied is not None
         assert copied.name == "water"
-        assert copied.get_property("Viscosity").value == 1.0
+        assert copied["Viscosity"].value == 1.0
+
+
 
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
@@ -245,7 +247,7 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert set(mat.property_names()) == {"Density", "Viscosity"}
+        assert mat.property_names == ["Density", "Viscosity"]
 
     def test_material_filter_properties_returns_only_allowed(self):
         """Material.filter_properties should return a new Material with only allowed properties."""
@@ -258,7 +260,7 @@ class TestMaterialLib:
 
         filtered = mat.filter_properties({"Density"})
 
-        assert filtered.property_names() == ["Density"]
+        assert filtered.property_names == ["Density"]
 
     def test_material_filter_properties_empty_set_returns_empty_material(self):
         """Material.filter_properties with empty allowed set should return a Material without properties."""
@@ -271,7 +273,7 @@ class TestMaterialLib:
         filtered = mat.filter_properties(set())
 
         assert filtered.properties == []
-        assert filtered.property_names() == []
+        assert filtered.property_names == []
 
     def test_material_repr_contains_name_and_property_count(self):
         """Material.__repr__ should show the material name and number of properties."""
@@ -305,10 +307,9 @@ class TestMaterialLib:
 
         filtered = mat.filter_process(process_schema)
 
-        names = filtered.property_names()
-        assert "Density" in names
-        assert "Viscosity" in names
-        assert "Permeability" not in names
+        assert "Density" in filtered
+        assert "Viscosity" in filtered
+        assert "Permeability" not in filtered
 
     def test_material_get_property(self):
         """get_property should return the correct property."""
@@ -339,7 +340,7 @@ class TestMaterialManager:
 
         assert mat is not None
         assert mat.name == "granite"
-        assert "Density" in mat.property_names()
+        assert "Density" in mat
 
     def test_materialdb_get_material_returns_correct_object(
         self, tmp_path, write_yaml
@@ -358,7 +359,7 @@ class TestMaterialManager:
 
         assert mat is not None
         assert mat.name == "water"
-        assert "Viscosity" in mat.property_names()
+        assert "Viscosity" in mat
 
     def test_materialdb_list_materials_returns_all_names(
         self, tmp_path, write_yaml
@@ -560,7 +561,7 @@ class TestMaterialManagerFilter:
 
         mat = filtered.get_material("region1")
         assert mat is not None
-        assert mat.property_names() == ["Density"]
+        assert mat.property_names == ["Density"]
         assert filtered._list_subdomains() == ["region1"]
         assert filtered._list_ids() == [0]
 

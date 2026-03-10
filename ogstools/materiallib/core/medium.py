@@ -121,9 +121,9 @@ class Medium:
                             raise NotImplementedError(msg)
 
                         # Require both fluids
-                        if not (
-                            self.fluids.get("Gas")
-                            and self.fluids.get("AqueousLiquid")
+                        if (
+                            self.fluids.get("Gas") is None
+                            or self.fluids.get("AqueousLiquid") is None
                         ):
                             msg = f"Both Gas and AqueousLiquid fluids required for {phase_type} with components."
                             raise ValueError(msg)
@@ -138,7 +138,7 @@ class Medium:
                     else:
                         # --- Case 1 + 2: No components ---
                         if phase_type == "Gas":
-                            if not self.fluids.get("Gas"):
+                            if self.fluids.get("Gas") is None:
                                 msg = "Gas phase requires gas_material."
                                 raise ValueError(msg)
                             phase = Phase(
@@ -148,7 +148,7 @@ class Medium:
                             )
 
                         elif phase_type == "AqueousLiquid":
-                            if not self.fluids.get("AqueousLiquid"):
+                            if self.fluids.get("AqueousLiquid") is None:
                                 msg = "AqueousLiquid phase requires liquid_material."
                                 raise ValueError(msg)
                             phase = Phase(
