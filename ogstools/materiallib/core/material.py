@@ -33,6 +33,8 @@ class Material(Mapping[str, MaterialProperty]):
     - Supports filtering by process schemas or property names.
     """
 
+    __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
+
     def __init__(self, name: str, raw_data: dict[str, Any]):
         self.name = name
         self.raw = raw_data  # full YAML (e.g. for debugging or export)
@@ -80,7 +82,9 @@ class Material(Mapping[str, MaterialProperty]):
                     k: v for k, v in entry.items() if k not in ("type", "value")
                 }
                 self.properties.append(
-                    MaterialProperty(name=prop_name, type_=type_, value=value, **extra)
+                    MaterialProperty(
+                        name=prop_name, type_=type_, value=value, **extra
+                    )
                 )
 
     def __getitem__(self, key: str) -> MaterialProperty:
@@ -102,22 +106,6 @@ class Material(Mapping[str, MaterialProperty]):
     def __bool__(self) -> bool:
         return bool(self.name)
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Material):
-            return NotImplemented
-        return self.name == other.name and [
-            p.to_dict() for p in self.properties
-        ] == [p.to_dict() for p in other.properties]
-
-    def __repr__(self) -> str:
-        return f"<Material '{self.name}' with {len(self.properties)} properties>"
-
-    def __str__(self) -> str:
-        lines = [repr(self)]
-        for p in self.properties:
-            lines.append(f"  {p}")
-        return "\n".join(lines)
-
     @property
     def property_names(self) -> list[str]:
         """Returns a list of all property names of this material."""
@@ -131,11 +119,6 @@ class Material(Mapping[str, MaterialProperty]):
             stacklevel=2,
         )
         return self[key]
-
-    def copy(self) -> Material:
-        """Return a deep copy."""
-        # default __deepcopy__ is fine
-        return copy.deepcopy(self)
 
     def filter_process(self, process_schema: dict[str, Any]) -> Material:
         """

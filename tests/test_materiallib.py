@@ -221,8 +221,6 @@ class TestMaterialLib:
         assert copied.name == "water"
         assert copied["Viscosity"].value == 1.0
 
-
-
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
         mat = make_material(
@@ -311,17 +309,33 @@ class TestMaterialLib:
         assert "Viscosity" in filtered
         assert "Permeability" not in filtered
 
-    def test_material_get_property(self):
-        """get_property should return the correct property."""
+    def test_material_getitem(self):
+        """mat[key] should return the correct property."""
         mat = make_material(
             {
                 "Density": {"type": "Constant", "value": 2500},
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat.get_property("Density").value == 2500
+        assert mat["Density"].value == 2500
         with pytest.raises(KeyError, match="No property with name"):
-            mat.get_property("porosity")
+            mat["porosity"]
+
+    def test_material_set_value(self):
+        """mat[key] should return the correct property."""
+        mat = make_material(
+            {
+                "Density": {"type": "Constant", "value": 2500},
+                "Viscosity": {"type": "Constant", "value": 1.0},
+            }
+        )
+        assert mat["Density"].value == 2500
+
+        mat_2000 = mat.copy()
+        assert mat_2000 == mat
+        mat_2000["Density"].value = 2000
+        assert mat_2000["Density"].value == 2000
+        assert mat["Density"].value == 2500
 
 
 class TestMaterialManager:
