@@ -104,7 +104,9 @@ class Model(StorageBase):
                         self.meshes = Meshes.from_folder(base)
                     else:
                         meshes_files = self.project.meshpaths(base)
-                        self.meshes = Meshes.from_files(meshes_files)
+                        self.meshes = Meshes.from_files(
+                            meshes_files, domain_key=meshes_files[0].stem
+                        )
                     break
             else:
                 loc_str = ", ".join(str(b) for b in mesh_locations)
