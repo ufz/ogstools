@@ -1,3 +1,5 @@
+import pyvista as pv
+
 import ogstools as ot
 from ogstools.examples import EXAMPLES_DIR
 
@@ -53,3 +55,18 @@ def test_model_construct_without_explicit_meshes2():
     )
     m = ot.Model(prj_file)
     assert len(m.meshes) == 5
+
+
+def test_domain_mesh_resolution(tmp_path):
+    mesh = pv.Plane().cast_to_unstructured_grid()
+    prj = ot.Project(output_file=tmp_path / "default.prj")
+
+    # first one is domain mesh
+    for name in ["square_quad8", "domain"]:
+        path = tmp_path / f"{name}.vtu"
+        mesh.save(path)
+        prj.mesh.add_mesh(path)
+    prj.write_input()
+
+    model = ot.Model(tmp_path / "default.prj")
+    assert model.meshes.domain_name == "square_quad8"
