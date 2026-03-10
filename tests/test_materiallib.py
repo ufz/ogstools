@@ -185,6 +185,22 @@ def medium_properties_from_xml(xml_file: Path, medium_id: int) -> dict:
 
 
 class TestMaterialLib:
+    def test_material_from_file_creates_material(self, write_yaml):
+        """Material.from_file should build a Material instance from valid YAML."""
+        file_path = write_yaml(
+            "granite.yml",
+            {
+                "name": "granite",
+                "properties": {"Density": {"type": "Constant", "value": 2700}},
+            },
+        )
+
+        mat = Material.from_file(file_path)
+
+        assert mat is not None
+        assert mat.name == "granite"
+        assert "Density" in mat.property_names()
+
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
         mat = make_material(

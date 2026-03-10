@@ -10,8 +10,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import]
-
 import ogstools.definitions as defs
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
@@ -94,20 +92,10 @@ class MaterialManager:
 
     def set_material(self, file_path: str | Path) -> None:
         """Write a material entry based of one yaml file."""
-        with Path(file_path).open(encoding="utf-8") as file:
-            raw_data = yaml.safe_load(file)
-
-            if not isinstance(raw_data, dict):
-                logger.debug("Skipping invalid YAML file: %s", file_path)
-                return
-
-            if "name" not in raw_data:
-                logger.debug("Skipping YAML file without 'name': %s", file_path)
-                return
-
-            name = raw_data["name"]
-            material = Material(name=name, raw_data=raw_data)
-            self.materials_db[material.name] = material
+        material = Material.from_file(file_path)
+        if material is None:
+            return
+        self.materials_db[material.name] = material
 
     # ------------------------------------------------------------
     # Loading
@@ -121,7 +109,9 @@ class MaterialManager:
             raise FileNotFoundError(msg)
 
         for file_path in yaml_files:
-            self.set_material(file_path)
+            material = Material.from_file(file_path)
+            if material is not None:
+                self.materials_db[material.name] = material
 
     # ------------------------------------------------------------
     # Accessors

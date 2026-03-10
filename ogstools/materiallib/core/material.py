@@ -7,7 +7,10 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
+
+import yaml  # type: ignore[import]
 
 from ogstools.materiallib.schema.required_properties import (
     required_property_names,
@@ -33,6 +36,25 @@ class Material:
         self.properties: list[MaterialProperty] = []
 
         self._parse_properties()
+
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> Material | None:
+        """Create a Material from a YAML file or return None if invalid."""
+        with Path(file_path).open(encoding="utf-8") as file:
+            raw_data = yaml.safe_load(file)
+
+        if not isinstance(raw_data, dict):
+            logger.debug("Skipping invalid YAML file: %s", file_path)
+            return None
+
+        name = raw_data.get("name")
+        if not isinstance(name, str):
+            logger.debug(
+                "Skipping YAML file without valid 'name': %s", file_path
+            )
+            return None
+
+        return cls(name=name, raw_data=raw_data)
 
     def _parse_properties(self) -> None:
         block = self.raw.get("properties", {})
