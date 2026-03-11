@@ -108,10 +108,8 @@ simc.run()  # this call is blocking, it waits for the simulation to finish
 
 # %%
 prj.write_input()
-monitor = prj.run_model(
-    background=True, args=f"-m {prj_path_in.parent} -o {results_dir}"
-)
-monitor.plot_log(
+prj.run_model(background=True, args=f"-m {prj_path_in.parent} -o {results_dir}")
+prj.plot_log(
     log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x"]]
 )
 
