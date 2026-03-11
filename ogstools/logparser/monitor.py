@@ -10,12 +10,9 @@ import time
 from pathlib import Path
 from queue import Queue
 
-import numpy as np
-
 try:
-    from bokeh.io import output_notebook, push_notebook, show
+    from bokeh.io import push_notebook
     from bokeh.io.notebook import CommsHandle
-    from bokeh.layouts import layout
     from bokeh.models import ColumnDataSource
     from bokeh.plotting import figure
 
@@ -173,7 +170,6 @@ class Monitor:
             y_axis_type=axis_type(log_data, time_y_axis_type),
         )
         if log_data in self.time_step_based_data:
-
             fig.line(
                 x="time_step",
                 y=log_data,
@@ -185,7 +181,6 @@ class Monitor:
             fig.yaxis.axis_label = self.ylabels[log_data]
             print(f"Plotting {log_data} against time_step")
         elif log_data in self.iteration_based_data:
-
             fig.line(
                 x="iteration_number",
                 y=log_data,
@@ -371,67 +366,3 @@ class Monitor:
                     break
         if self.notebook_execution is True:
             push_notebook(handle=handle_line_chart)
-
-    def plot_log(
-        self,
-        log_data: str | list[list[str]] = "step_start_time",
-        time_y_axis_type: str = "linear",
-        time_window_length: int = 0,
-        iteration_window_length: int = 0,
-        update_interval: int = 2,
-    ) -> None:
-        """Plots the log file.
-
-        :param log_data:  Plot type. Can be a single string or a list of list of strings.
-                          E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
-        :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
-        :param time_window_length:     Length of the time window (number of timesteps) for the plot. 0 Plots the whole log file.
-        :param iteration_window_length: Length of the iteration window (number of iterations) for the plot. 0 Plots the whole log file.
-        :param update_interval:        Interval in seconds to update the plot.
-        """
-
-        grid_layout = None
-
-        if isinstance(log_data, str):
-            grid_layout = self.generate_figure(
-                log_data, time_y_axis_type=time_y_axis_type
-            )
-        elif isinstance(log_data, list):
-            if len(log_data) == 0:
-                msg = "log_data list cannot be empty."
-                raise ValueError(msg)
-            try:
-                rows, cols = np.shape(log_data)
-            except ValueError:
-                print("log_data needs to be a list of lists.")
-            if rows == 0:
-                msg = "log_data list cannot be empty."
-                raise ValueError(msg)
-            if cols == 0:
-                msg = "log_data list cannot be empty."
-                raise ValueError(msg)
-            grid_layout = layout(
-                [
-                    [
-                        self.generate_figure(
-                            log_data[row][col],
-                            time_y_axis_type=time_y_axis_type,
-                        )
-                        for col in range(cols)
-                    ]
-                    for row in range(rows)
-                ]
-            )
-
-        output_notebook()
-
-        handle_line_chart = show(grid_layout, notebook_handle=True)
-        self.update_data(
-            handle_line_chart,
-            time_window_length,
-            iteration_window_length,
-            update_interval,
-        )
-        assert self._observer
-        self._observer.join()
-        print("Observer stopped.")
