@@ -552,7 +552,7 @@ class Project(StorageBase):
     @staticmethod
     def _set_type_value(
         parameterpointer: ET._ElementIterator,
-        value: int,
+        value: int | float | str,
         parametertype: Any | None,
         valuetag: str | None = None,
     ) -> None:
@@ -711,7 +711,7 @@ class Project(StorageBase):
                         sub_element.getparent().remove(sub_element)
 
     def replace_text(
-        self, value: str | int, xpath: str = ".", occurrence: int = -1
+        self, value: str | int | float, xpath: str = ".", occurrence: int = -1
     ) -> None:
         """General method for replacing text between opening and closing tags.
 
@@ -805,7 +805,10 @@ class Project(StorageBase):
                     )
 
     def replace_parameter_value(
-        self, name: str = "", value: int = 0, valuetag: str = "value"
+        self,
+        name: str = "",
+        value: int | float | str = 0,
+        valuetag: str = "value",
     ) -> None:
         """Replacing parameter values.
 
@@ -827,7 +830,7 @@ class Project(StorageBase):
         phase: str = "AqueousLiquid",
         component: str | None = None,
         name: str = "",
-        value: int = 0,
+        value: int | float | str = 0,
         propertytype: str = "Constant",
         valuetag: str = "value",
     ) -> None:
@@ -858,7 +861,7 @@ class Project(StorageBase):
         self,
         mediumid: int = 0,
         name: str = "",
-        value: int = 0,
+        value: int | float | str = 0,
         propertytype: str = "Constant",
         valuetag: str = "value",
     ) -> None:
