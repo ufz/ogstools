@@ -40,6 +40,15 @@ from ogstools.meshes.gmsh_BHE import BHE, gen_bhe_mesh
 
 mapping = dict.fromkeys(range(32))
 
+value_variants = [
+    (42, "42"),
+    ("42 42", "42 42"),
+    (42.42, "42.42"),
+    (-42.42, "-42.42"),
+    (42.42e-5, "0.0004242"),
+    (-42.42e-5, "-0.0004242"),
+]
+
 
 class TestiOGS:
 
@@ -1314,40 +1323,47 @@ class TestiOGS:
         model.write_input()
         self.compare(inputfile, prjfile)
 
-    def test_replace_phase_property(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(("value", "value_text"), value_variants)
+    def test_replace_phase_property(
+        self, value, value_text, tmp_path: Path
+    ) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_phase_property.prj"
         model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_phase_property_value(
-            mediumid=0, phase="Solid", name="thermal_expansivity", value=5
+            mediumid=0, phase="Solid", name="thermal_expansivity", value=value
         )
         model.write_input()
         root = ET.parse(prjfile)
         find = root.findall(
             "./media/medium/phases/phase[type='Solid']/properties/property[name='thermal_expansivity']/value"
         )
-        assert find[0].text == "5"
+        assert find[0].text == value_text
 
-    def test_replace_medium_property(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(("value", "value_text"), value_variants)
+    def test_replace_medium_property(
+        self, value, value_text, tmp_path: Path
+    ) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_medium_property.prj"
         model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.replace_medium_property_value(
-            mediumid=0, name="porosity", value=42
+            mediumid=0, name="porosity", value=value
         )
         model.write_input()
         root = ET.parse(prjfile)
         find = root.findall(
             "./media/medium/properties/property[name='porosity']/value"
         )
-        assert find[0].text == "42"
+        assert find[0].text == value_text
 
-    def test_replace_parameter(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(("value", "value_text"), value_variants)
+    def test_replace_parameter(self, value, value_text, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_parameter.prj"
         model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
-        model.replace_parameter_value(name="E", value=32)
+        model.replace_parameter_value(name="E", value=value)
         model.write_input()
         root = ET.parse(prjfile)
         find = root.findall("./parameters/parameter[name='E']/value")
-        assert find[0].text == "32"
+        assert find[0].text == value_text
 
     def test_replace_mesh(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "tunnel_ogs6py_replace_mesh.prj"
