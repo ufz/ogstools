@@ -13,8 +13,9 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import]
+import yaml
 
+from ogstools._internal import deprecated
 from ogstools.materiallib.schema.required_properties import (
     required_property_names,
 )
@@ -111,8 +112,8 @@ class Material(Mapping[str, MaterialProperty]):
         """Returns a list of all property names of this material."""
         return list(self)
 
+    @deprecated(""": use mat[key] instead.""")
     def get_property(self, key: str) -> MaterialProperty:
-        """Deprecated: use mat[key] instead."""
         warnings.warn(
             "get_property() is deprecated, use mat[key] instead.",
             DeprecationWarning,

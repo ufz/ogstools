@@ -72,6 +72,9 @@ class Components:
         like water. In the gas phase, it typically describes a vapor (e.g. H2O) diffusing in a
         carrier gas like CO₂.
 
+        Binary diffusion coefficients depend on a pair of species rather than a single
+        material, which is why they are treated differently from other material properties.
+
         Parameters:
             phase (str): Either "liquid" or "gas". Indicates the phase in which diffusion
                         occurs.
@@ -122,7 +125,7 @@ class Components:
         """
 
         default_dir = Path(defs.MATERIALS_DIR)
-        data_dir = Path(getattr(self, "data_dir", default_dir))
+        data_dir = self.data_dir
         dirs = [data_dir, default_dir]
         names = ["diffusion_coefficients.yaml", "diffusion_coefficients.yml"]
         candidates = list({dir_ / name for dir_ in dirs for name in names})
@@ -132,7 +135,7 @@ class Components:
                 return candidate
 
         # Default to the configured data_dir .yml path for error reporting/opening.
-        return data_dir / "diffusion_coefficients.yml"
+        return data_dir / names[-1]
 
     def _create_component(
         self, material: Material, role: str, D: float

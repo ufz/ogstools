@@ -220,6 +220,7 @@ class TestMaterialLib:
         assert copied is not None
         assert copied.name == "water"
         assert copied["Viscosity"].value == 1.0
+        assert copied == mat
 
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
@@ -1289,6 +1290,7 @@ class TestComponents:
         monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
 
         fake = components.Components.__new__(components.Components)
+        fake.data_dir = tmp_path
         fake.gas_component = make_material({}, name="co2")
         fake.liquid_component = make_material({}, name="water")
 
@@ -1460,72 +1462,30 @@ class TestMedium:
 
         assert "missing required properties" in str(exc.value).lower()
 
-    def test_custom_data_dir_used_for_diffusion_coefficients(
-        self, write_yaml, tmp_path, monkeypatch
+    @pytest.mark.parametrize(
+        ("use_custom_diffusion_file", "expected_diffusion"),
+        [
+            pytest.param(
+                True,
+                3.3,
+                id="uses-material-manager-data-dir",
+            ),
+            pytest.param(
+                False,
+                4.4,
+                id="falls-back-to-default-materials-dir",
+            ),
+        ],
+    )
+    def test_custom_data_dir_diffusion_coefficients(
+        self,
+        write_yaml,
+        tmp_path,
+        monkeypatch,
+        use_custom_diffusion_file: bool,
+        expected_diffusion: float,
     ):
-        """MediaSet should read diffusion coefficients from the MaterialManager data_dir."""
-        schema = {
-            "properties": ["Density"],
-            "phases": [
-                {"type": "Solid", "properties": ["Density"]},
-                {
-                    "type": "Gas",
-                    "properties": [],
-                    "components": {"Carrier": [], "Vapour": ["diffusion"]},
-                },
-                {
-                    "type": "AqueousLiquid",
-                    "properties": [],
-                    "components": {"Solute": [], "Solvent": []},
-                },
-            ],
-        }
-        monkeypatch.setitem(
-            material_manager.PROCESS_SCHEMAS, "custom_diffusion", schema
-        )
-
-        materials = {
-            "solid": {
-                "name": "solid",
-                "properties": {"Density": {"type": "Constant", "value": 2000}},
-            },
-            "CO2": {"name": "CO2", "properties": {}},
-            "H2O": {"name": "H2O", "properties": {}},
-        }
-        for filename, data in materials.items():
-            write_yaml(f"{filename}.yml", data)
-
-        diffusion_data = {
-            "Gas": {"CO2": {"H2O": 3.3}},
-            "AqueousLiquid": {"H2O": {"CO2": 1.1}},
-        }
-        (tmp_path / "diffusion_coefficients.yaml").write_text(
-            yaml.safe_dump(diffusion_data)
-        )
-
-        db = material_manager.MaterialManager(data_dir=tmp_path)
-        filtered = db.filter(
-            process="custom_diffusion",
-            subdomains=[
-                {
-                    "subdomain": "domain",
-                    "material": "solid",
-                    "material_ids": [1],
-                }
-            ],
-            fluids={"Gas": "CO2", "AqueousLiquid": "H2O"},
-        )
-
-        media = MediaSet(filtered)
-        gas_phase = media["domain"].gas
-        assert gas_phase is not None
-        vapour_component = gas_phase.components_obj.liquid_component_obj
-        assert pytest.approx(3.3) == vapour_component.D
-
-    def test_custom_data_dir_falls_back_to_default_diffusion_file(
-        self, tmp_path, monkeypatch
-    ):
-        """When custom data_dir has no diffusion file, use defs.MATERIALS_DIR."""
+        """MediaSet should prefer a custom diffusion file and otherwise fall back to defs.MATERIALS_DIR."""
         schema = {
             "properties": ["Density"],
             "phases": [
@@ -1544,14 +1504,9 @@ class TestMedium:
         }
         monkeypatch.setitem(
             material_manager.PROCESS_SCHEMAS,
-            "custom_diffusion_fallback",
+            "custom_diffusion",
             schema,
         )
-
-        custom_dir = tmp_path / "custom_repo"
-        fallback_dir = tmp_path / "fallback_repo"
-        custom_dir.mkdir()
-        fallback_dir.mkdir()
 
         materials = {
             "solid": {
@@ -1561,21 +1516,40 @@ class TestMedium:
             "CO2": {"name": "CO2", "properties": {}},
             "H2O": {"name": "H2O", "properties": {}},
         }
-        for filename, data in materials.items():
-            (custom_dir / f"{filename}.yml").write_text(yaml.safe_dump(data))
+        custom_dir = tmp_path / "custom_repo"
+        fallback_dir = tmp_path / "fallback_repo"
+        custom_dir.mkdir()
+        fallback_dir.mkdir()
+
+        if use_custom_diffusion_file:
+            for filename, data in materials.items():
+                write_yaml(f"{filename}.yml", data)
+        else:
+            for filename, data in materials.items():
+                (custom_dir / f"{filename}.yml").write_text(
+                    yaml.safe_dump(data)
+                )
 
         diffusion_data = {
-            "Gas": {"CO2": {"H2O": 4.4}},
+            "Gas": {"CO2": {"H2O": expected_diffusion}},
             "AqueousLiquid": {"H2O": {"CO2": 1.1}},
         }
-        (fallback_dir / "diffusion_coefficients.yml").write_text(
-            yaml.safe_dump(diffusion_data)
-        )
+        if use_custom_diffusion_file:
+            (tmp_path / "diffusion_coefficients.yaml").write_text(
+                yaml.safe_dump(diffusion_data)
+            )
+            data_dir = tmp_path
+        else:
+            (fallback_dir / "diffusion_coefficients.yml").write_text(
+                yaml.safe_dump(diffusion_data)
+            )
+            data_dir = custom_dir
+
         monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(fallback_dir))
 
-        db = material_manager.MaterialManager(data_dir=custom_dir)
+        db = material_manager.MaterialManager(data_dir=data_dir)
         filtered = db.filter(
-            process="custom_diffusion_fallback",
+            process="custom_diffusion",
             subdomains=[
                 {
                     "subdomain": "domain",
@@ -1590,7 +1564,7 @@ class TestMedium:
         gas_phase = media["domain"].gas
         assert gas_phase is not None
         vapour_component = gas_phase.components_obj.liquid_component_obj
-        assert pytest.approx(4.4) == vapour_component.D
+        assert pytest.approx(expected_diffusion) == vapour_component.D
 
     def test_media_import_exports_media_block(
         self,
