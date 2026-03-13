@@ -123,17 +123,9 @@ class Components:
 
         default_dir = Path(defs.MATERIALS_DIR)
         data_dir = Path(getattr(self, "data_dir", default_dir))
-        candidates = [
-            data_dir / "diffusion_coefficients.yml",
-            data_dir / "diffusion_coefficients.yaml",
-        ]
-        if data_dir != default_dir:
-            candidates.extend(
-                [
-                    default_dir / "diffusion_coefficients.yml",
-                    default_dir / "diffusion_coefficients.yaml",
-                ]
-            )
+        dirs = [data_dir, default_dir]
+        names = ["diffusion_coefficients.yaml", "diffusion_coefficients.yml"]
+        candidates = list({dir_ / name for dir_ in dirs for name in names})
 
         for candidate in candidates:
             if candidate.is_file():
