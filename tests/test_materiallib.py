@@ -1463,26 +1463,48 @@ class TestMedium:
         assert "missing required properties" in str(exc.value).lower()
 
     @pytest.mark.parametrize(
-        ("use_custom_diffusion_file", "expected_diffusion"),
+        (
+            "custom_diffusion_filename",
+            "custom_diffusion_value",
+            "fallback_diffusion_filename",
+            "fallback_diffusion_value",
+            "expected_diffusion",
+        ),
         [
             pytest.param(
-                True,
+                "diffusion_coefficients.yaml",
                 3.3,
-                id="uses-material-manager-data-dir",
+                None,
+                None,
+                3.3,
+                id="uses-custom-data-dir",
             ),
             pytest.param(
-                False,
+                None,
+                None,
+                "diffusion_coefficients.yml",
+                4.4,
                 4.4,
                 id="falls-back-to-default-materials-dir",
+            ),
+            pytest.param(
+                "diffusion_coefficients.yaml",
+                3.3,
+                "diffusion_coefficients.yml",
+                4.4,
+                3.3,
+                id="prefers-custom-data-dir-over-default",
             ),
         ],
     )
     def test_custom_data_dir_diffusion_coefficients(
         self,
-        write_yaml,
         tmp_path,
         monkeypatch,
-        use_custom_diffusion_file: bool,
+        custom_diffusion_filename: str | None,
+        custom_diffusion_value: float | None,
+        fallback_diffusion_filename: str | None,
+        fallback_diffusion_value: float | None,
         expected_diffusion: float,
     ):
         """MediaSet should prefer a custom diffusion file and otherwise fall back to defs.MATERIALS_DIR."""
@@ -1521,33 +1543,30 @@ class TestMedium:
         custom_dir.mkdir()
         fallback_dir.mkdir()
 
-        if use_custom_diffusion_file:
-            for filename, data in materials.items():
-                write_yaml(f"{filename}.yml", data)
-        else:
-            for filename, data in materials.items():
-                (custom_dir / f"{filename}.yml").write_text(
-                    yaml.safe_dump(data)
-                )
+        for filename, data in materials.items():
+            (custom_dir / f"{filename}.yml").write_text(yaml.safe_dump(data))
 
-        diffusion_data = {
-            "Gas": {"CO2": {"H2O": expected_diffusion}},
-            "AqueousLiquid": {"H2O": {"CO2": 1.1}},
-        }
-        if use_custom_diffusion_file:
-            (tmp_path / "diffusion_coefficients.yaml").write_text(
-                yaml.safe_dump(diffusion_data)
+        if custom_diffusion_filename is not None:
+            custom_diffusion_data = {
+                "Gas": {"CO2": {"H2O": custom_diffusion_value}},
+                "AqueousLiquid": {"H2O": {"CO2": 1.1}},
+            }
+            (custom_dir / custom_diffusion_filename).write_text(
+                yaml.safe_dump(custom_diffusion_data)
             )
-            data_dir = tmp_path
-        else:
-            (fallback_dir / "diffusion_coefficients.yml").write_text(
-                yaml.safe_dump(diffusion_data)
+
+        if fallback_diffusion_filename is not None:
+            fallback_diffusion_data = {
+                "Gas": {"CO2": {"H2O": fallback_diffusion_value}},
+                "AqueousLiquid": {"H2O": {"CO2": 1.1}},
+            }
+            (fallback_dir / fallback_diffusion_filename).write_text(
+                yaml.safe_dump(fallback_diffusion_data)
             )
-            data_dir = custom_dir
 
         monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(fallback_dir))
 
-        db = material_manager.MaterialManager(data_dir=data_dir)
+        db = material_manager.MaterialManager(data_dir=custom_dir)
         filtered = db.filter(
             process="custom_diffusion",
             subdomains=[

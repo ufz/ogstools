@@ -126,13 +126,13 @@ class Components:
 
         default_dir = Path(defs.MATERIALS_DIR)
         data_dir = self.data_dir
-        dirs = [data_dir, default_dir]
         names = ["diffusion_coefficients.yaml", "diffusion_coefficients.yml"]
-        candidates = list({dir_ / name for dir_ in dirs for name in names})
 
-        for candidate in candidates:
-            if candidate.is_file():
-                return candidate
+        for dir_ in [data_dir, default_dir]:
+            for name in names:
+                candidate = dir_ / name
+                if candidate.is_file():
+                    return candidate
 
         # Default to the configured data_dir .yml path for error reporting/opening.
         return data_dir / names[-1]
