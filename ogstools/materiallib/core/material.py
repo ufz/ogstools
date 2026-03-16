@@ -174,9 +174,13 @@ class Material(Mapping[str, MaterialProperty]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Material):
             return NotImplemented
-        return self.name == other.name and [
-            p.to_dict() for p in self.properties
-        ] == [p.to_dict() for p in other.properties]
+
+        def sort_key(d: dict) -> list:
+            return sorted((k, str(v)) for k, v in d.items())
+
+        return self.name == other.name and sorted(
+            [p.to_dict() for p in self.properties], key=sort_key
+        ) == sorted([p.to_dict() for p in other.properties], key=sort_key)
 
     def copy(self) -> Material:
         """Return a deep copy"""
