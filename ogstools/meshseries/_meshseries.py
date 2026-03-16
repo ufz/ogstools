@@ -1115,6 +1115,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         point_data: bool = True,
         cell_data: bool = True,
         field_data: bool = True,
+        fast_compare: bool = False,
         atol: float = 0.0,
         *,
         strict: bool = False,
@@ -1127,86 +1128,49 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         :param ms_a:            The reference base MeshSeries for comparison.
         :param ms_b:            The MeshSeries to compare against the reference.
-        :param variable:        The variable of interest. If not given, all
-                                point and cell data will be processed.
-        :param point_data:      Compare all point data if `variable` is None. Default is ``True``.
-        :param cell_data:       Compare all cell data if `variable` is None. Default is ``True``.
-        :param field_data:      Compare all field data if `variable` is None. Default is ``True``.
-        :param atol:            Absolute tolerance. Default is ``0.0``.
-        :param strict:          Raises an ``AssertionError``, if mismatch. Default is ``False``.
+        :param variable:        The variable of interest.
+                                If not given, all point, cell and field data will be processed.
+        :param point_data:      Compare all point data if `variable` is None.
+        :param cell_data:       Compare all cell data if `variable` is None.
+        :param field_data:      Compare all field data if `variable` is None.
+        :param fast_compare:    If ``True``, mesh topology is only verified for the first timestep,
+                                otherwise, topology is checked at every timestep.
+        :param atol:            Absolute tolerance.
+        :param strict:          Raises an ``AssertionError``, if mismatch.
         """
-        from ogstools.mesh.differences import _is_same_topology
-
-        def _check_data(
-            actual: np.ndarray, desired: int | float | np.ndarray, name: str
-        ) -> bool:
-            mask = np.isnan(actual)
-            if isinstance(desired, np.ndarray):
-                if len(actual) != len(desired):
-                    return False
-                desired = desired[~mask]
-
-            if not np.allclose(
-                actual[~mask],
-                desired,
-                atol=atol,
-                rtol=0.0,
-                equal_nan=True,
-            ):
-                if not strict:
-                    return False
-                err_msg = f"{name} differs between MeshSeries."
-                raise AssertionError(err_msg)
-            return True
+        from ogstools.mesh.differences import compare
 
         # Testing timevalues
-        if not _check_data(ms_a.timevalues, ms_b.timevalues, "timevalues"):
+        if ms_a.timevalues.shape != ms_b.timevalues.shape:
             return False
 
-        # Testing topology
-        for mesh_a, mesh_b in zip(ms_a, ms_b, strict=True):
-            if not _is_same_topology(mesh_a, mesh_b):
-                if not strict:
-                    return False
-                err_msg = "The topologies of the MeshSeries objects are not identical."
+        if not np.allclose(
+            ms_a.timevalues,
+            ms_b.timevalues,
+            atol=atol,
+            rtol=0.0,
+            equal_nan=True,
+        ):
+            if strict:
+                err_msg = "timevalues differs between MeshSeries."
                 raise AssertionError(err_msg)
+            return False
 
-        # Testing data
-        ms_diff = MeshSeries.difference(ms_a, ms_b, variable)
-        if variable is not None:
-            if isinstance(variable, str):
-                variable = Variable(data_name=variable, output_name=variable)
-            return _check_data(
-                ms_diff[variable.difference.data_name], 0.0, variable.data_name
-            )
-
-        if point_data:
-            for key, arr in ms_diff.point_data.items():
-                if not _check_data(arr, 0.0, key):
-                    return False
-
-        if cell_data:
-            for key, arr in ms_diff.cell_data.items():
-                if key == "MaterialIDs":
-                    if not _check_data(
-                        ms_a.cell_data[key], ms_b.cell_data[key], key
-                    ):
-                        return False
-                    continue
-
-                if not _check_data(arr, 0.0, key):
-                    return False
-
-        if field_data:
-            if field_diff := set(ms_a.field_data) ^ set(ms_b.field_data):
-                if not strict:
-                    return False
-                msg = f"field_data {field_diff} not common in both MeshSeries."
-                raise AssertionError(msg)
-
-            for key, arr in ms_a.field_data.items():
-                if not _check_data(arr, ms_b.field_data[key], key):
-                    return False
+        # Testing mesh-wise
+        for i, (mesh_a, mesh_b) in enumerate(zip(ms_a, ms_b, strict=True)):
+            check_topo = fast_compare or i == 0
+            if not compare(
+                mesh_a,
+                mesh_b,
+                variable=variable,
+                point_data=point_data,
+                cell_data=cell_data,
+                field_data=field_data,
+                check_topology=check_topo,
+                atol=atol,
+                strict=strict,
+            ):
+                return False
         return True
 
     @typechecked

@@ -482,7 +482,7 @@ def test_compare_meshseries(ms, var):
     assert not ot.MeshSeries.compare(ms_scaled, ms, var)
     with pytest.raises(
         AssertionError,
-        match=r"The topologies of the MeshSeries objects are not identical\.",
+        match=r"The topologies of the mesh objects are not identical\.",
     ):
         ot.MeshSeries.compare(ms_scaled, ms, var, strict=True)
 
@@ -537,7 +537,7 @@ def test_compare_meshseries_tol(tols):
         m[var.data_name] += tol_out
     assert not ot.MeshSeries.compare(ms, ms_b, var, atol=atol)
     with pytest.raises(
-        AssertionError, match=f"{var.data_name} differs between MeshSeries."
+        AssertionError, match=f"{var.data_name} differs between meshes."
     ):
         ot.MeshSeries.compare(ms, ms_b, atol=atol, strict=True)
     return
