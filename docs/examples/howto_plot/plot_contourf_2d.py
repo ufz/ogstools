@@ -40,10 +40,13 @@ fig = ot.plot.contourf(mesh, ot.variables.material_id)
 # ===================
 # Now, let's plot the temperature field (point_data) at the first timestep.
 # The default temperature variable from the ``variables`` reads the temperature
-# data as Kelvin and converts them to degrees Celsius.
+# data as Kelvin and converts them to degrees Celsius. This also shows how to
+# only plot a specific part of the model by creating a clip with
+# `pyvista.clip_box` beforehand.
 
 # %%
-fig = ot.plot.contourf(mesh, ot.variables.temperature, show_max=True)
+part = mesh.clip_box(bounds=[2, 5, -1.1, -0.7, 6, 7], invert=False)
+fig = ot.plot.contourf(part, ot.variables.temperature, show_max=True)
 
 # %% [markdown]
 # We can also plot components of vector variables:
