@@ -25,6 +25,7 @@ class Components:
         liquid_component: Material,
         process: str,
         Diffusion_coefficient: float | None = None,
+        data_dir: Path | str | None = None,
     ):
         self.phase_type = phase_type
         self.gas_properties: list[MaterialProperty] = gas_component.properties
@@ -32,6 +33,9 @@ class Components:
             liquid_component.properties
         )
         self.process = process
+        self.data_dir = (
+            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+        )
 
         self.gas_component = gas_component
         self.liquid_component = liquid_component
@@ -68,6 +72,9 @@ class Components:
         like water. In the gas phase, it typically describes a vapor (e.g. H2O) diffusing in a
         carrier gas like CO₂.
 
+        Binary diffusion coefficients depend on a pair of species rather than a single
+        material, which is why they are treated differently from other material properties.
+
         Parameters:
             phase (str): Either "liquid" or "gas". Indicates the phase in which diffusion
                         occurs.
@@ -90,7 +97,7 @@ class Components:
             msg = f"Invalid phase '{phase}'. Must be 'AqueousLiquid' or 'Gas'."
             raise ValueError(msg)
 
-        file_path = Path(defs.MATERIALS_DIR) / "diffusion_coefficients.yml"
+        file_path = self._diffusion_coefficients_path()
         with file_path.open() as f:
             data = yaml.safe_load(f)
 
@@ -107,6 +114,28 @@ class Components:
                 f"'{solvent} / {solute}' in {file_path}"
             )
             raise ValueError(msg) from err
+
+    def _diffusion_coefficients_path(self) -> Path:
+        """
+        Resolve the diffusion coefficients file within the configured data directory.
+
+        Prefers .yml but accepts .yaml as well so external libraries can supply either.
+        If not found in the configured data directory, fall back to the built-in
+        materials directory for backward compatibility.
+        """
+
+        default_dir = Path(defs.MATERIALS_DIR)
+        data_dir = self.data_dir
+        names = ["diffusion_coefficients.yaml", "diffusion_coefficients.yml"]
+
+        for dir_ in [data_dir, default_dir]:
+            for name in names:
+                candidate = dir_ / name
+                if candidate.is_file():
+                    return candidate
+
+        # Default to the configured data_dir .yml path for error reporting/opening.
+        return data_dir / names[-1]
 
     def _create_component(
         self, material: Material, role: str, D: float

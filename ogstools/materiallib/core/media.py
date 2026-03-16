@@ -68,6 +68,7 @@ class MediaSet:
                 name=name,
                 fluids=filtered_db.fluids,
                 process=self.process,
+                data_dir=filtered_db.data_dir,
             )
             logger.debug("Created Medium '%s' (ID=%d)", name, mat_id)
 

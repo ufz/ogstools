@@ -185,6 +185,43 @@ def medium_properties_from_xml(xml_file: Path, medium_id: int) -> dict:
 
 
 class TestMaterialLib:
+    def test_material_from_file_creates_material(self, write_yaml):
+        """Material.from_file should build a Material instance from valid YAML."""
+        file_path = write_yaml(
+            "granite.yml",
+            {
+                "name": "granite",
+                "properties": {"Density": {"type": "Constant", "value": 2700}},
+            },
+        )
+
+        mat = Material.from_file(file_path)
+
+        assert mat is not None
+        assert mat.name == "granite"
+        assert "Density" in mat
+
+    def test_material_to_file_roundtrip(self, tmp_path, write_yaml):
+        """Material.to_file should write YAML that can be loaded with Material.from_file."""
+        source = write_yaml(
+            "water.yml",
+            {
+                "name": "water",
+                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
+            },
+        )
+        mat = Material.from_file(source)
+        assert mat is not None
+
+        target = tmp_path / "water_copy.yml"
+        mat.to_file(target)
+        copied = Material.from_file(target)
+
+        assert copied is not None
+        assert copied.name == "water"
+        assert copied["Viscosity"].value == 1.0
+        assert copied == mat
+
     def test_material_parses_properties_from_raw_data(self):
         """Material should correctly parse properties (including lists) from raw_data."""
         mat = make_material(
@@ -209,7 +246,7 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert set(mat.property_names()) == {"Density", "Viscosity"}
+        assert mat.property_names == ["Density", "Viscosity"]
 
     def test_material_filter_properties_returns_only_allowed(self):
         """Material.filter_properties should return a new Material with only allowed properties."""
@@ -222,7 +259,7 @@ class TestMaterialLib:
 
         filtered = mat.filter_properties({"Density"})
 
-        assert filtered.property_names() == ["Density"]
+        assert filtered.property_names == ["Density"]
 
     def test_material_filter_properties_empty_set_returns_empty_material(self):
         """Material.filter_properties with empty allowed set should return a Material without properties."""
@@ -235,7 +272,7 @@ class TestMaterialLib:
         filtered = mat.filter_properties(set())
 
         assert filtered.properties == []
-        assert filtered.property_names() == []
+        assert filtered.property_names == []
 
     def test_material_repr_contains_name_and_property_count(self):
         """Material.__repr__ should show the material name and number of properties."""
@@ -269,22 +306,37 @@ class TestMaterialLib:
 
         filtered = mat.filter_process(process_schema)
 
-        names = filtered.property_names()
-        assert "Density" in names
-        assert "Viscosity" in names
-        assert "Permeability" not in names
+        assert "Density" in filtered
+        assert "Viscosity" in filtered
+        assert "Permeability" not in filtered
 
-    def test_material_get_property(self):
-        """get_property should return the correct property."""
+    def test_material_getitem(self):
+        """mat[key] should return the correct property."""
         mat = make_material(
             {
                 "Density": {"type": "Constant", "value": 2500},
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat.get_property("Density").value == 2500
+        assert mat["Density"].value == 2500
         with pytest.raises(KeyError, match="No property with name"):
-            mat.get_property("porosity")
+            mat["porosity"]
+
+    def test_material_set_value(self):
+        """mat[key] should return the correct property."""
+        mat = make_material(
+            {
+                "Density": {"type": "Constant", "value": 2500},
+                "Viscosity": {"type": "Constant", "value": 1.0},
+            }
+        )
+        assert mat["Density"].value == 2500
+
+        mat_2000 = mat.copy()
+        assert mat_2000 == mat
+        mat_2000["Density"].value = 2000
+        assert mat_2000["Density"].value == 2000
+        assert mat["Density"].value == 2500
 
 
 class TestMaterialManager:
@@ -303,7 +355,7 @@ class TestMaterialManager:
 
         assert mat is not None
         assert mat.name == "granite"
-        assert "Density" in mat.property_names()
+        assert "Density" in mat
 
     def test_materialdb_get_material_returns_correct_object(
         self, tmp_path, write_yaml
@@ -322,7 +374,7 @@ class TestMaterialManager:
 
         assert mat is not None
         assert mat.name == "water"
-        assert "Viscosity" in mat.property_names()
+        assert "Viscosity" in mat
 
     def test_materialdb_list_materials_returns_all_names(
         self, tmp_path, write_yaml
@@ -524,7 +576,7 @@ class TestMaterialManagerFilter:
 
         mat = filtered.get_material("region1")
         assert mat is not None
-        assert mat.property_names() == ["Density"]
+        assert mat.property_names == ["Density"]
         assert filtered._list_subdomains() == ["region1"]
         assert filtered._list_ids() == [0]
 
@@ -1238,6 +1290,7 @@ class TestComponents:
         monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
 
         fake = components.Components.__new__(components.Components)
+        fake.data_dir = tmp_path
         fake.gas_component = make_material({}, name="co2")
         fake.liquid_component = make_material({}, name="water")
 
@@ -1408,6 +1461,129 @@ class TestMedium:
             media.validate_medium(medium)
 
         assert "missing required properties" in str(exc.value).lower()
+
+    @pytest.mark.parametrize(
+        (
+            "custom_diffusion_filename",
+            "custom_diffusion_value",
+            "fallback_diffusion_filename",
+            "fallback_diffusion_value",
+            "expected_diffusion",
+        ),
+        [
+            pytest.param(
+                "diffusion_coefficients.yaml",
+                3.3,
+                None,
+                None,
+                3.3,
+                id="uses-custom-data-dir",
+            ),
+            pytest.param(
+                None,
+                None,
+                "diffusion_coefficients.yml",
+                4.4,
+                4.4,
+                id="falls-back-to-default-materials-dir",
+            ),
+            pytest.param(
+                "diffusion_coefficients.yaml",
+                3.3,
+                "diffusion_coefficients.yml",
+                4.4,
+                3.3,
+                id="prefers-custom-data-dir-over-default",
+            ),
+        ],
+    )
+    def test_custom_data_dir_diffusion_coefficients(
+        self,
+        tmp_path,
+        monkeypatch,
+        custom_diffusion_filename: str | None,
+        custom_diffusion_value: float | None,
+        fallback_diffusion_filename: str | None,
+        fallback_diffusion_value: float | None,
+        expected_diffusion: float,
+    ):
+        """MediaSet should prefer a custom diffusion file and otherwise fall back to defs.MATERIALS_DIR."""
+        schema = {
+            "properties": ["Density"],
+            "phases": [
+                {"type": "Solid", "properties": ["Density"]},
+                {
+                    "type": "Gas",
+                    "properties": [],
+                    "components": {"Carrier": [], "Vapour": ["diffusion"]},
+                },
+                {
+                    "type": "AqueousLiquid",
+                    "properties": [],
+                    "components": {"Solute": [], "Solvent": []},
+                },
+            ],
+        }
+        monkeypatch.setitem(
+            material_manager.PROCESS_SCHEMAS,
+            "custom_diffusion",
+            schema,
+        )
+
+        materials = {
+            "solid": {
+                "name": "solid",
+                "properties": {"Density": {"type": "Constant", "value": 2000}},
+            },
+            "CO2": {"name": "CO2", "properties": {}},
+            "H2O": {"name": "H2O", "properties": {}},
+        }
+        custom_dir = tmp_path / "custom_repo"
+        fallback_dir = tmp_path / "fallback_repo"
+        custom_dir.mkdir()
+        fallback_dir.mkdir()
+
+        for filename, data in materials.items():
+            (custom_dir / f"{filename}.yml").write_text(yaml.safe_dump(data))
+
+        if custom_diffusion_filename is not None:
+            custom_diffusion_data = {
+                "Gas": {"CO2": {"H2O": custom_diffusion_value}},
+                "AqueousLiquid": {"H2O": {"CO2": 1.1}},
+            }
+            (custom_dir / custom_diffusion_filename).write_text(
+                yaml.safe_dump(custom_diffusion_data)
+            )
+
+        if fallback_diffusion_filename is not None:
+            fallback_diffusion_data = {
+                "Gas": {"CO2": {"H2O": fallback_diffusion_value}},
+                "AqueousLiquid": {"H2O": {"CO2": 1.1}},
+            }
+            (fallback_dir / fallback_diffusion_filename).write_text(
+                yaml.safe_dump(fallback_diffusion_data)
+            )
+
+        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(fallback_dir))
+
+        db = material_manager.MaterialManager(data_dir=custom_dir)
+        filtered = db.filter(
+            process="custom_diffusion",
+            subdomains=[
+                {
+                    "subdomain": "domain",
+                    "material": "solid",
+                    "material_ids": [1],
+                }
+            ],
+            fluids={"Gas": "CO2", "AqueousLiquid": "H2O"},
+        )
+
+        media = MediaSet(filtered)
+        gas_phase = media["domain"].gas
+        assert gas_phase is not None
+        vapour_component = gas_phase.components_obj.liquid_component_obj
+        assert pytest.approx(expected_diffusion) == vapour_component.D
 
     def test_media_import_exports_media_block(
         self,

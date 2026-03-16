@@ -5,8 +5,10 @@
 #
 
 import logging
+from pathlib import Path
 from typing import Any
 
+import ogstools.definitions as defs
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .component import Component
@@ -25,12 +27,16 @@ class Phase:
         liquid_material: Material | None = None,
         solid_material: Material | None = None,
         process: str = "",
+        data_dir: Path | str | None = None,
     ):
         self.type = phase_type
         self.process = process
         self.gas_material = gas_material
         self.liquid_material = liquid_material
         self.solid_material = solid_material
+        self.data_dir = (
+            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+        )
 
         schema = PROCESS_SCHEMAS.get(process)
         if not schema:
@@ -152,6 +158,7 @@ class Phase:
             liquid_component=liquid_material,
             process=self.process,
             Diffusion_coefficient=Diffusion_coefficient,
+            data_dir=self.data_dir,
         )
         self.components = [
             self.components_obj.gas_component_obj,
