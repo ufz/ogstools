@@ -170,3 +170,128 @@ def difference_matrix(
         difference(m1, m2, variable) for m1, m2 in product(meshes_1, meshes_2)
     ]
     return np.asarray(diff_meshes).reshape((len(meshes_1), len(meshes_2)))
+
+
+def compare(
+    mesh_a: pv.UnstructuredGrid,
+    mesh_b: pv.UnstructuredGrid,
+    variable: Variable | str | None = None,
+    point_data: bool = True,
+    cell_data: bool = True,
+    field_data: bool = True,
+    check_topology: bool = True,
+    atol: float = 0.0,
+    *,
+    strict: bool = False,
+) -> bool:
+    """
+    Method to compare two meshes.
+
+    Returns ``True`` if they match within the tolerances,
+    otherwise ``False``.
+
+    :param mesh_a:          The reference base mesh for comparison.
+    :param mesh_b:          The mesh to compare against the reference.
+    :param variable:        The variable of interest. If not given, all
+                            point, cell and field data will be processed.
+    :param point_data:      Compare all point data if `variable` is `None`.
+    :param cell_data:       Compare all cell data if `variable` is `None`.
+    :param field_data:      Compare all field data if `variable` is `None`.
+    :param check_topology:  If ``True``, compare topologies
+    :param atol:            Absolute tolerance.
+    :param strict:          Raises an ``AssertionError``, if mismatch.
+    """
+
+    def _raise_if_strict(err_msg: str) -> bool:
+        if not strict:
+            return False
+        raise AssertionError(err_msg)
+
+    def _check_data(
+        actual: np.ndarray, desired: int | float | np.ndarray, key: str
+    ) -> bool:
+        """
+        Wrapper method to compare numerical data against a reference using :func:`numpy.allclose`.
+
+        NaN values in ``actual`` are ignored via masking prior to comparison.
+        If ``desired`` is an array, its shape must match ``actual``; otherwise
+        the comparison immediately fails.
+
+        :param actual:  Array to compare
+        :param desired: Reference data.
+        :param key:     variable
+        :rtype:         bool
+        """
+        mask = np.isnan(actual)
+        if isinstance(desired, np.ndarray):
+            if actual.shape != desired.shape:
+                return _raise_if_strict(f"shape mismatch for {key}")
+            desired = desired[~mask]
+
+        if not np.allclose(
+            actual[~mask],
+            desired,
+            atol=atol,
+            rtol=0.0,
+            equal_nan=True,
+        ):
+            return _raise_if_strict(f"{key} differs between meshes.")
+
+        return True
+
+    if check_topology and not _is_same_topology(mesh_a, mesh_b):
+        return _raise_if_strict(
+            "The topologies of the mesh objects are not identical."
+        )
+
+    mesh_diff = difference(mesh_a, mesh_b, variable)
+    if variable is not None:
+        if isinstance(variable, str):
+            variable = Variable.find(variable, mesh_diff)
+
+        variable = variable.replace(output_unit=variable.data_unit)
+        return _check_data(
+            variable.difference.transform(mesh_diff),
+            0.0,
+            variable.data_name,
+        )
+
+    if not any((point_data, cell_data, field_data)):
+        msg = "No data selected for comparison."
+        raise ValueError(msg)
+
+    if point_data:
+        for key in mesh_diff.point_data:
+            var = Variable.find(key, mesh_diff)
+            var = var.replace(output_unit=var.data_unit)
+
+            arr = var.transform(mesh_diff)
+            if not _check_data(arr, 0.0, key):
+                return False
+
+    if cell_data:
+        for key in mesh_diff.cell_data:
+            if key == "MaterialIDs":
+                if not _check_data(
+                    mesh_a.cell_data[key], mesh_b.cell_data[key], key
+                ):
+                    return False
+                continue
+
+            var = Variable.find(key, mesh_diff)
+            var = var.replace(output_unit=var.data_unit)
+
+            arr = var.transform(mesh_diff)
+            if not _check_data(arr, 0.0, key):
+                return False
+
+    if field_data:
+        if field_diff := set(mesh_a.field_data) ^ set(mesh_b.field_data):
+            return _raise_if_strict(
+                f"field_data {field_diff} not common in both meshes."
+            )
+
+        for key, arr in mesh_diff.field_data.items():
+            if not _check_data(arr, mesh_b.field_data[key], key):
+                return False
+    return True

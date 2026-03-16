@@ -52,6 +52,7 @@ OGS 6.5.7
   `from_id()` operations
 - `Project.inputfile` renamed to `Project.input_file`
 - `Project` implements `__eq__()`, `__deepcopy__()`, `__repr__()`, and `__str__()`
+- Removed `Project.restart`; use `Simulation.restart` instead.
 
 ### Logfile Parser
 
@@ -101,6 +102,7 @@ OGS 6.5.7
   - `Simulation.log` provides access to parsed log file as a `Log` object
   - `Simulation.status` and `Simulation.status_str` track simulation state
   - Full save/load support with automatic storage of model, results, and logs
+  - `Simulation.restart` allows restarting a simulation from a previous run.
 - **Result**: Wrapper for simulation results providing convenient access to mesh series.
   - Direct indexing to access timesteps (e.g., `result[-1]` for final timestep)
   - Integrates with existing MeshSeries functionality
