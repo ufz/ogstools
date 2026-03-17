@@ -4,6 +4,7 @@
 #            http://www.opengeosys.org/project/license
 #
 
+import shutil
 import subprocess
 from pathlib import Path
 from tempfile import mkdtemp

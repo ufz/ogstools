@@ -51,7 +51,30 @@ class Meshes(MutableMapping, StorageBase):
         super().__init__("Meshes", "", id)
         self._meshes = meshes
         self.has_identified_subdomains: bool = False
-        self.num_partitions: int | Sequence[int] | None = None
+        self._num_partitions: list[int] = []
+
+    @property
+    def num_partitions(self) -> list[int]:
+        return self._num_partitions
+
+    @num_partitions.setter
+    def num_partitions(self, value: int | Sequence[int] | None) -> None:
+        if value is None:
+            self._num_partitions = []
+        elif isinstance(value, int):
+            self._num_partitions = sorted({value})
+        else:
+            self._num_partitions = sorted(set(value))
+
+    def add_partitions(self, value: int | Sequence[int]) -> None:
+        """Add partition counts, keeping the list sorted and deduplicated."""
+        new = {value} if isinstance(value, int) else set(value)
+        to_add = new - set(self._num_partitions)
+        if not to_add:
+            return
+        if self.is_saved:
+            self._partmesh_save_all(list(to_add), self.next_target)
+        self.num_partitions = self._num_partitions + list(to_add)
 
     @classmethod
     def from_folder(cls, filepath: str | Path) -> Meshes:
@@ -349,8 +372,6 @@ class Meshes(MutableMapping, StorageBase):
     def _save_impl(self, dry_run: bool, **kwargs: Any) -> list[Path]:
         active_path = Path(self.next_target)
 
-        if isinstance(self.num_partitions, int):
-            self.num_partitions = [self.num_partitions]
         serial_files = [active_path / f"{name}.vtu" for name in self._meshes]
         meta_file = active_path / "meta.yaml"
 
