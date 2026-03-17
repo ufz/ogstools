@@ -287,7 +287,9 @@ def ip_data_threshold(
         idx = np.squeeze(np.argwhere(np.all(np.isclose(pts, pts[0]), axis=0)))
         mesh_ip.points[:, idx] = np.mean(result.points[:, idx])
 
-    data = mesh_ip.sample(result)[scalars]
+    data = np.repeat(
+        result.cell_data[scalars], mesh_ip.n_points // result.n_cells
+    )
     condition = (data >= value_bounds[0]) & (data <= value_bounds[1])
     if invert:
         condition = np.invert(condition)
