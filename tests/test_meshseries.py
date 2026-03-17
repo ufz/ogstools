@@ -41,7 +41,8 @@ def test_read_quadratic_xdmf(tmp_path, quads):
     model = ot.Model(prj1, meshes)
     # private function call allowed because it is guaranteed the path is empty
     model._next_target = tmp_path  # use only in testing!
-    sim1 = model.run("new1", overwrite=True)
+    sim1 = model.run(tmp_path / "read_quadratic")
+    assert sim1.status == sim1.Status.done
     print(sim1.log_file)
     ms_domain = sim1.meshseries
     if quads:
@@ -577,7 +578,9 @@ def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     # ToDo log prj.run_model(write_logs=True, args=f"-m {tmp_path} -o {tmp_path}")
     model = ot.Model(prj, meshes)
     model._next_target = tmp_path  # use only in testing!
-    meshseries = model.run().meshseries
+    sim = model.run()
+    assert sim.status == sim.Status.done
+    meshseries = sim.meshseries
     mesh_last = meshseries[-1]
     int_pts = ot.mesh.to_ip_point_cloud(mesh_last)
 
@@ -806,6 +809,7 @@ def test_ms_active():
     )
 
 
+@pytest.mark.tools
 def test_read_from_parallel_results():
     """Test integration point data is correctly read from parallel results.
 
