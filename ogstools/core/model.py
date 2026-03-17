@@ -380,12 +380,7 @@ class Model(StorageBase):
                 f")"
             )
 
-        save_hint = (
-            "\nNote: Components must be saved before use"
-            if not self.is_saved
-            else ""
-        )
-        return f"{construct}{save_hint}\n{base_repr}"
+        return f"{construct}\n{base_repr}"
 
     def __str__(self) -> str:
         base_str = super().__str__()

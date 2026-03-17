@@ -155,12 +155,7 @@ class Simulation(StorageBase):
                 f"meshseries_file={str(self.meshseries_file)!r}"
             )
 
-        save_hint = (
-            "\nNote: Components must be saved before use"
-            if not self.is_saved
-            else ""
-        )
-        return f"{construct}{save_hint}\nstatus={self.status_str}\n{base_repr}"
+        return f"{construct}\nstatus={self.status_str}\n{base_repr}"
 
     def __str__(self) -> str:
         base_str = super().__str__()
