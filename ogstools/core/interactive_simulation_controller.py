@@ -144,11 +144,6 @@ class OGSInteractiveController(SimulationController):
         """Get the current simulation status."""
         return self._status
 
-    @property
-    def args(self) -> list[str]:
-        """Get the OGS command-line arguments used for this simulation."""
-        return self._args_list
-
     def terminate(self) -> bool:
         """
         Terminate the simulation immediately.

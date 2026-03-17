@@ -515,7 +515,8 @@ class TestStorage:
 
     @pytest.fixture(
         params=[
-            pytest.param(s, id=f"prj_{s}") for s in ["original", "copy", "saved"]
+            pytest.param(s, id=f"prj_{s}")
+            for s in ["original", "copy", "saved"]
         ]
     )
     def prj_link(self, request, tmp_path):
@@ -532,9 +533,8 @@ class TestStorage:
 
     @pytest.fixture(
         params=[
-            pytest.param("original", id="meshes_original"),
-            pytest.param("copy", id="meshes_copy"),
-            pytest.param("saved", id="meshes_saved"),
+            pytest.param(s, id=f"meshes_{s}")
+            for s in ["original", "copy", "saved"]
         ]
     )
     def meshes_link(self, request, tmp_path):
@@ -574,7 +574,9 @@ class TestStorage:
 
         assert (model.active_target / "meshes").is_symlink() == meshes_was_saved
 
-        assert (model.active_target / "project").is_symlink() == project_was_saved
+        assert (
+            model.active_target / "project"
+        ).is_symlink() == project_was_saved
 
         if model_save == 1:  # not saved, directly by run
             assert sim

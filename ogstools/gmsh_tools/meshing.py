@@ -15,7 +15,11 @@ from ogstools.core.storage import _date_temp_path
 def optional_default_file(
     filepath: Path | str | None, class_id: str, suffix: str
 ) -> Path:
-    filepath = Path(filepath) if filepath else _date_temp_path(class_id, suffix)
+    filepath = (
+        Path(filepath)
+        if filepath
+        else _date_temp_path(class_id, suffix.lstrip("."))
+    )
     filepath.parent.mkdir(parents=True, exist_ok=True)
     return filepath
 

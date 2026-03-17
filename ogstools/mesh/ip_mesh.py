@@ -273,7 +273,7 @@ def ip_data_threshold(
     for data in [result.point_data, result.cell_data, result.field_data]:
         nan_keys = [k for k, v in data.items() if np.all(np.isnan(v))]
         for key in nan_keys:
-            del data[key]
+            data.remove(key)
 
     mesh_ip = to_ip_point_cloud(result)
     # in 2D there can be a floating point offset in the flat dimension resulting

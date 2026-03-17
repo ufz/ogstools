@@ -276,9 +276,10 @@ class StorageBase(abc.ABC):
         """
         if path is None:
             return repr(None)
+        resolved = Path(path).resolve()
         if for_repr:
-            return f"{str(path)!r}"
-        return f"file://{str(path)!s}"
+            return f"{str(resolved)!r}"
+        return f"file://{resolved!s}"
 
     def _component_status_str(self, obj: StorageBase, name: str) -> str:
         """
@@ -289,7 +290,7 @@ class StorageBase(abc.ABC):
         :returns:    Formatted status string.
         """
         if obj.active_target:  # is_saved
-            return f"{name}: saved to {self._format_path(obj.active_target.absolute())}"
+            return f"{name}: saved to {self._format_path(obj.active_target)}"
         return f"{name}: not saved (planned to {self._format_path(obj.next_target)})"
 
     def _save_or_link_child(

@@ -734,7 +734,7 @@ class Project(StorageBase):
 
         :param xpath:      XPath of the tag
         :param filename:   name of the include file
-        :param occurrence: Addresses nonunique XPath by their occurece
+        :param occurrence: Addresses nonunique XPath by their occurrence
         """
         print(
             "Note: Includes are only written if write_input(keep_includes=True) is called."

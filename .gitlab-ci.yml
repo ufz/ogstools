@@ -83,7 +83,7 @@ tests (arch - conda) (R):
     - *pip-setup-extra-headless
     - *pull-ogs-containers
   script:
-    - pytest -n auto -v
+    - make test -j
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:

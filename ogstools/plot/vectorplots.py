@@ -41,7 +41,7 @@ def _vectorfield(
     _mesh.points[:, projection] = 0.0
     for key in _mesh.point_data:
         if key not in [variable.data_name, variable.mask]:
-            del _mesh.point_data[key]
+            _mesh.point_data.remove(key)
 
     i_pts = np.linspace(mesh.bounds[2 * i_id], mesh.bounds[2 * i_id + 1], n_pts)
     j_pts = np.linspace(mesh.bounds[2 * j_id], mesh.bounds[2 * j_id + 1], n_pts)

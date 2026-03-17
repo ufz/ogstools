@@ -380,11 +380,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             reader = "None"
         return (
             f"MeshSeries:\n"
-            f"filepath:         {self.filepath}\n"
+            f"filepath:         {self._format_path(self.filepath)}\n"
             f"data_type:        {self._data_type}\n"
             f"timevalues:       {self.timevalues[0]} to {self.timevalues[-1]} in {len(self.timevalues)} steps\n"
             f"reader:           {reader}\n"
-            f"rawdata_file:     {self.rawdata_file()}\n"
+            f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
 
     # deliberately typing as Sequence and not as zip because typing as zip

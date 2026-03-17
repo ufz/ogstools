@@ -48,7 +48,7 @@ class DataDict(MutableMapping):
         if isinstance(key, Variable):
             key = key.output_name if key.output_name in self else key.data_name
         for mesh in self.ms:
-            del self.get_data(mesh)[key]
+            self.get_data(mesh).pop(key)
 
     def __iter__(self) -> Iterator[dict]:
         return iter(self.get_data(self.ms[0]))

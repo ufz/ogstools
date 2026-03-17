@@ -740,7 +740,7 @@ def test_remove_array():
             assert (
                 len(datafield.keys()) == num_arrays
             ), "Unexpected number of arrays in MeshSeries."
-            del datafield[arr_to_rm]
+            datafield.pop(arr_to_rm)
             assert arr_to_rm not in datafield, "Deleted array still exists."
             assert (
                 len(datafield.keys()) == num_arrays - 1

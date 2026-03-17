@@ -35,7 +35,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 
 @pytest.mark.system
 def test_simulation_simple(tmp_path, good_model):
-    sim = good_model.run()
+    sim = good_model.copy().run()
     assert sim.status == sim.Status.done
     sim_out = tmp_path / "sim_good_model"
     sim.save(sim_out)
@@ -228,7 +228,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
     """Run a simulation, save as archive, delete original, re-run via cmd."""
     import shutil
 
-    sim = good_model.run()
+    sim = good_model.copy().run()
     sim.save(tmp_path / "sim_original", archive=True)
 
     # Delete where the first simulation was computed so cmd can reuse the path
@@ -250,7 +250,7 @@ def test_simulation_cmd_reproduces_result(tmp_path, good_model):
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-def test_simulation_log_convergence() -> plt.Figure:
+def test_plot_simulation_log_convergence() -> plt.Figure:
     model = examples.load_model_liquid_flow_simple()
     sim = model.run()
     return sim.log.plot_convergence()
@@ -258,7 +258,7 @@ def test_simulation_log_convergence() -> plt.Figure:
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-def test_simulation_log_convergence_order() -> plt.figure:
+def test_plot_simulation_log_convergence_order() -> plt.figure:
     model = examples.load_model_liquid_flow_simple()
     sim = model.run()
     return sim.log.plot_convergence_order()
