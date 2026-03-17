@@ -236,7 +236,7 @@ class StorageBase(abc.ABC):
                 path.unlink()
                 if target.is_dir():
                     shutil.copytree(
-                        target, path, symlinks=False, copy_function=shutil.copy2
+                        target, path, symlinks=True, copy_function=shutil.copy2
                     )
                     if recursive:
                         for child in path.iterdir():
