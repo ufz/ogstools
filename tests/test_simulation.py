@@ -275,6 +275,7 @@ def test_mock_model_restart() -> None:
     assert prj_ref == model_restart.project
 
 
+@pytest.mark.usefixtures("require_ogs_containers")
 def test_execution_defaults_from_env(monkeypatch, good_model):
     """OGS_EXECUTION_DEFAULTS env var loads settings from the example YAML."""
     yml_path = Path(ot.__file__).parent / "core/execution_default_example.yml"
