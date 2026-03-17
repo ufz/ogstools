@@ -106,6 +106,7 @@ class OGSInteractiveController(SimulationController):
         )
 
         # TODO: Apply all model execution parameters
+        log_level = model_ref.execution.log_level
         self._args_list = [
             "",
             str(model_ref.project.prjfile),
@@ -113,8 +114,7 @@ class OGSInteractiveController(SimulationController):
             str(model_ref.meshes.active_target),
             "-o",
             str(self.result.next_target),
-            "-l",
-            model_ref.execution.log_level,
+            *(["-l", log_level] if log_level is not None else []),
         ]
 
         try:
