@@ -116,7 +116,7 @@ class Model(StorageBase):
         elif isinstance(execution, Path | str):
             self.execution = Execution.from_file(execution)
         else:  # None
-            self.execution = Execution()
+            self.execution = Execution.from_default()
             # Already initialized as not saved and user_specified_target=False
 
     @classmethod
@@ -211,6 +211,11 @@ class Model(StorageBase):
             dry_run,
             overwrite,
         )
+
+        envrc = self.next_target / ".envrc"
+        if not dry_run:
+            envrc.write_text(f'export cmd="{self.cmd}"\n')
+        files.append(envrc)
 
         return files
 
