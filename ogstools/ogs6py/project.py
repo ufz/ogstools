@@ -280,7 +280,9 @@ class Project(StorageBase):
             if getattr(v, "tree", None) is self.tree
         }
         skip_attrs = (
-            self._SAVE_STATE_ATTRS + ("prjfile", "process") + tuple(tree_backed)
+            self._SAVE_STATE_ATTRS
+            + ("prjfile", "process", "monitor")
+            + tuple(tree_backed)
         )
         for k, v in self.__dict__.items():
             if k not in skip_attrs:
@@ -288,6 +290,7 @@ class Project(StorageBase):
 
         new._reset_save_state()
         new._prj_filename = default_name
+        new.monitor = Monitor()
         assert isinstance(new.prjfile, Path)
 
         for k in tree_backed:
