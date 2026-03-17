@@ -307,8 +307,6 @@ class Simulation(StorageBase):
         files += self._save_or_link_child(
             self.result, self.next_target / "result", dry_run, overwrite
         )
-
-        self.materialize_symlink(self.next_target / "result", recursive=True)
         return files
 
     def save(

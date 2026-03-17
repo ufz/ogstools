@@ -298,16 +298,24 @@ class Model(StorageBase):
           inspect intermediate results) when execution.interactive is True
         - OGSNativeController: Runs to completion when execution.interactive is False
 
-        :param sim_output:  Optional path where simulation output should be written.
+        :param sim_output:  Optional path where simulation should be written.
                             If None, uses a default location.
         :param dry_run:     If True, prints the command that would be executed
                             but does not actually run the simulation.
         :returns:           A SimulationController for managing the simulation.
         """
 
+        sim_result = (
+            Path(sim_output) / "result" if sim_output is not None else None
+        )
+        sim_model = (
+            Path(sim_output) / "model" if sim_output is not None else None
+        )
         # ToDo Could also check if Model differs between the saved Model and the provided object
         if not self.is_saved:
+            self._next_target, _ = self._target_for_save(sim_model)
             self._propagate_target()
+            # self._pre_save()
             self._save_impl(overwrite=overwrite, dry_run=dry_run)
             self._post_save(False, False, False)
 
@@ -322,13 +330,13 @@ class Model(StorageBase):
             )
 
             return OGSInteractiveController(
-                model_ref=self, sim_output=sim_output, overwrite=overwrite
+                model_ref=self, sim_output=sim_result, overwrite=overwrite
             )
 
         from .native_simulation_controller import OGSNativeController
 
         return OGSNativeController(
-            model_ref=self, sim_output=sim_output, overwrite=overwrite
+            model_ref=self, sim_output=sim_result, overwrite=overwrite
         )
 
     def _component_repr(

@@ -129,8 +129,11 @@ class SimulationController(abc.ABC):
             sim.id = id
             return sim
         if target:
+            # This is basically self.save(target) but without pre_save
             sim._next_target = Path(target)
             sim.user_specified_target = True
+            sim._save_impl()
+            sim._post_save(user_defined=True)
 
         sim._propagate_target()
         return sim
