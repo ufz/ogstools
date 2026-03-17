@@ -914,7 +914,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         if time_logscale:
 
             def log10time(vals: np.ndarray) -> np.ndarray:
-                log10vals = np.log10(vals, where=vals != 0)
+                log10vals = np.log10(
+                    vals, where=vals != 0, out=np.zeros_like(vals)
+                )
                 if log10vals[0] == 0:
                     log10vals[0] = log10vals[1] - (log10vals[2] - log10vals[1])
                 return log10vals
