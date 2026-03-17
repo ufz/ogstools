@@ -204,7 +204,7 @@ class Simulation(StorageBase):
                 if has_errors:
                     return SimulationController.Status.error
         except Exception:
-            return SimulationController.Status.error
+            return SimulationController.Status.unknown
 
         return SimulationController.Status.done
 
