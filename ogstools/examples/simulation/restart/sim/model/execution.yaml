@@ -1,9 +1,9 @@
-interactive: true
+interactive: false
 args: null
-container_path: null
 wrapper: null
+mpi_wrapper: null
+ogs: null
 mpi_ranks: null
-ogs_bin_path: ogs
 omp_num_threads: null
 ogs_asm_threads: null
 write_logs: true
