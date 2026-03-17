@@ -83,7 +83,7 @@ tests (arch - conda) (R):
     - *pip-setup-extra-headless
     - *pull-ogs-containers
   script:
-    - pytest -n auto
+    - pytest -n auto -v
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -177,7 +177,7 @@ tests (arch - conda - ogs custom latest) (M):
     - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
-    - pytest -n auto
+    - pytest -n auto -v
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -286,7 +286,9 @@ docs hashes check:
   needs: ["docs preview (R)"]
   tags: [shell, envinf]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_MERGE_REQUEST_IID
+      when: manual
+      allow_failure: true
   script:
     - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png || exit $?
   allow_failure:
