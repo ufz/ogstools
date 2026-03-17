@@ -327,6 +327,7 @@ class TestStorage:
         assert_files_saved(files_overwrite)
         assert files_dry == files
         sim = model_1_1.run()
+        assert sim.status == sim.Status.done
         sim.save(tmp_path / "y", overwrite=True, archive=True)
         ms = sim.meshseries
         ms.save(tmp_path / "my_ms.pvd", overwrite=True)
@@ -416,9 +417,7 @@ class TestStorage:
         assert not model_pvd_rect10.user_specified_target
         assert not sim_default.is_saved
 
-        sim_default.save()
-        sim_highres.save()
-
+        sim_xdmf_2.save(id="xdmf")
         # 2 Sims just to compare but no long-term interest
 
         # different meshes make subtle differences
@@ -513,3 +512,81 @@ class TestStorage:
         ), "First file should be PVD"
         assert files[0].suffix == ".pvd"
         assert_files_saved(files, dry_run=dry_run)
+
+    @pytest.fixture(
+        params=[
+            pytest.param("original", id="prj_original"),
+            pytest.param("copy", id="prj_copy"),
+            pytest.param("saved", id="prj_saved"),
+        ]
+    )
+    def prj_link(self, request, tmp_path):
+        prj = ot.Project(input_file=prj_mechanics)
+        if request.param == "copy":
+            return prj.copy()
+        if request.param == "saved":
+            prj = prj.copy()
+            prj.save(tmp_path / "prj_saved")
+            return prj
+        # the original is defined as not saved (although there might be a prj_file connected too)
+        # it was not saved as a folder
+        return prj
+
+    @pytest.fixture(
+        params=[
+            pytest.param("original", id="meshes_original"),
+            pytest.param("copy", id="meshes_copy"),
+            pytest.param("saved", id="meshes_saved"),
+        ]
+    )
+    def meshes_link(self, request, tmp_path):
+        meshes = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
+        if request.param == "copy":
+            return meshes.copy()
+        if request.param == "saved":
+            meshes = meshes.copy()
+            meshes.save(tmp_path / "meshes_saved")
+            return meshes
+        return meshes
+
+    @pytest.fixture
+    def model_link(self, prj_link, meshes_link):
+        return ot.Model(prj_link, meshes_link)
+
+    @pytest.mark.system
+    @pytest.mark.parametrize(
+        "model_save", [0, 1, 2], ids=["save_only", "run_only", "save_then_run"]
+    )
+    def test_links_model(self, tmp_path, model_link, model_save):
+        model = model_link
+        meshes_was_saved = model.meshes.is_saved
+        project_was_saved = model.project.is_saved
+        if model_save == 0:
+            model.save(tmp_path / "model")
+            sim = None
+        elif model_save == 1:
+            sim = model.run(tmp_path / "sim")
+        else:
+            model.save(tmp_path / "model")
+            sim = model.run(tmp_path / "sim")
+        assert model.active_target
+        assert (model.active_target / "meshes").exists()
+        assert (model.active_target / "project").exists()
+        assert (model.active_target / "execution.yaml").exists()
+
+        if meshes_was_saved:
+            assert (model.active_target / "meshes").is_symlink()
+        else:
+            assert not (model.active_target / "meshes").is_symlink()
+
+        if project_was_saved:
+            assert (model.active_target / "project").is_symlink()
+        else:
+            assert not (model.active_target / "project").is_symlink()
+
+        if model_save == 1:  # not saved, directly by run
+            assert sim
+            assert not (sim.active_target / "model").is_symlink()
+        elif model_save == 2:
+            assert sim
+            assert (sim.active_target / "model").is_symlink()

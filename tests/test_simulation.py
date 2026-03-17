@@ -1,6 +1,10 @@
 """Unit tests for meshlib."""
 
+import os
+import re
 import subprocess
+import sys
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -32,16 +36,123 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 @pytest.mark.system
 def test_simulation_simple(tmp_path, good_model):
     sim = good_model.run()
-    sim.save(tmp_path / "sim_good_model")
+    assert sim.status == sim.Status.done
+    sim_out = tmp_path / "sim_good_model"
+    sim.save(sim_out)
     ms = sim.meshseries
     assert ms[-1]
+    assert (sim_out / "model").is_symlink()
+    assert (sim_out / "result").is_symlink()
 
 
 @pytest.mark.system
 def test_simulation_simple2(tmp_path, good_model):
-    sim = good_model.run(tmp_path / "Simulation" / "sim_good_model")
-    sim.save()
+    sim_out = tmp_path / "Simulation" / "sim_good_model"
+    model = good_model.copy()
+    sim = model.run(sim_out)
+    assert sim.status == sim.Status.done
     assert sim.meshseries
+    assert not (sim_out / "model").is_symlink()
+    assert (sim_out / "model").is_dir()
+    sim.save(tmp_path / "Simulation" / "model_save_as")
+
+
+@pytest.mark.system
+def test_simulation_simple_archive(tmp_path, good_model):
+    sim_out = tmp_path / "Simulation" / "sim_good_model"
+    model = good_model.copy()
+    model.save(tmp_path / "model", archive=True)
+    sim = model.run(sim_out)
+    assert sim.meshseries
+    assert (sim_out / "model").is_symlink()
+    assert (sim_out / "model").is_dir()
+
+
+@pytest.mark.system
+@pytest.mark.skipif(
+    (os.cpu_count() or 0) < 3 or sys.platform != "linux",
+    reason="requires at least 3 CPUs and Linux",
+)
+@pytest.mark.usefixtures("require_ogs_containers")
+@pytest.mark.parametrize("n", [1, 2, 3])
+def test_simulation_parallel(good_model, n):
+    parallel_model = good_model.copy()
+    parallel_model.execution.omp_num_threads = 1  # no over-subscription
+    parallel_model.execution.mpi_ranks = n
+    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.log_level = "debug"
+    parallel_model.execution.args = "--log-parallel"
+    parallel_model.save()
+    cmd = parallel_model.cmd
+
+    # test
+    mpi_part = rf"mpirun -np {n} " if n >= 1 else ""
+    mesh_suffix = rf"/partition/{n}" if n > 1 else ""
+    assert re.search(rf"apptainer exec \S+ {mpi_part}ogs", cmd)
+    assert re.search(rf"-m \S+/meshes{mesh_suffix}", cmd)
+    assert re.search(r"\S+/project/default\.prj", cmd)
+    assert "-l debug" in cmd
+    sim = parallel_model.run()
+    assert len(sim.meshseries) > 2
+    log_content = sim.log_file.read_text()
+    assert f"with MPI. MPI processes: {n}." in log_content
+
+    assert sim.status == sim.Status.done
+
+
+@pytest.mark.system
+@pytest.mark.xfail(
+    sys.platform == "darwin",
+    reason="OGS accidentally compiled without OpenMP on Mac in dependent ogs wheel package",
+)
+def test_simulation_omp_num_threads(good_model):
+    model_with_threads = good_model.copy()
+    model_with_threads.execution.omp_num_threads = 2
+    sim = model_with_threads.run()
+    log_content = sim.log_file.read_text()
+    assert "OMP_NUM_THREADS is set to: 2" in log_content
+
+    sim_no_threads = good_model.run()  # default has num_threads not set
+    log_no_threads = sim_no_threads.log_file.read_text()
+    assert good_model.execution.omp_num_threads is None
+    assert "OMP_NUM_THREADS is not set" in log_no_threads
+
+
+@pytest.mark.system
+@pytest.mark.usefixtures(
+    "require_ogs_wheel"
+)  # only here we are sure that build with openmp
+def test_simulation_ogs_asm_threads():
+    model = examples.load_simulation_smalldeformation().model.copy(
+        id="asm_test"
+    )
+    model_with_asm = model.copy()
+    model_with_asm.execution.ogs_asm_threads = 2
+    sim = model_with_asm.run()
+    log_content = sim.log_file.read_text()
+    assert "Threads used for ParallelVectorMatrixAssembler: 2" in log_content
+
+    sim_no_asm = model.run()
+    log_no_asm = sim_no_asm.log_file.read_text()
+    # if not set (OGS intern), default is 1
+    assert "Threads used for ParallelVectorMatrixAssembler: 1" in log_no_asm
+
+
+@pytest.mark.system
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux only")
+@pytest.mark.usefixtures("require_ogs_containers")
+def test_simulation_container(good_model):
+    parallel_model = good_model.copy()
+    parallel_model.execution.omp_num_threads = 1
+    parallel_model.execution.mpi_ranks = 2
+    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.log_level = "debug"
+    parallel_model.save()
+    cmd = parallel_model.cmd
+    assert re.search(r"apptainer exec \S+ mpirun -np 2 \S*ogs", cmd)
+    assert re.search(r"-m \S+/meshes/partition/2", cmd)
+    assert re.search(r"\S+/project/default\.prj", cmd)
+    assert "-l debug" in cmd
 
 
 @pytest.mark.system
@@ -103,8 +214,8 @@ def test_parallel_runs():
 
     sim_c1 = model.controller()
     sim_c2 = model.controller()
-    assert sim_c1.status == sim_c1.Status.running
-    assert sim_c2.status == sim_c2.Status.running
+    assert sim_c1.status in (sim_c1.Status.running, sim_c1.Status.done)
+    assert sim_c2.status in (sim_c2.Status.running, sim_c2.Status.done)
 
     sims = [simc.run() for simc in [sim_c1, sim_c2]]
     assert sims[0].status == sim_c1.Status.done
@@ -164,6 +275,17 @@ def test_mock_model_restart() -> None:
     assert prj_ref == model_restart.project
 
 
+def test_execution_defaults_from_env(monkeypatch, good_model):
+    """OGS_EXECUTION_DEFAULTS env var loads settings from the example YAML."""
+    yml_path = Path(ot.__file__).parent / "core/execution_default_example.yml"
+    monkeypatch.setenv("OGS_EXECUTION_DEFAULTS", str(yml_path))
+    exec_defaults = ot.Execution.from_default()
+    assert exec_defaults.mpi_ranks == 2
+    good_model.execution = exec_defaults
+    sim = good_model.run()
+    assert sim.status == sim.Status.done
+
+
 def test_restart_error_cases():
     sim = ot.Simulation.from_folder(
         examples.EXAMPLES_DIR / "simulation/restart/sim"
@@ -189,9 +311,11 @@ def test_restart_error_cases():
     return
 
 
+@pytest.mark.system
 def test_model_restart(tmp_path) -> None:
     model = ot.examples.load_model_liquid_flow_simple().copy()
     sim = model.run()
+    assert sim.status == sim.Status.done
     sim.save(tmp_path / "entire_run")
 
     ms_full = sim.meshseries
