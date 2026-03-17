@@ -12,7 +12,6 @@ import subprocess
 import sys
 import warnings
 from pathlib import Path
-from typing import Any
 
 import yaml
 from typing_extensions import Self
@@ -80,7 +79,7 @@ class Execution(StorageBase):
     def __init__(
         self,
         interactive: bool = False,
-        args: Any | None = None,
+        args: str | None = None,
         mpi_wrapper: str | None = "mpirun -np",
         wrapper: str | None = None,
         ogs: str | None = None,

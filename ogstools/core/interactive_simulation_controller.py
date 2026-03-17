@@ -107,6 +107,7 @@ class OGSInteractiveController(SimulationController):
 
         # TODO: Apply all model execution parameters
         log_level = model_ref.execution.log_level
+        extra_args = model_ref.execution.args
         self._args_list = [
             "",
             str(model_ref.project.prjfile),
@@ -115,6 +116,7 @@ class OGSInteractiveController(SimulationController):
             "-o",
             str(self.result.next_target),
             *(["-l", log_level] if log_level is not None else []),
+            *(str(extra_args).split() if extra_args is not None else []),
         ]
 
         try:
@@ -144,6 +146,11 @@ class OGSInteractiveController(SimulationController):
     def status(self) -> SimulationStatus:
         """Get the current simulation status."""
         return self._status
+
+    @property
+    def args(self) -> list[str]:
+        """Get the OGS command-line arguments used for this simulation."""
+        return self._args_list
 
     def terminate(self) -> bool:
         """
