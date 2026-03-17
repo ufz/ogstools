@@ -66,6 +66,7 @@ class TestiOGS:
         return Path(tmpdir_factory.mktemp("test_ogs6py")) / "shared.prj"
 
     @pytest.mark.dependency(name="tunnel_ogs6py_prj_file")
+    @pytest.mark.xdist_group("tunnel_ogs6py")
     def test_buildfromscratch(self, shared_prj: Path) -> str:
         model = ot.Project(output_file=shared_prj, OMP_NUM_THREADS=4)
         model.mesh.add_mesh("Decovalex-0-simplified-plain-with-p0-plain.vtu")
@@ -1386,10 +1387,9 @@ class TestiOGS:
         find = root.findall("./geometry")
         assert find[0].text == "geometry.gml"
 
-    @pytest.mark.dependency(depends=["tunnel_ogs6py_prj_file"])
-    def test_add_block(self, shared_prj: str) -> None:
-        prjfile = Path(shared_prj).parent / "tunnel_ogs6py_add_block.prj"
-        model = ot.Project(input_file=shared_prj, output_file=prjfile)
+    def test_add_block(self, tmp_path: Path) -> None:
+        prjfile = tmp_path / "tunnel_ogs6py_add_block.prj"
+        model = ot.Project(input_file=prj_tunnel_trm, output_file=prjfile)
         model.add_block(
             "parameter",
             parent_xpath="./parameters",
