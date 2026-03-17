@@ -79,20 +79,11 @@ class LogFileHandler(FileSystemEventHandler):
                     print(f"File not found yet: {self.file_name}")
                     return
 
-            # print(f"{self.file_name} has been modified.")
             while True:
-                # file_pos_before = self._file.tell()
                 line = self._file.readline()
-                # file_pos_after = self._file.tell()
                 num_lines_current = self.num_lines_read + 1
                 if not line or not line.endswith("\n"):
                     break  # Wait for complete line before processing
-
-                # Debug: print lines containing "Iteration"
-                # if "Iteration" in line:
-                #    print(
-                #        f"DEBUG handler={id(self)} file={id(self._file)} LINE {num_lines_current} pos {file_pos_before}->{file_pos_after}: {line.strip()}"
-                #    )
 
                 log_entry: Log | Termination | None = parse_line(
                     self.patterns,
@@ -100,12 +91,6 @@ class LogFileHandler(FileSystemEventHandler):
                     parallel_log=False,
                     number_of_lines_read=num_lines_current,
                 )
-
-                # Debug: print what was parsed for Iteration lines
-                # if "Iteration" in line:
-                #    print(
-                #        f"DEBUG PARSED: {type(log_entry).__name__ if log_entry else 'None'}"
-                #    )
 
                 if log_entry:
                     assert isinstance(log_entry, Log | Termination)
