@@ -250,7 +250,8 @@ class Project(StorageBase):
             dependencies = None
         lines = [
             f"{base_repr}",
-            f"   Input file: {self._format_path(self.input_file)}\n"
+            f"   Project file: {self._format_path(self.prjfile)}",
+            f"   Input file: {self._format_path(self.input_file)}",
             f"   Dependencies: {dependencies!r}",
         ]
 
