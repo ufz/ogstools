@@ -31,7 +31,18 @@ settings.load_profile("default")
 
 @pytest.fixture(scope="session", autouse=True)
 def set_userpath(tmp_path_factory):
-    ot.StorageBase.Userpath = tmp_path_factory.getbasetemp()
+    base = tmp_path_factory.getbasetemp()
+    if base.name.startswith("popen-gw"):
+        base = base.parent
+    ot.StorageBase.Userpath = base / "ot_user"
+    ot.StorageBase.Temppath = base / "ot_temp"
+
+
+def pytest_collection_modifyitems(items: list) -> None:
+    # Run test_simulation_parallel first so the container is downloaded early
+    first = [i for i in items if "test_simulation_parallel" in i.nodeid]
+    rest = [i for i in items if "test_simulation_parallel" not in i.nodeid]
+    items[:] = first + rest
 
 
 def pytest_make_parametrize_id(config, val, argname):  # noqa: ARG001
