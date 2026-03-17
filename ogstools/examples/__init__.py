@@ -202,6 +202,9 @@ feflow_model_2D_CT_t_28 = _feflow_dir / "CT_2D_line_28.fem"
 feflow_model_2D_HTC = _feflow_dir / "HTC.fem"
 feflow_model_2D_HTA = _feflow_dir / "HTA.fem"
 
+log_lf_simple_ranks_none = _logs_dir / "lf_simple_ranks_none.txt"
+log_lf_simple_ranks_1 = _logs_dir / "lf_simple_ranks_1.txt"
+log_lf_simple_ranks_3 = _logs_dir / "lf_simple_ranks_3.txt"
 log_const_viscosity_thermal_convection = (
     _logs_dir / "ConstViscosityThermalConvection.log"
 )

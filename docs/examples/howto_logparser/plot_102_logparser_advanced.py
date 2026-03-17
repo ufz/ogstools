@@ -23,8 +23,8 @@ import pandas as pd
 
 import ogstools as ot
 from ogstools.examples import (
+    debug_parallel_3,
     log_const_viscosity_thermal_convection,
-    log_parallel,
 )
 
 pd.set_option("display.max_rows", 8)  # for visualization only
@@ -35,12 +35,12 @@ pd.set_option("display.max_rows", 8)  # for visualization only
 # The log file to be investigated in this example is the result of a mpirun (-np 3) from https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3.prj
 
 
-records = ot.logparser.parse_file(log_parallel)
+records = ot.logparser.parse_file(debug_parallel_3)
 df_records = pd.DataFrame(records)
-df_parallel = ot.logparser.fill_ogs_context(df_records)
-df_parallel
+df_records
 
-df_ts = ot.logparser.analysis_time_step(df_parallel)
+
+df_ts = ot.logparser.analysis_time_step(df_records)
 # For each mpi_process and each time_step we get the measurements (e.g. output_time)
 df_ts
 # %% [markdown]
