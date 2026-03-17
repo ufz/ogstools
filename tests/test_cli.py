@@ -34,9 +34,6 @@ def test_hide_cli_stdout(capfd, stdout):
 
 @pytest.mark.tools
 def test_dashed_args(tmp_path, capfd):
-    os.environ["OGS_BIN_PATH"] = str(Path(shutil.which("ogs")).parent)
-    ot._find_ogs.cli().NodeReordering(
-        i=mechanics_2D, o=tmp_path / "test.vtu", log_level="info"
-    )
+    ot.cli().NodeReordering(i=mechanics_2D, o=tmp_path / "test.vtu", l="info")
     captured = capfd.readouterr()
     assert "PARSE ERROR" not in captured.err
