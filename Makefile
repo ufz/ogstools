@@ -1,7 +1,7 @@
 help:  ## Show this help
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | column -t -s :
 
-.PHONY : setup pip_setup_headless test coverage check clean docs cleandocs preview
+.PHONY : setup pip_setup_headless test coverage check clean docs cleandocs preview pull_containers
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	if command -v uv > /dev/null 2>&1; then \
@@ -64,6 +64,7 @@ setup_devcontainer:  ## Internal usage [CI]
 	.venv-devcontainer/bin/pip install -i https://gmsh.info/python-packages-dev-nox gmsh==4.13.1.dev1
 
 test:  ## Runs the unit tests
+	python scripts/pull_containers.py
 	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
 
 test_figures:  ## Create the reference figures for the plot tests
