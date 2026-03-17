@@ -18,6 +18,12 @@ from ogstools.logparser.regexes import (
     Termination,
 )
 
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _strip_ansi(line: str) -> str:
+    return _ANSI_ESCAPE.sub("", line)
+
 
 def _try_match_line(
     line: str,
@@ -38,13 +44,10 @@ def _try_match_line(
     return None
 
 
-def read_mpi_processes(file_name: str | Path) -> int:
+def parallel_log_used(file_name: str | Path) -> int:
     """
     Counts the number of MPI processes started by OpenGeoSys-6 by detecting
-    specific log entries in a given file. It assumes that each MPI process
-    will log two specific messages: "This is OpenGeoSys-6 version" and
-    "OGS started on". The function counts occurrences of these messages and
-    divides the count by two to estimate the number of MPI processes.
+    specific log entries in a given file.
 
     :param file_name: The path to the log file, as either a string or a Path object.
     :returns: An integer representing the estimated number of MPI processes
@@ -54,14 +57,30 @@ def read_mpi_processes(file_name: str | Path) -> int:
     occurrences = 0
     file_name = Path(file_name)
     with file_name.open() as file:
-        lines = iter(file)
-        # There is no synchronisation barrier between both info, we count both and divide
-        while re.search(
-            "info: This is OpenGeoSys-6 version|info: OGS started on",
-            next(lines),
-        ):
-            occurrences = occurrences + 1
-        return int(occurrences / 2)
+        for line in file:
+            # There is no synchronisation barrier between both info, we count both and divide
+            if re.search(
+                "info: This is OpenGeoSys-6 version|info: OGS started on",
+                _strip_ansi(line),
+            ):
+                occurrences += 1
+    return int(occurrences / 2)
+
+
+def read_mpi_processes(file_name: str | Path) -> int | None:
+    """
+    Reads the number of MPI processes started by OpenGeoSys-6 from the log file.
+
+    :param file_name: The path to the log file, as either a string or a Path object.
+    :returns: An integer representing the number of MPI processes. Or if serial execution: None
+
+    """
+    file_name = Path(file_name)
+    with file_name.open() as file:
+        for line in file:
+            if m := re.search(r"MPI processes: (\d+)", _strip_ansi(line)):
+                return int(m.group(1))
+    return None
 
 
 def normalize_regex(
@@ -101,7 +120,7 @@ def simple_consumer(queue: Queue) -> None:
 def parse_line(
     patterns: list, line: str, parallel_log: bool, number_of_lines_read: int
 ) -> Log | Termination | None:
-
+    line = _strip_ansi(line)
     for regex, log_type in patterns:
         has_mpi_process = parallel_log and issubclass(log_type, MPIProcess)
         fill_mpi = not has_mpi_process or issubclass(log_type, NoRankOutput)
@@ -126,12 +145,13 @@ def read_version(file: Path) -> int:
     """
     with file.open() as f:
         for line in f:
-            match = re.search(r"Log version: (\d+)", line)
+            line_s = _strip_ansi(line)
+            match = re.search(r"Log version: (\d+)", line_s)
             if match:
                 return int(match.group(1))
             if (
-                "This is OpenGeoSys-6 version " in line
-                and "Log version" not in line
+                "This is OpenGeoSys-6 version " in line_s
+                and "Log version" not in line_s
             ):
                 return 1
     print("Log version could not be deduced. Please specify it.")
@@ -139,9 +159,7 @@ def read_version(file: Path) -> int:
 
 
 def parse_file(
-    file_name: str | Path,
-    maximum_lines: int | None = None,
-    force_parallel: bool = False,
+    file_name: str | Path, maximum_lines: int | None = None
 ) -> list[Any]:
     """
     Parses a log file from OGS, applying regex patterns to extract specific information,
@@ -153,18 +171,18 @@ def parse_file(
     :param file_name: The path to the log file, as a string or Path object.
     :param maximum_lines: Optional maximum number of lines to read from the file.
                           If not provided, the whole file is read.
-    :param force_parallel: Should only be set to True if OGS run with MPI with a single core
     :returns: A list of extracted records based on the applied regex patterns.
              The exact type and structure of these records depend on the regex
              patterns and their associated processing functions.
     """
 
-    context = Context()
     file_name = Path(file_name)
+    parallel_execution = read_mpi_processes(file_name) is not None
+    consistency = not (parallel_execution and parallel_log_used(file_name) > 1)
 
-    parallel_log = force_parallel or read_mpi_processes(file_name) > 1
+    context = Context(sequential_consistency=consistency)
     version = read_version(file_name)
-    patterns = normalize_regex(select_regex(version), parallel_log)
+    patterns = normalize_regex(select_regex(version), parallel_execution)
 
     number_of_lines_read = 0
     with file_name.open() as file:
@@ -179,7 +197,7 @@ def parse_file(
                 break
 
             entry = parse_line(
-                patterns, line, parallel_log, number_of_lines_read
+                patterns, line, parallel_execution, number_of_lines_read
             )
 
             if entry:

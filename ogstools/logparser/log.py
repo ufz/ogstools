@@ -16,7 +16,6 @@ from .common_ogs_analyses import (
     analysis_simulation,
     analysis_simulation_termination,
     analysis_time_step,
-    fill_ogs_context,
 )
 from .log_parser import parse_file
 
@@ -39,7 +38,7 @@ class Log:
         self.file = Path(file)
         records = parse_file(self.file)
         self.df_records = pd.DataFrame(records)
-        self.df_log = fill_ogs_context(self.df_records)
+        self.df_log = self.df_records
 
     def convergence_coupling_iteration(self) -> pd.DataFrame:
         """

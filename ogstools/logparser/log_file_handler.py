@@ -32,7 +32,6 @@ class LogFileHandler(FileSystemEventHandler):
         queue: Queue,
         status: Context,
         stop_callback: Callable[[], tuple[None, Any]],
-        force_parallel: bool = False,
         line_limit: int = 0,
     ):
         """
@@ -40,7 +39,6 @@ class LogFileHandler(FileSystemEventHandler):
         :param queue: The queue where log entries are put and to be consumed.
         :status: The status of the simulation (e.g. current time step).
         :stop_callback: A callback function to stop the simulation.
-        :force_parallel: Only needed for MPI run with 1 process. Then it must be set to True.
         :line_limit: The number of lines to read before stopping the simulation. 0 means no limit.
         """
 
@@ -48,7 +46,6 @@ class LogFileHandler(FileSystemEventHandler):
         self.queue = queue
         self.status = status
         self.stop_callback = stop_callback
-        self.force_parallel = force_parallel
         self.line_limit = line_limit
 
         self._file_read: bool = False
