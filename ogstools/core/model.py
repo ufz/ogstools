@@ -274,7 +274,13 @@ class Model(StorageBase):
         :returns:           A :class:`ogstools.Simulation` object containing the completed
                             simulation results and metadata.
         """
-        sim_controller = self.controller(sim_output=None, overwrite=overwrite)
+        if id is not None and target is None:
+            target = StorageBase.saving_path() / "Simulation" / id
+        target_result = Path(target) if target else None
+
+        sim_controller = self.controller(
+            sim_output=target_result, overwrite=overwrite
+        )
         return sim_controller.run(target=target, id=id)
 
     def controller(
