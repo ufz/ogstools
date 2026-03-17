@@ -101,7 +101,7 @@ def test_framework_model():
 
     model_deep_copied = copy.deepcopy(model)
     assert model == model_deep_copied
-    model.execution.interactive = not model.execution.interactive
+    model.execution.omp_num_threads = 2
     assert model != model_deep_copied
     assert model is not model_deep_copied
     assert model.next_target != model_deep_copied.next_target
@@ -270,25 +270,21 @@ def assert_framework_object_contract(
         # 2 Execution
         pytest.param(
             lambda: load_model_liquid_flow_simple().execution,
-            lambda m: setattr(m, "interactive", not m.interactive),
+            lambda m: setattr(m, "omp_num_threads", 2),
             marks=pytest.mark.tools(),
             id="Execution",
         ),
         # 3 Model (objects)
         pytest.param(
             load_model_liquid_flow_simple,
-            lambda m: setattr(
-                m.execution, "interactive", not m.execution.interactive
-            ),
+            lambda m: setattr(m.execution, "omp_num_threads", 2),
             marks=pytest.mark.tools(),
             id="Model(objects)",
         ),
         # 4 Model (prj_file)
         pytest.param(
             model_liquid_flow_simple_prjfile,
-            lambda m: setattr(
-                m.execution, "interactive", not m.execution.interactive
-            ),
+            lambda m: setattr(m.execution, "omp_num_threads", 2),
             id="Model(prj-file)",
         ),
         # 5 Model (from folder)
@@ -330,7 +326,9 @@ def test_framework_objects(factory, mutate):
     [
         pytest.param("Project", load_project_simple_lf, id="Project"),
         pytest.param(
-            "Execution", lambda: Execution(mpi_ranks=4), id="Execution"
+            "Execution",
+            lambda: Execution(omp_num_threads=2),
+            id="Execution",
         ),
         pytest.param(
             "Meshes",
