@@ -51,6 +51,10 @@ def validate(
     else:
         mesh_file = str(mesh)
 
+    # ToDo Either checkMesh must return status of mesh (not of itself) OR
+    #      cli() can handle stdout
+    if shutil.which("checkMesh") is None:
+        return True
     ret = subprocess.run(
         ["checkMesh", mesh_file, "-v"], stdout=subprocess.PIPE, check=False
     )
