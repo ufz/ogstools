@@ -1,8 +1,21 @@
 import copy
+import importlib
 from collections.abc import Callable
 from typing import Any
 
 import pytest
+
+try:
+    _has_ogs_simulator = (
+        importlib.util.find_spec("ogs.OGSSimulator") is not None
+    )
+except (ImportError, ModuleNotFoundError, ValueError):
+    _has_ogs_simulator = False
+
+_skip_no_ogs_simulator = pytest.mark.skipif(
+    not _has_ogs_simulator,
+    reason="requires ogs Python package with OGSSimulator (interactive mode)",
+)
 
 # Untypical import, technical necessary here because of specific approach to testing
 # (one tests for multiple classes)
@@ -134,7 +147,10 @@ def test_framework_meshes():
         False,
         pytest.param(
             True,
-            marks=pytest.mark.xdist_group("interactive_serial"),
+            marks=[
+                pytest.mark.xdist_group("interactive_serial"),
+                _skip_no_ogs_simulator,
+            ],
         ),
     ],
     ids=["native", "interactive"],
@@ -166,7 +182,10 @@ def test_framework_simulation(interactive):
         False,
         pytest.param(
             True,
-            marks=pytest.mark.xdist_group("interactive_serial"),
+            marks=[
+                pytest.mark.xdist_group("interactive_serial"),
+                _skip_no_ogs_simulator,
+            ],
         ),
     ],
     ids=["native", "interactive"],
