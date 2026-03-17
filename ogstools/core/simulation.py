@@ -56,7 +56,7 @@ class Simulation(StorageBase):
         return simulation
 
     @classmethod
-    def from_folder(cls, sim_folder: Path) -> Self:
+    def from_folder(cls, sim_folder: Path | str) -> Self:
         """
         Load a Simulation from a folder following OGSTools conventions.
 
