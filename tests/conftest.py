@@ -1,7 +1,26 @@
+import shutil
+
 import pytest
 from hypothesis import Verbosity, settings
 
 import ogstools as ot
+
+
+@pytest.fixture
+def require_ogs_containers() -> None:
+    """Skip the test if apptainer is not available."""
+    if shutil.which("apptainer") is None:
+        pytest.skip("apptainer not found. Run: make pull_containers")
+
+
+@pytest.fixture
+def require_ogs_wheel() -> None:
+    """Skip the test if the OGS Python wheel is not installed."""
+    from ogstools._find_ogs import has_ogs_wheel
+
+    if not has_ogs_wheel():
+        pytest.skip("OGS wheel not installed. Run: pip install ogstools[ogs]")
+
 
 settings.register_profile("ci", max_examples=250, deadline=1000)
 settings.register_profile("default", max_examples=50, deadline=350)
