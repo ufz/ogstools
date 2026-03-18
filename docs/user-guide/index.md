@@ -113,6 +113,7 @@ docker
 feflowlib
 logparser
 meshlib
+monitor
 nuclearwasteheat
 run_simulation
 studies
