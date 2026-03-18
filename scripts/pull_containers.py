@@ -7,12 +7,17 @@ Run once before running the parallel simulation tests:
 """
 
 import subprocess
+from pathlib import Path
 
 from ogstools.core.execution import Execution
 
 
 def _pull(url: str) -> None:
     if not url.startswith(("http://", "https://")):
+        return
+    filename = url.rsplit("/", maxsplit=1)[-1]
+    if Path(filename).exists():
+        print(f"Already exists: {filename} - skipping.")
         return
     print(f"Pulling {url} ...")
     subprocess.run(["apptainer", "pull", url], check=True)
