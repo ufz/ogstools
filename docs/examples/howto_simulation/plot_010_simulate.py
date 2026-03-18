@@ -101,7 +101,7 @@ simc.run()  # this call is blocking, it waits for the simulation to finish
 
 # %% [markdown]
 # Logfile monitoring (experimental, works only in Jupyter notebooks)
-# ====================
+# ==================================================================
 # If you want to plot the progress of your simulation in real-time, you can use the
 # 'plot_log' method from the returned `Monitor` object. The model run has to be
 # executed in the background for this to work.
