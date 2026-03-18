@@ -21,7 +21,8 @@ print(app_filename)
 parser = ArgumentParser(description="This tool monitors OGS logfiles.")
 
 parser.add_argument("-i", "--input", help="The path to the logfile.")
-parser.add_argument("-j", "--json", help="The path to the logfile.")
+
+parser.add_argument("-j", "--json", help="The path to the json file.")
 
 
 def cli() -> int:
