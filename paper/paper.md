@@ -95,18 +95,16 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 ### Educational Jupyter notebooks
 
-OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes.
+OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
 
 ### Decentralised code
 
 
 ## State of the field
 
-Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. Software package bridges a domain-specific simulator to a general-purpose programming language ecosystem (here: Python), typically to cover pre-processing, execution, and post-processing while staying in a single platform.
+Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. Software package bridges a domain-specific simulator to a general-purpose programming language ecosystem (here: Python), typically to cover pre-processing, execution, and post-processing.
 
-In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis including unstructured grids. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family, as well. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks.
-
-DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
+In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis including unstructured grids. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks. DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
 
 OGSTools follows the simulator-specific companion library pattern, here for OpenGeoSys.
 
@@ -122,27 +120,19 @@ Previously, without any centralisation to contribute ogs-specific pre- and postp
 Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
 For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
 
+### Design choices
+
 The functionality is grouped thematically into sub-libraries. Beyond general software engineering best practices, the following design principles deserve particular attention.
 
-### Open interfaces to common Python libraries
+**Open interfaces to common Python libraries:** Each sub-library either transforms OpenGeoSys specific data into common Python data structures (e.g. Pyvista, Pandas, Numpy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
 
-Each sub-library either transforms OpenGeoSys specific data into common Python data structures (e.g. Pyvista, Pandas, Numpy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
+**Reuse OGS command line tools:** The new functionality combines the OGS command line tools [^5] to cover more complex tasks than any single tool can handle alone.
 
-### Reuse OGS command line tools
+**Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritizing early failure over silent pass-through.
 
-The new functionality combines the OGS command line tools [^5] to cover more complex tasks than any single tool can handle alone.
+**Large data awareness:** Meshes can exceed one million cells. The top-level API is designed to be approachable for small datasets at entry level, while experts working with large data can tune performance via lower-level API access or fall back to command-line tools and custom code.
 
-### Fail loudly
-
-Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritizing early failure over silent pass-through.
-
-### Large data awareness
-
-Meshes can exceed one million cells. The top-level API is designed to be approachable for small datasets at entry level, while experts working with large data can tune performance via lower-level API access or fall back to command-line tools and custom code.
-
-### Infrastructure
-
-Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage on every merge request. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
+**Infrastructure:** Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage on every merge request. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
 
 ### Example
 
