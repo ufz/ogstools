@@ -164,7 +164,7 @@ sim = model.run()
 
 # 3. Post-processing: Analyse results
 # Plot final pressure distribution (Figure 2)
-ot.plot.contourf(sim.result[-1], "pressure")
+ot.plot.contourf(sim.meshseries[-1], "pressure")
 # Plot convergence behaviour (Figure 3)
 sim.log.plot_convergence()
 
