@@ -201,7 +201,7 @@ OGSTools emerged from and is used in the following research projects. The AREHS-
 
 ### OpenGeoSys benchmarks
 
-The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research. They can be downloaded, executed, and adapted in an interactive environment for further exploration. With `OGSTools`, code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
+The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication has been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
 
 ## AI usage disclosure
 
