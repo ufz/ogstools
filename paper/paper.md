@@ -187,11 +187,7 @@ Pre-processing for OGS includes mesh creation, adaptation, conversion, as well a
 
 The simulation execution part covers running simulations with the `OGS` core via the command line and Python-based co-simulation interfaces. Runtime features include monitoring, interactive stepping, and access to intermediate results for in-simulation analysis.
 
-Post-processing includes domain-specific evaluation and visualisation of simulation results, for temporal and spatial distribution analysis.
-`OGSTools` helps to create detailed plots by defining sensible defaults and OGS-specific standards.
-It offers functionalities for the comparison of numerical simulation results with experimental data or analytical solutions.
-Just as pre-processing and analysis are essential for single simulations, tooling becomes critical for efficiently handling ensemble runs.
-Ensemble runs enable evaluation of model robustness, parameter sensitivity, numerical behaviour, and computational efficiency, with spatial and temporal grid conversion currently supported.
+Post-processing includes domain-specific evaluation and visualisation of simulation results for temporal and spatial distribution analysis, with sensible defaults and OGS-specific standards for plotting, and comparison against experimental data or analytical solutions.
 
 A more complete list of examples covering a significant part of the feature set is found in the online documentation of OGSTools [^1].
 Containers are provided for reproducibility, benefiting both developers and users (\[@Bilke2025\]).
