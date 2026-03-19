@@ -144,7 +144,7 @@ Meshes can exceed one million cells. The top-level API is designed to be approac
 
 ### Infrastructure
 
-Code development is centralised on a self-hosted GitLab instance and maintained by the OGS core developer team. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality via ruff, mypy, and black through pre-commit hooks, and reports test coverage on every merge request. The test suite uses pytest with regression, and maintenance tests — combining example-based and property-based testing (Hypothesis). Documentation is built with Sphinx using MyST Markdown for written content; examples are organised by task as plain Python scripts that are automatically converted to Jupyter notebooks, with Binder integration available for every released version. System tests with confidential, realistic datasets are maintained in a separate, access-controlled GitLab repository. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while also being continuously tested (maintenance tests) against the latest dependencies to catch breaking changes early.
+Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage on every merge request. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
 
 ### Example
 
