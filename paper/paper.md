@@ -98,10 +98,7 @@ In our scientific research, workflows integrate multiple steps — geological da
 OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes.
 
 ### Decentralised code
-Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation.
-The lack of centralisation led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
-Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
-For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
+
 
 ## State of the field
 
@@ -117,7 +114,15 @@ An alternative to scripting-based companion libraries is a dedicated companion G
 
 ## Software Design
 
-OGSTools consists of features designed specifically for [OpenGeoSys](https://www.opengeosys.org) but can be applied broadly across multiple [OpenGeoSys](https://www.opengeosys.org)-specific projects. The functionality is grouped thematically into sub-libraries. Beyond general software engineering best practices, the following design principles deserve particular attention.
+### Build vs. contribute
+
+OGSTools contains only functionality that is explicitly specific to [OpenGeoSys](https://www.opengeosys.org) — domain-specific data structures, OGS input/output formats, and process-specific defaults. General-purpose functionality is deliberately left to established libraries (PyVista, Pandas, NumPy, Pint), which OGSTools relies on.
+
+Previously, without any centralisation to contribute ogs-specific pre- and postprocessing code, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation, quality and maintenance efforts.
+Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
+For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
+
+The functionality is grouped thematically into sub-libraries. Beyond general software engineering best practices, the following design principles deserve particular attention.
 
 ### Open interfaces to common Python libraries
 
