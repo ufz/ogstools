@@ -103,7 +103,7 @@ OGS is already being used in academic courses and teaching environments. With Ju
 
 Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages bridge a domain-specific simulator to a general-purpose programming language ecosystem (e.g. Python), typically to cover pre-processing, execution, and post-processing conducted on a single programmatic platform.
 
-In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis including unstructured grids. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks. DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
+In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks. DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
 
 OGSTools follows the simulator-specific companion library pattern, here for OpenGeoSys.
 
@@ -116,7 +116,7 @@ An alternative to scripting-based companion libraries is a dedicated companion G
 OGSTools contains only functionality that is explicitly specific to [OpenGeoSys](https://www.opengeosys.org) — domain-specific data structures, OGS input/output formats, and process-specific defaults. General-purpose functionality is deliberately left to established libraries (PyVista, Pandas, NumPy, Pint), which OGSTools relies on.
 
 Previously, without any centralisation to contribute OGS-specific pre- and postprocessing code, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation, quality and maintenance efforts.
-Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
+Further, OGSTools enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
 For the centralised approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
 
 ### Design choices
@@ -127,11 +127,11 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 **Reuse OGS command line tools:** The new functionality combines the OGS command line tools [^5] to cover more complex tasks than any single tool can handle alone.
 
-**Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritizing early failure over silent pass-through.
+**Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritising early failure over silent pass-through.
 
 **Large data awareness:** Meshes can exceed one million cells. The top-level API is designed to be approachable for small datasets at entry level, while experts working with large data can tune performance via lower-level API access or fall back to command-line tools and custom code.
 
-**Infrastructure:** Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage on every merge request. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
+**Infrastructure:** Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
 
 ### Example
 
@@ -191,11 +191,11 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
 ### Workflows
 
-OGSTools emerged from and is used in the following research projects. The AREHS-Project \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, \[@Zill2024\] and \[@Silbermann2025\] demonstrated automated workflows using OGSTools functionality for model development and reproducibility, with all material available at \[@arehs2024\]. `OpenWorkFlow` \[@lehmann2025\] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
+OGSTools emerged from and is used in the following research projects. The AREHS-Project \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, \[@Zill2024\] and \[@Silbermann2025\] conducted their work using automated OGSTools workflows, with all material available at \[@arehs2024\]. `OpenWorkFlow` \[@lehmann2025\] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
 
 ### OpenGeoSys benchmarks
 
-The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication have been reduced, and it allows especially inexperienced users to focus on the important part of the notebook.
+The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication have been reduced, allowing especially inexperienced users to focus on the important part of the notebook.
 
 ## AI usage disclosure
 
