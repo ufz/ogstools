@@ -105,14 +105,23 @@ The workflow components are constructed from generic Python libraries, OGSTools,
 
 OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. `OGSTools` serves as an interface between OGS and the Python ecosystem, here Jupyter Notebooks.
 
-
-## State of the field
-
 ### Decentralised code
 Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation.
 The lack of centralisation led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
 Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
 For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
+
+## State of the field
+
+Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. Software package bridges a domain-specific simulator to a general-purpose programming language ecosystem (here: Python), typically to cover pre-processing, execution, and post-processing while staying in a single platform.
+
+In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis including unstructured grids. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family, as well. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks.
+
+DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
+
+OGSTools follows the simulator-specific companion library pattern — covering the full model development cycle, here for OpenGeoSys.
+
+An alternative to scripting-based companion libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the DataExplorer [@Rink2012] for OpenGeoSys.
 
 ## Software Design
 
