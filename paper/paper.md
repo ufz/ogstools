@@ -75,7 +75,7 @@ bibliography: paper.bib
 ## Summary
 
 `OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) - a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media \[@bilke_2025_14672997\] \[@kolditz2012opengeosys\].
-`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples, and sensible defaults for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
+`OGSTools` \[@ogstools2025\] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
 
 ## Statement of need
 
@@ -95,13 +95,13 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 ### Educational Jupyter notebooks
 
-OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. `OGSTools` serves as an interface between OGS and the Python ecosystem, here Jupyter Notebooks.
+OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes.
 
 ### Decentralised code
 Previously, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation.
 The lack of centralisation led to inefficiencies, inconsistent quality, and challenges in maintaining and extending the code.
 Further, it enables the transfer of years of experience in maintaining the OGS core \[@Bilke2019\] to the pre- and post-processing code.
-For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from the projects (1) `AREHS` \[@arehs2024\], and (2) `OpenWorkFlow - Synthesis Platform` \[@openworkflow2023\] have been adapted and integrated into `OGSTools`.
+For the centralized approach, preceding work on `msh2vtu` \[@msh2vtu\], `ogs6py and VTUInterface` \[@Buchwald2021\] and extracted functionalities from `AREHS` and `OpenWorkFlow` have been adapted and integrated into `OGSTools`.
 
 ## State of the field
 
@@ -111,7 +111,7 @@ In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundw
 
 DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
 
-OGSTools follows the simulator-specific companion library pattern — covering the full model development cycle, here for OpenGeoSys.
+OGSTools follows the simulator-specific companion library pattern, here for OpenGeoSys.
 
 An alternative to scripting-based companion libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the DataExplorer [@Rink2012] for OpenGeoSys.
 
@@ -189,7 +189,7 @@ The simulation execution part covers running simulations with the `OGS` core via
 
 Post-processing includes domain-specific evaluation and visualisation of simulation results for temporal and spatial distribution analysis, with sensible defaults and OGS-specific standards for plotting, and comparison against experimental data or analytical solutions.
 
-A more complete list of examples covering a significant part of the feature set is found in the online documentation of OGSTools [^1].
+The complete feature list is found in the online documentation [^1].
 Containers are provided for reproducibility, benefiting both developers and users (\[@Bilke2025\]).
 Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
