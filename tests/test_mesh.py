@@ -1,5 +1,6 @@
 """Unit tests for meshlib."""
 
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -140,6 +141,9 @@ def test_reshape_obs_points_mesh():
 
 
 @pytest.mark.tools  # checkMesh
+@pytest.mark.skipif(
+    shutil.which("checkMesh") is None, reason="checkMesh not found"
+)
 @pytest.mark.parametrize("strict", [True, False])
 @pytest.mark.parametrize(
     "mesh",

@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 """
 ogs6py is a python-API for the OpenGeoSys finite element software.
@@ -250,7 +247,8 @@ class Project(StorageBase):
             dependencies = None
         lines = [
             f"{base_repr}",
-            f"   Input file: {self._format_path(self.input_file)}\n"
+            f"   Project file: {self._format_path(self.prjfile)}",
+            f"   Input file: {self._format_path(self.input_file)}",
             f"   Dependencies: {dependencies!r}",
         ]
 
@@ -736,7 +734,7 @@ class Project(StorageBase):
 
         :param xpath:      XPath of the tag
         :param filename:   name of the include file
-        :param occurrence: Addresses nonunique XPath by their occurece
+        :param occurrence: Addresses nonunique XPath by their occurrence
         """
         print(
             "Note: Includes are only written if write_input(keep_includes=True) is called."

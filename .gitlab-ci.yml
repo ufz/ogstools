@@ -6,6 +6,7 @@ stages:
 
 variables:
   POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+  APPTAINER_CACHEDIR: "$CI_PROJECT_DIR/.apptainer_cache"
   DOCKER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0
   DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12-feflow-10.0
   ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
@@ -23,6 +24,7 @@ image: $DOCKER_IMAGE
 cache:
   paths:
     - .cache
+    - .apptainer_cache
 
 .pip-setup-extra-headless: &pip-setup-extra-headless
   - pip install -i https://gmsh.info/python-packages-dev-nox --upgrade --force-reinstall "gmsh<4.15.dev"
@@ -36,6 +38,9 @@ cache:
   - export CONDA_ENV_NAME=ogstools_conda_${PYTHON_VERSION}
   - conda create -y -n $CONDA_ENV_NAME python=${PYTHON_VERSION} font-ttf-dejavu-sans-mono tetgen -c conda-forge
   - conda activate $CONDA_ENV_NAME
+
+.pull-ogs-containers: &pull-ogs-containers
+  - python scripts/pull_containers.py
 
 .pip-install-ogs-latest: &pip-install-ogs-latest
 #  - pip uninstall ogs -y
@@ -76,8 +81,9 @@ tests (arch - conda) (R):
     - *conda-setup-activate
     - pip install -e ".[pinned]"
     - *pip-setup-extra-headless
+    - *pull-ogs-containers
   script:
-    - pytest -n auto
+    - make test -j
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -96,6 +102,7 @@ tests (arch - conda - ogs wheel release) (M):
     - *conda-setup-activate
     - pip install -e ".[all,test]" --pre --extra-index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple
     - *pip-setup-extra-headless
+    - *pull-ogs-containers
   script:
     - pytest -n auto --hypothesis-profile ci
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
@@ -170,7 +177,7 @@ tests (arch - conda - ogs custom latest) (M):
     - pip install -e .[test]
     - *pip-setup-extra-headless
   script:
-    - pytest -n auto
+    - pytest -n auto -v
     - rm -rf "$(python -c 'import matplotlib as mpl; print(mpl.get_cachedir())')"
   parallel:
     matrix:
@@ -279,7 +286,9 @@ docs hashes check:
   needs: ["docs preview (R)"]
   tags: [shell, envinf]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_MERGE_REQUEST_IID
+      when: manual
+      allow_failure: true
   script:
     - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png || exit $?
   allow_failure:

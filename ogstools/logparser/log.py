@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 from pathlib import Path
 from typing import Any, Literal
@@ -16,7 +13,6 @@ from .common_ogs_analyses import (
     analysis_simulation,
     analysis_simulation_termination,
     analysis_time_step,
-    fill_ogs_context,
 )
 from .log_parser import parse_file
 
@@ -39,7 +35,7 @@ class Log:
         self.file = Path(file)
         records = parse_file(self.file)
         self.df_records = pd.DataFrame(records)
-        self.df_log = fill_ogs_context(self.df_records)
+        self.df_log = self.df_records
 
     def convergence_coupling_iteration(self) -> pd.DataFrame:
         """

@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from typing import Any
@@ -51,7 +48,7 @@ class DataDict(MutableMapping):
         if isinstance(key, Variable):
             key = key.output_name if key.output_name in self else key.data_name
         for mesh in self.ms:
-            del self.get_data(mesh)[key]
+            self.get_data(mesh).pop(key)
 
     def __iter__(self) -> Iterator[dict]:
         return iter(self.get_data(self.ms[0]))

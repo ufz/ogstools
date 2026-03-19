@@ -22,6 +22,21 @@ In this guide, we will walk you through the process of using the `Project` class
 and then run a simple simulation from an existing model setup.
 Assuming you have prepared a model with your mesh and a project file you can
 use the following setup, to run it from python.
+
+**Choosing the OGS binary**
+
+Execution details (which OGS binary to use, MPI settings, logging, …) are
+controlled via :py:class:`ogstools.core.execution.Execution`.  Pre-built OGS
+binaries and container images for each release are available at
+`<https://www.opengeosys.org/6.5.7/releases/>`_.
+
+To apply site-wide defaults on a shared system (e.g. HPC cluster), set the
+``OGS_EXECUTION_DEFAULTS`` environment variable to a YAML file that overrides
+only the keys you need::
+
+    export OGS_EXECUTION_DEFAULTS=/path/to/my_defaults.yaml
+
+See :py:class:`ogstools.core.execution.Execution` for the full list of options.
 """
 
 # %%

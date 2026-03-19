@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 import typing
 from copy import deepcopy
@@ -56,7 +53,7 @@ class Simulation(StorageBase):
         return simulation
 
     @classmethod
-    def from_folder(cls, sim_folder: Path) -> Self:
+    def from_folder(cls, sim_folder: Path | str) -> Self:
         """
         Load a Simulation from a folder following OGSTools conventions.
 
@@ -155,12 +152,7 @@ class Simulation(StorageBase):
                 f"meshseries_file={str(self.meshseries_file)!r}"
             )
 
-        save_hint = (
-            "\nNote: Components must be saved before use"
-            if not self.is_saved
-            else ""
-        )
-        return f"{construct}{save_hint}\nstatus={self.status_str}\n{base_repr}"
+        return f"{construct}\nstatus={self.status_str}\n{base_repr}"
 
     def __str__(self) -> str:
         base_str = super().__str__()
@@ -209,7 +201,7 @@ class Simulation(StorageBase):
                 if has_errors:
                     return SimulationController.Status.error
         except Exception:
-            return SimulationController.Status.error
+            return SimulationController.Status.unknown
 
         return SimulationController.Status.done
 
@@ -238,12 +230,7 @@ class Simulation(StorageBase):
     @property
     def cmd(self) -> str:
         """Get the full command used to run the simulation."""
-        return (
-            f"{self.model.execution.ogs_bin_path}"
-            f" {self.model.project.prjfile}"
-            f" -m {self.model.meshes.active_target}"
-            f" -o {self.result.next_target}"
-        )
+        return f"{self.model.cmd} -o {self.result.next_target}"
 
     @property
     def log_file(self) -> Path:
@@ -312,8 +299,6 @@ class Simulation(StorageBase):
         files += self._save_or_link_child(
             self.result, self.next_target / "result", dry_run, overwrite
         )
-
-        self.materialize_symlink(self.next_target / "result", recursive=True)
         return files
 
     def save(

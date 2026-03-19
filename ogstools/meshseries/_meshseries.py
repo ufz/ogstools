@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 from __future__ import annotations
@@ -383,11 +380,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             reader = "None"
         return (
             f"MeshSeries:\n"
-            f"filepath:         {self.filepath}\n"
+            f"filepath:         {self._format_path(self.filepath)}\n"
             f"data_type:        {self._data_type}\n"
             f"timevalues:       {self.timevalues[0]} to {self.timevalues[-1]} in {len(self.timevalues)} steps\n"
             f"reader:           {reader}\n"
-            f"rawdata_file:     {self.rawdata_file()}\n"
+            f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
 
     # deliberately typing as Sequence and not as zip because typing as zip
@@ -914,7 +911,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         if time_logscale:
 
             def log10time(vals: np.ndarray) -> np.ndarray:
-                log10vals = np.log10(vals, where=vals != 0)
+                log10vals = np.log10(
+                    vals, where=vals != 0, out=np.zeros_like(vals)
+                )
                 if log10vals[0] == 0:
                     log10vals[0] = log10vals[1] - (log10vals[2] - log10vals[1])
                 return log10vals

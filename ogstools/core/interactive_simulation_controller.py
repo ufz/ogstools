@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 import os
 import threading
@@ -106,6 +103,8 @@ class OGSInteractiveController(SimulationController):
         )
 
         # TODO: Apply all model execution parameters
+        log_level = model_ref.execution.log_level
+        extra_args = model_ref.execution.args
         self._args_list = [
             "",
             str(model_ref.project.prjfile),
@@ -113,8 +112,8 @@ class OGSInteractiveController(SimulationController):
             str(model_ref.meshes.active_target),
             "-o",
             str(self.result.next_target),
-            "-l",
-            model_ref.execution.log_level,
+            *(["-l", log_level] if log_level is not None else []),
+            *(str(extra_args).split() if extra_args is not None else []),
         ]
 
         try:

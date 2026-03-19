@@ -1,366 +1,1344 @@
-info: This is OpenGeoSys-6 version 6.4.0-1102-gf7fffbb9ef.
-info: This is OpenGeoSys-6 version 6.4.0-1102-gf7fffbb9ef.
-info: This is OpenGeoSys-6 version 6.4.0-1102-gf7fffbb9ef.
-info: OGS started on 2021-09-15 15:32:43+0200.
-info: OGS started on 2021-09-15 15:32:43+0200.
-info: OGS started on 2021-09-15 15:32:43+0200.
-[2] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3_3files.prj' read.
-[1] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3_3files.prj' read.
-[0] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1e3_XDMF_np3_3files.prj' read.
-[0] warning: Consider switching from mesh and geometry input to multiple meshes input. See https://www.opengeosys.org/docs/tools/meshing-submeshes/constructmeshesfromgeometry/ tool for conversion.
-[0] debug: Reading mesh file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3.vtu'.
-[1] warning: Consider switching from mesh and geometry input to multiple meshes input. See https://www.opengeosys.org/docs/tools/meshing-submeshes/constructmeshesfromgeometry/ tool for conversion.
-[2] warning: Consider switching from mesh and geometry input to multiple meshes input. See https://www.opengeosys.org/docs/tools/meshing-submeshes/constructmeshesfromgeometry/ tool for conversion.
-[2] debug: Reading mesh file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3.vtu'.
-[1] debug: Reading mesh file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3.vtu'.
-[1] info: Reading corresponding part of mesh data from binary file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3 ...
-[2] info: Reading corresponding part of mesh data from binary file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3 ...
-[0] info: Reading corresponding part of mesh data from binary file /home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1_hex_1e3 ...
-[2] debug: name: 'D1_left_front_N1_right':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[2] debug: name: 'Linear_1_to_minus1':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[1] debug: name: 'D1_left_front_N1_right':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[1] debug: name: 'Linear_1_to_minus1':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[1] debug: [1] offset in the PropertyVector: 643
-[1] debug: [1] 622 tuples in partition.
-[0] debug: name: 'D1_left_front_N1_right':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[0] debug: name: 'Linear_1_to_minus1':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 1895
-[0] debug: [0] offset in the PropertyVector: 0
-[0] debug: [0] 643 tuples in partition.
-[0] debug: [0] global offset: 0, offset within the PropertyVector: 0.
-[0] debug: [0] global offset: 15160, offset within the PropertyVector: 15160.
-[0] debug: name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 1233
-[0] debug: [0] offset in the PropertyVector: 0
-[0] debug: [0] 417 tuples in partition.
-[1] debug: [1] global offset: 0, offset within the PropertyVector: 5144.
-[1] debug: [1] global offset: 15160, offset within the PropertyVector: 20304.
-[1] debug: name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 1233
-[1] debug: [1] offset in the PropertyVector: 417
-[1] debug: [1] 399 tuples in partition.
-[2] debug: [2] offset in the PropertyVector: 1265
-[2] debug: [2] 630 tuples in partition.
-[2] debug: [2] global offset: 0, offset within the PropertyVector: 10120.
-[2] debug: [2] global offset: 15160, offset within the PropertyVector: 25280.
-[2] debug: name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 1233
-[2] debug: [2] offset in the PropertyVector: 816
-[2] debug: [2] 417 tuples in partition.
-[0] debug: [0] global offset: 0, offset within the PropertyVector: 0.
-[1] debug: [1] global offset: 0, offset within the PropertyVector: 1668.
-[2] debug: [2] global offset: 0, offset within the PropertyVector: 3264.
-[0] info: [time] Reading the mesh took 0.007326 s.
-[1] info: [time] Reading the mesh took 0.008351 s.
-[2] info: [time] Reading the mesh took 0.008551 s.
-[1] debug: Reading geometry file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml'.
-[2] debug: Reading geometry file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml'.
-[0] debug: Reading geometry file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml'.
-[1] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml' read.
-[0] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml' read.
-[2] debug: Project configuration from file '/home/meisel/o/s/Tests/Data/EllipticPETSc/cube_1x1x1.gml' read.
-[1] debug: The search length for mesh 'cube_1x1x1_hex_1e3' is 1.000000e-09.
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry left.
-[2] debug: The search length for mesh 'cube_1x1x1_hex_1e3' is 1.000000e-09.
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry left.
-[0] debug: The search length for mesh 'cube_1x1x1_hex_1e3' is 1.000000e-09.
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry left.
-[2] debug: Found 0 elements in the mesh
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry right.
-[1] debug: Found 29 elements in the mesh
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry right.
-[2] debug: Found 70 elements in the mesh
-[0] debug: Found 82 elements in the mesh
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry top.
-[2] debug: Found 0 elements in the mesh
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry bottom.
-[1] debug: Found 40 elements in the mesh
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry top.
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry right.
-[0] debug: Found 0 elements in the mesh
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry top.
-[2] debug: Found 67 elements in the mesh
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry front.
-[2] debug: Found 47 elements in the mesh
-[2] debug: Creating mesh from geometry cube_1x1x1_geometry back.
-[1] debug: Found 84 elements in the mesh
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry bottom.
-[1] debug: Found 0 elements in the mesh
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry front.
-[0] debug: Found 26 elements in the mesh
-[1] debug: Found 58 elements in the mesh
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry bottom.
-[1] debug: Creating mesh from geometry cube_1x1x1_geometry back.
-[0] debug: Found 46 elements in the mesh
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry front.
-[0] debug: Found 12 elements in the mesh
-[0] debug: Creating mesh from geometry cube_1x1x1_geometry back.
-[2] debug: Found 34 elements in the mesh
-[1] debug: Found 21 elements in the mesh
-[0] debug: Found 62 elements in the mesh
-[2] debug: Reading parameters:
-[2] info: ConstantParameter: p0
-[2] debug: Using value 0 for constant parameter.
-[2] info: ConstantParameter: p_Dirichlet_left
-[2] debug: Using value 1 for constant parameter.
-[2] info: ConstantParameter: p_Dirichlet_right
-[2] debug: Using value -1 for constant parameter.
-[2] debug: Parse process variables:
-[2] debug: Found parameter `p0'.
-[2] debug: Constructing process variable pressure
-[2] debug: Found mesh 'cube_1x1x1_geometry_left' with id 1.
-[2] debug: Found mesh 'cube_1x1x1_geometry_right' with id 2.
-[2] info: No source terms for process variable 'pressure' found.
-[2] debug: Reading media:
-[2] debug: Create Constant property diffusion.
-[2] debug: Create Constant property reference_temperature.
-[2] debug: Reading processes:
-[2] debug: Create SteadyStateDiffusion.
-[2] debug: Found process variable 'pressure' for config tag <process_variable>.
-[2] debug: Check the media properties of steady state diffusion process ...
-[2] debug: Media properties verified.
-[2] debug: Reading linear solver configuration.
-[1] debug: Reading parameters:
-[1] info: ConstantParameter: p0
-[1] debug: Using value 0 for constant parameter.
-[1] info: ConstantParameter: p_Dirichlet_left
-[1] debug: Using value 1 for constant parameter.
-[1] info: ConstantParameter: p_Dirichlet_right
-[1] debug: Using value -1 for constant parameter.
-[1] debug: Parse process variables:
-[1] debug: Found parameter `p0'.
-[1] debug: Constructing process variable pressure
-[1] debug: Found mesh 'cube_1x1x1_geometry_left' with id 1.
-[1] debug: Found mesh 'cube_1x1x1_geometry_right' with id 2.
-[1] info: No source terms for process variable 'pressure' found.
-[1] debug: Reading media:
-[1] debug: Create Constant property diffusion.
-[1] debug: Create Constant property reference_temperature.
-[1] debug: Reading processes:
-[1] debug: Create SteadyStateDiffusion.
-[1] debug: Found process variable 'pressure' for config tag <process_variable>.
-[1] debug: Check the media properties of steady state diffusion process ...
-[1] debug: Media properties verified.
-[1] debug: Reading linear solver configuration.
-[0] debug: Reading parameters:
-[0] info: ConstantParameter: p0
-[0] debug: Using value 0 for constant parameter.
-[0] info: ConstantParameter: p_Dirichlet_left
-[0] debug: Using value 1 for constant parameter.
-[0] info: ConstantParameter: p_Dirichlet_right
-[0] debug: Using value -1 for constant parameter.
-[0] debug: Parse process variables:
-[0] debug: Found parameter `p0'.
-[0] debug: Constructing process variable pressure
-[0] debug: Found mesh 'cube_1x1x1_geometry_left' with id 1.
-[0] debug: Found mesh 'cube_1x1x1_geometry_right' with id 2.
-[0] info: No source terms for process variable 'pressure' found.
-[0] debug: Reading media:
-[0] debug: Create Constant property diffusion.
-[0] debug: Create Constant property reference_temperature.
-[0] debug: Reading processes:
-[0] debug: Create SteadyStateDiffusion.
-[0] debug: Found process variable 'pressure' for config tag <process_variable>.
-[0] debug: Check the media properties of steady state diffusion process ...
-[0] debug: Media properties verified.
-[0] debug: Reading linear solver configuration.
-[2] debug: Reading non-linear solver configuration.
-[1] debug: Reading non-linear solver configuration.
-[1] debug: Reading time loop configuration.
-[0] debug: Reading non-linear solver configuration.
-[0] debug: Reading time loop configuration.
-[1] debug: Parse output configuration:
-[2] debug: Reading time loop configuration.
-[2] debug: Parse output configuration:
-[0] debug: Parse output configuration:
-[2] debug: adding output variable `pressure'
-[2] debug: adding output variable `v'
-[1] debug: adding output variable `pressure'
-[1] debug: adding output variable `v'
-[0] debug: adding output variable `pressure'
-[0] debug: adding output variable `v'
-[2] info: Initialize processes.
-[2] debug: Initialize process.
-[2] debug: Construct dof mappings.
-[1] info: Initialize processes.
-[1] debug: Initialize process.
-[1] debug: Construct dof mappings.
-[0] info: Initialize processes.
-[0] debug: Initialize process.
-[0] debug: Construct dof mappings.
-[2] debug: Compute sparsity pattern
-[2] debug: Initialize the extrapolator
-[2] debug: Create local assemblers.
-[2] debug: Create local assemblers.
-[2] debug: Calling local assembler builder for all mesh elements.
-[1] debug: Compute sparsity pattern
-[1] debug: Initialize the extrapolator
-[1] debug: Create local assemblers.
-[1] debug: Create local assemblers.
-[0] debug: Compute sparsity pattern
-[0] debug: Initialize the extrapolator
-[0] debug: Create local assemblers.
-[0] debug: Create local assemblers.
-[1] debug: Calling local assembler builder for all mesh elements.
-[0] debug: Calling local assembler builder for all mesh elements.
-[2] debug: Initialize boundary conditions.
-[2] debug: Constructing DirichletBoundaryCondition from config.
-[2] debug: Using parameter p_Dirichlet_left
-[2] debug: Found parameter `p_Dirichlet_left'.
-[2] debug: Constructing DirichletBoundaryCondition from config.
-[2] debug: Using parameter p_Dirichlet_right
-[2] debug: Found parameter `p_Dirichlet_right'.
-[2] debug: Found 88 nodes for Dirichlet BCs for the variable 0 and component 0
-[2] debug: Construct reduced local to global index map.
-[2] info: Solve processes.
-[1] debug: Initialize boundary conditions.
-[1] debug: Constructing DirichletBoundaryCondition from config.
-[1] debug: Using parameter p_Dirichlet_left
-[1] debug: Found parameter `p_Dirichlet_left'.
-[1] debug: Found 42 nodes for Dirichlet BCs for the variable 0 and component 0
-[1] debug: Construct reduced local to global index map.
-[1] debug: Constructing DirichletBoundaryCondition from config.
-[1] debug: Using parameter p_Dirichlet_right
-[1] debug: Found parameter `p_Dirichlet_right'.
-[1] debug: Found 55 nodes for Dirichlet BCs for the variable 0 and component 0
-[1] debug: Construct reduced local to global index map.
-[0] debug: Initialize boundary conditions.
-[0] debug: Constructing DirichletBoundaryCondition from config.
-[0] debug: Using parameter p_Dirichlet_left
-[0] debug: Found parameter `p_Dirichlet_left'.
-[0] debug: Found 103 nodes for Dirichlet BCs for the variable 0 and component 0
-[0] debug: Construct reduced local to global index map.
-[1] info: Solve processes.
-[0] debug: Constructing DirichletBoundaryCondition from config.
-[0] debug: Using parameter p_Dirichlet_right
-[0] debug: Found parameter `p_Dirichlet_right'.
-[0] info: Solve processes.
-[2] debug: Set the initial condition of variable pressure of process 0.
-[1] debug: Set the initial condition of variable pressure of process 0.
-[0] debug: Set the initial condition of variable pressure of process 0.
-[1] debug: Process output data.
-[2] debug: Process output data.
-[0] debug: Process output data.
-[2] debug:   process variable pressure
-[1] debug:   process variable pressure
-[0] debug:   process variable pressure
-[0] debug:   secondary variable v
-[1] debug:   secondary variable v
-[2] debug:   secondary variable v
-[0] debug: Computing new singular value decomposition
-[1] debug: Computing new singular value decomposition
-[2] debug: Computing new singular value decomposition
-[2] debug: HDF: dataset name: geometry, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 3
-[1] debug: HDF: dataset name: geometry, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 3
-[0] debug: HDF: dataset name: geometry, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 3
-[2] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 630, tuples: 3
-[1] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 622, tuples: 3
-[0] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 643, tuples: 3
-[1] debug: HDF: dataset name: geometry, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 3
-[2] debug: HDF: dataset name: geometry, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 3
-[2] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 630, tuples: 3
-[0] debug: HDF: dataset name: geometry, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 3
-[0] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 643, tuples: 3
-[1] debug: XDMF: dataset name: geometry, offset: 0 global_blocks: 622, tuples: 3
-[0] debug: HDF: dataset name: topology, offset: 0, data_space: 3753, chunk_space 3753, file_space: 3753, tuples: 1
-[1] debug: HDF: dataset name: topology, offset: 0, data_space: 3591, chunk_space 3591, file_space: 3591, tuples: 1
-[2] debug: HDF: dataset name: topology, offset: 0, data_space: 3753, chunk_space 3753, file_space: 3753, tuples: 1
-[1] debug: XDMF: dataset name: topology, offset: 0 global_blocks: 3591, tuples: 1
-[1] debug: HDF: dataset name: D1_left_front_N1_right, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 1
-[0] debug: XDMF: dataset name: topology, offset: 0 global_blocks: 3753, tuples: 1
-[0] debug: HDF: dataset name: D1_left_front_N1_right, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 1
-[2] debug: XDMF: dataset name: topology, offset: 0 global_blocks: 3753, tuples: 1
-[2] debug: HDF: dataset name: D1_left_front_N1_right, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 1
-[2] debug: XDMF: dataset name: D1_left_front_N1_right, offset: 0 global_blocks: 630, tuples: 1
-[0] debug: XDMF: dataset name: D1_left_front_N1_right, offset: 0 global_blocks: 643, tuples: 1
-[1] debug: XDMF: dataset name: D1_left_front_N1_right, offset: 0 global_blocks: 622, tuples: 1
-[2] debug: HDF: dataset name: Linear_1_to_minus1, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 1
-[0] debug: HDF: dataset name: Linear_1_to_minus1, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 1
-[1] debug: HDF: dataset name: Linear_1_to_minus1, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 1
-[0] debug: XDMF: dataset name: Linear_1_to_minus1, offset: 0 global_blocks: 643, tuples: 1
-[2] debug: XDMF: dataset name: Linear_1_to_minus1, offset: 0 global_blocks: 630, tuples: 1
-[1] debug: XDMF: dataset name: Linear_1_to_minus1, offset: 0 global_blocks: 622, tuples: 1
-[2] debug: HDF: dataset name: MaterialIDs, offset: 0, data_space: 417, chunk_space 417, file_space: 417, tuples: 1
-[0] debug: HDF: dataset name: MaterialIDs, offset: 0, data_space: 417, chunk_space 417, file_space: 417, tuples: 1
-[1] debug: HDF: dataset name: MaterialIDs, offset: 0, data_space: 399, chunk_space 399, file_space: 399, tuples: 1
-[0] debug: XDMF: dataset name: MaterialIDs, offset: 0 global_blocks: 417, tuples: 1
-[2] debug: XDMF: dataset name: MaterialIDs, offset: 0 global_blocks: 417, tuples: 1
-[1] debug: XDMF: dataset name: MaterialIDs, offset: 0 global_blocks: 399, tuples: 1
-[2] debug: HDF: dataset name: pressure, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 1
-[0] debug: HDF: dataset name: pressure, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 1
-[1] debug: HDF: dataset name: pressure, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 1
-[1] debug: XDMF: dataset name: pressure, offset: 0 global_blocks: 622, tuples: 1
-[0] debug: XDMF: dataset name: pressure, offset: 0 global_blocks: 643, tuples: 1
-[2] debug: XDMF: dataset name: pressure, offset: 0 global_blocks: 630, tuples: 1
-[2] debug: HDF: dataset name: v, offset: 0, data_space: 630, chunk_space 630, file_space: 630, tuples: 3
-[1] debug: HDF: dataset name: v, offset: 0, data_space: 622, chunk_space 622, file_space: 622, tuples: 3
-[0] debug: HDF: dataset name: v, offset: 0, data_space: 643, chunk_space 643, file_space: 643, tuples: 3
-[2] debug: XDMF: dataset name: v, offset: 0 global_blocks: 630, tuples: 3
-[1] debug: XDMF: dataset name: v, offset: 0 global_blocks: 622, tuples: 3
-[0] debug: XDMF: dataset name: v, offset: 0 global_blocks: 643, tuples: 3
-[0] debug: HDF Filepath: cube_1e3_np3.h5.
-[1] debug: HDF Filepath: cube_1e3_np3_1.h5.
-[2] debug: HDF Filepath: cube_1e3_np3_2.h5.
-[0] info: [time] Output of timestep 0 took 0.00554528 s.
-[0] info: === Time stepping at step #1 and time 0.1 with step size 0.1
-[0] info: Calculate non-equilibrium initial residuum.
-[1] info: [time] Output of timestep 0 took 0.00555 s.
-[1] info: === Time stepping at step #1 and time 0.1 with step size 0.1
-[1] info: Calculate non-equilibrium initial residuum.
-[2] info: [time] Output of timestep 0 took 0.00555212 s.
-[2] info: === Time stepping at step #1 and time 0.1 with step size 0.1
-[2] info: Calculate non-equilibrium initial residuum.
-[0] debug: Assemble SteadyStateDiffusion.
-[2] debug: Assemble SteadyStateDiffusion.
-[1] debug: Assemble SteadyStateDiffusion.
-[0] info: [time] Assembly took 0.0028916 s.
-[1] info: [time] Assembly took 0.00289207 s.
-[2] info: [time] Assembly took 0.00289213 s.
-[0] info: [time] Applying Dirichlet BCs took 0.000227611 s.
-[2] info: [time] Applying Dirichlet BCs took 0.000249945 s.
-[1] info: [time] Applying Dirichlet BCs took 0.000249567 s.
-[1] info: [time] Linear solver took 0.0049394 s.
-[2] info: [time] Linear solver took 0.00493946 s.
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+WARNING: passwd file doesn't exist in container, not updating
+WARNING: group file doesn't exist in container, not updating
+WARNING: Skipping mount /var/tmp [tmp]: /var/tmp doesn't exist in container
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/lib/libBaseLib.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/vmvnrsgiv20dn2zla505i8c9mk8as8cp-xmlpatch-0.4.5/lib/libxmlpatch.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/vmvnrsgiv20dn2zla505i8c9mk8as8cp-xmlpatch-0.4.5/lib/libxmlpatch.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/vmvnrsgiv20dn2zla505i8c9mk8as8cp-xmlpatch-0.4.5/lib/libxmlpatch.so)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+[0] [32minfo:[m OGS started on 2026-03-11 17:25:08+0100 with MPI. MPI processes: 3.
+[0] [32minfo:[m This is OpenGeoSys-6 version 6.5.7.dirty. Log version: 2, Log level: debug.
+[1] [32minfo:[m OGS started on 2026-03-11 17:25:08+0100 with MPI. MPI processes: 3.
+[1] [32minfo:[m This is OpenGeoSys-6 version 6.5.7.dirty. Log version: 2, Log level: debug.
+[2] [32minfo:[m OGS started on 2026-03-11 17:25:08+0100 with MPI. MPI processes: 3.
+[2] [32minfo:[m This is OpenGeoSys-6 version 6.5.7.dirty. Log version: 2, Log level: debug.
+[1] [32minfo:[m Reading project file ../../../../tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[1] [36mdebug:[m Project file: /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[2] [32minfo:[m Reading project file ../../../../tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[2] [36mdebug:[m Project file: /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[0] [32minfo:[m Reading project file ../../../../tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[0] [36mdebug:[m Project file: /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[2] [36mdebug:[m Project configuration from file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj' read.
+[1] [36mdebug:[m Project configuration from file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj' read.
+[0] [36mdebug:[m Project configuration from file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj' read.
+[1] [36mdebug:[m ConfigTree: file path is /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[2] [36mdebug:[m ConfigTree: file path is /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[0] [36mdebug:[m ConfigTree: file path is /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/project/default.prj.
+[2] [36mdebug:[m Reading multiple meshes.
+[1] [36mdebug:[m Reading multiple meshes.
+[0] [36mdebug:[m Reading multiple meshes.
+[1] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain.vtu'.
+[2] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain.vtu'.
+[0] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain.vtu'.
+[0] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain ...
+[2] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain ...
+[1] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain ...
+[0] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 159
+[2] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 159
+[1] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 159
+[2] [36mdebug:[m offset in the PropertyVector: 103
+[2] [36mdebug:[m 56 tuples in partition.
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 49 tuples in partition.
+[1] [36mdebug:[m offset in the PropertyVector: 49
+[1] [36mdebug:[m 54 tuples in partition.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 824.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 392.
+[2] [36mdebug:[m name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 115
+[2] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 115
+[2] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 115
+[0] [36mdebug:[m name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 115
+[0] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 115
+[0] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 115
+[1] [36mdebug:[m name: 'MaterialIDs':	 is_int_data_type: 1, is_data_type_signed: 1, data_type_size_in_bytes: 4, number of components / tuples: 1 / 115
+[1] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 115
+[1] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 115
+[1] [36mdebug:[m offset in the PropertyVector: 35
+[1] [36mdebug:[m 39 tuples in partition.
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 35 tuples in partition.
+[2] [36mdebug:[m offset in the PropertyVector: 74
+[2] [36mdebug:[m 41 tuples in partition.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 296.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 140.
+[0] [36mdebug:[m global offset: 460, offset within the PropertyVector: 460.
+[0] [36mdebug:[m global offset: 1380, offset within the PropertyVector: 1380.
+[1] [36mdebug:[m global offset: 460, offset within the PropertyVector: 740.
+[1] [36mdebug:[m global offset: 1380, offset within the PropertyVector: 1415.
+[2] [36mdebug:[m global offset: 460, offset within the PropertyVector: 1052.
+[2] [36mdebug:[m global offset: 1380, offset within the PropertyVector: 1454.
+[1] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[0] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[2] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/domain_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[1] [32minfo:[m [time] Reading the mesh took 0.005996 s.
+[2] [32minfo:[m [time] Reading the mesh took 0.005999 s.
+[0] [32minfo:[m [time] Reading the mesh took 0.005999 s.
+[1] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left.vtu'.
+[0] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left.vtu'.
+[2] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left.vtu'.
+[1] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left ...
+[2] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left ...
+[0] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left ...
+[1] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[1] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[1] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[0] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[0] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[2] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[2] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[2] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[0] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 11
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 0 tuples in partition.
+[1] [36mdebug:[m offset in the PropertyVector: 0
+[1] [36mdebug:[m 6 tuples in partition.
+[2] [36mdebug:[m offset in the PropertyVector: 6
+[2] [36mdebug:[m 5 tuples in partition.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[0] [36mdebug:[m global offset: 88, offset within the PropertyVector: 88.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 48.
+[2] [36mdebug:[m global offset: 88, offset within the PropertyVector: 136.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[1] [36mdebug:[m global offset: 88, offset within the PropertyVector: 88.
+[2] [36mdebug:[m global offset: 176, offset within the PropertyVector: 224.
+[0] [36mdebug:[m global offset: 176, offset within the PropertyVector: 176.
+[1] [36mdebug:[m global offset: 176, offset within the PropertyVector: 176.
+[0] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[0] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 9
+[1] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[1] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[1] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 9
+[0] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 9
+[1] [36mdebug:[m offset in the PropertyVector: 0
+[1] [36mdebug:[m 5 tuples in partition.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[1] [36mdebug:[m global offset: 72, offset within the PropertyVector: 72.
+[1] [36mdebug:[m global offset: 144, offset within the PropertyVector: 144.
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 0 tuples in partition.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[0] [36mdebug:[m global offset: 72, offset within the PropertyVector: 72.
+[0] [36mdebug:[m global offset: 144, offset within the PropertyVector: 144.
+[2] [36mdebug:[m offset in the PropertyVector: 5
+[2] [36mdebug:[m 4 tuples in partition.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 40.
+[2] [36mdebug:[m global offset: 72, offset within the PropertyVector: 112.
+[2] [36mdebug:[m global offset: 144, offset within the PropertyVector: 149.
+[0] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[1] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[2] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/left_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[0] [32minfo:[m [time] Reading the mesh took 0.001210 s.
+[2] [32minfo:[m [time] Reading the mesh took 0.001215 s.
+[1] [32minfo:[m [time] Reading the mesh took 0.001215 s.
+[0] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right.vtu'.
+[1] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right.vtu'.
+[1] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right ...
+[2] [36mdebug:[m Reading mesh file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right.vtu'.
+[2] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right ...
+[0] [32minfo:[m Reading corresponding part of mesh data from binary file /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right ...
+[1] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[1] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[1] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[2] [36mdebug:[m offset in the PropertyVector: 9
+[2] [36mdebug:[m 0 tuples in partition.
+[0] [36mdebug:[m name: 'bulk_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[0] [36mdebug:[m name: 'global_node_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[0] [36mdebug:[m name: 'pressure':	 is_int_data_type: 0, is_data_type_signed: 1, data_type_size_in_bytes: 8, number of components / tuples: 1 / 9
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 9 tuples in partition.
+[1] [36mdebug:[m offset in the PropertyVector: 9
+[1] [36mdebug:[m 0 tuples in partition.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 72.
+[2] [36mdebug:[m global offset: 72, offset within the PropertyVector: 144.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 72.
+[1] [36mdebug:[m global offset: 72, offset within the PropertyVector: 144.
+[0] [36mdebug:[m global offset: 72, offset within the PropertyVector: 72.
+[0] [36mdebug:[m global offset: 144, offset within the PropertyVector: 144.
+[2] [36mdebug:[m global offset: 144, offset within the PropertyVector: 216.
+[1] [36mdebug:[m global offset: 144, offset within the PropertyVector: 216.
+[2] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[2] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[2] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 8
+[1] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[1] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[1] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 8
+[0] [36mdebug:[m name: 'bulk_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[0] [36mdebug:[m name: 'global_element_ids':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 8, number of components / tuples: 1 / 8
+[0] [36mdebug:[m name: 'vtkGhostType':	 is_int_data_type: 1, is_data_type_signed: 0, data_type_size_in_bytes: 1, number of components / tuples: 1 / 8
+[2] [36mdebug:[m offset in the PropertyVector: 8
+[2] [36mdebug:[m 0 tuples in partition.
+[1] [36mdebug:[m offset in the PropertyVector: 8
+[1] [36mdebug:[m 0 tuples in partition.
+[1] [36mdebug:[m global offset: 0, offset within the PropertyVector: 64.
+[1] [36mdebug:[m global offset: 64, offset within the PropertyVector: 128.
+[0] [36mdebug:[m offset in the PropertyVector: 0
+[0] [36mdebug:[m 8 tuples in partition.
+[0] [36mdebug:[m global offset: 0, offset within the PropertyVector: 0.
+[1] [36mdebug:[m global offset: 128, offset within the PropertyVector: 136.
+[2] [36mdebug:[m global offset: 0, offset within the PropertyVector: 64.
+[2] [36mdebug:[m global offset: 64, offset within the PropertyVector: 128.
+[2] [36mdebug:[m global offset: 128, offset within the PropertyVector: 136.
+[0] [36mdebug:[m global offset: 64, offset within the PropertyVector: 64.
+[0] [36mdebug:[m global offset: 128, offset within the PropertyVector: 128.
+[2] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[0] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[1] [33m[1mwarning:[m Could not open file '/tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3/right_partitioned_integration_point_properties_cfg3.bin'.
+	You can ignore this warning if the mesh does not contain integration_point-wise property data.
+[0] [32minfo:[m [time] Reading the mesh took 0.000514 s.
+[1] [32minfo:[m [time] Reading the mesh took 0.000513 s.
+[2] [32minfo:[m [time] Reading the mesh took 0.000513 s.
+[0] [32minfo:[m readRasters ...
+[0] [32minfo:[m readRasters done
+[0] [36mdebug:[m Reading parameters:
+[2] [32minfo:[m readRasters ...
+[2] [32minfo:[m readRasters done
+[2] [36mdebug:[m Reading parameters:
+[1] [32minfo:[m readRasters ...
+[1] [32minfo:[m readRasters done
+[1] [36mdebug:[m Reading parameters:
+[2] [32minfo:[m ConstantParameter: P0
+[0] [32minfo:[m ConstantParameter: P0
+[1] [32minfo:[m ConstantParameter: P0
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	2.9e+07
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	2.9e+07
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	2.9e+07
+[1] [32minfo:[m MeshNodeParameter: p_Dirichlet_left
+[1] [36mdebug:[m Using field_name pressure
+[2] [32minfo:[m MeshNodeParameter: p_Dirichlet_left
+[2] [36mdebug:[m Using field_name pressure
+[0] [32minfo:[m MeshNodeParameter: p_Dirichlet_left
+[0] [36mdebug:[m Using field_name pressure
+[1] [32minfo:[m MeshNodeParameter: p_Dirichlet_right
+[0] [32minfo:[m MeshNodeParameter: p_Dirichlet_right
+[0] [36mdebug:[m Using field_name pressure
+[2] [32minfo:[m MeshNodeParameter: p_Dirichlet_right
+[2] [36mdebug:[m Using field_name pressure
+[1] [36mdebug:[m Using field_name pressure
+[2] [36mdebug:[m Parse process variables:
+[1] [36mdebug:[m Parse process variables:
+[0] [36mdebug:[m Parse process variables:
+[1] [36mdebug:[m Found parameter `P0'.
+[2] [36mdebug:[m Found parameter `P0'.
+[2] [36mdebug:[m Constructing process variable pressure
+[0] [36mdebug:[m Found parameter `P0'.
+[0] [36mdebug:[m Constructing process variable pressure
+[1] [36mdebug:[m Constructing process variable pressure
+[0] [32minfo:[m Configure mesh 'left' for boundary condition or source term.
+[1] [32minfo:[m Configure mesh 'left' for boundary condition or source term.
+[1] [36mdebug:[m Found mesh 'left' with id 1.
+[2] [32minfo:[m Configure mesh 'left' for boundary condition or source term.
+[2] [36mdebug:[m Found mesh 'left' with id 1.
+[2] [32minfo:[m Configure mesh 'right' for boundary condition or source term.
+[2] [36mdebug:[m Found mesh 'right' with id 2.
+[2] [32minfo:[m No source terms for process variable 'pressure' found.
+[1] [32minfo:[m Configure mesh 'right' for boundary condition or source term.
+[1] [36mdebug:[m Found mesh 'right' with id 2.
+[1] [32minfo:[m No source terms for process variable 'pressure' found.
+[0] [36mdebug:[m Found mesh 'left' with id 1.
+[0] [32minfo:[m Configure mesh 'right' for boundary condition or source term.
+[0] [36mdebug:[m Found mesh 'right' with id 2.
+[2] [36mdebug:[m Reading media:
+[1] [36mdebug:[m Reading media:
+[0] [32minfo:[m No source terms for process variable 'pressure' found.
+[0] [36mdebug:[m Reading media:
+[1] [36mdebug:[m Create Constant property density.
+[2] [36mdebug:[m Create Constant property density.
+[0] [36mdebug:[m Create Constant property density.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	1000
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	1000
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	1000
+[1] [36mdebug:[m Create Constant property viscosity.
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	0.001
+[2] [36mdebug:[m Create Constant property viscosity.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	0.001
+[0] [36mdebug:[m Create Constant property viscosity.
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	0.001
+[1] [36mdebug:[m Create Constant property permeability.
+[1] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m Create Constant property permeability.
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	1e-10
+[0] [36mdebug:[m 	0
+[0] [36mdebug:[m [2] [36mdebug:[m Create Constant property permeability.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	1e-10
+[2] [36mdebug:[m 	0
+[2] [36mdebug:[m 	0
+[1] [36mdebug:[m 	1e-10
+[1] [36mdebug:[m 	0
+[1] [36mdebug:[m 	0
+[1] [36mdebug:[m 	1e-10
+	0
+[0] [36mdebug:[m 	1e-10
+[1] [36mdebug:[m Create Constant property reference_temperature.
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	293.15
+[2] [36mdebug:[m 	1e-10
+[2] [36mdebug:[m Create Constant property reference_temperature.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	293.15
+[0] [36mdebug:[m Create Constant property reference_temperature.
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	293.15
+[2] [36mdebug:[m Create Constant property porosity.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	0.1
+[1] [36mdebug:[m Create Constant property porosity.
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	0.1
+[0] [36mdebug:[m Create Constant property porosity.
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	0.1
+[1] [36mdebug:[m Create Constant property storage.
+[1] [36mdebug:[m Using following values for the constant parameter:
+[1] [36mdebug:[m 	1e-08
+[2] [36mdebug:[m Create Constant property storage.
+[2] [36mdebug:[m Using following values for the constant parameter:
+[2] [36mdebug:[m 	1e-08
+[0] [36mdebug:[m Create Constant property storage.
+[0] [36mdebug:[m Using following values for the constant parameter:
+[0] [36mdebug:[m 	1e-08
+[1] [36mdebug:[m Reading linear solver configuration.
+[0] [36mdebug:[m Reading linear solver configuration.
+[2] [36mdebug:[m Reading linear solver configuration.
+[0] [36mdebug:[m Reading processes:
+[1] [36mdebug:[m Reading processes:
+[2] [36mdebug:[m Reading processes:
+[0] [36mdebug:[m Create LiquidFlowProcess.
+[2] [36mdebug:[m Create LiquidFlowProcess.
+[1] [36mdebug:[m Create LiquidFlowProcess.
+[0] [36mdebug:[m Found process variable 'pressure' for config tag <process_variable>.
+[1] [36mdebug:[m Found process variable 'pressure' for config tag <process_variable>.
+[2] [36mdebug:[m Found process variable 'pressure' for config tag <process_variable>.
+[1] [36mdebug:[m Check the media properties of LiquidFlow process ...
+[0] [36mdebug:[m Check the media properties of LiquidFlow process ...
+[2] [36mdebug:[m Check the media properties of LiquidFlow process ...
+[1] [36mdebug:[m Media properties verified.
+[1] [36mdebug:[m Media properties verified.
+[1] [36mdebug:[m Found parameter `constant_one'.
+[2] [36mdebug:[m Media properties verified.
+[2] [36mdebug:[m Media properties verified.
+[2] [36mdebug:[m Found parameter `constant_one'.
+[0] [36mdebug:[m Media properties verified.
+[0] [36mdebug:[m Media properties verified.
+[0] [36mdebug:[m Found parameter `constant_one'.
+[2] [36mdebug:[m Create Liquid flow process.
+[1] [36mdebug:[m Create Liquid flow process.
+[0] [36mdebug:[m Create Liquid flow process.
+[1] [36mdebug:[m Reading non-linear solver configuration.
+[2] [36mdebug:[m Reading non-linear solver configuration.
+[0] [36mdebug:[m Reading non-linear solver configuration.
+[1] [36mdebug:[m Reading time loop configuration.
+[0] [36mdebug:[m Reading time loop configuration.
+[2] [36mdebug:[m Reading time loop configuration.
+[2] [36mdebug:[m adding output variable `pressure'
+[2] [36mdebug:[m adding output variable `darcy_velocity'
+[2] [36mdebug:[m adding output variable `MaterialIDs'
+[2] [36mdebug:[m adding output variable `VolumetricFlowRate'
+[0] [36mdebug:[m adding output variable `pressure'
+[0] [36mdebug:[m adding output variable `darcy_velocity'
+[0] [36mdebug:[m adding output variable `MaterialIDs'
+[0] [36mdebug:[m adding output variable `VolumetricFlowRate'
+[1] [36mdebug:[m adding output variable `pressure'
+[1] [36mdebug:[m adding output variable `darcy_velocity'
+[1] [36mdebug:[m adding output variable `MaterialIDs'
+[1] [36mdebug:[m adding output variable `VolumetricFlowRate'
+[2] [36mdebug:[m Default implementation of initializeSubmeshAssembly(). Doing nothing.
+[0] [36mdebug:[m Default implementation of initializeSubmeshAssembly(). Doing nothing.
+[1] [36mdebug:[m Default implementation of initializeSubmeshAssembly(). Doing nothing.
+[0] [32minfo:[m Initialize processes.
+[0] [36mdebug:[m Initialize process.
+[0] [36mdebug:[m Construct dof mappings.
+[2] [32minfo:[m Initialize processes.
+[2] [36mdebug:[m Initialize process.
+[2] [36mdebug:[m Construct dof mappings.
+[1] [32minfo:[m Initialize processes.
+[1] [36mdebug:[m Initialize process.
+[1] [36mdebug:[m Construct dof mappings.
+[2] [36mdebug:[m Compute sparsity pattern
+[0] [36mdebug:[m Compute sparsity pattern
+[1] [36mdebug:[m Compute sparsity pattern
+[2] [36mdebug:[m Initialize the extrapolator
+[1] [36mdebug:[m Initialize the extrapolator
+[0] [36mdebug:[m Initialize the extrapolator
+[1] [36mdebug:[m Create local assemblers.
+[1] [36mdebug:[m Create local assemblers.
+[2] [36mdebug:[m Create local assemblers.
+[2] [36mdebug:[m Create local assemblers.
+[0] [36mdebug:[m Create local assemblers.
+[0] [36mdebug:[m Create local assemblers.
+[0] [36mdebug:[m Calling local assembler builder for all mesh elements.
+[1] [36mdebug:[m Calling local assembler builder for all mesh elements.
+[2] [36mdebug:[m Calling local assembler builder for all mesh elements.
+[1] [36mdebug:[m Initialize boundary conditions.
+[0] [36mdebug:[m Initialize boundary conditions.
+[2] [36mdebug:[m Initialize boundary conditions.
+[1] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_left
+[2] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_left
+[2] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[2] [36mdebug:[m Found parameter `p_Dirichlet_left'.
+[0] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_left
+[0] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[0] [36mdebug:[m Found parameter `p_Dirichlet_left'.
+[1] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[1] [36mdebug:[m Found parameter `p_Dirichlet_left'.
+[1] [36mdebug:[m Found 6 nodes for Dirichlet BCs for the variable 0 and component 0
+[2] [36mdebug:[m Found 5 nodes for Dirichlet BCs for the variable 0 and component 0
+[1] [36mdebug:[m Construct reduced local to global index map.
+[2] [36mdebug:[m Construct reduced local to global index map.
+[0] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_right
+[0] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[0] [36mdebug:[m Found parameter `p_Dirichlet_right'.
+[0] [36mdebug:[m Found 9 nodes for Dirichlet BCs for the variable 0 and component 0
+[0] [36mdebug:[m Construct reduced local to global index map.
+[1] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_right
+[1] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[1] [36mdebug:[m Found parameter `p_Dirichlet_right'.
+[2] [36mdebug:[m parseDirichletBCConfig: parameter name p_Dirichlet_right
+[2] [36mdebug:[m Constructing DirichletBoundaryCondition.
+[2] [36mdebug:[m Found parameter `p_Dirichlet_right'.
+[0] [32minfo:[m Time step #0 started. Time: 0. Step size: 0.
+[1] [32minfo:[m Time step #0 started. Time: 0. Step size: 0.
+[2] [32minfo:[m Time step #0 started. Time: 0. Step size: 0.
+[1] [36mdebug:[m Set the initial condition of variable pressure of process 0.
+[0] [36mdebug:[m Set the initial condition of variable pressure of process 0.
+[2] [36mdebug:[m Set the initial condition of variable pressure of process 0.
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Process output data.
+[1] [36mdebug:[m Process output data.
+[0] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m Computing new singular value decomposition
+[1] [36mdebug:[m Computing new singular value decomposition
+[2] [36mdebug:[m Computing new singular value decomposition
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_0_t_0.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_0_t_0.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_0_t_0.000000.vtu'.
+[0] [32minfo:[m [time] Output of timestep 0 took 0.0175223 s.
+[0] [32minfo:[m Time step #0 took 0.0214624 s.
+[1] [32minfo:[m [time] Output of timestep 0 took 0.0175232 s.
+[1] [32minfo:[m Time step #0 took 0.021459 s.
+[2] [32minfo:[m [time] Output of timestep 0 took 0.0175223 s.
+[2] [32minfo:[m Time step #0 took 0.0214587 s.
+[0] [32minfo:[m Solve processes.
+[2] [32minfo:[m Solve processes.
+[1] [32minfo:[m Solve processes.
+[2] [32minfo:[m Time step #1 started. Time: 10. Step size: 10.
+[0] [32minfo:[m Time step #1 started. Time: 10. Step size: 10.
+[1] [32minfo:[m Time step #1 started. Time: 10. Step size: 10.
+[0] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000748699 s.
+[1] [32minfo:[m [time] Assembly took 0.000748779 s.
+[2] [32minfo:[m [time] Assembly took 0.000748659 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 3.2571e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 3.2691e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 3.2651e-05 s.
 
 ================================================
-Linear solver bcgs with mg preconditioner
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 0.000855289 s.
+[1] [32minfo:[m [time] Linear solver took 0.000855329 s.
+
+converged in 20 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.000862141 s.
+[1] [32minfo:[m Convergence criterion: |dx|=1.1825e+07, |x|=3.2353e+08, |dx|/|x|=3.6550e-02
+[1] [32minfo:[m [time] Iteration #1 took 0.00167442 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.1825e+07, |x|=3.2353e+08, |dx|/|x|=3.6550e-02
+[2] [32minfo:[m [time] Iteration #1 took 0.00167391 s.
+[2] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=1.1825e+07, |x|=3.2353e+08, |dx|/|x|=3.6550e-02
+[0] [32minfo:[m [time] Iteration #1 took 0.00167351 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Iteration #2 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000163115 s.
+[1] [32minfo:[m [time] Assembly took 0.000163175 s.
+[2] [32minfo:[m [time] Assembly took 0.000163135 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.7964e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.0349e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.0659e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 4.792e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.7198e-05 s.
+
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 5.4331e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=1.4775e-07, |x|=3.2353e+08, |dx|/|x|=4.5668e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.000253784 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.4775e-07, |x|=3.2353e+08, |dx|/|x|=4.5668e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000254766 s.
+[0] [32minfo:[m Convergence criterion: |dx|=1.4775e-07, |x|=3.2353e+08, |dx|/|x|=4.5668e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000255377 s.
+[0] [32minfo:[m [time] Solving process #0 took 0.00196529 s in time step #1
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Solving process #0 took 0.00196526 s in time step #1
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [32minfo:[m [time] Solving process #0 took 0.00196527 s in time step #1
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [32minfo:[m [time] Time step #1 took 0.00237446 s.
+[2] [32minfo:[m [time] Time step #1 took 0.00237451 s.
+[1] [32minfo:[m [time] Time step #1 took 0.00237385 s.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[0] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_1_t_10.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_1_t_10.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_1_t_10.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 1 took 0.000885575 s.
+[2] [32minfo:[m [time] Output of timestep 1 took 0.000886147 s.
+[2] [32minfo:[m Time step #2 started. Time: 20. Step size: 10.
+[1] [32minfo:[m Time step #2 started. Time: 20. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 1 took 0.000978128 s.
+[0] [32minfo:[m Time step #2 started. Time: 20. Step size: 10.
+[1] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.000141484 s.
+[1] [32minfo:[m [time] Assembly took 0.000141304 s.
+[0] [32minfo:[m [time] Assembly took 0.000141254 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.6069e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.7612e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.628e-05 s.
+
+converged in 19 iterations (relative convergence criterion fulfilled).
+================================================
+[2] [32minfo:[m [time] Linear solver took 0.000147386 s.
+[1] [32minfo:[m [time] Linear solver took 0.000147545 s.
+[0] [32minfo:[m [time] Linear solver took 0.0001551 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.0546e+06, |x|=3.2444e+08, |dx|/|x|=3.2506e-03
+[2] [32minfo:[m [time] Iteration #1 took 0.000333553 s.
+[2] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=1.0546e+06, |x|=3.2444e+08, |dx|/|x|=3.2506e-03
+[1] [32minfo:[m [time] Iteration #1 took 0.000333373 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=1.0546e+06, |x|=3.2444e+08, |dx|/|x|=3.2506e-03
+[0] [32minfo:[m [time] Iteration #1 took 0.000335456 s.
+[0] [32minfo:[m Iteration #2 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000177532 s.
+[1] [32minfo:[m [time] Assembly took 0.000177422 s.
+[2] [32minfo:[m [time] Assembly took 0.000177341 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 2.0769e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.7382e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.0268e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.0877e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.1718e-05 s.
+
+converged in 1 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 4.5946e-05 s.
+[2] [32minfo:[m Convergence criterion: |dx|=8.2547e-08, |x|=3.2444e+08, |dx|/|x|=2.5443e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000261488 s.
+[1] [32minfo:[m Convergence criterion: |dx|=8.2547e-08, |x|=3.2444e+08, |dx|/|x|=2.5443e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.00026199 s.
+[0] [32minfo:[m Convergence criterion: |dx|=8.2547e-08, |x|=3.2444e+08, |dx|/|x|=2.5443e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000259836 s.
+[0] [32minfo:[m [time] Solving process #0 took 0.000615861 s in time step #2
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [32minfo:[m [time] Solving process #0 took 0.000615951 s in time step #2
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Solving process #0 took 0.000616041 s in time step #2
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [32minfo:[m [time] Time step #2 took 0.00063693 s.
+[1] [32minfo:[m [time] Time step #2 took 0.000730435 s.
+[2] [32minfo:[m [time] Time step #2 took 0.000730195 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[0] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_2_t_20.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_2_t_20.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_2_t_20.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 2 took 0.000714245 s.
+[1] [32minfo:[m Time step #3 started. Time: 30. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 2 took 0.000852122 s.
+[2] [32minfo:[m Time step #3 started. Time: 30. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 2 took 0.000938053 s.
+[0] [32minfo:[m Time step #3 started. Time: 30. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000145512 s.
+[2] [32minfo:[m [time] Assembly took 0.000145692 s.
+[1] [32minfo:[m [time] Assembly took 0.000145502 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.171e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.2392e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 2.0478e-05 s.
+
+converged in 18 iterations (relative convergence criterion fulfilled).
+================================================
+[2] [32minfo:[m [time] Linear solver took 0.000134041 s.
+[1] [32minfo:[m [time] Linear solver took 0.000134031 s.
+[0] [32minfo:[m [time] Linear solver took 0.000140362 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.3202e+05, |x|=3.2455e+08, |dx|/|x|=4.0676e-04
+[2] [32minfo:[m [time] Iteration #1 took 0.000326179 s.
+[2] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=1.3202e+05, |x|=3.2455e+08, |dx|/|x|=4.0676e-04
+[1] [32minfo:[m [time] Iteration #1 took 0.000325889 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=1.3202e+05, |x|=3.2455e+08, |dx|/|x|=4.0676e-04
+[0] [32minfo:[m [time] Iteration #1 took 0.000327742 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.00015028 s.
+[1] [32minfo:[m [time] Assembly took 0.000150501 s.
+[0] [32minfo:[m [time] Assembly took 0.000150411 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.9417e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.7933e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.6851e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.1277e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.1047e-05 s.
+
+converged in 1 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 4.6267e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=7.5981e-08, |x|=3.2455e+08, |dx|/|x|=2.3411e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.000232234 s.
+[2] [32minfo:[m Convergence criterion: |dx|=7.5981e-08, |x|=3.2455e+08, |dx|/|x|=2.3411e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000232444 s.
+[0] [32minfo:[m Convergence criterion: |dx|=7.5981e-08, |x|=3.2455e+08, |dx|/|x|=2.3411e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000232274 s.
+[2] [32minfo:[m [time] Solving process #0 took 0.000580896 s in time step #3
+[1] [32minfo:[m [time] Solving process #0 took 0.000581597 s in time step #3
+[0] [32minfo:[m [time] Solving process #0 took 0.000580715 s in time step #3
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #3 took 0.000691722 s.
+[0] [32minfo:[m [time] Time step #3 took 0.00060506 s.
+[1] [32minfo:[m [time] Time step #3 took 0.00082919 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_3_t_30.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_3_t_30.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_3_t_30.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 3 took 0.000890134 s.
+[1] [32minfo:[m Time step #4 started. Time: 40. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 3 took 0.000891155 s.
+[2] [32minfo:[m Time step #4 started. Time: 40. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 3 took 0.000982126 s.
+[0] [32minfo:[m Time step #4 started. Time: 40. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.000145332 s.
+[0] [32minfo:[m [time] Assembly took 0.000145452 s.
+[1] [32minfo:[m [time] Assembly took 0.000145562 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.2061e-05 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.9857e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.2893e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Linear solver took 0.000134261 s.
+[2] [32minfo:[m [time] Linear solver took 0.0001341 s.
+
+converged in 18 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.00013901 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.6712e+04, |x|=3.2457e+08, |dx|/|x|=5.1490e-05
+[2] [32minfo:[m [time] Iteration #1 took 0.000324397 s.
+[2] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=1.6712e+04, |x|=3.2457e+08, |dx|/|x|=5.1490e-05
+[1] [32minfo:[m [time] Iteration #1 took 0.000323785 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=1.6712e+04, |x|=3.2457e+08, |dx|/|x|=5.1490e-05
+[0] [32minfo:[m [time] Iteration #1 took 0.000325679 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.00014472 s.
+[1] [32minfo:[m [time] Assembly took 0.000144791 s.
+[0] [32minfo:[m [time] Assembly took 0.0001447 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.5068e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.3616e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.5359e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.4363e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.4413e-05 s.
+
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 4.9132e-05 s.
+[0] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000225692 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000225561 s.
+[1] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.00022474 s.
+[0] [32minfo:[m [time] Solving process #0 took 0.000571138 s in time step #4
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Solving process #0 took 0.000571347 s in time step #4
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [32minfo:[m [time] Solving process #0 took 0.000571067 s in time step #4
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #4 took 0.000685952 s.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[0] [32minfo:[m [time] Time step #4 took 0.000594641 s.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[1] [32minfo:[m [time] Time step #4 took 0.000685862 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_4_t_40.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_4_t_40.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_4_t_40.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 4 took 0.000753738 s.
+[1] [32minfo:[m Time step #5 started. Time: 50. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 4 took 0.000859196 s.
+[2] [32minfo:[m Time step #5 started. Time: 50. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 4 took 0.000933465 s.
+[0] [32minfo:[m Time step #5 started. Time: 50. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000141013 s.
+[2] [32minfo:[m [time] Assembly took 0.000140903 s.
+[0] [32minfo:[m [time] Assembly took 0.000140883 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.2452e-05 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.9627e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.3464e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Linear solver took 0.00013347 s.
+[2] [32minfo:[m [time] Linear solver took 0.00013342 s.
+
+converged in 17 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.000138719 s.
+[2] [32minfo:[m Convergence criterion: |dx|=2.1171e+03, |x|=3.2457e+08, |dx|/|x|=6.5229e-06
+[2] [32minfo:[m [time] Iteration #1 took 0.000320178 s.
+[2] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=2.1171e+03, |x|=3.2457e+08, |dx|/|x|=6.5229e-06
+[1] [32minfo:[m [time] Iteration #1 took 0.000319147 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=2.1171e+03, |x|=3.2457e+08, |dx|/|x|=6.5229e-06
+[0] [32minfo:[m [time] Iteration #1 took 0.000321602 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.000157103 s.
+[1] [32minfo:[m [time] Assembly took 0.000157293 s.
+[0] [32minfo:[m [time] Assembly took 0.000157163 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.7103e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.9888e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.9818e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 5.0504e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.9743e-05 s.
+
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 5.4843e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=3.4571e-07, |x|=3.2457e+08, |dx|/|x|=1.0651e-15
+[1] [32minfo:[m [time] Iteration #2 took 0.000247733 s.
+[2] [32minfo:[m Convergence criterion: |dx|=3.4571e-07, |x|=3.2457e+08, |dx|/|x|=1.0651e-15
+[2] [32minfo:[m [time] Iteration #2 took 0.000247873 s.
+[0] [32minfo:[m Convergence criterion: |dx|=3.4571e-07, |x|=3.2457e+08, |dx|/|x|=1.0651e-15
+[0] [32minfo:[m [time] Iteration #2 took 0.000247773 s.
+[2] [32minfo:[m [time] Solving process #0 took 0.000590523 s in time step #5
+[1] [32minfo:[m [time] Solving process #0 took 0.000591024 s in time step #5
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [32minfo:[m [time] Solving process #0 took 0.000590273 s in time step #5
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #5 took 0.000687865 s.
+[0] [32minfo:[m [time] Time step #5 took 0.000613847 s.
+[1] [32minfo:[m [time] Time step #5 took 0.000791409 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[1] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_5_t_50.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_5_t_50.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_5_t_50.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 5 took 0.000805716 s.
+[1] [32minfo:[m Time step #6 started. Time: 60. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 5 took 0.000863985 s.
+[2] [32minfo:[m Time step #6 started. Time: 60. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 5 took 0.000950907 s.
+[0] [32minfo:[m Time step #6 started. Time: 60. Step size: 10.
+[1] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000141755 s.
+[0] [32minfo:[m [time] Assembly took 0.000141675 s.
+[2] [32minfo:[m [time] Assembly took 0.000141665 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.1169e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.1871e-05 s.
+
+================================================
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.8916e-05 s.
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 0.000123431 s.
+[1] [32minfo:[m [time] Linear solver took 0.000123661 s.
+
+converged in 16 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.000128751 s.
+[1] [32minfo:[m Convergence criterion: |dx|=2.6823e+02, |x|=3.2457e+08, |dx|/|x|=8.2640e-07
+[1] [32minfo:[m [time] Iteration #1 took 0.000308747 s.
+[2] [32minfo:[m Convergence criterion: |dx|=2.6823e+02, |x|=3.2457e+08, |dx|/|x|=8.2640e-07
+[2] [32minfo:[m [time] Iteration #1 took 0.000309468 s.
+[2] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=2.6823e+02, |x|=3.2457e+08, |dx|/|x|=8.2640e-07
+[0] [32minfo:[m [time] Iteration #1 took 0.000310641 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Iteration #2 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000144691 s.
+[0] [32minfo:[m [time] Assembly took 0.00014448 s.
+[2] [32minfo:[m [time] Assembly took 0.00014435 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.7833e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.7614e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.6401e-05 s.
+
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[1] [32minfo:[m [time] Linear solver took 4.3602e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.4133e-05 s.
+[0] [32minfo:[m [time] Linear solver took 4.9102e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.000229078 s.
+[2] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000228728 s.
+[0] [32minfo:[m Convergence criterion: |dx|=1.2322e-07, |x|=3.2457e+08, |dx|/|x|=3.7963e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000228618 s.
+[1] [32minfo:[m [time] Solving process #0 took 0.000560908 s in time step #6
+[0] [32minfo:[m [time] Solving process #0 took 0.000559997 s in time step #6
+[2] [32minfo:[m [time] Solving process #0 took 0.000560217 s in time step #6
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [32minfo:[m [time] Time step #6 took 0.000583921 s.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[2] [32minfo:[m [time] Time step #6 took 0.000670994 s.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[1] [32minfo:[m [time] Time step #6 took 0.00072765 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_6_t_60.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_6_t_60.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_6_t_60.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 6 took 0.00088321 s.
+[1] [32minfo:[m Time step #7 started. Time: 70. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 6 took 0.000885174 s.
+[2] [32minfo:[m Time step #7 started. Time: 70. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 6 took 0.000975152 s.
+[0] [32minfo:[m Time step #7 started. Time: 70. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.00014978 s.
+[2] [32minfo:[m [time] Assembly took 0.00014991 s.
+[0] [32minfo:[m [time] Assembly took 0.00014973 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.4285e-05 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 2.149e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.4946e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 0.00011781 s.
+
 converged in 15 iterations (relative convergence criterion fulfilled).
 ================================================
-[0] info: [time] Linear solver took 0.0049821 s.
-[2] info: [time] Iteration #1 took 0.00816039 s.
-[0] info: [time] Iteration #1 took 0.00813947 s.
-[1] info: [time] Iteration #1 took 0.00816068 s.
-[1] info: [time] Solving process #0 took 0.00850492 s in time step #1
-[0] info: [time] Solving process #0 took 0.00850708 s in time step #1
-[2] info: [time] Solving process #0 took 0.00850432 s in time step #1
-[2] info: [time] Time step #1 took 0.00875183 s.
-[2] debug: Process output data.
-[1] info: [time] Time step #1 took 0.00875223 s.
-[1] debug: Process output data.
-[0] info: [time] Time step #1 took 0.00874903 s.
-[0] debug: Process output data.
-[2] debug:   process variable pressure
-[1] debug:   process variable pressure
-[0] debug:   process variable pressure
-[1] debug:   secondary variable v
-[2] debug:   secondary variable v
-[0] debug:   secondary variable v
-[2] info: [time] Output of timestep 1 took 0.00182727 s.
-[2] info: The whole computation of the time stepping took 1 steps, in which
-	 the accepted steps are 1, and the rejected steps are 0.
+[0] [32minfo:[m [time] Linear solver took 0.00012312 s.
+[1] [32minfo:[m [time] Linear solver took 0.00011751 s.
+[0] [32minfo:[m Convergence criterion: |dx|=3.3982e+01, |x|=3.2457e+08, |dx|/|x|=1.0470e-07
+[0] [32minfo:[m [time] Iteration #1 took 0.000316902 s.
+[0] [32minfo:[m Iteration #2 started.
+[2] [32minfo:[m Convergence criterion: |dx|=3.3982e+01, |x|=3.2457e+08, |dx|/|x|=1.0470e-07
+[2] [32minfo:[m [time] Iteration #1 took 0.00031571 s.
+[2] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=3.3982e+01, |x|=3.2457e+08, |dx|/|x|=1.0470e-07
+[1] [32minfo:[m [time] Iteration #1 took 0.000315139 s.
+[1] [32minfo:[m Iteration #2 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000144159 s.
+[2] [32minfo:[m [time] Assembly took 0.000144289 s.
+[1] [32minfo:[m [time] Assembly took 0.00014447 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.0529e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.0709e-05 s.
 
-[2] info: [time] Execution took 0.0402821 s.
-[1] info: [time] Output of timestep 1 took 0.00183328 s.
-[1] info: The whole computation of the time stepping took 1 steps, in which
-	 the accepted steps are 1, and the rejected steps are 0.
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.8003e-05 s.
 
-[1] info: [time] Execution took 0.0402877 s.
-[0] info: [time] Output of timestep 1 took 0.00187078 s.
-[0] info: The whole computation of the time stepping took 1 steps, in which
-	 the accepted steps are 1, and the rejected steps are 0.
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 5.2608e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.823e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.7478e-05 s.
+[2] [32minfo:[m Convergence criterion: |dx|=3.1511e-07, |x|=3.2457e+08, |dx|/|x|=9.7086e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000233707 s.
+[0] [32minfo:[m Convergence criterion: |dx|=3.1511e-07, |x|=3.2457e+08, |dx|/|x|=9.7086e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000233857 s.
+[1] [32minfo:[m Convergence criterion: |dx|=3.1511e-07, |x|=3.2457e+08, |dx|/|x|=9.7086e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.000233176 s.
+[0] [32minfo:[m [time] Solving process #0 took 0.000572099 s in time step #7
+[2] [32minfo:[m [time] Solving process #0 took 0.000572289 s in time step #7
+[1] [32minfo:[m [time] Solving process #0 took 0.000572179 s in time step #7
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #7 took 0.000686162 s.
+[1] [32minfo:[m [time] Time step #7 took 0.000686683 s.
+[0] [32minfo:[m [time] Time step #7 took 0.000595713 s.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_7_t_70.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_7_t_70.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_7_t_70.000000.vtu'.
+[2] [32minfo:[m [time] Output of timestep 7 took 0.000886506 s.
+[2] [32minfo:[m Time step #8 started. Time: 80. Step size: 10.
+[1] [32minfo:[m [time] Output of timestep 7 took 0.000884824 s.
+[1] [32minfo:[m Time step #8 started. Time: 80. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 7 took 0.000978097 s.
+[0] [32minfo:[m Time step #8 started. Time: 80. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000142827 s.
+[2] [32minfo:[m [time] Assembly took 0.000142857 s.
+[1] [32minfo:[m [time] Assembly took 0.000142907 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.9346e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.3173e-05 s.
 
-[0] info: [time] Execution took 0.040327 s.
-[0] info: [time] Output of XDMF to cube_1e3_np3_cube_1x1x1_hex_1e3.xdmf took 0.000106312 s.
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.2161e-05 s.
+
+converged in 14 iterations (relative convergence criterion fulfilled).
+================================================
+[1] [32minfo:[m [time] Linear solver took 0.00011239 s.
+[2] [32minfo:[m [time] Linear solver took 0.00011237 s.
+[0] [32minfo:[m [time] Linear solver took 0.000118441 s.
+[2] [32minfo:[m Convergence criterion: |dx|=4.3053e+00, |x|=3.2457e+08, |dx|/|x|=1.3265e-08
+[2] [32minfo:[m [time] Iteration #1 took 0.000301393 s.
+[2] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=4.3053e+00, |x|=3.2457e+08, |dx|/|x|=1.3265e-08
+[0] [32minfo:[m [time] Iteration #1 took 0.000302004 s.
+[0] [32minfo:[m Iteration #2 started.
+[1] [32minfo:[m Convergence criterion: |dx|=4.3053e+00, |x|=3.2457e+08, |dx|/|x|=1.3265e-08
+[1] [32minfo:[m [time] Iteration #1 took 0.00029989 s.
+[1] [32minfo:[m Iteration #2 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000143328 s.
+[2] [32minfo:[m [time] Assembly took 0.000143118 s.
+[0] [32minfo:[m [time] Assembly took 0.000143248 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.62e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.9236e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.8996e-05 s.
+
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 5.3951e-05 s.
+[1] [32minfo:[m [time] Linear solver took 4.8842e-05 s.
+[2] [32minfo:[m [time] Linear solver took 4.9192e-05 s.
+[0] [32minfo:[m Convergence criterion: |dx|=2.8354e-07, |x|=3.2457e+08, |dx|/|x|=8.7358e-16
+[0] [32minfo:[m [time] Iteration #2 took 0.000232935 s.
+[2] [32minfo:[m Convergence criterion: |dx|=2.8354e-07, |x|=3.2457e+08, |dx|/|x|=8.7358e-16
+[2] [32minfo:[m [time] Iteration #2 took 0.000232675 s.
+[1] [32minfo:[m Convergence criterion: |dx|=2.8354e-07, |x|=3.2457e+08, |dx|/|x|=8.7358e-16
+[1] [32minfo:[m [time] Iteration #2 took 0.000231883 s.
+[2] [32minfo:[m [time] Solving process #0 took 0.00055611 s in time step #8
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [32minfo:[m [time] Solving process #0 took 0.000555799 s in time step #8
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [32minfo:[m [time] Solving process #0 took 0.000555929 s in time step #8
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [32minfo:[m [time] Time step #8 took 0.00066885 s.
+[0] [32minfo:[m [time] Time step #8 took 0.000576748 s.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[2] [32minfo:[m [time] Time step #8 took 0.00066888 s.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[2] [36mdebug:[m Process output data.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_8_t_80.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_8_t_80.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_8_t_80.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 8 took 0.000876768 s.
+[2] [32minfo:[m [time] Output of timestep 8 took 0.00087786 s.
+[2] [32minfo:[m Time step #9 started. Time: 90. Step size: 10.
+[1] [32minfo:[m Time step #9 started. Time: 90. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 8 took 0.000966797 s.
+[0] [32minfo:[m Time step #9 started. Time: 90. Step size: 10.
+[2] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[0] [32minfo:[m Iteration #1 started.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [32minfo:[m [time] Assembly took 0.000142546 s.
+[0] [32minfo:[m [time] Assembly took 0.000142276 s.
+[1] [32minfo:[m [time] Assembly took 0.000142316 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.8143e-05 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.8715e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 1.9236e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Linear solver took 0.000136435 s.
+[2] [32minfo:[m [time] Linear solver took 0.000136815 s.
+
+converged in 13 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.000142396 s.
+[2] [32minfo:[m Convergence criterion: |dx|=5.4545e-01, |x|=3.2457e+08, |dx|/|x|=1.6805e-09
+[2] [32minfo:[m [time] Iteration #1 took 0.000331099 s.
+[1] [32minfo:[m Convergence criterion: |dx|=5.4545e-01, |x|=3.2457e+08, |dx|/|x|=1.6805e-09
+[1] [32minfo:[m [time] Iteration #1 took 0.000329176 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=5.4545e-01, |x|=3.2457e+08, |dx|/|x|=1.6805e-09
+[0] [32minfo:[m [time] Iteration #1 took 0.000329907 s.
+[0] [32minfo:[m Iteration #2 started.
+[2] [32minfo:[m Iteration #2 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000175257 s.
+[2] [32minfo:[m [time] Assembly took 0.000175378 s.
+[0] [32minfo:[m [time] Assembly took 0.000175037 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 2.4606e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.1511e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.5638e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Linear solver took 5.4872e-05 s.
+[1] [32minfo:[m [time] Linear solver took 5.5644e-05 s.
+
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 6.0123e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=5.0914e-07, |x|=3.2457e+08, |dx|/|x|=1.5687e-15
+[1] [32minfo:[m [time] Iteration #2 took 0.000280765 s.
+[2] [32minfo:[m Convergence criterion: |dx|=5.0914e-07, |x|=3.2457e+08, |dx|/|x|=1.5687e-15
+[2] [32minfo:[m [time] Iteration #2 took 0.00027812 s.
+[0] [32minfo:[m Convergence criterion: |dx|=5.0914e-07, |x|=3.2457e+08, |dx|/|x|=1.5687e-15
+[0] [32minfo:[m [time] Iteration #2 took 0.000280204 s.
+[1] [32minfo:[m [time] Solving process #0 took 0.000632682 s in time step #9
+[0] [32minfo:[m [time] Solving process #0 took 0.000632602 s in time step #9
+[2] [32minfo:[m [time] Solving process #0 took 0.000633053 s in time step #9
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #9 took 0.0007495 s.
+[2] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [32minfo:[m [time] Time step #9 took 0.000659422 s.
+[0] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[0] [36mdebug:[m Process output data.
+[1] [32minfo:[m [time] Time step #9 took 0.000749611 s.
+[1] [36mdebug:[m The time stepping is stabilized with the step size of 10.
+[1] [36mdebug:[m Process output data.
+[2] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m   secondary variable v
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_9_t_90.000000.vtu'.
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_9_t_90.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_9_t_90.000000.vtu'.
+[1] [32minfo:[m [time] Output of timestep 9 took 0.000847454 s.
+[1] [32minfo:[m Time step #10 started. Time: 100. Step size: 10.
+[2] [32minfo:[m [time] Output of timestep 9 took 0.000892848 s.
+[2] [32minfo:[m Time step #10 started. Time: 100. Step size: 10.
+[0] [32minfo:[m [time] Output of timestep 9 took 0.000961166 s.
+[0] [32minfo:[m Time step #10 started. Time: 100. Step size: 10.
+[0] [32minfo:[m Solving process #0 started.
+[1] [32minfo:[m Solving process #0 started.
+[2] [32minfo:[m Solving process #0 started.
+[0] [32minfo:[m Iteration #1 started.
+[1] [32minfo:[m Iteration #1 started.
+[2] [32minfo:[m Iteration #1 started.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[0] [32minfo:[m [time] Assembly took 0.000151153 s.
+[1] [32minfo:[m [time] Assembly took 0.000151133 s.
+[2] [32minfo:[m [time] Assembly took 0.000151082 s.
+[1] [32minfo:[m [time] Applying Dirichlet BCs took 2.718e-05 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.7652e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[2] [32minfo:[m [time] Applying Dirichlet BCs took 2.15e-05 s.
+
+converged in 12 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 0.000111708 s.
+[1] [32minfo:[m [time] Linear solver took 0.00010682 s.
+[2] [32minfo:[m [time] Linear solver took 0.000106128 s.
+[1] [32minfo:[m Convergence criterion: |dx|=6.9105e-02, |x|=3.2457e+08, |dx|/|x|=2.1291e-10
+[1] [32minfo:[m [time] Iteration #1 took 0.00031041 s.
+[1] [32minfo:[m Iteration #2 started.
+[0] [32minfo:[m Convergence criterion: |dx|=6.9105e-02, |x|=3.2457e+08, |dx|/|x|=2.1291e-10
+[0] [32minfo:[m [time] Iteration #1 took 0.00031019 s.
+[0] [32minfo:[m Iteration #2 started.
+[2] [32minfo:[m Convergence criterion: |dx|=6.9105e-02, |x|=3.2457e+08, |dx|/|x|=2.1291e-10
+[2] [32minfo:[m [time] Iteration #1 took 0.000305692 s.
+[2] [32minfo:[m Iteration #2 started.
+[0] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [36mdebug:[m Assemble LiquidFlowProcess.
+[2] [36mdebug:[m Assemble LiquidFlowProcess.
+[1] [32minfo:[m [time] Assembly took 0.000162123 s.
+[0] [32minfo:[m [time] Assembly took 0.000161893 s.
+[2] [32minfo:[m [time] Assembly took 0.000161963 s.
+[0] [32minfo:[m [time] Applying Dirichlet BCs took 2.179e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED[1] [32minfo:[m [time] Applying Dirichlet BCs took 1.9577e-05 s.
+[2] [32minfo:[m [time] Applying Dirichlet BCs took 1.9907e-05 s.
+[2] [32minfo:[m [time] Linear solver took 5.6456e-05 s.
+[1] [32minfo:[m [time] Linear solver took 5.6436e-05 s.
+
+converged in 4 iterations (relative convergence criterion fulfilled).
+================================================
+[0] [32minfo:[m [time] Linear solver took 6.2597e-05 s.
+[1] [32minfo:[m Convergence criterion: |dx|=6.6343e-07, |x|=3.2457e+08, |dx|/|x|=2.0440e-15
+[1] [32minfo:[m [time] Iteration #2 took 0.000263282 s.
+[1] [32minfo:[m [time] Solving process #0 took 0.000596685 s in time step #10
+[0] [32minfo:[m Convergence criterion: |dx|=6.6343e-07, |x|=3.2457e+08, |dx|/|x|=2.0440e-15
+[0] [32minfo:[m [time] Iteration #2 took 0.000264745 s.
+[0] [32minfo:[m [time] Solving process #0 took 0.000595773 s in time step #10
+[2] [32minfo:[m Convergence criterion: |dx|=6.6343e-07, |x|=3.2457e+08, |dx|/|x|=2.0440e-15
+[2] [32minfo:[m [time] Iteration #2 took 0.000263903 s.
+[2] [32minfo:[m [time] Solving process #0 took 0.000595963 s in time step #10
+[1] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[0] [36mdebug:[m Compute the velocity for LiquidFlowProcess.
+[2] [32minfo:[m [time] Time step #10 took 0.000688297 s.
+[2] [36mdebug:[m Process output data.
+[2] [36mdebug:[m   process variable pressure
+[2] [36mdebug:[m   secondary variable v
+[1] [32minfo:[m [time] Time step #10 took 0.000735364 s.
+[1] [36mdebug:[m Process output data.
+[1] [36mdebug:[m   process variable pressure
+[1] [36mdebug:[m   secondary variable v
+[0] [32minfo:[m [time] Time step #10 took 0.000621842 s.
+[0] [36mdebug:[m Process output data.
+[0] [36mdebug:[m   process variable pressure
+[0] [36mdebug:[m   secondary variable v
+[1] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_10_t_100.000000.vtu'.
+[2] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_10_t_100.000000.vtu'.
+[0] [36mdebug:[m Writing output to '/tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548/LiquidFlow_Simple_ts_10_t_100.000000.vtu'.
+[2] [32minfo:[m [time] Output of timestep 10 took 0.000865357 s.
+[2] [32minfo:[m The whole computation of the time stepping took 10 steps, in which
+	 the accepted steps are 10, and the rejected steps are 0.
+
+[2] [32minfo:[m [time] Simulation completed. It took 0.065339 s.
+[1] [32minfo:[m [time] Output of timestep 10 took 0.000864806 s.
+[1] [32minfo:[m The whole computation of the time stepping took 10 steps, in which
+	 the accepted steps are 10, and the rejected steps are 0.
+
+[1] [32minfo:[m [time] Simulation completed. It took 0.0653391 s.
+[0] [32minfo:[m [time] Output of timestep 10 took 0.000953622 s.
+[0] [32minfo:[m The whole computation of the time stepping took 10 steps, in which
+	 the accepted steps are 10, and the rejected steps are 0.
+
+[0] [32minfo:[m [time] Simulation completed. It took 0.0654219 s.
 WARNING! There are options you set that were not used!
 WARNING! could be spelling mistake, etc!
-There is one unused database option. It is:
-Option left: name:-l value: debug
-[1] info: OGS terminated on 2021-09-15 15:32:44+0200.
-[2] info: OGS terminated on 2021-09-15 15:32:44+0200.
-[0] info: OGS terminated on 2021-09-15 15:32:44+0200.
+There are 4 unused database options. They are:
+Option left: name:--log-parallel (no value) source: command line
+Option left: name:-l value: debug source: command line
+Option left: name:-m value: /tmp/pytest-of-meisel/pytest-45/ot_temp/Model/20260311_172507_328230/meshes/partition/3 source: command line
+Option left: name:-o value: /tmp/pytest-of-meisel/pytest-45/ot_temp/Result/20260311_172507_856548 source: command line
+[1] [36mdebug:[m No test definition was found. No tests will be executed.
+[1] [32minfo:[m OGS completed on 2026-03-11 17:25:09+0100.
+[2] [36mdebug:[m No test definition was found. No tests will be executed.
+[2] [32minfo:[m OGS completed on 2026-03-11 17:25:09+0100.
+[0] [36mdebug:[m No test definition was found. No tests will be executed.
+[0] [32minfo:[m OGS completed on 2026-03-11 17:25:09+0100.

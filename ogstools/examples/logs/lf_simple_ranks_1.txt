@@ -1,0 +1,307 @@
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+WARNING: passwd file doesn't exist in container, not updating
+WARNING: group file doesn't exist in container, not updating
+WARNING: Skipping mount /var/tmp [tmp]: /var/tmp doesn't exist in container
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/wfrjwb448riw3cr4p27z9d9x0m0idyka-ogs-petsc-6.5.5/lib/libBaseLib.so)
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/wfrjwb448riw3cr4p27z9d9x0m0idyka-ogs-petsc-6.5.5/lib/libBaseLib.so)
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/wfrjwb448riw3cr4p27z9d9x0m0idyka-ogs-petsc-6.5.5/lib/libBaseLib.so)
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/vmvnrsgiv20dn2zla505i8c9mk8as8cp-xmlpatch-0.4.5/lib/libxmlpatch.so)
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+/gnu/store/15xmjkhqajmsirv334i4x196rkxxmkx1-profile/bin/ogs: /gnu/store/z37dmax9jy01qpsfkkivblxclysfd3c1-libxml2-2.14.5/lib/libxml2.so.2: no version information available (required by /gnu/store/i83fs4lz5znk72xsrg9740vm4z10pslk-netcdf-parallel-openmpi-4.9.0/lib/../lib/libnetcdf.so.19)
+[0] info: OGS started on 2026-03-12 09:42:12+0100 with MPI. MPI processes: 1.
+[0] info: This is OpenGeoSys-6 version 6.5.7.dirty. Log version: 2, Log level: info.
+[0] info: Reading project file ../../../../tmp/ogstools/Model/20260312_094209_396891/project/default.prj.
+[0] info: readRasters ...
+[0] info: readRasters done
+[0] info: ConstantParameter: P0
+[0] info: MeshNodeParameter: p_Dirichlet_left
+[0] info: MeshNodeParameter: p_Dirichlet_right
+[0] info: Configure mesh 'left' for boundary condition or source term.
+[0] info: Configure mesh 'right' for boundary condition or source term.
+[0] info: No source terms for process variable 'pressure' found.
+[0] info: Initialize processes.
+[0] info: Time step #0 started. Time: 0. Step size: 0.
+[0] info: [time] Output of timestep 0 took 0.0125596 s.
+[0] info: Time step #0 took 0.0176482 s.
+[0] info: Solve processes.
+[0] info: Time step #1 started. Time: 10. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000267878 s.
+[0] info: [time] Applying Dirichlet BCs took 2.3002e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 15 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.000343579 s.
+[0] info: Convergence criterion: |dx|=1.1825e+07, |x|=3.2353e+08, |dx|/|x|=3.6550e-02
+[0] info: [time] Iteration #1 took 0.000658574 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000136905 s.
+[0] info: [time] Applying Dirichlet BCs took 9.026e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.7421e-05 s.
+[0] info: Convergence criterion: |dx|=1.2060e-07, |x|=3.2353e+08, |dx|/|x|=3.7276e-16
+[0] info: [time] Iteration #2 took 0.000181979 s.
+[0] info: [time] Solving process #0 took 0.000877131 s in time step #1
+[0] info: [time] Time step #1 took 0.00157263 s.
+[0] info: [time] Output of timestep 1 took 0.000708427 s.
+[0] info: Time step #2 started. Time: 20. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000126044 s.
+[0] info: [time] Applying Dirichlet BCs took 8.637e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 13 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.000105797 s.
+[0] info: Convergence criterion: |dx|=1.0546e+06, |x|=3.2444e+08, |dx|/|x|=3.2506e-03
+[0] info: [time] Iteration #1 took 0.000250416 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000120634 s.
+[0] info: [time] Applying Dirichlet BCs took 5.089e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.4806e-05 s.
+[0] info: Convergence criterion: |dx|=1.3406e-07, |x|=3.2444e+08, |dx|/|x|=4.1320e-16
+[0] info: [time] Iteration #2 took 0.000158014 s.
+[0] info: [time] Solving process #0 took 0.000423828 s in time step #2
+[0] info: [time] Time step #2 took 0.000436963 s.
+[0] info: [time] Output of timestep 2 took 0.000682951 s.
+[0] info: Time step #3 started. Time: 30. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.00013462 s.
+[0] info: [time] Applying Dirichlet BCs took 9.097e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 13 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.000104355 s.
+[0] info: Convergence criterion: |dx|=1.3202e+05, |x|=3.2455e+08, |dx|/|x|=4.0676e-04
+[0] info: [time] Iteration #1 took 0.000258581 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000123339 s.
+[0] info: [time] Applying Dirichlet BCs took 5.45e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.9765e-05 s.
+[0] info: Convergence criterion: |dx|=3.0686e-07, |x|=3.2455e+08, |dx|/|x|=9.4547e-16
+[0] info: [time] Iteration #2 took 0.000166329 s.
+[0] info: [time] Solving process #0 took 0.000444727 s in time step #3
+[0] info: [time] Time step #3 took 0.00045709 s.
+[0] info: [time] Output of timestep 3 took 0.000619763 s.
+[0] info: Time step #4 started. Time: 40. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000123941 s.
+[0] info: [time] Applying Dirichlet BCs took 8.126e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 13 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.000103142 s.
+[0] info: Convergence criterion: |dx|=1.6712e+04, |x|=3.2457e+08, |dx|/|x|=5.1490e-05
+[0] info: [time] Iteration #1 took 0.000244685 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000121737 s.
+[0] info: [time] Applying Dirichlet BCs took 5.37e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.5037e-05 s.
+[0] info: Convergence criterion: |dx|=2.0343e-07, |x|=3.2457e+08, |dx|/|x|=6.2677e-16
+[0] info: [time] Iteration #2 took 0.000159747 s.
+[0] info: [time] Solving process #0 took 0.000419581 s in time step #4
+[0] info: [time] Time step #4 took 0.000433957 s.
+[0] info: [time] Output of timestep 4 took 0.000686547 s.
+[0] info: Time step #5 started. Time: 50. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000122969 s.
+[0] info: [time] Applying Dirichlet BCs took 8.506e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 11 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 9.4005e-05 s.
+[0] info: Convergence criterion: |dx|=2.1171e+03, |x|=3.2457e+08, |dx|/|x|=6.5229e-06
+[0] info: [time] Iteration #1 took 0.000234887 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000121697 s.
+[0] info: [time] Applying Dirichlet BCs took 5.109e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.4936e-05 s.
+[0] info: Convergence criterion: |dx|=1.4176e-07, |x|=3.2457e+08, |dx|/|x|=4.3675e-16
+[0] info: [time] Iteration #2 took 0.000159396 s.
+[0] info: [time] Solving process #0 took 0.000409401 s in time step #5
+[0] info: [time] Time step #5 took 0.000421755 s.
+[0] info: [time] Output of timestep 5 took 0.000771445 s.
+[0] info: Time step #6 started. Time: 60. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000123369 s.
+[0] info: [time] Applying Dirichlet BCs took 8.296e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 11 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 9.8183e-05 s.
+[0] info: Convergence criterion: |dx|=2.6823e+02, |x|=3.2457e+08, |dx|/|x|=8.2640e-07
+[0] info: [time] Iteration #1 took 0.000239665 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000122407 s.
+[0] info: [time] Applying Dirichlet BCs took 5.08e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 3 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.9835e-05 s.
+[0] info: Convergence criterion: |dx|=3.3457e-07, |x|=3.2457e+08, |dx|/|x|=1.0308e-15
+[0] info: [time] Iteration #2 took 0.000164906 s.
+[0] info: [time] Solving process #0 took 0.00041953 s in time step #6
+[0] info: [time] Time step #6 took 0.000432334 s.
+[0] info: [time] Output of timestep 6 took 0.000616437 s.
+[0] info: Time step #7 started. Time: 70. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000122929 s.
+[0] info: [time] Applying Dirichlet BCs took 8.466e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 11 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 9.3985e-05 s.
+[0] info: Convergence criterion: |dx|=3.3982e+01, |x|=3.2457e+08, |dx|/|x|=1.0470e-07
+[0] info: [time] Iteration #1 took 0.000234697 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000121696 s.
+[0] info: [time] Applying Dirichlet BCs took 5.09e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.4916e-05 s.
+[0] info: Convergence criterion: |dx|=1.3789e-07, |x|=3.2457e+08, |dx|/|x|=4.2483e-16
+[0] info: [time] Iteration #2 took 0.000159436 s.
+[0] info: [time] Solving process #0 took 0.000411285 s in time step #7
+[0] info: [time] Time step #7 took 0.000423548 s.
+[0] info: [time] Output of timestep 7 took 0.000672641 s.
+[0] info: Time step #8 started. Time: 80. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000123239 s.
+[0] info: [time] Applying Dirichlet BCs took 8.035e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 10 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 8.9477e-05 s.
+[0] info: Convergence criterion: |dx|=4.3053e+00, |x|=3.2457e+08, |dx|/|x|=1.3265e-08
+[0] info: [time] Iteration #1 took 0.000230048 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000121356 s.
+[0] info: [time] Applying Dirichlet BCs took 5.331e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 1 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.0097e-05 s.
+[0] info: Convergence criterion: |dx|=7.5247e-08, |x|=3.2457e+08, |dx|/|x|=2.3184e-16
+[0] info: [time] Iteration #2 took 0.000154337 s.
+[0] info: [time] Solving process #0 took 0.000399333 s in time step #8
+[0] info: [time] Time step #8 took 0.000411225 s.
+[0] info: [time] Output of timestep 8 took 0.000836425 s.
+[0] info: Time step #9 started. Time: 90. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.000175026 s.
+[0] info: [time] Applying Dirichlet BCs took 1.2634e-05 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 9 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 0.000130462 s.
+[0] info: Convergence criterion: |dx|=5.4545e-01, |x|=3.2457e+08, |dx|/|x|=1.6805e-09
+[0] info: [time] Iteration #1 took 0.000332799 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000185215 s.
+[0] info: [time] Applying Dirichlet BCs took 8.456e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 1 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 3.0727e-05 s.
+[0] info: Convergence criterion: |dx|=8.6888e-08, |x|=3.2457e+08, |dx|/|x|=2.6770e-16
+[0] info: [time] Iteration #2 took 0.000236009 s.
+[0] info: [time] Solving process #0 took 0.000591681 s in time step #9
+[0] info: [time] Time step #9 took 0.000612319 s.
+[0] info: [time] Output of timestep 9 took 0.000843128 s.
+[0] info: Time step #10 started. Time: 100. Step size: 10.
+[0] info: Solving process #0 started.
+[0] info: Iteration #1 started.
+[0] info: [time] Assembly took 0.00012371 s.
+[0] info: [time] Applying Dirichlet BCs took 8.105e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 8 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 8.0199e-05 s.
+[0] info: Convergence criterion: |dx|=6.9104e-02, |x|=3.2457e+08, |dx|/|x|=2.1291e-10
+[0] info: [time] Iteration #1 took 0.000221622 s.
+[0] info: Iteration #2 started.
+[0] info: [time] Assembly took 0.000121375 s.
+[0] info: [time] Applying Dirichlet BCs took 5.128e-06 s.
+
+================================================
+Linear solver bcgs with bjacobi preconditioner using PRECONDITIONED
+converged in 2 iterations (relative convergence criterion fulfilled).
+================================================
+[0] info: [time] Linear solver took 2.4766e-05 s.
+[0] info: Convergence criterion: |dx|=7.9074e-07, |x|=3.2457e+08, |dx|/|x|=2.4363e-15
+[0] info: [time] Iteration #2 took 0.00016103 s.
+[0] info: [time] Solving process #0 took 0.0003978 s in time step #10
+[0] info: [time] Time step #10 took 0.000409932 s.
+[0] info: [time] Output of timestep 10 took 0.000679544 s.
+[0] info: The whole computation of the time stepping took 10 steps, in which
+	 the accepted steps are 10, and the rejected steps are 0.
+
+[0] info: [time] Simulation completed. It took 0.0896878 s.
+WARNING! There are options you set that were not used!
+WARNING! could be spelling mistake, etc!
+There are 3 unused database options. They are:
+Option left: name:-l value: info source: command line
+Option left: name:-m value: /tmp/ogstools/Model/20260312_094209_396891/meshes source: command line
+Option left: name:-o value: /tmp/ogstools/Result/20260312_094210_422024 source: command line
+[0] info: OGS completed on 2026-03-12 09:42:12+0100.

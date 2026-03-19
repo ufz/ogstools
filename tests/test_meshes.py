@@ -134,17 +134,14 @@ def test_meshes_from_mesh_2D_run(tmp_path):
     # this is no good practice and only done for testing purposes
     # we recommend to define the boundaries as physical groups within gmsh
     meshes = ot.Meshes.from_mesh(domain)
-    meshes.save(tmp_path)
+    meshes.save(tmp_path / "test_meshes_from_mesh_2D_run")
     assert meshes.validate()
 
-    model = ot.Project(
-        input_file=examples.prj_mechanics,
-        output_file=tmp_path / "default.prj",
-    )
-    model.write_input()
-    model.run_model(write_logs=False, args=f"-m {tmp_path} -o {tmp_path}")
+    project = ot.Project(input_file=examples.prj_mechanics)
+    sim = ot.Model(project, meshes).run(tmp_path)
+    assert sim.status == sim.Status.done
     # check for correct bulk id mapping during extraction
-    mesh = ot.MeshSeries(tmp_path / "mesh.pvd")[-1]
+    mesh = sim.meshseries[-1]
     top_right = mesh.find_closest_point([1.0, 1.0, 0.0])
     max_uy = np.max(mesh["displacement"][:, 1])
     assert max_uy == mesh["displacement"][top_right, 1]

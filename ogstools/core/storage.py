@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 from __future__ import annotations
@@ -32,9 +29,12 @@ def _backup_move(src: Path, dst: Path) -> None:
 
 
 def _date_temp_path(
-    class_id: str, suffix: str | None = None, id: str | None = None
+    class_id: str,
+    suffix: str | None = None,
+    id: str | None = None,
+    temp: Path | None = None,
 ) -> Path:
-    dir = tempfile.gettempdir()
+    dir = temp or Path(tempfile.gettempdir()) / "ogstools"
 
     suffix = "." + suffix if suffix else ""
     if not id:
@@ -42,7 +42,7 @@ def _date_temp_path(
 
     if suffix:
         return Path(dir) / class_id / id / ("default" + suffix)
-    return Path(dir) / class_id / (id + suffix)
+    return Path(dir) / class_id / id
 
 
 def _temp_id() -> str:
@@ -113,6 +113,7 @@ class StorageBase(abc.ABC):
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
+    Temppath = None
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter
     _SAVE_STATE_ATTRS = (
@@ -232,7 +233,7 @@ class StorageBase(abc.ABC):
                 path.unlink()
                 if target.is_dir():
                     shutil.copytree(
-                        target, path, symlinks=False, copy_function=shutil.copy2
+                        target, path, symlinks=True, copy_function=shutil.copy2
                     )
                     if recursive:
                         for child in path.iterdir():
@@ -275,9 +276,10 @@ class StorageBase(abc.ABC):
         """
         if path is None:
             return repr(None)
+        resolved = Path(path).resolve()
         if for_repr:
-            return f"{str(path)!r}"
-        return f"file://{str(path)!s}"
+            return f"{str(resolved)!r}"
+        return f"file://{resolved!s}"
 
     def _component_status_str(self, obj: StorageBase, name: str) -> str:
         """
@@ -288,7 +290,7 @@ class StorageBase(abc.ABC):
         :returns:    Formatted status string.
         """
         if obj.active_target:  # is_saved
-            return f"{name}: saved to {self._format_path(obj.active_target.absolute())}"
+            return f"{name}: saved to {self._format_path(obj.active_target)}"
         return f"{name}: not saved (planned to {self._format_path(obj.next_target)})"
 
     def _save_or_link_child(
@@ -524,7 +526,7 @@ class StorageBase(abc.ABC):
 
     def _date_temp_path(self) -> Path:
         suffix = self._ext
-        return _date_temp_path(self.class_id, suffix, self._id)
+        return _date_temp_path(self.class_id, suffix, self._id, self.Temppath)
 
     def _reset_save_state(self) -> None:
         """

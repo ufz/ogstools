@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import dataclass
 from enum import Enum
@@ -93,6 +90,7 @@ class Context:
     iteration_number: None | int = None
     iteration_step_status: StepStatus = StepStatus.NOT_STARTED
     simulation_status: StepStatus = StepStatus.NOT_STARTED
+    sequential_consistency: bool = True
 
     def __str__(self) -> str:
         return (
@@ -128,23 +126,27 @@ class Context:
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
         if isinstance(x, TimeStepEnd):
-            assert (
-                x.time_step == self.time_step
-            ), f"Time step: {x}. Current status: {self.time_step}, {self}"
+            if self.sequential_consistency:
+                assert (
+                    x.time_step == self.time_step
+                ), f"Time step: {x}. Current status: {self.time_step}, {self}"
             self.time_step_status = StepStatus.TERMINATED
         if isinstance(x, SolvingProcessStart):
-            assert not self.process or x.process > self.process
+            if self.sequential_consistency:
+                assert not self.process or x.process > self.process
             self.process = x.process
             self.process_step_status = StepStatus.RUNNING
         if isinstance(x, SolvingProcessEnd):
-            assert x.process == self.process
+            if self.sequential_consistency:
+                assert x.process == self.process
             self.process_step_status = StepStatus.TERMINATED
 
         if isinstance(x, IterationStart):
             self.iteration_number = x.iteration_number
             self.iteration_step_status = StepStatus.RUNNING
         if isinstance(x, IterationEnd):
-            assert x.iteration_number == self.iteration_number
+            if self.sequential_consistency:
+                assert x.iteration_number == self.iteration_number
             self.iteration_step_status = StepStatus.TERMINATED
 
 

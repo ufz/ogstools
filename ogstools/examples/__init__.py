@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Sequence
 from typing import Literal
@@ -162,9 +159,8 @@ def load_meshes_simple_lf():
     )
 
     # Add data array 'pressure' to the left and right meshes boundary meshes
-    points_shape = np.shape(meshes["left"].points)
-    meshes["left"].point_data["pressure"] = np.full(points_shape[0], 2.9e7)
-    meshes["right"].point_data["pressure"] = np.full(points_shape[0], 3e7)
+    meshes["left"].point_data["pressure"] = 2.9e7
+    meshes["right"].point_data["pressure"] = 3.1e7
 
     return meshes
 
@@ -203,6 +199,9 @@ feflow_model_2D_CT_t_28 = _feflow_dir / "CT_2D_line_28.fem"
 feflow_model_2D_HTC = _feflow_dir / "HTC.fem"
 feflow_model_2D_HTA = _feflow_dir / "HTA.fem"
 
+log_lf_simple_ranks_none = _logs_dir / "lf_simple_ranks_none.txt"
+log_lf_simple_ranks_1 = _logs_dir / "lf_simple_ranks_1.txt"
+log_lf_simple_ranks_3 = _logs_dir / "lf_simple_ranks_3.txt"
 log_const_viscosity_thermal_convection = (
     _logs_dir / "ConstViscosityThermalConvection.log"
 )

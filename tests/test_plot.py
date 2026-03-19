@@ -4,6 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from tempfile import mkstemp
 from typing import ClassVar
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -389,6 +390,7 @@ class TestPlotting:
         fig.tight_layout()
         return fig
 
+    @pytest.mark.tools
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     def test_lineplot_PETSC(self):
         """Test plot.line with PETSC results via image comparison."""
@@ -463,7 +465,8 @@ class TestPlotting:
             )
             fig.axes[0].set_title(f"{timevalue:.1f} yrs", fontsize=32)
 
-        anim = ot.plot.animate(fig, plot_func, ms.timevalues, ms)
+        with patch("ogstools.plot.animation.tqdm", lambda x, **kw: x):
+            anim = ot.plot.animate(fig, plot_func, ms.timevalues, ms)
         if save is None:
             anim.to_jshtml()
         elif save:

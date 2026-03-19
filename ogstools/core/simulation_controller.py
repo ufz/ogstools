@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 import abc
@@ -129,8 +126,11 @@ class SimulationController(abc.ABC):
             sim.id = id
             return sim
         if target:
+            # This is basically self.save(target) but without pre_save
             sim._next_target = Path(target)
             sim.user_specified_target = True
+            sim._save_impl()
+            sim._post_save(user_defined=True)
 
         sim._propagate_target()
         return sim
@@ -167,12 +167,7 @@ class SimulationController(abc.ABC):
     @property
     def cmd(self) -> str:
         """Get the full command used to run the simulation."""
-        return (
-            f"{self.model_ref.execution.ogs_bin_path}"
-            f" {self.model_ref.project.prjfile}"
-            f" -m {self.model_ref.meshes.active_target}"
-            f" -o {self.result.next_target}"
-        )
+        return f"{self.model_ref.cmd} -o {self.result.next_target}"
 
     def error_report(self) -> str:
         """

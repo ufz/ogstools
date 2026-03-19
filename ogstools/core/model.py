@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 import copy
@@ -118,7 +115,7 @@ class Model(StorageBase):
         elif isinstance(execution, Path | str):
             self.execution = Execution.from_file(execution)
         else:  # None
-            self.execution = Execution()
+            self.execution = Execution.from_default()
             # Already initialized as not saved and user_specified_target=False
 
     @classmethod
@@ -194,7 +191,8 @@ class Model(StorageBase):
     def _save_impl(
         self, dry_run: bool = False, overwrite: bool | None = None
     ) -> list[Path]:
-        self.meshes.num_partitions = self.execution.mpi_ranks
+        if self.execution.mpi_ranks is not None:
+            self.meshes.add_partitions(self.execution.mpi_ranks)
 
         files: list[Path] = []
 
@@ -212,6 +210,11 @@ class Model(StorageBase):
             dry_run,
             overwrite,
         )
+
+        envrc = self.next_target / ".envrc"
+        if not dry_run:
+            envrc.write_text(f'export cmd="{self.cmd}"\n')
+        files.append(envrc)
 
         return files
 
@@ -270,7 +273,13 @@ class Model(StorageBase):
         :returns:           A :class:`ogstools.Simulation` object containing the completed
                             simulation results and metadata.
         """
-        sim_controller = self.controller(sim_output=None, overwrite=overwrite)
+        if id is not None and target is None:
+            target = StorageBase.saving_path() / "Simulation" / id
+        target_result = Path(target) if target else None
+
+        sim_controller = self.controller(
+            sim_output=target_result, overwrite=overwrite
+        )
         return sim_controller.run(target=target, id=id)
 
     def controller(
@@ -288,16 +297,24 @@ class Model(StorageBase):
           inspect intermediate results) when execution.interactive is True
         - OGSNativeController: Runs to completion when execution.interactive is False
 
-        :param sim_output:  Optional path where simulation output should be written.
+        :param sim_output:  Optional path where simulation should be written.
                             If None, uses a default location.
         :param dry_run:     If True, prints the command that would be executed
                             but does not actually run the simulation.
         :returns:           A SimulationController for managing the simulation.
         """
 
+        sim_result = (
+            Path(sim_output) / "result" if sim_output is not None else None
+        )
+        sim_model = (
+            Path(sim_output) / "model" if sim_output is not None else None
+        )
         # ToDo Could also check if Model differs between the saved Model and the provided object
         if not self.is_saved:
+            self._next_target, _ = self._target_for_save(sim_model)
             self._propagate_target()
+            # self._pre_save()
             self._save_impl(overwrite=overwrite, dry_run=dry_run)
             self._post_save(False, False, False)
 
@@ -312,13 +329,13 @@ class Model(StorageBase):
             )
 
             return OGSInteractiveController(
-                model_ref=self, sim_output=sim_output, overwrite=overwrite
+                model_ref=self, sim_output=sim_result, overwrite=overwrite
             )
 
         from .native_simulation_controller import OGSNativeController
 
         return OGSNativeController(
-            model_ref=self, sim_output=sim_output, overwrite=overwrite
+            model_ref=self, sim_output=sim_result, overwrite=overwrite
         )
 
     def _component_repr(
@@ -362,12 +379,7 @@ class Model(StorageBase):
                 f")"
             )
 
-        save_hint = (
-            "\nNote: Components must be saved before use"
-            if not self.is_saved
-            else ""
-        )
-        return f"{construct}{save_hint}\n{base_repr}"
+        return f"{construct}\n{base_repr}"
 
     def __str__(self) -> str:
         base_str = super().__str__()
@@ -396,6 +408,15 @@ class Model(StorageBase):
 
         memo[id(self)] = new
         return new
+
+    @property
+    def cmd(self) -> str:
+        """Get the full OGS command (without output path)."""
+        exe = self.execution
+        meshes_path = self.meshes.active_target or self.meshes.next_target
+        if exe.mpi_ranks is not None and exe.mpi_ranks > 1:
+            meshes_path = meshes_path / "partition" / str(exe.mpi_ranks)
+        return f"{exe.cmd} -m {meshes_path} {self.project.prjfile}"
 
     def plot_constraints(self, **kwargs: typing.Any) -> plt.Figure:
         """Plot the meshes with annotated boundary conditions and source terms.

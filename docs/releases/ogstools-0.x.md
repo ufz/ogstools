@@ -59,6 +59,14 @@ OGS 6.5.7
 - Add monitor for live logfile parsing in a Jupyter notebook
 - `step_start_time` column added to `time_step_vs_iterations()` analysis
 
+### Execution
+
+- Support for parallel execution with MPI
+
+### Logparser
+
+- OGS V1 log format no longer supported; only V2 is parsed
+
 ### Other API Changes
 
 - `Matrix.mean` -> `Matrix.tensor_mean`
@@ -87,6 +95,8 @@ OGS 6.5.7
 
 - plot.line seems to have been missing the very first point of a linesample, now fixed
 - cli dashed arguments now work as expected
+- cli tools with legitimately underscored arguments (e.g. `addDataToRaster`, `checkMesh`,
+  `generateGeometry`) no longer have their argument names incorrectly converted to hyphens
 
 ## Features
 
@@ -95,6 +105,8 @@ OGS 6.5.7
 - **Model**: New class combining project file, meshes, and execution settings into
   a complete OGS model. Can be created from components or loaded from disk.
   - `Model.run()` executes the simulation and returns a `Simulation` object
+  - `Model.run(<path>)` names the output folder directly
+  - `Model.cmd` property to inspect or reuse the full OGS command string
   - `Model.plot_constraints()` visualizes boundary conditions and source terms
   - Supports all storage operations (save, load by folder or ID)
 - **Simulation**: Represents a completed (ongoing by SimulationController) OGS simulation with model and results.
@@ -109,6 +121,13 @@ OGS 6.5.7
 - **Execution**: Manages OGS execution parameters (parallelization, logging, etc.)
   - Configurable OMP threads and assembly threads
   - Execution from YAML files or programmatic configuration
+  - `ogs` parameter accepts binary directory, container path (`.sif`/`.squashfs`), or URL
+  - Built-in container URLs: `Execution.CONTAINER_SERIAL` / `CONTAINER_PARALLEL` (OGS 6.5.7)
+  - Auto-detection via `OGS_BIN_PATH` env var or `$PATH` if `ogs` is not specified
+  - Site-wide defaults via `OGS_EXECUTION_DEFAULTS` env var pointing to a YAML file
+    (see `execution_default_example.yml` for reference)
+  - `Execution.from_default()` / `Execution.default` for sharing a session-wide config
+  - `cmd` property exposes the full OGS command string
 - **Log**: Parser and analyzer for OGS log files
   - `convergence_newton_iteration()` and `convergence_coupling_iteration()` extract
     convergence data
@@ -172,6 +191,9 @@ OGS 6.5.7
 
 ## Infrastructure
 
+- `uv.lock` added for reproducible installs
+- `scripts/pull_containers.py` — helper to pre-pull serial/parallel OGS containers
+- Temporary files now isolated under `tmp/ogstools/` instead of the system temp root
 - Drop Python 3.10 support
 - Add Python 3.14 support
 - Updated pinned environment

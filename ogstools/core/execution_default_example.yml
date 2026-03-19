@@ -1,0 +1,10 @@
+interactive: false
+args: null
+wrapper: null
+mpi_wrapper: mpirun -np
+ogs: https://vip.s3.ufz.de/ogs/public/binaries/ogs6/6.5.7/ogs-6.5.7-petsc.squashfs
+mpi_ranks: 2
+omp_num_threads: 1
+ogs_asm_threads: 1
+write_logs: true
+log_level: info

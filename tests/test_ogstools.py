@@ -6,7 +6,8 @@ import pytest
 from ogstools.definitions import ROOT_DIR
 
 FOLDER_PATH = ROOT_DIR  # <-- Replace with your folder path
-KEYWORD = "# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)"
+KEYWORD = """# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause"""
 CHECK_FIRST_N_LINES = 10  # bash shebang can be before the copyright
 
 
@@ -25,7 +26,7 @@ def get_py_files_missing_keyword(
                         if joined == "":
                             # Skip empty files
                             continue
-                        if not any(keyword.lower() in line for line in lines):
+                        if keyword.lower() not in joined:
                             missing.append(file)
                 except (UnicodeDecodeError, OSError) as e:
                     pytest.fail(f"Failed to read {file}: {e}")

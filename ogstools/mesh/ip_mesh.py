@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 import json
 from collections.abc import Sequence
@@ -276,7 +273,7 @@ def ip_data_threshold(
     for data in [result.point_data, result.cell_data, result.field_data]:
         nan_keys = [k for k, v in data.items() if np.all(np.isnan(v))]
         for key in nan_keys:
-            del data[key]
+            data.remove(key)
 
     mesh_ip = to_ip_point_cloud(result)
     # in 2D there can be a floating point offset in the flat dimension resulting
@@ -287,7 +284,13 @@ def ip_data_threshold(
         idx = np.squeeze(np.argwhere(np.all(np.isclose(pts, pts[0]), axis=0)))
         mesh_ip.points[:, idx] = np.mean(result.points[:, idx])
 
-    data = mesh_ip.sample(result)[scalars]
+    # ToDo: Possible other implementation (current)
+    # This was originally planned: data = mesh_ip.sample(result)[scalars], but got sometimes error on CI
+    cell_ids = result.find_containing_cell(mesh_ip.points)
+    data = result.cell_data[scalars][cell_ids]
+    # data_sampled = mesh_ip.sample(result)[scalars]
+    # assert np.array_equal(data, data_sampled.astype(data.dtype))
+
     condition = (data >= value_bounds[0]) & (data <= value_bounds[1])
     if invert:
         condition = np.invert(condition)

@@ -1,8 +1,5 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Collection
 from itertools import pairwise
@@ -18,7 +15,11 @@ from ogstools.core.storage import _date_temp_path
 def optional_default_file(
     filepath: Path | str | None, class_id: str, suffix: str
 ) -> Path:
-    filepath = Path(filepath) if filepath else _date_temp_path(class_id, suffix)
+    filepath = (
+        Path(filepath)
+        if filepath
+        else _date_temp_path(class_id, suffix.lstrip("."))
+    )
     filepath.parent.mkdir(parents=True, exist_ok=True)
     return filepath
 

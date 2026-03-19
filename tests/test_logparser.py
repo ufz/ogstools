@@ -16,13 +16,12 @@ from watchdog.observers import Observer, ObserverType
 from ogstools import logparser as lp
 from ogstools.examples import (
     debug_parallel_3,
-    info_parallel_1,
     log_adaptive_timestepping,
-    log_petsc_mpi_1,
-    log_petsc_mpi_2,
+    log_lf_simple_ranks_1,
+    log_lf_simple_ranks_3,
+    log_lf_simple_ranks_none,
     serial_convergence_long,
     serial_critical,
-    serial_info,
     serial_v2_coupled_ht,
     serial_warning_only,
 )
@@ -34,6 +33,7 @@ from ogstools.logparser import (
     time_step_vs_iterations,
     time_step_vs_step_size_and_time,
 )
+from ogstools.logparser.log import Log
 from ogstools.logparser.log_file_handler import (
     LogFileHandler,
     normalize_regex,
@@ -59,58 +59,6 @@ def log_types(records):
 class TestLogparser:
     """Test cases for logparser. Until version 6.5.4"""
 
-    def test_parallel_1_compare_serial_info(self):
-        # Only for MPI execution with 1 process we need to tell the log parser by force_parallel=True!
-        records_p = lp.parse_file(info_parallel_1, force_parallel=True)
-        num_of_record_type_p = [len(i) for i in log_types(records_p).values()]
-
-        records_s = lp.parse_file(serial_info)
-        num_of_record_type_s = [len(i) for i in log_types(records_s).values()]
-
-        assert (
-            num_of_record_type_s == num_of_record_type_p
-        ), f"The number of logs for each type must be equal for parallel log (got: {len(num_of_record_type_p)}) and serial log (got: {len(num_of_record_type_s)}))"
-
-    def test_parallel_3_debug(self):
-        records = lp.parse_file(debug_parallel_3)
-        mpi_processes = 3
-
-        assert (
-            len(records) % mpi_processes == 0
-        ), "The number of logs should by a multiple of the number of processes)"
-
-        num_of_record_type = [len(i) for i in log_types(records).values()]
-        assert all(
-            i % mpi_processes == 0 for i in num_of_record_type
-        ), "The number of logs of each type should be a multiple of the number of processes"
-
-        df_records = pd.DataFrame(records)
-        df_records = lp.fill_ogs_context(df_records)
-        df_ts = lp.analysis_time_step(df_records)
-
-        # some specific values
-        record_id = namedtuple("id", "mpi_process time_step")
-        digits = 6
-        assert df_ts.loc[
-            record_id(mpi_process=0.0, time_step=1.0), "output_time"
-        ] == pytest.approx(0.001871, digits)
-        assert df_ts.loc[
-            record_id(mpi_process=1.0, time_step=1.0), "output_time"
-        ] == pytest.approx(0.001833, digits)
-        assert df_ts.loc[
-            record_id(mpi_process=0.0, time_step=1.0), "linear_solver_time"
-        ] == pytest.approx(0.004982, digits)
-        assert df_ts.loc[
-            record_id(mpi_process=0.0, time_step=1.0), "assembly_time"
-        ] == pytest.approx(0.002892, digits)
-        assert df_ts.loc[
-            record_id(mpi_process=1.0, time_step=1.0), "dirichlet_time"
-        ] == pytest.approx(0.000250, digits)
-        assert df_ts.loc[
-            record_id(mpi_process=2.0, time_step=1.0),
-            "time_step_solution_time",
-        ] == pytest.approx(0.008504, digits)
-
     def test_serial_convergence_newton_iteration_long(self):
         records = lp.parse_file(serial_convergence_long)
         df_records = pd.DataFrame(records)
@@ -122,7 +70,7 @@ class TestLogparser:
             "id",
             "time_step coupling_iteration process iteration_number component",
         )
-        digits = 6
+        rel_tol = 0.05
         assert df_cni.loc[
             record_id(
                 time_step=1.0,
@@ -132,7 +80,7 @@ class TestLogparser:
                 component=-1,
             ),
             "dx",
-        ] == pytest.approx(9.906900e05, digits)
+        ] == pytest.approx(9.906900e05, rel_tol)
         assert df_cni.loc[
             record_id(
                 time_step=10.0,
@@ -142,7 +90,7 @@ class TestLogparser:
                 component=1,
             ),
             "x",
-        ] == pytest.approx(1.066500e00, digits)
+        ] == pytest.approx(1.066500e00, rel_tol)
 
     def test_serial_convergence_coupling_iteration_long(self):
         records = lp.parse_file(serial_convergence_long)
@@ -247,24 +195,6 @@ class TestLogparser:
             f"Difference between final clock_time {final_clock_time} and "
             f"total_runtime {run_time} from timestamps is to large."
         )
-
-    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-    @pytest.mark.parametrize("x_metric", ["time_step", "model_time"])
-    @pytest.mark.parametrize(
-        "log", [log_adaptive_timestepping, log_petsc_mpi_1, log_petsc_mpi_2]
-    )
-    def test_plot_convergence_error(self, x_metric: str, log: Path):
-        """Test via image comparison."""
-        records = lp.parse_file(log)
-        df_log = lp.fill_ogs_context(pd.DataFrame(records))
-        df_log_copy = df_log.copy()
-        fig, axes = plt.subplots(3, figsize=(25, 30))
-        lp.plot_convergence(df_log, "dx", x_metric, fig=fig, ax=axes[0])
-        lp.plot_convergence(df_log, "dx_x", x_metric, fig=fig, ax=axes[1])
-        lp.plot_convergence(df_log, "x", x_metric, fig=fig, ax=axes[2])
-        pd.testing.assert_frame_equal(df_log_copy, df_log)
-        assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
-        return fig
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     @pytest.mark.parametrize(
@@ -512,3 +442,62 @@ class TestLogparser_Version2:
         assert len(df_ts) >= timestep
         assert df_ts["step_size"].iloc[timestep + 1] == expected_step_size
         assert df_ts["step_start_time"].iloc[timestep] == expected_time
+
+    def test_parallel_3_debug(self):
+        records = lp.parse_file(debug_parallel_3)
+        assert lp.log_parser.read_mpi_processes(debug_parallel_3) == 3
+
+        assert (
+            len(records) == 508
+        ), f"The expected number of records is 508. Got: {len(records)}."
+
+        df_records = pd.DataFrame(records)
+        df_ts = lp.analysis_time_step(df_records)
+
+        # some specific values
+        record_id = namedtuple("id", "mpi_process time_step")
+        rel_tol = 0.01
+        assert df_ts.loc[
+            record_id(mpi_process=0.0, time_step=1.0), "output_time"
+        ] == pytest.approx(0.000978, rel_tol)
+        assert df_ts.loc[
+            record_id(mpi_process=1.0, time_step=1.0), "output_time"
+        ] == pytest.approx(0.000885, rel_tol)
+        assert df_ts.loc[
+            record_id(mpi_process=0.0, time_step=1.0), "linear_solver_time"
+        ] == pytest.approx(0.000916, rel_tol)
+        assert df_ts.loc[
+            record_id(mpi_process=0.0, time_step=1.0), "assembly_time"
+        ] == pytest.approx(0.000911, rel_tol)
+        assert df_ts.loc[
+            record_id(mpi_process=1.0, time_step=1.0), "dirichlet_time"
+        ] == pytest.approx(5.0535e-05, rel_tol)
+        assert df_ts.loc[
+            record_id(mpi_process=2.0, time_step=1.0),
+            "time_step_solution_time",
+        ] == pytest.approx(0.0019652, rel_tol)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize("x_metric", ["time_step", "model_time"])
+    @pytest.mark.parametrize(
+        "log_file",
+        [
+            log_lf_simple_ranks_none,
+            log_lf_simple_ranks_1,
+            log_lf_simple_ranks_3,
+        ],
+    )
+    def test_plot_convergence_error(self, x_metric: str, log_file):
+        """Test via image comparison."""
+        fig, axes = plt.subplots(3, figsize=(25, 30))
+        log = Log(log_file)
+        log.plot_convergence()
+        df_log = log.df_log
+        df_log_copy = df_log.copy()
+
+        log.plot_convergence("dx", x_metric, fig=fig, ax=axes[0])
+        log.plot_convergence("dx_x", x_metric, fig=fig, ax=axes[1])
+        log.plot_convergence("x", x_metric, fig=fig, ax=axes[2])
+        pd.testing.assert_frame_equal(df_log_copy, df_log)
+        assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
+        return fig

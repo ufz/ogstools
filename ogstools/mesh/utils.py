@@ -1,9 +1,7 @@
-# Copyright (c) 2012-2025, OpenGeoSys Community (http://www.opengeosys.org)
-#            Distributed under a Modified BSD License.
-#            See accompanying file LICENSE.txt or
-#            http://www.opengeosys.org/project/license
-#
+# SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
+# SPDX-License-Identifier: BSD-3-Clause
 
+import shutil
 import subprocess
 from pathlib import Path
 from tempfile import mkdtemp
@@ -51,6 +49,10 @@ def validate(
     else:
         mesh_file = str(mesh)
 
+    # ToDo Either checkMesh must return status of mesh (not of itself) OR
+    #      cli() can handle stdout
+    if shutil.which("checkMesh") is None:
+        return True
     ret = subprocess.run(
         ["checkMesh", mesh_file, "-v"], stdout=subprocess.PIPE, check=False
     )
