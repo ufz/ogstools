@@ -207,9 +207,9 @@ This work has been supported by multiple funding sources, including `AREHS` unde
 The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under (grant \[Grant Number\]) by `Deutsche Forschungsgemeinschaft` (DFG)
 
 [^1]: https://ogstools.opengeosys.org
-[^2]: https://www.opengeosys.org/stable/docs/processes/liquid-flow/liquidflow/
+[^2]: https://www.opengeosys.org/6.5.7/docs/processes/liquid-flow/liquidflow/
 [^3]: https://www.opengeosys.org/6.5.7/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
-[^4]: https://ogstools.opengeosys.org/stable/auto_examples/howto_quickstart/plot_framework_short.html
+[^4]: https://ogs.ogs.xyz/tools/ogstools/auto_examples/howto_quickstart/plot_framework.html
 [^5]: https://www.opengeosys.org/6.5.7/docs/tools/getting-started/overview/
 
 ## References
