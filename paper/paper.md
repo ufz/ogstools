@@ -81,20 +81,13 @@ bibliography: paper.bib
 
 ### Development efficiency
 
-Modellers of OGS iteratively run simulations, analyse results, and refine their models with the goal of improving the accuracy, efficiency and reliability of the simulation results.
+Modellers of OGS iteratively run simulations, analyse results, and refine their models.
 To improve efficiency, repetitive steps in the model development cycle should be formalised. Python was chosen as the formalisation language because it matches the existing expertise of the user base.
 The Python library introduced here serves as a central platform to collect and improve common functionalities needed by modellers of OGS.
 
 ### Complex workflows
 
-A workflow is a structured sequence of steps that processes data and executes computations to achieve a specific goal \[@diercks2022workflows\].
-In our scientific research, workflows need to integrate multiple steps—such as geological data preprocessing, ensemble simulations with OGS, domain-specific analysis and visualisation—into complex, fully automated, and therefore reproducible sequences.
-Typically, one specific workflow is implemented to answer one specific scientific question.
-Workflow-based approaches have been proven to adhere to the `FAIR principles` \[@goble2020fair\], \[@Wilkinson_2025\]. The typical approach is to use existing workflow management software that covers domain-independent parts like dependency graph description, computational efficiency, data management, execution control, multi-user collaboration and data provenance \[@Bilke2025\].
-Building on the Python ecosystem, our goal is an integrated solution in which all components, including the Python-based workflow managers like `Snakemake` \[@Köster2012\] and `AiiDA` \[@Huber2020\], function together.
-Common and frequently used functionality found within workflow components is made reusable and provided in this Python library.
-It focuses on functionalities directly related to (1) the OGS core simulator and its specific input and output data, (2) domain-specific definitions in geo-science, (3) finite element modelling (FEM), and (4) numerical computation.
-The workflow components are constructed from generic Python libraries, OGSTools, and integration code for the respective workflow manager chosen.
+In our scientific research, workflows integrate multiple steps — geological data preprocessing, ensemble simulations with OGS, domain-specific analysis and visualisation — into fully automated, reproducible sequences. Workflow-based approaches adhere to the `FAIR principles` \[@goble2020fair\], \[@Wilkinson_2025\], using workflow management software for dependency management, execution control, and data provenance \[@Bilke2025\]. Building on Python-based workflow managers like `Snakemake` \[@Köster2012\] and `AiiDA` \[@Huber2020\], OGSTools provides reusable, domain-specific functionality as the shared foundation across workflow components.
 
 ### Test suite
 
@@ -208,10 +201,7 @@ Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
 
 ### Workflows
 
-The AREHS-Project (effects of changing boundary conditions on the development of hydrogeological systems: numerical long-term modelling considering thermal–hydraulic–mechanical(–chemical) coupled effects) \[@Kahnt2021\] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany.
-\[@Zill2024\] and \[@Silbermann2025\] highlighted the importance of an automated workflow to efficiently develop models to answer the scientific question and to ensure the reproducibility of the results. For reproducibility all material is available at \[@arehs2024\].
-`OpenWorkFlow` \[@openworkflow2023\] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi` is a study that focuses on determining the optimal packing of disposal containers in a repository to ensure temperature limits are not exceeded.
-For scalability and parallelization both workflows use the workflow management software `Snakemake`. The rules are implemented using `OGSTools`.
+OGSTools emerged from and is used in the following research projects. The AREHS-Project \[@Kahnt2021\] provided foundational work that informed the development of OGSTools; \[@Zill2024\] and \[@Silbermann2025\] demonstrated automated workflows for model development and reproducibility, with all material available at \[@arehs2024\]. `OpenWorkFlow` \[@openworkflow2023\] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
 
 ### OpenGeoSys benchmarks
 
