@@ -327,7 +327,9 @@ class TestStorage:
         assert_files_saved(files_overwrite)
         assert files_dry == files
         sim = model_1_1.run()
-        assert sim.status == sim.Status.done
+        assert (
+            sim.status == sim.Status.done
+        ), f"Simulation status: {sim.status_str}"
         sim.save(tmp_path / "y", overwrite=True, archive=True)
         ms = sim.meshseries
         ms.save(tmp_path / "my_ms.pvd", overwrite=True)
