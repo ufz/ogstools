@@ -10,6 +10,7 @@ Its main functionalities include creating and altering OGS6 input files as well 
 import copy
 import difflib
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -357,21 +358,38 @@ class Project(StorageBase):
                 msg = "No inputfile given. Can't build XML tree."
                 raise RuntimeError(msg)
         root = self.tree.getroot()
-        all_occurrences = root.findall(".//include")
-        for occurrence in all_occurrences:
-            self.include_files.append(occurrence.attrib["file"])
-        for i, _ in enumerate(all_occurrences):
-            _tree = ET.parse(str(self.folder / self.include_files[i]), parser)
-            _root = _tree.getroot()
-            parentelement = all_occurrences[i].getparent()
-            children_before = parentelement.getchildren()
-            parentelement.append(_root)
-            parentelement.remove(all_occurrences[i])
-            children_after = parentelement.getchildren()
-            for child in children_after:
-                if child not in children_before:
-                    self.include_elements.append(child)
+        self._expand_includes(root, parser)
         return root
+
+    def _expand_includes(self, root: ET._Element, parser: ET.XMLParser) -> None:
+        """Helper method to expand all `<include file="..."/>` with the XML contents."""
+        for tag in list(root.findall(".//include")):
+            file_attr = tag.attrib.get("file")
+            if file_attr is None:
+                msg = "<include> tag missing 'file' attribute"
+                raise ValueError(msg)
+
+            self.include_files.append(file_attr)
+            include_path = self.folder / file_attr
+            if not include_path.exists():
+                msg = f"Include file: {include_path} does not exist!"
+                raise FileNotFoundError(msg)
+
+            raw = include_path.read_text()
+            content = re.sub(r"<\?xml.*?\?>", "", raw, flags=re.DOTALL).strip()
+
+            wrapper = ET.fromstring(f"<DummyRoot>{content}</DummyRoot>", parser)
+            new_elements = list(wrapper)
+
+            parent = tag.getparent()
+            if parent is None:
+                msg = "<include> element has no parent"
+                raise RuntimeError(msg)
+
+            parent.extend(new_elements)
+            self.include_elements.extend(new_elements)
+            parent.remove(tag)
+        return
 
     def _remove_empty_elements(self) -> None:
         root = self._get_root()

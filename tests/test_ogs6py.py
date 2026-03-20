@@ -1742,3 +1742,29 @@ class TestiOGS:
         )
         prj.write_input(tmp_path / "default.prj")
         assert prj == ot.Project(ref_prj)
+
+    def test_mock_xml_include(self, tmp_path) -> None:
+        """Tests include tag with a mock `include.xml`"""
+        prj = ot.Project()
+        prj.add_include(".", "include.xml")
+        prj_mock_xml_file = tmp_path / "prj_mock_xml_include"
+        prj.save(prj_mock_xml_file)
+
+        include = ot.Project()
+        include.processes.set_process(
+            name="include_test", type="HT", integration_order=1
+        )
+        include.time_loop.add_output(type="VTK", prefix="include_test")
+        with Path.open(prj_mock_xml_file / "include.xml", "wb") as fp:
+            # Write include.xml with some XML elements
+            fp.write(ET.tostring(include.processes.processes))
+            fp.write(ET.tostring(include.time_loop.time_loop))
+
+        new_prj = ot.Project.from_folder(prj_mock_xml_file)
+        root = new_prj._get_root()
+
+        assert (
+            root.findtext("./processes/process[type='HT']/name")
+            == "include_test"
+        )
+        assert root.findtext("./time_loop/output/prefix") == "include_test"
