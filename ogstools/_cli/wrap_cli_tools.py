@@ -10,7 +10,6 @@ from .provide_ogs_cli_tools_via_wheel import binaries_list, ogs_with_args
 
 
 class CLI_ON_PATH:
-
     def __init__(self, ogs_bin_dir: Path):
         self.ogs_bin_dir = ogs_bin_dir
         for b in binaries_list:
@@ -27,7 +26,7 @@ class CLI_ON_PATH:
         The entries of args are passed as is to the commandline tool.
         The entries of kwargs are transformed: one-letter keys get a single
         dash as a prefix, multi-letter keys are prefixed with two dashes,
-        underscores are replaced with dashes.
+        underscores are replaced with dashes if necessary.
 
         Thereby, commandline tools can be used in a "natural" way from Python, e.g.:
 
@@ -152,29 +151,6 @@ class CLI_ON_PATH:
             )
             return subprocess.call(cmdline, stdout=stdout, stderr=stderr)
 
-        # TODO: Only arguments with underscores work. Arguments with dashes not.
-        run_cmd.__doc__ = f"""
-            This function wraps the commandline tool {attr} for easy use from Python.
-
-            It returns the return code of the commandline tool.
-
-            The entries of args are passed as is to the commandline tool.
-            The entries of kwargs are transformed: one-letter keys get a single
-            dash as a prefix, multi-letter keys are prefixed with two dashes,
-            underscores are replaced with dashes.
-
-            Thereby, commandline tools can be used in a "natural" way from Python, e.g.:
-
-            >>> cli = CLI()
-            >>> cli.{attr}("--help") # prints a help text
-            ...
-            >>> cli.ogs(help=True) # flags without any additional value can be set to True
-            ...
-
-            A more useful example. The following will create a line mesh:
-
-            >>> outfile = "line.vtu"
-            >>> cli.generateStructuredMesh(e="line", lx=1, nx=10, o=outfile)
-            """
+        run_cmd.__doc__ = str(CLI_ON_PATH.ogs.__doc__).replace("ogs", attr)
 
         return run_cmd
