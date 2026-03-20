@@ -57,7 +57,7 @@ diff_mesh = ot.mesh.difference(
 
 
 ot.plot.contourf(diff_mesh, ot.variables.temperature, fig=fig, ax=ax[2])
-ax[0].set_title(r"$T(\mathrm{t}_{0})$")
-ax[1].set_title(r"$T(\mathrm{t}_{end})$")
-ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$")
+ax[0].set_title(r"$T(\mathrm{t}_{0})$", fontsize=32)
+ax[1].set_title(r"$T(\mathrm{t}_{end})$", fontsize=32)
+ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$", fontsize=32)
 fig.tight_layout()

@@ -161,17 +161,16 @@ class Variable:
             if not any(matches):
                 raise KeyError(error_msg)
             data_key = data_keys[matches.index(True)]
-            # TODO: remove these here and return them from compute functions
-            if data_key == f"{variable.output_name}_difference":
+            if data_key == variable.difference.output_name:
                 return variable.difference
-            if data_key.rsplit("_")[0] in [
-                "min",
-                "max",
-                "mean",
-                "median",
-                "sum",
-                "std",
-                "var",
+            if data_key in [
+                variable.min.output_name,
+                variable.max.output_name,
+                variable.mean.output_name,
+                variable.median.output_name,
+                variable.sum.output_name,
+                variable.std.output_name,
+                variable.var.output_name,
             ]:
                 return variable.replace(
                     data_name=data_key,
