@@ -30,6 +30,8 @@ For first steps, please take a look at our [examples](https://ogstools.opengeosy
 
 # Contribution
 
+> **GitHub mirror:** This repository is also mirrored at [github.com/ufz/ogstools](https://github.com/ufz/ogstools) — pull requests opened there are welcome and will be reviewed.
+
 Please report bugs on [Discourse](https://discourse.opengeosys.org) or fork the repository on our [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and create a merge request. We also welcome contributions in the form of merge requests and are here to assist in ensuring that the code passes all quality checks. We recommend starting with the [latest version of the Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) as your initial point of reference.
 
 You may also contribute by [donating](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/blob/main/donation.md) your existing code snippets.
