@@ -105,7 +105,7 @@ OGS 6.5.7
 - **Model**: New class combining project file, meshes, and execution settings into
   a complete OGS model. Can be created from components or loaded from disk.
   - `Model.run()` executes the simulation and returns a `Simulation` object
-  - `Model.run(<path>)` names the output folder directly
+  - `Model.run(<path>)` writes the simulation results into the specified folder
   - `Model.cmd` property to inspect or reuse the full OGS command string
   - `Model.plot_constraints()` visualizes boundary conditions and source terms
   - Supports all storage operations (save, load by folder or ID)
@@ -115,9 +115,6 @@ OGS 6.5.7
   - `Simulation.status` and `Simulation.status_str` track simulation state
   - Full save/load support with automatic storage of model, results, and logs
   - `Simulation.restart` allows restarting a simulation from a previous run.
-- **Result**: Wrapper for simulation results providing convenient access to mesh series.
-  - Direct indexing to access timesteps (e.g., `result[-1]` for final timestep)
-  - Integrates with existing MeshSeries functionality
 - **Execution**: Manages OGS execution parameters (parallelization, logging, etc.)
   - Configurable OMP threads and assembly threads
   - Execution from YAML files or programmatic configuration
@@ -150,7 +147,6 @@ OGS 6.5.7
 
 ### MeshSeries
 
-- Now has a difference method.
 - added support for logarithmic scaling in `ot.MeshSeries.plot_time_slice`.
 - new functions for renaming domain and subdomains
 - can now be scaled spatially / temporally in the Constructor
@@ -200,8 +196,6 @@ OGS 6.5.7
 - Test with container from 3.10 to 3.12
 - Dependency and tooling update
 - Use Intersphinx for 3rd party package documentation reference
-- Gallery example figures are now tested against hashes which avoids
-  unexpectedly changing figures.
 - Monitor (Bokeh) is optional dependency
 
 ## Documentation
