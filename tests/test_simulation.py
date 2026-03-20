@@ -330,3 +330,20 @@ def test_model_restart(tmp_path) -> None:
     ms_restart = sim_restart.meshseries
     assert all(ms_restart.timevalues == new_timevalues)
     assert ot.MeshSeries.compare(ms_full[timestep_break:], ms_restart)
+
+
+@pytest.mark.system
+def test_simulation_status_invalid_prj() -> None:
+
+    file = (
+        examples.EXAMPLES_DIR
+        / "prj"
+        / "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj"
+    )
+    prj = ot.Project(input_file=file).copy()
+    prj.add_element(
+        tag="invalid", attrib_list=["invalid"], attrib_value_list=["0"]
+    )
+    model = ot.Model(prj)
+    sim = model.run()
+    assert sim.status == sim.Status.error

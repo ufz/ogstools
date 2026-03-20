@@ -189,21 +189,12 @@ class Simulation(StorageBase):
         if not self.log_file.exists() and self.model.execution.write_logs:
             return SimulationController.Status.error
 
-        # Parse the log to check for errors
-        try:
-            log_df = self.log.df_log
-            if "type" in log_df.columns:
-                has_errors = (
-                    log_df["type"]
-                    .str.contains("error|critical", case=False, na=False)
-                    .any()
-                )
-                if has_errors:
-                    return SimulationController.Status.error
-        except Exception:
-            return SimulationController.Status.unknown
-
-        return SimulationController.Status.done
+        log_text = self.log_file.read_text(errors="replace").lower()
+        if "error" in log_text or "critical" in log_text:
+            return SimulationController.Status.error
+        if "simulation completed" in log_text:
+            return SimulationController.Status.done
+        return SimulationController.Status.running
 
     @property
     def status_str(self) -> str:
@@ -248,7 +239,7 @@ class Simulation(StorageBase):
 
         :returns: A Log object for querying simulation log data.
         """
-        if not self._log:
+        if self._log is None or self._log.df_records.empty:
             self._log = Log(self.log_file)
         return self._log
 
