@@ -15,10 +15,7 @@ import tempfile
 from pathlib import Path
 
 import ogstools as ot
-from ogstools.examples import (
-    load_meshes_simple_lf,
-    load_project_simple_lf,
-)
+from ogstools.examples import load_meshes_simple_lf, load_project_simple_lf
 
 # %%
 # 1. Setup: Load Project and Meshes
@@ -45,8 +42,12 @@ print(f"Simulation status: {sim.status_str}")
 # Plot final pressure distribution
 fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
 
-# Plot convergence behavior
-fig = sim.log.plot_convergence()
+
+# %%
+# Plot simulation time
+df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
+times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
+df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
 
 # %%
 # 4. Store: Save Simulation

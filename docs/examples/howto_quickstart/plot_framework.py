@@ -25,10 +25,7 @@ from pathlib import Path
 import numpy as np
 
 import ogstools as ot
-from ogstools.examples import (
-    load_meshes_simple_lf,
-    load_project_simple_lf,
-)
+from ogstools.examples import load_meshes_simple_lf, load_project_simple_lf
 
 # %%
 # 1. Setup: Project Files and Meshes
@@ -175,8 +172,10 @@ fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
 # The log parser extracts convergence data, timestep information, and errors
 # from the simulation log file:
 
-# Plot nonlinear solver convergence behavior
-fig_conv = sim.log.plot_convergence()
+# Plot simulation time
+df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
+times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
+df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
 
 # %% [markdown]
 # The convergence plot shows how the nonlinear solver converged at each
