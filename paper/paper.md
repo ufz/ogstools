@@ -136,7 +136,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 ### Example
 
 The following example shows a complete `OGS` Liquid Flow [^2] simulation workflow, adapted to 2D from [^3].
-First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `pyvista` functionality.
+First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` \[@sullivan2019pyvista\] functionality.
 After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An extended version of this example is available in the OGSTools documentation [^4].
 
 ```python
