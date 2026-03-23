@@ -129,6 +129,7 @@ class OGSNativeController(SimulationController):
         """
         self.ret_code = self.process.wait()
         self.runtime_end = time.time()
+        (self.result.next_target / "returncode").write_text(str(self.ret_code))
         return self._create_simulation(target=target, id=id)
 
     def status_str(self) -> str:

@@ -174,27 +174,30 @@ class Simulation(StorageBase):
     @property
     def status(self) -> SimulationStatus:
         """
-        Get the current simulation status from the log file.
+        Get the current simulation status from the return code file.
 
-        Checks the log for errors or critical messages to determine if the
-        simulation completed successfully or terminated with an error.
+        Reads the returncode file written by the simulation controller to
+        determine if the simulation completed successfully or with an error.
 
-        :returns: SimulationStatus enum value (done or error).
+        :returns: SimulationStatus enum value (running, done, error, or unknown).
         """
-        from .simulation_controller import SimulationController
-
-        if not self.model.execution.write_logs:
-            return SimulationController.Status.unknown
-
-        if not self.log_file.exists() and self.model.execution.write_logs:
-            return SimulationController.Status.error
-
-        log_text = self.log_file.read_text(errors="replace").lower()
-        if "error" in log_text or "critical" in log_text:
-            return SimulationController.Status.error
-        if "simulation completed" in log_text:
-            return SimulationController.Status.done
-        return SimulationController.Status.running
+        returncode_file = self.result.sim_output / "returncode"
+        if returncode_file.exists():
+            return (
+                SimulationStatus.done
+                if returncode_file.read_text().strip() == "0"
+                else SimulationStatus.error
+            )
+        if not self.log_file.exists():
+            return SimulationStatus.unknown
+        log_text = self.log_file.read_text(errors="replace")
+        if "Error" in log_text or "Critical" in log_text:
+            return SimulationStatus.error
+        if "Simulation completed" in log_text:
+            return SimulationStatus.done
+        if "OGS started on" in log_text:
+            return SimulationStatus.running
+        return SimulationStatus.not_started
 
     @property
     def status_str(self) -> str:

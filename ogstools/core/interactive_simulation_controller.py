@@ -191,6 +191,8 @@ class OGSInteractiveController(SimulationController):
             else self.Status.error
         )
         self.runtime_end = time.time()
+        ret_code = 0 if self._status == self.Status.done else 1
+        (self.result.next_target / "returncode").write_text(str(ret_code))
 
         return self._create_simulation(target=target, id=id)
 
