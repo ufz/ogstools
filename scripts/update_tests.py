@@ -29,7 +29,7 @@ def update_convergence_logs():
         sim = model.run()
         assert (
             sim.status == sim.Status.done
-        ), f"Simulation failed for ranks={ranks}"
+        ), f"Simulation failed for ranks={ranks}. {sim.status_str}"
         shutil.copy(sim.log_file, log_file)
         print(f"Saved {log_file}")
 

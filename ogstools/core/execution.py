@@ -25,7 +25,7 @@ class Execution(StorageBase):
 
     **OGS binary / container selection**
 
-    The ``ogs`` parameter accepts either:
+    The ``ogs_path`` parameter accepts either:
 
     - A directory containing the OGS executable (``"/path/to/bin"``).
     - A container image path or URL (``.sif`` / ``.squashfs``), in which case
@@ -33,7 +33,7 @@ class Execution(StorageBase):
 
     Use pre-built container image URLs::
 
-        Execution(ogs=Execution.CONTAINER_PARALLEL_V6_5_7)
+        Execution(ogs_path=Execution.CONTAINER_PARALLEL_V6_5_7)
 
     When ``ogs`` is not set, the executable is looked up via ``OGS_BIN_PATH``
     and, if not defined, on PATH.
@@ -47,13 +47,13 @@ class Execution(StorageBase):
 
     A typical cluster defaults file::
 
-        ogs:         "/scratch/containers/ogs-6.5.7-petsc.squashfs"
+        ogs_path:    "/scratch/containers/ogs-6.5.7-petsc.squashfs"
         mpi_wrapper: "srun --ntasks"
         write_logs:  true
 
     A typical developer defaults file::
 
-        ogs: "ogs/build/release/bin"
+        ogs_path: "ogs/build/release/bin"
 
     """
 
@@ -70,7 +70,7 @@ class Execution(StorageBase):
 
     Users can override the default for the entire session::
 
-        Execution.default = Execution(ogs="/path/to/bin")
+        Execution.default = Execution(ogs_path="/path/to/bin")
     """
 
     def __init__(
@@ -79,7 +79,7 @@ class Execution(StorageBase):
         args: str | None = None,
         mpi_wrapper: str | None = "mpirun -np",
         wrapper: str | None = None,
-        ogs: str | None = None,
+        ogs_path: str | None = None,
         mpi_ranks: int | None = None,
         omp_num_threads: int | None = None,
         ogs_asm_threads: int | None = None,
@@ -99,7 +99,7 @@ class Execution(StorageBase):
                              e.g. ``"mpirun -np"``, ``"mpiexec -n"``, ``"srun --ntasks"``.
         :param wrapper:      Generic command prefix prepended before the full command,
                              e.g. ``"valgrind"``, ``"perf stat"``.
-        :param ogs:          Directory containing the OGS executable, or a container
+        :param ogs_path:     Directory containing the OGS executable, or a container
                              image path/URL (``.sif`` / ``.squashfs``).
                              When not set, looked up via ``OGS_BIN_PATH`` or PATH.
         :param mpi_ranks:       Number of MPI ranks. ``None`` = serial run.
@@ -119,7 +119,9 @@ class Execution(StorageBase):
         self.args = args
         self.mpi_wrapper = mpi_wrapper
         self.wrapper = wrapper
-        self.ogs = ogs if ogs is not None else self._detect_ogs(mpi_ranks)
+        self.ogs_path = (
+            ogs_path if ogs_path is not None else self._detect_ogs(mpi_ranks)
+        )
         self.mpi_ranks = mpi_ranks
         self.omp_num_threads = omp_num_threads
         self.ogs_asm_threads = ogs_asm_threads
@@ -217,7 +219,7 @@ class Execution(StorageBase):
             "args": self.args,
             "wrapper": self.wrapper,
             "mpi_wrapper": self.mpi_wrapper,
-            "ogs": self.ogs,
+            "ogs_path": self.ogs_path,
             "mpi_ranks": self.mpi_ranks,
             "omp_num_threads": self.omp_num_threads,
             "ogs_asm_threads": self.ogs_asm_threads,
@@ -325,8 +327,8 @@ class Execution(StorageBase):
     def container_path(self) -> str | None:
         """Container reference for the active run, or ``None`` for native execution."""
         return (
-            self.ogs
-            if self.ogs is not None and self._is_container(self.ogs)
+            self.ogs_path
+            if self.ogs_path is not None and self._is_container(self.ogs_path)
             else None
         )
 
@@ -389,8 +391,8 @@ class Execution(StorageBase):
         """
         if self.container_path is not None:
             return "ogs"
-        if self.ogs is not None:
-            return str(Path(self.ogs) / "ogs")
+        if self.ogs_path is not None:
+            return str(Path(self.ogs_path) / "ogs")
         resolved = shutil.which("ogs")
         return resolved if resolved is not None else "ogs"
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 import abc
 import copy
 import errno
+import getpass
 import inspect
 import shutil
 import tempfile
@@ -34,8 +35,7 @@ def _date_temp_path(
     id: str | None = None,
     temp: Path | None = None,
 ) -> Path:
-    dir = temp or Path(tempfile.gettempdir()) / "ogstools"
-
+    dir = temp or StorageBase.Temppath
     suffix = "." + suffix if suffix else ""
     if not id:
         id = _temp_id()
@@ -113,7 +113,10 @@ class StorageBase(abc.ABC):
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
-    Temppath = None
+    Temppath = Path(tempfile.gettempdir()) / (
+        "ogstools" + "_" + getpass.getuser()
+    )
+
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter
     _SAVE_STATE_ATTRS = (

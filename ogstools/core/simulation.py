@@ -174,36 +174,30 @@ class Simulation(StorageBase):
     @property
     def status(self) -> SimulationStatus:
         """
-        Get the current simulation status from the log file.
+        Get the current simulation status from the return code file.
 
-        Checks the log for errors or critical messages to determine if the
-        simulation completed successfully or terminated with an error.
+        Reads the returncode file written by the simulation controller to
+        determine if the simulation completed successfully or with an error.
 
-        :returns: SimulationStatus enum value (done or error).
+        :returns: SimulationStatus enum value (running, done, error, or unknown).
         """
-        from .simulation_controller import SimulationController
-
-        if not self.model.execution.write_logs:
-            return SimulationController.Status.unknown
-
-        if not self.log_file.exists() and self.model.execution.write_logs:
-            return SimulationController.Status.error
-
-        # Parse the log to check for errors
-        try:
-            log_df = self.log.df_log
-            if "type" in log_df.columns:
-                has_errors = (
-                    log_df["type"]
-                    .str.contains("error|critical", case=False, na=False)
-                    .any()
-                )
-                if has_errors:
-                    return SimulationController.Status.error
-        except Exception:
-            return SimulationController.Status.unknown
-
-        return SimulationController.Status.done
+        returncode_file = self.result.sim_output / "returncode"
+        if returncode_file.exists():
+            return (
+                SimulationStatus.done
+                if returncode_file.read_text().strip() == "0"
+                else SimulationStatus.error
+            )
+        if not self.log_file.exists():
+            return SimulationStatus.unknown
+        log_text = self.log_file.read_text(errors="replace")
+        if "Error" in log_text or "Critical" in log_text:
+            return SimulationStatus.error
+        if "Simulation completed" in log_text:
+            return SimulationStatus.done
+        if "OGS started on" in log_text:
+            return SimulationStatus.running
+        return SimulationStatus.not_started
 
     @property
     def status_str(self) -> str:
@@ -248,7 +242,7 @@ class Simulation(StorageBase):
 
         :returns: A Log object for querying simulation log data.
         """
-        if not self._log:
+        if self._log is None or self._log.df_records.empty:
             self._log = Log(self.log_file)
         return self._log
 

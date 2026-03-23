@@ -36,7 +36,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 @pytest.mark.system
 def test_simulation_simple(tmp_path, good_model):
     sim = good_model.copy().run()
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     sim_out = tmp_path / "sim_good_model"
     sim.save(sim_out)
     ms = sim.meshseries
@@ -50,7 +50,7 @@ def test_simulation_simple2(tmp_path, good_model):
     sim_out = tmp_path / "Simulation" / "sim_good_model"
     model = good_model.copy()
     sim = model.run(sim_out)
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     assert sim.meshseries
     assert not (sim_out / "model").is_symlink()
     assert (sim_out / "model").is_dir()
@@ -79,7 +79,7 @@ def test_simulation_parallel(good_model, n):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1  # no over-subscription
     parallel_model.execution.mpi_ranks = n
-    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.ogs_path = ot.Execution.CONTAINER_PARALLEL
     parallel_model.execution.log_level = "debug"
     parallel_model.execution.args = "--log-parallel"
     parallel_model.save()
@@ -97,7 +97,7 @@ def test_simulation_parallel(good_model, n):
     log_content = sim.log_file.read_text()
     assert f"with MPI. MPI processes: {n}." in log_content
 
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
 
 
 @pytest.mark.system
@@ -145,7 +145,7 @@ def test_simulation_container(good_model):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1
     parallel_model.execution.mpi_ranks = 2
-    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.ogs_path = ot.Execution.CONTAINER_PARALLEL
     parallel_model.execution.log_level = "debug"
     parallel_model.save()
     cmd = parallel_model.cmd
@@ -285,7 +285,7 @@ def test_execution_defaults_from_env(monkeypatch, good_model):
     assert exec_defaults.mpi_ranks == 2
     good_model.execution = exec_defaults
     sim = good_model.run()
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
 
 
 def test_restart_error_cases():
@@ -317,7 +317,7 @@ def test_restart_error_cases():
 def test_model_restart(tmp_path) -> None:
     model = ot.examples.load_model_liquid_flow_simple().copy()
     sim = model.run()
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     sim.save(tmp_path / "entire_run")
 
     ms_full = sim.meshseries
@@ -330,3 +330,20 @@ def test_model_restart(tmp_path) -> None:
     ms_restart = sim_restart.meshseries
     assert all(ms_restart.timevalues == new_timevalues)
     assert ot.MeshSeries.compare(ms_full[timestep_break:], ms_restart)
+
+
+@pytest.mark.system
+def test_simulation_status_invalid_prj() -> None:
+
+    file = (
+        examples.EXAMPLES_DIR
+        / "prj"
+        / "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj"
+    )
+    prj = ot.Project(input_file=file).copy()
+    prj.add_element(
+        tag="invalid", attrib_list=["invalid"], attrib_value_list=["0"]
+    )
+    model = ot.Model(prj)
+    sim = model.run()
+    assert sim.status == sim.Status.error
