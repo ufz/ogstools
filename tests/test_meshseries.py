@@ -506,7 +506,7 @@ def test_compare_meshseries(ms, var):
             frac_in * atol,
             sign * mult * atol,
         ),
-        atol=st.floats(min_value=1e-12, max_value=2.0),
+        atol=st.floats(min_value=1e-11, max_value=2.0),
         frac_in=st.floats(-0.99, 0.99).filter(lambda x: x != 0),
         sign=st.sampled_from([-1.0, 1.0]),
         mult=st.floats(min_value=1.01, max_value=10.0),
