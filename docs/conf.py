@@ -260,7 +260,7 @@ sphinx_gallery_conf = {
     "binder": {
         "org": "bilke",
         "repo": "binder-ogs-requirements",
-        "branch": "6.5.6-0.7.1",  # Always update before release!
+        "branch": "6.5.7-0.8.0",  # Always update before release!
         "binderhub_url": "https://binder.opengeosys.org",
         # The following are not used because of monkey patching
         "dependencies": ["./requirements.txt"],
