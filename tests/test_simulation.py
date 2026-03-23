@@ -79,7 +79,7 @@ def test_simulation_parallel(good_model, n):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1  # no over-subscription
     parallel_model.execution.mpi_ranks = n
-    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.ogs_path = ot.Execution.CONTAINER_PARALLEL
     parallel_model.execution.log_level = "debug"
     parallel_model.execution.args = "--log-parallel"
     parallel_model.save()
@@ -145,7 +145,7 @@ def test_simulation_container(good_model):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1
     parallel_model.execution.mpi_ranks = 2
-    parallel_model.execution.ogs = ot.Execution.CONTAINER_PARALLEL
+    parallel_model.execution.ogs_path = ot.Execution.CONTAINER_PARALLEL
     parallel_model.execution.log_level = "debug"
     parallel_model.save()
     cmd = parallel_model.cmd
