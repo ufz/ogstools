@@ -2260,6 +2260,9 @@ class TestOgstoolsInternalDB:
         ("process", "input_prj"),
         [
             ("T", examples.prj_heat_conduction),
+            ("H", examples.prj_liquid_flow),
+            ("M", examples.prj_mechanics),
+            ("HM", examples.prj_HM_stationary),
             ("TH", examples.prj_heat_transport),
             ("TM", examples.prj_TM_square),
             ("THM", examples.prj_THM_stationary),
@@ -2273,7 +2276,7 @@ class TestOgstoolsInternalDB:
 
         subdomains = [
             {
-                "subdomain": f"test_subdomain_{idx+1}",
+                "subdomain": f"test_subdomain_{idx + 1}",
                 "material": mat,
                 "material_ids": [idx],
             }
@@ -2293,31 +2296,26 @@ class TestOgstoolsInternalDB:
                     for name, mat in db_dict.items()
                 }
                 db_dict.update(const_filtered)
+
         media = MediaSet(filtered)
         prj = Project(input_file=input_prj).copy()
         prj.set_media(media)
 
-        # Create mesh
         rect = ot.gmsh_tools.rect(
-            (6, 4),
-            5,
-            n_layers=2,
-            structured_grid=True,
-            order=1,
-            jiggle=0.06,
+            (6, 4), 5, n_layers=2, structured_grid=True, order=1, jiggle=0.06
         )
-        meshes = ot.Meshes.from_gmsh(rect)
-
+        meshes = ot.Meshes.from_gmsh(rect, log=False)
         model = ot.Model(prj, meshes)
         sim = model.run()
 
         assert (
             sim.status == ot.Simulation.Status.done
         ), f"Simulation status: {sim.status_str}"
+
         text = prj.prjfile.read_text()
         assert "<media>" in text
         assert "opalinus_clay" not in text  # only IDs are exported
-        if "H" in process:
-            assert "AqueousLiquid" in text
-        if process == "TH2M_PT":
-            assert "Gas" in text
+        assert ("specific_heat_capacity" in text) == ("T" in process)
+        assert ("thermal_conductivity" in text) == ("T" in process)
+        assert ("AqueousLiquid" in text) == ("H" in process)
+        assert ("Gas" in text) == (process == "TH2M_PT")

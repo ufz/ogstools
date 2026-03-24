@@ -33,6 +33,10 @@ properties:
     - type: Constant
       value: 2.5e-10
       unit: kg/(m²Pa)
+  reference_temperature:
+    - type: Constant
+      value: 293.15
+      unit: K
   permeability:
     - type: Constant
       value: 1.0e-20
