@@ -2311,7 +2311,9 @@ class TestOgstoolsInternalDB:
         model = ot.Model(prj, meshes)
         sim = model.run()
 
-        assert sim.status == ot.Simulation.Status.done
+        assert (
+            sim.status == ot.Simulation.Status.done
+        ), f"Simulation status: {sim.status_str}"
         text = prj.prjfile.read_text()
         assert "<media>" in text
         assert "opalinus_clay" not in text  # only IDs are exported

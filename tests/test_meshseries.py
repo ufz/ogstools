@@ -579,7 +579,7 @@ def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     model = ot.Model(prj, meshes)
     model._next_target = tmp_path  # use only in testing!
     sim = model.run()
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     meshseries = sim.meshseries
     mesh_last = meshseries[-1]
     int_pts = ot.mesh.to_ip_point_cloud(mesh_last)

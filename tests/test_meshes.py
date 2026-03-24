@@ -139,7 +139,7 @@ def test_meshes_from_mesh_2D_run(tmp_path):
 
     project = ot.Project(input_file=examples.prj_mechanics)
     sim = ot.Model(project, meshes).run(tmp_path)
-    assert sim.status == sim.Status.done
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     # check for correct bulk id mapping during extraction
     mesh = sim.meshseries[-1]
     top_right = mesh.find_closest_point([1.0, 1.0, 0.0])
