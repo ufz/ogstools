@@ -5,8 +5,12 @@
 #
 
 
+import atexit
 import importlib.util
 import subprocess
+import sys
+import tempfile
+import threading
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -25,10 +29,46 @@ parser.add_argument("-i", "--input", help="The path to the logfile.")
 parser.add_argument("-j", "--json", help="The path to the json file.")
 
 
+def _stream_stdin_to_file(dest: Path) -> None:
+    """Read stdin line by line, echo to stderr, and write to dest. Runs in a daemon thread."""
+    with dest.open("w") as f:
+        for line in sys.stdin:
+            sys.stderr.write(line)
+            sys.stderr.flush()
+            f.write(line)
+            f.flush()
+
+
 def cli() -> int:
     args = parser.parse_args()
-    logfile = Path(args.input)
-    logfile_abs = logfile.absolute()
+
+    temp_file: Path | None = None
+    stdin_subprocess_kwarg: dict = {}
+
+    if args.input:
+        logfile_abs = Path(args.input).absolute()
+    elif not sys.stdin.isatty():
+        # Piped mode: ogs ... | tee y.log | ogsmonitor
+        _, tmp_path = tempfile.mkstemp(suffix=".log", prefix="ogsmonitor_")
+        temp_file = Path(tmp_path)
+        logfile_abs = temp_file
+
+        thread = threading.Thread(
+            target=_stream_stdin_to_file, args=(temp_file,), daemon=True
+        )
+        thread.start()
+
+        # Don't let bokeh serve inherit our stdin (it would consume the pipe)
+        stdin_subprocess_kwarg = {"stdin": subprocess.DEVNULL}
+
+        def _cleanup() -> None:
+            if temp_file is not None and temp_file.exists():
+                temp_file.unlink()
+
+        atexit.register(_cleanup)
+    else:
+        parser.error("Provide -i LOGFILE or pipe stdin: ogs ... | ogsmonitor")
+
     jsonfile = None
     if args.json:
         print("jsonfile provided")
@@ -51,5 +91,6 @@ def cli() -> int:
         shell=True,
         check=False,
         stderr=subprocess.STDOUT,
+        **stdin_subprocess_kwarg,
     )
     return result.returncode
