@@ -16,13 +16,11 @@ from ogstools.logparser.monitor import Monitor
 
 if __name__.split("_")[0] == "bokeh":
     logfile = Path(sys.argv[1])
+    display_name = sys.argv[-1]  # always passed as last arg by monitor_cli
     json_file = None
-    if len(sys.argv) > 2:
-        if ".json" in sys.argv[2]:
-            json_file = Path(sys.argv[2])
-        else:
-            msg = f"{json_file} does not seem to be a json file"
-            raise RuntimeError(msg)
+    # args: logfile [jsonfile] display_name  →  jsonfile is sys.argv[2] when len==4
+    if len(sys.argv) == 4:
+        json_file = Path(sys.argv[2])
     config = {
         "liveplot": False,
         "log_data": [
