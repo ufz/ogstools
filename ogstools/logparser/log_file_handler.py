@@ -9,6 +9,7 @@ from queue import Queue
 from typing import Any
 
 from watchdog.events import (
+    DirCreatedEvent,
     DirModifiedEvent,
     FileCreatedEvent,
     FileModifiedEvent,
@@ -55,7 +56,7 @@ class LogFileHandler(FileSystemEventHandler):
             select_regex(version=2), parallel_log=False
         )
 
-    def on_created(self, event: FileCreatedEvent) -> None:
+    def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         if Path(event.src_path).resolve() != self.file_name.resolve():
             return
         self.process()
