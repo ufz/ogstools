@@ -19,13 +19,14 @@ logger = logging.getLogger(__name__)
 
 def argparser() -> ArgumentParser:
     parser = ArgumentParser(
-        description="Monitor OGS simulations via their log output."
+        description="Monitor OpenGeoSys simulations via their log output.",
+        epilog="Exit codes: 0 success, 1 bokeh failed, 2 invalid input.",
     )
     parser.add_argument(
         "input",
         nargs="?",
         metavar="log-file",
-        help="(required)  Input (.log). OGS log file. Omit when piping: ogs ... | ogsmonitor",
+        help="(Required)  OGS log file. Omit when piping: ogs ... | ogsmonitor",
     )
     parser.add_argument(
         "-j",
@@ -90,7 +91,10 @@ def cli() -> int:
 
         atexit.register(_cleanup)
     else:
-        parser.error("Provide log-file or pipe stdin: ogs ... | ogsmonitor")
+        parser.error(
+            "Provide the filename (relative to current working directory or absolute) of the log file,"
+            " or pipe stdin: ogs ... | ogsmonitor. Use -h for help."
+        )
 
     json_file = None
     if args.json:
