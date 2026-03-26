@@ -60,7 +60,7 @@ ogsmonitor my.log
 ```{argparse}
 ---
 module: ogstools.logparser.monitor_cli
-func: parser
+func: argparser
 prog: ogsmonitor
 ---
 ```

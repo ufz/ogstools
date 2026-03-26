@@ -12,20 +12,24 @@ import threading
 from argparse import ArgumentParser
 from pathlib import Path
 
-spec = importlib.util.find_spec(
-    "ogstools.logparser.monitor_app"
-)  # replace with any dotted name
-if spec is None or spec.origin is None:
-    msg = "Could not find module 'ogstools.logparser.monitor_app'"
-    raise ImportError(msg)
-app_filename = spec.origin
-print(app_filename)
-parser = ArgumentParser(description="This tool monitors OGS logfiles.")
 
-parser.add_argument("-i", "--input", help="The path to the logfile.")
-
-parser.add_argument("-j", "--json", help="The path to the json file.")
-
+def argparser() -> ArgumentParser:
+    parser = ArgumentParser(
+        description="Monitor OGS simulations via their log output."
+    )
+    parser.add_argument(
+        "input",
+        nargs="?",
+        metavar="log-file",
+        help="(required)  Input (.log). OGS log file. Omit when piping: ogs ... | ogsmonitor",
+    )
+    parser.add_argument(
+        "-j",
+        "--json",
+        metavar="json-file",
+        help="Optional JSON configuration file to fine-tune the displayed output.",
+    )
+    return parser
 
 
 def _stream_stdin_to_file(dest: Path, done: threading.Event) -> None:
@@ -40,6 +44,13 @@ def _stream_stdin_to_file(dest: Path, done: threading.Event) -> None:
 
 
 def cli() -> int:
+    spec = importlib.util.find_spec("ogstools.logparser.monitor_app")
+    if spec is None or spec.origin is None:
+        msg = "Could not find module 'ogstools.logparser.monitor_app'"
+        raise ImportError(msg)
+    app_filename = spec.origin
+
+    parser = argparser()
     args = parser.parse_args()
 
     temp_file: Path | None = None
