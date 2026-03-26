@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 
 try:
     from bokeh.io import push_notebook
@@ -217,7 +217,12 @@ class Monitor:
 
         t0 = time.time()
         while True:
-            item = self._records.get()
+            try:
+                item = self._records.get_nowait()
+            except Empty:
+                break
+            if time.time() - t0 > update_interval:
+                break
             if isinstance(item, log_regex.Termination):
                 print(
                     f"Consumer: Termination signal ({item}) received. Exiting."
@@ -354,12 +359,5 @@ class Monitor:
                     {f"dx_x_{item.component}": [(index, item.dx_x)]}
                 )
 
-            t_tmp = time.time()
-            if t_tmp - t0 > update_interval:
-                t0 = t_tmp
-                if self.notebook_execution is True:
-                    push_notebook(handle=handle_line_chart)
-                else:
-                    break
         if self.notebook_execution is True:
             push_notebook(handle=handle_line_chart)
