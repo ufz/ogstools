@@ -16,7 +16,7 @@ It can be used as a standalone command line utility (see below) or within a Jupy
 ## Command line usage
 
 `ogsmonitor` is a command line interface of the monitor.
-For example `ogsmonitor HM_excavation.log -j monitor.json`. The json file is not required, however it can be used to finetune the
+For example `ogsmonitor HM_excavation.log -c monitor.json`. The json file is not required, however it can be used to finetune the
 displayed output:
 
 ### Pipe mode (recommended when starting OGS and the monitor together)

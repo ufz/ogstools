@@ -49,9 +49,9 @@ def argparser() -> ArgumentParser:
         help="(Required)  OGS log file. Omit when piping: ogs ... | ogsmonitor",
     )
     parser.add_argument(
-        "-j",
-        "--json",
-        metavar="json-file",
+        "-c",
+        "--config",
+        metavar="config-file",
         help="Optional JSON configuration file to fine-tune the displayed output.",
     )
     parser.add_argument(
@@ -117,8 +117,8 @@ def cli() -> int:
         )
 
     json_file = None
-    if args.json:
-        json_file = Path(args.json).absolute()
+    if args.config:
+        json_file = Path(args.config).absolute()
         if not json_file.is_file():
             msg = f"Provided JSON file not found: {json_file}"
             logger.error(msg)
