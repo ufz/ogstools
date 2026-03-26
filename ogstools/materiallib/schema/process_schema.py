@@ -3,65 +3,51 @@
 
 from typing import Any
 
-_T_PROPS = ["density", "specific_heat_capacity", "thermal_conductivity"]
-_TH_LIQUID = _T_PROPS + ["viscosity"]
-_TH_SOLID = _T_PROPS + ["storage"]
-_TM_SOLID = _T_PROPS + ["thermal_expansivity"]
+_T_PROPS = ["density", "specific_heat_capacity"]
+_T_SOLID = _T_PROPS + ["thermal_conductivity"]
+_BHE_LIQUID = _T_PROPS + ["phase_velocity"]
+_H_LIQUID = ["density", "viscosity"]
+
+_TH_LIQUID = _T_SOLID + ["viscosity"]
+_TH_SOLID = _T_SOLID + ["storage"]
+_TM_SOLID = _T_SOLID + ["thermal_expansivity"]
 _THM_SOLID = _TH_SOLID + ["thermal_expansivity"]
-_TH_MED_PROPS = [
-    "biot_coefficient",
-    "permeability",
-    "porosity",
+
+_MED_PROPS = ["permeability", "porosity"]
+_H_MED_PROPS = _MED_PROPS + ["storage", "reference_temperature"]
+_HM_MED_PROPS = _MED_PROPS + ["biot_coefficient", "reference_temperature"]
+_T_DISP_PROPS = [
     "thermal_conductivity",
     "thermal_longitudinal_dispersivity",
     "thermal_transversal_dispersivity",
 ]
+_TH_MED_PROPS = _MED_PROPS + _T_DISP_PROPS
+_THM_MED_PROPS = _TH_MED_PROPS + ["biot_coefficient"]
+_BHE_MED_PROPS = _T_DISP_PROPS + ["porosity"]
+
+
+def _to_schema_dict(phases: dict, med_props: list) -> dict:
+    phase_props = [{"type": k, "properties": v} for k, v in phases.items()]
+    return {"phases": phase_props, "properties": med_props}
+
+
 PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
-    "SMALL_DEFORMATION": {
-        "phases": [{"type": "Solid", "properties": ["density"]}],
-        "properties": [],
-    },
-    "HEAT_CONDUCTION": {"phases": [], "properties": _T_PROPS},
-    "TH": {
-        "phases": [
-            {"type": "AqueousLiquid", "properties": _TH_LIQUID},
-            {"type": "Solid", "properties": _TH_SOLID},
-        ],
-        "properties": _TH_MED_PROPS,
-    },
-    "TM": {
-        "phases": [{"type": "Solid", "properties": _TM_SOLID}],
-        "properties": [],
-    },
-    "THM": {
-        "phases": [
-            {"type": "AqueousLiquid", "properties": _TH_LIQUID},
-            {"type": "Solid", "properties": _THM_SOLID},
-        ],
-        "properties": _TH_MED_PROPS,
-    },
-    "HEAT_TRANSPORT_BHE": {
-        "phases": [
-            {
-                "type": "AqueousLiquid",
-                "properties": [
-                    "specific_heat_capacity",
-                    "density",
-                    "phase_velocity",
-                ],
-            },
-            {
-                "type": "Solid",
-                "properties": ["specific_heat_capacity", "density"],
-            },
-        ],
-        "properties": [
-            "porosity",
-            "thermal_conductivity",
-            "thermal_longitudinal_dispersivity",
-            "thermal_transversal_dispersivity",
-        ],
-    },
+    "HEAT_CONDUCTION": _to_schema_dict({}, _T_SOLID),
+    "LIQUID_FLOW": _to_schema_dict({"AqueousLiquid": _H_LIQUID}, _H_MED_PROPS),
+    "SMALL_DEFORMATION": _to_schema_dict({"Solid": ["density"]}, []),
+    "TM": _to_schema_dict({"Solid": _TM_SOLID}, []),
+    "HM": _to_schema_dict(
+        {"AqueousLiquid": _H_LIQUID, "Solid": ["density"]}, _HM_MED_PROPS
+    ),
+    "TH": _to_schema_dict(
+        {"AqueousLiquid": _TH_LIQUID, "Solid": _TH_SOLID}, _TH_MED_PROPS
+    ),
+    "THM": _to_schema_dict(
+        {"AqueousLiquid": _TH_LIQUID, "Solid": _THM_SOLID}, _THM_MED_PROPS
+    ),
+    "HEAT_TRANSPORT_BHE": _to_schema_dict(
+        {"AqueousLiquid": _BHE_LIQUID, "Solid": _T_PROPS}, _BHE_MED_PROPS
+    ),
     "TH2M_PT": {
         "phases": [
             {
@@ -75,12 +61,7 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
                     ],
                     "Solvent": ["specific_heat_capacity"],
                 },
-                "properties": [
-                    "thermal_conductivity",
-                    "specific_heat_capacity",
-                    "density",
-                    "viscosity",
-                ],
+                "properties": _TH_LIQUID,
             },
             {
                 "type": "Gas",
@@ -96,15 +77,7 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
                 },
                 "properties": ["thermal_conductivity", "density", "viscosity"],
             },
-            {
-                "type": "Solid",
-                "properties": [
-                    "density",
-                    "thermal_conductivity",
-                    "specific_heat_capacity",
-                    "thermal_expansivity",
-                ],
-            },
+            {"type": "Solid", "properties": _TM_SOLID},
         ],
         "properties": [
             "permeability",
@@ -119,17 +92,13 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
         ],
     },
 }
-# just an alias for practicality
+# aliases for practicality
 PROCESS_SCHEMAS["T"] = PROCESS_SCHEMAS["HEAT_CONDUCTION"]
+PROCESS_SCHEMAS["H"] = PROCESS_SCHEMAS["LIQUID_FLOW"]
+PROCESS_SCHEMAS["M"] = PROCESS_SCHEMAS["SMALL_DEFORMATION"]
 
 
 # PROCESS_SCHEMAS = {
-#     "HeatConduction": {
-#         "thermal_conductivity": "medium",
-#         "density": "medium",
-#         "specific_heat_capacity": "medium",
-#         "_fluids": {},
-#     },
 #     "TH2M": {
 #         # Solid phase
 #         "density": "solid",
@@ -157,50 +126,6 @@ PROCESS_SCHEMAS["T"] = PROCESS_SCHEMAS["HEAT_CONDUCTION"]
 #                     "viscosity",
 #                     "thermal_conductivity",
 #                 ]
-#             },
-#         },
-#     },
-#     "TH2M_PT": {
-#         # Solid phase
-#         "density": "solid",
-#         "specific_heat_capacity": "solid",
-#         "thermal_conductivity": "solid",
-#         "thermal_expansivity": "solid",
-#         # Medium properties
-#         "porosity": "medium",
-#         "permeability": "medium",
-#         "saturation": "medium",
-#         "bishops_effective_stress": "medium",
-#         # Fluid properties with phase transitions - component properties
-#         "_fluids": {
-#             "AqueousLiquid": {
-#                 "component_properties": [
-#                     "molar_mass",
-#                     "specific_heat_capacity",
-#                     "diffusion",
-#                     "henry_coefficient",
-#                     "specific_latent_heat",
-#                 ],
-#                 "phase_properties": [
-#                     "density",
-#                     "viscosity",
-#                     "thermal_conductivity",
-#                     "specific_heat_capacity",
-#                 ],
-#             },
-#             "Gas": {
-#                 "component_properties": [
-#                     "molar_mass",
-#                     "specific_heat_capacity",
-#                     "specific_latent_heat",
-#                     "vapour_pressure",
-#                     "diffusion",
-#                 ],
-#                 "phase_properties": [
-#                     "density",
-#                     "viscosity",
-#                     "thermal_conductivity",
-#                 ],
 #             },
 #         },
 #     },

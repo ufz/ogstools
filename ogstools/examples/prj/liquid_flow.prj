@@ -1,5 +1,4 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
-<!-- Benchmarks: Parabolic/HT/HeatTransportInStationaryFlow -->
 <OpenGeoSysProject>
     <meshes>
         <mesh>domain.vtu</mesh>
@@ -10,12 +9,11 @@
     </meshes>
     <processes>
         <process>
-            <name>HeatTransportInStationaryFlow</name>
-            <type>HT</type>
+            <name>H</name>
+            <type>LIQUID_FLOW</type>
             <integration_order>2</integration_order>
             <process_variables>
-                <temperature>temperature</temperature>
-                <pressure>pressure</pressure>
+                <process_variable>pressure</process_variable>
             </process_variables>
             <specific_body_force>0 -0.0</specific_body_force>
             <secondary_variables>
@@ -24,12 +22,12 @@
     </processes>
     <time_loop>
         <processes>
-            <process ref="HeatTransportInStationaryFlow">
+            <process ref="H">
                 <nonlinear_solver>basic_picard</nonlinear_solver>
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>
                     <norm_type>NORM2</norm_type>
-                    <abstols>1e-6 1e-6</abstols>
+                    <abstols>1e-6</abstols>
                 </convergence_criterion>
                 <time_discretization>
                     <type>BackwardEuler</type>
@@ -49,7 +47,7 @@
         </processes>
         <output>
             <type>VTK</type>
-            <prefix>HeatTransportInStationaryFlow</prefix>
+            <prefix>liquid_flow</prefix>
             <timesteps>
                 <pair>
                     <repeat> 1 </repeat>
@@ -57,7 +55,6 @@
                 </pair>
             </timesteps>
             <variables>
-                <variable>temperature</variable>
                 <variable>pressure</variable>
                 <variable>velocity</variable>
             </variables>
@@ -65,11 +62,6 @@
         </output>
     </time_loop>
     <parameters>
-        <parameter>
-            <name>T0</name>
-            <type>Constant</type>
-            <value>1.</value>
-        </parameter>
         <parameter>
             <name>P0</name>
             <type>Constant</type>
@@ -85,26 +77,8 @@
             <type>Constant</type>
             <value>1.0e5</value>
         </parameter>
-        <parameter>
-            <name>T_left</name>
-            <type>Constant</type>
-            <value>1.</value>
-        </parameter>
     </parameters>
     <process_variables>
-        <process_variable>
-            <name>temperature</name>
-            <components>1</components>
-            <order>1</order>
-            <initial_condition>T0</initial_condition>
-            <boundary_conditions>
-                <boundary_condition>
-                    <mesh>left</mesh>
-                    <type>Dirichlet</type>
-                    <parameter>T_left</parameter>
-                </boundary_condition>
-            </boundary_conditions>
-        </process_variable>
         <process_variable>
             <name>pressure</name>
             <components>1</components>

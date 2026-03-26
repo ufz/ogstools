@@ -346,4 +346,6 @@ def test_simulation_status_invalid_prj() -> None:
     )
     model = ot.Model(prj)
     sim = model.run()
-    assert sim.status == sim.Status.error
+    assert (
+        sim.status == sim.Status.error
+    ), f"Simulation status: {sim.status_str}"
