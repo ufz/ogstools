@@ -71,7 +71,7 @@ def cli() -> int:
 
         atexit.register(_cleanup)
     else:
-        parser.error("Provide -i LOGFILE or pipe stdin: ogs ... | ogsmonitor")
+        parser.error("Provide log-file or pipe stdin: ogs ... | ogsmonitor")
 
     jsonfile = None
     if args.json:
