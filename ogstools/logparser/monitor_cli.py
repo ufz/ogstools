@@ -11,7 +11,27 @@ import sys
 import tempfile
 import threading
 from argparse import ArgumentParser
+from enum import IntEnum
 from pathlib import Path
+
+
+class ExitCode(IntEnum):
+    """Exit codes returned by the :func:`cli` function.
+
+    Attributes
+    ----------
+    SUCCESS : int
+        0 -- completed successfully.
+    BOKEH_FAILED : int
+        1 -- the bokeh subprocess exited with a non-zero return code.
+    INVALID_INPUT : int
+        2 -- invalid input, e.g. the specified JSON file was not found.
+    """
+
+    SUCCESS = 0
+    BOKEH_FAILED = 1
+    INVALID_INPUT = 2
+
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -93,15 +113,16 @@ def cli() -> int:
     else:
         parser.error(
             "Provide the filename (relative to current working directory or absolute) of the log file,"
-            " or pipe stdin: ogs ... | ogsmonitor. Use -h for help."
+            " or pipe stdin: ogs ... | ogsmonitor.\nUse -h for help."
         )
 
     json_file = None
     if args.json:
         json_file = Path(args.json).absolute()
         if not json_file.is_file():
-            msg = "Provided JSON file not found"
-            raise FileNotFoundError(msg)
+            msg = f"Provided JSON file not found: {json_file}"
+            logger.error(msg)
+            return ExitCode.INVALID_INPUT
         logger.info("Using provided JSON configuration: %s", json_file)
     else:
         json_file = Path("monitor.json").absolute()
@@ -125,4 +146,9 @@ def cli() -> int:
         stderr=subprocess.STDOUT,
         **stdin_subprocess_kwarg,
     )
-    return result.returncode
+    if result.returncode != 0:
+        logger.error(
+            "Starting bokeh failed with returncode %d.", result.returncode
+        )
+        return ExitCode.BOKEH_FAILED
+    return ExitCode.SUCCESS
