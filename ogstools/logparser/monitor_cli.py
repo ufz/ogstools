@@ -85,11 +85,13 @@ def cli() -> int:
     temp_file: Path | None = None
     stdin_subprocess_kwarg: dict = {}
     stdin_done: threading.Event | None = None
+    pipe_mode = False
 
     if args.input:
         logfile_abs = Path(args.input).absolute()
     elif not sys.stdin.isatty():
         # Piped mode: ogs ... | ogsmonitor
+        pipe_mode = True
         _, tmp_path = tempfile.mkstemp(suffix=".log", prefix="ogsmonitor_")
         temp_file = Path(tmp_path)
         logfile_abs = temp_file
@@ -139,13 +141,20 @@ def cli() -> int:
     )
     if json_file is not None:
         cmd += f" {json_file}"
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        check=False,
-        stderr=subprocess.STDOUT,
-        **stdin_subprocess_kwarg,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            check=False,
+            stderr=subprocess.STDOUT,
+            **stdin_subprocess_kwarg,
+        )
+    except KeyboardInterrupt:
+        if pipe_mode:
+            print("\nOGS and ogsmonitor stopped.")
+        else:
+            print("\nogsmonitor stopped.")
+        return ExitCode.SUCCESS
     if result.returncode != 0:
         logger.error(
             "Starting bokeh failed with returncode %d.", result.returncode
