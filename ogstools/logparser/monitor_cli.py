@@ -4,6 +4,7 @@
 
 import atexit
 import importlib.util
+import logging
 import socket
 import subprocess
 import sys
@@ -11,6 +12,9 @@ import tempfile
 import threading
 from argparse import ArgumentParser
 from pathlib import Path
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 
 def argparser() -> ArgumentParser:
@@ -28,6 +32,9 @@ def argparser() -> ArgumentParser:
         "--json",
         metavar="json-file",
         help="Optional JSON configuration file to fine-tune the displayed output.",
+    )
+    parser.add_argument(
+        "-l", "--log", action="store_true", help="Enable verbose logging."
     )
     return parser
 
@@ -52,6 +59,7 @@ def cli() -> int:
 
     parser = argparser()
     args = parser.parse_args()
+    logger.setLevel(logging.INFO if args.log else logging.ERROR)
 
     temp_file: Path | None = None
     stdin_subprocess_kwarg: dict = {}
@@ -84,20 +92,19 @@ def cli() -> int:
     else:
         parser.error("Provide log-file or pipe stdin: ogs ... | ogsmonitor")
 
-    jsonfile = None
+    json_file = None
     if args.json:
-        print("jsonfile provided")
-        jsonfile = Path(args.json)
-        jsonfile = jsonfile.absolute()
-        if not jsonfile.is_file():
+        json_file = Path(args.json).absolute()
+        if not json_file.is_file():
             msg = "Provided JSON file not found"
             raise FileNotFoundError(msg)
+        logger.info("Using provided JSON configuration: %s", json_file)
     else:
-        jsonfile = Path("monitor.json")
-        print("jsonfile found on disk")
-        jsonfile = jsonfile.absolute()
-        if not jsonfile.is_file():
-            jsonfile = None
+        json_file = Path("monitor.json").absolute()
+        if json_file.is_file():
+            logger.info("Using JSON configuration found on disk: %s", json_file)
+        else:
+            json_file = None
     with socket.socket() as s:
         s.bind(("", 0))
         port = s.getsockname()[1]
@@ -105,8 +112,8 @@ def cli() -> int:
     cmd = (
         f"bokeh serve --show --port {port} {app_filename} --args {logfile_abs}"
     )
-    if jsonfile is not None:
-        cmd += f" {jsonfile}"
+    if json_file is not None:
+        cmd += f" {json_file}"
     result = subprocess.run(
         cmd,
         shell=True,
