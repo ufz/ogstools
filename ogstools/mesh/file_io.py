@@ -4,7 +4,10 @@
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pyvista as pv
+
+from .ip_data import IPdata
 
 
 def read(filename: Path | str) -> pv.UnstructuredGrid:
@@ -50,6 +53,20 @@ def save(
                 mesh.filepath = outname
             else:
                 pv.set_new_attribute(mesh, "filepath", outname)
+
+    for data in [mesh.point_data, mesh.cell_data]:
+        nan_keys = [k for k, v in data.items() if np.all(np.isnan(v))]
+        for key in nan_keys:
+            data.remove(key)
+
+    ip_data = IPdata(mesh, auto_sync=False)
+    nan_keys = [k for k, v in mesh.field_data.items() if np.all(np.isnan(v))]
+    for key in nan_keys:
+        if key in ip_data._array_map:
+            del ip_data[key]
+        else:
+            mesh.field_data.remove(key)
+    ip_data._sync()
 
     if (
         outname.suffix == ".vtu"

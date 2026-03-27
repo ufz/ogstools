@@ -1,14 +1,16 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import json
 from collections.abc import Sequence
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any
 
 import numpy as np
 import pyvista as pv
+
+from ogstools.mesh.ip_data import IPdata
+
+from .file_io import save
 
 
 def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
@@ -184,40 +186,37 @@ def tessellate(
     return pv.PolyData(np.reshape(points, (-1, 3)), faces=connectivity)
 
 
-def ip_metadata(mesh: pv.UnstructuredGrid) -> list[dict[str, Any]]:
-    "return the IntegrationPointMetaData in the mesh's field_data as a dict."
-    if "IntegrationPointMetaData" not in mesh.field_data:
-        msg = "Required IntegrationPointMetaData not in mesh."
-        raise KeyError(msg)
-    data = bytes(mesh.field_data["IntegrationPointMetaData"]).decode("utf-8")
-    return json.loads(data)["integration_point_arrays"]
-
-
 def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
-    "Convert integration point data to a pyvista point cloud."
-    ip_keys = [arr["name"] for arr in ip_metadata(mesh)]
-    ip_len = max(len(mesh.field_data[key]) for key in ip_keys)
+    "Create a point cloud from a given mesh containing integration point data."
+    ip_data = IPdata(mesh, auto_sync=False)
+    ip_len = max(len(mesh.field_data[key]) for key in ip_data)
     _mesh = mesh.copy()
     # Filter data out, which is not on the entire mesh, i.e. material model
     # dependent data when different material models are used within one mesh.
-    for key in ip_keys:
+    for key in ip_data:
         if len(_mesh.field_data[key]) != ip_len:
-            _mesh.field_data.remove(key)
+            if key in ip_data._array_map:
+                del ip_data[key]
+            else:
+                mesh.field_data.remove(key)
+    ip_data._sync()
     tmp_dir = Path(mkdtemp())
     input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
     output_file = tmp_dir / "ip_mesh.vtu"
-    _mesh.save(input_file)
+    save(_mesh, input_file)
 
     from ogstools._find_ogs import cli
 
-    cli().ipDataToPointCloud(i=str(input_file), o=str(output_file))  # type: ignore[union-attr]
+    cli().ipDataToPointCloud(i=str(input_file), o=str(output_file))
+
     return pv.XMLUnstructuredGridReader(output_file).read()
 
 
 def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     "Create a mesh with cells centered around integration points."
     ip_mesh = to_ip_point_cloud(mesh)
-    integration_order = int(ip_metadata(mesh)[0]["integration_order"])
+
+    integration_order = max(data.order for data in IPdata(mesh).values())
     new_meshes: list[pv.PolyData] = []
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
@@ -251,8 +250,7 @@ def ip_data_threshold(
 ) -> dict[str, np.ndarray]:
     """Filters integration point data to match the threshold criterion.
 
-    Similar to ``pyvista``'s threshold filter, but only acting on the field data
-    and returning the modified field data dict.
+    Similar to ``pyvista``'s threshold filter, but only acting on field data.
 
     :param mesh:    original mesh, needs to contain MaterialIDs and
                     IntegratioPointMetaData.
@@ -269,12 +267,6 @@ def ip_data_threshold(
         raise ValueError(msg)
 
     result = mesh.copy()
-    # remove all nan data as ogs cli tools will throw errors if they exist
-    for data in [result.point_data, result.cell_data, result.field_data]:
-        nan_keys = [k for k, v in data.items() if np.all(np.isnan(v))]
-        for key in nan_keys:
-            data.remove(key)
-
     mesh_ip = to_ip_point_cloud(result)
     # in 2D there can be a floating point offset in the flat dimension resulting
     # in the sampling not finding all points, thus we have to align the ip_mesh
@@ -298,7 +290,10 @@ def ip_data_threshold(
     if len(cells_to_keep) == 0:
         msg = "Threshold resulted in empty mesh."
         raise ValueError(msg)
-    for arr in ip_metadata(result):
-        key = arr["name"]
-        result.field_data[key] = result.field_data[key][cells_to_keep]
+
+    ip_data = IPdata(mesh, auto_sync=False)
+    for key in ip_data:
+        ip_data[key].values = result.field_data[key][cells_to_keep]
+    ip_data._sync()
+
     return result.field_data
