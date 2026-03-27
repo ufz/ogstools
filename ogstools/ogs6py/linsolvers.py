@@ -20,6 +20,24 @@ class LinSolvers(build_tree.BuildTree):
             self.root, "linear_solvers", overwrite=True
         )
 
+    def _linear_solver_exists(self, name: str) -> bool:
+        """Check if a linear_solver with the given name already exists.
+        The name is stored inside a <name> sub-tag, not as an attribute.
+        """
+        if not hasattr(self, "lss") or self.lss is None:
+            return False
+
+        for solver in self.lss:
+            if not hasattr(solver, "find"):  # not an XML element
+                continue
+
+            # Find the <name> child tag and get its text content
+            name_element = solver.find("name")
+            if name_element is not None and name_element.text == name:
+                return True
+
+        return False
+
     def add_lin_solver(self, **args: Any) -> None:
         """
         Adds a linear solver.
@@ -51,7 +69,11 @@ class LinSolvers(build_tree.BuildTree):
         if "name" not in args:
             msg = "You need to provide a name for the linear solver."
             raise KeyError(msg)
-        ls = self.populate_tree(self.lss, "linear_solver", overwrite=True)
+        if self._linear_solver_exists(args["name"]):
+            ls = self.populate_tree(self.lss, "linear_solver", overwrite=True)
+        else:
+            ls = self.populate_tree(self.lss, "linear_solver", overwrite=False)
+
         self.populate_tree(ls, "name", text=args["name"], overwrite=True)
         if "kind" not in args:
             msg = """No kind given. Please specify the linear \
