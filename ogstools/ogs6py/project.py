@@ -18,11 +18,13 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from lxml import etree as ET
 from typing_extensions import Self
 
 from ogstools.core.storage import StorageBase
+from ogstools.logparser.monitor import Monitor
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
     curves,
@@ -49,6 +51,14 @@ from ogstools.ogs6py.properties import (
     location_pointer,
     property_dict,
 )
+
+try:
+    from bokeh.io import output_notebook, show
+    from bokeh.layouts import layout
+except ImportError as e:
+    msg = "Monitor() requires extra dependency 'bokeh'. Install with: pip install ogstools[monitor] or pip install bokeh"
+    raise RuntimeError(msg) from e
+
 
 default_name = "default.prj"
 
@@ -165,6 +175,7 @@ class Project(StorageBase):
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
+        self.monitor = Monitor()
 
     @property
     def prjfile(self) -> Path:
@@ -269,7 +280,9 @@ class Project(StorageBase):
             if getattr(v, "tree", None) is self.tree
         }
         skip_attrs = (
-            self._SAVE_STATE_ATTRS + ("prjfile", "process") + tuple(tree_backed)
+            self._SAVE_STATE_ATTRS
+            + ("prjfile", "process", "monitor")
+            + tuple(tree_backed)
         )
         for k, v in self.__dict__.items():
             if k not in skip_attrs:
@@ -277,6 +290,7 @@ class Project(StorageBase):
 
         new._reset_save_state()
         new._prj_filename = default_name
+        new.monitor = Monitor()
         assert isinstance(new.prjfile, Path)
 
         for k in tree_backed:
@@ -1155,7 +1169,7 @@ class Project(StorageBase):
         wrapper: Any | None = None,
         write_logs: bool = True,
         background: bool = False,
-    ) -> subprocess.Popen:
+    ) -> "subprocess.Popen":
         """Command to run OGS.
 
         Runs OGS with the project file specified as output_file.
@@ -1168,7 +1182,6 @@ class Project(StorageBase):
         :param container_path:   Path of the OGS container file.
         :param wrapper:          add a wrapper command. E.g. mpirun
         :param write_logs:       set False to omit logging
-        :param write_prj_to_pvd: write the prj file as a comment in the pvd
         :param background:       Run the simulation in a background process
         """
 
@@ -1272,6 +1285,8 @@ class Project(StorageBase):
 
         self.runtime_start = time.time()
         if write_logs is True:
+            print(cmd)
+            print(cmd.split())
             with self.logfile.open("w") as logf:
                 self.process = subprocess.Popen(
                     cmd,
@@ -1289,10 +1304,80 @@ class Project(StorageBase):
                 stderr=subprocess.STDOUT,
                 env=env,
             )
-        if not background:
-            self.process.wait()
-
+        if background:
+            print(
+                f"Simulation started in background with PID {self.process.pid}."
+            )
+            self.monitor.start_log_file_handler(self.logfile)
+        self.process.wait()
+        self.runtime_end = time.time()
+        if self.process.returncode != 0:
+            self._failed_run_print_log_tail(write_logs)
         return self.process
+
+    def plot_log(
+        self,
+        log_data: str | list[list[str]] = "step_start_time",
+        time_y_axis_type: str = "linear",
+        time_window_length: int = 0,
+        iteration_window_length: int = 0,
+        update_interval: int = 2,
+    ) -> None:
+        """Plots the log file.
+
+        :param log_data:  Plot type. Can be a single string or a list of list of strings.
+                            E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
+        :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
+        :param time_window_length:     Length of the time window (number of timesteps) for the plot. 0 Plots the whole log file.
+        :param iteration_window_length: Length of the iteration window (number of iterations) for the plot. 0 Plots the whole log file.
+        :param update_interval:        Interval in seconds to update the plot.
+        """
+
+        grid_layout = None
+
+        if isinstance(log_data, str):
+            grid_layout = self.monitor.generate_figure(
+                log_data, time_y_axis_type=time_y_axis_type
+            )
+        elif isinstance(log_data, list):
+            if len(log_data) == 0:
+                msg = "log_data list cannot be empty."
+                raise ValueError(msg)
+            try:
+                rows, cols = np.shape(log_data)
+            except ValueError:
+                print("log_data needs to be a list of lists.")
+            if rows == 0:
+                msg = "log_data list cannot be empty."
+                raise ValueError(msg)
+            if cols == 0:
+                msg = "log_data list cannot be empty."
+                raise ValueError(msg)
+            grid_layout = layout(
+                [
+                    [
+                        self.monitor.generate_figure(
+                            log_data[row][col],
+                            time_y_axis_type=time_y_axis_type,
+                        )
+                        for col in range(cols)
+                    ]
+                    for row in range(rows)
+                ]
+            )
+
+        output_notebook()
+
+        handle_line_chart = show(grid_layout, notebook_handle=True)
+        self.monitor.update_data(
+            handle_line_chart,
+            time_window_length,
+            iteration_window_length,
+            update_interval,
+        )
+        assert self.monitor._observer
+        self.monitor._observer.join()
+        print("Observer stopped.")
 
     def _propagate_target(self) -> None:
         """Propagate save target to geometry and python_script files."""

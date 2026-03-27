@@ -67,6 +67,7 @@ dependencies = [
   "vtk>=9.4.0",
   "pytest-mpl>=0.17.0",
   "imagehash>=4.3.2",
+  "bokeh>=3.6.0"
 ]
 
 [project.urls]
@@ -91,6 +92,7 @@ fallback_version = "0.7.0+no-scm" # Manually increment on release!
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
 feflow2ogs = 'ogstools.feflowlib._cli:cli'
 yaml2vtu = 'ogstools.meshlib.meshes_from_yaml_cli:cli'
+ogsmonitor = 'ogstools.logparser.monitor_cli:cli'
 
 [project.optional-dependencies]
 

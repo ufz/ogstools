@@ -291,6 +291,8 @@ nitpick_ignore_regex = [
     ("py:class", "numpy.array"),
     # meshio has no Sphinx docs site with objects.inv.
     ("py:class", r"meshio\..*"),
+    ("py:class", "bokeh.io.notebook.CommsHandle"),
+    ("py:class", "bokeh.plotting._figure.figure"),
 ]
 
 # feflowlib is optional

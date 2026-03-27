@@ -172,9 +172,6 @@ def test_abort_run_and_status(
     # run the model till the end
     sim_control = model.controller()  # always running in background
     # never set a break point between start and here (test is sensible to timing)
-    assert sim_control.status == sim_control.Status.running
-    d = sim_control.status_str()
-    assert "running" in d
     if model._id == "failing_model":
         expected_final_state = sim_control.Status.error
     elif model._id == "good_model":

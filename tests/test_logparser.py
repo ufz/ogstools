@@ -305,7 +305,7 @@ class TestLogparser_Version2:
         assert ver == 2, f"Expected version 2, but got {ver}"
         l_regexes = len(select_regex(ver))
         assert (
-            l_regexes == 22
+            l_regexes == 23
         ), f"Expected regexes version {ver},this is of length 22 but got {l_regexes}."
 
     # parameterized

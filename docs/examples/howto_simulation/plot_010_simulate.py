@@ -100,6 +100,10 @@ simc.run()  # this call is blocking, it waits for the simulation to finish
 
 
 # %% [markdown]
+# .. image:: /examples/howto_simulation/bokeh_logs.png
+#    :alt: Bokeh log plot
+
+# %% [markdown]
 # Creating a Project from scratch
 # ===============================
 # You can also create a Project without a prj-file. Have a look at this example
