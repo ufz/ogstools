@@ -6,15 +6,16 @@ from .cosim import from_simulator
 from .differences import difference, difference_matrix, difference_pairwise
 from .file_io import read, save
 from .geo import depth
+from .ip_data import IPdata, ip_metadata
 from .ip_mesh import (
     ip_data_threshold,
-    ip_metadata,
     to_ip_mesh,
     to_ip_point_cloud,
 )
 from .utils import check_datatypes, node_reordering, validate
 
 __all__ = [
+    "IPdata",
     "check_datatypes",
     "create",
     "depth",

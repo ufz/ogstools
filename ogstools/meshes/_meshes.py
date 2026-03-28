@@ -860,8 +860,7 @@ class Meshes(MutableMapping, StorageBase):
 
         self["cut_boundary"] = cut_boundary
 
-        new_ip_data = ip_data_threshold(self.domain, mat_id, invert=True)
-        self.domain.field_data.update(new_ip_data)
+        ip_data_threshold(self.domain, mat_id, invert=True)
         self.domain = self.domain.threshold(
             mat_id, scalars="MaterialIDs", invert=True
         )
