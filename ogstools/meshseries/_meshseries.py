@@ -1315,8 +1315,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         fn = self.next_target
         fn.parent.mkdir(parents=True, exist_ok=True)
         if self.filepath is None:
-            # In-memory MeshSeries (from_data): generate vtu filenames from
-            # the target PVD stem and timestep indices.
             stem = fn.stem
             fns = [
                 fn.parent / f"{stem}_ts_{t}_t_{self.timevalues[t]:.6f}.vtu"

@@ -21,7 +21,7 @@ prj = ot.Project(output_file=output_dir / "mechanics_new.prj")
 
 # %%
 # Define geometry and/or meshes, we expect the gml to be in the same folder like the prj file:
-prj.geometry.add_geometry(file_pathname=EXAMPLES_DIR / "prj" / "square_1x1.gml")
+prj.geometry.add_geometry(filename=EXAMPLES_DIR / "prj" / "square_1x1.gml")
 prj.mesh.add_mesh(filename="square_1x1_quad_1e2.vtu")
 
 # %%

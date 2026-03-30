@@ -52,18 +52,18 @@ class Geo(build_tree.BuildTree, StorageBase):
         # Check if geometry element has content (inline definition)
         return self.root.find("geometry") is not None
 
-    def add_geometry(self, file_pathname: str | Path) -> None:
+    def add_geometry(self, filename: str | Path) -> None:
         """
         Add/set a geometry file.
 
         :param filename:    The file path and name of the gml file
         """
-        file_pathname = Path(file_pathname)
-        self._bind_to_path(file_pathname)
+        filename = Path(filename)
+        self._bind_to_path(filename)
         self.populate_tree(
             self.root,
             "geometry",
-            text=str(file_pathname.name),
+            text=str(filename.name),
             overwrite=True,
         )
 

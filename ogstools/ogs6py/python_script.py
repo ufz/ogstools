@@ -39,18 +39,18 @@ class PythonScript(build_tree.BuildTree, StorageBase):
             return script_elem.text.strip() or None
         return None
 
-    def add_python_script(self, file_pathname: str | Path) -> None:
+    def add_python_script(self, filename: str | Path) -> None:
         """
         Add/set a python script file.
 
-        :param file_pathname: The file path and name of the python script
+        :param filename: The file path and name of the python script
         """
-        file_pathname = Path(file_pathname)
-        self._bind_to_path(file_pathname)
+        filename = Path(filename)
+        self._bind_to_path(filename)
         self.populate_tree(
             self.root,
             "python_script",
-            text=str(file_pathname.name),
+            text=str(filename.name),
             overwrite=True,
         )
 
