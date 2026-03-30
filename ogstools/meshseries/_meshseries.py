@@ -1314,13 +1314,23 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         """
         fn = self.next_target
         fn.parent.mkdir(parents=True, exist_ok=True)
-        fns = [
-            self._check_path(self.mesh(t).filepath)
-            for t in np.arange(len(self.timevalues), dtype=int)
-        ]
+        if self.filepath is None:
+            # In-memory MeshSeries (from_data): generate vtu filenames from
+            # the target PVD stem and timestep indices.
+            stem = fn.stem
+            fns = [
+                fn.parent / f"{stem}_ts_{t}_t_{self.timevalues[t]:.6f}.vtu"
+                for t in np.arange(len(self.timevalues), dtype=int)
+            ]
+        else:
+            fns = [
+                self._check_path(self.mesh(t).filepath)
+                for t in np.arange(len(self.timevalues), dtype=int)
+            ]
         if ".pvd" in fn.name:
             if deep is True:
-                fns = self._rename_vtufiles(fn, fns)
+                if self.filepath is not None:
+                    fns = self._rename_vtufiles(fn, fns)
                 if dry_run:
                     # For dry_run, return paths where files would be written
                     fns_written = [fn.parent / f.name for f in fns]
