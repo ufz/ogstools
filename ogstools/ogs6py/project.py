@@ -942,21 +942,42 @@ class Project(StorageBase):
             self.replace_text(val, xpath=property_db[key])
 
     def meshseries_file(self) -> Path:
+        """Returns the MeshSeries file defined by the first <output> element in the project."""
         if self.tree is None:
             msg = "self.tree is empty."
             raise AttributeError(msg)
 
-        fn_type = self.tree.find("./time_loop/output/type").text
-        if fn_type == "VTK":
-            return self.tree.find("./time_loop/output/prefix").text + ".pvd"
+        mesh = self.tree.findtext("./mesh") or self.tree.findtext(
+            "./meshes/mesh"
+        )
+        if mesh is None:
+            msg = "Expected <mesh> definition."
+            raise AttributeError(msg)
 
-        if fn_type == "XDMF":
-            prefix = self.tree.find("./time_loop/output/prefix").text
-            mesh = self.tree.find("./mesh") or self.tree.find("./meshes/mesh")
-            return str(prefix) + "_" + mesh.text.split(".vtu")[0] + ".xdmf"
+        output = self.tree.find("./time_loop/outputs/output")
+        if output is None:
+            output = self.tree.find("./time_loop/output")
 
-        msg = "No mesh found"
-        raise AttributeError(msg)
+        if output is None:
+            msg = "No <output> found in project file."
+            raise ValueError(msg)
+
+        fn_type = output.findtext("type", "").strip()
+        prefix = output.findtext("prefix", "")
+
+        mesh_stem = Path(mesh).stem
+        prefix = prefix.replace("{:meshname}", mesh_stem)
+
+        fn: str
+        match fn_type:
+            case "VTK":
+                fn = f"{prefix}.pvd"
+            case "XDMF":
+                fn = f"{prefix}_{mesh_stem}.xdmf"
+            case _:
+                msg = "Output file type unknown. Please use VTK/XDMF."
+                raise RuntimeError(msg)
+        return Path(fn)
 
     def _set_timescheme(
         self,
@@ -1088,34 +1109,6 @@ class Project(StorageBase):
                 )
         return
 
-    def _get_output_file(self) -> Path:
-        """Helper method to extract output filename from the project."""
-        if self.tree is None:
-            msg = "self.tree is empty."
-            raise AttributeError(msg)
-
-        mesh = self.tree.findtext("./mesh") or self.tree.findtext(
-            "./meshes/mesh"
-        )
-        if mesh is None:
-            msg = "Expected <mesh> definition."
-            raise AttributeError(msg)
-
-        fn_type = self.tree.findtext("./time_loop/output/type").strip()
-        prefix = self.tree.findtext("./time_loop/output/prefix", "")
-        prefix = prefix.replace("{:meshname}", Path(mesh).stem)
-
-        fn: Path
-        match fn_type:
-            case "VTK":
-                fn = self.output_dir / f"{prefix}.pvd"
-            case "XDMF":
-                fn = self.output_dir / f"{prefix}_{Path(mesh).stem}.xdmf"
-            case _:
-                msg = "Output file type unknown. Please use VTK/XDMF."
-                raise RuntimeError(msg)
-        return fn
-
     def _write_prj_to_pvd(self) -> None:
         self.input_file = self.prjfile
         root = self._get_root(remove_blank_text=True, remove_comments=True)
@@ -1128,7 +1121,7 @@ class Project(StorageBase):
             .replace("--", "")
         )
 
-        fn = self._get_output_file()
+        fn = self.output_dir / self.meshseries_file()
         if not fn.exists():
             msg = f"Specified output file not found: {fn}."
             raise FileNotFoundError(msg)
