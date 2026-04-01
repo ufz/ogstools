@@ -6,6 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import overload
 
+import pyvista as pv
 from typing_extensions import Self
 
 from ogstools.core.model import Model
@@ -380,14 +381,14 @@ class Simulation(StorageBase):
         :return:                    None
         """
 
-        def _get_target_file(time: float) -> Path:
+        def _get_restart_mesh(time: float) -> pv.UnstructuredGrid:
             """new domain mesh"""
             index = mesh_series.closest_timestep(time)
             target_diff = abs(mesh_series.timevalues[index] - time)
             if (target_diff) > 1e-6:
                 msg = f"Output data file corresponding to timestep: {time} not found! Target: {target_diff} away"
                 raise FileNotFoundError(msg)
-            return mesh_series[index]
+            return mesh_series[index].copy()
 
         model_restart = self.model.copy()
         prj = model_restart.project
@@ -408,7 +409,7 @@ class Simulation(StorageBase):
             t_initial = timevalues[0]
 
         assert t_initial is not None
-        new_bulk_mesh = _get_target_file(t_initial)
+        new_bulk_mesh = _get_restart_mesh(t_initial)
 
         root = prj._get_root()
         old_bulk_mesh = root.findtext("./mesh") or root.findtext(
@@ -428,4 +429,5 @@ class Simulation(StorageBase):
             initialize_porosity_from_medium_property,
         )
         new_meshes.domain = new_bulk_mesh
+        model_restart.meshes.has_identified_subdomains = True
         return model_restart

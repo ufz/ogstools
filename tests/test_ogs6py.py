@@ -1623,7 +1623,7 @@ class TestiOGS:
             (prj_square_1e4_robin, "square_1x1_quad_1e4.pvd"),
         ],
     )
-    def test_get_output_file(self, tmp_path, prjfile, expected_output):
+    def test_meshseries_file(self, prjfile, expected_output):
         """
         Test for `Project._get_output_file` s.t.:
             (A): VTK output file
@@ -1631,9 +1631,9 @@ class TestiOGS:
             (C): XDMF output file
             (D): `{:meshname}` in output prefix
         """
-        model = ot.Project(prjfile, output_dir=tmp_path)
-        output = model._get_output_file()
-        assert output == tmp_path / expected_output
+        model = ot.Project(prjfile)
+        output = model.meshseries_file()
+        assert output.name == expected_output
 
     def test_media_add_property(self, shared_prj: Path) -> None:
         model = ot.Project(output_file=shared_prj)
