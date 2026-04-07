@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import re
 import warnings
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -130,18 +131,18 @@ class Material(Mapping[str, MaterialProperty]):
         )
         return self[key]
 
-    def filter_process(self, process_schema: dict[str, Any]) -> Material:
+    def filter_process(self, process_schema: dict[str, Any]) -> None:
         """
-        Return a new Material containing only properties required by a given process schema.
+        Filter self, to only contain properties required by a given process.
         """
         allowed = required_property_names(process_schema)
-        return self.filter_properties(allowed)
+        self.filter_properties(allowed)
 
     def filter_properties(
         self, allowed: set[str] | str, key: str = "name"
-    ) -> Material:
+    ) -> None:
         """
-        Return a new Material containing only the properties in 'allowed',
+        Filter self, to only contain properties in 'allowed',
         preserving all extra fields (e.g. scope, unit).
 
         :param allowed: values to filter for
@@ -159,8 +160,46 @@ class Material(Mapping[str, MaterialProperty]):
             ", ".join(p.name for p in filtered_props),
         )
 
-        filtered_raw = Material._raw_from_properties(self.name, filtered_props)
-        return Material(name=self.name, raw_data=filtered_raw)
+        self.properties = filtered_props
+        self.raw = Material._raw_from_properties(self.name, filtered_props)
+
+    @property
+    def duplicates(self) -> list[MaterialProperty]:
+        "Returns all material properties with multiple definitions."
+        prop_names = [p.name for p in self.properties]
+        dupe_names = [x for x in self.property_names if prop_names.count(x) > 1]
+        return [p for p in self.properties if p.name in dupe_names]
+
+    def _filter(
+        self, selection: dict[str, dict[str, str | re.Pattern]]
+    ) -> None:
+        "Reduce properties by the given selection."
+        if len(selection) == 0:
+            return
+
+        def matching(value: str | re.Pattern, text: str) -> bool:
+            if isinstance(value, re.Pattern):
+                return re.search(value, text) is not None
+            return text == value
+
+        pick: list[MaterialProperty] = []
+        for name, restrictions in selection.items():
+            filtered = [
+                p
+                for p in self.properties
+                if matching(name, p.name)
+                and all(matching(v, p.get(k)) for k, v in restrictions.items())
+            ]
+            pick += filtered
+
+        others = [
+            p
+            for p in self.properties
+            if not all(matching(name, p.name) for name in selection)
+        ]
+
+        self.properties = sorted(others + pick, key=lambda p: p.name)
+        self.raw = Material._raw_from_properties(self.name, self.properties)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Material):
@@ -173,9 +212,26 @@ class Material(Mapping[str, MaterialProperty]):
             [p.to_dict() for p in self.properties], key=sort_key
         ) == sorted([p.to_dict() for p in other.properties], key=sort_key)
 
-    def copy(self) -> Material:
-        """Return a deep copy"""
-        return copy.deepcopy(self)
+    def copy(
+        self, selection: dict[str, dict[str, str | re.Pattern]] | None = None
+    ) -> Material:
+        """Return a deep copy, optionally with a filtered selection.
+
+        :param selection:
+            Maps restrictions to different properties. They will be only present
+            in the resulting copy, if the properties named in selection adhere
+            to the given constraint. The values can be regular expressions.
+            Shape: `{"propertynames": {"attributes": "values"}}`
+
+            Example:
+
+            `{"saturation": {"type": re.compile("SaturationVan.*")},
+            "density": {"type": "Constant", "source": re.compile(".*2018.*")}}`
+        """
+        new_mat = copy.deepcopy(self)
+        if selection is not None:
+            new_mat._filter(selection)
+        return new_mat
 
     def __repr__(self) -> str:
         return (
