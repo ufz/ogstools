@@ -186,20 +186,24 @@ def tessellate(
     return pv.PolyData(np.reshape(points, (-1, 3)), faces=connectivity)
 
 
-def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
-    "Create a point cloud from a given mesh containing integration point data."
+def _filter_incomplete_data(mesh: pv.UnstructuredGrid) -> None:
     ip_data = IPdata(mesh, auto_sync=False)
     ip_len = max(len(mesh.field_data[key]) for key in ip_data)
-    _mesh = mesh.copy()
     # Filter data out, which is not on the entire mesh, i.e. material model
     # dependent data when different material models are used within one mesh.
-    for key in ip_data:
-        if len(_mesh.field_data[key]) != ip_len:
-            if key in ip_data._array_map:
+    for key in list(ip_data.keys()):
+        if len(mesh.field_data[key]) != ip_len:
+            if key in ip_data:
                 del ip_data[key]
             else:
                 mesh.field_data.remove(key)
     ip_data._sync()
+
+
+def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Create a point cloud from a given mesh containing integration point data."
+    _mesh = mesh.copy()
+    _filter_incomplete_data(_mesh)
     tmp_dir = Path(mkdtemp())
     input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
     output_file = tmp_dir / "ip_mesh.vtu"
@@ -267,6 +271,7 @@ def ip_data_threshold(
         raise ValueError(msg)
 
     result = mesh.copy()
+    _filter_incomplete_data(result)
     mesh_ip = to_ip_point_cloud(result)
     # in 2D there can be a floating point offset in the flat dimension resulting
     # in the sampling not finding all points, thus we have to align the ip_mesh
@@ -291,7 +296,7 @@ def ip_data_threshold(
         msg = "Threshold resulted in empty mesh."
         raise ValueError(msg)
 
-    ip_data = IPdata(mesh, auto_sync=False)
+    ip_data = IPdata(result, auto_sync=False)
     for key in ip_data:
         ip_data[key].values = result.field_data[key][cells_to_keep]
     ip_data._sync()

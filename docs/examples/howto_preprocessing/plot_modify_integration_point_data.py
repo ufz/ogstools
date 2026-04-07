@@ -26,7 +26,7 @@ from ogstools import examples
 mesh = ot.mesh.read(examples.mechanics_2D)
 ip_data = ot.mesh.IPdata(mesh)
 with np.printoptions(precision=2):
-    print(ip_data)
+    print(ip_data.info)
 
 
 # %%
@@ -75,6 +75,7 @@ ip_data["sigma_ip"].values[mask, :3] -= 2.1e6
 # %%
 # Modify integration point data of a material group
 # -------------------------------------------------
+
 # %%
 # Sometimes it might be needed to modify only the integration point data of a
 # specific material group. Here, top part of the mesh has material id 0, while
@@ -90,7 +91,7 @@ ip_data["sigma_ip"].values[ip_mat_ids == 0, 0] -= 10e6
 # We can see, that the above modifications are reflected in the mesh.
 
 with np.printoptions(precision=2):
-    print(ip_data)
+    print(ip_data.info)
 
 # %%
 fig = ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
@@ -98,6 +99,7 @@ fig = ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
 # %%
 # Remove a material group
 # -----------------------
+
 # %%
 # The following code recipe removes a material group from the mesh and updates
 # the integration point data accordingly.

@@ -91,6 +91,9 @@ class Variable:
         self.categoric = categoric
         self.color = color
 
+    def __str__(self) -> str:
+        return self.data_name
+
     @property
     def type_name(self) -> str:
         return type(self).__name__

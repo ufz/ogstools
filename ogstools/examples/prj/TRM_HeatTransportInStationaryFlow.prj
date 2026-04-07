@@ -38,7 +38,7 @@
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>
                     <norm_type>NORM2</norm_type>
-                    <abstols>1e-11 1e-8 1e-14 1e-14</abstols>
+                    <abstols>1e-10 1e-8 1e-10 1e-10</abstols>
                 </convergence_criterion>
                 <time_discretization>
                     <type>BackwardEuler</type>

@@ -239,11 +239,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> MeshSeries:
         if isinstance(pts_or_mesh, pv.DataSet):
-            points = pts_or_mesh.points
             mesh = pts_or_mesh
         else:
-            points = np.asarray(pts_or_mesh, dtype=float)
-            mesh = pv.PolyData(np.asarray(points))
+            mesh = pv.PolyData(np.asarray(pts_or_mesh, dtype=float))
         if data_name is None:
             variables = list(set().union(self[0].point_data, self[0].cell_data))
         elif isinstance(data_name, list):
@@ -257,11 +255,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             (str(self.spatial_unit), str(self.spatial_unit)),
             (str(self.time_unit), str(self.time_unit)),
         )
-        point_data_keys = [key for key in variables if key in self.point_data]
-        cell_data_keys = [key for key in variables if key in self.cell_data]
-        for keys, data in [
-            (point_data_keys, probe_ms.point_data),
-            (cell_data_keys, probe_ms.cell_data),
+
+        point_data_keys = [
+            key
+            for key in variables
+            if all(str(key) in mesh.point_data for mesh in self)
+        ]
+        cell_data_keys = [
+            key
+            for key in variables
+            if key in self.cell_data
+            if all(str(key) in mesh.cell_data for mesh in self)
+        ]
+        for keys, data, points in [
+            (point_data_keys, probe_ms.point_data, mesh.points),
+            (cell_data_keys, probe_ms.cell_data, mesh.cell_centers().points),
         ]:
             if len(keys) == 0:
                 continue
@@ -291,15 +299,17 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self,
         mesh: pv.DataSet,
         data_name: str | Variable | list[str | Variable] | None = None,
+        interp_method: Literal["nearest", "linear"] = "linear",
     ) -> MeshSeries:
         """Create a new MeshSeries by spatial interpolation.
 
         :param mesh: The mesh on which to interpolate.
         :param data_name: Data to extract. If None, use all point data.
+        :param interp_method:   Interpolation method, defaults to `linear`
 
         :returns: A spatially interpolated MeshSeries.
         """
-        return self._extract_probe(mesh, data_name, "linear")
+        return self._extract_probe(mesh, data_name, interp_method)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, MeshSeries):

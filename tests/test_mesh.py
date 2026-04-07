@@ -132,12 +132,12 @@ def test_reshape_obs_points_mesh():
 def test_threshold_ip_data(mat_ids: tuple, invert: bool):
     "Check length of thresholded ip data is correct."
     mesh = examples.load_meshseries_THM_2D_PVD()[-1]
-    ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
+    new_field_data = ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
     modified = mesh.threshold(mat_ids, scalars="MaterialIDs", invert=invert)
 
     ip_data = ot.mesh.IPdata(modified)
     for name in ip_data:
-        assert len(modified.field_data[name]) == (ip_data.n_points)
+        assert len(new_field_data[name]) == (ip_data.n_points)
 
 
 @pytest.mark.tools  # checkMesh
