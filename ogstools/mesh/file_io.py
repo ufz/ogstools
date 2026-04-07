@@ -19,7 +19,10 @@ from ogstools.core.storage import _date_temp_path
 
 
 def save(
-    mesh: pv.DataSet, filename: Path | str | None = None, **kwargs: Any
+    mesh: pv.DataSet,
+    filename: Path | str | None = None,
+    drop_nan_keys: bool = False,
+    **kwargs: Any,
 ) -> Path:
     """Save mesh to file.
 
@@ -60,12 +63,15 @@ def save(
             data.remove(key)
 
     ip_data = IPdata(mesh, auto_sync=False)
-    nan_keys = [k for k, v in mesh.field_data.items() if np.all(np.isnan(v))]
-    for key in nan_keys:
-        if key in ip_data._array_map:
-            del ip_data[key]
-        else:
-            mesh.field_data.remove(key)
+    if drop_nan_keys:
+        nan_keys = [
+            k for k, v in mesh.field_data.items() if np.all(np.isnan(v))
+        ]
+        for key in nan_keys:
+            if key in ip_data._array_map:
+                del ip_data[key]
+            else:
+                mesh.field_data.remove(key)
     ip_data._sync()
 
     if (
