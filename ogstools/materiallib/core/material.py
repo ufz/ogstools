@@ -138,17 +138,7 @@ class Material(Mapping[str, MaterialProperty]):
         if isinstance(allowed, str):
             allowed = {allowed}
 
-        def prop_attr(p: MaterialProperty, key: str) -> Any:
-            if key in ["name", "type", "value"]:
-                return getattr(p, key)
-            if key not in p.extra:
-                msg = f"Property {p.name} has no attribute called '{key}'."
-                raise KeyError(msg)
-            return p.extra[key]
-
-        filtered_props = [
-            p for p in self.properties if prop_attr(p, key) in allowed
-        ]
+        filtered_props = [p for p in self.properties if p.get(key) in allowed]
         logger.debug(
             "Material %s: filtered %d/%d properties (%s)",
             self.name,
