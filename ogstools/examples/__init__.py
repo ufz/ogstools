@@ -262,6 +262,7 @@ prj_heat_transport = _prj_dir / "HeatTransportInStationaryFlow.prj"
 prj_heat_conduction = _prj_dir / "HeatConduction.prj"
 prj_HM_stationary = _prj_dir / "HM_StationaryFlow.prj"
 prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
+prj_TRM_stationary = _prj_dir / "TRM_HeatTransportInStationaryFlow.prj"
 prj_TM_square = _prj_dir / "TM_square.prj"
 
 surface_paths = [

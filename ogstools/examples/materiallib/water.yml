@@ -32,6 +32,8 @@ properties:
           reference_condition: 293.15
           slope: 1.5e-5
       source: "CRC Handbook of Chemistry and Physics"
+    - type: WaterDensityIAPWSIF97Region1
+      unit: kg/m³
   viscosity:
     - type: Constant
       value: 1.0e-3

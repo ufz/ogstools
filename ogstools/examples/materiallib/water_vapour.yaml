@@ -1,0 +1,9 @@
+name: water_vapour
+group: Gas
+type: phase
+properties:
+  density: { type: WaterVapourDensity, unit: kg/m³ }
+  diffusion: { type: VapourDiffusionFEBEX }
+  specific_heat_capacity: { type: Constant, value: 0, unit: J/(kg·K) }
+  specific_latent_heat: { type: LinearWaterVapourLatentHeat }
+  thermal_diffusion_enhancement_factor: { type: Constant, value: 1.0 }

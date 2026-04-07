@@ -7,6 +7,7 @@ _T_PROPS = ["density", "specific_heat_capacity"]
 _T_SOLID = _T_PROPS + ["thermal_conductivity"]
 _BHE_LIQUID = _T_PROPS + ["phase_velocity"]
 _H_LIQUID = ["density", "viscosity"]
+_TR_LIQUID = _H_LIQUID + ["specific_heat_capacity"]
 
 _TH_LIQUID = _T_SOLID + ["viscosity"]
 _TH_SOLID = _T_SOLID + ["storage"]
@@ -48,6 +49,32 @@ PROCESS_SCHEMAS: dict[str, dict[str, Any]] = {
     "HEAT_TRANSPORT_BHE": _to_schema_dict(
         {"AqueousLiquid": _BHE_LIQUID, "Solid": _T_PROPS}, _BHE_MED_PROPS
     ),
+    "TRM": {
+        "phases": [
+            {"type": "AqueousLiquid", "properties": _TR_LIQUID},
+            {
+                "type": "Gas",
+                "properties": [
+                    "density",
+                    "diffusion",
+                    "specific_heat_capacity",
+                    "specific_latent_heat",
+                    "thermal_diffusion_enhancement_factor",
+                ],
+            },
+            {"type": "Solid", "properties": _T_PROPS + ["thermal_expansivity"]},
+        ],
+        "properties": [
+            "tortuosity",
+            "porosity",
+            "biot_coefficient",
+            "permeability",
+            "relative_permeability",
+            "saturation",
+            "bishops_effective_stress",
+            "thermal_conductivity",
+        ],
+    },
     "TH2M_PT": {
         "phases": [
             {

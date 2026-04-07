@@ -10,7 +10,7 @@
     </meshes>
     <processes>
         <process>
-            <name>HeatTransportInStationaryFlow</name>
+            <name>HT_HeatTransportInStationaryFlow</name>
             <type>HT</type>
             <integration_order>2</integration_order>
             <process_variables>
@@ -24,7 +24,7 @@
     </processes>
     <time_loop>
         <processes>
-            <process ref="HeatTransportInStationaryFlow">
+            <process ref="HT_HeatTransportInStationaryFlow">
                 <nonlinear_solver>basic_picard</nonlinear_solver>
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>
