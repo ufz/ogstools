@@ -9,7 +9,7 @@
     </meshes>
     <processes>
         <process>
-            <name>HeatTransportInStationaryFlow</name>
+            <name>TRM</name>
             <type>THERMO_RICHARDS_MECHANICS</type>
             <integration_order>2</integration_order>
             <constitutive_relation>
@@ -33,7 +33,7 @@
     </processes>
     <time_loop>
         <processes>
-            <process ref="HeatTransportInStationaryFlow">
+            <process ref="TRM">
                 <nonlinear_solver>basic_newton</nonlinear_solver>
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>

@@ -43,3 +43,4 @@ OGS 6.5.7 -
 ### next main release
 
 - modify ip_data_threshold to use the same pattern as in the ip_data.py example
+- MaterialManager: set_material -> set_material_from_file + set_material(self, Material)

@@ -10,7 +10,7 @@
     </meshes>
     <processes>
         <process>
-            <name>THM_HeatTransportInStationaryFlow</name>
+            <name>THM</name>
             <type>THERMO_HYDRO_MECHANICS</type>
             <integration_order>2</integration_order>
             <constitutive_relation>
@@ -30,7 +30,7 @@
     </processes>
     <time_loop>
         <processes>
-            <process ref="THM_HeatTransportInStationaryFlow">
+            <process ref="THM">
                 <nonlinear_solver>basic_newton</nonlinear_solver>
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>
