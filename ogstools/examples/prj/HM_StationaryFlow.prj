@@ -10,7 +10,7 @@
     </meshes>
     <processes>
         <process>
-            <name>HM_StationaryFlow</name>
+            <name>HM</name>
             <type>HYDRO_MECHANICS</type>
             <integration_order>2</integration_order>
             <constitutive_relation>
@@ -29,7 +29,7 @@
     </processes>
     <time_loop>
         <processes>
-            <process ref="HM_StationaryFlow">
+            <process ref="HM">
                 <nonlinear_solver>basic_newton</nonlinear_solver>
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>

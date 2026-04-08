@@ -74,7 +74,7 @@ class Material(Mapping[str, MaterialProperty]):
             for entry in entries if isinstance(entries, list) else [entries]:
                 type_ = entry.get(
                     "type", "Constant"
-                )  # Todo - Error if 'type' not found
+                )  # TODO: Error if 'type' not found
                 value = entry.get("value", None)
                 extra = {
                     k: v for k, v in entry.items() if k not in ("type", "value")
@@ -103,6 +103,18 @@ class Material(Mapping[str, MaterialProperty]):
 
     def __bool__(self) -> bool:
         return bool(self.name)
+
+    @staticmethod
+    def _raw_from_properties(
+        name: str, properties: list[MaterialProperty]
+    ) -> dict:
+        "raw yaml data dict with lists if multiple entries have same names"
+        raw_block: dict[str, list[dict[str, Any]]] = {}
+        for p in properties:
+            entry = {"type": p.type, "value": p.value, **p.extra}
+            raw_block.setdefault(p.name, []).append(entry)
+
+        return {"name": name, "properties": raw_block}
 
     @property
     def property_names(self) -> list[str]:
@@ -138,17 +150,7 @@ class Material(Mapping[str, MaterialProperty]):
         if isinstance(allowed, str):
             allowed = {allowed}
 
-        def prop_attr(p: MaterialProperty, key: str) -> Any:
-            if key in ["name", "type", "value"]:
-                return getattr(p, key)
-            if key not in p.extra:
-                msg = f"Property {p.name} has no attribute called '{key}'."
-                raise KeyError(msg)
-            return p.extra[key]
-
-        filtered_props = [
-            p for p in self.properties if prop_attr(p, key) in allowed
-        ]
+        filtered_props = [p for p in self.properties if p.get(key) in allowed]
         logger.debug(
             "Material %s: filtered %d/%d properties (%s)",
             self.name,
@@ -157,15 +159,7 @@ class Material(Mapping[str, MaterialProperty]):
             ", ".join(p.name for p in filtered_props),
         )
 
-        # Build a raw_data dict with lists if multiple entries share the same name
-        raw_block: dict[str, list[dict[str, Any]]] = {}
-        for p in filtered_props:
-            entry = {"type": p.type, "value": p.value, **p.extra}
-            raw_block.setdefault(p.name, []).append(entry)
-
-        filtered_raw = {"name": self.name, "properties": raw_block}
-
-        # Create a new Material that parses only the filtered_raw
+        filtered_raw = Material._raw_from_properties(self.name, filtered_props)
         return Material(name=self.name, raw_data=filtered_raw)
 
     def __eq__(self, other: object) -> bool:
@@ -183,9 +177,6 @@ class Material(Mapping[str, MaterialProperty]):
         """Return a deep copy"""
         return copy.deepcopy(self)
 
-    # -----------------------
-    # Representation
-    # -----------------------
     def __repr__(self) -> str:
         return (
             f"<Material '{self.name}' with {len(self.properties)} properties>"

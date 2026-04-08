@@ -822,7 +822,6 @@ class TestMaterialManagerFilter:
 
 
 class TestMedia:
-
     def test_media_create_no_process(self, tmp_path, write_yaml):
         """MediaSet should not be creatable from an unfiltered MaterialManager."""
         write_yaml(
@@ -2164,7 +2163,6 @@ class TestBuiltinProcessSchemas:
 
 
 class TestOgstoolsInternalDB:
-
     def test_materialdb_loads_builtin_materials(self):
         """Check that the internal material DB loads non-empty set of materials."""
         db = material_manager.MaterialManager()
@@ -2266,6 +2264,7 @@ class TestOgstoolsInternalDB:
             ("TH", examples.prj_heat_transport),
             ("TM", examples.prj_TM_square),
             ("THM", examples.prj_THM_stationary),
+            ("TRM", examples.prj_TRM_stationary),
             ("TH2M_PT", examples.prj_th2m_phase_transition),
         ],
     )
@@ -2283,13 +2282,15 @@ class TestOgstoolsInternalDB:
             for idx, mat in enumerate(["opalinus_clay", "bentonite"])
         ]
         fluids = {"AqueousLiquid": "water"}
+        if process == "TRM":
+            fluids["Gas"] = "water_vapour"
         if process == "TH2M_PT":
             fluids["Gas"] = "carbon_dioxide"
 
         filtered = db.filter(
             process=process, subdomains=subdomains, fluids=fluids
         )
-        if process != "TH2M_PT":
+        if process not in ["TRM", "TH2M_PT"]:
             for db_dict in [filtered.materials_db, filtered.fluids]:
                 const_filtered = {
                     name: mat.filter_properties("Constant", "type")
@@ -2317,5 +2318,5 @@ class TestOgstoolsInternalDB:
         assert "opalinus_clay" not in text  # only IDs are exported
         assert ("specific_heat_capacity" in text) == ("T" in process)
         assert ("thermal_conductivity" in text) == ("T" in process)
-        assert ("AqueousLiquid" in text) == ("H" in process)
-        assert ("Gas" in text) == (process == "TH2M_PT")
+        assert ("AqueousLiquid" in text) == ("H" in process) or ("R" in process)
+        assert ("Gas" in text) == (process in ["TRM", "TH2M_PT"])
