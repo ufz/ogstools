@@ -520,10 +520,16 @@ class Meshes(MutableMapping, StorageBase):
     def identify_subdomain(self, include_domain: bool = False) -> None:
         from ogstools.meshes.subdomains import identify_subdomains
 
-        if include_domain:
-            identify_subdomains(self.domain, list(self.values()))
-        else:
-            identify_subdomains(self.domain, list(self.subdomains.values()))
+        def is_anchor(mesh: pv.UnstructuredGrid) -> bool:
+            return (mesh.GetMaxSpatialDimension() == 1) and (
+                "anchor_stiffness" in mesh.cell_data
+            )
+
+        all_subdomains = (self if include_domain else self.subdomains).values()
+        subdomains = list(
+            filter(lambda mesh: not is_anchor(mesh), all_subdomains)
+        )
+        identify_subdomains(self.domain, subdomains)
         self.has_identified_subdomains = True
 
     def rename_subdomains(self, rename_map: dict[str, str]) -> None:
