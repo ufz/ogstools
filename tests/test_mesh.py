@@ -119,7 +119,7 @@ def test_reshape_obs_points_mesh():
 
 
 @pytest.mark.tools
-@settings(max_examples=10, deadline=1600)
+@settings(max_examples=10, deadline=2000)
 @given(
     st.one_of(
         st.integers(2, 13),
@@ -131,6 +131,7 @@ def test_reshape_obs_points_mesh():
 )
 def test_threshold_ip_data(mat_ids: tuple, invert: bool):
     "Check length of thresholded ip data is correct."
+    # TODO: only tested for materialIDs for now
     mesh = examples.load_meshseries_THM_2D_PVD()[-1]
     new_field_data = ot.mesh.ip_data_threshold(mesh, mat_ids, invert=invert)
     modified = mesh.threshold(mat_ids, scalars="MaterialIDs", invert=invert)
@@ -138,6 +139,14 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
     ip_data = ot.mesh.IPdata(modified)
     for name in ip_data:
         assert len(new_field_data[name]) == (ip_data.n_points)
+
+    ip_cloud = ot.mesh.to_ip_point_cloud(modified)
+    ip_cloud.points[:, 2] = mesh.points[0, 2]  # avoids floating pt problems
+    cell_map = mesh.find_containing_cell(ip_cloud.points)
+    ids = set(mesh["MaterialIDs"][cell_map])
+    is_int = isinstance(mat_ids, int)
+    bounds = [mat_ids, 99] if is_int else [mat_ids[0], mat_ids[1] + 1]
+    assert (ids.isdisjoint if invert else ids.issubset)(set(range(*bounds)))
 
 
 @pytest.mark.tools  # checkMesh
