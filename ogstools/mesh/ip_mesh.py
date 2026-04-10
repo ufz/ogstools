@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Sequence
+from functools import reduce
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -10,7 +11,7 @@ import pyvista as pv
 
 from ogstools.mesh.ip_data import IPdata
 
-from .file_io import save
+from .file_io import read, save
 
 
 def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
@@ -213,7 +214,7 @@ def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
 
     cli().ipDataToPointCloud(i=str(input_file), o=str(output_file))
 
-    return pv.XMLUnstructuredGridReader(output_file).read()
+    return read(output_file)
 
 
 def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
@@ -221,17 +222,15 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     ip_mesh = to_ip_point_cloud(mesh)
 
     integration_order = max(data.order for data in IPdata(mesh).values())
-    new_meshes: list[pv.PolyData] = []
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
     )
-    for cell_type in cell_types:
-        _mesh = mesh.extract_cells_by_type(cell_type)
-        new_meshes += [tessellate(_mesh, cell_type, integration_order)]
-    new_mesh = new_meshes[0]
-    for _mesh in new_meshes[1:]:
-        new_mesh = new_mesh.merge(_mesh)
-    new_mesh = new_mesh.clean()
+
+    type_meshes = (
+        tessellate(mesh.extract_cells_by_type(ct), ct, integration_order)
+        for ct in cell_types
+    )
+    new_mesh = reduce(lambda m: m.merge, type_meshes).clean()  # type: ignore[misc,arg-type]
 
     # if we add new cell_type / integration_order combination, the following
     # helps, to bring the new_mesh's cells in the correct order:
