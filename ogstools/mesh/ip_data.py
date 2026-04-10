@@ -95,6 +95,16 @@ class IPdata(MutableMapping):
         return key in self._array_map
 
     def __str__(self) -> str:
+        lines = [
+            f"{name} (order={data.order}, "
+            f"num_components={data.num_components}, "
+            f"len={len(data.values)}"
+            for name, data in self.items()
+        ]
+        return "\n".join(lines)
+
+    @property
+    def info(self) -> str:
         return (
             str(self._array_map)
             .replace("values=", "values=\n")

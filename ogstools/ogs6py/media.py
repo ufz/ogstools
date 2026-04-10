@@ -205,6 +205,7 @@ class Media(build_tree.BuildTree):
             "WaterVapourDensity": [],
             "WaterDensityIAPWSIF97Region1": [],
             "WaterVapourLatentHeatWithCriticalTemperature": [],
+            "WaterViscosityIAPWS": [],
         }
 
     def _generate_generic_property(

@@ -212,7 +212,7 @@ class ProcessVars(build_tree.BuildTree):
             if "alpha" in args:
                 self.populate_tree(source_term, "alpha", text=args["alpha"])
             self.populate_tree(source_term, "u_0", text=args["u_0"])
-        else:
+        elif args["type"] != "EmbeddedAnchor":
             msg = """Please provide the parameter for Dirichlet \
                                         or Neumann ST/source_term_object for Python STs."""
             raise KeyError(msg)

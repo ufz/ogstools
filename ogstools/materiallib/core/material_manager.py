@@ -170,8 +170,8 @@ class MaterialManager:
         # Solids (subdomains)
         for entry in subdomains:
             name = entry["material"]
-            mat = self.get_material(name)
-            filtered_mat = mat.filter_process(schema)
+            mat = self.get_material(name).copy()
+            mat.filter_process(schema)
 
             subdomain_name = entry["subdomain"]
             mat_ids = entry["material_ids"]
@@ -186,14 +186,15 @@ class MaterialManager:
                     if len(mat_ids) == 1
                     else f"{subdomain_name}_{mat_id}"
                 )
-                filtered[key] = filtered_mat
+                filtered[key] = mat
                 subdomain_ids[key] = mat_id
 
         # Fluids
         fluid_materials: dict[str, Material] = {}
         for phase_type, mat_name in (fluids or {}).items():
-            raw = self.get_material(mat_name)
-            fluid_materials[phase_type] = raw.filter_process(schema)
+            fluid = self.get_material(mat_name).copy()
+            fluid.filter_process(schema)
+            fluid_materials[phase_type] = fluid
 
         return MaterialManager(
             data_dir=self.data_dir,

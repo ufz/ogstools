@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -257,9 +258,9 @@ class TestMaterialLib:
             }
         )
 
-        filtered = mat.filter_properties({"Density"})
+        mat.filter_properties({"Density"})
 
-        assert filtered.property_names == ["Density"]
+        assert mat.property_names == ["Density"]
 
     def test_material_filter_properties_empty_set_returns_empty_material(self):
         """Material.filter_properties with empty allowed set should return a Material without properties."""
@@ -269,10 +270,10 @@ class TestMaterialLib:
             }
         )
 
-        filtered = mat.filter_properties(set())
+        mat.filter_properties(set())
 
-        assert filtered.properties == []
-        assert filtered.property_names == []
+        assert mat.properties == []
+        assert mat.property_names == []
 
     def test_material_repr_contains_name_and_property_count(self):
         """Material.__repr__ should show the material name and number of properties."""
@@ -304,11 +305,11 @@ class TestMaterialLib:
             "phases": [],
         }
 
-        filtered = mat.filter_process(process_schema)
+        mat.filter_process(process_schema)
 
-        assert "Density" in filtered
-        assert "Viscosity" in filtered
-        assert "Permeability" not in filtered
+        assert "Density" in mat
+        assert "Viscosity" in mat
+        assert "Permeability" not in mat
 
     def test_material_getitem(self):
         """mat[key] should return the correct property."""
@@ -812,11 +813,9 @@ class TestMaterialManagerFilter:
             name="mock",
         )
 
-        # Nur thermal_conductivity erlauben
-        filtered = mat.filter_properties({"thermal_conductivity"})
+        mat.filter_properties({"thermal_conductivity"})
 
-        # Check, dass beide Varianten drinbleiben
-        scopes = [p.extra.get("scope") for p in filtered.properties]
+        scopes = [p.extra.get("scope") for p in mat.properties]
         assert "phase" in scopes
         assert "medium" in scopes
 
@@ -2185,7 +2184,6 @@ class TestOgstoolsInternalDB:
         filtered = db.filter(
             process="TH2M_PT", subdomains=subdomains, fluids=fluids
         )
-        from ogstools.materiallib.core.media import MediaSet
 
         media = MediaSet(filtered)
 
@@ -2199,6 +2197,29 @@ class TestOgstoolsInternalDB:
         assert "<media>" in text
         assert "AqueousLiquid" in text
         assert "Gas" in text
+
+    def test_copy_filter(self):
+        "Select a subset of multiple MaterialProperty definitions"
+        db = material_manager.MaterialManager()
+        opa = db.get_material("opalinus_clay")
+        assert len(opa.duplicates) == 4
+
+        opa_tc_const = opa.copy({"thermal_conductivity": {"type": "Constant"}})
+        assert len(opa_tc_const.duplicates) == 2
+
+        opa_tc_unique = opa_tc_const.copy(
+            {"thermal_conductivity": {"type": "Constant", "scope": "medium"}}
+        )
+        assert len(opa_tc_unique.duplicates) == 0
+        th_cond = opa_tc_unique["thermal_conductivity"]
+        assert th_cond.extra["scope"] == "medium"
+
+        opa_tc_unique = opa.copy(
+            {"thermal_conductivity": {"type": re.compile(".+Weighted.+")}}
+        )
+        assert len(opa_tc_unique.duplicates) == 0
+        th_cond = opa_tc_unique["thermal_conductivity"]
+        assert th_cond.type == "SaturationWeightedThermalConductivity"
 
     def test_media_import_with_builtin_BHE_schema(self, tmp_path):
         """Integration: Project can import builtin DB + schema."""
@@ -2216,7 +2237,6 @@ class TestOgstoolsInternalDB:
         filtered = db.filter(
             process="HEAT_TRANSPORT_BHE", subdomains=subdomains, fluids=fluids
         )
-        from ogstools.materiallib.core.media import MediaSet
 
         media = MediaSet(filtered)
 
@@ -2236,22 +2256,6 @@ class TestOgstoolsInternalDB:
             if "Gas" in key:
                 continue
             assert df_mat[key] == value
-
-    def create_temporary_mesh(self, tmp_path):
-
-        mesh_path = tmp_path / "domain.msh"
-
-        ot.gmsh_tools.rect(
-            (6, 4),
-            5,
-            n_layers=2,
-            structured_grid=True,
-            order=1,
-            out_name=mesh_path,
-            jiggle=0.06,
-        )
-        meshes = ot.Meshes.from_gmsh(mesh_path)
-        meshes.save(tmp_path)
 
     @pytest.mark.system
     @pytest.mark.parametrize(
@@ -2287,16 +2291,12 @@ class TestOgstoolsInternalDB:
         if process == "TH2M_PT":
             fluids["Gas"] = "carbon_dioxide"
 
+        if process not in ["TRM", "TH2M_PT"]:
+            for mat in db.materials_db.values():
+                mat.filter_properties("Constant", "type")
         filtered = db.filter(
             process=process, subdomains=subdomains, fluids=fluids
         )
-        if process not in ["TRM", "TH2M_PT"]:
-            for db_dict in [filtered.materials_db, filtered.fluids]:
-                const_filtered = {
-                    name: mat.filter_properties("Constant", "type")
-                    for name, mat in db_dict.items()
-                }
-                db_dict.update(const_filtered)
 
         media = MediaSet(filtered)
         prj = Project(input_file=input_prj).copy()

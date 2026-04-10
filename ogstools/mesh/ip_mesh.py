@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Sequence
+from functools import reduce
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -10,7 +11,7 @@ import pyvista as pv
 
 from ogstools.mesh.ip_data import IPdata
 
-from .file_io import save
+from .file_io import read, save
 
 
 def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
@@ -186,20 +187,24 @@ def tessellate(
     return pv.PolyData(np.reshape(points, (-1, 3)), faces=connectivity)
 
 
-def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
-    "Create a point cloud from a given mesh containing integration point data."
+def _filter_incomplete_data(mesh: pv.UnstructuredGrid) -> None:
     ip_data = IPdata(mesh, auto_sync=False)
     ip_len = max(len(mesh.field_data[key]) for key in ip_data)
-    _mesh = mesh.copy()
     # Filter data out, which is not on the entire mesh, i.e. material model
     # dependent data when different material models are used within one mesh.
-    for key in ip_data:
-        if len(_mesh.field_data[key]) != ip_len:
-            if key in ip_data._array_map:
+    for key in list(ip_data.keys()):
+        if len(mesh.field_data[key]) != ip_len:
+            if key in ip_data:
                 del ip_data[key]
             else:
                 mesh.field_data.remove(key)
     ip_data._sync()
+
+
+def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Create a point cloud from a given mesh containing integration point data."
+    _mesh = mesh.copy()
+    _filter_incomplete_data(_mesh)
     tmp_dir = Path(mkdtemp())
     input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
     output_file = tmp_dir / "ip_mesh.vtu"
@@ -209,7 +214,7 @@ def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
 
     cli().ipDataToPointCloud(i=str(input_file), o=str(output_file))
 
-    return pv.XMLUnstructuredGridReader(output_file).read()
+    return read(output_file)
 
 
 def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
@@ -217,17 +222,15 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     ip_mesh = to_ip_point_cloud(mesh)
 
     integration_order = max(data.order for data in IPdata(mesh).values())
-    new_meshes: list[pv.PolyData] = []
     cell_types = np.unique(
         getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
     )
-    for cell_type in cell_types:
-        _mesh = mesh.extract_cells_by_type(cell_type)
-        new_meshes += [tessellate(_mesh, cell_type, integration_order)]
-    new_mesh = new_meshes[0]
-    for _mesh in new_meshes[1:]:
-        new_mesh = new_mesh.merge(_mesh)
-    new_mesh = new_mesh.clean()
+
+    type_meshes = (
+        tessellate(mesh.extract_cells_by_type(ct), ct, integration_order)
+        for ct in cell_types
+    )
+    new_mesh = reduce(lambda m: m.merge, type_meshes).clean()  # type: ignore[misc,arg-type]
 
     # if we add new cell_type / integration_order combination, the following
     # helps, to bring the new_mesh's cells in the correct order:
@@ -267,6 +270,7 @@ def ip_data_threshold(
         raise ValueError(msg)
 
     result = mesh.copy()
+    _filter_incomplete_data(result)
     mesh_ip = to_ip_point_cloud(result)
     # in 2D there can be a floating point offset in the flat dimension resulting
     # in the sampling not finding all points, thus we have to align the ip_mesh
@@ -291,7 +295,7 @@ def ip_data_threshold(
         msg = "Threshold resulted in empty mesh."
         raise ValueError(msg)
 
-    ip_data = IPdata(mesh, auto_sync=False)
+    ip_data = IPdata(result, auto_sync=False)
     for key in ip_data:
         ip_data[key].values = result.field_data[key][cells_to_keep]
     ip_data._sync()
