@@ -347,6 +347,21 @@ class TestPhysicalVariable:
         for var in [si.mean, si.median, si.sum, si.var, si.std]:
             assert np.all(np.diff(var.transform(ms_bot)) >= 0)
 
+    def test_matrix_agg_on_single_mesh_shape(self):
+        """Aggregation on Matrix/Vector must reduce to per-point, not per-component.
+
+        stress.mean on a single mesh collapses axis=-2 (the points axis) and
+        returns shape (n_components,), not (n_points,). This must NOT be used
+        for per-point visualization. stress.tensor_mean is the correct choice
+        for hydrostatic stress per point.
+        """
+        mesh = examples.load_mesh_mechanics_2D()
+        n_pts = mesh.n_points
+        # stress.mean aggregates spatially → shape (n_components,), not (n_pts,)
+        assert ov.stress.mean.transform(mesh).shape == (4,)
+        # stress.tensor_mean gives hydrostatic stress per point → shape (n_pts,)
+        assert ov.stress.tensor_mean.transform(mesh).shape == (n_pts,)
+
     def test_get_data_mask(self):
         def _check_masked_data(ms_check, actual):
             desired = ms_check.point_data[var.data_name]
