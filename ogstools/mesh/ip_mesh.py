@@ -189,6 +189,8 @@ def tessellate(
 
 def _filter_incomplete_data(mesh: pv.UnstructuredGrid) -> None:
     ip_data = IPdata(mesh, auto_sync=False)
+    if len(ip_data) == 0:
+        return
     ip_len = max(len(mesh.field_data[key]) for key in ip_data)
     # Filter data out, which is not on the entire mesh, i.e. material model
     # dependent data when different material models are used within one mesh.
@@ -250,7 +252,7 @@ def ip_data_threshold(
     value: int | Sequence[int],
     scalars: str = "MaterialIDs",
     invert: bool = False,
-) -> dict[str, np.ndarray]:
+) -> pv.DataSetAttributes:
     """Filters integration point data to match the threshold criterion.
 
     Similar to ``pyvista``'s threshold filter, but only acting on field data.
@@ -263,12 +265,13 @@ def ip_data_threshold(
     :param scalars: Name of data to threshold on.
     :param invert:  Invert the threshold results
     """
-    #
     value_bounds = (value, np.inf) if isinstance(value, int) else value
     if len(value_bounds) != 2:
         msg = "If given as a Sequence, length of value must be 2."
         raise ValueError(msg)
 
+    if len(IPdata(mesh, auto_sync=False)) == 0:
+        return mesh.field_data
     result = mesh.copy()
     _filter_incomplete_data(result)
     mesh_ip = to_ip_point_cloud(result)
