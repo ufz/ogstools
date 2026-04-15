@@ -86,7 +86,7 @@ namespaces = false
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"   # would increment version otherwise
 local_scheme = "dirty-tag"
-fallback_version = "0.7.0+no-scm" # Manually increment on release!
+fallback_version = "0.8.0+no-scm" # Manually increment on release!
 
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
