@@ -124,7 +124,7 @@ class TestPlotting:
     ) -> plt.Figure:
         """Test filled 2D contourplots via image comparison."""
         ot.plot.setup.material_names = {
-            i + 1: f"Layer {i+1}" for i in range(26)
+            i + 1: f"Layer {i + 1}" for i in range(26)
         }
         ms = examples.load_meshseries_THM_2D_PVD()
         return contourf(ms[1], var, **kwargs)
@@ -316,18 +316,30 @@ class TestPlotting:
         return fig
 
     @pytest.mark.parametrize(
-        ("var1", "var2"),
-        [("time", ot.variables.saturation), (ot.variables.saturation, "time")],
+        ("var1", "var2", "n_pts"),
+        [
+            ("time", ot.variables.saturation, 4),
+            (ot.variables.saturation, "time", 4),
+            ("x", ot.variables.saturation, 100),
+        ],
     )
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     def test_line_meshseries(
-        self, var1: ot.variables.Variable, var2: ot.variables.Variable
+        self,
+        var1: ot.variables.Variable,
+        var2: ot.variables.Variable,
+        n_pts: int,
     ) -> plt.Figure:
         """Test plot.line from sampled meshseries data via image comparison."""
-        ms = examples.load_meshseries_CT_2D_XDMF()
-        pts = np.linspace([0, 0, 60], [120, 0, 60], 4)
-        probe = ms.probe(pts)
+        ms = examples.load_meshseries_CT_2D_XDMF().scale(time="a")
+        pts = np.linspace([0, 0, 60], [120, 0, 60], n_pts)
         labels = [f"{i}: x={pt[0]: >5} z={pt[2]}" for i, pt in enumerate(pts)]
+        if not (var1 == "time" or var2 == "time"):
+            ms = ms[::4]
+            labels = [f"{t=:.1f} a" for t in ms.timevalues]
+            np.random.default_rng().shuffle(pts)  # to test sorting
+
+        probe = ms.probe(pts)
         fig = probe.plot_line(
             var1, var2, labels=labels, monospace=True, outer_legend=True
         )

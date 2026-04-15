@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1'?>
-<VTKFile type="Collection" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">
-  <Collection>
-    <DataSet timestep="999.3155373032168" group="" part="0" file="x_ts_1_t_31536000000.000000.vtu"/>
-    <DataSet timestep="9993.155373032168" group="" part="0" file="x_ts_10_t_315360000000.000000.vtu"/>
-    <DataSet timestep="99931.55373032168" group="" part="0" file="x_ts_100_t_3153600000000.000000.vtu"/>
-    <DataSet timestep="999315.5373032169" group="" part="0" file="x_ts_1000_t_31536000000000.000000.vtu"/>
-  </Collection>
-</VTKFile>

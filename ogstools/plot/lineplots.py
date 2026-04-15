@@ -114,8 +114,11 @@ def line(
 
     ##### process variables ##################################################
     is_meshseries = isinstance(dataset, Sequence)
+    if is_meshseries and var1 is None and var2 is None:
+        msg = "Please provide at least one variable."
+        raise UserWarning(msg)
     mesh: pv.DataSet = dataset[0] if is_meshseries else dataset
-    default = ["time", "time"] if is_meshseries else ["x", "y", "z"]
+    default = ["time", "time", "time"] if is_meshseries else ["x", "y", "z"]
     x_var, y_var = _normalize_vars(var1, var2, mesh, default)
     pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
 
@@ -169,12 +172,12 @@ def line(
         x = x.T
 
     def sorted_ids(
-        mesh: pv.DataSet, use_cells: bool = False
+        mesh: pv.DataSet, use_cells: bool, data_len: int
     ) -> slice | np.ndarray:
-        if is_meshseries or not sort:
+        mesh_ = mesh.cell_centers() if use_cells else mesh
+        if not sort or (mesh_.n_points != data_len):
             return slice(None)
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
-        mesh_ = mesh.cell_centers() if use_cells else mesh
         return np.argsort(mesh_.points[:, sort_idx])
 
     ##### plotting ###########################################################
@@ -186,7 +189,9 @@ def line(
     strip: pv.PolyData = surf.strip()
 
     if is_meshseries or only_points or strip.n_cells <= 1:
-        x_sort_ids = sorted_ids(mesh=mesh, use_cells=x_cell_data)
+        x_sort_ids = sorted_ids(
+            mesh=mesh, use_cells=x_cell_data, data_len=len(x)
+        )
         if x_cell_data == y_cell_data:
             # pure cell or point data
             ax_.plot(x[x_sort_ids], y[x_sort_ids], **kwargs)
@@ -195,7 +200,9 @@ def line(
                 msg = "Line Plot of CellData vs. PointData for cells with inner points currently not supported!"
                 raise ValueError(msg)
             # mixed point data and cell data - special case
-            y_sort_ids = sorted_ids(mesh=mesh, use_cells=y_cell_data)
+            y_sort_ids = sorted_ids(
+                mesh=mesh, use_cells=y_cell_data, data_len=len(y)
+            )
 
             def prepare_data(data: np.ndarray, use_cells: bool) -> np.ndarray:
                 if use_cells:
