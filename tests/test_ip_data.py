@@ -8,6 +8,7 @@ import ogstools as ot
 from ogstools import examples
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.parametrize(
     "mesh_load",
     [
@@ -21,6 +22,7 @@ def test_ip_data_init(mesh_load):
     assert ip_data.n_points != 0
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.parametrize(("n_comps", "val"), [(1, 0.0), (4, [1, 1, 1, 0])])
 def test_set_ip_data(n_comps: int, val):
     mesh = examples.load_mesh_mechanics_2D()
@@ -59,6 +61,7 @@ def test_modify_simple():
     np.testing.assert_array_equal(mesh.field_data["epsilon_ip"], 0.0)
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_modify_complex() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()
@@ -74,6 +77,7 @@ def test_modify_complex() -> plt.Figure:
     return ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_modify_material() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()
