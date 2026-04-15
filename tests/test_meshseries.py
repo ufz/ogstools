@@ -175,12 +175,8 @@ def test_all_types():
 
 
 def test_from_data():
-    vtu0 = ot.mesh.read(
-        examples.pvd_serial_2D.parent / "mesh_ts_0_t_0.000000.vtu"
-    )
-    vtu1 = ot.mesh.read(
-        examples.pvd_serial_2D.parent / "mesh_ts_1_t_1.000000.vtu"
-    )
+    vtu0 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_0_t_0.000000.vtu")
+    vtu1 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_1_t_1.000000.vtu")
     timevalues = np.array([0.0, 1.0])
     ms = ot.MeshSeries.from_data([vtu0, vtu1], timevalues)
     ms.save()
