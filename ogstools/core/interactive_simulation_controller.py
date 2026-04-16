@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
+import signal
 import threading
 import time
 import typing
@@ -138,6 +139,9 @@ class OGSInteractiveController(SimulationController):
 
         self.runtime_start = time.time()
         self.runtime_end: float | None = None
+
+        signal.signal(signal.SIGINT, self._handler)
+        signal.signal(signal.SIGTERM, self._handler)
 
     @property
     def status(self) -> SimulationStatus:
