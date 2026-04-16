@@ -232,7 +232,7 @@ def subplot(
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        if variable.data_name in mesh.point_data:
+        if variable.data_name in surf_tri.point_data:
             tri_levels = 255 if conti_cmap else kwargs.get("levels", levels)
             ax.tricontourf(
                 x, y, tri, values, levels=tri_levels,

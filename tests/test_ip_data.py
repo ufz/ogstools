@@ -6,8 +6,10 @@ import pytest
 
 import ogstools as ot
 from ogstools import examples
+from ogstools.examples import prj_mechanics
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.parametrize(
     "mesh_load",
     [
@@ -21,6 +23,7 @@ def test_ip_data_init(mesh_load):
     assert ip_data.n_points != 0
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.parametrize(("n_comps", "val"), [(1, 0.0), (4, [1, 1, 1, 0])])
 def test_set_ip_data(n_comps: int, val):
     mesh = examples.load_mesh_mechanics_2D()
@@ -59,6 +62,7 @@ def test_modify_simple():
     np.testing.assert_array_equal(mesh.field_data["epsilon_ip"], 0.0)
 
 
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_modify_complex() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()
@@ -74,6 +78,33 @@ def test_modify_complex() -> plt.Figure:
     return ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
 
 
+@pytest.mark.parametrize("mixed", [False, True])
+@pytest.mark.system
+def test_to_ip_mesh_mixed(tmp_path, mixed):
+    "Test to_ip_mesh works with single and mixed cell types."
+    rect = ot.gmsh_tools.rect(
+        n_edge_cells=6,
+        n_layers=2,
+        structured_grid=True,
+        mixed_elements=mixed,
+    )
+    meshes = ot.Meshes.from_gmsh(rect)
+    prj = ot.Project(input_file=prj_mechanics).copy()
+    model = ot.Model(prj, meshes)
+    model._next_target = tmp_path  # use only in testing!
+    sim = model.run()
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
+    mesh_last = sim.meshseries[-1]
+    n_cell_types = len(np.unique(mesh_last.celltypes))
+    assert n_cell_types == (
+        2 if mixed else 1
+    ), f"Expected {'mixed' if mixed else 'uniform'} cell types, got {n_cell_types}"
+    int_pts = ot.mesh.to_ip_point_cloud(mesh_last)
+    ip_mesh = ot.mesh.to_ip_mesh(mesh_last)
+    assert int_pts.number_of_points == ip_mesh.number_of_cells
+
+
+@pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_modify_material() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()

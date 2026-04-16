@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def meshes_from_gmsh(
-    filename: Path,
+    filename: Path | str,
     dim: int | Sequence[int] = 0,
     reindex: bool = True,
     log: bool = True,

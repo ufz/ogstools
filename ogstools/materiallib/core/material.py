@@ -195,7 +195,7 @@ class Material(Mapping[str, MaterialProperty]):
         others = [
             p
             for p in self.properties
-            if not all(matching(name, p.name) for name in selection)
+            if not any(matching(name, p.name) for name in selection)
         ]
 
         self.properties = sorted(others + pick, key=lambda p: p.name)

@@ -133,6 +133,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         time_unit: str | Sequence[str] = "s",
     ) -> MeshSeries:
         "Create a MeshSeries from a list of meshes and timevalues."
+        # ToDo Issue !178
         new_ms = cls(spatial_unit=spatial_unit, time_unit=time_unit)
         new_ms._timevalues = deepcopy(timevalues)  # pylint: disable=W0212
         new_ms._mesh_cache.update(
@@ -256,16 +257,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             (str(self.time_unit), str(self.time_unit)),
         )
 
+        first_mesh = self[0]
         point_data_keys = [
-            key
-            for key in variables
-            if all(str(key) in mesh.point_data for mesh in self)
+            key for key in variables if str(key) in first_mesh.point_data
         ]
         cell_data_keys = [
-            key
-            for key in variables
-            if key in self.cell_data
-            if all(str(key) in mesh.cell_data for mesh in self)
+            key for key in variables if str(key) in first_mesh.cell_data
         ]
         for keys, data, points in [
             (point_data_keys, probe_ms.point_data, mesh.points),
@@ -1314,13 +1311,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         """
         fn = self.next_target
         fn.parent.mkdir(parents=True, exist_ok=True)
-        fns = [
-            self._check_path(self.mesh(t).filepath)
-            for t in np.arange(len(self.timevalues), dtype=int)
-        ]
+        if self.filepath is None:
+            stem = fn.stem
+            fns = [
+                fn.parent / f"{stem}_ts_{t}_t_{self.timevalues[t]:.6f}.vtu"
+                for t in np.arange(len(self.timevalues), dtype=int)
+            ]
+        else:
+            fns = [
+                self._check_path(self.mesh(t).filepath)
+                for t in np.arange(len(self.timevalues), dtype=int)
+            ]
         if ".pvd" in fn.name:
             if deep is True:
-                fns = self._rename_vtufiles(fn, fns)
+                if self.filepath is not None:
+                    fns = self._rename_vtufiles(fn, fns)
                 if dry_run:
                     # For dry_run, return paths where files would be written
                     fns_written = [fn.parent / f.name for f in fns]

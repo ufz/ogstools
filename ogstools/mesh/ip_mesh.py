@@ -189,6 +189,8 @@ def tessellate(
 
 def _filter_incomplete_data(mesh: pv.UnstructuredGrid) -> None:
     ip_data = IPdata(mesh, auto_sync=False)
+    if len(ip_data) == 0:
+        return
     ip_len = max(len(mesh.field_data[key]) for key in ip_data)
     # Filter data out, which is not on the entire mesh, i.e. material model
     # dependent data when different material models are used within one mesh.
@@ -230,7 +232,8 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
         tessellate(mesh.extract_cells_by_type(ct), ct, integration_order)
         for ct in cell_types
     )
-    new_mesh = reduce(lambda m: m.merge, type_meshes).clean()  # type: ignore[misc,arg-type]
+
+    new_mesh = reduce(lambda a, b: a.merge(b), type_meshes).clean()
 
     # if we add new cell_type / integration_order combination, the following
     # helps, to bring the new_mesh's cells in the correct order:
@@ -250,7 +253,7 @@ def ip_data_threshold(
     value: int | Sequence[int],
     scalars: str = "MaterialIDs",
     invert: bool = False,
-) -> dict[str, np.ndarray]:
+) -> pv.DataSetAttributes:
     """Filters integration point data to match the threshold criterion.
 
     Similar to ``pyvista``'s threshold filter, but only acting on field data.
@@ -263,12 +266,13 @@ def ip_data_threshold(
     :param scalars: Name of data to threshold on.
     :param invert:  Invert the threshold results
     """
-    #
     value_bounds = (value, np.inf) if isinstance(value, int) else value
     if len(value_bounds) != 2:
         msg = "If given as a Sequence, length of value must be 2."
         raise ValueError(msg)
 
+    if len(IPdata(mesh, auto_sync=False)) == 0:
+        return mesh.field_data
     result = mesh.copy()
     _filter_incomplete_data(result)
     mesh_ip = to_ip_point_cloud(result)

@@ -1,0 +1,10 @@
+interactive: false
+args: null
+wrapper: null
+mpi_wrapper: null
+ogs_path: null
+mpi_ranks: null
+omp_num_threads: null
+ogs_asm_threads: null
+write_logs: true
+log_level: info

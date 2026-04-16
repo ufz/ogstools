@@ -174,6 +174,35 @@ def test_all_types():
         ms.clear_cache()
 
 
+def test_from_data():
+    vtu0 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_0_t_0.000000.vtu")
+    vtu1 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_1_t_1.000000.vtu")
+    timevalues = np.array([0.0, 1.0])
+    ms = ot.MeshSeries.from_data([vtu0, vtu1], timevalues)
+    ms.save()
+
+    ms.scale(time="h")
+    ms.scale(time="s")
+    ms.save()
+    assert len(ms.timevalues) == 2
+    assert np.array_equal(ms.timevalues, timevalues)
+    assert ms.mesh(0).n_points == vtu0.n_points
+    assert ms.mesh(1).n_points == vtu1.n_points
+    assert ms.dim == vtu0.GetMaxSpatialDimension()
+
+
+def test_from_data_units():
+    vtu0 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_0_t_0.000000.vtu")
+    vtu1 = pv.read(examples.pvd_serial_2D.parent / "mesh_ts_1_t_1.000000.vtu")
+    timevalues = np.array([0.0, 1.0])
+    ms = ot.MeshSeries.from_data(
+        [vtu0, vtu1], timevalues, spatial_unit="mm", time_unit="a"
+    )
+
+    assert str(ms.spatial_unit.units) == "mm"
+    assert str(ms.time_unit.units) == "a"
+
+
 def test_items():
     ms = examples.load_meshseries_HT_2D_XDMF()
     for i, (timevalue, mesh) in enumerate(ms.items()):

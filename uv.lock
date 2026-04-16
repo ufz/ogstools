@@ -2495,6 +2495,7 @@ wheels = [
 name = "ogstools"
 source = { editable = "." }
 dependencies = [
+    { name = "bokeh" },
     { name = "gmsh" },
     { name = "h5py" },
     { name = "imagehash" },
@@ -2802,6 +2803,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = "==24.4.0" },
     { name = "black", marker = "extra == 'pinned'", specifier = "==24.4.0" },
     { name = "bleach", marker = "extra == 'pinned'", specifier = "==6.3.0" },
+    { name = "bokeh", specifier = ">=3.6.0" },
     { name = "bokeh", marker = "extra == 'monitor'", specifier = ">=3.6.0" },
     { name = "bokeh", marker = "extra == 'pinned'", specifier = "==3.8.2" },
     { name = "build", marker = "extra == 'dev'" },
@@ -2837,7 +2839,7 @@ requires-dist = [
     { name = "fonttools", marker = "extra == 'pinned'", specifier = "==4.61.1" },
     { name = "fqdn", marker = "extra == 'pinned'", specifier = "==1.5.1" },
     { name = "frozenlist", marker = "extra == 'pinned'", specifier = "==1.8.0" },
-    { name = "gmsh", specifier = ">=4.12.0,<4.15" },
+    { name = "gmsh", specifier = ">=4.12.0" },
     { name = "gmsh", marker = "extra == 'pinned'", specifier = "==4.14.1" },
     { name = "greenlet", marker = "extra == 'pinned'", specifier = "==3.3.1" },
     { name = "h5py", specifier = ">=3.8.0" },

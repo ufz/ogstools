@@ -257,7 +257,7 @@ class Meshes(MutableMapping, StorageBase):
     @classmethod
     def from_gmsh(
         cls,
-        filename: Path,
+        filename: Path | str,
         dim: int | Sequence[int] = 0,
         reindex: bool = True,
         log: bool = True,
