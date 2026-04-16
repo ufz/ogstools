@@ -2221,6 +2221,17 @@ class TestOgstoolsInternalDB:
         th_cond = opa_tc_unique["thermal_conductivity"]
         assert th_cond.type == "SaturationWeightedThermalConductivity"
 
+        # Selecting multiple property names at once keeps exactly one of each.
+        opa_multi = opa.copy(
+            {
+                "thermal_conductivity": {"type": "Constant"},
+                "porosity": {"type": "Constant"},
+            }
+        )
+        names = [p.name for p in opa_multi.properties]
+        assert names.count("thermal_conductivity") == 2
+        assert names.count("porosity") == 1
+
     def test_media_import_with_builtin_BHE_schema(self, tmp_path):
         """Integration: Project can import builtin DB + schema."""
         db = material_manager.MaterialManager()
