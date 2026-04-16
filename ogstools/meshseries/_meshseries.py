@@ -133,6 +133,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         time_unit: str | Sequence[str] = "s",
     ) -> MeshSeries:
         "Create a MeshSeries from a list of meshes and timevalues."
+        # ToDo Issue !178
         new_ms = cls(spatial_unit=spatial_unit, time_unit=time_unit)
         new_ms._timevalues = deepcopy(timevalues)  # pylint: disable=W0212
         new_ms._mesh_cache.update(
@@ -256,16 +257,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             (str(self.time_unit), str(self.time_unit)),
         )
 
+        first_mesh = self[0]
         point_data_keys = [
-            key
-            for key in variables
-            if all(str(key) in mesh.point_data for mesh in self)
+            key for key in variables if str(key) in first_mesh.point_data
         ]
         cell_data_keys = [
-            key
-            for key in variables
-            if key in self.cell_data
-            if all(str(key) in mesh.cell_data for mesh in self)
+            key for key in variables if str(key) in first_mesh.cell_data
         ]
         for keys, data, points in [
             (point_data_keys, probe_ms.point_data, mesh.points),
