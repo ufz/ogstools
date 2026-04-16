@@ -232,7 +232,8 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
         tessellate(mesh.extract_cells_by_type(ct), ct, integration_order)
         for ct in cell_types
     )
-    new_mesh = reduce(lambda m: m.merge, type_meshes).clean()  # type: ignore[misc,arg-type]
+
+    new_mesh = reduce(lambda a, b: a.merge(b), type_meshes).clean()
 
     # if we add new cell_type / integration_order combination, the following
     # helps, to bring the new_mesh's cells in the correct order:
