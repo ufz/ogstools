@@ -3,7 +3,6 @@
 
 
 import abc
-import signal
 import typing
 from enum import Enum
 from pathlib import Path
@@ -71,8 +70,6 @@ class SimulationController(abc.ABC):
         self.result.next_target.mkdir(parents=True, exist_ok=True)
 
         self._interrupted = False
-        signal.signal(signal.SIGINT, self._handler)
-        signal.signal(signal.SIGTERM, self._handler)
 
     def _handler(self, signum: int, _: typing.Any) -> None:
         self._interrupted = True
