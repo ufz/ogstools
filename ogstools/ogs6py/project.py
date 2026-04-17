@@ -40,6 +40,7 @@ from ogstools.ogs6py import (
     processes,
     processvars,
     python_script,
+    referenced_file as referenced_file_module,
     timeloop,
 )
 from ogstools.ogs6py.project_media_importer import _ProjectMediaImporter
@@ -168,7 +169,9 @@ class Project(StorageBase):
                 self.python_script._active_target = py_path
         self.chemical_database = chemical_database.ChemicalDatabase(self.tree)
         if self.input_file is not None and self.chemical_database.filename:
-            dat_path = Path(self.input_file).parent / self.chemical_database.filename
+            dat_path = (
+                Path(self.input_file).parent / self.chemical_database.filename
+            )
             if dat_path.exists():
                 self.chemical_database._active_target = dat_path
         self.curve_files: list[referenced_file_module.ReferencedFile] = []
@@ -1401,9 +1404,7 @@ class Project(StorageBase):
     def _reload_curve_files(self) -> None:
         """Rebuild curve_files from current XML tree (curves with read_from_file=true)."""
         self.curve_files = []
-        for i, curve in enumerate(
-            self.tree.findall("./curves/curve"), start=1
-        ):
+        for i, curve in enumerate(self.tree.findall("./curves/curve"), start=1):
             rfb = curve.find("read_from_file")
             if rfb is None or (rfb.text or "").strip().lower() != "true":
                 continue
@@ -1492,7 +1493,9 @@ class Project(StorageBase):
             self.python_script._active_target = self.python_script._next_target
         files += self.chemical_database._save_impl(dry_run=dry_run)
         if self.chemical_database.filename:
-            self.chemical_database._active_target = self.chemical_database._next_target
+            self.chemical_database._active_target = (
+                self.chemical_database._next_target
+            )
         for rf in self.curve_files:
             files += rf._save_impl(dry_run=dry_run)
             if rf.filename:
