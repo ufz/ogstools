@@ -2,6 +2,7 @@
 Tests (pytest) for msh2vtu and meshes_from_gmsh
 """
 
+import importlib
 import os
 import sys
 from dataclasses import dataclass
@@ -85,6 +86,8 @@ def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
 @pytest.mark.tools  # NodeReordering
 def test_multiple_groups_per_element(tmp_path: Path):
     """Test correct conversion, if element are assigned to multiple groups."""
+    import gmsh
+
     gmsh.initialize(["-noenv"])
     # gmsh.option.setNumber("General.Terminal", 1)
     gmsh.model.add("multiple_groups_per_element")
@@ -303,7 +306,8 @@ def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
     if version is not None:
         gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("Mesh.MshFileVersion", version)
-    runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod = importlib.import_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod.main()
     prefix = str(Path(script).stem)
     msh_file = Path(tmp_path, prefix + ".msh")
     assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes
