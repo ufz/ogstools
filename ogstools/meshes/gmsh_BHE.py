@@ -8,7 +8,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
 
-import gmsh
 import numpy as np
 import shapely
 
@@ -1284,6 +1283,8 @@ def gen_bhe_mesh(
 
     with TemporaryDirectory() as tmpdir:
         msh_file = Path(tmpdir) / f"{meshname}.msh"
+        import gmsh
+
         gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("General.Verbosity", 2)
         model = gmsh.model

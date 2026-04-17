@@ -6,7 +6,6 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Any
 
-import gmsh
 import yaml  # type: ignore[import]
 from simpleeval import simple_eval
 
@@ -112,6 +111,8 @@ def meshes_from_yaml(
     """
     Generate a 2D mesh from a YAML geometry file using gmsh.
     """
+    import gmsh
+
     output_dir = output_dir or Path(mkdtemp())
 
     geometry = _load_geometry_from_yaml(geometry_file)

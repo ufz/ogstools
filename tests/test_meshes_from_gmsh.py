@@ -3,14 +3,12 @@ Tests (pytest) for msh2vtu and meshes_from_gmsh
 """
 
 import os
-import runpy
 import sys
 from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 from tempfile import mkdtemp
 
-import gmsh
 import meshio
 import numpy as np
 import pytest
@@ -29,6 +27,8 @@ from ogstools.msh2vtu._cli import cli
 
 @pytest.mark.tools  # NodeReordering
 def test_multiple_groups_per_element_2(tmp_path: Path) -> None:
+    import gmsh
+
     gmsh.initialize(["-noenv"])
     gmsh.model.add("multiple_groups_per_element_2")
 
@@ -297,6 +297,8 @@ def run_cli(cmd: str) -> int:
     ],
 )
 def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
+    import gmsh
+
     os.chdir(tmp_path)
     if version is not None:
         gmsh.initialize(["-noenv"])
