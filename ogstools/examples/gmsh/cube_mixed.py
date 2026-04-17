@@ -19,7 +19,6 @@ def main(out_name="cube_mixed.msh"):
     gmsh.option.setNumber("General.Terminal", 1)
     gmsh.model.add("cubes_mixed")
 
-    dim1 = 1
     dim2 = 2
     dim3 = 3
     lc = 0.5  # mesh size
@@ -32,7 +31,6 @@ def main(out_name="cube_mixed.msh"):
     y1 = 1.0
     z1 = 1.0
 
-
     # vertices
     gmsh.model.geo.addPoint(x1, y0, z0, lc, 1)
     gmsh.model.geo.addPoint(x1, y1, z0, lc, 2)
@@ -42,7 +40,6 @@ def main(out_name="cube_mixed.msh"):
     gmsh.model.geo.addPoint(x1, y1, z1, lc, 6)
     gmsh.model.geo.addPoint(x0, y1, z1, lc, 7)
     gmsh.model.geo.addPoint(x0, y0, z0, lc, 8)
-
 
     # edges
     gmsh.model.geo.addLine(7, 6, 1)
@@ -57,7 +54,6 @@ def main(out_name="cube_mixed.msh"):
     gmsh.model.geo.addLine(2, 1, 10)
     gmsh.model.geo.addLine(2, 6, 11)
     gmsh.model.geo.addLine(2, 3, 12)
-
 
     # faces
     gmsh.model.geo.addCurveLoop([6, 1, -11, 12], 1)
@@ -86,18 +82,13 @@ def main(out_name="cube_mixed.msh"):
     gmsh.model.geo.addCurveLoop([10, 4, 5, -12], 6)
     gmsh.model.geo.addPlaneSurface([6], 6)  # bottom (normal -ez)
 
-
     # volume
     gmsh.model.geo.addSurfaceLoop([6, 2, 1, 4, 3, 5], 1)
     gmsh.model.geo.addVolume([1], 1)  # first unit cube
 
-    top_surface_id = (
-        3  # in direction [0,0,1] extrude 2 layers of height 0.5, recombination=True
-    )
-    newEntities = gmsh.model.geo.extrude(
+    gmsh.model.geo.extrude(
         [(dim2, 5)], 0, -1, 0, [2], [1], True
     )  # second unit cube
-
 
     # mesh
     gmsh.model.geo.synchronize()

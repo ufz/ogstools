@@ -36,7 +36,6 @@ def main(out_name="quarter_rectangle_with_hole.msh"):
     s45 = np.sin(np.pi / 4)
     c45 = np.cos(np.pi / 4)
 
-
     # Outer points (ccw)
     gmsh.model.geo.addPoint(0, 0, 0, lc, 1)
     gmsh.model.geo.addPoint(r, 0, 0, lc, 2)
@@ -71,7 +70,6 @@ def main(out_name="quarter_rectangle_with_hole.msh"):
     gmsh.model.geo.addLine(7, 12, 13)
     gmsh.model.geo.addLine(9, 12, 14)
     gmsh.model.geo.addLine(11, 12, 15)
-
 
     # The third elementary entity is the surface. In order to define a surface
     # from the curves defined above, a curve loop has first to be defined (ccw).
