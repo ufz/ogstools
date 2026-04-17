@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<OpenGeoSysProject>
+    <curves>
+        <curve>
+            <name>InTemp</name>
+            <read_from_file>true</read_from_file>
+            <coords>curve_coords.bin</coords>
+            <values>curve_values.bin</values>
+        </curve>
+    </curves>
+</OpenGeoSysProject>

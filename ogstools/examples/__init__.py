@@ -264,6 +264,11 @@ prj_HM_stationary = _prj_dir / "HM_StationaryFlow.prj"
 prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
 prj_TRM_stationary = _prj_dir / "TRM_HeatTransportInStationaryFlow.prj"
 prj_TM_square = _prj_dir / "TM_square.prj"
+prj_with_chemical_db = _prj_dir / "with_chemical_db.prj"
+dat_phreeqc = _prj_dir / "phreeqc.dat"
+prj_with_curve_files = _prj_dir / "with_curve_files.prj"
+bin_curve_coords = _prj_dir / "curve_coords.bin"
+bin_curve_values = _prj_dir / "curve_values.bin"
 
 surface_paths = [
     _surface_dir / (file + ".vtu")

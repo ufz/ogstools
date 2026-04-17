@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<OpenGeoSysProject>
+    <processes>
+        <process>
+            <name>CT</name>
+            <type>ComponentTransport</type>
+            <chemical_system chemical_solver="Phreeqc">
+                <database>phreeqc.dat</database>
+            </chemical_system>
+        </process>
+    </processes>
+</OpenGeoSysProject>
