@@ -38,6 +38,8 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
     @property
     def filename(self) -> str | None:
         """Get the filename from the XML tree."""
+        if not self._xpath:
+            return None
         elem = self.root.find(self._xpath)
         if elem is not None and elem.text:
             return elem.text.strip() or None
