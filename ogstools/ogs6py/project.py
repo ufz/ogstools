@@ -27,7 +27,6 @@ from ogstools.core.storage import StorageBase
 from ogstools.logparser.monitor import Monitor
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.ogs6py import (
-    chemical_database,
     curves,
     display,
     geo,
@@ -40,8 +39,10 @@ from ogstools.ogs6py import (
     processes,
     processvars,
     python_script,
-    referenced_file as referenced_file_module,
     timeloop,
+)
+from ogstools.ogs6py import (
+    referenced_file as referenced_file_module,
 )
 from ogstools.ogs6py.project_media_importer import _ProjectMediaImporter
 from ogstools.ogs6py.properties import (
@@ -167,7 +168,10 @@ class Project(StorageBase):
             py_path = Path(self.input_file).parent / self.python_script.filename
             if py_path.exists():
                 self.python_script._active_target = py_path
-        self.chemical_database = chemical_database.ChemicalDatabase(self.tree)
+        self.chemical_database = referenced_file_module.ReferencedFile(
+            self.tree,
+            xpath="./processes/process/chemical_system/database",
+        )
         if self.input_file is not None and self.chemical_database.filename:
             dat_path = (
                 Path(self.input_file).parent / self.chemical_database.filename
@@ -1404,6 +1408,7 @@ class Project(StorageBase):
     def _reload_curve_files(self) -> None:
         """Rebuild curve_files from current XML tree (curves with read_from_file=true)."""
         self.curve_files = []
+        assert self.tree
         for i, curve in enumerate(self.tree.findall("./curves/curve"), start=1):
             rfb = curve.find("read_from_file")
             if rfb is None or (rfb.text or "").strip().lower() != "true":

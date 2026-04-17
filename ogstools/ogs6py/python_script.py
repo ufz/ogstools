@@ -1,16 +1,14 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import shutil
 from pathlib import Path
 
 from lxml import etree as ET
 
-from ogstools.core.storage import StorageBase
-from ogstools.ogs6py import build_tree
+from ogstools.ogs6py.referenced_file import ReferencedFile
 
 
-class PythonScript(build_tree.BuildTree, StorageBase):
+class PythonScript(ReferencedFile):
     """
     Class managing the python script file (.py) for an OGS project.
 
@@ -19,25 +17,13 @@ class PythonScript(build_tree.BuildTree, StorageBase):
     """
 
     __hash__ = None
+    _NAME = "PythonScript"
+    _EXT = "py"
+    _XPATH = "python_script"
 
     def __init__(self, tree: ET.ElementTree) -> None:
-        """
-        Initialize a PythonScript object.
-
-        :param tree: The Project's XML ElementTree (shared reference)
-        """
-        build_tree.BuildTree.__init__(self, tree)
-        StorageBase.__init__(self, "PythonScript", "py")
-        self.root = self.tree.getroot()
+        ReferencedFile.__init__(self, tree)
         self.populate_tree(self.root, "python_script", overwrite=True)
-
-    @property
-    def filename(self) -> str | None:
-        """Get the python script filename from the XML tree."""
-        script_elem = self.root.find("python_script")
-        if script_elem is not None and script_elem.text:
-            return script_elem.text.strip() or None
-        return None
 
     def add_python_script(self, filename: str | Path) -> None:
         """
@@ -62,66 +48,9 @@ class PythonScript(build_tree.BuildTree, StorageBase):
         """
         self.add_python_script(filename)
 
-    def _propagate_target(self) -> None:
-        """No children to propagate to."""
-
-    def _save_impl(self, dry_run: bool = False) -> list[Path]:
-        """
-        Save the python script file to the target location.
-
-        :param dry_run: If True, don't actually copy the file
-        :returns: List of saved file paths
-        """
-        if not self.filename:
-            return []
-
-        target = self.next_target
-
-        if dry_run:
-            return [target]
-
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        if (
-            self.active_target
-            and self.active_target.exists()
-            and self.active_target.resolve() != target.resolve()
-        ):
-            shutil.copy2(self.active_target, target)
-
-        return [target]
-
-    def save(
-        self,
-        target: Path | str | None = None,
-        overwrite: bool | None = None,
-        dry_run: bool = False,
-        archive: bool = False,
-        id: str | None = None,
-    ) -> list[Path]:
-        """
-        Save the python script file.
-
-        :param target:    Optional target path
-        :param overwrite: If True, overwrite existing files
-        :param dry_run:   If True, simulate without writing
-        :param archive:   If True, materialize symlinks
-        :param id:        Optional identifier. Mutually exclusive with target.
-        :returns: List of saved file paths
-        """
-        if not self.filename:
-            return []
-
-        user_defined = self._pre_save(target, overwrite, dry_run, id=id)
-        files = self._save_impl(dry_run)
-        if files:
-            self._post_save(user_defined, archive, dry_run)
-        return files
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PythonScript):
             return NotImplemented
-        # Compare file contents by full path
         if self.active_target is None or other.active_target is None:
             return self.active_target == other.active_target
         if not self.active_target.exists() or not other.active_target.exists():
