@@ -21,6 +21,8 @@ OGS 6.5.7 -
 
 - added the Class `ogstools.mesh.IPdata` to interface with the integration point
   metadata
+- variable components can now be plotted via strings e.g. `"displacement_x"` will
+  plot the same thing as `ot.variables.displacement["x"]`
 
 ## Infrastructure
 
