@@ -2,8 +2,8 @@
 Tests (pytest) for msh2vtu and meshes_from_gmsh
 """
 
+import importlib
 import os
-import runpy
 import sys
 from dataclasses import dataclass
 from itertools import product
@@ -301,7 +301,8 @@ def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
     if version is not None:
         gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("Mesh.MshFileVersion", version)
-    runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod = importlib.import_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod.main()
     prefix = str(Path(script).stem)
     msh_file = Path(tmp_path, prefix + ".msh")
     assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes

@@ -2,41 +2,48 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # mesh unit line with line elements (higher order)
-import gmsh
 
-# Before using any functions in the Python API, Gmsh must be initialized:
-gmsh.initialize(["-noenv"])
-gmsh.option.setNumber("General.Terminal", 1)
-gmsh.model.add("line")
 
-# Dimensions
-dim0 = 0
-dim1 = 1
+def main(out_name="line.msh"):
+    import gmsh
 
-lc = 0.1  # characteristic length for mesh size
+    # Before using any functions in the Python API, Gmsh must be initialized:
+    gmsh.initialize(["-noenv"])
+    gmsh.option.setNumber("General.Terminal", 1)
+    gmsh.model.add("line")
 
-gmsh.model.geo.addPoint(0, 0, 0, lc, 1)
-gmsh.model.geo.addPoint(1, 0, 0, lc, 2)
+    # Dimensions
+    dim0 = 0
+    dim1 = 1
 
-# Lines connecting points
-gmsh.model.geo.addLine(1, 2, 1)
+    lc = 0.1  # characteristic length for mesh size
 
-# Here we define physical curves that groups
-Left = gmsh.model.addPhysicalGroup(dim0, [1])
-gmsh.model.setPhysicalName(dim0, Left, "left")
+    gmsh.model.geo.addPoint(0, 0, 0, lc, 1)
+    gmsh.model.geo.addPoint(1, 0, 0, lc, 2)
 
-Right = gmsh.model.addPhysicalGroup(dim0, [2])
-gmsh.model.setPhysicalName(dim0, Right, "right")
+    # Lines connecting points
+    gmsh.model.geo.addLine(1, 2, 1)
 
-Domain = gmsh.model.addPhysicalGroup(dim1, [1])
-gmsh.model.setPhysicalName(dim1, Domain, "domain")
+    # Here we define physical curves that groups
+    Left = gmsh.model.addPhysicalGroup(dim0, [1])
+    gmsh.model.setPhysicalName(dim0, Left, "left")
 
-# Before it can be meshed, the internal CAD representation must be synchronized
-gmsh.model.geo.synchronize()
-gmsh.model.mesh.generate(dim1)
-# higher order, for simplex elements there is no difference between Lagrange and
-# Serendipity:
-# gmsh.model.mesh.setOrder(2)
-gmsh.write("line.msh")
+    Right = gmsh.model.addPhysicalGroup(dim0, [2])
+    gmsh.model.setPhysicalName(dim0, Right, "right")
 
-gmsh.finalize()
+    Domain = gmsh.model.addPhysicalGroup(dim1, [1])
+    gmsh.model.setPhysicalName(dim1, Domain, "domain")
+
+    # Before it can be meshed, the internal CAD representation must be synchronized
+    gmsh.model.geo.synchronize()
+    gmsh.model.mesh.generate(dim1)
+    # higher order, for simplex elements there is no difference between Lagrange and
+    # Serendipity:
+    # gmsh.model.mesh.setOrder(2)
+    gmsh.write(str(out_name))
+
+    gmsh.finalize()
+
+
+if __name__ == "__main__":
+    main()
