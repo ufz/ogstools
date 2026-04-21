@@ -8,7 +8,6 @@ from typing import Literal
 
 import numpy as np
 from pyvista import UnstructuredGrid
-from typeguard import typechecked
 
 from ogstools.variables import tensor_math
 from ogstools.variables.mesh_dependent import angles
@@ -23,7 +22,6 @@ class Matrix(Variable):
     Matrix components can be accesses with brackets e.g. stress[0]
     """
 
-    @typechecked
     def __getitem__(
         self,
         index: (
@@ -46,6 +44,10 @@ class Matrix(Variable):
         cartesian_keys = {"xx": 0, "yy": 1, "zz": 2, "xy": 3, "yz": 4, "xz": 5}
         polar_keys = {"rr": 0, "tt": 1, "pp": 2, "rt": 3, "tp": 4, "rp": 5}
         key_map = cartesian_keys | polar_keys
+        if not isinstance(index, int) and index not in key_map:
+            allowed = list(key_map.keys())
+            msg = f"Matrix index can only be an int or one of {allowed}."
+            raise KeyError(msg)
         int_index = key_map.get(str(index), index)
 
         return Scalar.from_variable(

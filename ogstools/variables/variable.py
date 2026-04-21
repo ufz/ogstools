@@ -61,8 +61,8 @@ class Variable:
         self,
         data_name: str,
         data_unit: str = "",
-        output_unit: str | None = None,
-        output_name: str | None = None,
+        output_unit: str = "",
+        output_name: str = "",
         symbol: str = "",
         mask: str = "",
         func: Callable = identity,
@@ -75,12 +75,8 @@ class Variable:
     ) -> None:
         self.data_name = data_name
         self.data_unit = data_unit
-        self.output_unit = (
-            str(output_unit) if output_unit is not None else data_unit
-        )
-        self.output_name = (
-            str(output_name) if output_name is not None else data_name
-        )
+        self.output_unit = str(output_unit) if output_unit != "" else data_unit
+        self.output_name = str(output_name) if output_name != "" else data_name
         self.symbol = symbol
         self.mask = mask
         self.func = func
@@ -192,7 +188,12 @@ class Variable:
 
         def component(var: Variable, suffix: str) -> Variable:
             suffix_ = int(suffix) if suffix.isdigit() else suffix
-            return var if suffix == "" else var[suffix_]  # type: ignore[index]
+            if suffix == "":
+                return var
+            if isinstance(var, Scalar):
+                msg = f"Scalar {var.data_name} has no component {suffix}."
+                raise KeyError(msg)
+            return var[suffix_]  # type: ignore[index]
 
         for prop in all_variables:
             if prop.data_name == variable:
@@ -205,8 +206,7 @@ class Variable:
                     prop.replace(data_name=prop.output_name), suffix
                 )
 
-        matches = [variable in data_key for data_key in data_keys]
-        if not any(matches):
+        if variable not in data_keys:
             raise KeyError(error_msg)
 
         data_shape = mesh[variable].shape
