@@ -47,16 +47,11 @@ class Curves(build_tree.BuildTree):
                             rf._active_target = src
                     self.files.append(rf)
 
-    def get_curve(self, name: str) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Return coords and values of a named curve as numpy arrays.
-
-        For inline curves the space-separated text is parsed directly.
-        For file-based curves (read_from_file=true) the binary files are read
-        as little-endian float64.
+    def _get_array(self, name: str, tag: str) -> np.ndarray:
+        """Return coords or values of a named curve as a numpy array.
 
         :param name: Curve name as defined in the <name> element.
-        :raises KeyError: If no curve with the given name exists.
+        :param tag:  Either ``"coords"`` or ``"values"``.
         """
         for i, curve in enumerate(self.tree.findall("./curves/curve"), start=1):
             if curve.findtext("name") != name:
@@ -65,31 +60,38 @@ class Curves(build_tree.BuildTree):
                 curve.findtext("read_from_file") or ""
             ).strip().lower() == "true"
             if from_file:
-                # Locate the matching ReferencedFile objects for this curve
-                coords_xpath = f"./curves/curve[{i}]/coords"
-                values_xpath = f"./curves/curve[{i}]/values"
-                rf_coords = next(
-                    (rf for rf in self.files if rf._xpath == coords_xpath),
-                    None,
-                )
-                rf_values = next(
-                    (rf for rf in self.files if rf._xpath == values_xpath),
-                    None,
-                )
-                if rf_coords is None or rf_values is None:
-                    msg = f"Binary files for curve {name!r} are not resolved."
+                xpath = f"./curves/curve[{i}]/{tag}"
+                rf = next((r for r in self.files if r._xpath == xpath), None)
+                if rf is None:
+                    msg = f"Binary file for curve {name!r} ({tag}) is not resolved."
                     raise FileNotFoundError(msg)
-                coords = np.fromfile(rf_coords.active_target, dtype="<f8")
-                values = np.fromfile(rf_values.active_target, dtype="<f8")
-            else:
-                coords = np.fromstring(
-                    curve.findtext("coords") or "", dtype=float, sep=" "
-                )
-                values = np.fromstring(
-                    curve.findtext("values") or "", dtype=float, sep=" "
-                )
-            return coords, values
+                return np.fromfile(rf.active_target, dtype="<f8")
+            return np.fromstring(
+                curve.findtext(tag) or "", dtype=float, sep=" "
+            )
         raise KeyError(name)
+
+    def coords(self, name: str) -> np.ndarray:
+        """Return the coords of a named curve as a numpy array.
+
+        :param name: Curve name as defined in the <name> element.
+        :returns:    1-D array of coordinate values.
+        :raises KeyError:          If no curve with the given name exists.
+        :raises FileNotFoundError: If the binary file for a file-based curve
+                                   is not resolved.
+        """
+        return self._get_array(name, "coords")
+
+    def values(self, name: str) -> np.ndarray:
+        """Return the values of a named curve as a numpy array.
+
+        :param name: Curve name as defined in the <name> element.
+        :returns:    1-D array of curve values corresponding to each coord.
+        :raises KeyError:          If no curve with the given name exists.
+        :raises FileNotFoundError: If the binary file for a file-based curve
+                                   is not resolved.
+        """
+        return self._get_array(name, "values")
 
     def add_curve(
         self, name: str, coords: Sequence[float], values: Sequence[float]
