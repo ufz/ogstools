@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections.abc import Sequence
 from pathlib import Path
 
+import numpy as np
 from lxml import etree as ET
 
 from ogstools.ogs6py import build_tree
@@ -45,7 +47,53 @@ class Curves(build_tree.BuildTree):
                             rf._active_target = src
                     self.files.append(rf)
 
-    def add_curve(self, name: str, coords: list, values: list) -> None:
+    def get_curve(self, name: str) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Return coords and values of a named curve as numpy arrays.
+
+        For inline curves the space-separated text is parsed directly.
+        For file-based curves (read_from_file=true) the binary files are read
+        as little-endian float64.
+
+        :param name: Curve name as defined in the <name> element.
+        :raises KeyError: If no curve with the given name exists.
+        """
+        for i, curve in enumerate(self.tree.findall("./curves/curve"), start=1):
+            if curve.findtext("name") != name:
+                continue
+            from_file = (
+                curve.findtext("read_from_file") or ""
+            ).strip().lower() == "true"
+            if from_file:
+                # Locate the matching ReferencedFile objects for this curve
+                coords_xpath = f"./curves/curve[{i}]/coords"
+                values_xpath = f"./curves/curve[{i}]/values"
+                rf_coords = next(
+                    (rf for rf in self.files if rf._xpath == coords_xpath),
+                    None,
+                )
+                rf_values = next(
+                    (rf for rf in self.files if rf._xpath == values_xpath),
+                    None,
+                )
+                if rf_coords is None or rf_values is None:
+                    msg = f"Binary files for curve {name!r} are not resolved."
+                    raise FileNotFoundError(msg)
+                coords = np.fromfile(rf_coords.active_target, dtype="<f8")
+                values = np.fromfile(rf_values.active_target, dtype="<f8")
+            else:
+                coords = np.fromstring(
+                    curve.findtext("coords") or "", dtype=float, sep=" "
+                )
+                values = np.fromstring(
+                    curve.findtext("values") or "", dtype=float, sep=" "
+                )
+            return coords, values
+        raise KeyError(name)
+
+    def add_curve(
+        self, name: str, coords: Sequence[float], values: Sequence[float]
+    ) -> None:
         """
         Adds a new curve.
 
