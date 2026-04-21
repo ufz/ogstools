@@ -342,7 +342,7 @@ class TestStorage:
         )
 
         prj = ot.Project(prj_with_curve_files)
-        assert len(prj.curve_files) == 2  # coords + values for one curve
+        assert len(prj.curves.files) == 2  # coords + values for one curve
 
         target = tmp_path / "test_curve_files"
         files = prj.save(target)

@@ -178,15 +178,13 @@ class Project(StorageBase):
             )
             if dat_path.exists():
                 self.chemical_database._active_target = dat_path
-        self.curve_files: list[referenced_file_module.ReferencedFile] = []
-        self._reload_curve_files()
         self.media = media.Media(self.tree)
         self.time_loop = timeloop.TimeLoop(self.tree)
         self.local_coordinate_system = (
             local_coordinate_system.LocalCoordinateSystem(self.tree)
         )
         self.parameters = parameters.Parameters(self.tree)
-        self.curves = curves.Curves(self.tree)
+        self.curves = curves.Curves(self.tree, self.input_file)
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
@@ -1401,30 +1399,9 @@ class Project(StorageBase):
             self.chemical_database._next_target = (
                 self.next_target / self.chemical_database.filename
             )
-        for rf in self.curve_files:
+        for rf in self.curves.files:
             if rf.filename:
                 rf._next_target = self.next_target / rf.filename
-
-    def _reload_curve_files(self) -> None:
-        """Rebuild curve_files from current XML tree (curves with read_from_file=true)."""
-        self.curve_files = []
-        assert self.tree
-        for i, curve in enumerate(self.tree.findall("./curves/curve"), start=1):
-            rfb = curve.find("read_from_file")
-            if rfb is None or (rfb.text or "").strip().lower() != "true":
-                continue
-            for tag in ("coords", "values"):
-                elem = curve.find(tag)
-                if elem is not None and elem.text and elem.text.strip():
-                    xpath = f"./curves/curve[{i}]/{tag}"
-                    rf = referenced_file_module.ReferencedFile(
-                        self.tree, xpath=xpath
-                    )
-                    if self.input_file is not None and rf.filename:
-                        src = Path(self.input_file).parent / rf.filename
-                        if src.exists():
-                            rf._active_target = src
-                    self.curve_files.append(rf)
 
     def write_input(
         self,
@@ -1457,7 +1434,7 @@ class Project(StorageBase):
                 if hasattr(v, "tree") and not isinstance(v, ET._ElementTree):
                     v.tree = self.tree
                     v.root = self.tree.getroot()
-            for rf in self.curve_files:
+            for rf in self.curves.files:
                 rf.tree = self.tree
                 rf.root = self.tree.getroot()
             if self.verbose is True:
@@ -1484,7 +1461,7 @@ class Project(StorageBase):
             files += self.geometry._save_impl(dry_run=dry_run)
             files += self.python_script._save_impl(dry_run=dry_run)
             files += self.chemical_database._save_impl(dry_run=dry_run)
-            for rf in self.curve_files:
+            for rf in self.curves.files:
                 files += rf._save_impl(dry_run=dry_run)
             return files
 
@@ -1501,7 +1478,7 @@ class Project(StorageBase):
             self.chemical_database._active_target = (
                 self.chemical_database._next_target
             )
-        for rf in self.curve_files:
+        for rf in self.curves.files:
             files += rf._save_impl(dry_run=dry_run)
             if rf.filename:
                 rf._active_target = rf._next_target
