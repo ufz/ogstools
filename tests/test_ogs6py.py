@@ -1768,3 +1768,37 @@ class TestiOGS:
             == "include_test"
         )
         assert root.findtext("./time_loop/output/prefix") == "include_test"
+
+    def test_curves_inline(self) -> None:
+        import numpy as np
+
+        prj = ot.Project(prj_beier_sandbox)
+        coords = prj.curves.coords("inflow_temperature")
+        values = prj.curves.values("inflow_temperature")
+
+        assert isinstance(coords, np.ndarray)
+        assert isinstance(values, np.ndarray)
+        assert len(coords) == len(values) == 2833
+        assert coords[0] == pytest.approx(0.0)
+        assert values[0] == pytest.approx(295.15)
+
+        with pytest.raises(KeyError):
+            prj.curves.coords("NonExistent")
+
+    def test_curves_file_based(self, tmp_path: Path) -> None:
+        import numpy as np
+
+        coords = np.array([0.0, 1.0, 2.0])
+        values = np.array([0.0, 0.5, 1.0])
+        coords_file = tmp_path / "coords.bin"
+        values_file = tmp_path / "values.bin"
+        coords.astype("<f8").tofile(coords_file)
+        values.astype("<f8").tofile(values_file)
+
+        prj = ot.Project()
+        prj.curves.add_curve_from_file("FileCurve", coords_file, values_file)
+        prj.save(tmp_path / "test")
+
+        prj2 = ot.Project.from_folder(tmp_path / "test")
+        np.testing.assert_array_equal(prj2.curves.coords("FileCurve"), coords)
+        np.testing.assert_array_equal(prj2.curves.values("FileCurve"), values)
