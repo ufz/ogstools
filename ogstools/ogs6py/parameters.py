@@ -210,3 +210,34 @@ class Parameters(build_tree.BuildTree):
             self.populate_tree(ts_pair, "time", text=str(time_val))
             self.populate_tree(ts_pair, "parameter_name", text=param_name)
         return param
+
+    def add_group_parameter(
+        self,
+        name: str,
+        group_id_property: str = "MaterialIDs",
+        index_values: dict[int, Any] | None = None,
+    ) -> ET.Element:
+        param = self._prepare_parameter(name=name, type="Group")
+        self.populate_tree(param, "group_id_property", text=group_id_property)
+        if index_values is None:
+            return param
+        self.add_index_values_to_group(param, index_values)
+        return param
+
+    def add_index_values_to_group(
+        self, name: str | ET.Element, index_values: dict[int, Any]
+    ) -> None:
+        if isinstance(name, str):
+            param = self.parameters.find(f".//parameter[name='{name}']")
+            if param is None:
+                msg = f"Couldn't find a parameter named {name}."
+                raise KeyError(msg)
+            if param.find("type").text != "Group":
+                msg = f"Parameter {name} is not of type 'Group'."
+                raise KeyError(msg)
+        else:
+            param = name
+        for idx, value in index_values.items():
+            idx_val_elem = self.populate_tree(param, "index_values")
+            self.populate_tree(idx_val_elem, "index", str(idx))
+            self.populate_tree(idx_val_elem, "value", str(value))

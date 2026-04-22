@@ -26,6 +26,7 @@ OGS 6.5.7 -
 - added standalone type hinted methods, to add parameters to a project per
   parameter type e.g. `prj.parameters.add_constant_parameter` or
   `prj.parameters.add_function_parameter`
+- added `prj.parameters.add_group_parameter`
 
 ## Infrastructure
 
