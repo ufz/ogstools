@@ -320,14 +320,14 @@ class TestStorage:
         from ogstools.examples import dat_phreeqc, prj_with_chemical_db
 
         prj = ot.Project(prj_with_chemical_db)
-        assert prj.chemical_database.filename == "phreeqc.dat"
-        assert prj.chemical_database.active_target is not None
-        assert prj.chemical_database.active_target.exists()
+        assert prj.processes.chemical_database.filename == "phreeqc.dat"
+        assert prj.processes.chemical_database.active_target is not None
+        assert prj.processes.chemical_database.active_target.exists()
 
         target = tmp_path / "test_chemical_db"
         files = prj.save(target)
         assert_files_saved(files, expected_count=2)  # default.prj + phreeqc.dat
-        dat_file = prj.chemical_database.active_target
+        dat_file = prj.processes.chemical_database.active_target
         assert dat_file is not None
         assert dat_file.exists()
         assert dat_file.name == "phreeqc.dat"

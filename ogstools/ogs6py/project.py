@@ -41,9 +41,6 @@ from ogstools.ogs6py import (
     python_script,
     timeloop,
 )
-from ogstools.ogs6py import (
-    referenced_file as referenced_file_module,
-)
 from ogstools.ogs6py.project_media_importer import _ProjectMediaImporter
 from ogstools.ogs6py.properties import (
     Property,
@@ -54,6 +51,7 @@ from ogstools.ogs6py.properties import (
     location_pointer,
     property_dict,
 )
+from ogstools.ogs6py.referenced_file import ReferencedFile
 
 try:
     from bokeh.io import output_notebook, show
@@ -161,23 +159,13 @@ class Project(StorageBase):
             self.geometry._active_target = gml_path
 
         self.mesh = mesh.Mesh(self.tree)
-        self.processes = processes.Processes(self.tree)
+        self.processes = processes.Processes(self.tree, self.input_file)
         self.python_script = python_script.PythonScript(self.tree)
         # If loading from file, set the python_script source path
         if self.input_file is not None and self.python_script.filename:
             py_path = Path(self.input_file).parent / self.python_script.filename
             if py_path.exists():
                 self.python_script._active_target = py_path
-        self.chemical_database = referenced_file_module.ReferencedFile(
-            self.tree,
-            xpath="./processes/process/chemical_system/database",
-        )
-        if self.input_file is not None and self.chemical_database.filename:
-            dat_path = (
-                Path(self.input_file).parent / self.chemical_database.filename
-            )
-            if dat_path.exists():
-                self.chemical_database._active_target = dat_path
         self.media = media.Media(self.tree)
         self.time_loop = timeloop.TimeLoop(self.tree)
         self.local_coordinate_system = (
@@ -309,7 +297,7 @@ class Project(StorageBase):
         for k in tree_backed:
             old_v = getattr(self, k)
             new_v = type(old_v)(new.tree)
-            if isinstance(old_v, referenced_file_module.ReferencedFile):
+            if isinstance(old_v, ReferencedFile):
                 new_v._active_target = old_v._active_target
                 if old_v.filename:
                     new_v._next_target = new._next_target / old_v.filename
@@ -319,6 +307,10 @@ class Project(StorageBase):
             self.curves.files, new.curves.files, strict=True
         ):
             new_rf._active_target = old_rf._active_target
+
+        new.processes.chemical_database._active_target = (
+            self.processes.chemical_database._active_target
+        )
 
         return new
 
@@ -1400,9 +1392,9 @@ class Project(StorageBase):
             self.python_script._next_target = (
                 self.next_target / self.python_script.filename
             )
-        if self.chemical_database.filename:
-            self.chemical_database._next_target = (
-                self.next_target / self.chemical_database.filename
+        if self.processes.chemical_database.filename:
+            self.processes.chemical_database._next_target = (
+                self.next_target / self.processes.chemical_database.filename
             )
         for rf in self.curves.files:
             if rf.filename:
@@ -1465,7 +1457,9 @@ class Project(StorageBase):
         if dry_run:
             files += self.geometry._save_impl(dry_run=dry_run)
             files += self.python_script._save_impl(dry_run=dry_run)
-            files += self.chemical_database._save_impl(dry_run=dry_run)
+            files += self.processes.chemical_database._save_impl(
+                dry_run=dry_run
+            )
             for rf in self.curves.files:
                 files += rf._save_impl(dry_run=dry_run)
             return files
@@ -1478,10 +1472,10 @@ class Project(StorageBase):
         files += self.python_script._save_impl(dry_run=dry_run)
         if self.python_script.filename:
             self.python_script._active_target = self.python_script._next_target
-        files += self.chemical_database._save_impl(dry_run=dry_run)
-        if self.chemical_database.filename:
-            self.chemical_database._active_target = (
-                self.chemical_database._next_target
+        files += self.processes.chemical_database._save_impl(dry_run=dry_run)
+        if self.processes.chemical_database.filename:
+            self.processes.chemical_database._active_target = (
+                self.processes.chemical_database._next_target
             )
         for rf in self.curves.files:
             files += rf._save_impl(dry_run=dry_run)

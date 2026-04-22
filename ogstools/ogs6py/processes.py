@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import Any
 
 from lxml import etree as ET
 
 from ogstools.ogs6py import build_tree
+from ogstools.ogs6py.referenced_file import ReferencedFile
 
 
 class Processes(build_tree.BuildTree):
@@ -13,7 +15,9 @@ class Processes(build_tree.BuildTree):
     Class for managing the processes section in the project file.
     """
 
-    def __init__(self, tree: ET.ElementTree) -> None:
+    def __init__(
+        self, tree: ET.ElementTree, input_file: Path | None = None
+    ) -> None:
         self.tree = tree
         self.root = self.tree.getroot()
         self.processes = self.populate_tree(
@@ -22,6 +26,13 @@ class Processes(build_tree.BuildTree):
         self.process = self.populate_tree(
             self.processes, "process", overwrite=True
         )
+        self.chemical_database = ReferencedFile(
+            tree, xpath="./processes/process/chemical_system/database"
+        )
+        if input_file is not None and self.chemical_database.filename:
+            dat_path = input_file.parent / self.chemical_database.filename
+            if dat_path.exists():
+                self.chemical_database._active_target = dat_path
         self.procvars = None
         self.procvar: dict[str, ET.Element] = {}
         self.secondvars = None
