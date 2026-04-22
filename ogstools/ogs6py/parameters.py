@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Any
+from typing import Any, Literal, overload
 
 from lxml import etree as ET
 
@@ -20,102 +20,193 @@ class Parameters(build_tree.BuildTree):
             self.root, "parameters", overwrite=True
         )
 
-    def add_parameter(self, **args: Any) -> None:
+    def add_parameter(self, **kwargs: Any) -> None:
         """
         Adds a parameter.
 
         Parameters
         ----------
         name : `str`
-            name of the parameter
+            Name of the parameter.
         type : `str`
-            type of the parameter, one of `Constant`, `CurveScaled`, `Function`,
+            Type of the parameter, one of `Constant`, `CurveScaled`, `Function`,
             `Group`, `MeshElement`, `MeshNode`, `RandomFieldMeshElement`,
-            `Raster`, or `TimeDependentHeterogeneousParameter`
+            `Raster`, or `TimeDependentHeterogeneousParameter`.
         value : `float` or `str`
-            value for a constant parameter
+            Value for a constant parameter.
         values : `float` or `str`
-            values for a constant parameter
-        expression : `str`
-            expression describing a function (valid for function parameter)
+            Values for a constant parameter.
+        expression : `str` or `list[str]`
+            Expression describing a function (valid for function parameter).
         curve : `str`
-            name of the curve (used in CurveScaled parameter)
+            Name of the curve (used in CurveScaled parameter).
         parameter : `str`
-            used in CurveScaled parameter, name of the parameter scaled by the
-            curve
+            Used in CurveScaled parameter; name of the parameter scaled by the
+            curve.
         mesh : `str`
-            used in MeshElement or MeshNode parameter; specification of the mesh
-            the parameter is defined on
+            Used in MeshElement or MeshNode parameter; specification of the mesh
+            the parameter is defined on.
         field_name : `str`
-            used in MeshElement or MeshNode parameter; reference to the
-            PropertyVector / DataArray given in the mesh
-        time : `list`
-            used in TimeDependentHeterogeneousParameter
-        parameter_name : `list`
-            used in `CurveScaled` to specify the parameter that shall be scaled
-            use_local_coordinate_system : `bool` or `str`
+            Used in MeshElement or MeshNode parameter; reference to the
+            PropertyVector / DataArray given in the mesh.
+        time : `list[float]`
+            Used in TimeDependentHeterogeneousParameter.
+        parameter_name : `list[str]`
+            Used in `CurveScaled` to specify the parameter that shall be scaled.
+        use_local_coordinate_system : `bool` or `str`
+
+        Raises
+        ------
+        KeyError
+            If 'name' or 'type' is not provided.
+        KeyError
+            If the parameter type is not supported.
 
         """
-        self._convertargs(args)
-        if "name" not in args:
-            msg = "No parameter name given."
-            raise KeyError(msg)
-        if "type" not in args:
-            msg = "Parameter type not given."
-            raise KeyError(msg)
-        parameter = self.populate_tree(self.parameters, "parameter")
-        self.populate_tree(parameter, "name", text=args["name"])
-        self.populate_tree(parameter, "type", text=args["type"])
-        if args["type"] == "Constant":
-            if "value" in args:
-                self.populate_tree(parameter, "value", text=args["value"])
-            elif "values" in args:
-                self.populate_tree(parameter, "values", text=args["values"])
-        elif args["type"] == "MeshElement" or args["type"] == "MeshNode":
-            if "mesh" in args:
-                self.populate_tree(parameter, "mesh", text=args["mesh"])
-            self.populate_tree(parameter, "field_name", text=args["field_name"])
-        elif args["type"] == "Function":
-            if "mesh" in args:
-                self.populate_tree(parameter, "mesh", text=args["mesh"])
-            if isinstance(args["expression"], str) is True:
-                self.populate_tree(
-                    parameter, "expression", text=args["expression"]
+        self._convertargs(kwargs)
+        match param_type := kwargs.pop("type"):
+            case "Constant":
+                param = self.add_constant_parameter(**kwargs)
+            case "MeshNode" | "MeshElement":
+                param = self.add_mesh_parameter(type=param_type, **kwargs)
+            case "Function":
+                param = self.add_function_parameter(**kwargs)
+            case "CurveScaled":
+                param = self.add_curve_scaled_parameter(**kwargs)
+            case "TimeDependentHeterogeneousParameter":
+                param = self.add_time_dependent_heterogeneous_parameter(
+                    **kwargs
                 )
-            elif isinstance(args["expression"], list) is True:
-                for entry in args["expression"]:
-                    self.populate_tree(parameter, "expression", text=entry)
-        elif args["type"] == "CurveScaled":
-            if "curve" in args:
-                self.populate_tree(parameter, "curve", text=args["curve"])
-            if "parameter" in args:
-                self.populate_tree(
-                    parameter, "parameter", text=args["parameter"]
-                )
-        elif args["type"] == "TimeDependentHeterogeneousParameter":
-            if "time" not in args:
-                msg = "time missing."
+            case _:
+                msg = f"Parameter type '{param_type}' not supported (yet)."
                 raise KeyError(msg)
-            if "parameter_name" not in args:
-                msg = "Parameter name missing."
+        if kwargs.get("use_local_coordinate_system") in [True, "true"]:
+            self.use_local_coordinate_system(param)
+
+    def use_local_coordinate_system(self, parameter: ET.Element) -> None:
+        "Add the local coordinate system element."
+        self.populate_tree(
+            parameter, "use_local_coordinate_system", text="true"
+        )
+
+    def _prepare_parameter(self, **kwargs: Any) -> ET.Element:
+        param = self.populate_tree(self.parameters, "parameter")
+        for key in ["name", "type"]:
+            if key not in kwargs:
+                msg = f"{key} not given."
                 raise KeyError(msg)
-            if len(args["time"]) != len(args["parameter_name"]):
-                msg = "parameter_name and time lists have different length."
-                raise KeyError(msg)
-            time_series = self.populate_tree(parameter, "time_series")
-            for i, _ in enumerate(args["parameter_name"]):
-                ts_pair = self.populate_tree(time_series, "pair")
-                self.populate_tree(ts_pair, "time", text=str(args["time"][i]))
-                self.populate_tree(
-                    ts_pair, "parameter_name", text=args["parameter_name"][i]
-                )
+            self.populate_tree(param, key, text=kwargs[key])
+        return param
+
+    @overload
+    def add_constant_parameter(
+        self, name: str, *, value: str
+    ) -> ET.Element: ...
+
+    @overload
+    def add_constant_parameter(
+        self, name: str, *, values: list[str]
+    ) -> ET.Element: ...
+
+    def add_constant_parameter(self, name: str, **kwargs: Any) -> ET.Element:
+        """
+        Add a constant parameter to the XML tree.
+
+        :param name: parameter name
+
+        Keyword Arguments:
+            - value: str
+            - values: list[str]
+        """
+        param = self._prepare_parameter(name=name, type="Constant")
+        if "value" in kwargs:
+            self.populate_tree(param, "value", text=kwargs["value"])
+        elif "values" in kwargs:
+            self.populate_tree(param, "values", text=kwargs["values"])
         else:
-            msg = "Parameter type not supported (yet)."
+            msg = "Constant type parameter requires either a value or values."
             raise KeyError(msg)
-        if ("use_local_coordinate_system" in args) and (
-            (args["use_local_coordinate_system"] == "true")
-            or (args["use_local_coordinate_system"] is True)
-        ):
-            self.populate_tree(
-                parameter, "use_local_coordinate_system", text="true"
-            )
+        return param
+
+    def add_mesh_parameter(
+        self,
+        name: str,
+        type: Literal["MeshNode", "MeshElement"],
+        field_name: str,
+        mesh: str | None = None,
+    ) -> ET.Element:
+        """
+        Add a mesh-based parameter (MeshElement or MeshNode) to the XML tree.
+
+        :param name: parameter name
+        :param type: parameter type
+        :param field_name: fieldata name to read from the mesh
+        :param mesh: mesh name
+        """
+        param = self._prepare_parameter(name=name, type=type)
+        if mesh is not None:
+            self.populate_tree(param, "mesh", text=mesh)
+        self.populate_tree(param, "field_name", text=field_name)
+        return param
+
+    def add_function_parameter(
+        self,
+        name: str,
+        expression: str | list[str],
+        mesh: str | None = None,
+    ) -> ET.Element:
+        """
+        Add a function parameter to the XML tree.
+
+        :param name: parameter name
+        :param expression: function expression of the parameter
+        :param mesh: mesh name
+        """
+        param = self._prepare_parameter(name=name, type="Function")
+        if mesh is not None:
+            self.populate_tree(param, "mesh", text=mesh)
+        if isinstance(expression, str):
+            self.populate_tree(param, "expression", text=expression)
+        elif isinstance(expression, list):
+            for entry in expression:
+                self.populate_tree(param, "expression", text=entry)
+        return param
+
+    def add_curve_scaled_parameter(
+        self, name: str, curve: str, parameter: str
+    ) -> ET.Element:
+        """
+        Add a curve-scaled parameter to the XML tree.
+
+        :param name: parameter name
+        :param curve: name of the curve which scales this parameter
+        :param parameter: name of the parameter which is scaled
+        """
+        param = self._prepare_parameter(name=name, type="CurveScaled")
+        self.populate_tree(param, "curve", text=curve)
+        self.populate_tree(param, "parameter", text=parameter)
+        return param
+
+    def add_time_dependent_heterogeneous_parameter(
+        self, name: str, time: list[Any], parameter_name: list[str]
+    ) -> ET.Element:
+        """
+        Add a time-dependent heterogeneous parameter to the XML tree.
+
+        :param name: parameter name
+        :param time: list of timevalues
+        :param parameter_name: list of parameter names
+        """
+        if len(time) != len(parameter_name):
+            msg = "times and parameter_names have different lengths."
+            raise ValueError(msg)
+
+        param = self._prepare_parameter(
+            name=name, type="TimeDependentHeterogeneousParameter"
+        )
+        time_series = self.populate_tree(param, "time_series")
+        for time_val, param_name in zip(time, parameter_name, strict=True):
+            ts_pair = self.populate_tree(time_series, "pair")
+            self.populate_tree(ts_pair, "time", text=str(time_val))
+            self.populate_tree(ts_pair, "parameter_name", text=param_name)
+        return param
