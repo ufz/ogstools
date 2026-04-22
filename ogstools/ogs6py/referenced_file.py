@@ -28,11 +28,22 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
     _EXT: str = ""
     _XPATH: str = ""
 
+    def __new__(
+        cls, _tree: ET.ElementTree, xpath: str | None = None
+    ) -> "ReferencedFile":
+        effective_cls = (
+            type(cls.__name__, (cls,), {"_XPATH": xpath})
+            if xpath is not None and not cls._XPATH
+            else cls
+        )
+        return object.__new__(effective_cls)
+
     def __init__(self, tree: ET.ElementTree, xpath: str | None = None) -> None:
+        del xpath  # handled in __new__ by baking xpath into the class
         build_tree.BuildTree.__init__(self, tree)
         StorageBase.__init__(self, self._NAME or "ReferencedFile", self._EXT)
         self.root = self.tree.getroot()
-        self._xpath = xpath if xpath is not None else self._XPATH
+        self._xpath = self._XPATH
 
     @property
     def filename(self) -> str | None:

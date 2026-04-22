@@ -333,7 +333,10 @@ class TestStorage:
         assert dat_file.name == "phreeqc.dat"
         assert dat_file.read_bytes() == dat_phreeqc.read_bytes()
 
-    def test_storage_project_curve_binary_files(self, tmp_path):
+        files_copy = prj.copy().save()
+        assert_files_saved(files_copy, expected_count=2)
+
+    def test_storage_project_curve_binary_files(self):
         """Curve binary files are copied into the saved project folder."""
         from ogstools.examples import (
             bin_curve_coords,
@@ -357,8 +360,6 @@ class TestStorage:
         prj_copy = prj.copy()
         files_copy = prj_copy.save()
         assert_files_saved(files_copy, expected_count=3)  # default.prj + 2 .bin
-
-        prj.save(tmp_path / "test_curve_files")
 
     @pytest.mark.tools  # NodeReordering
     def test_storage_model_1(self, tmp_path):

@@ -309,9 +309,9 @@ class Project(StorageBase):
         for k in tree_backed:
             old_v = getattr(self, k)
             new_v = type(old_v)(new.tree)
-            if isinstance(old_v, StorageBase):
+            if isinstance(old_v, referenced_file_module.ReferencedFile):
                 new_v._active_target = old_v._active_target
-                if hasattr(old_v, "filename") and old_v.filename:
+                if old_v.filename:
                     new_v._next_target = new._next_target / old_v.filename
             setattr(new, k, new_v)
 
