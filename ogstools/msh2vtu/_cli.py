@@ -30,7 +30,7 @@ def argparser() -> argparse.ArgumentParser:
     add_arg = parser.add_argument
     add_arg("filename", help=get_help("filename"))
     add_arg(
-        "-o", "--output_path", default="",
+        "-o", "--output_path", default=Path.cwd(),
         help="Path of output files, defaults to current working dir",
     )  # fmt: skip
     add_arg(
