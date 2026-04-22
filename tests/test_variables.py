@@ -381,3 +381,54 @@ class TestPhysicalVariable:
         mask_a = ms_a.cell_data[var.mask]
         ms_b.cell_data[var.mask] = np.broadcast_to(mask_a[-1], mask_a.shape)
         _check_masked_data(ms_b, var.transform(ms_b))
+
+    def test_access_via_str(self):
+        "Test accessing variables and their components via a string"
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        mesh.point_data["scalar"] = np.zeros(mesh.n_points)
+        mesh.point_data["vector"] = np.tile([0, 1], (mesh.n_points, 1))
+        mesh.point_data["matrix"] = np.tile([0, 1, 2, 3], (mesh.n_points, 1))
+
+        def equal(name: str, var: ov.Variable) -> None:
+            str_var = ov.Variable.find(name, mesh)
+            for key in vars(var):
+                if key == "func":
+                    # a simple comparison like var == str_var would fail due to
+                    # the funcs being stored in different memory locations
+                    continue
+                assert getattr(str_var, key) == getattr(var, key)
+            np.testing.assert_equal(
+                var.transform(mesh), str_var.transform(mesh)
+            )
+
+        for name, var in [
+            ("temperature", ov.temperature),
+            ("displacement", ov.displacement),
+            ("displacement_x", ov.displacement["x"]),
+            ("displacement_0", ov.displacement[0]),
+            ("sigma", ov.stress),
+            ("sigma_yy", ov.stress["yy"]),
+            ("sigma_2", ov.stress[2]),
+            ("scalar", ov.Scalar("scalar")),
+            ("vector", ov.Vector("vector")),
+            ("vector_x", ov.Vector("vector")["x"]),
+            ("vector_1", ov.Vector("vector")[1]),
+            ("matrix", ov.Matrix("matrix")),
+            ("matrix_xx", ov.Matrix("matrix")["xx"]),
+            ("matrix_3", ov.Matrix("matrix")[3]),
+        ]:
+            equal(name, var)
+
+    def test_error_msg_via_str(self):
+        "Test if meaningful error messages are given upon faulty input."
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        failcases = [
+            ("", "not found in mesh."),
+            ("Temperature", "Temperature not found in mesh."),
+            ("temperature_x", "Scalar temperature has no component x"),
+            ("velocity_xx", "Vector index can only be 'x', 'y', 'z' or an int"),
+            ("sigma_x", "Matrix index can only be an int or one of"),
+        ]  # fmt: skip
+        for key, message in failcases:
+            with pytest.raises(KeyError, match=message):
+                ov.Variable.find(key, mesh)
