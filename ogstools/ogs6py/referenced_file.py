@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import shutil
 from pathlib import Path
 
 from lxml import etree as ET
@@ -45,6 +44,10 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
             return elem.text.strip() or None
         return None
 
+    @property
+    def is_file(self) -> bool:
+        return True
+
     def _propagate_target(self) -> None:
         """No children to propagate to."""
 
@@ -57,14 +60,8 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
         if dry_run:
             return [target]
 
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        if (
-            self.active_target
-            and self.active_target.exists()
-            and self.active_target.resolve() != target.resolve()
-        ):
-            shutil.copy2(self.active_target, target)
+        if self.active_target and self.active_target.exists():
+            self.link(target, dry_run=False)
 
         return [target]
 

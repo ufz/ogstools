@@ -344,15 +344,21 @@ class TestStorage:
         prj = ot.Project(prj_with_curve_files)
         assert len(prj.curves.files) == 2  # coords + values for one curve
 
-        target = tmp_path / "test_curve_files"
-        files = prj.save(target)
+        files = prj.save()
         assert_files_saved(files, expected_count=3)  # default.prj + 2 .bin
-        coords_file = target / "curve_coords.bin"
-        values_file = target / "curve_values.bin"
+        assert prj.active_target
+        coords_file = prj.active_target / "curve_coords.bin"
+        values_file = prj.active_target / "curve_values.bin"
         assert coords_file.exists()
         assert values_file.exists()
         assert coords_file.read_bytes() == bin_curve_coords.read_bytes()
         assert values_file.read_bytes() == bin_curve_values.read_bytes()
+
+        prj_copy = prj.copy()
+        files_copy = prj_copy.save()
+        assert_files_saved(files_copy, expected_count=3)  # default.prj + 2 .bin
+
+        prj.save(tmp_path / "test_curve_files")
 
     @pytest.mark.tools  # NodeReordering
     def test_storage_model_1(self, tmp_path):

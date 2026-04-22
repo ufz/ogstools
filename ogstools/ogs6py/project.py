@@ -315,6 +315,11 @@ class Project(StorageBase):
                     new_v._next_target = new._next_target / old_v.filename
             setattr(new, k, new_v)
 
+        for old_rf, new_rf in zip(
+            self.curves.files, new.curves.files, strict=True
+        ):
+            new_rf._active_target = old_rf._active_target
+
         return new
 
     def __eq__(self, other: object) -> bool:
