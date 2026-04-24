@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections.abc import Sequence
 from typing import Any, Literal, overload
 
 from lxml import etree as ET
@@ -19,6 +20,27 @@ class Parameters(build_tree.BuildTree):
         self.parameters = self.populate_tree(
             self.root, "parameters", overwrite=True
         )
+
+    def __getitem__(self, key: str) -> ET.Element:
+        param = self.parameters.find(f".//parameter[name='{key}']")
+        if param is None:
+            msg = f"No parameter is defined with the name '{key}'."
+            raise KeyError(msg)
+        return param
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if isinstance(value, str) or (
+            isinstance(value, Sequence)
+            and any(isinstance(s, str) for s in value)
+        ):
+            self.set_function_parameter(key, expression=value)
+        elif isinstance(value, int | float):
+            self.set_constant_parameter(key, value=str(value))
+        elif isinstance(value, Sequence):
+            self.set_constant_parameter(key, values=" ".join(map(str, value)))
+        else:
+            msg = "`__setitem__` is not implemented for values of this type."
+            raise TypeError(msg)
 
     def add_parameter(self, **kwargs: Any) -> None:
         """
@@ -54,6 +76,7 @@ class Parameters(build_tree.BuildTree):
         parameter_name : `list[str]`
             Used in `CurveScaled` to specify the parameter that shall be scaled.
         use_local_coordinate_system : `bool` or `str`
+            can be added to any parameter type
 
         Raises
         ------
@@ -66,15 +89,15 @@ class Parameters(build_tree.BuildTree):
         self._convertargs(kwargs)
         match param_type := kwargs.pop("type"):
             case "Constant":
-                param = self.add_constant_parameter(**kwargs)
+                param = self.set_constant_parameter(**kwargs)
             case "MeshNode" | "MeshElement":
-                param = self.add_mesh_parameter(type=param_type, **kwargs)
+                param = self.set_mesh_parameter(type=param_type, **kwargs)
             case "Function":
-                param = self.add_function_parameter(**kwargs)
+                param = self.set_function_parameter(**kwargs)
             case "CurveScaled":
-                param = self.add_curve_scaled_parameter(**kwargs)
+                param = self.set_curve_scaled_parameter(**kwargs)
             case "TimeDependentHeterogeneousParameter":
-                param = self.add_time_dependent_heterogeneous_parameter(
+                param = self.set_time_dependent_heterogeneous_parameter(
                     **kwargs
                 )
             case _:
@@ -90,27 +113,30 @@ class Parameters(build_tree.BuildTree):
         )
 
     def _prepare_parameter(self, **kwargs: Any) -> ET.Element:
+        assert "name" in kwargs, "A name has to be given to the parameter."
+        assert "type" in kwargs, "A type has to be given to the parameter."
+        param = self.parameters.find(f".//parameter[name='{kwargs['name']}']")
+        if param is not None:
+            self.parameters.remove(param)
+
         param = self.populate_tree(self.parameters, "parameter")
         for key in ["name", "type"]:
-            if key not in kwargs:
-                msg = f"{key} not given."
-                raise KeyError(msg)
             self.populate_tree(param, key, text=kwargs[key])
         return param
 
     @overload
-    def add_constant_parameter(
+    def set_constant_parameter(
         self, name: str, *, value: str
     ) -> ET.Element: ...
 
     @overload
-    def add_constant_parameter(
-        self, name: str, *, values: list[str]
+    def set_constant_parameter(
+        self, name: str, *, values: str
     ) -> ET.Element: ...
 
-    def add_constant_parameter(self, name: str, **kwargs: Any) -> ET.Element:
+    def set_constant_parameter(self, name: str, **kwargs: Any) -> ET.Element:
         """
-        Add a constant parameter to the XML tree.
+        Set a constant parameter.
 
         :param name: parameter name
 
@@ -128,7 +154,7 @@ class Parameters(build_tree.BuildTree):
             raise KeyError(msg)
         return param
 
-    def add_mesh_parameter(
+    def set_mesh_parameter(
         self,
         name: str,
         type: Literal["MeshNode", "MeshElement"],
@@ -136,7 +162,7 @@ class Parameters(build_tree.BuildTree):
         mesh: str | None = None,
     ) -> ET.Element:
         """
-        Add a mesh-based parameter (MeshElement or MeshNode) to the XML tree.
+        Set a mesh-based parameter (MeshElement or MeshNode).
 
         :param name: parameter name
         :param type: parameter type
@@ -149,14 +175,14 @@ class Parameters(build_tree.BuildTree):
         self.populate_tree(param, "field_name", text=field_name)
         return param
 
-    def add_function_parameter(
+    def set_function_parameter(
         self,
         name: str,
-        expression: str | list[str],
+        expression: str | Sequence[str],
         mesh: str | None = None,
     ) -> ET.Element:
         """
-        Add a function parameter to the XML tree.
+        Set a function parameter.
 
         :param name: parameter name
         :param expression: function expression of the parameter
@@ -172,11 +198,11 @@ class Parameters(build_tree.BuildTree):
                 self.populate_tree(param, "expression", text=entry)
         return param
 
-    def add_curve_scaled_parameter(
+    def set_curve_scaled_parameter(
         self, name: str, curve: str, parameter: str
     ) -> ET.Element:
         """
-        Add a curve-scaled parameter to the XML tree.
+        Set a curve-scaled parameter.
 
         :param name: parameter name
         :param curve: name of the curve which scales this parameter
@@ -187,11 +213,11 @@ class Parameters(build_tree.BuildTree):
         self.populate_tree(param, "parameter", text=parameter)
         return param
 
-    def add_time_dependent_heterogeneous_parameter(
+    def set_time_dependent_heterogeneous_parameter(
         self, name: str, time: list[Any], parameter_name: list[str]
     ) -> ET.Element:
         """
-        Add a time-dependent heterogeneous parameter to the XML tree.
+        Set a time-dependent heterogeneous parameter.
 
         :param name: parameter name
         :param time: list of timevalues
@@ -211,12 +237,19 @@ class Parameters(build_tree.BuildTree):
             self.populate_tree(ts_pair, "parameter_name", text=param_name)
         return param
 
-    def add_group_parameter(
+    def set_group_parameter(
         self,
         name: str,
         group_id_property: str = "MaterialIDs",
         index_values: dict[int, Any] | None = None,
     ) -> ET.Element:
+        """
+        Set a group type parameter.
+
+        :param name: parameter name
+        :param group_id_property: name of index field (default: 'MaterialIDs')
+        :param index_values: pairs of indices and corresponding values.
+        """
         param = self._prepare_parameter(name=name, type="Group")
         self.populate_tree(param, "group_id_property", text=group_id_property)
         if index_values is None:
