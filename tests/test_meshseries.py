@@ -631,6 +631,13 @@ def test_reader():
     assert isinstance(ot.MeshSeries(examples.elder_xdmf), ot.MeshSeries)
 
 
+def test_xdmf_symlink():
+    "Test reading an XDMF MeshSeries via a symbolic link in a different folder."
+    ms = ot.MeshSeries(examples.elder_xdmf_symlink)
+    assert isinstance(ms, ot.MeshSeries)
+    assert not np.any(np.isnan(ms.values("Si")))
+
+
 @pytest.mark.system
 def test_xdmf_quadratic(tmp_path):
     "Test reading of quadratic elements in xdmf."
