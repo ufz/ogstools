@@ -315,6 +315,52 @@ class TestStorage:
         original_py = EXAMPLES_DIR / "prj" / "decay_boundary_conditions.py"
         assert py_file.read_bytes() == original_py.read_bytes()
 
+    def test_storage_project_chemical_database(self, tmp_path):
+        """chemical_database .dat file is copied into the saved project folder."""
+        from ogstools.examples import dat_phreeqc, prj_with_chemical_db
+
+        prj = ot.Project(prj_with_chemical_db)
+        assert prj.chemical_system_database.filename == "phreeqc.dat"
+        assert prj.chemical_system_database.active_target is not None
+        assert prj.chemical_system_database.active_target.exists()
+
+        target = tmp_path / "test_chemical_db"
+        files = prj.save(target)
+        assert_files_saved(files, expected_count=2)  # default.prj + phreeqc.dat
+        dat_file = prj.chemical_system_database.active_target
+        assert dat_file is not None
+        assert dat_file.exists()
+        assert dat_file.name == "phreeqc.dat"
+        assert dat_file.read_bytes() == dat_phreeqc.read_bytes()
+
+        files_copy = prj.copy().save()
+        assert_files_saved(files_copy, expected_count=2)
+
+    def test_storage_project_curve_binary_files(self):
+        """Curve binary files are copied into the saved project folder."""
+        from ogstools.examples import (
+            bin_curve_coords,
+            bin_curve_values,
+            prj_with_curve_files,
+        )
+
+        prj = ot.Project(prj_with_curve_files)
+        assert len(prj.curves.files) == 2  # coords + values for one curve
+
+        files = prj.save()
+        assert_files_saved(files, expected_count=3)  # default.prj + 2 .bin
+        assert prj.active_target
+        coords_file = prj.active_target / "curve_coords.bin"
+        values_file = prj.active_target / "curve_values.bin"
+        assert coords_file.exists()
+        assert values_file.exists()
+        assert coords_file.read_bytes() == bin_curve_coords.read_bytes()
+        assert values_file.read_bytes() == bin_curve_values.read_bytes()
+
+        prj_copy = prj.copy()
+        files_copy = prj_copy.save()
+        assert_files_saved(files_copy, expected_count=3)  # default.prj + 2 .bin
+
     @pytest.mark.tools  # NodeReordering
     def test_storage_model_1(self, tmp_path):
         prj1 = ot.Project(input_file=prj_mechanics, output_file="mechanics")

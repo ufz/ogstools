@@ -359,6 +359,7 @@ log_cli_level = "info"
 testpaths = ["tests"]
 
 
+
 [tool.black]
 line-length = 80
 exclude = '.*/examples/.*'

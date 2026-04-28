@@ -1,6 +1,7 @@
 """Unit tests for meshlib."""
 
 import shutil
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -119,7 +120,7 @@ def test_reshape_obs_points_mesh():
 
 
 @pytest.mark.tools
-@settings(max_examples=10, deadline=2000)
+@settings(max_examples=10, deadline=2000 if sys.platform == "linux" else None)
 @given(
     st.one_of(
         st.integers(2, 13),

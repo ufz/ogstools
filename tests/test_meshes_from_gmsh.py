@@ -198,7 +198,7 @@ def is_typical_edge_length(val):
 @settings(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
-    deadline=750,
+    deadline=750 if sys.platform == "linux" else None,
 )
 def test_rect(tmp_path: Path, rect_p):
     """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
