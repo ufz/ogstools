@@ -18,6 +18,7 @@ OGS 6.5.7 -
 ## Bugfixes
 
 - MeshSeries: could not be read if xdmf-file was a symbolic link
+- Project: Curves (bin) and chemical solver database (dat) are now copied and saved with Project
 
 ## Features
 
