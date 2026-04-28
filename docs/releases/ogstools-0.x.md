@@ -25,6 +25,7 @@ OGS 6.5.7 -
   (`ot.variables.Matrix.to_polar()`) is now also able to use `.transform` on a MeshSeries
 - `.xdmf` MeshSeries which only contain points (and no cells) can now be properly
   read
+- Project: Curves (bin) and chemical solver database (dat) are now copied and saved with Project
 
 ## Features
 
