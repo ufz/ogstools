@@ -471,8 +471,8 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             selection = ()
 
         # The HDF5 file path is given with respect to the XDMF (XML) file.
-        dirpath = self.filename.resolve().parent
-        full_hdf5_path = dirpath / filename
+        dirpath = self.filename.parent
+        full_hdf5_path = (dirpath / filename).resolve()
 
         with h5py.File(full_hdf5_path, "r") as file:
             if h5path[0] != "/":

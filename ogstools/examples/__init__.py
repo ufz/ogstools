@@ -272,6 +272,7 @@ surface_paths = [
 
 elder_h5 = _meshseries_dir / "elder.h5"
 elder_xdmf = _meshseries_dir / "elder.xdmf"
+elder_xdmf_symlink = _meshseries_dir / "symlinked" / "elder_symlink.xdmf"
 pvd_parallel_2D = _meshseries_dir / "2D_mechanics_pvd/parallel/mesh.pvd"
 pvd_serial_2D = _meshseries_dir / "2D_mechanics_pvd/serial/mesh.pvd"
 

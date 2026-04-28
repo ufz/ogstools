@@ -17,6 +17,8 @@ OGS 6.5.7 -
 
 ## Bugfixes
 
+- MeshSeries: could not be read if xdmf-file was a symbolic link
+
 ## Features
 
 - added the Class `ogstools.mesh.IPdata` to interface with the integration point
