@@ -253,6 +253,7 @@ prj_3bhes_id_1U_2U_1U = _prj_dir / "3bhes_id_1U_2U_1U.prj"
 prj_3bhes_id_restart_ic_ref = _prj_dir / "3bhes_id_1U_2U_1U_restart_ic_ref.prj"
 prj_3bhes_id_1U_2U_1U_ref = _prj_dir / "3bhes_id_1U_2U_1U_ref.prj"
 prj_beier_sandbox_power_ref = _prj_dir / "beier_sandbox_power_ref.prj"
+prj_beier_sandbox_processed = _prj_dir / "beier_sandbox_processed.prj"
 prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
 prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
@@ -264,11 +265,14 @@ prj_HM_stationary = _prj_dir / "HM_StationaryFlow.prj"
 prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
 prj_TRM_stationary = _prj_dir / "TRM_HeatTransportInStationaryFlow.prj"
 prj_TM_square = _prj_dir / "TM_square.prj"
-prj_with_chemical_db = _prj_dir / "with_chemical_db.prj"
-dat_phreeqc = _prj_dir / "phreeqc.dat"
-prj_with_curve_files = _prj_dir / "with_curve_files.prj"
-bin_curve_coords = _prj_dir / "curve_coords.bin"
-bin_curve_values = _prj_dir / "curve_values.bin"
+prj_wetland = _prj_dir / "Wetland_1d.prj"
+# referenced files
+dat_cwm1 = _prj_dir / "cwm1.dat"
+bin_curve_coords = _prj_dir / "inflow_temperature_coords.bin"
+bin_curve_values = (
+    _prj_dir
+    / "/home/meisel/gitlabrepos/ogstools/ogstools/examples/prj/inflow_temperature_values.bin"
+)
 
 surface_paths = [
     _surface_dir / (file + ".vtu")

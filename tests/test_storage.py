@@ -317,21 +317,21 @@ class TestStorage:
 
     def test_storage_project_chemical_database(self, tmp_path):
         """chemical_database .dat file is copied into the saved project folder."""
-        from ogstools.examples import dat_phreeqc, prj_with_chemical_db
+        from ogstools.examples import dat_cwm1, prj_wetland
 
-        prj = ot.Project(prj_with_chemical_db)
-        assert prj.chemical_system_database.filename == "phreeqc.dat"
+        prj = ot.Project(prj_wetland)
+        assert prj.chemical_system_database.filename == "cwm1.dat"
         assert prj.chemical_system_database.active_target is not None
         assert prj.chemical_system_database.active_target.exists()
 
         target = tmp_path / "test_chemical_db"
         files = prj.save(target)
-        assert_files_saved(files, expected_count=2)  # default.prj + phreeqc.dat
+        assert_files_saved(files, expected_count=2)  # default.prj + cwm1.dat
         dat_file = prj.chemical_system_database.active_target
         assert dat_file is not None
         assert dat_file.exists()
-        assert dat_file.name == "phreeqc.dat"
-        assert dat_file.read_bytes() == dat_phreeqc.read_bytes()
+        assert dat_file.name == "cwm1.dat"
+        assert dat_file.read_bytes() == dat_cwm1.read_bytes()
 
         files_copy = prj.copy().save()
         assert_files_saved(files_copy, expected_count=2)
@@ -341,17 +341,18 @@ class TestStorage:
         from ogstools.examples import (
             bin_curve_coords,
             bin_curve_values,
-            prj_with_curve_files,
+            prj_beier_sandbox_processed,
         )
 
-        prj = ot.Project(prj_with_curve_files)
+        prj = ot.Project(prj_beier_sandbox_processed)
         assert len(prj.curves.files) == 2  # coords + values for one curve
 
         files = prj.save()
         assert_files_saved(files, expected_count=3)  # default.prj + 2 .bin
         assert prj.active_target
-        coords_file = prj.active_target / "curve_coords.bin"
-        values_file = prj.active_target / "curve_values.bin"
+        coords_file = prj.active_target / "inflow_temperature_coords.bin"
+        values_file = prj.active_target / "inflow_temperature_values.bin"
+
         assert coords_file.exists()
         assert values_file.exists()
         assert coords_file.read_bytes() == bin_curve_coords.read_bytes()
