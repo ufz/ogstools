@@ -269,10 +269,7 @@ prj_wetland = _prj_dir / "Wetland_1d.prj"
 # referenced files
 dat_cwm1 = _prj_dir / "cwm1.dat"
 bin_curve_coords = _prj_dir / "inflow_temperature_coords.bin"
-bin_curve_values = (
-    _prj_dir
-    / "/home/meisel/gitlabrepos/ogstools/ogstools/examples/prj/inflow_temperature_values.bin"
-)
+bin_curve_values = _prj_dir / "inflow_temperature_values.bin"
 
 surface_paths = [
     _surface_dir / (file + ".vtu")
