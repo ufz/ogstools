@@ -22,6 +22,7 @@ from ogstools.examples import (
     prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
+    prj_mechanics,
     prj_nuclear_decay,
     prj_pid_timestepping,
     prj_pid_timestepping_ref,
@@ -51,7 +52,6 @@ value_variants = [
 
 
 class TestiOGS:
-
     def compare(self, file1: str | Path, file2: str | Path) -> None:
         "Check equality of files, ignoring line endings."
         WINDOWS_LINE_ENDING = b"\r\n"
@@ -1116,6 +1116,43 @@ class TestiOGS:
         root = ET.parse(prjfile)
         find = root.findall("./time_loop/output/prefix")
         assert find[0].text == "tunnel_replace"
+
+    def test_parameters_setitem(self) -> None:
+        prj = ot.Project(input_file=prj_mechanics)
+        params = prj.parameters
+        with pytest.raises(KeyError, match="No parameter is defined with"):
+            params["test"]
+        params["test"] = 1
+        assert params["test"].find("type").text == "Constant"
+        params["test"] = 2
+        assert len(params.tree.findall(".//parameter[name='test']")) == 1
+        assert params["test"].find("value").text == "2"
+        params["test"] = [1, 2, 3]
+        assert params["test"].find("values").text == "1 2 3"
+        params["test"] = "1000 * 9.81 * y"
+        assert params["test"].find("type").text == "Function"
+        assert len(params["test"].findall("expression")) == 1
+        params["test"] = ["1000 * 9.81 * y"] * 3 + [0]
+        assert params["test"].find("type").text == "Function"
+        assert len(params["test"].findall("expression")) == 4
+
+    def test_group_parameter(self) -> None:
+        "Test creation of group type parameter and adding index values to it."
+        prj = ot.Project(input_file=prj_mechanics)
+        xpath = ".//parameter[name='test']"
+        assert prj.parameters.tree.find(xpath) is None
+        param = prj.parameters.set_group_parameter(
+            "test", "MaterialIDs", {0: 0, 1: 10}
+        )
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 2
+        prj.parameters.add_index_values_to_group("test", {2: 20})
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 3
+        prj.parameters.add_index_values_to_group(param, {3: 30})
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 4
+        with pytest.raises(KeyError, match="Couldn't find"):
+            prj.parameters.add_index_values_to_group("abcd", {0: 0})
+        with pytest.raises(KeyError, match="not of type 'Group'"):
+            prj.parameters.add_index_values_to_group("zero", {0: 0})
 
     def test_timedependenthet_param(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "timedephetparam.prj"

@@ -25,6 +25,10 @@ OGS 6.5.7 -
   metadata
 - variable components can now be plotted via strings e.g. `"displacement_x"` will
   plot the same thing as `ot.variables.displacement["x"]`
+- added standalone type hinted methods, to set parameters to a project per
+  parameter type e.g. `prj.parameters.set_constant_parameter` / `prj.parameters[name] = int_or_float` or
+  `prj.parameters.set_function_parameter` / `prj.parameters[name] = str`
+- added `prj.parameters.set_group_parameter`
 
 ## Infrastructure
 
