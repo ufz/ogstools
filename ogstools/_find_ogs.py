@@ -47,6 +47,8 @@ def check_path() -> None:
             print(f"- {path}")
     elif is_outside_python_env(ogs_executables[0]):
         print(f"✅ Custom OGS found on {ogs_executables[0]}.")
+    else:
+        print(ogs_executables)
 
 
 def has_ogs_wheel(verbose: bool = False) -> bool:

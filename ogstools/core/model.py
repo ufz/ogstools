@@ -80,7 +80,8 @@ class Model(StorageBase):
                 meshes_files = self.project.meshpaths(meshes)
                 self.meshes = Meshes.from_files(meshes_files)
 
-        else:  # None
+        else:
+            assert meshes is None, f"unsupported meshing type {type(meshes)}"
             assert self.project.input_file
             # Last resort - Possible conventions to try
             mesh_locations = [
@@ -323,7 +324,6 @@ class Model(StorageBase):
             raise NotImplementedError(msg)
 
         if self.execution.interactive:
-
             from .interactive_simulation_controller import (
                 OGSInteractiveController,
             )
