@@ -186,7 +186,7 @@ def line(
     )
     only_points = cell_types in [{0}, {1}]
     surf: pv.PolyData = mesh.extract_surface(algorithm="dataset_surface")
-    strip: pv.PolyData = surf.strip()
+    strip: pv.PolyData = surf.strip(join=True)
 
     if is_meshseries or only_points or strip.n_cells <= 1:
         x_sort_ids = sorted_ids(
