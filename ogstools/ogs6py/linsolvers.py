@@ -141,3 +141,6 @@ class LinSolvers(build_tree.BuildTree):
                 self.populate_tree(
                     petsc, "parameters", petsc_string, overwrite=True
                 )
+        else:
+            msg = f"unsupported linear solver type {args['kind']}"
+            raise KeyError

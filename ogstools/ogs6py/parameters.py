@@ -193,7 +193,10 @@ class Parameters(build_tree.BuildTree):
             self.populate_tree(param, "mesh", text=mesh)
         if isinstance(expression, str):
             self.populate_tree(param, "expression", text=expression)
-        elif isinstance(expression, list):
+        else:
+            assert isinstance(
+                expression, Sequence
+            ), f"unsupported expression type {type(expression)}"
             for entry in expression:
                 self.populate_tree(param, "expression", text=entry)
         return param

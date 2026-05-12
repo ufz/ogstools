@@ -1295,7 +1295,8 @@ def gen_bhe_mesh(
 
         if meshing_type == "structured":
             _mesh_structured()
-        elif meshing_type == "prism":
+        else:
+            assert meshing_type == "prism", f"unsupported {meshing_type=}"
             _mesh_prism()
 
         mesh.generate(3)
