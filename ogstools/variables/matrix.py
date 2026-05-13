@@ -66,6 +66,11 @@ class Matrix(Variable):
         For 3D only spherical coordinate system is implemented for now.
         """
 
+        def _get_mesh(
+            dataset: UnstructuredGrid | Sequence[UnstructuredGrid],
+        ) -> UnstructuredGrid:
+            return dataset[0] if isinstance(dataset, Sequence) else dataset
+
         def theta(mesh: UnstructuredGrid) -> np.ndarray | None:
             "Calculate the azimuth angle with regards to the z-axis"
             if np.shape(mesh[self.data_name])[-1] == 4:  # 2D
@@ -78,12 +83,10 @@ class Matrix(Variable):
 
         return self.replace(
             mesh_dependent=True,
-            func=lambda mesh: (
-                tensor_math.to_polar(
-                    self.func(self._get_data(mesh)),
-                    angles(mesh, center, normal),
-                    theta(mesh),
-                )
+            func=lambda dataset: tensor_math.to_polar(
+                self.func(self._get_data(dataset)),
+                angles(_get_mesh(dataset), center, normal),
+                theta(_get_mesh(dataset)),
             ),
         )
 

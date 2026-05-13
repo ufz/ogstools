@@ -88,7 +88,7 @@ def read_ogs_path(verbose: bool = False) -> Path | None:
     if optional_ogs_path_str is None:
         return None
 
-    ogs_path: Path = Path(optional_ogs_path_str)
+    ogs_path: Path = Path(optional_ogs_path_str).expanduser()
 
     if not ogs_path.exists():
         msg = f"OGS_BIN_PATH is invalid. It is set to {ogs_path!s}.\n"
