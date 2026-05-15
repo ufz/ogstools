@@ -18,8 +18,7 @@ if __name__.split("_")[0] == "bokeh":
     logfile = Path(sys.argv[1])
     display_name = sys.argv[-1]  # always passed as last arg by monitor_cli
     json_file = None
-    # args: logfile [jsonfile] display_name  →  jsonfile is sys.argv[2] when len==4
-    if len(sys.argv) == 4:
+    if len(sys.argv) > 2:
         json_file = Path(sys.argv[2])
     config = {
         "liveplot": False,
@@ -35,7 +34,7 @@ if __name__.split("_")[0] == "bokeh":
     }
     if json_file is not None:
         with Path.open(json_file) as read_file:
-            print("load json config ...")
+            print("load json config...")
             config = json.load(read_file)
     monitor = Monitor(notebook_execution=False)
     monitor.start_log_file_handler(logfile)
