@@ -8,6 +8,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
+import pyvista as pv
 
 import ogstools as ot
 from ogstools import examples
@@ -34,7 +35,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
 
 
 @pytest.mark.system
-def test_simulation_simple(tmp_path, good_model):
+def test_simulation_simple(tmp_path: Path, good_model: ot.Model):
     sim = good_model.copy().run()
     assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
     sim_out = tmp_path / "sim_good_model"
@@ -46,7 +47,32 @@ def test_simulation_simple(tmp_path, good_model):
 
 
 @pytest.mark.system
-def test_simulation_simple2(tmp_path, good_model):
+def test_simulation_simple_xdmf_obs_pts(tmp_path: Path, good_model: ot.Model):
+    """Checks generation and reading of point-only-xdmf-meshseries works."""
+    model = good_model.copy()
+
+    model.project.mesh.add_mesh("center.vtu")
+    model.project.replace_text("XDMF", ".//time_loop/output/type")
+    model.project.replace_text(
+        "LiquidFlow_Simple_{:meshname}", ".//time_loop/output/prefix"
+    )
+    time_loop = model.project.time_loop
+    meshes = time_loop.populate_tree(time_loop.output[0], "meshes")
+    time_loop.populate_tree(meshes, "mesh", "domain")
+    time_loop.populate_tree(meshes, "mesh", "center")
+    model.meshes["center"] = pv.PointSet(model.meshes.domain.points[0])
+
+    sim = model.run()
+    assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
+    sim_out = tmp_path / "sim_good_model"
+    sim.save(sim_out)
+
+    obs_pt_res = sim_out / "result" / "LiquidFlow_Simple_domain_center.xdmf"
+    assert ot.MeshSeries(obs_pt_res)[0]["pressure"]
+
+
+@pytest.mark.system
+def test_simulation_simple2(tmp_path: Path, good_model: ot.Model):
     sim_out = tmp_path / "Simulation" / "sim_good_model"
     model = good_model.copy()
     sim = model.run(sim_out)
@@ -58,7 +84,7 @@ def test_simulation_simple2(tmp_path, good_model):
 
 
 @pytest.mark.system
-def test_simulation_simple_archive(tmp_path, good_model):
+def test_simulation_simple_archive(tmp_path: Path, good_model: ot.Model):
     sim_out = tmp_path / "Simulation" / "sim_good_model"
     model = good_model.copy()
     model.save(tmp_path / "model", archive=True)
@@ -75,7 +101,7 @@ def test_simulation_simple_archive(tmp_path, good_model):
 )
 @pytest.mark.usefixtures("require_ogs_containers")
 @pytest.mark.parametrize("n", [1, 2, 3])
-def test_simulation_parallel(good_model, n):
+def test_simulation_parallel(good_model: ot.Model, n: int):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1  # no over-subscription
     parallel_model.execution.mpi_ranks = n
@@ -105,7 +131,7 @@ def test_simulation_parallel(good_model, n):
     sys.platform == "darwin",
     reason="OGS accidentally compiled without OpenMP on Mac in dependent ogs wheel package",
 )
-def test_simulation_omp_num_threads(good_model):
+def test_simulation_omp_num_threads(good_model: ot.Model):
     model_with_threads = good_model.copy()
     model_with_threads.execution.omp_num_threads = 2
     sim = model_with_threads.run()
@@ -141,7 +167,7 @@ def test_simulation_ogs_asm_threads():
 @pytest.mark.system
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux only")
 @pytest.mark.usefixtures("require_ogs_containers")
-def test_simulation_container(good_model):
+def test_simulation_container(good_model: ot.Model):
     parallel_model = good_model.copy()
     parallel_model.execution.omp_num_threads = 1
     parallel_model.execution.mpi_ranks = 2
@@ -221,7 +247,7 @@ def test_parallel_runs():
 
 
 @pytest.mark.system
-def test_simulation_cmd_reproduces_result(tmp_path, good_model):
+def test_simulation_cmd_reproduces_result(tmp_path: Path, good_model: ot.Model):
     """Run a simulation, save as archive, delete original, re-run via cmd."""
     import shutil
 
@@ -274,7 +300,7 @@ def test_mock_model_restart() -> None:
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.usefixtures("require_ogs_containers")
-def test_execution_defaults_from_env(monkeypatch, good_model):
+def test_execution_defaults_from_env(monkeypatch, good_model: ot.Model):
     """OGS_EXECUTION_DEFAULTS env var loads settings from the example YAML."""
     yml_path = Path(ot.__file__).parent / "core/execution_default_example.yml"
     monkeypatch.setenv("OGS_EXECUTION_DEFAULTS", str(yml_path))
@@ -311,7 +337,7 @@ def test_restart_error_cases():
 
 
 @pytest.mark.system
-def test_model_restart(tmp_path) -> None:
+def test_model_restart(tmp_path: Path) -> None:
     model = ot.examples.load_model_liquid_flow_simple().copy()
     sim = model.run()
     assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"

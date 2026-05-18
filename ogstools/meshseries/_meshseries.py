@@ -694,6 +694,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         import meshio
 
         points, cells = self._xdmf_reader.read_points_cells()
+        # `pv.from_meshio` requires the cell.data to be a 2D array
+        # OGS xdmf point meshes do not satisfy this (maybe bug in xdmfwriter of
+        # OGS or bug / differing behavior in meshio)
+        for cell in cells:
+            if cell.data.ndim == 1:
+                cell.data = np.asarray([cell.data])
         _, point_data, cell_data, field_data = self._xdmf_reader.read_data(
             timestep
         )
