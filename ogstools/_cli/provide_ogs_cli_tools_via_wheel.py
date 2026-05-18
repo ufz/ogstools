@@ -18,6 +18,7 @@ binaries_list = [
     "convertGEO",
     "convertToLinearMesh",
     "convertVtkDataArrayToVtkDataArray",
+    "CreateAnchors",
     "CreateBoundaryConditionsAlongPolylines",
     "createIntermediateRasters",
     "createLayeredMeshFromRasters",

@@ -69,6 +69,7 @@ class IPdata(MutableMapping):
                     values=mesh.field_data[kwargs["name"]],
                 )
                 for kwargs in ip_meta["integration_point_arrays"]
+                if kwargs["name"] in mesh.field_data
             }
 
     def __setitem__(self, key: str, value: IPdict) -> None:
