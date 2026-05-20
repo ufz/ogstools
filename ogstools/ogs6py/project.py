@@ -1402,6 +1402,13 @@ class Project(StorageBase):
             self.python_script._next_target = (
                 self.next_target / self.python_script.filename
             )
+        if self.chemical_system_database.filename:
+            self.chemical_system_database._next_target = (
+                self.next_target / self.chemical_system_database.filename
+            )
+        for rf in self.curves.files:
+            if rf.filename:
+                rf._next_target = self.next_target / rf.filename
 
     def write_input(
         self,
@@ -1434,6 +1441,9 @@ class Project(StorageBase):
                 if hasattr(v, "tree") and not isinstance(v, ET._ElementTree):
                     v.tree = self.tree
                     v.root = self.tree.getroot()
+            for rf in self.curves.files:
+                rf.tree = self.tree
+                rf.root = self.tree.getroot()
             if self.verbose is True:
                 display.Display(self.tree)
             self.tree.write(
@@ -1457,6 +1467,9 @@ class Project(StorageBase):
         if dry_run:
             files += self.geometry._save_impl(dry_run=dry_run)
             files += self.python_script._save_impl(dry_run=dry_run)
+            files += self.chemical_system_database._save_impl(dry_run=dry_run)
+            for rf in self.curves.files:
+                files += rf._save_impl(dry_run=dry_run)
             return files
 
         self.next_target.mkdir(parents=True, exist_ok=True)
@@ -1467,6 +1480,15 @@ class Project(StorageBase):
         files += self.python_script._save_impl(dry_run=dry_run)
         if self.python_script.filename:
             self.python_script._active_target = self.python_script._next_target
+        files += self.chemical_system_database._save_impl(dry_run=dry_run)
+        if self.chemical_system_database.filename:
+            self.chemical_system_database._active_target = (
+                self.chemical_system_database._next_target
+            )
+        for rf in self.curves.files:
+            files += rf._save_impl(dry_run=dry_run)
+            if rf.filename:
+                rf._active_target = rf._next_target
 
         return files
 
