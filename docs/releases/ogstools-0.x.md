@@ -18,6 +18,13 @@ OGS 6.5.7 -
 ## Bugfixes
 
 - MeshSeries: could not be read if xdmf-file was a symbolic link
+- added missing tools to cli interface (`mergeMeshToBulkMesh`, `CreateAnchors`)
+- identifysubdomains will ignore anchor meshes to not wrongly overwrite the special id mapping
+- fixed sorting of `ot.plot.line` in some edge cases
+- A Matrix Variable transformed to the polar coordinate system
+  (`ot.variables.Matrix.to_polar()`) is now also able to use `.transform` on a MeshSeries
+- `.xdmf` MeshSeries which only contain points (and no cells) can now be properly
+  read
 
 ## Features
 

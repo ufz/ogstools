@@ -173,3 +173,6 @@ cython_debug/
 # Ignore file created by running webpage preview locally
 docs/sg_execution_times.rst
 uv.lock
+
+# local python version pin
+.python-version
