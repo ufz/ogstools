@@ -51,6 +51,7 @@ from ogstools.ogs6py.properties import (
     location_pointer,
     property_dict,
 )
+from ogstools.ogs6py.referenced_file import ReferencedFile
 
 try:
     from bokeh.io import output_notebook, show
@@ -165,13 +166,26 @@ class Project(StorageBase):
             py_path = Path(self.input_file).parent / self.python_script.filename
             if py_path.exists():
                 self.python_script._active_target = py_path
+        self.chemical_system_database = ReferencedFile(
+            self.tree, xpath=".//chemical_system/database"
+        )
+        if (
+            self.input_file is not None
+            and self.chemical_system_database.filename
+        ):
+            dat_path = (
+                Path(self.input_file).parent
+                / self.chemical_system_database.filename
+            )
+            if dat_path.exists():
+                self.chemical_system_database._active_target = dat_path
         self.media = media.Media(self.tree)
         self.time_loop = timeloop.TimeLoop(self.tree)
         self.local_coordinate_system = (
             local_coordinate_system.LocalCoordinateSystem(self.tree)
         )
         self.parameters = parameters.Parameters(self.tree)
-        self.curves = curves.Curves(self.tree)
+        self.curves = curves.Curves(self.tree, self.input_file)
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
@@ -296,11 +310,17 @@ class Project(StorageBase):
         for k in tree_backed:
             old_v = getattr(self, k)
             new_v = type(old_v)(new.tree)
-            if isinstance(old_v, StorageBase):
+            if isinstance(old_v, ReferencedFile):
+                new_v._xpath = old_v._xpath
                 new_v._active_target = old_v._active_target
-                if hasattr(old_v, "filename") and old_v.filename:
+                if old_v.filename:
                     new_v._next_target = new._next_target / old_v.filename
             setattr(new, k, new_v)
+
+        for old_rf, new_rf in zip(
+            self.curves.files, new.curves.files, strict=True
+        ):
+            new_rf._active_target = old_rf._active_target
 
         return new
 
