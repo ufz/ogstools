@@ -97,7 +97,7 @@ print("Temperatures at last timestep:", temp_at_points[-1])
 
 # %%
 ms_right_half = ms.transform(
-    lambda mesh: mesh.clip("x", mesh.center, crinkle=True)
+    lambda mesh: mesh.clip("x", origin=mesh.center, crinkle=True)
 )
 temp_right_half = ms_right_half.values("temperature")
 print("Data on clipped domain:", np.shape(temp_right_half))

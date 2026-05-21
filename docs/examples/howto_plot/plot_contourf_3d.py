@@ -18,7 +18,7 @@ import ogstools as ot
 
 mesh = examples.load_channels()
 data = ot.variables.Scalar("facies", categoric=True, cmap="tab20")
-section = mesh.clip("y", (0, 20, 0))
+section = mesh.clip("y", origin=(0, 20, 0))
 
 # %%
 #

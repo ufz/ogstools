@@ -46,7 +46,7 @@ ms = ms.resample_temporal(timevalues)
 
 # %%
 # clip to the right half
-ms_r = ms.transform(lambda mesh: mesh.clip("-x", [-1, 0, 0]))
+ms_r = ms.transform(lambda mesh: mesh.clip("-x", origin=[-1, 0, 0]))
 
 # create initial figure with fixed colorbar
 fig = ot.plot.contourf(ms_r[0], saturation, vmin=0, vmax=100, dpi=50)
