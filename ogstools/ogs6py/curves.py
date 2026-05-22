@@ -88,10 +88,11 @@ class Curves(build_tree.BuildTree):
     def add_curve_from_file(
         self, name: str, coords: str | Path, values: str | Path
     ) -> None:
-        """Add a file-based curve (read_from_file=true).
+        """Add a curve whose data is read from binary files.
 
         The binary files must be in little-endian double precision format.
-        If full paths are given, only the basenames are written to the Project file.
+        Only the file basenames are stored in the project file; if full paths
+        are given, ``Project.save()`` copies the files to the project directory.
 
         :param name:   Curve name.
         :param coords: Path to the binary coords file (full or basename only).
@@ -105,8 +106,8 @@ class Curves(build_tree.BuildTree):
         self.populate_tree(curve, "read_from_file", text="true")
         self.populate_tree(curve, "coords", text=coords.name)
         self.populate_tree(curve, "values", text=values.name)
-        # Only the basename is written to the XML, so the actual source location is lost
-        # Project.save() can copy the file to the project directory.
+        # _bind_to_path records the full source path so Project.save() can copy
+        # the file to the project directory (only the basename is in the XML).
         for tag, src in (("coords", coords), ("values", values)):
             xpath = f"./curves/curve[name='{name}']/{tag}"
             rf = ReferencedFile(self.tree, xpath=xpath)

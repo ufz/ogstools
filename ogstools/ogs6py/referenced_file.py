@@ -10,20 +10,10 @@ from ogstools.ogs6py import build_tree
 
 
 class ReferencedFile(build_tree.BuildTree, StorageBase):
-    """
-    Base class for a single file referenced in an OGS project file.
-
-    Subclasses define the XML location of the filename via class attributes:
-    - _NAME: StorageBase name
-    - _EXT:  file extension (without dot)
-    - _XPATH: XPath expression locating the filename element in the tree
-
-    Alternatively, pass xpath= to __init__ to override the class-level _XPATH
-    at the instance level (used for dynamically located references such as
-    curve binary files).
-    """
+    """Represents a single file referenced by path in an OGS project file."""
 
     __hash__ = None
+    # Subclasses set these to fix the XML location of the filename element.
     _NAME: str = ""
     _EXT: str = ""
     _XPATH: str = ""
@@ -36,7 +26,7 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
 
     @property
     def filename(self) -> str | None:
-        """Get the filename from the XML tree."""
+        """Filename as stored in the project file, or None if not set."""
         if not self._xpath:
             return None
         elem = self.root.find(self._xpath)
@@ -49,7 +39,7 @@ class ReferencedFile(build_tree.BuildTree, StorageBase):
         return True
 
     def _propagate_target(self) -> None:
-        """No children to propagate to."""
+        pass
 
     def _save_impl(self, dry_run: bool = False) -> list[Path]:
         if not self.filename:
