@@ -88,8 +88,8 @@ API: [](../reference/ogstools.mesh.ip_data.rst) (`IPdata`, `ip_metadata`) ·
 
 - **`difference(base, subtract)`** — subtracts data arrays between two meshes element-by-element;
   resamples automatically when topologies differ.
-- **`depth(mesh, top_mesh)`** — interpolates a depth-below-surface scalar from a reference
-  surface mesh and adds it as a point data array.
+- **`depth(mesh, top_mesh)`** — interpolates and returns a depth-below-surface scalar from a reference
+  surface mesh.
 - **`from_simulator(simulation, ...)`** — extracts a live mesh from a running OGS co-simulation
   via the [OGS Python bindings](https://www.opengeosys.org/docs/tools/python-bindings/).
 
