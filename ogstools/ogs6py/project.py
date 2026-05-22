@@ -154,7 +154,7 @@ class Project(StorageBase):
             and self.geometry.has_geometry
             and self.geometry.filename
         ):
-            gml_path = Path(self.input_file).parent / self.geometry.filename
+            gml_path = self.input_file.parent / self.geometry.filename
             assert gml_path.exists()
             self.geometry._active_target = gml_path
 
@@ -163,7 +163,7 @@ class Project(StorageBase):
         self.python_script = python_script.PythonScript(self.tree)
         # If loading from file, set the python_script source path
         if self.input_file is not None and self.python_script.filename:
-            py_path = Path(self.input_file).parent / self.python_script.filename
+            py_path = self.input_file.parent / self.python_script.filename
             if py_path.exists():
                 self.python_script._active_target = py_path
         self.chemical_system_database = ReferencedFile(
@@ -174,8 +174,7 @@ class Project(StorageBase):
             and self.chemical_system_database.filename
         ):
             dat_path = (
-                Path(self.input_file).parent
-                / self.chemical_system_database.filename
+                self.input_file.parent / self.chemical_system_database.filename
             )
             if dat_path.exists():
                 self.chemical_system_database._active_target = dat_path
