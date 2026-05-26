@@ -13,9 +13,29 @@ from ogstools.materiallib.core.media import MediaSet
 from ogstools.materiallib.schema import process_schema, required_properties
 
 
-def make_material(properties: dict, name="test_material") -> Material:
-    """Factory that builds a Material object directly from properties."""
-    raw_data = {"name": name, "properties": properties}
+def _grouped_raw_data(
+    name: str,
+    properties: dict,
+    *,
+    domain: str = "medium",
+    extra_domains: list[dict] | None = None,
+    **metadata,
+) -> dict:
+    raw_data = {
+        "name": name,
+        "domains": [{"domain": domain, "properties": properties}],
+        **metadata,
+    }
+    if extra_domains:
+        raw_data["domains"].extend(extra_domains)
+    return raw_data
+
+
+def make_material(
+    properties: dict, name="test_material", domain: str = "medium"
+) -> Material:
+    """Factory that builds a Material object directly from grouped-domain data."""
+    raw_data = _grouped_raw_data(name, properties, domain=domain)
     return Material(name=name, raw_data=raw_data)
 
 
@@ -26,7 +46,7 @@ def write_yaml(tmp_path):
     def _write(filename: str, data: dict):
         path = tmp_path / filename
         with path.open("w", encoding="utf-8") as f:
-            yaml.safe_dump(data, f)
+            yaml.safe_dump(data, f, sort_keys=False)
         return path
 
     return _write
@@ -38,29 +58,66 @@ def example_materials():
     return {
         "granite": {
             "name": "granite",
-            "properties": {"Density": {"type": "Constant", "value": 2700}},
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2700}
+                    },
+                }
+            ],
         },
         "water": {
             "name": "water",
-            "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
+            "domains": [
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "Viscosity": {"type": "Constant", "value": 1.0}
+                    },
+                }
+            ],
         },
         "sandstone": {
             "name": "sandstone",
-            "properties": {"Density": {"type": "Constant", "value": 2200}},
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2200}
+                    },
+                }
+            ],
         },
         "limestone": {
             "name": "limestone",
-            "properties": {"Density": {"type": "Constant", "value": 2500}},
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2500}
+                    },
+                }
+            ],
         },
         "clay": {
             "name": "clay",
-            "properties": {"Density": {"type": "Constant", "value": 2400}},
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2400}
+                    },
+                }
+            ],
         },
         "granite_obj": make_material(
             {"Density": {"type": "Constant", "value": 2700}}, name="granite"
         ),
         "water_obj": make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="phase",
         ),
         "clay_obj": make_material(
             {"Density": {"type": "Constant", "value": 2400}}, name="clay"
@@ -92,11 +149,25 @@ def default_materials():
     return {
         "clay": {
             "name": "clay",
-            "properties": {"Density": {"type": "Constant", "value": 2400}},
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2400}
+                    },
+                }
+            ],
         },
         "water": {
             "name": "water",
-            "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
+            "domains": [
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "Viscosity": {"type": "Constant", "value": 1.0}
+                    },
+                }
+            ],
         },
     }
 
@@ -190,10 +261,9 @@ class TestMaterialLib:
         """Material.from_file should build a Material instance from valid YAML."""
         file_path = write_yaml(
             "granite.yml",
-            {
-                "name": "granite",
-                "properties": {"Density": {"type": "Constant", "value": 2700}},
-            },
+            _grouped_raw_data(
+                "granite", {"Density": {"type": "Constant", "value": 2700}}
+            ),
         )
 
         mat = Material.from_file(file_path)
@@ -206,10 +276,11 @@ class TestMaterialLib:
         """Material.to_file should write YAML that can be loaded with Material.from_file."""
         source = write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
         mat = Material.from_file(source)
         assert mat is not None
@@ -345,10 +416,9 @@ class TestMaterialManager:
         """MaterialManager should load all YAML files in the given directory into Material objects."""
         write_yaml(
             "rock.yml",
-            {
-                "name": "granite",
-                "properties": {"Density": {"type": "Constant", "value": 2700}},
-            },
+            _grouped_raw_data(
+                "granite", {"Density": {"type": "Constant", "value": 2700}}
+            ),
         )
 
         db = material_manager.MaterialManager(data_dir=str(tmp_path))
@@ -364,10 +434,11 @@ class TestMaterialManager:
         """MaterialManager.get_material should return the correct Material instance by name."""
         write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
@@ -382,14 +453,12 @@ class TestMaterialManager:
     ):
         """MaterialManager.list_materials should return a list of all loaded material names."""
         mats = [
-            {
-                "name": "sandstone",
-                "properties": {"Density": {"type": "Constant", "value": 2200}},
-            },
-            {
-                "name": "limestone",
-                "properties": {"Density": {"type": "Constant", "value": 2500}},
-            },
+            _grouped_raw_data(
+                "sandstone", {"Density": {"type": "Constant", "value": 2200}}
+            ),
+            _grouped_raw_data(
+                "limestone", {"Density": {"type": "Constant", "value": 2500}}
+            ),
         ]
         for m in mats:
             write_yaml(f"{m['name']}.yml", m)
@@ -417,7 +486,16 @@ class TestMaterialManager:
         """MaterialManager should skip YAML files that do not contain a 'name' field."""
         write_yaml(
             "noname.yml",
-            {"properties": {"Density": {"type": "Constant", "value": 2500}}},
+            {
+                "domains": [
+                    {
+                        "domain": "medium",
+                        "properties": {
+                            "Density": {"type": "Constant", "value": 2500}
+                        },
+                    }
+                ]
+            },
         )
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
@@ -429,17 +507,17 @@ class TestMaterialManager:
         """MaterialManager.__repr__ should include subdomain ids and fluid materials in its string output."""
         write_yaml(
             "granite.yml",
-            {
-                "name": "granite",
-                "properties": {"Density": {"type": "Constant", "value": 2700}},
-            },
+            _grouped_raw_data(
+                "granite", {"Density": {"type": "Constant", "value": 2700}}
+            ),
         )
         write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
@@ -484,10 +562,11 @@ class TestMaterialManager:
         """MaterialManager.__repr__ should state 'No solid or medium materials defined' if no subdomain_ids exist."""
         write_yaml(
             "fluidy.yml",
-            {
-                "name": "fluidy",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "fluidy",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
 
         db = material_manager.MaterialManager(
@@ -507,10 +586,9 @@ class TestMaterialManager:
         """MaterialManager.list_ids should return all stored material_ids."""
         write_yaml(
             "sandstone.yml",
-            {
-                "name": "sandstone",
-                "properties": {"Density": {"type": "Constant", "value": 2200}},
-            },
+            _grouped_raw_data(
+                "sandstone", {"Density": {"type": "Constant", "value": 2200}}
+            ),
         )
 
         db = material_manager.MaterialManager(
@@ -530,10 +608,9 @@ class TestMaterialManager:
         """MaterialManager.list_subdomains should return all subdomain names."""
         write_yaml(
             "limestone.yml",
-            {
-                "name": "limestone",
-                "properties": {"Density": {"type": "Constant", "value": 2500}},
-            },
+            _grouped_raw_data(
+                "limestone", {"Density": {"type": "Constant", "value": 2500}}
+            ),
         )
 
         db = material_manager.MaterialManager(
@@ -555,13 +632,13 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should include materials for all given subdomains."""
         write_yaml(
             "clay.yml",
-            {
-                "name": "clay",
-                "properties": {
+            _grouped_raw_data(
+                "clay",
+                {
                     "Density": {"type": "Constant", "value": 2400},
                     "Permeability": {"type": "Constant", "value": 1e-18},
                 },
-            },
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -587,13 +664,14 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should include an aqueous liquid fluid material."""
         write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {
+            _grouped_raw_data(
+                "water",
+                {
                     "Density": {"type": "Constant", "value": 1000},
                     "Viscosity": {"type": "Constant", "value": 1.0},
                 },
-            },
+                domain="phase",
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -617,13 +695,14 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should include a non-aqueous liquid fluid material."""
         write_yaml(
             "oil.yml",
-            {
-                "name": "oil",
-                "properties": {
+            _grouped_raw_data(
+                "oil",
+                {
                     "Density": {"type": "Constant", "value": 800},
                     "Viscosity": {"type": "Constant", "value": 5.0},
                 },
-            },
+                domain="phase",
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -647,10 +726,9 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should raise ValueError if a referenced material is not in the DB."""
         write_yaml(
             "present.yml",
-            {
-                "name": "present",
-                "properties": {"Density": {"type": "Constant", "value": 1234}},
-            },
+            _grouped_raw_data(
+                "present", {"Density": {"type": "Constant", "value": 1234}}
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -677,10 +755,9 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should raise ValueError if a referenced fluid material is not in the DB."""
         write_yaml(
             "rock.yml",
-            {
-                "name": "rock",
-                "properties": {"Density": {"type": "Constant", "value": 2700}},
-            },
+            _grouped_raw_data(
+                "rock", {"Density": {"type": "Constant", "value": 2700}}
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -706,10 +783,9 @@ class TestMaterialManagerFilter:
         """MaterialManager.filter should raise ValueError if the process name is not in PROCESS_SCHEMAS."""
         write_yaml(
             "rock.yml",
-            {
-                "name": "rock",
-                "properties": {"Density": {"type": "Constant", "value": 2700}},
-            },
+            _grouped_raw_data(
+                "rock", {"Density": {"type": "Constant", "value": 2700}}
+            ),
         )
         db = material_manager.MaterialManager(data_dir=tmp_path)
 
@@ -730,20 +806,21 @@ class TestMaterialManagerFilter:
         """MaterialManager.__repr__ should correctly summarize a filtered database with solids and fluids."""
         write_yaml(
             "clay.yml",
-            {
-                "name": "clay",
-                "properties": {
+            _grouped_raw_data(
+                "clay",
+                {
                     "Density": {"type": "Constant", "value": 2400},
                     "Permeability": {"type": "Constant", "value": 1e-18},
                 },
-            },
+            ),
         )
         write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
@@ -825,17 +902,17 @@ class TestMedia:
         """MediaSet should not be creatable from an unfiltered MaterialManager."""
         write_yaml(
             "clay.yml",
-            {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
+            _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
         )
         write_yaml(
             "water.yml",
-            {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         )
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
@@ -1028,14 +1105,14 @@ class TestMedia:
     def test_media_builds_phases_from_fluids(self, make_filtered_db):
         """MediaSet should build Mediums with correct phases when fluids are provided."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1062,7 +1139,9 @@ class TestComponent:
     def test_component_initializes_with_schema(self, monkeypatch):
         """Component should initialize and filter properties according to schema."""
         mat = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         schema = {
@@ -1084,7 +1163,9 @@ class TestComponent:
     def test_component_raises_if_schema_missing(self):
         """Component should raise ValueError if process schema is not found."""
         mat = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         with pytest.raises(
@@ -1114,7 +1195,9 @@ class TestComponent:
     def test_component_validate_raises_for_wrong_phase(self, monkeypatch):
         """Component.validate should raise if phase type not in schema."""
         mat = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         schema = {
@@ -1138,7 +1221,9 @@ class TestComponent:
     def test_component_repr_contains_name_and_role(self, monkeypatch):
         """__repr__ should include component name and role."""
         mat = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         schema = {
@@ -1164,10 +1249,14 @@ class TestComponents:
     def test_components_initializes_aqueousliquid(self, monkeypatch):
         """Components should initialize Solute and Solvent for AqueousLiquid phase."""
         gas = make_material(
-            {"Henry": {"type": "Constant", "value": 1.0}}, name="co2"
+            {"Henry": {"type": "Constant", "value": 1.0}},
+            name="co2",
+            domain="component",
         )
         liquid = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         schema = {
@@ -1189,10 +1278,14 @@ class TestComponents:
     def test_components_initializes_gas(self, monkeypatch):
         """Components should initialize Carrier and Vapour for Gas phase."""
         gas = make_material(
-            {"MolarMass": {"type": "Constant", "value": 28}}, name="N2"
+            {"MolarMass": {"type": "Constant", "value": 28}},
+            name="N2",
+            domain="component",
         )
         liquid = make_material(
-            {"MolarMass": {"type": "Constant", "value": 18}}, name="H2O"
+            {"MolarMass": {"type": "Constant", "value": 18}},
+            name="H2O",
+            domain="component",
         )
 
         schema = {
@@ -1225,10 +1318,14 @@ class TestComponents:
     def test_components_repr_includes_phase_and_components(self, monkeypatch):
         """__repr__ should include phase type and component details."""
         gas = make_material(
-            {"Henry": {"type": "Constant", "value": 1.0}}, name="co2"
+            {"Henry": {"type": "Constant", "value": 1.0}},
+            name="co2",
+            domain="component",
         )
         liquid = make_material(
-            {"Viscosity": {"type": "Constant", "value": 1.0}}, name="water"
+            {"Viscosity": {"type": "Constant", "value": 1.0}},
+            name="water",
+            domain="component",
         )
 
         schema = {
@@ -1527,12 +1624,20 @@ class TestMedium:
         )
 
         materials = {
-            "solid": {
-                "name": "solid",
-                "properties": {"Density": {"type": "Constant", "value": 2000}},
-            },
-            "CO2": {"name": "CO2", "properties": {}},
-            "H2O": {"name": "H2O", "properties": {}},
+            "solid": _grouped_raw_data(
+                "solid",
+                {"Density": {"type": "Constant", "value": 2000}},
+                extra_domains=[
+                    {
+                        "domain": "phase",
+                        "properties": {
+                            "Density": [{"type": "Constant", "value": 2000}]
+                        },
+                    }
+                ],
+            ),
+            "CO2": _grouped_raw_data("CO2", {}, domain="phase"),
+            "H2O": _grouped_raw_data("H2O", {}, domain="phase"),
         }
         custom_dir = tmp_path / "custom_repo"
         fallback_dir = tmp_path / "fallback_repo"
@@ -1619,18 +1724,44 @@ class TestMedium:
     ):
         """Project.set_media should export a TH2M-style Medium with Solid + Gas + AqueousLiquid phases and components."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "CO2": {
-                "name": "CO2",
-                "properties": {"Density": {"type": "Constant", "value": 1.8}},
-            },
-            "H2O": {
-                "name": "H2O",
-                "properties": {"Density": {"type": "Constant", "value": 1.0}},
-            },
+            "clay": _grouped_raw_data(
+                "clay",
+                {"Density": {"type": "Constant", "value": 2400}},
+                extra_domains=[
+                    {
+                        "domain": "phase",
+                        "properties": {
+                            "Density": [{"type": "Constant", "value": 2400}]
+                        },
+                    }
+                ],
+            ),
+            "CO2": _grouped_raw_data(
+                "CO2",
+                {"Density": {"type": "Constant", "value": 1.8}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "Density": [{"type": "Constant", "value": 1.8}]
+                        },
+                    }
+                ],
+            ),
+            "H2O": _grouped_raw_data(
+                "H2O",
+                {"Density": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "Density": [{"type": "Constant", "value": 1.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1706,14 +1837,14 @@ class TestMediumPhaseMatrix:
     def test_one_phase_no_components(self, make_filtered_db):
         """Case 1: One phase, no components (AqueousLiquid only)."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1737,20 +1868,19 @@ class TestMediumPhaseMatrix:
     def test_two_phase_no_components(self, make_filtered_db):
         """Case 2: Two phases, no components (Gas + AqueousLiquid)."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
-            "co2": {
-                "name": "co2",
-                "properties": {
-                    "MolarMass": {"type": "Constant", "value": 44.0}
-                },
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
+            "co2": _grouped_raw_data(
+                "co2",
+                {"MolarMass": {"type": "Constant", "value": 44.0}},
+                domain="phase",
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1774,22 +1904,37 @@ class TestMediumPhaseMatrix:
     def test_two_phase_with_components(self, make_filtered_db):
         """Case 3: Two phases with components (TH2M style)."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {
-                    "specific_heat_capacity": {"type": "Constant", "value": 1.0}
-                },
-            },
-            "co2": {
-                "name": "co2",
-                "properties": {
-                    "molar_mass": {"type": "Constant", "value": 44.0}
-                },
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"specific_heat_capacity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "specific_heat_capacity": [
+                                {"type": "Constant", "value": 1.0}
+                            ]
+                        },
+                    }
+                ],
+            ),
+            "co2": _grouped_raw_data(
+                "co2",
+                {"molar_mass": {"type": "Constant", "value": 44.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "molar_mass": [{"type": "Constant", "value": 44.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1849,22 +1994,37 @@ class TestMediumPhaseMatrix:
     ):
         """Gas phase schema with Carrier: [] should still create a valid Component without properties."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {
-                    "specific_heat_capacity": {"type": "Constant", "value": 1.0}
-                },
-            },
-            "co2": {
-                "name": "co2",
-                "properties": {
-                    "molar_mass": {"type": "Constant", "value": 44.0}
-                },
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"specific_heat_capacity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "specific_heat_capacity": [
+                                {"type": "Constant", "value": 1.0}
+                            ]
+                        },
+                    }
+                ],
+            ),
+            "co2": _grouped_raw_data(
+                "co2",
+                {"molar_mass": {"type": "Constant", "value": 44.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "molar_mass": [{"type": "Constant", "value": 44.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1920,22 +2080,37 @@ class TestMediumPhaseMatrix:
     ):
         """AqueousLiquid phase schema with Solvent: [] should still create a valid Component without properties."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {
-                    "specific_heat_capacity": {"type": "Constant", "value": 1.0}
-                },
-            },
-            "co2": {
-                "name": "co2",
-                "properties": {
-                    "molar_mass": {"type": "Constant", "value": 44.0}
-                },
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"specific_heat_capacity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "specific_heat_capacity": [
+                                {"type": "Constant", "value": 1.0}
+                            ]
+                        },
+                    }
+                ],
+            ),
+            "co2": _grouped_raw_data(
+                "co2",
+                {"molar_mass": {"type": "Constant", "value": 44.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "molar_mass": [{"type": "Constant", "value": 44.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -1990,22 +2165,37 @@ class TestMediumPhaseMatrix:
     ):
         """Two-phase schema with empty component roles should still yield valid Components without properties."""
         materials = {
-            "clay": {
-                "name": "clay",
-                "properties": {"Density": {"type": "Constant", "value": 2400}},
-            },
-            "water": {
-                "name": "water",
-                "properties": {
-                    "specific_heat_capacity": {"type": "Constant", "value": 1.0}
-                },
-            },
-            "co2": {
-                "name": "co2",
-                "properties": {
-                    "molar_mass": {"type": "Constant", "value": 44.0}
-                },
-            },
+            "clay": _grouped_raw_data(
+                "clay", {"Density": {"type": "Constant", "value": 2400}}
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"specific_heat_capacity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "specific_heat_capacity": [
+                                {"type": "Constant", "value": 1.0}
+                            ]
+                        },
+                    }
+                ],
+            ),
+            "co2": _grouped_raw_data(
+                "co2",
+                {"molar_mass": {"type": "Constant", "value": 44.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "molar_mass": [{"type": "Constant", "value": 44.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": ["Density"],
@@ -2056,22 +2246,37 @@ class TestMediumPhaseMatrix:
     def test_one_phase_with_components_xfail(self, make_filtered_db):
         """Case 4: One phase with multiple components should raise NotImplementedError."""
         materials = {
-            "water": {
-                "name": "water",
-                "properties": {"Viscosity": {"type": "Constant", "value": 1.0}},
-            },
-            "o2": {
-                "name": "o2",
-                "properties": {
-                    "MolarMass": {"type": "Constant", "value": 32.0}
-                },
-            },
-            "n2": {
-                "name": "n2",
-                "properties": {
-                    "MolarMass": {"type": "Constant", "value": 28.0}
-                },
-            },
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
+            "o2": _grouped_raw_data(
+                "o2",
+                {"MolarMass": {"type": "Constant", "value": 32.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "MolarMass": [{"type": "Constant", "value": 32.0}]
+                        },
+                    }
+                ],
+            ),
+            "n2": _grouped_raw_data(
+                "n2",
+                {"MolarMass": {"type": "Constant", "value": 28.0}},
+                domain="phase",
+                extra_domains=[
+                    {
+                        "domain": "component",
+                        "properties": {
+                            "MolarMass": [{"type": "Constant", "value": 28.0}]
+                        },
+                    }
+                ],
+            ),
         }
         schema = {
             "properties": [],
@@ -2200,22 +2405,29 @@ class TestOgstoolsInternalDB:
         "Select a subset of multiple MaterialProperty definitions"
         db = material_manager.MaterialManager()
         opa = db.get_material("opalinus_clay")
-        assert len(opa.duplicates) == 4
+        assert len(opa.duplicates) == 12
 
-        opa_tc_const = opa.copy({"thermal_conductivity": {"type": "Constant"}})
-        assert len(opa_tc_const.duplicates) == 2
+        opa_tc_const = opa.copy(
+            {"thermal_conductivity": {"type": "Constant", "domain": "medium"}}
+        )
+        assert len(opa_tc_const.duplicates) == 8
 
         opa_tc_unique = opa_tc_const.copy(
-            {"thermal_conductivity": {"type": "Constant", "scope": "medium"}}
+            {"thermal_conductivity": {"type": "Constant", "domain": "medium"}}
         )
-        assert len(opa_tc_unique.duplicates) == 0
+        assert len(opa_tc_unique.duplicates) == 8
         th_cond = opa_tc_unique["thermal_conductivity"]
-        assert th_cond.extra["scope"] == "medium"
+        assert th_cond.extra["domain"] == "medium"
 
         opa_tc_unique = opa.copy(
-            {"thermal_conductivity": {"type": re.compile(".+Weighted.+")}}
+            {
+                "thermal_conductivity": {
+                    "type": re.compile(".+Weighted.+"),
+                    "domain": "medium",
+                }
+            }
         )
-        assert len(opa_tc_unique.duplicates) == 0
+        assert len(opa_tc_unique.duplicates) == 8
         th_cond = opa_tc_unique["thermal_conductivity"]
         assert th_cond.type == "SaturationWeightedThermalConductivity"
 
