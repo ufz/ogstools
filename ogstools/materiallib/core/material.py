@@ -80,17 +80,37 @@ class Material(Mapping[str, MaterialProperty]):
                         "type", "Constant"
                     )  # TODO: Error if 'type' not found
                     value = entry.get("value", None)
+                    value, value_extra = self._parse_top_level_value(value)
                     extra = {
                         k: v
                         for k, v in entry.items()
                         if k not in ("type", "value")
                     }
+                    extra.update(value_extra)
                     extra["domain"] = domain_name
                     self.properties.append(
                         MaterialProperty(
                             name=prop_name, type_=type_, value=value, **extra
                         )
                     )
+
+    @staticmethod
+    def _is_scalar_metadata_wrapper(value: Any) -> bool:
+        if not isinstance(value, dict):
+            return False
+        keys = set(value)
+        if "value" not in keys:
+            return False
+        return keys.issubset({"value", "unit", "distribution"})
+
+    @classmethod
+    def _parse_top_level_value(cls, value: Any) -> tuple[Any, dict[str, Any]]:
+        if not cls._is_scalar_metadata_wrapper(value):
+            return value, {}
+
+        wrapped_value = dict(value)
+        baseline = wrapped_value.pop("value")
+        return baseline, wrapped_value
 
     def _validate_grouped_domains(self) -> None:
         if "properties" in self.raw:
@@ -177,10 +197,19 @@ class Material(Mapping[str, MaterialProperty]):
                     "domain metadata."
                 )
                 raise ValueError(msg)
+            entry_extra = {k: v for k, v in p.extra.items() if k != "domain"}
+            value = p.value
+            if "distribution" in entry_extra:
+                wrapped_value = {"value": value}
+                if "unit" in entry_extra:
+                    wrapped_value["unit"] = entry_extra.pop("unit")
+                wrapped_value["distribution"] = entry_extra.pop("distribution")
+                value = wrapped_value
+
             entry = {
                 "type": p.type,
-                "value": p.value,
-                **{k: v for k, v in p.extra.items() if k != "domain"},
+                "value": value,
+                **entry_extra,
             }
             properties_by_name = domain_blocks.setdefault(domain, {})
             properties_by_name.setdefault(p.name, []).append(entry)
