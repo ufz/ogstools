@@ -2,119 +2,163 @@ name: water
 group: liquid
 type: phase
 domains:
-  - domain: phase
-    properties:
-      molar_mass:
-        - type: Constant
-          value: 0.018016
-          unit: kg/mol
-          source: "CODATA 2018 recommended values"
-      specific_heat_capacity:
-        - type: Constant
-          value: 4187
-          unit: J/(kg·K)
-          source: "CRC Handbook of Chemistry and Physics"
-      thermal_conductivity:
-        - type: Constant
-          value: 0.6
-          unit: W/(m·K)
-          source: "CRC Handbook of Chemistry and Physics"
-      density:
-        - type: Constant
-          value: 1000
-          unit: kg/m³
-          source: "at 4 °C, standard value"
-        - type: Linear
-          reference_value: 1000
-          independent_variables:
-            concentration:
-              reference_condition: 0.0
-              slope: 2.0e-6
-            temperature:
-              reference_condition: 293.15
-              slope: 1.5e-5
-          source: "CRC Handbook of Chemistry and Physics"
-        - type: WaterDensityIAPWSIF97Region1
-          unit: kg/m³
-      viscosity:
-        - type: Constant
-          value: 1.0e-3
-          unit: Pa·s
-          source: "at 20 °C, standard value"
-      vapour_pressure:
-        - type: ClausiusClapeyron
-          triple_temperature: 273.16
-          triple_pressure: 611.66
-          critical_temperature: 647.096
-          critical_pressure: 22.064e6
-          reference_temperature: 373.15
-          reference_pressure: 101325
-          source: "IAPWS, 1995 formulation"
-      diffusion:
-        - type: Constant
-          value: 1.0e-9
-          unit: m²/s
-          source: "typical value for water in porous media"
-      specific_latent_heat:
-        - type: Constant
-          value: 2268000.0
-          unit: J/kg
-          source: "at 100 °C, standard value"
-  - domain: component
-    properties:
-      molar_mass:
-        - type: Constant
-          value: 0.018016
-          unit: kg/mol
-          source: "CODATA 2018 recommended values"
-      specific_heat_capacity:
-        - type: Constant
-          value: 4187
-          unit: J/(kg·K)
-          source: "CRC Handbook of Chemistry and Physics"
-      thermal_conductivity:
-        - type: Constant
-          value: 0.6
-          unit: W/(m·K)
-          source: "CRC Handbook of Chemistry and Physics"
-      density:
-        - type: Constant
-          value: 1000
-          unit: kg/m³
-          source: "at 4 °C, standard value"
-        - type: Linear
-          reference_value: 1000
-          independent_variables:
-            concentration:
-              reference_condition: 0.0
-              slope: 2.0e-6
-            temperature:
-              reference_condition: 293.15
-              slope: 1.5e-5
-          source: "CRC Handbook of Chemistry and Physics"
-        - type: WaterDensityIAPWSIF97Region1
-          unit: kg/m³
-      viscosity:
-        - type: Constant
-          value: 1.0e-3
-          unit: Pa·s
-          source: "at 20 °C, standard value"
-      vapour_pressure:
-        - type: ClausiusClapeyron
-          triple_temperature: 273.16
-          triple_pressure: 611.66
-          critical_temperature: 647.096
-          critical_pressure: 22.064e6
-          reference_temperature: 373.15
-          reference_pressure: 101325
-          source: "IAPWS, 1995 formulation"
-      diffusion:
-        - type: Constant
-          value: 1.0e-9
-          unit: m²/s
-          source: "typical value for water in porous media"
-      specific_latent_heat:
-        - type: Constant
-          value: 2268000.0
-          unit: J/kg
-          source: "at 100 °C, standard value"
+- domain: phase
+  properties:
+    molar_mass:
+    - type: Constant
+      value: 0.018016
+      unit: kg/mol
+      source: CODATA 2018 recommended values
+    specific_heat_capacity:
+    - type: Constant
+      value: 4187
+      unit: J/(kg·K)
+      source: CRC Handbook of Chemistry and Physics
+    thermal_conductivity:
+    - type: Constant
+      value: 0.6
+      unit: W/(m·K)
+      source: CRC Handbook of Chemistry and Physics
+      distribution:
+        type: uniform
+        lower: 0.55
+        upper: 0.65
+    density:
+    - type: Constant
+      value: 1000
+      unit: kg/m³
+      source: at 4 °C, standard value
+    - type: Linear
+      reference_value: 1000
+      independent_variables:
+        concentration:
+          reference_condition: 0.0
+          slope:
+            value: 2.0e-06
+            distribution:
+              type: uniform
+              lower: 1.0e-06
+              upper: 4.0e-06
+        temperature:
+          reference_condition: 293.15
+          slope:
+            value: 1.5e-05
+            distribution:
+              type: uniform
+              lower: 1.0e-05
+              upper: 2.0e-05
+      source: CRC Handbook of Chemistry and Physics
+    - type: WaterDensityIAPWSIF97Region1
+      unit: kg/m³
+    viscosity:
+    - type: Constant
+      value: 0.001
+      unit: Pa·s
+      source: at 20 °C, standard value
+      distribution:
+        type: loguniform
+        lower: 0.0007
+        upper: 0.0015
+    vapour_pressure:
+    - type: ClausiusClapeyron
+      triple_temperature: 273.16
+      triple_pressure: 611.66
+      critical_temperature: 647.096
+      critical_pressure: 22.064e6
+      reference_temperature: 373.15
+      reference_pressure: 101325
+      source: IAPWS, 1995 formulation
+    diffusion:
+    - type: Constant
+      value: 1.0e-09
+      unit: m²/s
+      source: typical value for water in porous media
+      distribution:
+        type: loguniform
+        lower: 3.0e-10
+        upper: 3.0e-09
+    specific_latent_heat:
+    - type: Constant
+      value: 2268000.0
+      unit: J/kg
+      source: at 100 °C, standard value
+- domain: component
+  properties:
+    molar_mass:
+    - type: Constant
+      value: 0.018016
+      unit: kg/mol
+      source: CODATA 2018 recommended values
+    specific_heat_capacity:
+    - type: Constant
+      value: 4187
+      unit: J/(kg·K)
+      source: CRC Handbook of Chemistry and Physics
+    thermal_conductivity:
+    - type: Constant
+      value: 0.6
+      unit: W/(m·K)
+      source: CRC Handbook of Chemistry and Physics
+      distribution:
+        type: uniform
+        lower: 0.55
+        upper: 0.65
+    density:
+    - type: Constant
+      value: 1000
+      unit: kg/m³
+      source: at 4 °C, standard value
+    - type: Linear
+      reference_value: 1000
+      independent_variables:
+        concentration:
+          reference_condition: 0.0
+          slope:
+            value: 2.0e-06
+            distribution:
+              type: uniform
+              lower: 1.0e-06
+              upper: 4.0e-06
+        temperature:
+          reference_condition: 293.15
+          slope:
+            value: 1.5e-05
+            distribution:
+              type: uniform
+              lower: 1.0e-05
+              upper: 2.0e-05
+      source: CRC Handbook of Chemistry and Physics
+    - type: WaterDensityIAPWSIF97Region1
+      unit: kg/m³
+    viscosity:
+    - type: Constant
+      value: 0.001
+      unit: Pa·s
+      source: at 20 °C, standard value
+      distribution:
+        type: loguniform
+        lower: 0.0007
+        upper: 0.0015
+    vapour_pressure:
+    - type: ClausiusClapeyron
+      triple_temperature: 273.16
+      triple_pressure: 611.66
+      critical_temperature: 647.096
+      critical_pressure: 22.064e6
+      reference_temperature: 373.15
+      reference_pressure: 101325
+      source: IAPWS, 1995 formulation
+    diffusion:
+    - type: Constant
+      value: 1.0e-09
+      unit: m²/s
+      source: typical value for water in porous media
+      distribution:
+        type: loguniform
+        lower: 3.0e-10
+        upper: 3.0e-09
+    specific_latent_heat:
+    - type: Constant
+      value: 2268000.0
+      unit: J/kg
+      source: at 100 °C, standard value
