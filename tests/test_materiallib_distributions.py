@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml  # type: ignore[import]
 
 from ogstools.materiallib.core.material import Material
+from ogstools.materiallib.core.property import PropertyAddress
 
 
 def _write_yaml(path: Path, data: dict) -> Path:
@@ -195,3 +196,198 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
             "max": 1.0e8,
         },
     }
+
+
+def test_property_address_reads_top_level_baseline_and_distribution(
+    tmp_path: Path,
+) -> None:
+    material_path = _write_yaml(
+        tmp_path / "porosity.yml",
+        {
+            "name": "porosity_test",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": [
+                            {
+                                "type": "Constant",
+                                "value": {
+                                    "value": 0.15,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 0.1,
+                                        "max": 0.2,
+                                    },
+                                },
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(material_path)
+    assert material is not None
+
+    address = PropertyAddress(domain="medium", property_name="porosity")
+    assert material.baseline_value(address) == 0.15
+    assert material.distribution(address) == {
+        "type": "uniform",
+        "min": 0.1,
+        "max": 0.2,
+    }
+
+
+def test_property_address_reads_nested_baseline_and_distribution(
+    tmp_path: Path,
+) -> None:
+    material_path = _write_yaml(
+        tmp_path / "nested.yml",
+        {
+            "name": "nested_test",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "saturation": [
+                            {
+                                "type": "SaturationVanGenuchten",
+                                "exponent": {
+                                    "value": 0.2,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 0.15,
+                                        "max": 0.3,
+                                    },
+                                },
+                                "p_b": {
+                                    "value": 4.8e7,
+                                    "distribution": {
+                                        "type": "loguniform",
+                                        "min": 1.0e7,
+                                        "max": 1.0e8,
+                                    },
+                                },
+                                "residual_gas_saturation": 0.01,
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(material_path)
+    assert material is not None
+
+    exponent = PropertyAddress(
+        domain="medium",
+        property_name="saturation",
+        parameter_path=("exponent",),
+    )
+    assert material.baseline_value(exponent) == 0.2
+    assert material.distribution(exponent) == {
+        "type": "uniform",
+        "min": 0.15,
+        "max": 0.3,
+    }
+
+    p_b = PropertyAddress(
+        domain="medium",
+        property_name="saturation",
+        parameter_path=("p_b",),
+    )
+    assert material.baseline_value(p_b) == 4.8e7
+    assert material.distribution(p_b) == {
+        "type": "loguniform",
+        "min": 1.0e7,
+        "max": 1.0e8,
+    }
+
+    plain_scalar = PropertyAddress(
+        domain="medium",
+        property_name="saturation",
+        parameter_path=("residual_gas_saturation",),
+    )
+    assert material.baseline_value(plain_scalar) == 0.01
+    assert material.distribution(plain_scalar) is None
+
+
+def test_property_address_uses_domain_and_index_to_select_property_variant(
+    tmp_path: Path,
+) -> None:
+    material_path = _write_yaml(
+        tmp_path / "thermal_conductivity.yml",
+        {
+            "name": "thermal_test",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "thermal_conductivity": [
+                            {
+                                "type": "Constant",
+                                "value": {
+                                    "value": 1.7,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 1.5,
+                                        "max": 1.9,
+                                    },
+                                },
+                            },
+                            {
+                                "type": "Constant",
+                                "value": {
+                                    "value": 2.1,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 2.0,
+                                        "max": 2.2,
+                                    },
+                                },
+                            },
+                        ]
+                    },
+                },
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "thermal_conductivity": [
+                            {"type": "Constant", "value": 5.0}
+                        ]
+                    },
+                },
+            ],
+        },
+    )
+
+    material = Material.from_file(material_path)
+    assert material is not None
+
+    medium_first = PropertyAddress(
+        domain="medium", property_name="thermal_conductivity", index=0
+    )
+    medium_second = PropertyAddress(
+        domain="medium", property_name="thermal_conductivity", index=1
+    )
+    phase_first = PropertyAddress(
+        domain="phase", property_name="thermal_conductivity", index=0
+    )
+
+    assert material.baseline_value(medium_first) == 1.7
+    assert material.distribution(medium_first) == {
+        "type": "uniform",
+        "min": 1.5,
+        "max": 1.9,
+    }
+    assert material.baseline_value(medium_second) == 2.1
+    assert material.distribution(medium_second) == {
+        "type": "uniform",
+        "min": 2.0,
+        "max": 2.2,
+    }
+    assert material.baseline_value(phase_first) == 5.0
+    assert material.distribution(phase_first) is None

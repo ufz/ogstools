@@ -18,7 +18,7 @@ from ogstools.materiallib.schema.required_properties import (
     required_property_names,
 )
 
-from .property import MaterialProperty
+from .property import MaterialProperty, PropertyAddress
 
 logger = logging.getLogger(__name__)
 
@@ -96,12 +96,7 @@ class Material(Mapping[str, MaterialProperty]):
 
     @staticmethod
     def _is_scalar_metadata_wrapper(value: Any) -> bool:
-        if not isinstance(value, dict):
-            return False
-        keys = set(value)
-        if "value" not in keys:
-            return False
-        return keys.issubset({"value", "unit", "distribution"})
+        return MaterialProperty.is_scalar_metadata_wrapper(value)
 
     @classmethod
     def _parse_top_level_value(cls, value: Any) -> tuple[Any, dict[str, Any]]:
@@ -111,6 +106,65 @@ class Material(Mapping[str, MaterialProperty]):
         wrapped_value = dict(value)
         baseline = wrapped_value.pop("value")
         return baseline, wrapped_value
+
+    def _property_by_address(
+        self, address: PropertyAddress
+    ) -> MaterialProperty:
+        matches = [
+            prop
+            for prop in self.properties
+            if prop.name == address.property_name
+            and prop.extra.get("domain") == address.domain
+        ]
+        if address.index < 0 or address.index >= len(matches):
+            msg = (
+                f"No property found for address {address!r} in material "
+                f"'{self.name}'."
+            )
+            raise IndexError(msg)
+        return matches[address.index]
+
+    def _parameter_payload(self, address: PropertyAddress) -> Any:
+        prop = self._property_by_address(address)
+        if not address.parameter_path:
+            return prop.value
+
+        current: Any = prop.extra
+        for segment in address.parameter_path:
+            if not isinstance(current, Mapping) or segment not in current:
+                msg = (
+                    f"Parameter path {address.parameter_path!r} does not exist "
+                    f"for address {address!r} in material '{self.name}'."
+                )
+                raise KeyError(msg)
+            current = current[segment]
+        return current
+
+    def baseline_value(self, address: PropertyAddress) -> Any:
+        payload = self._parameter_payload(address)
+        if self._is_scalar_metadata_wrapper(payload):
+            return payload["value"]
+        return payload
+
+    def distribution(self, address: PropertyAddress) -> dict[str, Any] | None:
+        if not address.parameter_path:
+            prop = self._property_by_address(address)
+            authored_distribution = prop.extra.get("distribution")
+            return (
+                authored_distribution
+                if isinstance(authored_distribution, dict)
+                else None
+            )
+
+        payload = self._parameter_payload(address)
+        if self._is_scalar_metadata_wrapper(payload):
+            authored_distribution = payload.get("distribution")
+            return (
+                authored_distribution
+                if isinstance(authored_distribution, dict)
+                else None
+            )
+        return None
 
     def _validate_grouped_domains(self) -> None:
         if "properties" in self.raw:

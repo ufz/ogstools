@@ -1,7 +1,16 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Any
+
+
+@dataclass(frozen=True)
+class PropertyAddress:
+    domain: str
+    property_name: str
+    index: int = 0
+    parameter_path: tuple[str, ...] = ()
 
 
 class MaterialProperty:
@@ -10,6 +19,15 @@ class MaterialProperty:
         self.type = type_
         self.value = value
         self.extra = extra  # e.g. unit, slope, source, ...
+
+    @staticmethod
+    def is_scalar_metadata_wrapper(value: Any) -> bool:
+        if not isinstance(value, dict):
+            return False
+        keys = set(value)
+        if "value" not in keys:
+            return False
+        return keys.issubset({"value", "unit", "distribution"})
 
     def to_dict(self) -> dict:
         d = {"name": self.name, "type": self.type}
