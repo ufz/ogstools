@@ -5,9 +5,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml  # type: ignore[import]
 
+from ogstools import Project
+from ogstools.materiallib.core import material_manager
 from ogstools.materiallib.core.material import Material
+from ogstools.materiallib.core.material_manager import MaterialManager
+from ogstools.materiallib.core.media import MediaSet
 from ogstools.materiallib.core.property import PropertyAddress
 
 
@@ -391,3 +396,100 @@ def test_property_address_uses_domain_and_index_to_select_property_variant(
     }
     assert material.baseline_value(phase_first) == 5.0
     assert material.distribution(phase_first) is None
+
+
+def test_export_writes_only_baseline_values_without_distribution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_yaml(
+        tmp_path / "host.yml",
+        {
+            "name": "host",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "permeability": [
+                            {
+                                "type": "Constant",
+                                "value": {
+                                    "value": 1.0e-20,
+                                    "unit": "m²",
+                                    "distribution": {
+                                        "type": "loguniform",
+                                        "min": 1.0e-21,
+                                        "max": 1.0e-19,
+                                    },
+                                },
+                            }
+                        ],
+                        "saturation": [
+                            {
+                                "type": "SaturationVanGenuchten",
+                                "exponent": {
+                                    "value": 0.2,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 0.15,
+                                        "max": 0.3,
+                                    },
+                                },
+                                "p_b": {
+                                    "value": 4.8e7,
+                                    "unit": "Pa",
+                                    "distribution": {
+                                        "type": "loguniform",
+                                        "min": 1.0e7,
+                                        "max": 1.0e8,
+                                    },
+                                },
+                                "residual_gas_saturation": {
+                                    "value": 0.01,
+                                    "distribution": {
+                                        "type": "uniform",
+                                        "min": 0.0,
+                                        "max": 0.02,
+                                    },
+                                },
+                                "residual_liquid_saturation": 0.01,
+                            }
+                        ],
+                    },
+                }
+            ],
+        },
+    )
+
+    monkeypatch.setitem(
+        material_manager.PROCESS_SCHEMAS,
+        "distribution_export_dummy",
+        {"properties": ["permeability", "saturation"], "phases": []},
+    )
+
+    manager = MaterialManager(data_dir=tmp_path)
+    filtered = manager.filter(
+        process="distribution_export_dummy",
+        subdomains=[
+            {"subdomain": "region1", "material": "host", "material_ids": [0]}
+        ],
+        fluids={},
+    )
+    media = MediaSet(filtered)
+
+    project = Project()
+    project.set_media(media)
+
+    prj_path = tmp_path / "distribution_export.prj"
+    project.write_input(prj_path)
+    xml = prj_path.read_text(encoding="utf-8")
+
+    assert "<name>permeability</name>" in xml
+    assert "<value>1e-20</value>" in xml
+    assert "<name>saturation</name>" in xml
+    assert "<exponent>0.2</exponent>" in xml
+    assert "<p_b>48000000.0</p_b>" in xml
+    assert "<residual_gas_saturation>0.01</residual_gas_saturation>" in xml
+    assert (
+        "<residual_liquid_saturation>0.01</residual_liquid_saturation>" in xml
+    )
+    assert "distribution" not in xml

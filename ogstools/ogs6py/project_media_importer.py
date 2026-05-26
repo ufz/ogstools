@@ -115,6 +115,23 @@ class _ProjectMediaImporter:
     # ------------------------------------------------------------------
     # Property
     # ------------------------------------------------------------------
+    @staticmethod
+    def _baseline_only_payload(value: object) -> object:
+        if isinstance(value, dict):
+            if MaterialProperty.is_scalar_metadata_wrapper(value):
+                return value["value"]
+            return {
+                key: _ProjectMediaImporter._baseline_only_payload(val)
+                for key, val in value.items()
+                if key != "distribution"
+            }
+        if isinstance(value, list):
+            return [
+                _ProjectMediaImporter._baseline_only_payload(item)
+                for item in value
+            ]
+        return value
+
     def set_property(
         self,
         prop: MaterialProperty,
@@ -127,8 +144,12 @@ class _ProjectMediaImporter:
             "medium_id": medium_id,
             "name": prop.name,
             "type": prop.type,
-            "value": prop.value,
-            **prop.extra,
+            "value": self._baseline_only_payload(prop.value),
+            **{
+                key: self._baseline_only_payload(value)
+                for key, value in prop.extra.items()
+                if key not in {"domain", "distribution"}
+            },
         }
         if phase_type is not None:
             args["phase_type"] = phase_type
