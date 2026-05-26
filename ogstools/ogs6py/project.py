@@ -51,6 +51,7 @@ from ogstools.ogs6py.properties import (
     location_pointer,
     property_dict,
 )
+from ogstools.ogs6py.referenced_file import ReferencedFile
 
 try:
     from bokeh.io import output_notebook, show
@@ -153,7 +154,7 @@ class Project(StorageBase):
             and self.geometry.has_geometry
             and self.geometry.filename
         ):
-            gml_path = Path(self.input_file).parent / self.geometry.filename
+            gml_path = self.input_file.parent / self.geometry.filename
             assert gml_path.exists()
             self.geometry._active_target = gml_path
 
@@ -162,16 +163,28 @@ class Project(StorageBase):
         self.python_script = python_script.PythonScript(self.tree)
         # If loading from file, set the python_script source path
         if self.input_file is not None and self.python_script.filename:
-            py_path = Path(self.input_file).parent / self.python_script.filename
+            py_path = self.input_file.parent / self.python_script.filename
             if py_path.exists():
                 self.python_script._active_target = py_path
+        self.chemical_system_database = ReferencedFile(
+            self.tree, xpath=".//chemical_system/database"
+        )
+        if (
+            self.input_file is not None
+            and self.chemical_system_database.filename
+        ):
+            dat_path = (
+                self.input_file.parent / self.chemical_system_database.filename
+            )
+            if dat_path.exists():
+                self.chemical_system_database._active_target = dat_path
         self.media = media.Media(self.tree)
         self.time_loop = timeloop.TimeLoop(self.tree)
         self.local_coordinate_system = (
             local_coordinate_system.LocalCoordinateSystem(self.tree)
         )
         self.parameters = parameters.Parameters(self.tree)
-        self.curves = curves.Curves(self.tree)
+        self.curves = curves.Curves(self.tree, self.input_file)
         self.process_variables = processvars.ProcessVars(self.tree)
         self.nonlinear_solvers = nonlinsolvers.NonLinSolvers(self.tree)
         self.linear_solvers = linsolvers.LinSolvers(self.tree)
@@ -296,11 +309,17 @@ class Project(StorageBase):
         for k in tree_backed:
             old_v = getattr(self, k)
             new_v = type(old_v)(new.tree)
-            if isinstance(old_v, StorageBase):
+            if isinstance(old_v, ReferencedFile):
+                new_v._xpath = old_v._xpath
                 new_v._active_target = old_v._active_target
-                if hasattr(old_v, "filename") and old_v.filename:
+                if old_v.filename:
                     new_v._next_target = new._next_target / old_v.filename
             setattr(new, k, new_v)
+
+        for old_rf, new_rf in zip(
+            self.curves.files, new.curves.files, strict=True
+        ):
+            new_rf._active_target = old_rf._active_target
 
         return new
 
@@ -1382,6 +1401,13 @@ class Project(StorageBase):
             self.python_script._next_target = (
                 self.next_target / self.python_script.filename
             )
+        if self.chemical_system_database.filename:
+            self.chemical_system_database._next_target = (
+                self.next_target / self.chemical_system_database.filename
+            )
+        for rf in self.curves.files:
+            if rf.filename:
+                rf._next_target = self.next_target / rf.filename
 
     def write_input(
         self,
@@ -1414,6 +1440,9 @@ class Project(StorageBase):
                 if hasattr(v, "tree") and not isinstance(v, ET._ElementTree):
                     v.tree = self.tree
                     v.root = self.tree.getroot()
+            for rf in self.curves.files:
+                rf.tree = self.tree
+                rf.root = self.tree.getroot()
             if self.verbose is True:
                 display.Display(self.tree)
             self.tree.write(
@@ -1437,6 +1466,9 @@ class Project(StorageBase):
         if dry_run:
             files += self.geometry._save_impl(dry_run=dry_run)
             files += self.python_script._save_impl(dry_run=dry_run)
+            files += self.chemical_system_database._save_impl(dry_run=dry_run)
+            for rf in self.curves.files:
+                files += rf._save_impl(dry_run=dry_run)
             return files
 
         self.next_target.mkdir(parents=True, exist_ok=True)
@@ -1447,6 +1479,15 @@ class Project(StorageBase):
         files += self.python_script._save_impl(dry_run=dry_run)
         if self.python_script.filename:
             self.python_script._active_target = self.python_script._next_target
+        files += self.chemical_system_database._save_impl(dry_run=dry_run)
+        if self.chemical_system_database.filename:
+            self.chemical_system_database._active_target = (
+                self.chemical_system_database._next_target
+            )
+        for rf in self.curves.files:
+            files += rf._save_impl(dry_run=dry_run)
+            if rf.filename:
+                rf._active_target = rf._next_target
 
         return files
 
