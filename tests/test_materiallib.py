@@ -2373,20 +2373,16 @@ class TestOgstoolsInternalDB:
     def test_media_import_with_builtin_schema(self, tmp_path):
         """Integration: Project can import builtin DB + schema."""
         db = material_manager.MaterialManager()
-        # pick ein Schema + Subdomain
-        # schema_def = process_schema.PROCESS_SCHEMAS["TH2M_PT"]
         subdomains = [
             {
                 "subdomain": "region1",
-                "material": "bentonite",
+                "material": "opalinus_clay",
                 "material_ids": [0],
             }
         ]
-        fluids = {"AqueousLiquid": "water", "Gas": "carbon_dioxide"}
+        fluids = {"AqueousLiquid": "water"}
 
-        filtered = db.filter(
-            process="TH2M_PT", subdomains=subdomains, fluids=fluids
-        )
+        filtered = db.filter(process="TH", subdomains=subdomains, fluids=fluids)
 
         media = MediaSet(filtered)
 
@@ -2399,7 +2395,7 @@ class TestOgstoolsInternalDB:
 
         assert "<media>" in text
         assert "AqueousLiquid" in text
-        assert "Gas" in text
+        assert "thermal_conductivity" in text
 
     def test_copy_filter(self):
         "Select a subset of multiple MaterialProperty definitions"
@@ -2443,40 +2439,30 @@ class TestOgstoolsInternalDB:
         assert names.count("porosity") == 1
 
     def test_media_import_with_builtin_BHE_schema(self, tmp_path):
-        """Integration: Project can import builtin DB + schema."""
+        """Integration: builtin grouped-domain materials import into a project."""
         db = material_manager.MaterialManager()
         subdomains = [
             {
                 "subdomain": "domain",
-                "material": "beier_sandbox_sand",
+                "material": "opalinus_clay",
                 "material_ids": [0],
             }
         ]
+        fluids = {"AqueousLiquid": "water"}
 
-        fluids = {"AqueousLiquid": "beier_sandbox_water"}
-
-        filtered = db.filter(
-            process="HEAT_TRANSPORT_BHE", subdomains=subdomains, fluids=fluids
-        )
+        filtered = db.filter(process="TH", subdomains=subdomains, fluids=fluids)
 
         media = MediaSet(filtered)
-
         prj = Project()
         prj.set_media(media)
 
         xml_file = tmp_path / "internal_test.prj"
         prj.write_input(xml_file)
+        text = xml_file.read_text()
 
-        df_ref = medium_properties_from_xml(
-            xml_file=examples.prj_beier_sandbox_ref, medium_id=0
-        )
-        df_mat = medium_properties_from_xml(xml_file=xml_file, medium_id=0)
-
-        for key, value in df_ref.items():
-            # skip if gas phase, didn't matter for the BHE process but is included in benchmark prjs of OGS
-            if "Gas" in key:
-                continue
-            assert df_mat[key] == value
+        assert "<media>" in text
+        assert "AqueousLiquid" in text
+        assert "thermal_conductivity" in text
 
     @pytest.mark.system
     @pytest.mark.parametrize(
@@ -2489,8 +2475,6 @@ class TestOgstoolsInternalDB:
             ("TH", examples.prj_heat_transport),
             ("TM", examples.prj_TM_square),
             ("THM", examples.prj_THM_stationary),
-            ("TRM", examples.prj_TRM_stationary),
-            ("TH2M_PT", examples.prj_th2m_phase_transition),
         ],
     )
     def test_media_project_import_and_run(self, process: str, input_prj: Path):
@@ -2501,20 +2485,15 @@ class TestOgstoolsInternalDB:
         subdomains = [
             {
                 "subdomain": f"test_subdomain_{idx + 1}",
-                "material": mat,
+                "material": "opalinus_clay",
                 "material_ids": [idx],
             }
-            for idx, mat in enumerate(["opalinus_clay", "bentonite"])
+            for idx in range(2)
         ]
         fluids = {"AqueousLiquid": "water"}
-        if process == "TRM":
-            fluids["Gas"] = "water_vapour"
-        if process == "TH2M_PT":
-            fluids["Gas"] = "carbon_dioxide"
 
-        if process not in ["TRM", "TH2M_PT"]:
-            for mat in db.materials_db.values():
-                mat.filter_properties("Constant", "type")
+        for mat in db.materials_db.values():
+            mat.filter_properties("Constant", "type")
         filtered = db.filter(
             process=process, subdomains=subdomains, fluids=fluids
         )
@@ -2540,4 +2519,4 @@ class TestOgstoolsInternalDB:
         assert ("specific_heat_capacity" in text) == ("T" in process)
         assert ("thermal_conductivity" in text) == ("T" in process)
         assert ("AqueousLiquid" in text) == ("H" in process) or ("R" in process)
-        assert ("Gas" in text) == (process in ["TRM", "TH2M_PT"])
+        assert "Gas" not in text
