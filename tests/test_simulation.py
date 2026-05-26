@@ -288,7 +288,7 @@ def test_plot_simulation_log_convergence_order() -> plt.figure:
 
 
 def test_mock_model_restart() -> None:
-    sim_dir = examples.EXAMPLES_DIR / "simulation/restart/sim"
+    sim_dir = ot.definitions.EXAMPLES_DIR / "simulation/restart/sim"
     sim = ot.Simulation.from_folder(sim_dir)
     prj_ref = ot.Project(sim_dir / "model/project/ref.prj")
     new_timevalues = [2, 3, 4]
@@ -313,7 +313,7 @@ def test_execution_defaults_from_env(monkeypatch, good_model: ot.Model):
 
 def test_restart_error_cases():
     sim = ot.Simulation.from_folder(
-        examples.EXAMPLES_DIR / "simulation/restart/sim"
+        ot.definitions.EXAMPLES_DIR / "simulation/restart/sim"
     )
     # TypeError if both timevalues and (t_initial, t_end) are given
     with pytest.raises(TypeError):
@@ -359,7 +359,7 @@ def test_model_restart(tmp_path: Path) -> None:
 def test_simulation_status_invalid_prj() -> None:
 
     file = (
-        examples.EXAMPLES_DIR
+        ot.definitions.EXAMPLES_DIR
         / "prj"
         / "Elliptic/quarter_circle/quarter_circle_nodal_source_term.prj"
     )

@@ -3,11 +3,12 @@
 
 import math
 from pathlib import Path
-from tempfile import mkdtemp
 from typing import Any
 
 import yaml  # type: ignore[import]
 from simpleeval import simple_eval
+
+from ogstools.definitions import temp_dir
 
 
 def _load_geometry_from_yaml(path: Path) -> dict[str, Any]:
@@ -113,7 +114,7 @@ def meshes_from_yaml(
     """
     import gmsh
 
-    output_dir = output_dir or Path(mkdtemp())
+    output_dir = output_dir or temp_dir("meshes_from_yaml")
 
     geometry = _load_geometry_from_yaml(geometry_file)
     _validate_geometry_schema(geometry)

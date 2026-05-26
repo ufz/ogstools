@@ -40,20 +40,18 @@ See :py:class:`ogstools.core.execution.Execution` for the full list of options.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
+
 
 import ogstools as ot
-from ogstools.definitions import EXAMPLES_DIR
 
-results_dir = Path(mkdtemp())
-prj_path_in = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
+results_dir = ot.definitions.temp_dir(prefix="simulate", dir="examples")
+prj_path_in = ot.definitions.EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
 prj_path_out = results_dir / "simple_mechanics_modified.prj"
 prj = ot.Project(
     input_file=prj_path_in, output_file=prj_path_out, output_dir=results_dir
 )
 
-model = ot.Model(prj, meshes=EXAMPLES_DIR / "prj")
+model = ot.Model(prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
 sim = model.run()
 # Optionally save the simulation data
 sim.save()

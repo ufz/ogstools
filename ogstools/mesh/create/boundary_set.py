@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import subprocess
-import tempfile
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from itertools import chain, pairwise
@@ -12,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from ogstools import mesh
+from ogstools.definitions import temp_dir, temp_file
 
 from .boundary import Layer
 from .region import RegionSet
@@ -118,12 +118,10 @@ class LayerSet(BoundarySet):
         # aligned with the cardinal directions, OR do an automatic rotation, if
         # the surfaces are rectangular, but rotated.
         raster = Raster(locFrame, resolution=resolution * 0.95)
-        raster_vtu = Path(tempfile.mkstemp(".vtu", "raster")[1])
+        raster_vtu = temp_file(".vtu", "create_raster")
         raster.as_vtu(raster_vtu)
 
-        rastered_layers_txt = Path(
-            tempfile.mkstemp(".txt", "rastered_layers")[1]
-        )
+        rastered_layers_txt = temp_file(".txt", "create_raster")
         with rastered_layers_txt.open("w") as file:
             file.write("\n".join(str(item) for item in raster_set))
         return raster_vtu, rastered_layers_txt
@@ -199,7 +197,7 @@ class LayerSet(BoundarySet):
             resolution=resolution, margin=margin
         )
 
-        outfile = Path(tempfile.mkstemp(".vtu", "region_prism")[1])
+        outfile = temp_file(".vtu", "region_prism")
 
         from ogstools._find_ogs import cli
 
@@ -269,7 +267,7 @@ class LayerSet(BoundarySet):
 
         from ogstools._find_ogs import cli
 
-        tmp_dir = Path(tempfile.mkdtemp("to_region_simplified"))
+        tmp_dir = temp_dir("", "to_region_simplified")
         mesh.save(merged_mesh, outfile := (tmp_dir / "domain.vtu"))
         cli().NodeReordering(i=str(outfile), o=str(outfile))
 
@@ -307,7 +305,7 @@ class LayerSet(BoundarySet):
             resolution=resolution, margin=margin
         )
 
-        smesh_file = Path(tempfile.mkstemp(".smesh", "region_tetrahedron")[1])
+        smesh_file = temp_file(".smesh", "region_tetrahedron")
 
         from ogstools._find_ogs import cli
 
@@ -393,11 +391,11 @@ class LayerSet(BoundarySet):
             voxel_mesh = layer_set.to_region_voxel(resolution)
         """
 
-        layers_txt = Path(tempfile.mkstemp(".txt", "layers")[1])
+        layers_txt = temp_file(".txt", "to_region_voxel")
         layer_filenames = self.filenames()
         with layers_txt.open("w") as file:
             file.write("\n".join(str(filename) for filename in layer_filenames))
-        outfile = Path(tempfile.mkstemp(".vtu", "region_voxel")[1])
+        outfile = temp_file(".vtu", "to_region_voxel")
 
         from ogstools._find_ogs import cli
 

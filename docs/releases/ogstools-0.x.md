@@ -37,6 +37,7 @@ OGS 6.5.7 -
   parameter type e.g. `prj.parameters.set_constant_parameter` / `prj.parameters[name] = int_or_float` or
   `prj.parameters.set_function_parameter` / `prj.parameters[name] = str`
 - added `prj.parameters.set_group_parameter`
+- temporary files are now all consistently written und `/tmp/ogstools_<username>/<functionname>/`
 
 ## Infrastructure
 

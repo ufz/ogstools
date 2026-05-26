@@ -7,9 +7,7 @@ This example shows how to convert a FEFLOW model and how to modify the correspon
 
 # %%
 # 0. Necessary imports
-import tempfile
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
@@ -17,7 +15,7 @@ from ogstools.examples import feflow_model_2D_CT_t_560
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
-temp_dir = Path(tempfile.mkdtemp("converted_models"))
+temp_dir = ot.definitions.temp_dir("converted_models", "examples")
 feflow_model = ot.FeflowModel(feflow_model_2D_CT_t_560, temp_dir / "CT_model")
 # %%
 # 2. Get the mesh and run the FEFLOW model in OGS.

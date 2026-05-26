@@ -31,16 +31,13 @@ First, the required packages are imported and an output directory is created:
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
-
 from IPython.display import HTML
 
 import ogstools as ot
 from ogstools import examples, workflow
 from ogstools.studies import convergence
 
-tmp_path = Path(mkdtemp(prefix="steady_state_diffusion"))
+tmp_path = ot.definitions.temp_dir("steady_state_diffusion", "examples")
 report_name = str(tmp_path / "report.ipynb")
 
 

@@ -3,12 +3,11 @@
 
 from collections.abc import Sequence
 from functools import reduce
-from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
 
+from ogstools.definitions import temp_dir
 from ogstools.mesh.ip_data import IPdata
 
 from .file_io import read, save
@@ -207,7 +206,7 @@ def to_ip_point_cloud(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     "Create a point cloud from a given mesh containing integration point data."
     _mesh = mesh.copy()
     _filter_incomplete_data(_mesh)
-    tmp_dir = Path(mkdtemp())
+    tmp_dir = temp_dir("", "to_ip_point_cloud")
     input_file = tmp_dir / "ipDataToPointCloud_input.vtu"
     output_file = tmp_dir / "ip_mesh.vtu"
     save(_mesh, input_file)

@@ -5,8 +5,7 @@ from pathlib import Path
 
 import yaml  # type: ignore[import]
 
-# from ogstools.definitions import MATERIALS_DIR
-import ogstools.definitions as defs
+from ogstools.definitions import MATERIALS_DIR
 
 from .component import Component
 from .material import Material
@@ -14,7 +13,6 @@ from .property import MaterialProperty
 
 
 class Components:
-
     def __init__(
         self,
         phase_type: str,
@@ -31,7 +29,7 @@ class Components:
         )
         self.process = process
         self.data_dir = (
-            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+            Path(data_dir) if data_dir is not None else MATERIALS_DIR
         )
 
         self.gas_component = gas_component
@@ -121,7 +119,7 @@ class Components:
         materials directory for backward compatibility.
         """
 
-        default_dir = Path(defs.MATERIALS_DIR)
+        default_dir = MATERIALS_DIR
         data_dir = self.data_dir
         names = ["diffusion_coefficients.yaml", "diffusion_coefficients.yml"]
 

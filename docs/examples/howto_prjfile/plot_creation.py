@@ -10,18 +10,18 @@ The names of the method calls are based on the corresponding XML tags.
 
 # %%
 # Initialize the ogs6py object:
-from pathlib import Path
-from tempfile import mkdtemp
+
 
 import ogstools as ot
-from ogstools.definitions import EXAMPLES_DIR
 
-output_dir = Path(mkdtemp())
+output_dir = ot.definitions.temp_dir("prj_creation", "examples")
 prj = ot.Project(output_file=output_dir / "mechanics_new.prj")
 
 # %%
 # Define geometry and/or meshes, we expect the gml to be in the same folder like the prj file:
-prj.geometry.add_geometry(filename=EXAMPLES_DIR / "prj" / "square_1x1.gml")
+prj.geometry.add_geometry(
+    filename=ot.definitions.EXAMPLES_DIR / "prj" / "square_1x1.gml"
+)
 prj.mesh.add_mesh(filename="square_1x1_quad_1e2.vtu")
 
 # %%
@@ -153,7 +153,7 @@ prj.linear_solvers.add_lin_solver(
 )
 
 # %%
-m = ot.Model(project=prj, meshes=EXAMPLES_DIR / "prj")
+m = ot.Model(project=prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
 fig = m.plot_constraints()
 # %%
 m.run()

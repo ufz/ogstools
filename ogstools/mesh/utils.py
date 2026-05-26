@@ -4,12 +4,12 @@
 import shutil
 import subprocess
 from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
 
 from ogstools._find_ogs import cli
+from ogstools.definitions import temp_file
 
 from .file_io import save
 
@@ -29,7 +29,7 @@ def node_reordering(
         3: Re-ordering of mesh node vector such that all base nodes are
            sorted before all nonlinear nodes.
     """
-    tmp_file = Path(mkdtemp(prefix="node_reordering")) / "mesh.vtu"
+    tmp_file = temp_file(".vtu", "node_reordering")
     save(mesh, tmp_file)
     cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
     return pv.XMLUnstructuredGridReader(tmp_file).read()
@@ -43,8 +43,9 @@ def validate(
     :param mesh:    pyvista mesh or path to the mesh file.
     :param strict:  If True, raise a UserWarning if checkMesh returns an error.
     """
+
     if isinstance(mesh, pv.DataSet):
-        mesh_file = str(Path(mkdtemp(prefix="validate")) / "mesh.vtu")
+        mesh_file = str(temp_file(".vtu", "validate"))
         save(mesh, mesh_file)
     else:
         mesh_file = str(mesh)

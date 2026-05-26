@@ -23,8 +23,8 @@ def fluid_pressure_criterion(mesh: pv.UnstructuredGrid) -> np.ndarray:
 
         F_{p} = p_{fl} - \\sigma_{min}
     """
-    sig_min = eigenvalues(-mesh["sigma"])[..., 0]
-    return mesh["pressure"] - sig_min
+    return -eigenvalues(-mesh["sigma"])[..., 0]
+    # return mesh["pressure"] - sig_min
 
 
 def dilatancy_critescu(

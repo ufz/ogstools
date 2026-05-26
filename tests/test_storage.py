@@ -14,8 +14,8 @@ from hypothesis.stateful import (
 )
 
 import ogstools as ot
+from ogstools.definitions import EXAMPLES_DIR
 from ogstools.examples import (
-    EXAMPLES_DIR,
     load_meshseries_CT_2D_XDMF,
     load_meshseries_HT_2D_VTU,
     load_model_liquid_flow_simple,

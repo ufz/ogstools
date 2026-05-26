@@ -1,7 +1,7 @@
 import pyvista as pv
 
 import ogstools as ot
-from ogstools.examples import EXAMPLES_DIR
+from ogstools.definitions import EXAMPLES_DIR
 
 
 def test_model_construct_without_explicit_meshes():

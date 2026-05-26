@@ -42,7 +42,7 @@ def set_userpath(tmp_path_factory):
     if base.name.startswith("popen-gw"):
         base = base.parent
     ot.StorageBase.Userpath = base / "ot_user"
-    ot.StorageBase.Temppath = base / "ot_temp"
+    ot.StorageBase.TempFile = base / "ot_temp"
 
 
 def pytest_collection_modifyitems(items: list) -> None:
