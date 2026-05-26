@@ -94,7 +94,10 @@ class Component:
                     filtered_properties.append(prop)
                 else:
                     for prop in self.material.properties:
-                        if prop.name == name:
+                        if (
+                            prop.name == name
+                            and prop.extra.get("domain") == "component"
+                        ):
                             filtered_properties.append(prop)
                             break
 

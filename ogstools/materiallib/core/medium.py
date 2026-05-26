@@ -191,10 +191,7 @@ class Medium:
         self.properties = [
             prop
             for prop in self.material.properties
-            if prop.name in required
-            and (
-                prop.extra.get("scope") == "medium" or "scope" not in prop.extra
-            )
+            if prop.name in required and prop.extra.get("domain") == "medium"
         ]
 
         loaded = {prop.name for prop in self.properties}
