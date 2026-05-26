@@ -123,10 +123,7 @@ class Phase:
         self.properties = [
             prop
             for prop in source.properties
-            if prop.name in required
-            and (
-                prop.extra.get("scope") == "phase" or "scope" not in prop.extra
-            )
+            if prop.name in required and prop.extra.get("domain") == "phase"
         ]
 
         loaded = {prop.name for prop in self.properties}
