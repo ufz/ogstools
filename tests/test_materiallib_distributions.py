@@ -493,3 +493,117 @@ def test_export_writes_only_baseline_values_without_distribution(
         "<residual_liquid_saturation>0.01</residual_liquid_saturation>" in xml
     )
     assert "distribution" not in xml
+
+
+def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> (
+    None
+):
+    examples_dir = (
+        Path(__file__).resolve().parents[1] / "ogstools/examples/materiallib"
+    )
+
+    opalinus_raw = yaml.safe_load(
+        (examples_dir / "opalinus.yml").read_text(encoding="utf-8")
+    )
+    water_raw = yaml.safe_load(
+        (examples_dir / "water.yml").read_text(encoding="utf-8")
+    )
+    hydrogen_raw = yaml.safe_load(
+        (examples_dir / "hydrogen.yml").read_text(encoding="utf-8")
+    )
+
+    manager = MaterialManager(data_dir=examples_dir)
+    filtered = manager.filter(
+        process="TH2M_PT",
+        subdomains=[
+            {
+                "subdomain": "host_rock",
+                "material": "opalinus_clay",
+                "material_ids": [0],
+            }
+        ],
+        fluids={"AqueousLiquid": "water", "Gas": "hydrogen"},
+    )
+
+    assert filtered.get_material("host_rock") is not None
+    assert filtered.fluids["AqueousLiquid"].name == "water"
+    assert filtered.fluids["Gas"].name == "hydrogen"
+
+    opalinus = manager.get_material("opalinus_clay")
+    water = manager.get_material("water")
+    hydrogen = manager.get_material("hydrogen")
+
+    opalinus_medium = next(
+        block
+        for block in opalinus_raw["domains"]
+        if block["domain"] == "medium"
+    )
+    opalinus_phase = next(
+        block for block in opalinus_raw["domains"] if block["domain"] == "phase"
+    )
+    water_phase = next(
+        block for block in water_raw["domains"] if block["domain"] == "phase"
+    )
+    hydrogen_phase = next(
+        block for block in hydrogen_raw["domains"] if block["domain"] == "phase"
+    )
+
+    medium_density = PropertyAddress(domain="medium", property_name="density")
+    phase_density = PropertyAddress(domain="phase", property_name="density")
+    saturation_p_b = PropertyAddress(
+        domain="medium",
+        property_name="saturation",
+        index=0,
+        parameter_path=("p_b",),
+    )
+    water_viscosity = PropertyAddress(domain="phase", property_name="viscosity")
+    hydrogen_thermal_conductivity = PropertyAddress(
+        domain="phase", property_name="thermal_conductivity"
+    )
+
+    assert (
+        opalinus.baseline_value(medium_density)
+        == opalinus_medium["properties"]["density"][0]["value"]
+    )
+    assert (
+        opalinus.distribution(medium_density)
+        == opalinus_medium["properties"]["density"][0]["distribution"]
+    )
+
+    assert (
+        opalinus.baseline_value(phase_density)
+        == opalinus_phase["properties"]["density"][0]["value"]
+    )
+    assert (
+        opalinus.distribution(phase_density)
+        == opalinus_phase["properties"]["density"][0]["distribution"]
+    )
+
+    assert (
+        opalinus.baseline_value(saturation_p_b)
+        == opalinus_medium["properties"]["saturation"][0]["p_b"]["value"]
+    )
+    assert (
+        opalinus.distribution(saturation_p_b)
+        == opalinus_medium["properties"]["saturation"][0]["p_b"]["distribution"]
+    )
+
+    assert (
+        water.baseline_value(water_viscosity)
+        == water_phase["properties"]["viscosity"][0]["value"]
+    )
+    assert (
+        water.distribution(water_viscosity)
+        == water_phase["properties"]["viscosity"][0]["distribution"]
+    )
+
+    assert (
+        hydrogen.baseline_value(hydrogen_thermal_conductivity)
+        == hydrogen_phase["properties"]["thermal_conductivity"][0]["value"]
+    )
+    assert (
+        hydrogen.distribution(hydrogen_thermal_conductivity)
+        == hydrogen_phase["properties"]["thermal_conductivity"][0][
+            "distribution"
+        ]
+    )
