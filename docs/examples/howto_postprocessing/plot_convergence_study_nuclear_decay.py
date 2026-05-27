@@ -29,9 +29,6 @@ created:
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
-
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import HTML
@@ -40,7 +37,7 @@ from scipy.constants import Julian_year as sec_per_yr
 import ogstools as ot
 from ogstools import examples, physics, studies, workflow
 
-temp_path = Path(mkdtemp(prefix="nuclear_decay"))
+temp_path = ot.definitions.temp_dir("nuclear_decay", "examples")
 
 # %% [markdown]
 # Let's run the different simulations with increasingly fine spatial and
@@ -54,7 +51,7 @@ time_step_sizes = [30.0 / (2.0**r) for r in range(n_refinements)]
 prefix = "stepsize_{0}"
 sim_results = []
 msh_path = temp_path / "rect.msh"
-script_path = Path(examples.pybc_nuclear_decay).parent
+script_path = examples.pybc_nuclear_decay.parent
 prj_path = examples.prj_nuclear_decay
 edge_cells = [5 * 2**i for i in range(n_refinements)]
 

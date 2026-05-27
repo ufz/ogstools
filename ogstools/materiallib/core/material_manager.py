@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import ogstools.definitions as defs
+from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .material import Material
@@ -55,7 +55,7 @@ class MaterialManager:
         ----------
         data_dir : Path | str | None
             Directory containing the repository of material YAML files.
-            Defaults to `defs.MATERIALS_DIR`. Only used if no `materials`
+            Defaults to `ot.definitions.MATERIALS_DIR`. Only used if no `materials`
             are passed.
         materials : dict[str, Material] | None
             Pre-loaded material dictionary. If None, materials are loaded
@@ -74,7 +74,7 @@ class MaterialManager:
           and does not perform any additional repository access.
         """
 
-        self.data_dir = Path(data_dir or defs.MATERIALS_DIR)
+        self.data_dir = Path(data_dir or MATERIALS_DIR)
         self.materials_db: dict[str, Material] = materials or {}
         self.subdomain_ids: dict[str, int] = subdomain_ids or {}
         self.fluids: dict[str, Material] = {}

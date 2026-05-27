@@ -8,7 +8,6 @@ import sys
 from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
-from tempfile import mkdtemp
 
 import gmsh
 import meshio
@@ -228,7 +227,6 @@ def test_rect(tmp_path: Path, rect_p):
 
 @pytest.mark.tools  # NodeReordering
 class TestPhysGroups:
-    tmp_path = Path(mkdtemp())
 
     # By default, the gmsh physical group tags translate directly to MaterialIDs
     # With reindex=True, we want to map these tags to incrementing integers

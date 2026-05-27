@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from tempfile import mkstemp
 from typing import ClassVar
 from unittest.mock import patch
 
@@ -16,7 +15,7 @@ from pyvista import examples as pv_examples
 
 import ogstools as ot
 from ogstools import examples
-from ogstools.definitions import EXAMPLES_DIR
+from ogstools.definitions import EXAMPLES_DIR, temp_file
 from ogstools.plot import contourf, utils
 
 
@@ -482,15 +481,16 @@ class TestPlotting:
         if save is None:
             anim.to_jshtml()
         elif save:
+            filename = temp_file(ext, "animation")
             if err is RuntimeError:
                 with pytest.raises(err):
-                    utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+                    utils.save_animation(anim, filename, 5)
                 anim.to_jshtml()
             elif err is RuntimeWarning:
                 with pytest.warns(err):
-                    utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+                    utils.save_animation(anim, filename, 5)
             else:
-                utils.save_animation(anim, mkstemp(suffix=ext)[1], 5)
+                utils.save_animation(anim, filename, 5)
         else:
             pytest.skip(f"{writer} not available")
         plt.close()

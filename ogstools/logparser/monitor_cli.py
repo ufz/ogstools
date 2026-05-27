@@ -8,11 +8,12 @@ import logging
 import socket
 import subprocess
 import sys
-import tempfile
 import threading
 from argparse import ArgumentParser
 from enum import IntEnum
 from pathlib import Path
+
+from ogstools.definitions import temp_file
 
 
 class ExitCode(IntEnum):
@@ -82,7 +83,6 @@ def cli() -> int:
     args = parser.parse_args()
     logger.setLevel(logging.INFO if args.log else logging.ERROR)
 
-    temp_file: Path | None = None
     stdin_subprocess_kwarg: dict = {}
     stdin_done: threading.Event | None = None
     pipe_mode = False
@@ -92,14 +92,12 @@ def cli() -> int:
     elif not sys.stdin.isatty():
         # Piped mode: ogs ... | ogsmonitor
         pipe_mode = True
-        _, tmp_path = tempfile.mkstemp(suffix=".log", prefix="ogsmonitor_")
-        temp_file = Path(tmp_path)
-        logfile_abs = temp_file
+        logfile_abs = temp_file(".log", "ogsmonitor_")
 
         stdin_done = threading.Event()
         thread = threading.Thread(
             target=_stream_stdin_to_file,
-            args=(temp_file, stdin_done),
+            args=(logfile_abs, stdin_done),
             daemon=True,
         )
         thread.start()
@@ -108,8 +106,8 @@ def cli() -> int:
         stdin_subprocess_kwarg = {"stdin": subprocess.DEVNULL}
 
         def _cleanup() -> None:
-            if temp_file is not None and temp_file.exists():
-                temp_file.unlink()
+            if logfile_abs.exists():
+                logfile_abs.unlink()
 
         atexit.register(_cleanup)
     else:

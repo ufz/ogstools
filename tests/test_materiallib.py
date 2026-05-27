@@ -157,7 +157,7 @@ def make_filtered_db(write_yaml, tmp_path, monkeypatch):
             (tmp_path / "diffusion_coefficients.yml").write_text(
                 yaml.safe_dump(diffusion)
             )
-            monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
+            monkeypatch.setattr(components, "MATERIALS_DIR", tmp_path)
 
         return db.filter(process="dummy", subdomains=subdomains, fluids=fluids)
 
@@ -1266,7 +1266,7 @@ class TestComponents:
         (tmp_path / "diffusion_coefficients.yml").write_text(
             yaml.safe_dump(diffusion_data)
         )
-        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
+        monkeypatch.setattr(components, "MATERIALS_DIR", tmp_path)
 
         gas = make_material({}, name="co2")
         liquid = make_material({}, name="water")
@@ -1285,7 +1285,7 @@ class TestComponents:
         (tmp_path / "diffusion_coefficients.yml").write_text(
             yaml.safe_dump(diffusion_data)
         )
-        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
+        monkeypatch.setattr(components, "MATERIALS_DIR", tmp_path)
 
         fake = components.Components.__new__(components.Components)
         fake.data_dir = tmp_path
@@ -1320,7 +1320,7 @@ class TestComponents:
         (tmp_path / "diffusion_coefficients.yml").write_text(
             yaml.safe_dump(diffusion_data)
         )
-        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
+        monkeypatch.setattr(components, "MATERIALS_DIR", tmp_path)
 
         gas = make_material({}, name="co2")
         liquid = make_material({}, name="water")
@@ -1362,7 +1362,7 @@ class TestComponents:
         (tmp_path / "diffusion_coefficients.yml").write_text(
             yaml.safe_dump(diffusion_data)
         )
-        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(tmp_path))
+        monkeypatch.setattr(components, "MATERIALS_DIR", tmp_path)
 
         gas = make_material({}, name="CO2")
         liquid = make_material({}, name="H2O")
@@ -1505,7 +1505,7 @@ class TestMedium:
         fallback_diffusion_value: float | None,
         expected_diffusion: float,
     ):
-        """MediaSet should prefer a custom diffusion file and otherwise fall back to defs.MATERIALS_DIR."""
+        """MediaSet should prefer a custom diffusion file and otherwise fall back to ot.definitions.MATERIALS_DIR."""
         schema = {
             "properties": ["Density"],
             "phases": [
@@ -1523,9 +1523,7 @@ class TestMedium:
             ],
         }
         monkeypatch.setitem(
-            material_manager.PROCESS_SCHEMAS,
-            "custom_diffusion",
-            schema,
+            material_manager.PROCESS_SCHEMAS, "custom_diffusion", schema
         )
 
         materials = {
@@ -1562,7 +1560,7 @@ class TestMedium:
                 yaml.safe_dump(fallback_diffusion_data)
             )
 
-        monkeypatch.setattr(components.defs, "MATERIALS_DIR", str(fallback_dir))
+        monkeypatch.setattr(components, "MATERIALS_DIR", fallback_dir)
 
         db = material_manager.MaterialManager(data_dir=custom_dir)
         filtered = db.filter(

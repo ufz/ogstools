@@ -1569,7 +1569,7 @@ class TestiOGS:
 
     @pytest.fixture
     def cuboid_model2(
-        self, temp_dir: Path, num_threads: int, thread_type: str
+        self, tmp_path: Path, num_threads: int, thread_type: str
     ) -> ot.Model:
 
         meshes = ot.Meshes.from_gmsh(
@@ -1580,25 +1580,25 @@ class TestiOGS:
         kwargs = {thread_type: num_threads}
         prj = ot.Project(
             input_file=prj_aniso_expansion,
-            output_file=temp_dir / "test_asm_threads.prj",
+            output_file=tmp_path / "test_asm_threads.prj",
             **kwargs,
         )
         execution = ot.Execution(
-            sim_output=temp_dir,
-            logfile=temp_dir / "cuboid.log",
+            sim_output=tmp_path,
+            logfile=tmp_path / "cuboid.log",
             write_logs=True,
             background=True,
         )
 
         model = ot.Model(prj, meshes, execution=execution)
-        model._next_target = temp_dir  # use only in testing!
+        model._next_target = tmp_path  # use only in testing!
         return model
 
     @pytest.fixture
     def bhe_model(
-        self, temp_dir: Path, num_threads: int, thread_type: str
+        self, tmp_path: Path, num_threads: int, thread_type: str
     ) -> ot.Project:
-        vtu_file = temp_dir / "bhe_simple.vtu"
+        vtu_file = tmp_path / "bhe_simple.vtu"
         gen_bhe_mesh(
             length=5, width=5, layer=[20], groundwater=[],
             BHE_Array=[
@@ -1612,7 +1612,7 @@ class TestiOGS:
         kwargs = {thread_type: num_threads}
         return ot.Project(
             input_file=prj_heat_transport_bhe_simple,
-            output_file=temp_dir / "test_Threads.prj",
+            output_file=tmp_path / "test_Threads.prj",
             **kwargs,
         )
 

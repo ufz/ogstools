@@ -9,9 +9,7 @@ component transport process.
 
 # %%
 # 0. Necessary imports
-import tempfile
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +21,7 @@ ot.plot.setup.show_element_edges = True
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
-temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+temp_dir = ot.definitions.temp_dir("feflow_test_simulation", "examples")
 feflow_model = ot.FeflowModel(
     feflow_model_2D_CT_t_560, temp_dir / "2D_CT_model"
 )

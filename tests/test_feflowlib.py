@@ -71,7 +71,7 @@ def test_cli():
 
 class TestSimulation_Neumann:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         neumann = np.array(self.pv_mesh["P_BCFLOW_2ND"])
@@ -154,7 +154,7 @@ class TestSimulation_Neumann:
 
 class TestSimulation_Robin:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Robin))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "boxRobin.vtu"
@@ -236,7 +236,7 @@ class TestSimulation_Robin:
 
 class TestSimulation_Well:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_well_BC))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "boxWell.vtu"
@@ -318,7 +318,7 @@ class TestSimulation_Well:
 class TestConverter:
     def setup_method(self):
         # Variables for the following tests:
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_converter"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_converter")
         self.doc = ifm.loadDocument(str(examples.feflow_model_box_Neumann))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
 
@@ -451,7 +451,7 @@ class TestConverter:
 
 class TestSimulation_HT:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         self.doc = ifm.loadDocument(str(examples.feflow_model_2D_HT))
         self.pv_mesh = _feflowlib.convert_properties_mesh(self.doc)
         self.vtu_path = self.temp_dir / "HT_Dirichlet.vtu"
@@ -512,7 +512,7 @@ class TestSimulation_HT:
 
 class TestSimulation_CT:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         doc_560 = ifm.loadDocument(str(examples.feflow_model_2D_CT_t_560))
         self.pv_mesh_560 = _feflowlib.convert_properties_mesh(doc_560)
         self.pv_mesh_560.save(self.temp_dir / "CT_2D_line.vtu")
@@ -606,7 +606,7 @@ class TestSimulation_CT:
 
 class TestFeflowModel:
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        self.temp_dir = ot.definitions.temp_dir("feflow_test_simulation")
         self.feflow_model_HT = FeflowModel(
             examples.feflow_model_2D_HT, self.temp_dir / "HT"
         )
@@ -831,12 +831,14 @@ class TestFeflowModel:
             in self.feflow_model_HTC.process
         )
 
-    def test_prj_file_HT(self):
+    def test_prj_file_HT(self, tmp_path: Path):
         """
         Test if prj-file is created correctly using
         FeflowModel object for a HT process.
         """
-        temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+        temp_dir = Path(
+            tempfile.mkdtemp("feflow_test_simulation", dir=tmp_path)
+        )
         model = FeflowModel(
             examples.feflow_model_box_Neumann,
             temp_dir / "boxNeumann_feflow_model",

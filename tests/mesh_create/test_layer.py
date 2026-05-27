@@ -1,6 +1,5 @@
 import re
 import shutil
-import tempfile
 from itertools import pairwise
 from pathlib import Path
 
@@ -8,7 +7,7 @@ import numpy as np
 import pytest
 import pyvista as pv
 
-from ogstools.definitions import EXAMPLES_DIR
+from ogstools.definitions import EXAMPLES_DIR, temp_file
 from ogstools.mesh import create
 
 meshpath = EXAMPLES_DIR / "meshlib"
@@ -66,7 +65,7 @@ class TestRaster:
         Checks if GML is created and its content (some parts)
         """
         x = create.LocationFrame(0, 20, -1.4, 4000.4)
-        outfile = Path(tempfile.mkstemp(".gml")[1])
+        outfile = temp_file(".gml", "LocationFrame")
         x.as_gml(outfile)
         ## start of test
         pattern = r'y="(-?\d+\.\d+)"'
@@ -85,7 +84,7 @@ class TestRaster:
         """
         locFrame = create.LocationFrame(0.0, 20.0, -1.4, 12.4)
         raster = create.Raster(locFrame, 25)
-        outfile = Path(tempfile.mkstemp(".vtu", "Raster")[1])
+        outfile = temp_file(".vtu", "Raster")
         vtu = raster.as_vtu(outfile)
         # start of test
         # expect a new file to written and now able to read as vtu

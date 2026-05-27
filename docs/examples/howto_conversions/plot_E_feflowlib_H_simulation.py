@@ -8,22 +8,17 @@ be simulated in ot.
 
 # %%
 # 0. Necessary imports
-import tempfile
-from pathlib import Path
-
 import numpy as np
 import pyvista as pv
 
 import ogstools as ot
 from ogstools.examples import feflow_model_box_Neumann
-from ogstools.feflowlib import (
-    FeflowModel,
-)
+from ogstools.feflowlib import FeflowModel
 
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
-temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+temp_dir = ot.definitions.temp_dir("feflow_test_simulation", "examples")
 feflow_model = FeflowModel(feflow_model_box_Neumann, temp_dir / "boxNeumann")
 pv.global_theme.colorbar_orientation = "vertical"
 feflow_model.mesh.plot(

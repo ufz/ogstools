@@ -7,7 +7,6 @@ from __future__ import annotations
 import abc
 import copy
 import errno
-import getpass
 import inspect
 import shutil
 import tempfile
@@ -16,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 from typing_extensions import Self
+
+from ogstools.definitions import usr_tmp_dir
 
 
 # TODO: other backup strategies could include git repo or work with provenance features of workflow managers
@@ -35,7 +36,7 @@ def _date_temp_path(
     id: str | None = None,
     temp: Path | None = None,
 ) -> Path:
-    dir = temp or StorageBase.Temppath
+    dir = temp or StorageBase.TempFile
     suffix = "." + suffix if suffix else ""
     if not id:
         id = _temp_id()
@@ -113,9 +114,7 @@ class StorageBase(abc.ABC):
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
-    Temppath = Path(tempfile.gettempdir()) / (
-        "ogstools" + "_" + getpass.getuser()
-    )
+    TempFile = usr_tmp_dir()
 
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter
@@ -529,7 +528,7 @@ class StorageBase(abc.ABC):
 
     def _date_temp_path(self) -> Path:
         suffix = self._ext
-        return _date_temp_path(self.class_id, suffix, self._id, self.Temppath)
+        return _date_temp_path(self.class_id, suffix, self._id, self.TempFile)
 
     def _reset_save_state(self) -> None:
         """

@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+
+from ogstools.definitions import temp_file
 
 
 class RegionSet:
@@ -22,7 +23,7 @@ class RegionSet:
             self.filename = input
             self.mesh = None
         else:
-            self.filename = Path(tempfile.mkstemp(".vtu", "region_set")[1])
+            self.filename = temp_file(".vtu", "region_set")
             self.mesh = input
 
     def box_boundaries(self) -> tuple[pv.UnstructuredGrid, ...]:

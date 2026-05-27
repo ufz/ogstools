@@ -22,13 +22,11 @@ via :meth:`~ogstools.Project.set_media`.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
+
 
 import ogstools as ot
-from ogstools import definitions as defs
 
-model_dir = Path(mkdtemp())
+model_dir = ot.definitions.temp_dir("materiallib", "user-guide")
 
 # %% [markdown]
 # Example materials
@@ -38,8 +36,10 @@ model_dir = Path(mkdtemp())
 # For example, here are the definitions of "opalinus_clay" (solid) and "water" (fluid):
 
 # %%
-print((Path(defs.MATERIALS_DIR) / "opalinus.yml").read_text(encoding="utf-8"))
-print((Path(defs.MATERIALS_DIR) / "water.yml").read_text(encoding="utf-8"))
+print(
+    (ot.definitions.MATERIALS_DIR / "opalinus.yml").read_text(encoding="utf-8")
+)
+print((ot.definitions.MATERIALS_DIR / "water.yml").read_text(encoding="utf-8"))
 
 # %% [markdown]
 # Media creation

@@ -8,9 +8,6 @@ First we will change the values of the boundary conditions and later we will sho
 
 # %%
 # 0. Necessary imports
-import tempfile
-from pathlib import Path
-
 import numpy as np
 
 import ogstools as ot
@@ -20,7 +17,7 @@ from ogstools.feflowlib import assign_bulk_ids
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
-temp_dir = Path(tempfile.mkdtemp("converted_models"))
+temp_dir = ot.definitions.temp_dir("converted_models", "examples")
 feflow_model = ot.FeflowModel(feflow_model_2D_HT, temp_dir / "HT_model")
 mesh = feflow_model.mesh
 # Print information about the mesh.

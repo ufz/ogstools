@@ -182,3 +182,6 @@ uv.lock
 
 # local python version pin
 .python-version
+
+# Large Language Models
+.continue

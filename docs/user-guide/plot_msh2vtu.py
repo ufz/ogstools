@@ -9,13 +9,10 @@ group in the gmsh mesh.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
-
 import ogstools as ot
 from ogstools import examples
 
-model_dir = Path(mkdtemp())
+model_dir = ot.definitions.temp_dir("msh2vtu", "user-guide")
 msh = examples.msh_geolayers_2d
 
 # %% [markdown]

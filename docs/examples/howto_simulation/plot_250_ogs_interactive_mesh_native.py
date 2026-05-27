@@ -24,9 +24,6 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 # Imports and definitions
 # =======================
 
-import tempfile
-from pathlib import Path
-
 import numpy as np
 from ogs import OGSMesh
 from ogs.OGSSimulator import OGSSimulation
@@ -51,7 +48,7 @@ model = load_model_liquid_flow_simple()
 
 
 model.save()
-sim_output = Path(tempfile.mkdtemp("interactive_mesh"))
+sim_output = ot.definitions.temp_dir("interactive_mesh", "examples")
 arguments = [
     "",
     str(model.project.prjfile),

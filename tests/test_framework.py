@@ -5,6 +5,8 @@ from typing import Any
 
 import pytest
 
+from ogstools.definitions import EXAMPLES_DIR
+
 try:
     _has_ogs_simulator = (
         importlib.util.find_spec("ogs.OGSSimulator") is not None
@@ -30,7 +32,6 @@ from ogstools import (
     Simulation,
 )
 from ogstools.examples import (
-    EXAMPLES_DIR,
     load_meshes_simple_lf,
     load_meshseries_CT_2D_XDMF,
     load_model_liquid_flow_simple,

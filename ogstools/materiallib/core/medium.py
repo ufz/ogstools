@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import ogstools.definitions as defs
+from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .material import Material
@@ -48,7 +48,7 @@ class Medium:
         self.material = material
         self.name = name
         self.data_dir = (
-            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+            Path(data_dir) if data_dir is not None else MATERIALS_DIR
         )
 
         if fluids is not None:
