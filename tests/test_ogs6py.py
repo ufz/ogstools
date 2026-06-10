@@ -851,10 +851,11 @@ class TestiOGS:
             distance_between_pipes="0.06",
             longitudinal_dispersion_length="0.001",
         )
+
         model.processes.set_bhe_component(
             comp_type="flow_and_temperature_control",
-            type="PowerCurveConstantFlow",
-            power_curve="scaled_power_curve",
+            type="Power",
+            power="scaled_power_curve",
             flow_rate="0.00037",
         )
         model.processes.set_bhe_component(
@@ -1064,8 +1065,14 @@ class TestiOGS:
         model.parameters.add_parameter(
             name="dT_Groundsource", type="Constant", value="0.06"
         )
-        model.curves.add_curve(
+        model.parameters.add_parameter(
             name="scaled_power_curve",
+            type="CurveScaled",
+            curve="power_curve",
+            parameter="T_CurveScaled",
+        )
+        model.curves.add_curve(
+            name="power_curve",
             coords=["0 1576800 31536000"],
             values=["-1600 0 -1600"],
         )
@@ -1204,7 +1211,7 @@ class TestiOGS:
         model.processes.set_bhe_component(
             bhe_id=0,
             comp_type="flow_and_temperature_control",
-            type="FixedPowerConstantFlow",
+            type="Power",
             power="100",
             flow_rate="2e-4",
         )
