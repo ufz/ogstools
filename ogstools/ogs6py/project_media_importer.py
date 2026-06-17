@@ -118,7 +118,7 @@ class _ProjectMediaImporter:
     @staticmethod
     def _baseline_only_payload(value: object) -> object:
         if isinstance(value, dict):
-            if MaterialProperty.is_scalar_metadata_wrapper(value):
+            if MaterialProperty._is_scalar_metadata_wrapper(value):
                 return value["value"]
             return {
                 key: _ProjectMediaImporter._baseline_only_payload(val)

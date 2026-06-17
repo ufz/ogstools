@@ -97,7 +97,7 @@ class Material(Mapping[str, MaterialProperty]):
 
     @staticmethod
     def _is_scalar_metadata_wrapper(value: Any) -> bool:
-        return MaterialProperty.is_scalar_metadata_wrapper(value)
+        return MaterialProperty._is_scalar_metadata_wrapper(value)
 
     @classmethod
     def _parse_top_level_value(cls, value: Any) -> tuple[Any, dict[str, Any]]:

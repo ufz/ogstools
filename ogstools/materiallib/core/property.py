@@ -21,7 +21,7 @@ class MaterialProperty:
         self.extra = extra  # e.g. unit, slope, source, ...
 
     @staticmethod
-    def is_scalar_metadata_wrapper(value: Any) -> bool:
+    def _is_scalar_metadata_wrapper(value: Any) -> bool:
         if not isinstance(value, dict):
             return False
         keys = set(value)
