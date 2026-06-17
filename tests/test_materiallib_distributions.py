@@ -281,7 +281,6 @@ def test_property_address_reads_nested_baseline_and_distribution(
     )
 
     material = Material.from_file(material_path)
-    assert material is not None
 
     exponent = PropertyAddress(
         domain="medium",
@@ -314,6 +313,56 @@ def test_property_address_reads_nested_baseline_and_distribution(
     )
     assert material.baseline_value(plain_scalar) == 0.01
     assert material.distribution(plain_scalar) is None
+
+
+def test_property_address_reads_multi_segment_parameter_path(
+    tmp_path: Path,
+) -> None:
+    material_path = _write_yaml(
+        tmp_path / "multi_segment.yml",
+        {
+            "name": "multi_segment_test",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "relative_permeability": [
+                            {
+                                "type": "RelativePermeabilityVanGenuchten",
+                                "wetting": {
+                                    "curve": {
+                                        "exponent": {
+                                            "value": 0.45,
+                                            "distribution": {
+                                                "type": "uniform",
+                                                "min": 0.40,
+                                                "max": 0.50,
+                                            },
+                                        }
+                                    }
+                                },
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(material_path)
+
+    exponent = PropertyAddress(
+        domain="medium",
+        property_name="relative_permeability",
+        parameter_path=("wetting", "curve", "exponent"),
+    )
+
+    assert material.baseline_value(exponent) == 0.45
+    assert material.distribution(exponent) == {
+        "type": "uniform",
+        "min": 0.40,
+        "max": 0.50,
+    }
 
 
 def test_property_address_uses_domain_and_index_to_select_property_variant(
