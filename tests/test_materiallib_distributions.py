@@ -9,6 +9,7 @@ import pytest
 import yaml  # type: ignore[import]
 
 from ogstools import Project
+from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.core import material_manager
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.material_manager import MaterialManager
@@ -543,9 +544,7 @@ def test_export_writes_only_baseline_values_without_distribution(
 def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> (
     None
 ):
-    examples_dir = (
-        Path(__file__).resolve().parents[1] / "ogstools/examples/materiallib"
-    )
+    examples_dir = MATERIALS_DIR
 
     opalinus_raw = yaml.safe_load(
         (examples_dir / "opalinus.yml").read_text(encoding="utf-8")
