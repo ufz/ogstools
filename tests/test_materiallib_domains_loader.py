@@ -41,7 +41,6 @@ def test_material_from_file_accepts_grouped_domains(write_yaml) -> None:
 
     material = Material.from_file(file_path)
 
-    assert material is not None
     assert material.name == "granite"
     assert "Density" in material
     assert material["Density"].extra["domain"] == "medium"
@@ -66,7 +65,6 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
     )
 
     material = Material.from_file(file_path)
-    assert material is not None
 
     target = tmp_path / "water_copy.yml"
     material.to_file(target)
@@ -142,3 +140,34 @@ def test_material_manager_loads_grouped_domain_repository(
     manager = MaterialManager(data_dir=tmp_path)
 
     assert "granite" in manager.materials_db
+
+
+def test_material_from_file_rejects_yaml_without_name(write_yaml) -> None:
+    file_path = write_yaml("not_a_material.yml", {"domains": []})
+
+    with pytest.raises(ValueError, match="top-level 'name' string"):
+        Material.from_file(file_path)
+
+
+def test_material_manager_skips_yaml_without_name(
+    tmp_path: Path, write_yaml
+) -> None:
+    write_yaml("not_a_material.yml", {"domains": []})
+    write_yaml(
+        "granite.yml",
+        {
+            "name": "granite",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": [{"type": "Constant", "value": 2700}]
+                    },
+                }
+            ],
+        },
+    )
+
+    manager = MaterialManager(data_dir=tmp_path)
+
+    assert list(manager.materials_db) == ["granite"]

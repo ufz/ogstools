@@ -53,8 +53,6 @@ def test_top_level_wrapped_value_is_parsed_into_baseline_and_metadata(
     )
 
     material = Material.from_file(material_path)
-
-    assert material is not None
     permeability = material["permeability"]
     assert permeability.value == 1.0e-20
     assert permeability.extra["unit"] == "m²"
@@ -98,7 +96,6 @@ def test_top_level_wrapped_value_roundtrip_preserves_distribution_metadata(
     )
 
     material = Material.from_file(source)
-    assert material is not None
 
     roundtrip_path = tmp_path / "density_roundtrip.yml"
     material.to_file(roundtrip_path)
@@ -156,7 +153,6 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
     )
 
     material = Material.from_file(source)
-    assert material is not None
 
     saturation = material["saturation"]
     assert saturation.value is None

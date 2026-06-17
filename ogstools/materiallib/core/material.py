@@ -43,21 +43,22 @@ class Material(Mapping[str, MaterialProperty]):
         self._parse_properties()
 
     @classmethod
-    def from_file(cls, file_path: str | Path) -> Material | None:
-        """Create a Material from a YAML file or return None if invalid."""
+    def from_file(cls, file_path: str | Path) -> Material:
+        """Create a Material from a YAML file."""
         with Path(file_path).open(encoding="utf-8") as file:
             raw_data = yaml.safe_load(file)
 
         if not isinstance(raw_data, dict):
-            logger.debug("Skipping invalid YAML file: %s", file_path)
-            return None
+            msg = f"Material file '{file_path}' must contain a YAML mapping."
+            raise ValueError(msg)
 
         name = raw_data.get("name")
         if not isinstance(name, str):
-            logger.debug(
-                "Skipping YAML file without valid 'name': %s", file_path
+            msg = (
+                f"Material file '{file_path}' must define a top-level "
+                "'name' string."
             )
-            return None
+            raise ValueError(msg)
 
         return cls(name=name, raw_data=raw_data)
 

@@ -268,7 +268,6 @@ class TestMaterialLib:
 
         mat = Material.from_file(file_path)
 
-        assert mat is not None
         assert mat.name == "granite"
         assert "Density" in mat
 
@@ -283,13 +282,11 @@ class TestMaterialLib:
             ),
         )
         mat = Material.from_file(source)
-        assert mat is not None
 
         target = tmp_path / "water_copy.yml"
         mat.to_file(target)
         copied = Material.from_file(target)
 
-        assert copied is not None
         assert copied.name == "water"
         assert copied["Viscosity"].value == 1.0
         assert copied == mat

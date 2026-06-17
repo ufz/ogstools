@@ -7,6 +7,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
@@ -90,13 +92,30 @@ class MaterialManager:
     def set_material(self, file_path: str | Path) -> None:
         """Write a material entry based of one yaml file."""
         material = Material.from_file(file_path)
-        if material is None:
-            return
         self.materials_db[material.name] = material
 
     # ------------------------------------------------------------
     # Loading
     # ------------------------------------------------------------
+    @staticmethod
+    def _load_repository_material(file_path: Path) -> Material | None:
+        """Load one repository entry, skipping YAML files that are not materials."""
+        with file_path.open(encoding="utf-8") as file:
+            raw_data = yaml.safe_load(file)
+
+        if not isinstance(raw_data, dict):
+            logger.debug("Skipping non-material YAML file: %s", file_path)
+            return None
+
+        name = raw_data.get("name")
+        if not isinstance(name, str):
+            logger.debug(
+                "Skipping YAML file without valid material name: %s", file_path
+            )
+            return None
+
+        return Material(name=name, raw_data=raw_data)
+
     def _load_materials(self) -> None:
         yaml_files = list(self.data_dir.glob("*.yml")) + list(
             self.data_dir.glob("*.yaml")
@@ -106,7 +125,7 @@ class MaterialManager:
             raise FileNotFoundError(msg)
 
         for file_path in yaml_files:
-            material = Material.from_file(file_path)
+            material = self._load_repository_material(file_path)
             if material is not None:
                 self.materials_db[material.name] = material
 

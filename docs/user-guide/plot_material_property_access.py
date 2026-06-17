@@ -38,9 +38,6 @@ work_dir = ot.definitions.temp_dir("materiallib", "property-access")
 # %%
 opalinus_path = ot.definitions.MATERIALS_DIR / "opalinus.yml"
 opalinus = Material.from_file(opalinus_path)
-if opalinus is None:
-    msg = f"Could not load material from {opalinus_path}."
-    raise RuntimeError(msg)
 
 print(f"source: {opalinus_path.name}")
 print(f"material: {opalinus.name}")
@@ -131,9 +128,6 @@ material_path.write_text(
 )
 
 demo_material = Material.from_file(material_path)
-if demo_material is None:
-    msg = f"Could not load material from {material_path}."
-    raise RuntimeError(msg)
 print(f"demo material written to: {material_path.name}")
 
 
@@ -223,9 +217,6 @@ repeat_path.write_text(
 )
 
 repeat_material = Material.from_file(repeat_path)
-if repeat_material is None:
-    msg = f"Could not load material from {repeat_path}."
-    raise RuntimeError(msg)
 
 first_density = PropertyAddress("medium", "density", index=0)
 second_density = PropertyAddress("medium", "density", index=1)
@@ -290,7 +281,8 @@ print(roundtrip_raw["domains"][0]["properties"]["porosity"][0]["value"])
 #
 # - ``Material.from_file()`` is intended for one known material file.
 # - ``MaterialManager`` is better suited for repository-style loading, where
-#   YAML files that are not valid material definitions may be skipped.
+#   YAML files that are not valid material definitions may be skipped during
+#   repository discovery.
 
 # %%
 logging.getLogger("ogstools.materiallib.core.material_manager").setLevel(
