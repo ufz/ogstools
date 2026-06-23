@@ -71,7 +71,8 @@ print(permeability)
 # * ``parameter_path``: optional nested path inside the property payload
 #
 # To keep the example self-contained, we create a small temporary material file
-# with one top-level wrapped value and one nested wrapped parameter.
+# with one top-level value carrying additional metadata and one nested parameter
+# carrying additional metadata.
 
 # %%
 material_path = work_dir / "property_access_demo.yml"
@@ -138,7 +139,7 @@ print(f"demo material written to: {material_path.name}")
 # Top-level baseline value and distribution
 # -----------------------------------------
 #
-# For a wrapped top-level scalar like ``porosity``, the empty ``parameter_path``
+# For a top-level scalar like ``porosity``, the empty ``parameter_path``
 # means "use the property value itself".
 
 # %%
