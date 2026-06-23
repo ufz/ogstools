@@ -16,13 +16,14 @@ domains:
       source: CRC Handbook of Chemistry and Physics
     thermal_conductivity:
     - type: Constant
-      value: 0.6
-      unit: W/(m·K)
+      value:
+        nominal_value: 0.6
+        unit: W/(m·K)
+        distribution:
+          type: uniform
+          lower: 0.55
+          upper: 0.65
       source: CRC Handbook of Chemistry and Physics
-      distribution:
-        type: uniform
-        lower: 0.55
-        upper: 0.65
     density:
     - type: Constant
       value: 1000
@@ -34,7 +35,7 @@ domains:
         concentration:
           reference_condition: 0.0
           slope:
-            value: 2.0e-06
+            nominal_value: 2.0e-06
             distribution:
               type: uniform
               lower: 1.0e-06
@@ -42,7 +43,7 @@ domains:
         temperature:
           reference_condition: 293.15
           slope:
-            value: 1.5e-05
+            nominal_value: 1.5e-05
             distribution:
               type: uniform
               lower: 1.0e-05
@@ -52,13 +53,14 @@ domains:
       unit: kg/m³
     viscosity:
     - type: Constant
-      value: 0.001
-      unit: Pa·s
+      value:
+        nominal_value: 0.001
+        unit: Pa·s
+        distribution:
+          type: loguniform
+          lower: 0.0007
+          upper: 0.0015
       source: at 20 °C, standard value
-      distribution:
-        type: loguniform
-        lower: 0.0007
-        upper: 0.0015
     vapour_pressure:
     - type: ClausiusClapeyron
       triple_temperature: 273.16
@@ -70,13 +72,14 @@ domains:
       source: IAPWS, 1995 formulation
     diffusion:
     - type: Constant
-      value: 1.0e-09
-      unit: m²/s
+      value:
+        nominal_value: 1.0e-09
+        unit: m²/s
+        distribution:
+          type: loguniform
+          lower: 3.0e-10
+          upper: 3.0e-09
       source: typical value for water in porous media
-      distribution:
-        type: loguniform
-        lower: 3.0e-10
-        upper: 3.0e-09
     specific_latent_heat:
     - type: Constant
       value: 2268000.0
@@ -96,13 +99,14 @@ domains:
       source: CRC Handbook of Chemistry and Physics
     thermal_conductivity:
     - type: Constant
-      value: 0.6
-      unit: W/(m·K)
+      value:
+        nominal_value: 0.6
+        unit: W/(m·K)
+        distribution:
+          type: uniform
+          lower: 0.55
+          upper: 0.65
       source: CRC Handbook of Chemistry and Physics
-      distribution:
-        type: uniform
-        lower: 0.55
-        upper: 0.65
     density:
     - type: Constant
       value: 1000
@@ -114,7 +118,7 @@ domains:
         concentration:
           reference_condition: 0.0
           slope:
-            value: 2.0e-06
+            nominal_value: 2.0e-06
             distribution:
               type: uniform
               lower: 1.0e-06
@@ -122,7 +126,7 @@ domains:
         temperature:
           reference_condition: 293.15
           slope:
-            value: 1.5e-05
+            nominal_value: 1.5e-05
             distribution:
               type: uniform
               lower: 1.0e-05
@@ -132,13 +136,14 @@ domains:
       unit: kg/m³
     viscosity:
     - type: Constant
-      value: 0.001
-      unit: Pa·s
+      value:
+        nominal_value: 0.001
+        unit: Pa·s
+        distribution:
+          type: loguniform
+          lower: 0.0007
+          upper: 0.0015
       source: at 20 °C, standard value
-      distribution:
-        type: loguniform
-        lower: 0.0007
-        upper: 0.0015
     vapour_pressure:
     - type: ClausiusClapeyron
       triple_temperature: 273.16
@@ -150,13 +155,14 @@ domains:
       source: IAPWS, 1995 formulation
     diffusion:
     - type: Constant
-      value: 1.0e-09
-      unit: m²/s
+      value:
+        nominal_value: 1.0e-09
+        unit: m²/s
+        distribution:
+          type: loguniform
+          lower: 3.0e-10
+          upper: 3.0e-09
       source: typical value for water in porous media
-      distribution:
-        type: loguniform
-        lower: 3.0e-10
-        upper: 3.0e-09
     specific_latent_heat:
     - type: Constant
       value: 2268000.0

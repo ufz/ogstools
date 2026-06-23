@@ -87,7 +87,7 @@ material_path.write_text(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 0.15,
+                                    "nominal_value": 0.15,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.10,
@@ -100,7 +100,7 @@ material_path.write_text(
                             {
                                 "type": "SaturationVanGenuchten",
                                 "exponent": {
-                                    "value": 0.20,
+                                    "nominal_value": 0.20,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.15,
@@ -108,7 +108,7 @@ material_path.write_text(
                                     },
                                 },
                                 "p_b": {
-                                    "value": 4.8e7,
+                                    "nominal_value": 4.8e7,
                                     "unit": "Pa",
                                     "distribution": {
                                         "type": "loguniform",

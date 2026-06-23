@@ -1,28 +1,32 @@
 AqueousLiquid:
   water:
     carbon_dioxide:
-      value: 1.92e-09
-      distribution:
-        type: loguniform
-        lower: 5.76e-10
-        upper: 5.76e-09
+      value:
+        nominal_value: 1.92e-09
+        distribution:
+          type: loguniform
+          lower: 5.76e-10
+          upper: 5.76e-09
     hydrogen:
-      value: 2.1e-09
-      distribution:
-        type: loguniform
-        lower: 6.3e-10
-        upper: 6.3e-09
+      value:
+        nominal_value: 2.1e-09
+        distribution:
+          type: loguniform
+          lower: 6.3e-10
+          upper: 6.3e-09
     air:
-      value: 2.3e-09
-      distribution:
-        type: loguniform
-        lower: 6.9e-10
-        upper: 6.9e-09
+      value:
+        nominal_value: 2.3e-09
+        distribution:
+          type: loguniform
+          lower: 6.9e-10
+          upper: 6.9e-09
 Gas:
   carbon_dioxide:
     water:
-      value: 1.0e-06
-      distribution:
-        type: loguniform
-        lower: 5.0e-07
-        upper: 2.0e-06
+      value:
+        nominal_value: 1.0e-06
+        distribution:
+          type: loguniform
+          lower: 5.0e-07
+          upper: 2.0e-06

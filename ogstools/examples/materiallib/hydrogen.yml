@@ -16,13 +16,14 @@ domains:
       source: NIST Chemistry WebBook
     thermal_conductivity:
     - type: Constant
-      value: 0.1805
-      unit: W/(m·K)
+      value:
+        nominal_value: 0.1805
+        unit: W/(m·K)
+        distribution:
+          type: uniform
+          lower: 0.17
+          upper: 0.19
       source: NIST Chemistry WebBook
-      distribution:
-        type: uniform
-        lower: 0.17
-        upper: 0.19
     density:
     - type: Constant
       value: 0.08988
@@ -30,13 +31,14 @@ domains:
       source: NIST Chemistry WebBook
     viscosity:
     - type: Constant
-      value: 8.76e-06
-      unit: Pa·s
+      value:
+        nominal_value: 8.76e-06
+        unit: Pa·s
+        distribution:
+          type: uniform
+          lower: 8.3e-06
+          upper: 9.2e-06
       source: NIST Chemistry WebBook
-      distribution:
-        type: uniform
-        lower: 8.3e-06
-        upper: 9.2e-06
     vapour_pressure:
     - type: Antoine
       A: 4.584
@@ -51,13 +53,14 @@ domains:
       source: NIST Chemistry WebBook
     henry_coefficient:
     - type: Constant
-      value: 1.28e-05
-      unit: mol/(m³·Pa)
+      value:
+        nominal_value: 1.28e-05
+        unit: mol/(m³·Pa)
+        distribution:
+          type: loguniform
+          lower: 8.0e-06
+          upper: 2.0e-05
       source: Sander, R. (2015), Atmospheric Chemistry and Physics, 15, 4399–4981
-      distribution:
-        type: loguniform
-        lower: 8.0e-06
-        upper: 2.0e-05
 - domain: component
   properties:
     molar_mass:
@@ -72,13 +75,14 @@ domains:
       source: NIST Chemistry WebBook
     thermal_conductivity:
     - type: Constant
-      value: 0.1805
-      unit: W/(m·K)
+      value:
+        nominal_value: 0.1805
+        unit: W/(m·K)
+        distribution:
+          type: uniform
+          lower: 0.17
+          upper: 0.19
       source: NIST Chemistry WebBook
-      distribution:
-        type: uniform
-        lower: 0.17
-        upper: 0.19
     density:
     - type: Constant
       value: 0.08988
@@ -86,13 +90,14 @@ domains:
       source: NIST Chemistry WebBook
     viscosity:
     - type: Constant
-      value: 8.76e-06
-      unit: Pa·s
+      value:
+        nominal_value: 8.76e-06
+        unit: Pa·s
+        distribution:
+          type: uniform
+          lower: 8.3e-06
+          upper: 9.2e-06
       source: NIST Chemistry WebBook
-      distribution:
-        type: uniform
-        lower: 8.3e-06
-        upper: 9.2e-06
     vapour_pressure:
     - type: Antoine
       A: 4.584
@@ -107,10 +112,11 @@ domains:
       source: NIST Chemistry WebBook
     henry_coefficient:
     - type: Constant
-      value: 1.28e-05
-      unit: mol/(m³·Pa)
+      value:
+        nominal_value: 1.28e-05
+        unit: mol/(m³·Pa)
+        distribution:
+          type: loguniform
+          lower: 8.0e-06
+          upper: 2.0e-05
       source: Sander, R. (2015), Atmospheric Chemistry and Physics, 15, 4399–4981
-      distribution:
-        type: loguniform
-        lower: 8.0e-06
-        upper: 2.0e-05

@@ -11,67 +11,74 @@ domains:
       source: null
     specific_heat_capacity:
     - type: Constant
-      value: 500
-      unit: J/(kg·K)
+      value:
+        nominal_value: 500
+        unit: J/(kg·K)
+        distribution:
+          type: uniform
+          lower: 450
+          upper: 550
       source: null
-      distribution:
-        type: uniform
-        lower: 450
-        upper: 550
     thermal_conductivity:
     - type: Constant
-      value: 45
-      unit: W/(m·K)
+      value:
+        nominal_value: 45
+        unit: W/(m·K)
+        distribution:
+          type: uniform
+          lower: 35
+          upper: 55
       source: null
-      distribution:
-        type: uniform
-        lower: 35
-        upper: 55
     density:
     - type: Constant
-      value: 7850
-      unit: kg/m³
+      value:
+        nominal_value: 7850
+        unit: kg/m³
+        distribution:
+          type: normal
+          mean: 7850
+          stddev: 100
       source: null
-      distribution:
-        type: normal
-        mean: 7850
-        stddev: 100
     youngs_modulus:
     - type: Constant
-      value: 2.0e11
-      unit: Pa
+      value:
+        nominal_value: 2.0e11
+        unit: Pa
+        distribution:
+          type: normal
+          mean: 200000000000.0
+          stddev: 10000000000.0
       source: null
-      distribution:
-        type: normal
-        mean: 200000000000.0
-        stddev: 10000000000.0
     poisson_ratio:
     - type: Constant
-      value: 0.3
-      unit: 1
+      value:
+        nominal_value: 0.3
+        unit: 1
+        distribution:
+          type: uniform
+          lower: 0.27
+          upper: 0.31
       source: null
-      distribution:
-        type: uniform
-        lower: 0.27
-        upper: 0.31
     yield_strength:
     - type: Constant
-      value: 250e6
-      unit: Pa
+      value:
+        nominal_value: 250e6
+        unit: Pa
+        distribution:
+          type: loguniform
+          lower: 200000000.0
+          upper: 400000000.0
       source: null
-      distribution:
-        type: loguniform
-        lower: 200000000.0
-        upper: 400000000.0
     thermal_expansivity:
     - type: Constant
-      value: 1.2e-05
-      unit: 1/K
+      value:
+        nominal_value: 1.2e-05
+        unit: 1/K
+        distribution:
+          type: uniform
+          lower: 1.0e-05
+          upper: 1.5e-05
       source: null
-      distribution:
-        type: uniform
-        lower: 1.0e-05
-        upper: 1.5e-05
 - domain: medium
   properties:
     permeability:

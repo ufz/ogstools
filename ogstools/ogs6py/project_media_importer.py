@@ -119,7 +119,7 @@ class _ProjectMediaImporter:
     def _baseline_only_payload(value: object) -> object:
         if isinstance(value, dict):
             if MaterialProperty._is_scalar_metadata_wrapper(value):
-                return value["value"]
+                return value["nominal_value"]
             return {
                 key: _ProjectMediaImporter._baseline_only_payload(val)
                 for key, val in value.items()

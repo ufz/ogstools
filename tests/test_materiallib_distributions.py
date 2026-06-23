@@ -37,7 +37,7 @@ def test_top_level_wrapped_value_is_parsed_into_baseline_and_metadata(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 1.0e-20,
+                                    "nominal_value": 1.0e-20,
                                     "unit": "m²",
                                     "distribution": {
                                         "type": "loguniform",
@@ -80,7 +80,7 @@ def test_top_level_wrapped_value_roundtrip_preserves_distribution_metadata(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 2600,
+                                    "nominal_value": 2600,
                                     "unit": "kg/m³",
                                     "distribution": {
                                         "type": "normal",
@@ -104,7 +104,7 @@ def test_top_level_wrapped_value_roundtrip_preserves_distribution_metadata(
     roundtrip_raw = yaml.safe_load(roundtrip_path.read_text(encoding="utf-8"))
     density_entry = roundtrip_raw["domains"][0]["properties"]["density"][0]
     assert density_entry["value"] == {
-        "value": 2600,
+        "nominal_value": 2600,
         "unit": "kg/m³",
         "distribution": {
             "type": "normal",
@@ -129,7 +129,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
                             {
                                 "type": "SaturationVanGenuchten",
                                 "exponent": {
-                                    "value": 0.2,
+                                    "nominal_value": 0.2,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.15,
@@ -137,7 +137,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
                                     },
                                 },
                                 "p_b": {
-                                    "value": 4.8e7,
+                                    "nominal_value": 4.8e7,
                                     "unit": "Pa",
                                     "distribution": {
                                         "type": "loguniform",
@@ -158,7 +158,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
     saturation = material["saturation"]
     assert saturation.value is None
     assert saturation.extra["exponent"] == {
-        "value": 0.2,
+        "nominal_value": 0.2,
         "distribution": {
             "type": "uniform",
             "min": 0.15,
@@ -166,7 +166,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
         },
     }
     assert saturation.extra["p_b"] == {
-        "value": 4.8e7,
+        "nominal_value": 4.8e7,
         "unit": "Pa",
         "distribution": {
             "type": "loguniform",
@@ -182,7 +182,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
         0
     ]
     assert saturation_entry["exponent"] == {
-        "value": 0.2,
+        "nominal_value": 0.2,
         "distribution": {
             "type": "uniform",
             "min": 0.15,
@@ -190,7 +190,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
         },
     }
     assert saturation_entry["p_b"] == {
-        "value": 4.8e7,
+        "nominal_value": 4.8e7,
         "unit": "Pa",
         "distribution": {
             "type": "loguniform",
@@ -215,7 +215,7 @@ def test_property_address_reads_top_level_baseline_and_distribution(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 0.15,
+                                    "nominal_value": 0.15,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.1,
@@ -257,7 +257,7 @@ def test_property_address_reads_nested_baseline_and_distribution(
                             {
                                 "type": "SaturationVanGenuchten",
                                 "exponent": {
-                                    "value": 0.2,
+                                    "nominal_value": 0.2,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.15,
@@ -265,7 +265,7 @@ def test_property_address_reads_nested_baseline_and_distribution(
                                     },
                                 },
                                 "p_b": {
-                                    "value": 4.8e7,
+                                    "nominal_value": 4.8e7,
                                     "distribution": {
                                         "type": "loguniform",
                                         "min": 1.0e7,
@@ -333,7 +333,7 @@ def test_property_address_reads_multi_segment_parameter_path(
                                 "wetting": {
                                     "curve": {
                                         "exponent": {
-                                            "value": 0.45,
+                                            "nominal_value": 0.45,
                                             "distribution": {
                                                 "type": "uniform",
                                                 "min": 0.40,
@@ -381,7 +381,7 @@ def test_property_address_uses_domain_and_index_to_select_property_variant(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 1.7,
+                                    "nominal_value": 1.7,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 1.5,
@@ -392,7 +392,7 @@ def test_property_address_uses_domain_and_index_to_select_property_variant(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 2.1,
+                                    "nominal_value": 2.1,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 2.0,
@@ -459,7 +459,7 @@ def test_export_writes_only_baseline_values_without_distribution(
                             {
                                 "type": "Constant",
                                 "value": {
-                                    "value": 1.0e-20,
+                                    "nominal_value": 1.0e-20,
                                     "unit": "m²",
                                     "distribution": {
                                         "type": "loguniform",
@@ -473,7 +473,7 @@ def test_export_writes_only_baseline_values_without_distribution(
                             {
                                 "type": "SaturationVanGenuchten",
                                 "exponent": {
-                                    "value": 0.2,
+                                    "nominal_value": 0.2,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.15,
@@ -481,7 +481,7 @@ def test_export_writes_only_baseline_values_without_distribution(
                                     },
                                 },
                                 "p_b": {
-                                    "value": 4.8e7,
+                                    "nominal_value": 4.8e7,
                                     "unit": "Pa",
                                     "distribution": {
                                         "type": "loguniform",
@@ -490,7 +490,7 @@ def test_export_writes_only_baseline_values_without_distribution(
                                     },
                                 },
                                 "residual_gas_saturation": {
-                                    "value": 0.01,
+                                    "nominal_value": 0.01,
                                     "distribution": {
                                         "type": "uniform",
                                         "min": 0.0,
@@ -607,25 +607,27 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
 
     assert (
         opalinus.baseline_value(medium_density)
-        == opalinus_medium["properties"]["density"][0]["value"]
+        == opalinus_medium["properties"]["density"][0]["value"]["nominal_value"]
     )
     assert (
         opalinus.distribution(medium_density)
-        == opalinus_medium["properties"]["density"][0]["distribution"]
+        == opalinus_medium["properties"]["density"][0]["value"]["distribution"]
     )
 
     assert (
         opalinus.baseline_value(phase_density)
-        == opalinus_phase["properties"]["density"][0]["value"]
+        == opalinus_phase["properties"]["density"][0]["value"]["nominal_value"]
     )
     assert (
         opalinus.distribution(phase_density)
-        == opalinus_phase["properties"]["density"][0]["distribution"]
+        == opalinus_phase["properties"]["density"][0]["value"]["distribution"]
     )
 
     assert (
         opalinus.baseline_value(saturation_p_b)
-        == opalinus_medium["properties"]["saturation"][0]["p_b"]["value"]
+        == opalinus_medium["properties"]["saturation"][0]["p_b"][
+            "nominal_value"
+        ]
     )
     assert (
         opalinus.distribution(saturation_p_b)
@@ -634,20 +636,22 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
 
     assert (
         water.baseline_value(water_viscosity)
-        == water_phase["properties"]["viscosity"][0]["value"]
+        == water_phase["properties"]["viscosity"][0]["value"]["nominal_value"]
     )
     assert (
         water.distribution(water_viscosity)
-        == water_phase["properties"]["viscosity"][0]["distribution"]
+        == water_phase["properties"]["viscosity"][0]["value"]["distribution"]
     )
 
     assert (
         hydrogen.baseline_value(hydrogen_thermal_conductivity)
-        == hydrogen_phase["properties"]["thermal_conductivity"][0]["value"]
+        == hydrogen_phase["properties"]["thermal_conductivity"][0]["value"][
+            "nominal_value"
+        ]
     )
     assert (
         hydrogen.distribution(hydrogen_thermal_conductivity)
-        == hydrogen_phase["properties"]["thermal_conductivity"][0][
+        == hydrogen_phase["properties"]["thermal_conductivity"][0]["value"][
             "distribution"
         ]
     )

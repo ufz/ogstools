@@ -1,246 +1,261 @@
 group: medium
 name: opalinus_clay
 domains:
-- domain: medium
-  properties:
-    biot_coefficient:
-    - type: Constant
-      value: 0.6
-      unit: 1
-      distribution:
-        type: uniform
-        lower: 0.4
-        upper: 0.8
-    bishops_effective_stress:
-    - type: BishopsPowerLaw
-      exponent: 1
-      unit: 1
-    density:
-    - type: Constant
-      value: 2600
-      unit: kg/m³
-      distribution:
-        type: normal
-        mean: 2600
-        stddev: 80
-    permeability:
-    - type: Constant
-      value: 1.0e-21
-      unit: m²
-      distribution:
-        type: loguniform
-        lower: 1.0e-22
-        upper: 1.0e-20
-    poisson_ratio:
-    - type: Constant
-      value: 0.23
-      unit: 1
-      distribution:
-        type: uniform
-        lower: 0.18
-        upper: 0.3
-    porosity:
-    - type: Constant
-      value: 0.15
-      unit: 1
-      distribution:
-        type: uniform
-        lower: 0.1
-        upper: 0.2
-    storage:
-    - type: Constant
-      value: 2e-10
-      unit: kg/(m²Pa)
-      distribution:
-        type: loguniform
-        lower: 5.0e-11
-        upper: 8.0e-10
-    reference_temperature:
-    - type: Constant
-      value: 293.15
-      unit: K
-    saturation:
-    - type: SaturationVanGenuchten
-      exponent:
-        value: 0.2
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.15
-          upper: 0.35
-      p_b:
-        value: 48000000
-        unit: Pa
-        distribution:
-          type: loguniform
-          lower: 10000000.0
-          upper: 100000000.0
-      residual_gas_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.03
-      residual_liquid_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.05
-    specific_heat_capacity:
-    - type: Constant
-      value: 995
-      unit: J/(kg·K)
-      distribution:
-        type: normal
-        mean: 995
-        stddev: 80
-    thermal_conductivity:
-    - type: SaturationWeightedThermalConductivity
-      mean_type: arithmetic_squareroot
-      dry_thermal_conductivity:
-        value: 1.36
-        unit: W/(m·K)
-        distribution:
-          type: uniform
-          lower: 1.1
-          upper: 1.6
-      wet_thermal_conductivity:
-        value: 1.7
-        unit: W/(m·K)
-        distribution:
-          type: uniform
-          lower: 1.5
-          upper: 2.0
-      unit: W/(m·K)
-    - type: EffectiveThermalConductivityPorosityMixing
-      unit: W/(m·K)
-    - type: Constant
-      value: 1.7
-      unit: W/(m·K)
-      distribution:
-        type: uniform
-        lower: 1.5
-        upper: 2.0
-    thermal_expansivity:
-    - type: Constant
-      value: 1.7e-05
-      unit: 1/K
-      distribution:
-        type: uniform
-        lower: 1.0e-05
-        upper: 2.5e-05
-    thermal_longitudinal_dispersivity:
-    - type: Constant
-      value: 0
-      unit: m
-    thermal_transversal_dispersivity:
-    - type: Constant
-      value: 0
-      unit: m
-    tortuosity:
-    - type: Constant
-      value: 1
-      unit: 1
-    youngs_modulus:
-    - type: Constant
-      value: 6500000000
-      unit: Pa
-      distribution:
-        type: loguniform
-        lower: 3000000000.0
-        upper: 12000000000.0
-    relative_permeability:
-    - type: RelativePermeabilityVanGenuchten
-      residual_liquid_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.05
-      residual_gas_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.03
-      exponent:
-        value: 0.2
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.15
-          upper: 0.35
-      minimum_relative_permeability_liquid: 1e-12
-      unit: 1
-    relative_permeability_nonwetting_phase:
-    - type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
-      residual_liquid_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.05
-      residual_gas_saturation:
-        value: 0.01
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.0
-          upper: 0.03
-      exponent:
-        value: 0.2
-        unit: '1'
-        distribution:
-          type: uniform
-          lower: 0.15
-          upper: 0.35
-      min_relative_permeability: 1e-5
-      unit: 1
-- domain: phase
-  properties:
-    density:
-    - type: Constant
-      value: 2600
-      unit: kg/m³
-      distribution:
-        type: normal
-        mean: 2600
-        stddev: 80
-    specific_heat_capacity:
-    - type: Constant
-      value: 995
-      unit: J/(kg·K)
-      distribution:
-        type: normal
-        mean: 995
-        stddev: 80
-    thermal_conductivity:
-    - type: Constant
-      value: 1.7
-      unit: W/(m·K)
-      distribution:
-        type: uniform
-        lower: 1.5
-        upper: 2.0
-    thermal_expansivity:
-    - type: Constant
-      value: 1.7e-05
-      unit: 1/K
-      distribution:
-        type: uniform
-        lower: 1.0e-05
-        upper: 2.5e-05
-    storage:
-    - type: Constant
-      value: 2e-10
-      unit: kg/(m²Pa)
-      distribution:
-        type: loguniform
-        lower: 5.0e-11
-        upper: 8.0e-10
+  - domain: medium
+    properties:
+      biot_coefficient:
+        - type: Constant
+          value:
+            nominal_value: 0.6
+            unit: 1
+            distribution:
+              type: uniform
+              lower: 0.4
+              upper: 0.8
+      bishops_effective_stress:
+        - type: BishopsPowerLaw
+          exponent: 1
+          unit: 1
+      density:
+        - type: Constant
+          value:
+            nominal_value: 2600
+            unit: kg/m³
+            distribution:
+              type: normal
+              mean: 2600
+              stddev: 80
+      permeability:
+        - type: Constant
+          value:
+            nominal_value: 1.0e-21
+            unit: m²
+            distribution:
+              type: loguniform
+              lower: 1.0e-22
+              upper: 1.0e-20
+      poisson_ratio:
+        - type: Constant
+          value:
+            nominal_value: 0.23
+            unit: 1
+            distribution:
+              type: uniform
+              lower: 0.18
+              upper: 0.3
+      porosity:
+        - type: Constant
+          value:
+            nominal_value: 0.15
+            unit: 1
+            distribution:
+              type: uniform
+              lower: 0.1
+              upper: 0.2
+      storage:
+        - type: Constant
+          value:
+            nominal_value: 2e-10
+            unit: kg/(m²Pa)
+            distribution:
+              type: loguniform
+              lower: 5.0e-11
+              upper: 8.0e-10
+      reference_temperature:
+        - type: Constant
+          value: 293.15
+          unit: K
+      saturation:
+        - type: SaturationVanGenuchten
+          exponent:
+            nominal_value: 0.2
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.15
+              upper: 0.35
+          p_b:
+            nominal_value: 48000000
+            unit: Pa
+            distribution:
+              type: loguniform
+              lower: 10000000.0
+              upper: 100000000.0
+          residual_gas_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.03
+          residual_liquid_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.05
+      specific_heat_capacity:
+        - type: Constant
+          value:
+            nominal_value: 995
+            unit: J/(kg·K)
+            distribution:
+              type: normal
+              mean: 995
+              stddev: 80
+      thermal_conductivity:
+        - type: SaturationWeightedThermalConductivity
+          mean_type: arithmetic_squareroot
+          dry_thermal_conductivity:
+            nominal_value: 1.36
+            unit: W/(m·K)
+            distribution:
+              type: uniform
+              lower: 1.1
+              upper: 1.6
+          wet_thermal_conductivity:
+            nominal_value: 1.7
+            unit: W/(m·K)
+            distribution:
+              type: uniform
+              lower: 1.5
+              upper: 2.0
+          unit: W/(m·K)
+        - type: EffectiveThermalConductivityPorosityMixing
+          unit: W/(m·K)
+        - type: Constant
+          value:
+            nominal_value: 1.7
+            unit: W/(m·K)
+            distribution:
+              type: uniform
+              lower: 1.5
+              upper: 2.0
+      thermal_expansivity:
+        - type: Constant
+          value:
+            nominal_value: 1.7e-05
+            unit: 1/K
+            distribution:
+              type: uniform
+              lower: 1.0e-05
+              upper: 2.5e-05
+      thermal_longitudinal_dispersivity:
+        - type: Constant
+          value: 0
+          unit: m
+      thermal_transversal_dispersivity:
+        - type: Constant
+          value: 0
+          unit: m
+      tortuosity:
+        - type: Constant
+          value: 1
+          unit: 1
+      youngs_modulus:
+        - type: Constant
+          value:
+            nominal_value: 6500000000
+            unit: Pa
+            distribution:
+              type: loguniform
+              lower: 3000000000.0
+              upper: 12000000000.0
+      relative_permeability:
+        - type: RelativePermeabilityVanGenuchten
+          residual_liquid_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.05
+          residual_gas_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.03
+          exponent:
+            nominal_value: 0.2
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.15
+              upper: 0.35
+          minimum_relative_permeability_liquid: 1e-12
+          unit: 1
+      relative_permeability_nonwetting_phase:
+        - type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
+          residual_liquid_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.05
+          residual_gas_saturation:
+            nominal_value: 0.01
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.0
+              upper: 0.03
+          exponent:
+            nominal_value: 0.2
+            unit: "1"
+            distribution:
+              type: uniform
+              lower: 0.15
+              upper: 0.35
+          min_relative_permeability: 1e-5
+          unit: 1
+  - domain: phase
+    properties:
+      density:
+        - type: Constant
+          value:
+            nominal_value: 2600
+            unit: kg/m³
+            distribution:
+              type: normal
+              mean: 2600
+              stddev: 80
+      specific_heat_capacity:
+        - type: Constant
+          value:
+            nominal_value: 995
+            unit: J/(kg·K)
+            distribution:
+              type: normal
+              mean: 995
+              stddev: 80
+      thermal_conductivity:
+        - type: Constant
+          value:
+            nominal_value: 1.7
+            unit: W/(m·K)
+            distribution:
+              type: uniform
+              lower: 1.5
+              upper: 2.0
+      thermal_expansivity:
+        - type: Constant
+          value:
+            nominal_value: 1.7e-05
+            unit: 1/K
+            distribution:
+              type: uniform
+              lower: 1.0e-05
+              upper: 2.5e-05
+      storage:
+        - type: Constant
+          value:
+            nominal_value: 2e-10
+            unit: kg/(m²Pa)
+            distribution:
+              type: loguniform
+              lower: 5.0e-11
+              upper: 8.0e-10

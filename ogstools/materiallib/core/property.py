@@ -22,12 +22,11 @@ class MaterialProperty:
 
     @staticmethod
     def _is_scalar_metadata_wrapper(value: Any) -> bool:
-        if not isinstance(value, dict):
-            return False
-        keys = set(value)
-        if "value" not in keys:
-            return False
-        return keys.issubset({"value", "unit", "distribution"})
+        return (
+            isinstance(value, dict)
+            and "nominal_value" in value
+            and ("distribution" in value or "unit" in value)
+        )
 
     def to_dict(self) -> dict:
         d = {"name": self.name, "type": self.type}
