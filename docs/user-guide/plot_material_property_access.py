@@ -75,55 +75,58 @@ print(permeability)
 
 # %%
 material_path = work_dir / "property_access_demo.yml"
-material_path.write_text(
-    yaml.safe_dump(
-        {
-            "name": "property_access_demo",
-            "domains": [
-                {
-                    "domain": "medium",
-                    "properties": {
-                        "porosity": [
-                            {
-                                "type": "Constant",
-                                "value": {
-                                    "nominal_value": 0.15,
-                                    "distribution": {
-                                        "type": "uniform",
-                                        "min": 0.10,
-                                        "max": 0.20,
-                                    },
-                                },
-                            }
-                        ],
-                        "saturation": [
-                            {
-                                "type": "SaturationVanGenuchten",
-                                "exponent": {
-                                    "nominal_value": 0.20,
-                                    "distribution": {
-                                        "type": "uniform",
-                                        "min": 0.15,
-                                        "max": 0.30,
-                                    },
-                                },
-                                "p_b": {
-                                    "nominal_value": 4.8e7,
-                                    "unit": "Pa",
-                                    "distribution": {
-                                        "type": "loguniform",
-                                        "min": 1.0e7,
-                                        "max": 1.0e8,
-                                    },
-                                },
-                            }
-                        ],
-                    },
-                }
-            ],
+porosity = {
+    "type": "Constant",
+    "value": {
+        "nominal_value": 0.15,
+        "distribution": {
+            "type": "uniform",
+            "min": 0.10,
+            "max": 0.20,
         },
-        sort_keys=False,
-    ),
+    },
+}
+
+sat_exponent = {
+    "nominal_value": 0.20,
+    "distribution": {
+        "type": "uniform",
+        "min": 0.15,
+        "max": 0.30,
+    },
+}
+
+sat_p_b = {
+    "nominal_value": 4.8e7,
+    "unit": "Pa",
+    "distribution": {
+        "type": "loguniform",
+        "min": 1.0e7,
+        "max": 1.0e8,
+    },
+}
+
+saturation = {
+    "type": "SaturationVanGenuchten",
+    "exponent": sat_exponent,
+    "p_b": sat_p_b,
+}
+
+demo_material_data = {
+    "name": "property_access_demo",
+    "domains": [
+        {
+            "domain": "medium",
+            "properties": {
+                "porosity": [porosity],
+                "saturation": [saturation],
+            },
+        }
+    ],
+}
+
+material_path.write_text(
+    yaml.safe_dump(demo_material_data, sort_keys=False),
     encoding="utf-8",
 )
 
