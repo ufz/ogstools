@@ -80,8 +80,10 @@ class Material(Mapping[str, MaterialProperty]):
                     type_ = entry.get(
                         "type", "Constant"
                     )  # TODO: Error if 'type' not found
-                    value = entry.get("value", None)
-                    value, value_extra = self._parse_top_level_value(value)
+                    raw_value = entry.get("value", None)
+                    parsed_value, value_extra = self._parse_top_level_value(
+                        raw_value
+                    )
                     extra = {
                         k: v
                         for k, v in entry.items()
@@ -91,7 +93,10 @@ class Material(Mapping[str, MaterialProperty]):
                     extra["domain"] = domain_name
                     self.properties.append(
                         MaterialProperty(
-                            name=prop_name, type_=type_, value=value, **extra
+                            name=prop_name,
+                            type_=type_,
+                            value=parsed_value,
+                            **extra,
                         )
                     )
 
