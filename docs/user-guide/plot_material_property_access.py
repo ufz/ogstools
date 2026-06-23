@@ -54,7 +54,7 @@ print(f"property count: {len(opalinus.properties)}")
 
 # %%
 permeability = opalinus["permeability"]
-print(permeability.to_dict())
+print(permeability)
 
 
 # %% [markdown]
