@@ -62,7 +62,7 @@ print(permeability)
 # ----------------------------
 #
 # Some properties carry additional metadata such as uncertainty distributions.
-# Others contain nested parameter payloads instead of a single scalar value.
+# Others contain nested parameters  instead of a single scalar value.
 # ``PropertyAddress`` is used to point to one concrete property occurrence:
 #
 # * ``domain``: top-level domain block such as ``medium`` or ``phase``
