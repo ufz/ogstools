@@ -191,26 +191,23 @@ print(f"p_b distribution: {demo_material.distribution(p_b_address)}")
 
 # %%
 repeat_path = work_dir / "repeated_property_demo.yml"
+density1 = {"type": "Constant", "value": 1.7}
+density2 = {"type": "Constant", "value": 2.1}
+densities = [density1, density2]
+
 repeat_path.write_text(
     yaml.safe_dump(
         {
             "name": "repeated_property_demo",
             "domains": [
-                {
-                    "domain": "medium",
-                    "properties": {
-                        "density": [
-                            {"type": "Constant", "value": 1.7},
-                            {"type": "Constant", "value": 2.1},
-                        ]
-                    },
-                }
+                {"domain": "medium", "properties": {"density": densities}}
             ],
         },
         sort_keys=False,
     ),
     encoding="utf-8",
 )
+
 
 repeat_material = Material.from_file(repeat_path)
 
