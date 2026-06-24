@@ -148,9 +148,8 @@ porosity_address = PropertyAddress(
     property_name="porosity",
 )
 
-print({"baseline": demo_material.baseline_value(porosity_address)})
-print({"distribution": demo_material.distribution(porosity_address)})
-
+print(f"baseline: {demo_material.baseline_value(porosity_address)}")
+print(f"distribution: {demo_material.distribution(porosity_address)}")
 
 # %% [markdown]
 # Nested parameter access with `parameter_path`
@@ -177,18 +176,11 @@ p_b_address = PropertyAddress(
 )
 
 print(
-    {
-        "exponent baseline": demo_material.baseline_value(exponent_address),
-        "exponent distribution": demo_material.distribution(exponent_address),
-    }
+    f"exponent nominal value: {demo_material.baseline_value(exponent_address)}"
 )
-print(
-    {
-        "p_b baseline": demo_material.baseline_value(p_b_address),
-        "p_b distribution": demo_material.distribution(p_b_address),
-    }
-)
-
+print(f"exponent distribution: {demo_material.distribution(exponent_address)}")
+print(f"p_b nominal value: {demo_material.baseline_value(p_b_address)}")
+print(f"p_b distribution: {demo_material.distribution(p_b_address)}")
 
 # %% [markdown]
 # Repeated properties and `index`
@@ -225,9 +217,12 @@ repeat_material = Material.from_file(repeat_path)
 first_density = PropertyAddress("medium", "density", index=0)
 second_density = PropertyAddress("medium", "density", index=1)
 
-print({"density[0]": repeat_material.baseline_value(first_density)})
-print({"density[1]": repeat_material.baseline_value(second_density)})
-
+print(
+    f"density[0] nominal value: {repeat_material.baseline_value(first_density)}"
+)
+print(
+    f"density[1] nominal value: {repeat_material.baseline_value(second_density)}"
+)
 
 # %% [markdown]
 # Validation timing and failure modes
