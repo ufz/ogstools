@@ -5,6 +5,7 @@
 
 from .common_ogs_analyses import (
     analysis_convergence_coupling_iteration,
+    analysis_convergence_linear_solver,
     analysis_convergence_newton_iteration,
     analysis_simulation,
     analysis_simulation_termination,
@@ -22,6 +23,7 @@ from .regexes import ogs_regexes
 
 __all__ = [
     "analysis_convergence_coupling_iteration",
+    "analysis_convergence_linear_solver",
     "analysis_convergence_newton_iteration",
     "analysis_simulation",
     "analysis_simulation_termination",

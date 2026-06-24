@@ -144,6 +144,20 @@ def analysis_convergence_newton_iteration(df: pd.DataFrame) -> pd.DataFrame:
     return pt
 
 
+def analysis_convergence_linear_solver(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convergence behaviour of linear solver / precondition configuration.
+    """
+    dfe_linear_solver_iteration = df.copy()
+    interest = ["norm_of_residuum"]
+
+    context = ["time_step", "process", "iteration_number", "linear_iteration_number"]
+    pt = dfe_linear_solver_iteration.pivot_table(interest, context)
+
+    _check_output(pt, interest, context)
+    return pt
+
+
 @pre_post_check(
     interest=["dx", "x", "dx_x"],
     context=["time_step", "coupling_iteration", "coupling_iteration_process"],

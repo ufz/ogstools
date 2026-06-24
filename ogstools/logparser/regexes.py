@@ -366,6 +366,11 @@ class SimulationEndTime(MPIProcess, Info, Termination):
 class SimulationEndTimeFailed(MPIProcess, Info, Termination):
     message: str
 
+@dataclass
+class LinearSolverIteration(TimeStepProcessContext, MPIProcess, Log):
+    linear_iteration_number: int
+    norm_of_residuum: float
+
 
 def ogs_regexes() -> list[tuple[str, type[Log]]]:
     """
@@ -472,6 +477,10 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
         (
             r"info: \[time\] Applying Dirichlet BCs took ([\d\.e+-]+) s",
             DirichletTime,
+        ),
+        (
+            r"(\d+) ([\d\.e+-]+)",
+            LinearSolverIteration,
         ),
         (
             r"info: \[time\] Linear solver took ([\d\.e+-]+) s",
