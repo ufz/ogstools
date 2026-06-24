@@ -9,7 +9,7 @@ The focus is on the property-access helpers introduced for nested parameter
 payloads:
 
 * :class:`~ogstools.materiallib.core.property.PropertyAddress`
-* :meth:`~ogstools.materiallib.core.material.Material.baseline_value`
+* :meth:`~ogstools.materiallib.core.material.Material.nominal_value`
 * :meth:`~ogstools.materiallib.core.material.Material.distribution`
 
 It also shows when a plain ``material["property_name"]`` lookup is sufficient
@@ -136,7 +136,7 @@ print(f"demo material written to: {material_path.name}")
 
 
 # %% [markdown]
-# Top-level baseline value and distribution
+# Top-level nominal value and distribution
 # -----------------------------------------
 #
 # For a top-level scalar like ``porosity``, the empty ``parameter_path``
@@ -148,14 +148,14 @@ porosity_address = PropertyAddress(
     property_name="porosity",
 )
 
-print(f"baseline: {demo_material.baseline_value(porosity_address)}")
+print(f"nominal: {demo_material.nominal_value(porosity_address)}")
 print(f"distribution: {demo_material.distribution(porosity_address)}")
 
 # %% [markdown]
 # Nested parameter access with `parameter_path`
 # ---------------------------------------------
 #
-# For composite properties such as ``SaturationVanGenuchten``, the baseline value
+# For composite properties such as ``SaturationVanGenuchten``, the nominal value
 # is stored in nested fields like ``exponent`` or ``p_b``.
 #
 # ``parameter_path=("exponent",)`` means:
@@ -176,10 +176,10 @@ p_b_address = PropertyAddress(
 )
 
 print(
-    f"exponent nominal value: {demo_material.baseline_value(exponent_address)}"
+    f"exponent nominal value: {demo_material.nominal_value(exponent_address)}"
 )
 print(f"exponent distribution: {demo_material.distribution(exponent_address)}")
-print(f"p_b nominal value: {demo_material.baseline_value(p_b_address)}")
+print(f"p_b nominal value: {demo_material.nominal_value(p_b_address)}")
 print(f"p_b distribution: {demo_material.distribution(p_b_address)}")
 
 # %% [markdown]
@@ -218,10 +218,10 @@ first_density = PropertyAddress("medium", "density", index=0)
 second_density = PropertyAddress("medium", "density", index=1)
 
 print(
-    f"density[0] nominal value: {repeat_material.baseline_value(first_density)}"
+    f"density[0] nominal value: {repeat_material.nominal_value(first_density)}"
 )
 print(
-    f"density[1] nominal value: {repeat_material.baseline_value(second_density)}"
+    f"density[1] nominal value: {repeat_material.nominal_value(second_density)}"
 )
 
 # %% [markdown]
@@ -241,7 +241,7 @@ try:
         property_name="saturation",
         parameter_path=("does_not_exist",),
     )
-    demo_material.baseline_value(invalid_path)
+    demo_material.nominal_value(invalid_path)
 except KeyError as err:
     print(f"{type(err).__name__}: {err}")
 
@@ -251,7 +251,7 @@ try:
         property_name="density",
         index=99,
     )
-    repeat_material.baseline_value(invalid_index)
+    repeat_material.nominal_value(invalid_index)
 except IndexError as err:
     print(f"{type(err).__name__}: {err}")
 

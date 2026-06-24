@@ -22,7 +22,7 @@ def _write_yaml(path: Path, data: dict) -> Path:
     return path
 
 
-def test_top_level_wrapped_value_is_parsed_into_baseline_and_metadata(
+def test_top_level_wrapped_value_is_parsed_into_nominal_value_and_metadata(
     tmp_path: Path,
 ) -> None:
     material_path = _write_yaml(
@@ -200,7 +200,7 @@ def test_nested_wrapped_parameter_payload_is_preserved_unchanged(
     }
 
 
-def test_property_address_reads_top_level_baseline_and_distribution(
+def test_property_address_reads_top_level_nominal_value_and_distribution(
     tmp_path: Path,
 ) -> None:
     material_path = _write_yaml(
@@ -234,7 +234,7 @@ def test_property_address_reads_top_level_baseline_and_distribution(
     assert material is not None
 
     address = PropertyAddress(domain="medium", property_name="porosity")
-    assert material.baseline_value(address) == 0.15
+    assert material.nominal_value(address) == 0.15
     assert material.distribution(address) == {
         "type": "uniform",
         "min": 0.1,
@@ -242,7 +242,7 @@ def test_property_address_reads_top_level_baseline_and_distribution(
     }
 
 
-def test_property_address_reads_nested_baseline_and_distribution(
+def test_property_address_reads_nested_nominal_value_and_distribution(
     tmp_path: Path,
 ) -> None:
     material_path = _write_yaml(
@@ -288,7 +288,7 @@ def test_property_address_reads_nested_baseline_and_distribution(
         property_name="saturation",
         parameter_path=("exponent",),
     )
-    assert material.baseline_value(exponent) == 0.2
+    assert material.nominal_value(exponent) == 0.2
     assert material.distribution(exponent) == {
         "type": "uniform",
         "min": 0.15,
@@ -300,7 +300,7 @@ def test_property_address_reads_nested_baseline_and_distribution(
         property_name="saturation",
         parameter_path=("p_b",),
     )
-    assert material.baseline_value(p_b) == 4.8e7
+    assert material.nominal_value(p_b) == 4.8e7
     assert material.distribution(p_b) == {
         "type": "loguniform",
         "min": 1.0e7,
@@ -312,7 +312,7 @@ def test_property_address_reads_nested_baseline_and_distribution(
         property_name="saturation",
         parameter_path=("residual_gas_saturation",),
     )
-    assert material.baseline_value(plain_scalar) == 0.01
+    assert material.nominal_value(plain_scalar) == 0.01
     assert material.distribution(plain_scalar) is None
 
 
@@ -358,7 +358,7 @@ def test_property_address_reads_multi_segment_parameter_path(
         parameter_path=("wetting", "curve", "exponent"),
     )
 
-    assert material.baseline_value(exponent) == 0.45
+    assert material.nominal_value(exponent) == 0.45
     assert material.distribution(exponent) == {
         "type": "uniform",
         "min": 0.40,
@@ -428,23 +428,23 @@ def test_property_address_uses_domain_and_index_to_select_property_variant(
         domain="phase", property_name="thermal_conductivity", index=0
     )
 
-    assert material.baseline_value(medium_first) == 1.7
+    assert material.nominal_value(medium_first) == 1.7
     assert material.distribution(medium_first) == {
         "type": "uniform",
         "min": 1.5,
         "max": 1.9,
     }
-    assert material.baseline_value(medium_second) == 2.1
+    assert material.nominal_value(medium_second) == 2.1
     assert material.distribution(medium_second) == {
         "type": "uniform",
         "min": 2.0,
         "max": 2.2,
     }
-    assert material.baseline_value(phase_first) == 5.0
+    assert material.nominal_value(phase_first) == 5.0
     assert material.distribution(phase_first) is None
 
 
-def test_export_writes_only_baseline_values_without_distribution(
+def test_export_writes_only_nominal_values_without_distribution(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _write_yaml(
@@ -606,7 +606,7 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
     )
 
     assert (
-        opalinus.baseline_value(medium_density)
+        opalinus.nominal_value(medium_density)
         == opalinus_medium["properties"]["density"][0]["value"]["nominal_value"]
     )
     assert (
@@ -615,7 +615,7 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
     )
 
     assert (
-        opalinus.baseline_value(phase_density)
+        opalinus.nominal_value(phase_density)
         == opalinus_phase["properties"]["density"][0]["value"]["nominal_value"]
     )
     assert (
@@ -624,7 +624,7 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
     )
 
     assert (
-        opalinus.baseline_value(saturation_p_b)
+        opalinus.nominal_value(saturation_p_b)
         == opalinus_medium["properties"]["saturation"][0]["p_b"][
             "nominal_value"
         ]
@@ -635,7 +635,7 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
     )
 
     assert (
-        water.baseline_value(water_viscosity)
+        water.nominal_value(water_viscosity)
         == water_phase["properties"]["viscosity"][0]["value"]["nominal_value"]
     )
     assert (
@@ -644,7 +644,7 @@ def test_th2m_pt_example_materials_preserve_authored_distribution_metadata() -> 
     )
 
     assert (
-        hydrogen.baseline_value(hydrogen_thermal_conductivity)
+        hydrogen.nominal_value(hydrogen_thermal_conductivity)
         == hydrogen_phase["properties"]["thermal_conductivity"][0]["value"][
             "nominal_value"
         ]

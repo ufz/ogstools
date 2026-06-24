@@ -116,18 +116,18 @@ class _ProjectMediaImporter:
     # Property
     # ------------------------------------------------------------------
     @staticmethod
-    def _baseline_only_payload(value: object) -> object:
+    def _nominal_value_only_payload(value: object) -> object:
         if isinstance(value, dict):
             if MaterialProperty._is_scalar_metadata_wrapper(value):
                 return value["nominal_value"]
             return {
-                key: _ProjectMediaImporter._baseline_only_payload(val)
+                key: _ProjectMediaImporter._nominal_value_only_payload(val)
                 for key, val in value.items()
                 if key != "distribution"
             }
         if isinstance(value, list):
             return [
-                _ProjectMediaImporter._baseline_only_payload(item)
+                _ProjectMediaImporter._nominal_value_only_payload(item)
                 for item in value
             ]
         return value
@@ -144,9 +144,9 @@ class _ProjectMediaImporter:
             "medium_id": medium_id,
             "name": prop.name,
             "type": prop.type,
-            "value": self._baseline_only_payload(prop.value),
+            "value": self._nominal_value_only_payload(prop.value),
             **{
-                key: self._baseline_only_payload(value)
+                key: self._nominal_value_only_payload(value)
                 for key, value in prop.extra.items()
                 if key not in {"domain", "distribution"}
             },

@@ -110,8 +110,8 @@ class Material(Mapping[str, MaterialProperty]):
             return value, {}
 
         wrapped_value = dict(value)
-        baseline = wrapped_value.pop("nominal_value")
-        return baseline, wrapped_value
+        nomainal_value = wrapped_value.pop("nominal_value")
+        return nomainal_value, wrapped_value
 
     def _property_by_address(
         self, address: PropertyAddress
@@ -146,7 +146,7 @@ class Material(Mapping[str, MaterialProperty]):
             current = current[segment]
         return current
 
-    def baseline_value(self, address: PropertyAddress) -> Any:
+    def nominal_value(self, address: PropertyAddress) -> Any:
         payload = self._parameter_payload(address)
         if self._is_scalar_metadata_wrapper(payload):
             return payload["nominal_value"]
