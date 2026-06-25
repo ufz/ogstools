@@ -37,8 +37,8 @@
                         <longitudinal_dispersion_length>0.001</longitudinal_dispersion_length>
                     </pipes>
                     <flow_and_temperature_control>
-                        <type>PowerCurveConstantFlow</type>
-                        <power_curve>scaled_power_curve</power_curve>
+                        <type>Power</type>
+                        <power>scaled_power_curve</power>
                         <flow_rate>0.00037</flow_rate>
                     </flow_and_temperature_control>
                     <grout>
@@ -256,10 +256,16 @@
             <type>Constant</type>
             <value>0.06</value>
         </parameter>
+        <parameter>
+            <name>scaled_power_curve</name>
+            <type>CurveScaled</type>
+            <curve>power_curve</curve>
+            <parameter>T_CurveScaled</parameter>
+        </parameter>
     </parameters>
     <curves>
         <curve>
-            <name>scaled_power_curve</name>
+            <name>power_curve</name>
             <coords>0 1576800 31536000</coords>
             <values>-1600 0 -1600</values>
         </curve>

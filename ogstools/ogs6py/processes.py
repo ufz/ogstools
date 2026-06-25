@@ -264,54 +264,22 @@ class Processes(build_tree.BuildTree):
 
         elif bhecomponent.tag == "flow_and_temperature_control":
             self.populate_tree(bhecomponent, "type", text=args["type"])
-            if args["type"] == "FixedPowerConstantFlow":
+
+            if args["type"] == "InflowTemperature":
+                self.populate_tree(
+                    bhecomponent, "temperature", text=args["temperature"]
+                )
+            elif args["type"] == "Power":
+                self.populate_tree(bhecomponent, "power", text=args["power"])
+
+            elif args["type"] == "BuildingPower":
                 self.populate_tree(bhecomponent, "power", text=args["power"])
                 self.populate_tree(
-                    bhecomponent, "flow_rate", text=args["flow_rate"]
+                    bhecomponent, "cop_curve", text=args["cop_curve"]
                 )
-            elif args["type"] == "FixedPowerFlowCurve":
-                self.populate_tree(bhecomponent, "power", text=args["power"])
-                self.populate_tree(
-                    bhecomponent,
-                    "flow_rate_curve",
-                    text=args["flow_rate_curve"],
-                )
-            elif args["type"] == "PowerCurveConstantFlow":
-                self.populate_tree(
-                    bhecomponent, "power_curve", text=args["power_curve"]
-                )
-                self.populate_tree(
-                    bhecomponent, "flow_rate", text=args["flow_rate"]
-                )
-            elif args["type"] == "TemperatureCurveConstantFlow":
-                self.populate_tree(
-                    bhecomponent, "flow_rate", text=args["flow_rate"]
-                )
-                self.populate_tree(
-                    bhecomponent,
-                    "temperature_curve",
-                    text=args["temperature_curve"],
-                )
-            elif args["type"] == "TemperatureCurveFlowCurve":
-                self.populate_tree(
-                    bhecomponent,
-                    "flow_rate_curve",
-                    text=args["flow_rate_curve"],
-                )
-                self.populate_tree(
-                    bhecomponent,
-                    "temperature_curve",
-                    text=args["temperature_curve"],
-                )
-            elif args["type"] == "PowerCurveFlowCurve":
-                self.populate_tree(
-                    bhecomponent, "power_curve", text=args["power_curve"]
-                )
-                self.populate_tree(
-                    bhecomponent,
-                    "flow_rate_curve",
-                    text=args["flow_rate_curve"],
-                )
+            self.populate_tree(
+                bhecomponent, "flow_rate", text=args["flow_rate"]
+            )
 
         elif bhecomponent.tag == "grout":
             self.populate_tree(bhecomponent, "density", text=args["density"])
