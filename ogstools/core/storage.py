@@ -51,35 +51,6 @@ def _temp_id() -> str:
     return f"{now:%Y%m%d_%H%M%S_%f}"
 
 
-def _check_filename_or_filepath(
-    path_string: Path | str, strict: bool = True
-) -> bool:
-    path_string = str(path_string)
-    if not path_string:
-        if strict:
-            msg = "The requested filepathname is empty."
-            raise ValueError(msg)
-        return False
-
-    allowed_chars = set(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-/\\(), :"
-    )
-    p = Path(path_string)
-
-    for part in p.parts:
-        if part in ("", ".", ".."):
-            continue
-
-        for c in part:
-            if c not in allowed_chars:
-                if strict:
-                    msg = rf"The requested filepath '{path_string}' contains invalid character '{c}'. Only a-Z, 0-9, _.-\/(), and space are allowed."
-                    raise ValueError(msg)
-                return False
-
-    return True
-
-
 BASE_SAVE_DOC = """
 Save the object.
 
@@ -174,7 +145,6 @@ class StorageBase(abc.ABC):
     @id.setter
     def id(self, id: str) -> None:
         """Set a new identifier and update the target path accordingly."""
-        _check_filename_or_filepath(id, strict=True)
         new_target, user_defined = self._target_for_save(id=id)
         self._next_target = new_target
         self.user_specified_target = user_defined
@@ -360,7 +330,6 @@ class StorageBase(abc.ABC):
             self.id = id
             user_defined = True
         elif target:
-            _check_filename_or_filepath(target, strict=True)
             user_defined = True
             self._next_target = Path(target)
         else:
