@@ -62,7 +62,7 @@ def _check_filename_or_filepath(
         return False
 
     allowed_chars = set(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-/\\(), :"
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-/\\(), :~"
     )
     p = Path(path_string)
 
@@ -174,7 +174,6 @@ class StorageBase(abc.ABC):
     @id.setter
     def id(self, id: str) -> None:
         """Set a new identifier and update the target path accordingly."""
-        _check_filename_or_filepath(id, strict=True)
         new_target, user_defined = self._target_for_save(id=id)
         self._next_target = new_target
         self.user_specified_target = user_defined
@@ -360,7 +359,6 @@ class StorageBase(abc.ABC):
             self.id = id
             user_defined = True
         elif target:
-            _check_filename_or_filepath(target, strict=True)
             user_defined = True
             self._next_target = Path(target)
         else:
