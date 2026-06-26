@@ -51,35 +51,6 @@ def _temp_id() -> str:
     return f"{now:%Y%m%d_%H%M%S_%f}"
 
 
-def _check_filename_or_filepath(
-    path_string: Path | str, strict: bool = True
-) -> bool:
-    path_string = str(path_string)
-    if not path_string:
-        if strict:
-            msg = "The requested filepathname is empty."
-            raise ValueError(msg)
-        return False
-
-    allowed_chars = set(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-/\\(), :~"
-    )
-    p = Path(path_string)
-
-    for part in p.parts:
-        if part in ("", ".", ".."):
-            continue
-
-        for c in part:
-            if c not in allowed_chars:
-                if strict:
-                    msg = rf"The requested filepath '{path_string}' contains invalid character '{c}'. Only a-Z, 0-9, _.-\/(), and space are allowed."
-                    raise ValueError(msg)
-                return False
-
-    return True
-
-
 BASE_SAVE_DOC = """
 Save the object.
 
