@@ -110,8 +110,8 @@ class Material(Mapping[str, MaterialProperty]):
             return value, {}
 
         wrapped_value = dict(value)
-        nomainal_value = wrapped_value.pop("nominal_value")
-        return nomainal_value, wrapped_value
+        nominal_value = wrapped_value.pop("nominal_value")
+        return nominal_value, wrapped_value
 
     def _property_by_address(
         self, address: PropertyAddress
@@ -132,19 +132,18 @@ class Material(Mapping[str, MaterialProperty]):
 
     def _parameter_payload(self, address: PropertyAddress) -> Any:
         prop = self._property_by_address(address)
-        if not address.parameter_path:
+        if not address.parameter_name:
             return prop.value
 
         current: Any = prop.extra
-        for segment in address.parameter_path:
-            if not isinstance(current, Mapping) or segment not in current:
-                msg = (
-                    f"Parameter path {address.parameter_path!r} does not exist "
-                    f"for address {address!r} in material '{self.name}'."
-                )
-                raise KeyError(msg)
-            current = current[segment]
-        return current
+        segment = address.parameter_name
+        if not isinstance(current, Mapping) or segment not in current:
+            msg = (
+                f"Parameter name {address.parameter_name!r} does not exist "
+                f"for address {address!r} in material '{self.name}'."
+            )
+            raise KeyError(msg)
+        return current[segment]
 
     def nominal_value(self, address: PropertyAddress) -> Any:
         payload = self._parameter_payload(address)
@@ -153,7 +152,7 @@ class Material(Mapping[str, MaterialProperty]):
         return payload
 
     def distribution(self, address: PropertyAddress) -> dict[str, Any] | None:
-        if not address.parameter_path:
+        if not address.parameter_name:
             prop = self._property_by_address(address)
             authored_distribution = prop.extra.get("distribution")
             return (

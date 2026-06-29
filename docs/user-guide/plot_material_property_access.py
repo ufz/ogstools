@@ -68,7 +68,7 @@ print(permeability)
 # * ``domain``: top-level domain block such as ``medium`` or ``phase``
 # * ``property_name``: the property key inside that domain
 # * ``index``: which occurrence to select if the same property appears multiple times
-# * ``parameter_path``: optional nested path inside the property payload
+# * ``parameter_name``: optional nested parameter name inside the property payload
 #
 # To keep the example self-contained, we create a small temporary material file
 # with one top-level value carrying additional metadata and one nested parameter
@@ -139,7 +139,7 @@ print(f"demo material written to: {material_path.name}")
 # Top-level nominal value and distribution
 # -----------------------------------------
 #
-# For a top-level scalar like ``porosity``, the empty ``parameter_path``
+# For a top-level scalar like ``porosity``, the empty ``parameter_name``
 # means "use the property value itself".
 
 # %%
@@ -152,13 +152,13 @@ print(f"nominal: {demo_material.nominal_value(porosity_address)}")
 print(f"distribution: {demo_material.distribution(porosity_address)}")
 
 # %% [markdown]
-# Nested parameter access with `parameter_path`
-# ---------------------------------------------
+# Parameter access with `parameter_name`
+# --------------------------------------
 #
 # For composite properties such as ``SaturationVanGenuchten``, the nominal value
 # is stored in nested fields like ``exponent`` or ``p_b``.
 #
-# ``parameter_path=("exponent",)`` means:
+# ``parameter_name="exponent"`` means:
 # "start from the addressed property and then look up the nested key
 # ``exponent``."
 
@@ -166,13 +166,13 @@ print(f"distribution: {demo_material.distribution(porosity_address)}")
 exponent_address = PropertyAddress(
     domain="medium",
     property_name="saturation",
-    parameter_path=("exponent",),
+    parameter_name="exponent",
 )
 
 p_b_address = PropertyAddress(
     domain="medium",
     property_name="saturation",
-    parameter_path=("p_b",),
+    parameter_name="p_b",
 )
 
 print(
@@ -236,7 +236,7 @@ try:
     invalid_path = PropertyAddress(
         domain="medium",
         property_name="saturation",
-        parameter_path=("does_not_exist",),
+        parameter_name="does_not_exist",
     )
     demo_material.nominal_value(invalid_path)
 except KeyError as err:

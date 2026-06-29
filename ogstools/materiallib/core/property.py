@@ -10,7 +10,7 @@ class PropertyAddress:
     domain: str
     property_name: str
     index: int = 0
-    parameter_path: tuple[str, ...] = ()
+    parameter_name: str = ""
 
 
 class MaterialProperty:
