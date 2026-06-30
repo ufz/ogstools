@@ -32,7 +32,7 @@ def test_material_from_file_accepts_grouped_domains(write_yaml) -> None:
                 {
                     "domain": "medium",
                     "properties": {
-                        "Density": [{"type": "Constant", "value": 2700}]
+                        "Density": {"type": "Constant", "value": 2700}
                     },
                 }
             ],
@@ -58,7 +58,7 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
                 {
                     "domain": "phase",
                     "properties": {
-                        "Viscosity": [{"type": "Constant", "value": 1.0}]
+                        "Viscosity": {"type": "Constant", "value": 1.0}
                     },
                 }
             ],
@@ -132,7 +132,7 @@ def test_material_manager_loads_grouped_domain_repository(
                 {
                     "domain": "medium",
                     "properties": {
-                        "Density": [{"type": "Constant", "value": 2700}]
+                        "Density": {"type": "Constant", "value": 2700}
                     },
                 }
             ],

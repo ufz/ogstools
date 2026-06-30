@@ -72,25 +72,20 @@ class Material(Mapping[str, MaterialProperty]):
         for domain_block in self.raw["domains"]:
             domain_name = domain_block["domain"]
             properties = domain_block["properties"]
-            for prop_name, entries in properties.items():
-                for entry in (
-                    entries if isinstance(entries, list) else [entries]
-                ):
-                    type_ = entry.get(
-                        "type", "Constant"
-                    )  # TODO: Error if 'type' not found
-                    value = entry.get("value", None)
-                    extra = {
-                        k: v
-                        for k, v in entry.items()
-                        if k not in ("type", "value")
-                    }
-                    extra["domain"] = domain_name
-                    self.properties.append(
-                        MaterialProperty(
-                            name=prop_name, type_=type_, value=value, **extra
-                        )
+            for prop_name, entry in properties.items():
+                type_ = entry.get(
+                    "type", "Constant"
+                )  # TODO: Error if 'type' not found
+                value = entry.get("value", None)
+                extra = {
+                    k: v for k, v in entry.items() if k not in ("type", "value")
+                }
+                extra["domain"] = domain_name
+                self.properties.append(
+                    MaterialProperty(
+                        name=prop_name, type_=type_, value=value, **extra
                     )
+                )
 
     def _validate_grouped_domains(self) -> None:
         if "properties" in self.raw:
@@ -144,6 +139,14 @@ class Material(Mapping[str, MaterialProperty]):
                 )
                 raise ValueError(msg)
 
+            for prop_name, prop_entry in properties.items():
+                if not isinstance(prop_entry, dict):
+                    msg = (
+                        f"Material '{self.name}' property '{prop_name}' in domain "
+                        f"'{domain_name}' must be a mapping, not {type(prop_entry).__name__}."
+                    )
+                    raise ValueError(msg)
+
     def __getitem__(self, key: str) -> MaterialProperty:
         for p in self.properties:
             if p.name == key:
@@ -167,8 +170,8 @@ class Material(Mapping[str, MaterialProperty]):
     def _raw_from_properties(
         name: str, properties: list[MaterialProperty]
     ) -> dict:
-        "raw grouped yaml data dict with lists if multiple entries have same names"
-        domain_blocks: dict[str, dict[str, list[dict[str, Any]]]] = {}
+        "Return grouped raw YAML data without list-valued properties."
+        domain_blocks: dict[str, dict[str, dict[str, Any]]] = {}
         for p in properties:
             domain = p.extra.get("domain")
             if not isinstance(domain, str):
@@ -183,7 +186,13 @@ class Material(Mapping[str, MaterialProperty]):
                 **{k: v for k, v in p.extra.items() if k != "domain"},
             }
             properties_by_name = domain_blocks.setdefault(domain, {})
-            properties_by_name.setdefault(p.name, []).append(entry)
+            if p.name in properties_by_name:
+                msg = (
+                    f"Material '{name}' contains duplicate property '{p.name}' "
+                    f"in domain '{domain}', which can no longer be exported."
+                )
+                raise ValueError(msg)
+            properties_by_name[p.name] = entry
 
         return {
             "name": name,

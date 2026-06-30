@@ -55,13 +55,11 @@ def test_medium_loads_only_medium_domain_properties(
         [
             {
                 "domain": "medium",
-                "properties": {
-                    "Density": [{"type": "Constant", "value": 2400}]
-                },
+                "properties": {"Density": {"type": "Constant", "value": 2400}},
             },
             {
                 "domain": "phase",
-                "properties": {"Density": [{"type": "Constant", "value": 999}]},
+                "properties": {"Density": {"type": "Constant", "value": 999}},
             },
         ],
     )
@@ -71,8 +69,8 @@ def test_medium_loads_only_medium_domain_properties(
             {
                 "domain": "phase",
                 "properties": {
-                    "Density": [{"type": "Constant", "value": 999}],
-                    "Viscosity": [{"type": "Constant", "value": 1.0}],
+                    "Density": {"type": "Constant", "value": 999},
+                    "Viscosity": {"type": "Constant", "value": 1.0},
                 },
             }
         ],
@@ -98,15 +96,13 @@ def test_phase_loads_only_phase_domain_properties(grouped_schema: str) -> None:
         [
             {
                 "domain": "medium",
-                "properties": {
-                    "Density": [{"type": "Constant", "value": 2400}]
-                },
+                "properties": {"Density": {"type": "Constant", "value": 2400}},
             },
             {
                 "domain": "phase",
                 "properties": {
-                    "Density": [{"type": "Constant", "value": 999}],
-                    "Viscosity": [{"type": "Constant", "value": 1.0}],
+                    "Density": {"type": "Constant", "value": 999},
+                    "Viscosity": {"type": "Constant", "value": 1.0},
                 },
             },
         ],
@@ -132,13 +128,13 @@ def test_component_loads_only_component_domain_properties(
             {
                 "domain": "phase",
                 "properties": {
-                    "MolarMass": [{"type": "Constant", "value": 18.0}]
+                    "MolarMass": {"type": "Constant", "value": 18.0}
                 },
             },
             {
                 "domain": "component",
                 "properties": {
-                    "MolarMass": [{"type": "Constant", "value": 18.0}]
+                    "MolarMass": {"type": "Constant", "value": 18.0}
                 },
             },
         ],
