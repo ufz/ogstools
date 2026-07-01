@@ -29,13 +29,6 @@ domains:
         value: 8.76e-6
         unit: Pa·s
         source: "NIST Chemistry WebBook"
-      vapour_pressure:
-        type: Antoine
-        A: 4.584
-        B: 99.42
-        C: -6.0
-        unit: Pa
-        source: "NIST Chemistry WebBook"
       specific_latent_heat:
         type: Constant
         value: 446000
@@ -72,13 +65,6 @@ domains:
         type: Constant
         value: 8.76e-6
         unit: Pa·s
-        source: "NIST Chemistry WebBook"
-      vapour_pressure:
-        type: Antoine
-        A: 4.584
-        B: 99.42
-        C: -6.0
-        unit: Pa
         source: "NIST Chemistry WebBook"
       specific_latent_heat:
         type: Constant

@@ -17,6 +17,7 @@ from ogstools._internal import deprecated
 from ogstools.materiallib.schema.required_properties import (
     required_property_names,
 )
+from ogstools.property_types import PROPERTY_TYPES
 
 from .property import MaterialProperty
 
@@ -68,26 +69,105 @@ class Material(Mapping[str, MaterialProperty]):
         with Path(file_path).open("w", encoding="utf-8") as file:
             yaml.safe_dump(output_data, file, sort_keys=False)
 
+    @staticmethod
+    def _validate_property_payload(
+        material_name: str,
+        property_name: str,
+        domain_name: str,
+        type_: str,
+        parameters: Mapping[str, Any],
+        metadata: Mapping[str, Any],
+        actual_keys: set[str] | None = None,
+    ) -> None:
+        spec = PROPERTY_TYPES.get(type_)
+        if spec is None:
+            msg = (
+                f"Material '{material_name}' property '{property_name}' in "
+                f"domain '{domain_name}' has unknown type '{type_}'."
+            )
+            raise ValueError(msg)
+
+        if actual_keys is not None:
+            allowed_keys = (
+                {"type"} | set(spec.parameters) | set(spec.metadata_keys)
+            )
+            unknown_keys = actual_keys - allowed_keys
+            if unknown_keys:
+                msg = (
+                    f"Material '{material_name}' property '{property_name}' in "
+                    f"domain '{domain_name}' of type '{type_}' contains unknown "
+                    f"key(s): {', '.join(sorted(unknown_keys))}."
+                )
+                raise ValueError(msg)
+
+        actual_parameter_keys = set(parameters)
+        required_parameter_keys = set(spec.parameters)
+        missing = required_parameter_keys - actual_parameter_keys
+        unknown_parameters = actual_parameter_keys - required_parameter_keys
+
+        if missing:
+            msg = (
+                f"Material '{material_name}' property '{property_name}' in "
+                f"domain '{domain_name}' of type '{type_}' is missing "
+                f"required parameter(s): {', '.join(sorted(missing))}."
+            )
+            raise ValueError(msg)
+
+        if unknown_parameters:
+            msg = (
+                f"Material '{material_name}' property '{property_name}' in "
+                f"domain '{domain_name}' of type '{type_}' contains unknown "
+                f"parameter(s): {', '.join(sorted(unknown_parameters))}."
+            )
+            raise ValueError(msg)
+
+        actual_metadata_keys = set(metadata)
+        allowed_metadata_keys = set(spec.metadata_keys)
+        unknown_metadata = actual_metadata_keys - allowed_metadata_keys
+
+        if unknown_metadata:
+            msg = (
+                f"Material '{material_name}' property '{property_name}' in "
+                f"domain '{domain_name}' of type '{type_}' contains unknown "
+                f"metadata key(s): {', '.join(sorted(unknown_metadata))}."
+            )
+            raise ValueError(msg)
+
     def _parse_properties(self) -> None:
         for domain_block in self.raw["domains"]:
             domain_name = domain_block["domain"]
             properties = domain_block["properties"]
             for prop_name, entry in properties.items():
                 if "type" not in entry:
-                    msg = f"Property '{prop_name}' in domain '{domain_name}' is missing required key 'type'."
+                    msg = (
+                        f"Material '{self.name}' property '{prop_name}' in "
+                        f"domain '{domain_name}' is missing required key "
+                        "'type'."
+                    )
                     raise ValueError(msg)
 
                 type_ = entry["type"]
-                value = entry.get("value")
-                extra = {
-                    k: v for k, v in entry.items() if k not in ("type", "value")
-                }
+                spec = PROPERTY_TYPES[type_]
+                parameters = {k: entry[k] for k in spec.parameters}
+                extra = {k: entry[k] for k in spec.metadata_keys if k in entry}
+
+                self._validate_property_payload(
+                    material_name=self.name,
+                    property_name=prop_name,
+                    domain_name=domain_name,
+                    type_=type_,
+                    parameters=parameters,
+                    metadata=extra,
+                    actual_keys=set(entry),
+                )
+
                 extra["domain"] = domain_name
+
                 self.properties.append(
                     MaterialProperty(
                         name=prop_name,
                         type_=type_,
-                        value=value,
+                        parameters=parameters,
                         **extra,
                     )
                 )
@@ -177,6 +257,7 @@ class Material(Mapping[str, MaterialProperty]):
     ) -> dict:
         "Return grouped raw YAML data without list-valued properties."
         domain_blocks: dict[str, dict[str, dict[str, Any]]] = {}
+
         for p in properties:
             domain = p.extra.get("domain")
             if not isinstance(domain, str):
@@ -185,11 +266,23 @@ class Material(Mapping[str, MaterialProperty]):
                     "domain metadata."
                 )
                 raise ValueError(msg)
+
+            metadata = {k: v for k, v in p.extra.items() if k != "domain"}
+            Material._validate_property_payload(
+                material_name=name,
+                property_name=p.name,
+                domain_name=domain,
+                type_=p.type,
+                parameters=p.parameters,
+                metadata=metadata,
+            )
+
             entry = {
                 "type": p.type,
-                "value": p.value,
-                **{k: v for k, v in p.extra.items() if k != "domain"},
+                **p.parameters,
+                **metadata,
             }
+
             properties_by_name = domain_blocks.setdefault(domain, {})
             if p.name in properties_by_name:
                 msg = (
@@ -197,6 +290,7 @@ class Material(Mapping[str, MaterialProperty]):
                     f"in domain '{domain}', which can no longer be exported."
                 )
                 raise ValueError(msg)
+
             properties_by_name[p.name] = entry
 
         return {
@@ -233,7 +327,7 @@ class Material(Mapping[str, MaterialProperty]):
     ) -> None:
         """
         Filter self, to only contain properties in 'allowed',
-        preserving all extra fields (e.g. scope, unit).
+        preserving all extra fields (e.g. source, unit).
 
         :param allowed: values to filter for
         :param key:     attribute to filter for (e.g. 'name' or 'type')
@@ -267,10 +361,13 @@ class Material(Mapping[str, MaterialProperty]):
         if len(selection) == 0:
             return
 
-        def matching(value: str | re.Pattern, text: str) -> bool:
+        def matching(value: str | re.Pattern, candidate: Any) -> bool:
             if isinstance(value, re.Pattern):
-                return re.search(value, text) is not None
-            return text == value
+                return (
+                    isinstance(candidate, str)
+                    and re.search(value, candidate) is not None
+                )
+            return candidate == value
 
         pick: list[MaterialProperty] = []
         for name, restrictions in selection.items():

@@ -290,7 +290,7 @@ class TestMaterialLib:
 
         assert copied is not None
         assert copied.name == "water"
-        assert copied["Viscosity"].value == 1.0
+        assert copied["Viscosity"].parameters["value"] == 1.0
         assert copied == mat
 
     def test_material_parses_properties_from_raw_data(self):
@@ -305,6 +305,19 @@ class TestMaterialLib:
         assert len(props) == 2
         assert any(p.name == "Density" for p in props)
         assert sum(p.name == "Permeability" for p in props) == 1
+
+    def test_material_rejects_unknown_property_key(self):
+        """Material should reject property entries with unknown keys."""
+        with pytest.raises(ValueError, match="contains unknown key"):
+            make_material(
+                {
+                    "Density": {
+                        "type": "Constant",
+                        "value": 2500,
+                        "scope": "medium",
+                    }
+                }
+            )
 
     def test_material_property_names_returns_all_names(self):
         """Material.property_names should return the names of all parsed properties."""
@@ -386,7 +399,7 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].value == 2500
+        assert mat["Density"].parameters["value"] == 2500
         with pytest.raises(KeyError, match="No property with name"):
             mat["porosity"]
 
@@ -398,13 +411,13 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].value == 2500
+        assert mat["Density"].parameters["value"] == 2500
 
         mat_2000 = mat.copy()
         assert mat_2000 == mat
-        mat_2000["Density"].value = 2000
-        assert mat_2000["Density"].value == 2000
-        assert mat["Density"].value == 2500
+        mat_2000["Density"].parameters["value"] = 2000
+        assert mat_2000["Density"].parameters["value"] == 2000
+        assert mat["Density"].parameters["value"] == 2500
 
 
 class TestMaterialManager:
@@ -869,15 +882,15 @@ class TestMaterialManagerFilter:
             "DiffusionCoefficient",
         }
 
-    def test_filter_preserves_scope(self):
-        """Filtering a Material must preserve extra fields like 'scope'."""
+    def test_filter_preserves_unit(self):
+        """Filtering a Material must preserve extra fields like 'unit'."""
 
         mat = make_material(
             {
                 "thermal_conductivity": {
                     "type": "Constant",
                     "value": 1.7,
-                    "scope": "medium",
+                    "unit": "W/(m*K)",
                 }
             },
             name="mock",
@@ -885,7 +898,7 @@ class TestMaterialManagerFilter:
 
         mat.filter_properties({"thermal_conductivity"})
 
-        assert [p.extra.get("scope") for p in mat.properties] == ["medium"]
+        assert [p.extra.get("unit") for p in mat.properties] == ["W/(m*K)"]
 
 
 class TestMedia:

@@ -85,7 +85,9 @@ def test_medium_loads_only_medium_domain_properties(
     )
 
     assert [
-        prop.value for prop in medium.properties if prop.name == "Density"
+        prop.parameters["value"]
+        for prop in medium.properties
+        if prop.name == "Density"
     ] == [2400]
     assert medium.properties[0].extra["domain"] == "medium"
 
@@ -115,7 +117,7 @@ def test_phase_loads_only_phase_domain_properties(grouped_schema: str) -> None:
     )
 
     density = next(prop for prop in phase.properties if prop.name == "Density")
-    assert density.value == 999
+    assert density.parameters["value"] == 999
     assert density.extra["domain"] == "phase"
 
 

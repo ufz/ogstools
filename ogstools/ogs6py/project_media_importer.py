@@ -123,12 +123,16 @@ class _ProjectMediaImporter:
         component_name: str | None = None,
     ) -> None:
         """Import a single MaterialProperty into the Project."""
+        # `domain` is materiallib-internal placement metadata. The OGS XML
+        # builder expects location via medium_id / phase_type / component_name
+        # instead, so it must not be forwarded as a property argument.
+        extra = {k: v for k, v in prop.extra.items() if k != "domain"}
         args = {
             "medium_id": medium_id,
             "name": prop.name,
             "type": prop.type,
-            "value": prop.value,
-            **prop.extra,
+            **prop.parameters,
+            **extra,
         }
         if phase_type is not None:
             args["phase_type"] = phase_type
