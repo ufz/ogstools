@@ -1,6 +1,4 @@
 name: water
-group: liquid
-type: phase
 domains:
   - domain: phase
     properties:

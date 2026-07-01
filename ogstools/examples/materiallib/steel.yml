@@ -1,6 +1,4 @@
 name: steel
-group: solid
-type: phase
 domains:
   - domain: phase
     properties:

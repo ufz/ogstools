@@ -75,10 +75,30 @@ class Material(Mapping[str, MaterialProperty]):
         property_name: str,
         domain_name: str,
         type_: str,
-        parameters: Mapping[str, Any],
-        metadata: Mapping[str, Any],
+        parameters: dict[str, Any],
+        metadata: dict[str, Any],
         actual_keys: set[str] | None = None,
     ) -> None:
+        """Validate a material property against the shared property type registry.
+
+        Parameters
+        ----------
+        material_name : str
+            Name of the material.
+        property_name : str
+            Name of the property.
+        domain_name : str
+            Material domain containing the property.
+        type_ : str
+            OGS property type.
+        parameters : dict[str, Any]
+            Type-specific property parameters, e.g. "Constant", "SaturationVanGenuchten".
+        metadata : dict[str, Any]
+            Additional property metadata, e.g. "unit", "source".
+        actual_keys : set[str] | None, optional
+            Keys present in the YAML property definition. If provided, they are
+            checked for missing required keys and unsupported entries.
+        """
         spec = PROPERTY_TYPES.get(type_)
         if spec is None:
             msg = (
@@ -87,6 +107,7 @@ class Material(Mapping[str, MaterialProperty]):
             )
             raise ValueError(msg)
 
+        # First validate raw YAML keys, then validate the extracted parameters.
         if actual_keys is not None:
             allowed_keys = (
                 {"type"} | set(spec.parameters) | set(spec.metadata_keys)
@@ -173,6 +194,16 @@ class Material(Mapping[str, MaterialProperty]):
                 )
 
     def _validate_grouped_domains(self) -> None:
+        allowed_top_level_keys = {"name", "domains"}
+        unknown_top_level_keys = set(self.raw) - allowed_top_level_keys
+        if unknown_top_level_keys:
+            msg = (
+                f"Material '{self.name}' contains unsupported top-level "
+                f"key(s): {', '.join(sorted(unknown_top_level_keys))}. "
+                "Allowed keys are: domains, name."
+            )
+            raise ValueError(msg)
+
         if "properties" in self.raw:
             msg = (
                 f"Material '{self.name}' must use top-level 'domains'; "
@@ -192,6 +223,16 @@ class Material(Mapping[str, MaterialProperty]):
         for block in domains:
             if not isinstance(block, dict):
                 msg = f"Material '{self.name}' has a non-mapping domain block."
+                raise ValueError(msg)
+
+            allowed_domain_keys = {"domain", "properties"}
+            unknown_domain_keys = set(block) - allowed_domain_keys
+            if unknown_domain_keys:
+                msg = (
+                    f"Material '{self.name}' contains unsupported key(s) in "
+                    f"a domain block: {', '.join(sorted(unknown_domain_keys))}. "
+                    "Allowed keys are: domain, properties."
+                )
                 raise ValueError(msg)
 
             domain_name = block.get("domain")

@@ -1,6 +1,4 @@
 name: hydrogen
-group: gas
-type: phase
 domains:
   - domain: phase
     properties:
