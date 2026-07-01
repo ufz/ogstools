@@ -73,17 +73,22 @@ class Material(Mapping[str, MaterialProperty]):
             domain_name = domain_block["domain"]
             properties = domain_block["properties"]
             for prop_name, entry in properties.items():
-                type_ = entry.get(
-                    "type", "Constant"
-                )  # TODO: Error if 'type' not found
-                value = entry.get("value", None)
+                if "type" not in entry:
+                    msg = f"Property '{prop_name}' in domain '{domain_name}' is missing required key 'type'."
+                    raise ValueError(msg)
+
+                type_ = entry["type"]
+                value = entry.get("value")
                 extra = {
                     k: v for k, v in entry.items() if k not in ("type", "value")
                 }
                 extra["domain"] = domain_name
                 self.properties.append(
                     MaterialProperty(
-                        name=prop_name, type_=type_, value=value, **extra
+                        name=prop_name,
+                        type_=type_,
+                        value=value,
+                        **extra,
                     )
                 )
 
