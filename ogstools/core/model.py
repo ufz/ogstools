@@ -424,7 +424,7 @@ class Model(StorageBase):
         keyword arguments: see :func:`~ogstools.plot.contourf`
         """
 
-        meshes = self.meshes
+        meshes = self.meshes.copy()
         tmp_path = temp_dir("plot_constraints")
         if (
             self.project.geometry
