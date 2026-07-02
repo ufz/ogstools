@@ -13,6 +13,7 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib import ticker as mticker
 from matplotlib.patches import Rectangle as Rect
+from matplotlib.tri import Triangulation
 from PIL.Image import Image
 
 from ogstools.plot import utils
@@ -232,24 +233,25 @@ def subplot(
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        if variable.data_name in mesh.point_data:
+        triangulation = Triangulation(x, y, tri, mask=nan_mask)
+        if variable.data_name in surf_tri.point_data:
             tri_levels = 255 if conti_cmap else kwargs.get("levels", levels)
             ax.tricontourf(
-                x, y, tri, values, levels=tri_levels,
-                cmap=cmap, norm=norm, extend="both", mask=nan_mask
+                triangulation, values, levels=tri_levels,
+                cmap=cmap, norm=norm, extend="both"
             )  # fmt: skip
             if variable.bilinear_cmap:
-                ax.tricontour(
-                    x, y, tri, values, levels=[0], mask=nan_mask, colors="w"
-                )
+                ax.tricontour(triangulation, values, levels=[0], colors="w")
         else:
             ax.tripcolor(
-                x, y, tri, facecolors=values, mask=nan_mask,
-                cmap=cmap, norm=norm
+                triangulation, facecolors=values, cmap=cmap, norm=norm
             )  # fmt: skip
             if variable.is_mask():
+                mask_triangulation = Triangulation(
+                    x, y, tri, mask=(values == 1)
+                )
                 ax.tripcolor(
-                    x, y, tri, facecolors=values, mask=(values == 1),
+                    mask_triangulation, facecolors=values,
                     cmap=cmap, norm=norm, hatch="/"
                 )  # fmt: skip
 
