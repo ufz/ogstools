@@ -1,7 +1,7 @@
 # OGSTools 0.x Release Notes
 
-Python 3.11-3.14
-OGS 6.5.7 -
+Python 3.12-3.14
+OGS 6.5.8 -
 
 # Breaking changes
 
@@ -19,16 +19,11 @@ OGS 6.5.7 -
 
 ## Features
 
-- added the Class `ogstools.mesh.IPdata` to interface with the integration point
-  metadata
-
 ## Infrastructure
 
 ## Documentation
 
 ### New Examples
-
-- added an example which shows, how to modify integration point data
 
 ### Updated Examples
 
@@ -41,6 +36,3 @@ OGS 6.5.7 -
 ### next sub release
 
 ### next main release
-
-- modify ip_data_threshold to use the same pattern as in the ip_data.py example
-- MaterialManager: set_material -> set_material_from_file + set_material(self, Material)

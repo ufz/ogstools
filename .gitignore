@@ -87,6 +87,12 @@ ipython_config.py
 # vscode
 .vscode
 
+# container
+*.squashfs
+
+# LLM
+.claude/
+
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
@@ -173,3 +179,9 @@ cython_debug/
 # Ignore file created by running webpage preview locally
 docs/sg_execution_times.rst
 uv.lock
+
+# local python version pin
+.python-version
+
+# Large Language Models
+.continue

@@ -61,8 +61,8 @@ class Variable:
         self,
         data_name: str,
         data_unit: str = "",
-        output_unit: str | None = None,
-        output_name: str | None = None,
+        output_unit: str = "",
+        output_name: str = "",
         symbol: str = "",
         mask: str = "",
         func: Callable = identity,
@@ -75,12 +75,8 @@ class Variable:
     ) -> None:
         self.data_name = data_name
         self.data_unit = data_unit
-        self.output_unit = (
-            str(output_unit) if output_unit is not None else data_unit
-        )
-        self.output_name = (
-            str(output_name) if output_name is not None else data_name
-        )
+        self.output_unit = str(output_unit) if output_unit != "" else data_unit
+        self.output_name = str(output_name) if output_name != "" else data_name
         self.symbol = symbol
         self.mask = mask
         self.func = func
@@ -166,15 +162,7 @@ class Variable:
             data_key = data_keys[matches.index(True)]
             if data_key == variable.difference.output_name:
                 return variable.difference
-            if data_key in [
-                variable.min.output_name,
-                variable.max.output_name,
-                variable.mean.output_name,
-                variable.median.output_name,
-                variable.sum.output_name,
-                variable.std.output_name,
-                variable.var.output_name,
-            ]:
+            if data_key in variable._agg_names:
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
@@ -190,29 +178,46 @@ class Variable:
         from ogstools.variables import all_variables
 
         # pylint: enable=import-outside-toplevel
+        suffix = ""
+        if (
+            "_" in variable
+            and variable not in data_keys
+            and variable.rsplit("_", 1)[0] in data_keys
+        ):
+            variable, suffix = variable.rsplit("_", 1)
+
+        def component(var: Variable, suffix: str) -> Variable:
+            suffix_ = int(suffix) if suffix.isdigit() else suffix
+            if suffix == "":
+                return var
+            if isinstance(var, Scalar):
+                msg = f"Scalar {var.data_name} has no component {suffix}."
+                raise KeyError(msg)
+            return var[suffix_]  # type: ignore[index]
 
         for prop in all_variables:
             if prop.data_name == variable:
-                return prop
+                return component(prop, suffix)
         for prop in all_variables:
             if prop.output_name == variable:
                 if prop.data_name in data_keys:
-                    return prop
-                return prop.replace(data_name=prop.output_name)
+                    return component(prop, suffix)
+                return component(
+                    prop.replace(data_name=prop.output_name), suffix
+                )
 
-        matches = [variable in data_key for data_key in data_keys]
-        if not any(matches):
+        if variable not in data_keys:
             raise KeyError(error_msg)
 
         data_shape = mesh[variable].shape
         if len(data_shape) == 1:
-            return Scalar(variable)
+            return component(Scalar(variable), suffix)
         subclasses = Variable.__subclasses__()
         vector = next(x for x in subclasses if x.__name__ == "Vector")
         matrix = next(x for x in subclasses if x.__name__ == "Matrix")
         if data_shape[1] in [2, 3]:
-            return vector(variable)
-        return matrix(variable)
+            return component(vector(variable), suffix)
+        return component(matrix(variable), suffix)
 
     def transform(
         self,
@@ -253,6 +258,18 @@ class Variable:
     def get_output_unit(self) -> str:
         "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
+
+    @property
+    def _agg_names(self) -> list[str]:
+        return [
+            self.min.output_name,
+            self.max.output_name,
+            self.mean.output_name,
+            self.median.output_name,
+            self.sum.output_name,
+            self.std.output_name,
+            self.var.output_name,
+        ]
 
     def _agg(self, func: Callable, new_symbol: str | None) -> Self:
         subclasses = Variable.__subclasses__()

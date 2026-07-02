@@ -47,7 +47,7 @@
                         <reference_temperature>298.15</reference_temperature>
                     </refrigerant>
                     <flow_and_temperature_control>
-                        <type>FixedPowerConstantFlow</type>
+                        <type>Power</type>
                         <power>100</power>
                         <flow_rate>2e-4</flow_rate>
                     </flow_and_temperature_control>
@@ -194,6 +194,17 @@
             <name>T0_BHE1</name>
             <type>Constant</type>
             <values>295.15 295.15 295.15 295.15</values>
+        </parameter>
+        <parameter>
+            <name>T_CurveScaled</name>
+            <type>Constant</type>
+            <value>1</value>
+        </parameter>
+        <parameter>
+            <name>scaled_temperature_curve</name>
+            <type>CurveScaled</type>
+            <curve>inflow_temperature</curve>
+            <parameter>T_CurveScaled</parameter>
         </parameter>
     </parameters>
     <process_variables>

@@ -47,6 +47,8 @@ def check_path() -> None:
             print(f"- {path}")
     elif is_outside_python_env(ogs_executables[0]):
         print(f"✅ Custom OGS found on {ogs_executables[0]}.")
+    else:
+        print(ogs_executables)
 
 
 def has_ogs_wheel(verbose: bool = False) -> bool:
@@ -86,7 +88,7 @@ def read_ogs_path(verbose: bool = False) -> Path | None:
     if optional_ogs_path_str is None:
         return None
 
-    ogs_path: Path = Path(optional_ogs_path_str)
+    ogs_path: Path = Path(optional_ogs_path_str).expanduser()
 
     if not ogs_path.exists():
         msg = f"OGS_BIN_PATH is invalid. It is set to {ogs_path!s}.\n"

@@ -1,6 +1,5 @@
 import shutil
 import sys
-import tempfile
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from queue import Queue
@@ -14,6 +13,7 @@ from dateutil import parser
 from watchdog.observers import Observer, ObserverType
 
 from ogstools import logparser as lp
+from ogstools.definitions import temp_file
 from ogstools.examples import (
     debug_parallel_3,
     log_adaptive_timestepping,
@@ -256,14 +256,7 @@ class TestLogparser_Version2:
     )
     def test_coupled_with_producer(self, chunk_size, delay):
         original_file = serial_v2_coupled_ht
-        temp_dir = Path(
-            tempfile.mkdtemp(
-                f"test_v2_coupled_with_producer_{chunk_size}_{delay}"
-            )
-        )
-        temp_dir.mkdir(parents=True, exist_ok=True)
-
-        new_file = temp_dir / "ht.log"
+        new_file = temp_file(".log", "test_coupled_with_producer", "ht")
         records: Queue = Queue()
         observer: ObserverType = Observer()
         status: Context = Context()

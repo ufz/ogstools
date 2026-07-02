@@ -3,8 +3,6 @@
 
 from functools import reduce
 from itertools import chain
-from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
 import pyvista as pv
@@ -43,9 +41,10 @@ def extract_surfaces(
                 edges.
     """
     from ogstools._find_ogs import cli
+    from ogstools.definitions import temp_dir
     from ogstools.mesh.file_io import read, save
 
-    tmp_dir = Path(mkdtemp("extract_surfaces"))
+    tmp_dir = temp_dir("", "extract_surfaces")
 
     directions = {
         "bottom": ("0", "0", "1"),

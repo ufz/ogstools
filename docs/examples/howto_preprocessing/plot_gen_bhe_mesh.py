@@ -61,7 +61,7 @@ def load_and_plot(bhe_meshes: ot.Meshes):
     bhe_line = bhe_meshes.domain.extract_cells_by_type(pv.CellType.LINE)
     offsets = [(0, 0, 10), (0, 0, -10), (10, 0, 0), (-10, 0, 0)]
     plotter = ot.plot.contourf(
-        bhe_meshes.domain.clip("x", bhe_line.center, crinkle=True),
+        bhe_meshes.domain.clip("x", origin=bhe_line.center, crinkle=True),
         ot.variables.material_id,
     )
     plotter.add_mesh(bhe_meshes.domain, style="wireframe", color="grey")

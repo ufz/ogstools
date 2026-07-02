@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import ClassVar, Literal, TypeAlias, TypeVar
 
 import numpy as np
@@ -39,6 +38,9 @@ class Vector(Variable):
 
         :returns: A scalar variable as a vector component.
         """
+        if not isinstance(index, int) and index not in ["x", "y", "z"]:
+            msg = "Vector index can only be 'x', 'y', 'z' or an int."
+            raise KeyError(msg)
         int_index = index if isinstance(index, int) else "xyz".index(index)
         return Scalar.from_variable(
             self,
@@ -59,7 +61,6 @@ class Vector(Variable):
         )
 
 
-@dataclass
 class BHE_Vector(Variable):
     """
     ========= ===========================
@@ -153,7 +154,6 @@ class BHE_Vector(Variable):
         raise TypeError(msg)
 
 
-@dataclass
 class VectorList(Variable):
     """Represent a list of vector variables."""
 

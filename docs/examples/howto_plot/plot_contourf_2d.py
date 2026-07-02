@@ -62,10 +62,12 @@ fig = ot.plot.contourf(mesh, ot.variables.displacement[1], show_max=True)
 # %% [markdown]
 # To have a continuous colormap instead of discrete colors per level pass a
 # the equally named argument. In this case this helps to increase the level
-# of detail of the negative displacements due to the bilinear colormap.
+# of detail of the negative displacements due to the bilinear colormap. You are
+# also able to access the vector component via a string of the data with
+# the appended suffix.
 
 # %%
-fig = ot.plot.contourf(mesh, ot.variables.displacement[1], continuous_cmap=True)
+fig = ot.plot.contourf(mesh, "displacement_y", continuous_cmap=True)
 
 # %% [markdown]
 # Plotting with deactivated subdomains

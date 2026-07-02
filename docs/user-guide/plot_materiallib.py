@@ -2,7 +2,7 @@
 Materials and Media
 ===================
 
-NB! Works for HEAT_CONDUCTION and TH2M (with Phase Transitions) only so far.
+NB! This example demonstrates the stable `HEAT_CONDUCTION` path.
 
 This example shows how to build OpenGeoSys media definitions directly
 from a YAML-based **Material Library** using
@@ -12,23 +12,21 @@ and :class:`~ogstools.materiallib.core.media.MediaSet`.
 The YAML schema defines materials with:
 
 * **name** - unique material identifier
-* **properties** - sets of constitutive relations (with type, parameters, scope)
-* **scope** - indicates whether a property applies at *phase* or *medium* level
+* **domains** - grouped `medium` / `phase` / `component` property blocks
+* **properties** - sets of constitutive relations (with type and parameters)
 
-Together with the built-in **process schemas** (e.g. ``TH2M_PT``),
+Together with the built-in **process schemas** (e.g. ``HEAT_CONDUCTION``),
 these building blocks allow you to construct full **Media** definitions
 including phases and components, and import them into an OGS project XML
 via :meth:`~ogstools.Project.set_media`.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
+
 
 import ogstools as ot
-from ogstools import definitions as defs
 
-model_dir = Path(mkdtemp())
+model_dir = ot.definitions.temp_dir("materiallib", "user-guide")
 
 # %% [markdown]
 # Example materials
@@ -38,8 +36,10 @@ model_dir = Path(mkdtemp())
 # For example, here are the definitions of "opalinus_clay" (solid) and "water" (fluid):
 
 # %%
-print((Path(defs.MATERIALS_DIR) / "opalinus.yml").read_text(encoding="utf-8"))
-print((Path(defs.MATERIALS_DIR) / "water.yml").read_text(encoding="utf-8"))
+print(
+    (ot.definitions.MATERIALS_DIR / "opalinus.yml").read_text(encoding="utf-8")
+)
+print((ot.definitions.MATERIALS_DIR / "water.yml").read_text(encoding="utf-8"))
 
 # %% [markdown]
 # Media creation
@@ -60,21 +60,13 @@ subdomains = [
     {
         "subdomain": "host_rock",
         "material": "opalinus_clay",
-        "material_ids": [0, 3, 4],  # multiple MatIDs grouped under one name
-    },
-    {
-        "subdomain": "buffer",
-        "material": "bentonite",
-        "material_ids": [1, 2],
-    },
+        "material_ids": [0, 1, 2, 3, 4],
+    }
 ]
 
-fluids = {
-    "AqueousLiquid": "water",
-    "Gas": "carbon_dioxide",
-}  # required by TH2M_PT schema
-
-filtered = db.filter(process="TH2M_PT", subdomains=subdomains, fluids=fluids)
+filtered = db.filter(
+    process="HEAT_CONDUCTION", subdomains=subdomains, fluids={}
+)
 
 media = ot.MediaSet(filtered)
 

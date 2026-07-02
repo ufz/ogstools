@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from math import ceil
@@ -11,6 +10,7 @@ import numpy as np
 import pyvista as pv
 
 from ogstools import mesh
+from ogstools.definitions import temp_file
 
 from .boundary_subset import Surface
 
@@ -72,7 +72,7 @@ class Layer(Boundary):
         if self.num_subdivisions < 1:
             return [top_raster, bottom_raster]
 
-        outfile = Path(tempfile.mkstemp(".asc")[1])
+        outfile = temp_file(".asc", "create_raster")
 
         from ogstools._find_ogs import cli
 

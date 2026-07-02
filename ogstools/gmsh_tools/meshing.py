@@ -1,12 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from __future__ import annotations
+
 from collections.abc import Collection
 from itertools import pairwise
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import gmsh
 import numpy as np
+
+if TYPE_CHECKING:
+    import gmsh
 import pyvista as pv
 
 from ogstools.core.storage import _date_temp_path
@@ -67,6 +72,8 @@ def rect(
     :param msh_version: Version of the GMSH mesh file format. Default is None (use the default version).
     :param layer_ids: List of layer IDs for the physical groups. If None, the IDs will be generated automatically.
     """
+    import gmsh
+
     out_name = optional_default_file(out_name, "gmsh_rect", ".msh")
 
     if not all(
@@ -201,6 +208,8 @@ def cuboid(
     out_name: Path | str | None = None,
     msh_version: float | None = None,
 ) -> Path:
+    import gmsh
+
     out_name = optional_default_file(out_name, "gmsh_cuboid", ".msh")
 
     gmsh.initialize(["-noenv"])
@@ -325,6 +334,8 @@ def remesh_with_triangles(
     :param extract_regions: If True, each region (MaterialIDs) of the new mesh
         will be saved as an individual mesh in addition to the domain mesh.
     """
+    import gmsh
+
     output_file = optional_default_file(output_file, "gmsh_remesh", ".msh")
     gmsh.initialize(["-noenv"])
     gmsh.option.set_number("General.Verbosity", 0)

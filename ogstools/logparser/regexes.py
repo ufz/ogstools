@@ -143,38 +143,38 @@ class Context:
     def update(self, x: Log | Termination) -> None:
         if isinstance(x, SimulationStartTime):
             self.simulation_status = StepStatus.RUNNING
-        if isinstance(x, SimulationEndTime | SimulationExecutionTime):
+        elif isinstance(x, SimulationEndTime | SimulationExecutionTime):
             self.simulation_status = StepStatus.TERMINATED
-        if isinstance(
+        elif isinstance(
             x,
             SimulationEndTimeFailed
             | SimulationAbort
             | SimulationExecutionTimeFailed,
         ):
             self.simulation_status = StepStatus.TERMINATED_WITH_ERROR
-        if isinstance(x, TimeStepStart):
+        elif isinstance(x, TimeStepStart):
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
-        if isinstance(x, TimeStepEnd):
+        elif isinstance(x, TimeStepEnd):
             if self.sequential_consistency:
                 assert (
                     x.time_step == self.time_step
                 ), f"Time step: {x}. Current status: {self.time_step}, {self}"
             self.time_step_status = StepStatus.TERMINATED
-        if isinstance(x, SolvingProcessStart):
+        elif isinstance(x, SolvingProcessStart):
             if self.sequential_consistency:
                 assert not self.process or x.process > self.process
             self.process = x.process
             self.process_step_status = StepStatus.RUNNING
-        if isinstance(x, SolvingProcessEnd):
+        elif isinstance(x, SolvingProcessEnd):
             if self.sequential_consistency:
                 assert x.process == self.process
             self.process_step_status = StepStatus.TERMINATED
 
-        if isinstance(x, IterationStart):
+        elif isinstance(x, IterationStart):
             self.iteration_number = x.iteration_number
             self.iteration_step_status = StepStatus.RUNNING
-        if isinstance(x, IterationEnd):
+        elif isinstance(x, IterationEnd):
             if self.sequential_consistency:
                 assert x.iteration_number == self.iteration_number
             self.iteration_step_status = StepStatus.TERMINATED

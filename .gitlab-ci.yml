@@ -70,8 +70,8 @@ pre-commit:
 build:
   needs: []
   script:
-    - pip install build
-    - pyproject-build
+    - python -m pip install build
+    - python -m build
 
 tests (arch - conda) (R):
   stage: test

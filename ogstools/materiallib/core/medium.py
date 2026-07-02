@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import ogstools.definitions as defs
+from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .material import Material
@@ -48,7 +48,7 @@ class Medium:
         self.material = material
         self.name = name
         self.data_dir = (
-            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+            Path(data_dir) if data_dir is not None else MATERIALS_DIR
         )
 
         if fluids is not None:
@@ -191,10 +191,7 @@ class Medium:
         self.properties = [
             prop
             for prop in self.material.properties
-            if prop.name in required
-            and (
-                prop.extra.get("scope") == "medium" or "scope" not in prop.extra
-            )
+            if prop.name in required and prop.extra.get("domain") == "medium"
         ]
 
         loaded = {prop.name for prop in self.properties}

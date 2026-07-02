@@ -34,7 +34,7 @@ Press **Ctrl+C** to stop OGS and the monitor together.
 To monitor, save and view the log to a file at the same time, use `tee`, which is available on Linux, macOS, and Windows PowerShell:
 
 ```bash
-ogs simulation.prj | ogsmonitor -j my.json | tee my.log
+ogs simulation.prj | ogsmonitor -c my.json | tee my.log
 ```
 
 ### Post-hoc analysis

@@ -8,9 +8,6 @@ be simulated in ot.
 
 # %%
 # 0. Necessary imports
-import tempfile
-from pathlib import Path
-
 import pyvista as pv
 
 import ogstools as ot
@@ -19,7 +16,7 @@ from ogstools.examples import feflow_model_2D_HT
 # %%
 # 1. Load a FEFLOW model (.fem) as a FeflowModel object to further work it.
 # During the initialisation, the FEFLOW file is converted.
-temp_dir = Path(tempfile.mkdtemp("feflow_test_simulation"))
+temp_dir = ot.definitions.temp_dir("feflow_test_simulation", "examples")
 feflow_model = ot.FeflowModel(feflow_model_2D_HT, temp_dir / "2D_HT_model.vtu")
 # %%
 # 2. Plot the temperature simulated in FEFLOW on the mesh, and print information about the mesh.

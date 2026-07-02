@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
+  <UnstructuredGrid>
+    <Piece NumberOfPoints="11" NumberOfCells="10">
+      <PointData>
+        <DataArray type="UInt64" Name="bulk_node_ids" format="binary" RangeMin="0" RangeMax="110">
+          AQAAAACAAABYAAAAJQAAAA==eF5jYIAAbigtBqUVobQOlDaH0k5Q2hdKR0DpZCidB6UBS/gCXg==
+        </DataArray>
+      </PointData>
+      <CellData Scalars="MaterialIDs">
+        <DataArray type="UInt64" Name="bulk_element_ids" format="binary" RangeMin="0" RangeMax="90">
+          AQAAAACAAABQAAAAIwAAAA==eF5jYIAALigtAqXloLQGlDaC0jZQ2g1KB0DpKCgNADPgAcM=
+        </DataArray>
+        <DataArray type="Int32" Name="MaterialIDs" format="binary" RangeMin="0" RangeMax="0">
+          AQAAAACAAAAoAAAADAAAAA==eF5jYCAOAAAAKAAB
+        </DataArray>
+      </CellData>
+      <Points>
+        <DataArray type="Float64" Name="Points" NumberOfComponents="3" format="binary" RangeMin="0" RangeMax="1">
+          AQAAAACAAAAIAQAAPQAAAA==eF5jYMAPZs0EgZ322MVPYoibGIPAZRzqb2KIQ8ADHOY8xhBPTwOBZzjMf4khfvYMCLzBYe8HuDgA+PojAw==
+          <InformationKey name="L2_NORM_RANGE" location="vtkDataArray" length="2">
+            <Value index="0">
+              0
+            </Value>
+            <Value index="1">
+              1
+            </Value>
+          </InformationKey>
+        </DataArray>
+      </Points>
+      <Cells>
+        <DataArray type="Int64" Name="connectivity" format="binary" RangeMin="0" RangeMax="10">
+          AQAAAACAAACgAAAAJgAAAA==eF5dxTkCABAMALA6i/8/2MCULIl4Cldu3Hnw5OTFm8//Ahb4AGU=
+        </DataArray>
+        <DataArray type="Int64" Name="offsets" format="binary" RangeMin="2" RangeMax="20">
+          AQAAAACAAABQAAAAIwAAAA==eF5jYoAAFijNBqU5oDQXlOaB0nxQWgBKC0FpESgNAA4QAG8=
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="binary" RangeMin="3" RangeMax="3">
+          AQAAAACAAAAKAAAACwAAAA==eF5jZoYBAACvAB8=
+        </DataArray>
+      </Cells>
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>

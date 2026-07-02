@@ -13,15 +13,12 @@ The examples start with basic operations and progress to advanced features.
 """
 
 # %%
-from pathlib import Path
-from tempfile import mkdtemp
+
 
 import ogstools as ot
-from ogstools.definitions import EXAMPLES_DIR
-from ogstools.gmsh_tools import rect
 
 # Set up a temporary directory for our examples
-work_dir = Path(mkdtemp())
+work_dir = ot.definitions.temp_dir(prefix="storage", dir="examples")
 ot.StorageBase.Userpath = work_dir
 
 # %%
@@ -30,8 +27,8 @@ ot.StorageBase.Userpath = work_dir
 # Create and save a model in just a few lines.
 
 # Create components
-meshes = ot.Meshes.from_gmsh(rect(n_edge_cells=10))
-prj_path = EXAMPLES_DIR / "prj" / "mechanics.prj"
+meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=10))
+prj_path = ot.definitions.EXAMPLES_DIR / "prj" / "mechanics.prj"
 project = ot.Project(input_file=prj_path)
 
 # Create and save the model
@@ -138,7 +135,7 @@ print(f"Files created at: {model_obj.active_target}")
 
 model_cascade = ot.Model(
     project=ot.Project(input_file=prj_path),
-    meshes=ot.Meshes.from_gmsh(rect(n_edge_cells=5)),
+    meshes=ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=5)),
 )
 print(f"Before save - Meshes is_saved: {model_cascade.meshes.is_saved}")
 print(f"Before save - Project is_saved: {model_cascade.project.is_saved}")
@@ -163,7 +160,7 @@ for item in sorted((work_dir / "cascade_model").rglob("*")):
 # saving the parent. This is useful for sharing components between models.
 
 # Create meshes and save to a shared location first
-shared_meshes = ot.Meshes.from_gmsh(rect(n_edge_cells=6))
+shared_meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=6))
 shared_meshes.save(work_dir / "shared_meshes")
 print(f"Meshes saved to: {shared_meshes.active_target}")
 

@@ -2470,31 +2470,32 @@ wheels = [
 
 [[package]]
 name = "ogs"
-version = "6.5.7"
+version = "6.5.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pandas" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/84/d8/b9cc007b4f3d73da030d55e5f026ac5782689f4ff6615b76bbb37f0c3671/ogs-6.5.7.tar.gz", hash = "sha256:6eb4375381edb4347eaa8b62bf14d82ba1a4381d4e4ffdda36e0f7246b7462e7", size = 3166764, upload-time = "2026-01-31T14:01:50.072Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/b5/98444037c9356f5cb05fa8412062779bb0f85d7ad196437becfee1bb1a15/ogs-6.5.8.tar.gz", hash = "sha256:5df76ee7f505c583819871bdd4701b814380332223809163c5f3865286c7c572", size = 3001826, upload-time = "2026-05-18T09:54:03.83Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/12/f9f417744da03a946a6f9c36ea44a7ce60681ab77ef80149717a55c1b106/ogs-6.5.7-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:aa317b6a080e47cc6eac97948bd07f77c191a82226450daaf17e303a474234ae", size = 42035444, upload-time = "2026-01-31T14:00:41.528Z" },
-    { url = "https://files.pythonhosted.org/packages/03/0d/de7328825a22a5a15a318d8d0b7229e944e75bdb2e85460c6baa0953c7a3/ogs-6.5.7-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:c16184d1be3070892bc0dd6998e3d55c3e503a8b8f32f310849a0e8f1ef0af20", size = 66721935, upload-time = "2026-01-31T14:00:47.326Z" },
-    { url = "https://files.pythonhosted.org/packages/ad/40/ff656069be15748e78205c247b10e0a31598fa38e7ca9d1a5f71cf15a49e/ogs-6.5.7-cp311-cp311-win_amd64.whl", hash = "sha256:ab3eb7b62015f3175d63685142da4f620df6d8de112d9cc1d250fcdf6650389e", size = 52250950, upload-time = "2026-01-31T14:00:52.491Z" },
-    { url = "https://files.pythonhosted.org/packages/99/a3/8595be6bea9a82c6015822f0d402c58af2d31dea6dd39dcf22934d484514/ogs-6.5.7-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:33ba5fdd118fcbcdfd74cf39c2b8fcc09478b397560336b50a0072245fb2b238", size = 42028097, upload-time = "2026-01-31T14:00:57.803Z" },
-    { url = "https://files.pythonhosted.org/packages/23/2b/b0134751b33bb161eecfdd529a0c2085a6adee1ccea4035a0d9314ba52a4/ogs-6.5.7-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:6179e50c26471aee138d55164a0aff33bf87d30842e9bf65a488f5107c95d735", size = 66728609, upload-time = "2026-01-31T14:01:03.139Z" },
-    { url = "https://files.pythonhosted.org/packages/ca/f2/bb2ec6957f1f8a95a6df54c3b9bd72c2a0588f68882d573eae3ebab02402/ogs-6.5.7-cp312-cp312-win_amd64.whl", hash = "sha256:e467e018fbf3e52db6cf2ec4456a169d3ac507b1f4f0165298730ee9e249ded8", size = 52515410, upload-time = "2026-01-31T14:01:09.086Z" },
-    { url = "https://files.pythonhosted.org/packages/7d/2d/a4e4b31745c05ab19e28d8c7d1112b6edc5dc00a055b4d15b2b6b2ea97b6/ogs-6.5.7-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:f65ed5fb8b8a1ae1d02991bca0f2d49b761091f34962c7b26afdbbf666c9a6d7", size = 42028355, upload-time = "2026-01-31T14:01:13.961Z" },
-    { url = "https://files.pythonhosted.org/packages/00/0a/20388b53e95505d5024bcd53bfa272467807afa39f2000c93bbeaaea0892/ogs-6.5.7-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:31dc549b02029630dc8511f9fcc2e5034603ca9365ebe7865fc8c8e625af2b40", size = 66728148, upload-time = "2026-01-31T14:01:19.78Z" },
-    { url = "https://files.pythonhosted.org/packages/ba/a4/4fc1dc117f0eb05dfb63d6cb9d58386e21bd10b746f0eb98038b86ab0b94/ogs-6.5.7-cp313-cp313-win_amd64.whl", hash = "sha256:3d3b802e49f93f620c6e41efb36eb48194d421c66faa79c36ee04528d7004389", size = 52449159, upload-time = "2026-01-31T14:01:30.732Z" },
-    { url = "https://files.pythonhosted.org/packages/f0/23/6ff9049cd3a9b76e148a45d475b63eba689f786e0f60e56d28a501ecf334/ogs-6.5.7-cp314-cp314-macosx_12_0_arm64.whl", hash = "sha256:1269f9d858d802cd13aa254db38cc4fe023cc9991d884f15ad96839d6407136e", size = 42030058, upload-time = "2026-01-31T14:01:35.994Z" },
-    { url = "https://files.pythonhosted.org/packages/00/6d/71265ca6be04d5bbe34ec6f3a967aa49024201122524dc25385f26657538/ogs-6.5.7-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:28aa90e8bc12d4de293b921a7c5ac780ac740a053c693658e6a40d979688ceb9", size = 66728993, upload-time = "2026-01-31T14:01:41.451Z" },
-    { url = "https://files.pythonhosted.org/packages/7d/93/a06028a2c51bf97a26555310fb446ddc971597a78278151ea4f0523a1795/ogs-6.5.7-cp314-cp314-win_amd64.whl", hash = "sha256:4bd9bbfe2c1f4f34d8b1920b86d0e68b88bfc9cae95cdaf26a850502c18f5936", size = 53831439, upload-time = "2026-01-31T14:01:46.742Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/c4/8e3442604b99af8f8be1557c0d553896e3c71a6bbf8f839457287eb1c251/ogs-6.5.8-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:397ec82f31563738f7423ee4502ef9f03d81d7f084b2fb15a48d99863212a380", size = 43405048, upload-time = "2026-05-18T09:52:39.75Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/44/48cce69988cc6910aae7bdf0d98b3f08631dc87bec43cc465d73e3ee3d57/ogs-6.5.8-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:092fa512609a3f39d0273868c188432320321a96c71c7c53b1c4dcd470a814b5", size = 68226101, upload-time = "2026-05-18T09:52:46.284Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/3f/c45917308e4fa6b01da22bb8c2db3c60dcaaa60d760fd0d5bcdc42368ac6/ogs-6.5.8-cp311-cp311-win_amd64.whl", hash = "sha256:dbfde06097f82732907c6e3152b81c6915d25b7658366b56541a7aad6658f24f", size = 78699174, upload-time = "2026-05-18T09:52:56.221Z" },
+    { url = "https://files.pythonhosted.org/packages/88/72/fb524da3cc166b161c2ab592a3090c74f53a7f0762718b077e84e2ccacdc/ogs-6.5.8-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:0e3c10e0733872d815b4795fc3ac78e8dda8ea3fbd1936f98b0379020ae7b123", size = 43399410, upload-time = "2026-05-18T09:53:03.232Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/79/f98d5bd4b553876182144c585365f6c5e24da47502d3a4ad4b2553441daf/ogs-6.5.8-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:3cbbbf586415352034b185758e3d71b9e64ac089d36a1628a96b8606a3d31378", size = 68231499, upload-time = "2026-05-18T09:53:10.499Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/2d/5ce7b12db00f1c7da6ba779e9ec7716c63cc51aff4a073ff2b0b4cd96461/ogs-6.5.8-cp312-cp312-win_amd64.whl", hash = "sha256:85378921102396cbd872cd4ab7d5a99eb8b51139db7f2790e148bdf0afd12353", size = 78959591, upload-time = "2026-05-18T09:53:18.835Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/f5/dc395921bb08e2f8594dcb99b213ac808081fcf6bea687d519fe197768a8/ogs-6.5.8-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:75040e80a2eeb0c0ac84df6501b21ecb822320c55c4d4b54e4356978eea165ae", size = 43399936, upload-time = "2026-05-18T09:53:24.949Z" },
+    { url = "https://files.pythonhosted.org/packages/82/60/6bc91011e92a15aaabf17b3c4b691fe9b4dc9714d325d71101697a22d987/ogs-6.5.8-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:b6a89f7d71982650ad7d66c4b3047f5059223c742a5d899139faece858ca7a47", size = 68231148, upload-time = "2026-05-18T09:53:31.704Z" },
+    { url = "https://files.pythonhosted.org/packages/48/85/c4b1f6632944299c10da5035af5ef97d00d682e8323041c501f37364e723/ogs-6.5.8-cp313-cp313-win_amd64.whl", hash = "sha256:c81dc9b0e5079054c36ee2d82fd98ce5aa47789a6d8531237a24ac65448b32e0", size = 78896627, upload-time = "2026-05-18T09:53:38.951Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/b3/cf83e36900a7d1dbdb99539c3ef44af8f4d414b2760a30e4d58c7e31d561/ogs-6.5.8-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:4ed26fd99de31d467d40c85eae4cdd6aba3ea0c107e75e66a5297123c2527590", size = 43401634, upload-time = "2026-05-18T09:53:45.202Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/d3/dfb720db8159e2ea718486dc6ccbd24be1cb974b463a87d04bed28d29ad9/ogs-6.5.8-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:591560c3228c3d011c3aab8dbaf85005d498a8266b3059a065b014fca019e863", size = 68232092, upload-time = "2026-05-18T09:53:52.685Z" },
+    { url = "https://files.pythonhosted.org/packages/97/57/895b346f899849e091f6bd0deab29502d2236f9894fe358dc5bcae3aacdc/ogs-6.5.8-cp314-cp314-win_amd64.whl", hash = "sha256:128728979fdfcf111d014ded64518a495118dda47a445c7930e5c14949b87e7b", size = 80628917, upload-time = "2026-05-18T09:54:00.224Z" },
 ]
 
 [[package]]
 name = "ogstools"
 source = { editable = "." }
 dependencies = [
+    { name = "bokeh" },
     { name = "gmsh" },
     { name = "h5py" },
     { name = "imagehash" },
@@ -2701,6 +2702,7 @@ pinned = [
     { name = "pytest-xdist" },
     { name = "python-dateutil" },
     { name = "python-json-logger" },
+    { name = "pytz" },
     { name = "pyvista" },
     { name = "pywavelets" },
     { name = "pyyaml" },
@@ -2763,6 +2765,7 @@ pinned = [
     { name = "tzdata" },
     { name = "uri-template" },
     { name = "urllib3" },
+    { name = "virtualenv" },
     { name = "vtk" },
     { name = "watchdog" },
     { name = "wcwidth" },
@@ -2802,6 +2805,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = "==24.4.0" },
     { name = "black", marker = "extra == 'pinned'", specifier = "==24.4.0" },
     { name = "bleach", marker = "extra == 'pinned'", specifier = "==6.3.0" },
+    { name = "bokeh", specifier = ">=3.6.0" },
     { name = "bokeh", marker = "extra == 'monitor'", specifier = ">=3.6.0" },
     { name = "bokeh", marker = "extra == 'pinned'", specifier = "==3.8.2" },
     { name = "build", marker = "extra == 'dev'" },
@@ -2837,7 +2841,7 @@ requires-dist = [
     { name = "fonttools", marker = "extra == 'pinned'", specifier = "==4.61.1" },
     { name = "fqdn", marker = "extra == 'pinned'", specifier = "==1.5.1" },
     { name = "frozenlist", marker = "extra == 'pinned'", specifier = "==1.8.0" },
-    { name = "gmsh", specifier = ">=4.12.0,<4.15" },
+    { name = "gmsh", specifier = ">=4.12.0" },
     { name = "gmsh", marker = "extra == 'pinned'", specifier = "==4.14.1" },
     { name = "greenlet", marker = "extra == 'pinned'", specifier = "==3.3.1" },
     { name = "h5py", specifier = ">=3.8.0" },
@@ -2885,7 +2889,7 @@ requires-dist = [
     { name = "lxml", marker = "extra == 'pinned'", specifier = "==6.0.2" },
     { name = "markdown-it-py", marker = "extra == 'pinned'", specifier = "==4.0.0" },
     { name = "markupsafe", marker = "extra == 'pinned'", specifier = "==3.0.3" },
-    { name = "matplotlib", specifier = ">=3.7.1" },
+    { name = "matplotlib", specifier = ">=3.7.1,<3.11" },
     { name = "matplotlib", marker = "extra == 'pinned'", specifier = "==3.10.8" },
     { name = "matplotlib-inline", marker = "extra == 'pinned'", specifier = "==0.2.1" },
     { name = "mdit-py-plugins", marker = "extra == 'pinned'", specifier = "==0.5.0" },
@@ -2910,8 +2914,8 @@ requires-dist = [
     { name = "nodeenv", marker = "extra == 'pinned'", specifier = "==1.10.0" },
     { name = "numpy", specifier = ">=1.20.0" },
     { name = "numpy", marker = "extra == 'pinned'", specifier = "==2.4.2" },
-    { name = "ogs", marker = "extra == 'ogs'", specifier = ">=6.5.7" },
-    { name = "ogs", marker = "extra == 'pinned'", specifier = "==6.5.7" },
+    { name = "ogs", marker = "extra == 'ogs'", specifier = ">=6.5.8" },
+    { name = "ogs", marker = "extra == 'pinned'", specifier = "==6.5.8" },
     { name = "ogstools", extras = ["monitor", "ogs"], marker = "extra == 'all'" },
     { name = "overrides", marker = "extra == 'pinned'", specifier = "==7.7.0" },
     { name = "packaging", marker = "extra == 'pinned'", specifier = "==26.0" },
@@ -2958,6 +2962,7 @@ requires-dist = [
     { name = "pytest-xdist", marker = "extra == 'test'" },
     { name = "python-dateutil", marker = "extra == 'pinned'", specifier = "==2.9.0.post0" },
     { name = "python-json-logger", marker = "extra == 'pinned'", specifier = "==4.0.0" },
+    { name = "pytz", marker = "extra == 'pinned'", specifier = "==2025.2" },
     { name = "pyvista", marker = "extra == 'pinned'", specifier = "==0.47.0" },
     { name = "pyvista", extras = ["all"], specifier = ">=0.47.0" },
     { name = "pywavelets", marker = "extra == 'pinned'", specifier = "==1.9.0" },
@@ -3038,6 +3043,7 @@ requires-dist = [
     { name = "tzdata", marker = "extra == 'pinned'", specifier = "==2025.3" },
     { name = "uri-template", marker = "extra == 'pinned'", specifier = "==1.3.0" },
     { name = "urllib3", marker = "extra == 'pinned'", specifier = "==2.6.3" },
+    { name = "virtualenv", marker = "extra == 'pinned'", specifier = "==20.34.0" },
     { name = "vtk", specifier = ">=9.4.0" },
     { name = "vtk", marker = "extra == 'pinned'", specifier = "==9.6.0" },
     { name = "watchdog", specifier = ">=6.0.0" },

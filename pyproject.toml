@@ -44,11 +44,12 @@ classifiers = [
 readme = "README.md"
 requires-python = '>=3.11'
 dependencies = [
-  "gmsh>=4.12.0,<4.15",
+  "gmsh>=4.12.0",
   "h5py>=3.8.0",
   "json5>=0.12.0",
   "jupytext>=1.14.0",
-  "matplotlib>=3.7.1",
+  # TODO: unrestrict, when 3.11 is working again
+  "matplotlib >=3.7.1,<3.11",  # 3.11RC02 is failing our plot tests
   "meshio>=5.3.0",
   "pyvista[all]>=0.47.0",
   "numpy>=1.20.0",
@@ -86,7 +87,7 @@ namespaces = false
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"   # would increment version otherwise
 local_scheme = "dirty-tag"
-fallback_version = "0.7.0+no-scm" # Manually increment on release!
+fallback_version = "0.8.1+no-scm" # Manually increment on release!
 
 [project.scripts]
 msh2vtu = 'ogstools.msh2vtu._cli:cli'
@@ -203,7 +204,7 @@ pinned = [
   "nest-asyncio2==1.7.2",
   "nodeenv==1.10.0",
   "numpy==2.4.2",
-  "ogs==6.5.7",
+  "ogs==6.5.8",
   "overrides==7.7.0",
   "packaging==26.0",
   "pagefind==1.4.0",
@@ -239,6 +240,7 @@ pinned = [
   "python-dateutil==2.9.0.post0",
   "python-json-logger==4.0.0",
   "pyvista==0.47.0",
+  "pytz==2025.2",
   "PyWavelets==1.9.0",
   "PyYAML==6.0.3",
   "pyzmq==27.1.0",
@@ -300,6 +302,7 @@ pinned = [
   "tzdata==2025.3",
   "uri-template==1.3.0",
   "urllib3==2.6.3",
+  "virtualenv==20.34.0",
   "vtk==9.6.0",
   "watchdog==6.0.0",
   "wcwidth==0.6.0",
@@ -334,7 +337,7 @@ docs = [
   "pagefind[extended]",
 ]
 feflow = ["ifm_contrib>=0.2.4"]
-ogs = ["ogs>=6.5.7"]
+ogs = ["ogs>=6.5.8"]
 monitor = ["bokeh>=3.6.0", "ipykernel>5"]
 # all features (not extra for developer tasks (test,docs,dev,...))
 all = ["ogstools[ogs,monitor]"]

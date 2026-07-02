@@ -5,7 +5,7 @@ from contextlib import suppress
 from importlib import metadata
 
 # Top API
-from . import gmsh_tools, logparser, mesh, plot, variables
+from . import definitions, gmsh_tools, logparser, mesh, plot, variables
 from ._find_ogs import cli, status  # noqa: F401
 from .core.execution import Execution
 from .core.interactive_simulation_controller import (
@@ -44,6 +44,7 @@ __all__ = [
     "Model",
     "Project",
     "Simulation",
+    "definitions",
     "gmsh_tools",
     "logparser",
     "mesh",

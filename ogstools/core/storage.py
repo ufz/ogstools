@@ -7,7 +7,6 @@ from __future__ import annotations
 import abc
 import copy
 import errno
-import getpass
 import inspect
 import shutil
 import tempfile
@@ -16,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 from typing_extensions import Self
+
+from ogstools.definitions import usr_tmp_dir
 
 
 # TODO: other backup strategies could include git repo or work with provenance features of workflow managers
@@ -35,7 +36,7 @@ def _date_temp_path(
     id: str | None = None,
     temp: Path | None = None,
 ) -> Path:
-    dir = temp or StorageBase.Temppath
+    dir = temp or StorageBase.TempFile
     suffix = "." + suffix if suffix else ""
     if not id:
         id = _temp_id()
@@ -48,35 +49,6 @@ def _date_temp_path(
 def _temp_id() -> str:
     now = datetime.now()
     return f"{now:%Y%m%d_%H%M%S_%f}"
-
-
-def _check_filename_or_filepath(
-    path_string: Path | str, strict: bool = True
-) -> bool:
-    path_string = str(path_string)
-    if not path_string:
-        if strict:
-            msg = "The requested filepathname is empty."
-            raise ValueError(msg)
-        return False
-
-    allowed_chars = set(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-/\\(), :"
-    )
-    p = Path(path_string)
-
-    for part in p.parts:
-        if part in ("", ".", ".."):
-            continue
-
-        for c in part:
-            if c not in allowed_chars:
-                if strict:
-                    msg = rf"The requested filepath '{path_string}' contains invalid character '{c}'. Only a-Z, 0-9, _.-\/(), and space are allowed."
-                    raise ValueError(msg)
-                return False
-
-    return True
 
 
 BASE_SAVE_DOC = """
@@ -113,9 +85,7 @@ class StorageBase(abc.ABC):
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
 
     Userpath = Path("storage")  # relative paths or None
-    Temppath = Path(tempfile.gettempdir()) / (
-        "ogstools" + "_" + getpass.getuser()
-    )
+    TempFile = usr_tmp_dir()
 
     Backup = False
     DefaultOverwrite = False  # Default value for overwrite parameter
@@ -175,7 +145,6 @@ class StorageBase(abc.ABC):
     @id.setter
     def id(self, id: str) -> None:
         """Set a new identifier and update the target path accordingly."""
-        _check_filename_or_filepath(id, strict=True)
         new_target, user_defined = self._target_for_save(id=id)
         self._next_target = new_target
         self.user_specified_target = user_defined
@@ -361,7 +330,6 @@ class StorageBase(abc.ABC):
             self.id = id
             user_defined = True
         elif target:
-            _check_filename_or_filepath(target, strict=True)
             user_defined = True
             self._next_target = Path(target)
         else:
@@ -529,7 +497,7 @@ class StorageBase(abc.ABC):
 
     def _date_temp_path(self) -> Path:
         suffix = self._ext
-        return _date_temp_path(self.class_id, suffix, self._id, self.Temppath)
+        return _date_temp_path(self.class_id, suffix, self._id, self.TempFile)
 
     def _reset_save_state(self) -> None:
         """

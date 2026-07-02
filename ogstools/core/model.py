@@ -5,11 +5,11 @@
 import copy
 import typing
 from pathlib import Path
-from tempfile import mkdtemp
 
 import numpy as np
 from matplotlib import pyplot as plt
 
+from ogstools.definitions import temp_dir
 from ogstools.meshes._meshes import Meshes
 from ogstools.ogs6py.project import Project
 
@@ -80,7 +80,8 @@ class Model(StorageBase):
                 meshes_files = self.project.meshpaths(meshes)
                 self.meshes = Meshes.from_files(meshes_files)
 
-        else:  # None
+        else:
+            assert meshes is None, f"unsupported meshing type {type(meshes)}"
             assert self.project.input_file
             # Last resort - Possible conventions to try
             mesh_locations = [
@@ -323,7 +324,6 @@ class Model(StorageBase):
             raise NotImplementedError(msg)
 
         if self.execution.interactive:
-
             from .interactive_simulation_controller import (
                 OGSInteractiveController,
             )
@@ -425,7 +425,7 @@ class Model(StorageBase):
         """
 
         meshes = self.meshes
-        tmp_path = Path(mkdtemp(prefix="plot_constraints"))
+        tmp_path = temp_dir("plot_constraints")
         if (
             self.project.geometry
             and self.project.geometry.active_target is not None

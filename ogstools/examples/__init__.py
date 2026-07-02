@@ -253,10 +253,13 @@ prj_3bhes_id_1U_2U_1U = _prj_dir / "3bhes_id_1U_2U_1U.prj"
 prj_3bhes_id_restart_ic_ref = _prj_dir / "3bhes_id_1U_2U_1U_restart_ic_ref.prj"
 prj_3bhes_id_1U_2U_1U_ref = _prj_dir / "3bhes_id_1U_2U_1U_ref.prj"
 prj_beier_sandbox_power_ref = _prj_dir / "beier_sandbox_power_ref.prj"
+prj_beier_sandbox_processed = _prj_dir / "beier_sandbox_processed.prj"
 prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
 prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
-prj_th2m_phase_transition = _prj_dir / "th2m_phase_transition.prj"
+prj_th2m_phase_transition = (
+    _prj_dir / "TH2M" / "TH2M_PT" / "th2m_phase_transition.prj"
+)
 prj_liquid_flow = _prj_dir / "liquid_flow.prj"
 prj_heat_transport = _prj_dir / "HeatTransportInStationaryFlow.prj"
 prj_heat_conduction = _prj_dir / "HeatConduction.prj"
@@ -264,6 +267,11 @@ prj_HM_stationary = _prj_dir / "HM_StationaryFlow.prj"
 prj_THM_stationary = _prj_dir / "THM_HeatTransportInStationaryFlow.prj"
 prj_TRM_stationary = _prj_dir / "TRM_HeatTransportInStationaryFlow.prj"
 prj_TM_square = _prj_dir / "TM_square.prj"
+prj_wetland = _prj_dir / "Wetland_1d.prj"
+# referenced files
+dat_cwm1 = _prj_dir / "cwm1.dat"
+bin_curve_coords = _prj_dir / "inflow_temperature_coords.bin"
+bin_curve_values = _prj_dir / "inflow_temperature_values.bin"
 
 surface_paths = [
     _surface_dir / (file + ".vtu")
@@ -272,6 +280,7 @@ surface_paths = [
 
 elder_h5 = _meshseries_dir / "elder.h5"
 elder_xdmf = _meshseries_dir / "elder.xdmf"
+elder_xdmf_symlink = _meshseries_dir / "symlinked" / "elder_symlink.xdmf"
 pvd_parallel_2D = _meshseries_dir / "2D_mechanics_pvd/parallel/mesh.pvd"
 pvd_serial_2D = _meshseries_dir / "2D_mechanics_pvd/serial/mesh.pvd"
 

@@ -9,7 +9,7 @@ import re
 import warnings
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import yaml
 
@@ -33,11 +33,13 @@ class Material(Mapping[str, MaterialProperty]):
     """
 
     __hash__ = None  # type: ignore[assignment]  # Mutable with __eq__
+    ALLOWED_DOMAINS: ClassVar[set[str]] = {"medium", "phase", "component"}
 
     def __init__(self, name: str, raw_data: dict[str, Any]):
         self.name = name
         self.raw = raw_data  # full YAML (e.g. for debugging or export)
         self.properties: list[MaterialProperty] = []
+        self._validate_grouped_domains()
         self._parse_properties()
 
     @classmethod
@@ -67,24 +69,80 @@ class Material(Mapping[str, MaterialProperty]):
             yaml.safe_dump(output_data, file, sort_keys=False)
 
     def _parse_properties(self) -> None:
-        block = self.raw.get("properties", {})
-        if not block:
-            logger.debug("Material %s has no properties", self.name)
-
-        for prop_name, entries in block.items():
-            for entry in entries if isinstance(entries, list) else [entries]:
-                type_ = entry.get(
-                    "type", "Constant"
-                )  # TODO: Error if 'type' not found
-                value = entry.get("value", None)
-                extra = {
-                    k: v for k, v in entry.items() if k not in ("type", "value")
-                }
-                self.properties.append(
-                    MaterialProperty(
-                        name=prop_name, type_=type_, value=value, **extra
+        for domain_block in self.raw["domains"]:
+            domain_name = domain_block["domain"]
+            properties = domain_block["properties"]
+            for prop_name, entries in properties.items():
+                for entry in (
+                    entries if isinstance(entries, list) else [entries]
+                ):
+                    type_ = entry.get(
+                        "type", "Constant"
+                    )  # TODO: Error if 'type' not found
+                    value = entry.get("value", None)
+                    extra = {
+                        k: v
+                        for k, v in entry.items()
+                        if k not in ("type", "value")
+                    }
+                    extra["domain"] = domain_name
+                    self.properties.append(
+                        MaterialProperty(
+                            name=prop_name, type_=type_, value=value, **extra
+                        )
                     )
+
+    def _validate_grouped_domains(self) -> None:
+        if "properties" in self.raw:
+            msg = (
+                f"Material '{self.name}' must use top-level 'domains'; "
+                "flat top-level 'properties' is no longer supported."
+            )
+            raise ValueError(msg)
+
+        domains = self.raw.get("domains")
+        if not isinstance(domains, list) or not domains:
+            msg = (
+                f"Material '{self.name}' must define a non-empty top-level "
+                "'domains' list."
+            )
+            raise ValueError(msg)
+
+        seen_domains: set[str] = set()
+        for block in domains:
+            if not isinstance(block, dict):
+                msg = f"Material '{self.name}' has a non-mapping domain block."
+                raise ValueError(msg)
+
+            domain_name = block.get("domain")
+            if not isinstance(domain_name, str):
+                msg = (
+                    f"Material '{self.name}' has a domain block without a "
+                    "valid 'domain' string."
                 )
+                raise ValueError(msg)
+            if domain_name not in self.ALLOWED_DOMAINS:
+                msg = (
+                    f"Material '{self.name}' uses unsupported domain "
+                    f"'{domain_name}'. Allowed domains are: "
+                    f"{sorted(self.ALLOWED_DOMAINS)}."
+                )
+                raise ValueError(msg)
+            if domain_name in seen_domains:
+                msg = (
+                    f"Material '{self.name}' defines duplicate top-level "
+                    f"domain block '{domain_name}'."
+                )
+                raise ValueError(msg)
+            seen_domains.add(domain_name)
+
+            properties = block.get("properties")
+            if not isinstance(properties, dict):
+                msg = (
+                    f"Material '{self.name}' domain '{domain_name}' must "
+                    "define a 'properties' mapping."
+                )
+                raise ValueError(msg)
 
     def __getitem__(self, key: str) -> MaterialProperty:
         for p in self.properties:
@@ -109,13 +167,31 @@ class Material(Mapping[str, MaterialProperty]):
     def _raw_from_properties(
         name: str, properties: list[MaterialProperty]
     ) -> dict:
-        "raw yaml data dict with lists if multiple entries have same names"
-        raw_block: dict[str, list[dict[str, Any]]] = {}
+        "raw grouped yaml data dict with lists if multiple entries have same names"
+        domain_blocks: dict[str, dict[str, list[dict[str, Any]]]] = {}
         for p in properties:
-            entry = {"type": p.type, "value": p.value, **p.extra}
-            raw_block.setdefault(p.name, []).append(entry)
+            domain = p.extra.get("domain")
+            if not isinstance(domain, str):
+                msg = (
+                    f"Property '{p.name}' in material '{name}' is missing its "
+                    "domain metadata."
+                )
+                raise ValueError(msg)
+            entry = {
+                "type": p.type,
+                "value": p.value,
+                **{k: v for k, v in p.extra.items() if k != "domain"},
+            }
+            properties_by_name = domain_blocks.setdefault(domain, {})
+            properties_by_name.setdefault(p.name, []).append(entry)
 
-        return {"name": name, "properties": raw_block}
+        return {
+            "name": name,
+            "domains": [
+                {"domain": domain, "properties": properties_by_name}
+                for domain, properties_by_name in domain_blocks.items()
+            ],
+        }
 
     @property
     def property_names(self) -> list[str]:
@@ -195,7 +271,7 @@ class Material(Mapping[str, MaterialProperty]):
         others = [
             p
             for p in self.properties
-            if not all(matching(name, p.name) for name in selection)
+            if not any(matching(name, p.name) for name in selection)
         ]
 
         self.properties = sorted(others + pick, key=lambda p: p.name)

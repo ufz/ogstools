@@ -8,7 +8,6 @@ from typing import Literal
 
 import numpy as np
 from pyvista import UnstructuredGrid
-from typeguard import typechecked
 
 from ogstools.variables import tensor_math
 from ogstools.variables.mesh_dependent import angles
@@ -23,7 +22,6 @@ class Matrix(Variable):
     Matrix components can be accesses with brackets e.g. stress[0]
     """
 
-    @typechecked
     def __getitem__(
         self,
         index: (
@@ -46,6 +44,10 @@ class Matrix(Variable):
         cartesian_keys = {"xx": 0, "yy": 1, "zz": 2, "xy": 3, "yz": 4, "xz": 5}
         polar_keys = {"rr": 0, "tt": 1, "pp": 2, "rt": 3, "tp": 4, "rp": 5}
         key_map = cartesian_keys | polar_keys
+        if not isinstance(index, int) and index not in key_map:
+            allowed = list(key_map.keys())
+            msg = f"Matrix index can only be an int or one of {allowed}."
+            raise KeyError(msg)
         int_index = key_map.get(str(index), index)
 
         return Scalar.from_variable(
@@ -64,6 +66,11 @@ class Matrix(Variable):
         For 3D only spherical coordinate system is implemented for now.
         """
 
+        def _get_mesh(
+            dataset: UnstructuredGrid | Sequence[UnstructuredGrid],
+        ) -> UnstructuredGrid:
+            return dataset[0] if isinstance(dataset, Sequence) else dataset
+
         def theta(mesh: UnstructuredGrid) -> np.ndarray | None:
             "Calculate the azimuth angle with regards to the z-axis"
             if np.shape(mesh[self.data_name])[-1] == 4:  # 2D
@@ -76,12 +83,10 @@ class Matrix(Variable):
 
         return self.replace(
             mesh_dependent=True,
-            func=lambda mesh: (
-                tensor_math.to_polar(
-                    self.func(self._get_data(mesh)),
-                    angles(mesh, center, normal),
-                    theta(mesh),
-                )
+            func=lambda dataset: tensor_math.to_polar(
+                self.func(self._get_data(dataset)),
+                angles(_get_mesh(dataset), center, normal),
+                theta(_get_mesh(dataset)),
             ),
         )
 

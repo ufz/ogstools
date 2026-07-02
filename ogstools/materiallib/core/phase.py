@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import ogstools.definitions as defs
+from ogstools.definitions import MATERIALS_DIR
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .component import Component
@@ -32,7 +32,7 @@ class Phase:
         self.liquid_material = liquid_material
         self.solid_material = solid_material
         self.data_dir = (
-            Path(data_dir) if data_dir is not None else Path(defs.MATERIALS_DIR)
+            Path(data_dir) if data_dir is not None else MATERIALS_DIR
         )
 
         schema = PROCESS_SCHEMAS.get(process)
@@ -123,10 +123,7 @@ class Phase:
         self.properties = [
             prop
             for prop in source.properties
-            if prop.name in required
-            and (
-                prop.extra.get("scope") == "phase" or "scope" not in prop.extra
-            )
+            if prop.name in required and prop.extra.get("domain") == "phase"
         ]
 
         loaded = {prop.name for prop in self.properties}

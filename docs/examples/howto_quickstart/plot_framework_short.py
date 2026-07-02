@@ -11,9 +11,6 @@ This is a condensed version of the OGSTools workflow.
 # For detailed explanations of each step, see :ref:`sphx_glr_auto_examples_howto_quickstart_plot_framework.py`.
 
 # %%
-import tempfile
-from pathlib import Path
-
 import ogstools as ot
 from ogstools.examples import load_meshes_simple_lf, load_project_simple_lf
 
@@ -53,7 +50,7 @@ df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
 # 4. Store: Save Simulation
 # ==========================
 
-tmp = Path(tempfile.mkdtemp())
+tmp = ot.definitions.temp_dir("framework_short", "examples")
 sim.save(tmp / "mysim", archive=True)
 
 # %% [markdown]

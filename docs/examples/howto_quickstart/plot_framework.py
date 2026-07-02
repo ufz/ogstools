@@ -19,9 +19,6 @@ For detailed information on each component, see the linked examples throughout t
 """
 
 # %%
-import tempfile
-from pathlib import Path
-
 import numpy as np
 
 import ogstools as ot
@@ -208,7 +205,7 @@ df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
 # - **ID-based organization**: Use IDs for organized storage
 # - **Complete roundtrip**: Save → load → identical object
 
-tmp = Path(tempfile.mkdtemp())
+tmp = ot.definitions.temp_dir("framework", "examples")
 
 # Save the complete simulation with archive mode
 # This creates a self-contained copy you can share or move

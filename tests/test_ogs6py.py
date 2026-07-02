@@ -22,6 +22,7 @@ from ogstools.examples import (
     prj_heat_transport_bhe_simple,
     prj_include_solid,
     prj_include_solid_ref,
+    prj_mechanics,
     prj_nuclear_decay,
     prj_pid_timestepping,
     prj_pid_timestepping_ref,
@@ -51,7 +52,6 @@ value_variants = [
 
 
 class TestiOGS:
-
     def compare(self, file1: str | Path, file2: str | Path) -> None:
         "Check equality of files, ignoring line endings."
         WINDOWS_LINE_ENDING = b"\r\n"
@@ -851,10 +851,11 @@ class TestiOGS:
             distance_between_pipes="0.06",
             longitudinal_dispersion_length="0.001",
         )
+
         model.processes.set_bhe_component(
             comp_type="flow_and_temperature_control",
-            type="PowerCurveConstantFlow",
-            power_curve="scaled_power_curve",
+            type="Power",
+            power="scaled_power_curve",
             flow_rate="0.00037",
         )
         model.processes.set_bhe_component(
@@ -1064,8 +1065,14 @@ class TestiOGS:
         model.parameters.add_parameter(
             name="dT_Groundsource", type="Constant", value="0.06"
         )
-        model.curves.add_curve(
+        model.parameters.add_parameter(
             name="scaled_power_curve",
+            type="CurveScaled",
+            curve="power_curve",
+            parameter="T_CurveScaled",
+        )
+        model.curves.add_curve(
+            name="power_curve",
             coords=["0 1576800 31536000"],
             values=["-1600 0 -1600"],
         )
@@ -1117,6 +1124,43 @@ class TestiOGS:
         find = root.findall("./time_loop/output/prefix")
         assert find[0].text == "tunnel_replace"
 
+    def test_parameters_setitem(self) -> None:
+        prj = ot.Project(input_file=prj_mechanics)
+        params = prj.parameters
+        with pytest.raises(KeyError, match="No parameter is defined with"):
+            params["test"]
+        params["test"] = 1
+        assert params["test"].find("type").text == "Constant"
+        params["test"] = 2
+        assert len(params.tree.findall(".//parameter[name='test']")) == 1
+        assert params["test"].find("value").text == "2"
+        params["test"] = [1, 2, 3]
+        assert params["test"].find("values").text == "1 2 3"
+        params["test"] = "1000 * 9.81 * y"
+        assert params["test"].find("type").text == "Function"
+        assert len(params["test"].findall("expression")) == 1
+        params["test"] = ["1000 * 9.81 * y"] * 3 + [0]
+        assert params["test"].find("type").text == "Function"
+        assert len(params["test"].findall("expression")) == 4
+
+    def test_group_parameter(self) -> None:
+        "Test creation of group type parameter and adding index values to it."
+        prj = ot.Project(input_file=prj_mechanics)
+        xpath = ".//parameter[name='test']"
+        assert prj.parameters.tree.find(xpath) is None
+        param = prj.parameters.set_group_parameter(
+            "test", "MaterialIDs", {0: 0, 1: 10}
+        )
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 2
+        prj.parameters.add_index_values_to_group("test", {2: 20})
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 3
+        prj.parameters.add_index_values_to_group(param, {3: 30})
+        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 4
+        with pytest.raises(KeyError, match="Couldn't find"):
+            prj.parameters.add_index_values_to_group("abcd", {0: 0})
+        with pytest.raises(KeyError, match="not of type 'Group'"):
+            prj.parameters.add_index_values_to_group("zero", {0: 0})
+
     def test_timedependenthet_param(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "timedephetparam.prj"
         model = ot.Project(
@@ -1167,7 +1211,7 @@ class TestiOGS:
         model.processes.set_bhe_component(
             bhe_id=0,
             comp_type="flow_and_temperature_control",
-            type="FixedPowerConstantFlow",
+            type="Power",
             power="100",
             flow_rate="2e-4",
         )
@@ -1532,7 +1576,7 @@ class TestiOGS:
 
     @pytest.fixture
     def cuboid_model2(
-        self, temp_dir: Path, num_threads: int, thread_type: str
+        self, tmp_path: Path, num_threads: int, thread_type: str
     ) -> ot.Model:
 
         meshes = ot.Meshes.from_gmsh(
@@ -1543,25 +1587,25 @@ class TestiOGS:
         kwargs = {thread_type: num_threads}
         prj = ot.Project(
             input_file=prj_aniso_expansion,
-            output_file=temp_dir / "test_asm_threads.prj",
+            output_file=tmp_path / "test_asm_threads.prj",
             **kwargs,
         )
         execution = ot.Execution(
-            sim_output=temp_dir,
-            logfile=temp_dir / "cuboid.log",
+            sim_output=tmp_path,
+            logfile=tmp_path / "cuboid.log",
             write_logs=True,
             background=True,
         )
 
         model = ot.Model(prj, meshes, execution=execution)
-        model._next_target = temp_dir  # use only in testing!
+        model._next_target = tmp_path  # use only in testing!
         return model
 
     @pytest.fixture
     def bhe_model(
-        self, temp_dir: Path, num_threads: int, thread_type: str
+        self, tmp_path: Path, num_threads: int, thread_type: str
     ) -> ot.Project:
-        vtu_file = temp_dir / "bhe_simple.vtu"
+        vtu_file = tmp_path / "bhe_simple.vtu"
         gen_bhe_mesh(
             length=5, width=5, layer=[20], groundwater=[],
             BHE_Array=[
@@ -1575,7 +1619,7 @@ class TestiOGS:
         kwargs = {thread_type: num_threads}
         return ot.Project(
             input_file=prj_heat_transport_bhe_simple,
-            output_file=temp_dir / "test_Threads.prj",
+            output_file=tmp_path / "test_Threads.prj",
             **kwargs,
         )
 
@@ -1768,3 +1812,37 @@ class TestiOGS:
             == "include_test"
         )
         assert root.findtext("./time_loop/output/prefix") == "include_test"
+
+    def test_curves_inline(self) -> None:
+        import numpy as np
+
+        prj = ot.Project(prj_beier_sandbox)
+        coords = prj.curves.coords("inflow_temperature")
+        values = prj.curves.values("inflow_temperature")
+
+        assert isinstance(coords, np.ndarray)
+        assert isinstance(values, np.ndarray)
+        assert len(coords) == len(values) == 2833
+        assert coords[0] == pytest.approx(0.0)
+        assert values[0] == pytest.approx(295.15)
+
+        with pytest.raises(KeyError):
+            prj.curves.coords("NonExistent")
+
+    def test_curves_file_based(self, tmp_path: Path) -> None:
+        import numpy as np
+
+        coords = np.array([0.0, 1.0, 2.0])
+        values = np.array([0.0, 0.5, 1.0])
+        coords_file = tmp_path / "coords.bin"
+        values_file = tmp_path / "values.bin"
+        coords.astype("<f8").tofile(coords_file)
+        values.astype("<f8").tofile(values_file)
+
+        prj = ot.Project()
+        prj.curves.add_curve_from_file("FileCurve", coords_file, values_file)
+        prj.save(tmp_path / "test")
+
+        prj2 = ot.Project.from_folder(tmp_path / "test")
+        np.testing.assert_array_equal(prj2.curves.coords("FileCurve"), coords)
+        np.testing.assert_array_equal(prj2.curves.values("FileCurve"), values)

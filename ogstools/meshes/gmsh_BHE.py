@@ -4,15 +4,13 @@
 
 from dataclasses import dataclass
 from math import ceil
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Any, Literal
 
-import gmsh
 import numpy as np
 import shapely
 
 from ogstools import Meshes
+from ogstools.definitions import temp_file
 
 
 @dataclass(frozen=True)
@@ -1282,43 +1280,41 @@ def gen_bhe_mesh(
 
     outer_mesh_size_inner = (outer_mesh_size + inner_mesh_size) / 2
 
-    with TemporaryDirectory() as tmpdir:
-        msh_file = Path(tmpdir) / f"{meshname}.msh"
-        gmsh.initialize(["-noenv"])
-        gmsh.option.setNumber("General.Verbosity", 2)
-        model = gmsh.model
-        geo = model.geo
-        mesh = model.mesh
+    msh_file = temp_file(".msh", "gen_bhe_mesh", meshname)
+    import gmsh
 
-        model.add(msh_file.stem)
+    gmsh.initialize(["-noenv"])
+    gmsh.option.setNumber("General.Verbosity", 2)
+    model = gmsh.model
+    geo = model.geo
+    mesh = model.mesh
 
-        if meshing_type == "structured":
-            _mesh_structured()
-        elif meshing_type == "prism":
-            _mesh_prism()
+    model.add(msh_file.stem)
 
-        mesh.generate(3)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-        mesh.setOrder(order)
-        mesh.removeDuplicateNodes()
+    if meshing_type == "structured":
+        _mesh_structured()
+    else:
+        assert meshing_type == "prism", f"unsupported {meshing_type=}"
+        _mesh_prism()
 
-        # delete zero-volume elements
-        # 1 for line elements --> BHE's are the reason
-        elem_tags, _node_tags = mesh.getElementsByType(1)
-        elem_qualities = mesh.getElementQualities(
-            elementTags=elem_tags, qualityName="volume"
-        )
-        zero_volume_elements_id = np.argwhere(elem_qualities == 0)
+    mesh.generate(3)
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    mesh.setOrder(order)
+    mesh.removeDuplicateNodes()
 
-        # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
-        mesh.setVisibility(
-            elem_tags[zero_volume_elements_id].ravel().tolist(), 0
-        )
-        gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
-        gmsh.plugin.run("Invisible")
+    # delete zero-volume elements
+    # 1 for line elements --> BHE's are the reason
+    elem_tags, _node_tags = mesh.getElementsByType(1)
+    elem_qualities = mesh.getElementQualities(
+        elementTags=elem_tags, qualityName="volume"
+    )
+    zero_volume_elements_id = np.argwhere(elem_qualities == 0)
 
-        gmsh.write(str(msh_file))
-        gmsh.finalize()
-        return Meshes.from_gmsh(
-            msh_file, dim=[1, 3], log=False, meshname=meshname
-        )
+    # only possible with the hack over the visibilitiy, see https://gitlab.onelab.info/gmsh/gmsh/-/issues/2006
+    mesh.setVisibility(elem_tags[zero_volume_elements_id].ravel().tolist(), 0)
+    gmsh.plugin.setNumber("Invisible", "DeleteElements", 1)
+    gmsh.plugin.run("Invisible")
+
+    gmsh.write(str(msh_file))
+    gmsh.finalize()
+    return Meshes.from_gmsh(msh_file, dim=[1, 3], log=False, meshname=meshname)

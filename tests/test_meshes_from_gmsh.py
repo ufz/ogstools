@@ -2,13 +2,12 @@
 Tests (pytest) for msh2vtu and meshes_from_gmsh
 """
 
+import importlib
 import os
-import runpy
 import sys
 from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
-from tempfile import mkdtemp
 
 import gmsh
 import meshio
@@ -198,7 +197,7 @@ def is_typical_edge_length(val):
 @settings(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
     verbosity=Verbosity.normal,
-    deadline=750,
+    deadline=750 if sys.platform == "linux" else None,
 )
 def test_rect(tmp_path: Path, rect_p):
     """Property-based test for the function 'rect'. It uses meshes_from_gmsh."""
@@ -228,7 +227,6 @@ def test_rect(tmp_path: Path, rect_p):
 
 @pytest.mark.tools  # NodeReordering
 class TestPhysGroups:
-    tmp_path = Path(mkdtemp())
 
     # By default, the gmsh physical group tags translate directly to MaterialIDs
     # With reindex=True, we want to map these tags to incrementing integers
@@ -301,7 +299,8 @@ def test_gmsh(tmp_path: Path, script: str, num_meshes: int, version: float):
     if version is not None:
         gmsh.initialize(["-noenv"])
         gmsh.option.setNumber("Mesh.MshFileVersion", version)
-    runpy.run_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod = importlib.import_module(f"ogstools.examples.gmsh.{Path(script).stem}")
+    mod.main()
     prefix = str(Path(script).stem)
     msh_file = Path(tmp_path, prefix + ".msh")
     assert len(meshes_from_gmsh(msh_file, log=False)) == num_meshes

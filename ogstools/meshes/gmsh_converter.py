@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def meshes_from_gmsh(
-    filename: Path,
+    filename: Path | str,
     dim: int | Sequence[int] = 0,
     reindex: bool = True,
     log: bool = True,
@@ -51,7 +51,8 @@ def meshes_from_gmsh(
     filename = Path(filename)
 
     if not filename.is_file():
-        raise FileNotFoundError
+        msg = f"Could not find file: {filename}."
+        raise FileNotFoundError(msg)
 
     meshes: dict[str, pv.UnstructuredGrid] = {}
     mesh: meshio.Mesh = meshio.read(str(filename))

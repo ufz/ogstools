@@ -5,7 +5,7 @@ Meshes from YAML
 This example shows how to generate OGS-ready VTU meshes directly from a YAML
 geometry description using :meth:`~ogstools.Meshes.from_yaml`.
 
-The YAML schema defines the mesh in terms of five top-level keys:
+The YAML schema de...ot.definitions..ogstoolsines the mesh in terms of fdefinitionsop-lepathseys:
 
 * **parameters** - scalar values and expressions that can be reused in the geometry
 * **points** - coordinates and local mesh sizes
