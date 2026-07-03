@@ -477,6 +477,7 @@ ogs/ogs-notebooks:
 
 check web links:
   stage: test
+  tags: [shell, envinf]
   allow_failure: true
   script:
     - make link_check
