@@ -318,7 +318,21 @@ class Meshes(MutableMapping, StorageBase):
         """
         from ogstools.meshes.subdomains import extract_boundaries
 
-        sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
+        Mesh.validate(mesh, strict=True)
+
+        cell_types = np.unique(
+            getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
+        )
+        if any("QUADRATIC" in pv.CellType(ct).name for ct in cell_types):
+            sub_meshes_dict_linear = extract_boundaries(
+                utils.to_linear(mesh), threshold_angle
+            )
+            sub_meshes_dict = {
+                name: utils.to_quadratic(mesh)
+                for name, mesh in sub_meshes_dict_linear.items()
+            }
+        else:
+            sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 
         meshes_dict = {domain_name: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)

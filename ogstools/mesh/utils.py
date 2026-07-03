@@ -35,6 +35,22 @@ def node_reordering(
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
 
+def to_linear(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Convert to a linear mesh."
+    tmp_file = temp_file(".vtu", "mesh", "to_linear")
+    save(mesh, tmp_file)
+    cli().convertToLinearMesh(i=str(tmp_file), o=str(tmp_file))
+    return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
+def to_quadratic(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Convert to a quadratic mesh."
+    tmp_file = temp_file(".vtu", "mesh", "to_quadratic")
+    save(mesh, tmp_file)
+    cli().createQuadraticMesh(i=str(tmp_file), o=str(tmp_file))
+    return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
 def validate(
     mesh: pv.UnstructuredGrid | Path | str, strict: bool = False
 ) -> bool:
