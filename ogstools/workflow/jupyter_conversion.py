@@ -1,10 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os
-import sys
 import tempfile
-import warnings
+from contextlib import suppress
 from pathlib import Path
 
 from nbconvert import HTMLExporter
@@ -12,13 +10,9 @@ from nbconvert.preprocessors import TagRemovePreprocessor
 from traitlets.config import Config
 
 # suppress output of version incompatibility between sphinx-gallery and jupytext
-# it works anyways
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore")
-    sys.stdout = open(os.devnull, "w")  # noqa: SIM115, PTH123
+with suppress(Warning):
     import jupytext
 
-    sys.stdout = sys.__stdout__
 import papermill as pm
 
 
