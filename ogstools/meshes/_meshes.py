@@ -186,13 +186,13 @@ class Meshes(MutableMapping, StorageBase):
 
         """
 
+        def sorted_paths(paths: Sequence[str | Path]) -> Sequence[Path]:
+            domains = sorted(Path(p) for p in paths if domain_key in str(p))
+            others = sorted(Path(p) for p in paths if domain_key not in str(p))
+            return domains + others
+
         meshes = cls(
-            {
-                Path(m).stem: Mesh.read(m)
-                for m in sorted(
-                    filepaths, key=lambda fp: str(fp).replace(domain_key, "")
-                )
-            }
+            {Path(m).stem: Mesh.read(m) for m in sorted_paths(filepaths)}
         )
         meshes._bind_to_path(Path(filepaths[0]).parent)
         return meshes
