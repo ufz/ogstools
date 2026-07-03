@@ -11,6 +11,7 @@ from ogstools.definitions import temp_dir
 from ogstools.mesh.ip_data import IPdata
 
 from .file_io import read, save
+from .utils import unique_cell_types
 
 
 def _tessellation_map(cell_type: pv.CellType, integration_order: int) -> list:
@@ -223,10 +224,7 @@ def to_ip_mesh(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
     ip_mesh = to_ip_point_cloud(mesh)
 
     integration_order = max(data.order for data in IPdata(mesh).values())
-    cell_types = np.unique(
-        getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
-    )
-
+    cell_types = unique_cell_types(mesh)
     type_meshes = (
         tessellate(mesh.extract_cells_by_type(ct), ct, integration_order)
         for ct in cell_types

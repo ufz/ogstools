@@ -293,6 +293,8 @@ nitpick_ignore_regex = [
     ("py:class", r"meshio\..*"),
     ("py:class", "bokeh.io.notebook.CommsHandle"),
     ("py:class", "bokeh.plotting._figure.figure"),
+    # sphinx cannot reference this class
+    ("py:class", "pyvista.core.celltype.CellType"),
 ]
 
 # feflowlib is optional

@@ -320,9 +320,7 @@ class Meshes(MutableMapping, StorageBase):
 
         Mesh.validate(mesh, strict=True)
 
-        cell_types = np.unique(
-            getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
-        )
+        cell_types = utils.unique_cell_types(mesh)
         if any("QUADRATIC" in pv.CellType(ct).name for ct in cell_types):
             sub_meshes_dict_linear = extract_boundaries(
                 utils.to_linear(mesh), threshold_angle

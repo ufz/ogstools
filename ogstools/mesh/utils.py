@@ -215,3 +215,10 @@ def ordered_cell_ids(edges: pv.PolyData) -> list[int]:
         ordered_cell_ids += [int(next_id)]
         cell_id = int(next_id)
     return ordered_cell_ids
+
+
+def unique_cell_types(mesh: pv.DataSet) -> list[pv.CellType]:
+    "Returns the unique cell types of the mesh"
+    if hasattr(mesh, "celltypes"):
+        return np.unique(mesh.celltypes).tolist()
+    return list({cell.type for cell in mesh.cell})
