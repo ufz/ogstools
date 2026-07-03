@@ -59,7 +59,7 @@ API: [](../reference/ogstools.mesh.create.rst) ·
 `read` wraps [`pv.read()`](https://docs.pyvista.org/api/utilities/_autosummary/pyvista.read.html)
 and returns a `pv.UnstructuredGrid`. `save` additionally strips NaN arrays and syncs
 `IntegrationPointMetaData`. `validate` calls the OGS
-[checkMesh](https://www.opengeosys.org/docs/tools/meshing/checkMesh/) tool; `node_reordering`
+[checkMesh](https://www.opengeosys.org/stable/docs/tools/meshing/checkmesh/) tool; `node_reordering`
 fixes element node ordering for OGS6 compliance.
 
 API: [](../reference/ogstools.mesh.file_io.rst) · [](../reference/ogstools.mesh.utils.rst)
@@ -91,7 +91,7 @@ API: [](../reference/ogstools.mesh.ip_data.rst) (`IPdata`, `ip_metadata`) ·
 - **`depth(mesh, top_mesh)`** — interpolates and returns a depth-below-surface scalar from a reference
   surface mesh.
 - **`from_simulator(simulation, ...)`** — extracts a live mesh from a running OGS co-simulation
-  via the [OGS Python bindings](https://www.opengeosys.org/docs/tools/python-bindings/).
+  via the [OGS Python bindings](https://www.opengeosys.org/stable/docs/devguide/advanced/python-wheel/).
 
 API: [](../reference/ogstools.mesh.differences.rst) ·
 [](../reference/ogstools.mesh.geo.rst) ·

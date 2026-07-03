@@ -112,14 +112,19 @@ sample_3 = pv.lines_from_points(pts).sample(mesh)
 # Another way to setup the sampling line is to extract points from the domain
 # mesh. Here, we use the ``clip`` function from ``pyvista`` and some boolean logic,
 # to extract a vertical line through the center, which follows the boundary of
-# the hole.
+# the hole. This time we just use a PointSet to sample the data, which gets
+# automatically sorted during plotting. Otherwise we'd have to sort prior to
+# using `pv.lines_from_points`.
 
 # %%
-edges = mesh.clip("x").extract_feature_edges()
-is_top_bot = np.isin(edges.points[:, 1], [-800, -460])
-is_left = edges.points[:, 0] == 0
-pts = edges.points[np.invert(is_top_bot | is_left)]
-sample_4 = pv.lines_from_points(pts).sample(mesh)
+pts = mesh.clip("x").extract_feature_edges().points
+is_top_bot = np.isin(pts[:, 1], mesh.bounds[2:4])
+is_left = pts[:, 0] == 0
+pts = pts[np.invert(is_top_bot | is_left)]
+sample_4 = pv.PointSet(pts).sample(mesh)
+# alternatively:
+# pts = sorted(pts, key=lambda p: p[1])
+# sample_4 = pv.lines_from_points(pts).sample(mesh)
 
 # %% [markdown]
 # Now we plot all samples for comparison.

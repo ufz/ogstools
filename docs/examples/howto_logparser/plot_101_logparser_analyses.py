@@ -5,7 +5,7 @@ Logparser: Predefined Analyses
 In this section, we showcase various predefined analyses available in the log parser.
 We utilize project files from the following benchmarks:
 `ogs: Constant viscosity (Hydro-Thermal)
-<https://www.opengeosys.org/docs/benchmarks/hydro-thermal/constant-viscosity>`_
+<https://www.opengeosys.org/stable/docs/benchmarks/hydro-thermal/constant-viscosity/>`_
 and for the **staggered scheme** we use a prj from
 `ogs tests: HT StaggeredCoupling HeatTransportInStationaryFlow
 <https://gitlab.opengeosys.org/ogs/ogs/-/blob/master/Tests/Data/Parabolic/HT/StaggeredCoupling/HeatTransportInStationaryFlow/HeatTransportInStationaryFlow.prj>`_
@@ -79,7 +79,7 @@ df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
 # Newton iterations. The resulting table provides convergence metrics for monolithic processes.
 # For details, refer to the documentation on
 # <`convergence_criterion
-# <https://doxygen.opengeosys.org/d4/d58/classnumlib_1_1convergencecriterion>`_ > defined in in the prj file.
+# <https://doxygen.opengeosys.org/stable/d4/d58/classNumLib_1_1ConvergenceCriterion.html>`_ > defined in in the prj file.
 #
 # * **|x|** is a norm of a vector of the global component (e.g. pressure, temperature, displacement).
 # * **|dx|** is the change of a norm of the global component between 2 iteration of non linear solver.

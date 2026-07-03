@@ -5,7 +5,7 @@ Stress analysis
 The following example from the ogs benchmark collection is used for the
 stress analysis:
 
-<https://www.opengeosys.org/docs/benchmarks/thermo-mechanics/creepafterexcavation/>
+<https://www.opengeosys.org/stable/docs/benchmarks/thermo-mechanics/creepafterexcavation/>
 
 
 """

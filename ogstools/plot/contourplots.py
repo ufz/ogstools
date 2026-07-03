@@ -191,10 +191,27 @@ def subplot(
             value=[1, 1], scalars=variable.mask
         )
 
+    x_id, y_id, projection, _ = utils.get_projection(mesh)
+    if "xlim" in kwargs or "ylim" in kwargs:
+        lims = [-np.inf, np.inf]
+        ids = np.full(mesh.n_points, True)
+        for idx, lim_str in zip([x_id, y_id], ["xlim", "ylim"], strict=True):
+            vals = kwargs.get(lim_str, [None, None])
+            lim = [val or lim for val, lim in zip(vals, lims, strict=True)]
+            pts = mesh.points
+            ids &= (pts[:, idx] >= lim[0]) & (pts[:, idx] <= lim[1])
+        bounds = mesh.bounds
+        mesh = mesh.extract_points(np.argwhere(ids))
+        if mesh.n_points == 0:
+            msg = (
+                "Limits where chosen such, that no points remain. "
+                f"Original bounds: {bounds}"
+            )
+            raise ValueError(msg)
+
     surf_tri = mesh.triangulate().extract_surface(algorithm="dataset_surface")
     # Get rid of 1D elements in the mesh
     surf_tri = surf_tri.extract_cells_by_type(pv.CellType.TRIANGLE)
-    x_id, y_id, projection, _ = utils.get_projection(mesh)
 
     # faces contains a padding indicating number of points per face which gets
     # removed with this reshaping and slicing to get the array of tri's
@@ -230,6 +247,7 @@ def subplot(
     cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
 
     conti_cmap = kwargs.get("continuous_cmap", setup.continuous_cmap)
+    alpha = kwargs.get("alpha", 1)
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -237,14 +255,15 @@ def subplot(
         if variable.data_name in surf_tri.point_data:
             tri_levels = 255 if conti_cmap else kwargs.get("levels", levels)
             ax.tricontourf(
-                triangulation, values, levels=tri_levels,
+                triangulation, values, levels=tri_levels, alpha=alpha,
                 cmap=cmap, norm=norm, extend="both"
             )  # fmt: skip
             if variable.bilinear_cmap:
                 ax.tricontour(triangulation, values, levels=[0], colors="w")
         else:
             ax.tripcolor(
-                triangulation, facecolors=values, cmap=cmap, norm=norm
+                triangulation, facecolors=values,
+                cmap=cmap, norm=norm, alpha=alpha,
             )  # fmt: skip
             if variable.is_mask():
                 mask_triangulation = Triangulation(
@@ -369,7 +388,7 @@ def label_sec_ax(
     mesh: pv.UnstructuredGrid, ax: plt.Axes, x2_var: Variable, fontsize: float
 ) -> None:
     _, _, projection, mean_normal = utils.get_projection(mesh)
-    if abs(max(mean_normal) - 1) <= 1e-6:
+    if abs(max(mean_normal) - 1) <= 1e-2:
         return
     sec_id = np.argmax(np.delete(mean_normal, projection))
     sec_labels = []
@@ -450,6 +469,14 @@ def draw_plot(
     return fig
 
 
+def _set_aspect(ax: plt.Axes, aspect: float, **kwargs: Any) -> None:
+    if "xlim" in kwargs:
+        ax.set_xlim(kwargs["xlim"])
+    if "ylim" in kwargs:
+        ax.set_ylim(kwargs["ylim"])
+    ax.set_aspect(1.0 / aspect)
+
+
 def contourf(
     meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
     variable: Variable | str,
@@ -492,6 +519,9 @@ def contourf(
         - show_region_bounds: show the edges of the different regions
         - vmin:               minimum value
         - vmax:               maximum value
+        - xlim:               limits as [min, max], use None for auto limit
+        - ylim:               limits as [min, max], use None for auto limit
+        - alpha:              opaqueness (1: opaque, 0: transparent)
     """
 
     shape = utils.get_rows_cols(meshes)
@@ -526,13 +556,14 @@ def contourf(
     fig = draw_plot(meshes, variable, fig=fig, axes=ax, **kwargs)
 
     if ax is not None and isinstance(ax, plt.Axes):
-        ax.set_aspect(1.0 / ax_aspects[0])
+        _set_aspect(ax, ax_aspects[0], **kwargs)
         utils.update_font_sizes(
             ax, fontsize=kwargs.get("fontsize", setup.fontsize)
         )
     elif fig is not None:
+        _ax: plt.Axes
         for _ax, aspect in zip(fig.axes[:n_axs], ax_aspects, strict=True):
-            _ax.set_aspect(1.0 / aspect)
+            _set_aspect(_ax, aspect, **kwargs)
 
     if optional_return_figure is None:
         return None

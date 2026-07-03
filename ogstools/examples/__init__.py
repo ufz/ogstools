@@ -165,6 +165,11 @@ def load_meshes_simple_lf():
     return meshes
 
 
+def load_meshes_selke() -> ot.Meshes:
+    folder = EXAMPLES_DIR / "meshes" / "selke"
+    return ot.Meshes.from_files(list(folder.glob("*.vtu")), domain_key="Domain")
+
+
 def load_project_simple_lf() -> ot.Project:
     return ot.Project(EXAMPLES_DIR / "prj" / "SimpleLF.prj").copy()
 

@@ -35,6 +35,22 @@ def node_reordering(
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
 
+def to_linear(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Convert to a linear mesh."
+    tmp_file = temp_file(".vtu", "mesh", "to_linear")
+    save(mesh, tmp_file)
+    cli().convertToLinearMesh(i=str(tmp_file), o=str(tmp_file))
+    return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
+def to_quadratic(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    "Convert to a quadratic mesh."
+    tmp_file = temp_file(".vtu", "mesh", "to_quadratic")
+    save(mesh, tmp_file)
+    cli().createQuadraticMesh(i=str(tmp_file), o=str(tmp_file))
+    return pv.XMLUnstructuredGridReader(tmp_file).read()
+
+
 def validate(
     mesh: pv.UnstructuredGrid | Path | str, strict: bool = False
 ) -> bool:
@@ -165,3 +181,47 @@ def reshape_obs_points(
                 pts_pyvista[:, col_id] = pts[:, pts_id]
                 pts_id = pts_id + 1
     return pts_pyvista
+
+
+def ordered_cell_ids(edges: pv.PolyData) -> list[int]:
+    n_cells = edges.n_cells
+    # shape=(n_cells, 2, 3), the 2 is for pointA and pointB
+    cell_pts = np.asarray([cell.points for cell in edges.cell])
+
+    ordered_cell_ids = [0]
+    cell_id = 0
+    compare_idx = 1
+
+    def next_unused(length: int, used: list[int]) -> int:
+        return next(idx for idx in range(length) if idx not in sorted(used))
+
+    for _ in range(n_cells - 1):
+        matching = np.equal(
+            cell_pts[cell_id, compare_idx], cell_pts[:, 1 - compare_idx]
+        ).all(axis=1)
+        if not any(matching):
+            ordered_cell_ids = ordered_cell_ids[::-1]
+            compare_idx = 1 - compare_idx
+            matching = np.equal(
+                cell_pts[ordered_cell_ids[-1], compare_idx],
+                cell_pts[:, 1 - compare_idx],
+            ).all(axis=1)
+            if not any(matching):
+                next_id = next_unused(n_cells, ordered_cell_ids)
+            else:
+                next_id = np.argmax(matching)
+        else:
+            next_id = np.argmax(matching)
+
+        if next_id in ordered_cell_ids:
+            next_id = next_unused(n_cells, ordered_cell_ids)
+        ordered_cell_ids += [int(next_id)]
+        cell_id = int(next_id)
+    return ordered_cell_ids
+
+
+def unique_cell_types(mesh: pv.DataSet) -> list[pv.CellType]:
+    "Returns the unique cell types of the mesh"
+    if hasattr(mesh, "celltypes"):
+        return np.unique(mesh.celltypes).tolist()
+    return list({cell.type for cell in mesh.cell})

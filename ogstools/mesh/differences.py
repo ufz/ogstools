@@ -246,11 +246,9 @@ def compare(
         if isinstance(variable, str):
             variable = Variable.find(variable, mesh_diff)
 
-        variable = variable.replace(output_unit=variable.data_unit)
+        var = variable.replace(output_unit=variable.data_unit)
         return _check_data(
-            variable.difference.transform(mesh_diff),
-            0.0,
-            variable.data_name,
+            var.difference.transform(mesh_diff), 0.0, var.data_name
         )
 
     if not any((point_data, cell_data, field_data)):
@@ -259,8 +257,8 @@ def compare(
 
     if point_data:
         for key in mesh_diff.point_data:
-            var = Variable.find(key, mesh_diff)
-            var = var.replace(output_unit=var.data_unit)
+            var_ = Variable.find(key, mesh_diff)
+            var = var_.replace(output_unit=var_.data_unit)
 
             arr = var.transform(mesh_diff)
             if not _check_data(arr, 0.0, key):
@@ -275,8 +273,8 @@ def compare(
                     return False
                 continue
 
-            var = Variable.find(key, mesh_diff)
-            var = var.replace(output_unit=var.data_unit)
+            var_ = Variable.find(key, mesh_diff)
+            var = var_.replace(output_unit=var_.data_unit)
 
             arr = var.transform(mesh_diff)
             if not _check_data(arr, 0.0, key):

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from ogstools.mesh.utils import ordered_cell_ids
+
 if TYPE_CHECKING:
     import gmsh
 import pyvista as pv
@@ -286,19 +288,9 @@ def cuboid(
 def _ordered_edges(mesh: pv.UnstructuredGrid) -> np.ndarray:
     "Return edge elements ordered to form a contiguous array."
     edges = mesh.extract_feature_edges()
-    n_cells = edges.n_cells
-    # shape=(n_cells, 2, 3), the 2 is for pointA and pointB
     cell_pts = np.asarray([cell.points for cell in edges.cell])
-
-    ordered_cell_ids = [0]
-    cell_id = 0
-    for _ in range(n_cells):
-        next_id = np.argmax(
-            np.equal(cell_pts[cell_id, 1], cell_pts[:, 0]).all(axis=1)
-        )
-        ordered_cell_ids += [int(next_id)]
-        cell_id = int(next_id)
-    return cell_pts[ordered_cell_ids[:-1], 0]
+    cell_ids = ordered_cell_ids(edges)
+    return cell_pts[cell_ids[:-1], 0]
 
 
 def remesh_with_triangles(

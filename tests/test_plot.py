@@ -1,6 +1,7 @@
 """Unit tests for plotting."""
 
 from collections.abc import Callable
+from itertools import pairwise
 from pathlib import Path
 from typing import ClassVar
 from unittest.mock import patch
@@ -112,8 +113,8 @@ class TestPlotting:
         (ot.variables.pressure.get_mask(), {}),
         (ot.variables.velocity, {"arrowsize": 2}),
         (ot.variables.displacement[1], {"log_scaled": True}),
-        (ot.variables.stress, {}),
-        (ot.variables.stress.von_Mises, {}),
+        (ot.variables.stress, {"xlim": [2, 5]}),
+        (ot.variables.stress.von_Mises, {"xlim": [2, 5], "ylim": [-1.1, None]}),
     ]
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
@@ -125,7 +126,7 @@ class TestPlotting:
         ot.plot.setup.material_names = {
             i + 1: f"Layer {i + 1}" for i in range(26)
         }
-        ms = examples.load_meshseries_THM_2D_PVD()
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(ms[1], var, **kwargs)
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
@@ -144,7 +145,7 @@ class TestPlotting:
         self, var: ot.variables.Variable, kwargs: dict
     ) -> plt.Figure:
         """Test creation of difference plots via image comparison."""
-        ms = examples.load_meshseries_THM_2D_PVD()
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(
             ot.mesh.difference(ms[1], ms[0], var), var.difference, **kwargs
         )
@@ -313,6 +314,31 @@ class TestPlotting:
         fig = ot.plot.line(sample, var1=var, label=f"{name}-sampling line")
         fig.tight_layout()
         return fig
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        ("xvar", "yvar"), [("x", "y"), ("displacement_x", "y")]
+    )
+    def test_plot_lines_from_points(self, xvar: str, yvar: str) -> plt.Figure:
+        """Test plot.line from sampled profile data via image comparison."""
+        mesh = examples.load_mesh_mechanics_2D()
+        pts = mesh.clip("x").extract_feature_edges().points
+        is_top_bot = np.isin(pts[:, 1], mesh.bounds[2:4])
+        is_left = pts[:, 0] == 0
+        sample = pv.PointSet(pts[np.invert(is_top_bot | is_left)]).sample(mesh)
+        return ot.plot.line(sample, xvar, yvar)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        ("xvar", "yvar"), [("x", "y"), ("displacement_x", "y")]
+    )
+    def test_plot_lines_repeated_pts(self, xvar: str, yvar: str) -> plt.Figure:
+        """Test plot.line from sampled profile data via image comparison."""
+        mesh = examples.load_mesh_mechanics_2D()
+        pts = np.asarray([[150, -460, 0], [50, -650, 0], [150, -800, 0]])
+        pts = np.vstack([np.linspace(p1, p2, 50) for p1, p2 in pairwise(pts)])
+        sample = pv.lines_from_points(pts).sample(mesh)
+        return ot.plot.line(sample, xvar, yvar)
 
     @pytest.mark.parametrize(
         ("var1", "var2", "n_pts"),
@@ -536,6 +562,14 @@ class TestPlotting:
             tmp_path / "test.png"
         )
         assert (tmp_path / "test.png").is_file()
+
+    # ### Testing meshes plot ###################################################
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 40})
+    def test_meshes_plot(self):
+        meshes = examples.load_meshes_selke()
+        ot.plot.setup.linewidth = 0.25
+        return meshes.plot(fontsize=16)
 
     # ### Testing model plot ###################################################
 

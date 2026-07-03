@@ -5,7 +5,7 @@ How to Create Time Slices
 In this example we show how to create a filled contourplot of transient data
 over a sampling line. For this purpose we use a component transport example
 from the ogs benchmark gallery
-(https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
+(https://www.opengeosys.org/stable/docs/benchmarks/hydro-component/elder_jupyter/).
 
 To see this benchmark results over all timesteps have a look at
 :ref:`sphx_glr_auto_examples_howto_plot_plot_animation.py`.

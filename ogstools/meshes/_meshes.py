@@ -186,13 +186,13 @@ class Meshes(MutableMapping, StorageBase):
 
         """
 
+        def sorted_paths(paths: Sequence[str | Path]) -> Sequence[Path]:
+            domains = sorted(Path(p) for p in paths if domain_key in str(p))
+            others = sorted(Path(p) for p in paths if domain_key not in str(p))
+            return domains + others
+
         meshes = cls(
-            {
-                Path(m).stem: pv.read(m)
-                for m in sorted(
-                    filepaths, key=lambda fp: str(fp).replace(domain_key, "")
-                )
-            }
+            {Path(m).stem: Mesh.read(m) for m in sorted_paths(filepaths)}
         )
         meshes._bind_to_path(Path(filepaths[0]).parent)
         return meshes
@@ -318,7 +318,19 @@ class Meshes(MutableMapping, StorageBase):
         """
         from ogstools.meshes.subdomains import extract_boundaries
 
-        sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
+        Mesh.validate(mesh, strict=True)
+
+        cell_types = utils.unique_cell_types(mesh)
+        if any("QUADRATIC" in pv.CellType(ct).name for ct in cell_types):
+            sub_meshes_dict_linear = extract_boundaries(
+                utils.to_linear(mesh), threshold_angle
+            )
+            sub_meshes_dict = {
+                name: utils.to_quadratic(mesh)
+                for name, mesh in sub_meshes_dict_linear.items()
+            }
+        else:
+            sub_meshes_dict = extract_boundaries(mesh, threshold_angle)
 
         meshes_dict = {domain_name: mesh} | sub_meshes_dict
         meshes_obj = cls(meshes_dict)
@@ -358,7 +370,7 @@ class Meshes(MutableMapping, StorageBase):
             filename = str(file.stem)
             prefix = f"{gml_path.stem}_geometry_"
             prefix_offset = len(prefix) if filename.startswith(prefix) else 0
-            self[filename[prefix_offset:]] = pv.read(file)
+            self[filename[prefix_offset:]] = Mesh.read(file)
 
     def sort(self) -> None:
         "Sort the subdomains alphanumerically."
@@ -777,9 +789,14 @@ class Meshes(MutableMapping, StorageBase):
 
         keyword arguments: see :func:`ogstools.plot.contourf`
         """
+        # TODO: 1D, 3D
         self.sort()
 
+        from matplotlib import colormaps
+        from matplotlib.colors import ListedColormap
+
         from ogstools import plot
+        from ogstools.variables import Scalar
 
         fontsize = kwargs.pop("fontsize", plot.setup.fontsize)
         lw = kwargs.get("lw", kwargs.get("linewidth", 2))
@@ -790,6 +807,7 @@ class Meshes(MutableMapping, StorageBase):
         else:
             var = "None"
         cbar = kwargs.pop("cbar", var != "None")
+        clip_on = kwargs.get("clip_on", False)
         fig = plot.contourf(
             self.domain, var, show_edges=show_edges, cbar=cbar, **kwargs
         )
@@ -799,26 +817,47 @@ class Meshes(MutableMapping, StorageBase):
             fig = kwargs.get("fig")
         assert isinstance(fig, plt.Figure)
         ax: plt.Axes = fig.axes[0]
+        colors_2D = iter(colormaps["Set2"].colors)
+        colors_1D = iter(colormaps["Set1"].colors)
+        colors_0D = iter(colormaps["Pastel1"].colors)
 
-        for i, (name, mesh) in enumerate(self.items()):
-            color = kwargs.get("color", plt.get_cmap("Set2")(i))
-
-            # TODO: 1D, 3D
-            if mesh.GetMaxSpatialDimension() == 1:
+        for name, mesh in self.items():
+            if name == self.domain_name:
+                ax.plot([], [], "s", label=name, c="lightgrey", ms=8 * lw)
+            elif mesh.GetMaxSpatialDimension() == 2:
+                color = next(colors_2D)
+                subvar = Scalar(
+                    (
+                        var
+                        if var in mesh.point_data or var in mesh.cell_data
+                        else "None"
+                    ),
+                    cmap=ListedColormap([color]),
+                )
+                alpha = 0.5 if var == "MaterialIDs" else 1.0
+                plot.contourf(
+                    mesh, subvar, show_edges=False, cbar=False, fig=fig, ax=ax,
+                    alpha=alpha
+                )  # fmt: skip
+                ax.plot([], [], "s", label=name, c=color, ms=8 * lw)
+            elif mesh.GetMaxSpatialDimension() == 1:
+                color = next(colors_1D)
                 plot.line(
                     mesh, ax=ax, label=name, lw=lw, color=color,
-                    fontsize=fontsize, clip_on=False
+                    fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
                 if name == self.domain_name:
                     ax.plot([], [], "s", label=name, c="lightgrey", ms=16 * lw)
                 else:
                     axes = plot.utils.get_projection(self.domain)[:2]
+                    color = next(colors_0D)
                     ax.plot(
-                        *mesh.points[:, axes].T, "o",
-                        label=name, clip_on=False, color=color, ms=8 * lw
+                        *mesh.points[:, axes].T, "o", label=name,
+                        clip_on=clip_on, color=color, ms=8 * lw
                     )  # fmt: skip
 
+        plot.utils.update_font_sizes(fig.axes, fontsize)
         ax.legend(
             loc="upper left",
             bbox_to_anchor=(1.05, 1),
@@ -862,7 +901,7 @@ class Meshes(MutableMapping, StorageBase):
             i=str(cut_material_file),
             o=str(boundary_file),
         )
-        cut_boundary = pv.read(boundary_file)
+        cut_boundary = Mesh.read(boundary_file)
 
         self["cut_boundary"] = cut_boundary
 

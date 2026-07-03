@@ -7,15 +7,19 @@ from typing import Any
 import numpy as np
 import pyvista as pv
 
+from ogstools.core.storage import _date_temp_path
+
 from .ip_data import IPdata
 
 
 def read(filename: Path | str) -> pv.UnstructuredGrid:
     "Read a single mesh from a filepath."
-    return pv.read(filename)
-
-
-from ogstools.core.storage import _date_temp_path
+    mesh = pv.UnstructuredGrid(pv.read(filename))
+    if not hasattr(pv, "set_new_attribute") or hasattr(mesh, "filepath"):
+        mesh.filepath = Path(filename)
+    else:
+        pv.set_new_attribute(mesh, "filepath", Path(filename))
+    return mesh
 
 
 def save(

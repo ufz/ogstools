@@ -1249,7 +1249,7 @@ class Project(StorageBase):
             ogs_path = ogs_path / "apptainer"
             if shutil.which(str(ogs_path)) is None:
                 msg = """The Apptainer executable was not found.\
-                        See https://www.opengeosys.org/docs/userguide/basics/container/\
+                        See https://www.opengeosys.org/stable/docs/userguide/basics/container/\
                         for installation instructions."""
                 raise RuntimeError(msg)
         else:
@@ -1259,7 +1259,7 @@ class Project(StorageBase):
                 ogs_path = ogs_path / "ogs"
             if shutil.which(str(ogs_path)) is None:
                 msg = """The OGS executable was not found.\
-                        See https://www.opengeosys.org/docs/userguide/basics/introduction/\
+                        See https://www.opengeosys.org/stable/docs/userguide/basics/introduction/\
                         for installation instructions."""
                 raise RuntimeError(msg)
         cmd = " "

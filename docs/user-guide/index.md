@@ -31,7 +31,7 @@ source .venv/bin/activate
 python -m venv .venv
 
 # The following may need to be run once. Please check the docs for its consequences:
-# https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policiess
+# https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
 
 .venv\Scripts\Activate.ps1

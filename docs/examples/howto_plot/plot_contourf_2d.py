@@ -14,7 +14,7 @@ available as keyword arguments in the function call. Please see
 import ogstools as ot
 from ogstools import examples
 
-ot.plot.setup.material_names = {i + 1: f"Layer {i+1}" for i in range(26)}
+ot.plot.setup.material_names = {i + 1: f"Layer {i + 1}" for i in range(26)}
 ms = examples.load_meshseries_THM_2D_PVD().scale(spatial="km")
 mesh = ms.mesh(1)
 
@@ -38,15 +38,15 @@ fig = ot.plot.contourf(mesh, ot.variables.material_id)
 # %% [markdown]
 # Plotting Point Data
 # ===================
-# Now, let's plot the temperature field (point_data) at the first timestep.
+# Now, let's plot the temperature field (point_data).
 # The default temperature variable from the ``variables`` reads the temperature
 # data as Kelvin and converts them to degrees Celsius. This also shows how to
-# only plot a specific part of the model by creating a clip with
-# `pyvista.clip_box` beforehand.
+# only plot a specific part of the model by using ``xlim`` and ``ylim``.
 
 # %%
-part = mesh.clip_box(bounds=[2, 5, -1.1, -0.7, 6, 7], invert=False)
-fig = ot.plot.contourf(part, ot.variables.temperature, show_max=True)
+fig = ot.plot.contourf(
+    mesh, ot.variables.temperature, xlim=[2, 5], ylim=[-1.1, -0.7]
+)
 
 # %% [markdown]
 # We can also plot components of vector variables:

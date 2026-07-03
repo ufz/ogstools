@@ -6,7 +6,7 @@ This simple example demonstrates how to analyze the OGS (OpenGeoSys) log output 
 extract performance information regarding various computational parts of OGS.
 Here we utilize the project file from the benchmark titled:
 `OGS: Constant viscosity (Hydro-Thermal)
-<https://www.opengeosys.org/docs/benchmarks/hydro-thermal/constant-viscosity>`_
+<https://www.opengeosys.org/stable/docs/benchmarks/hydro-thermal/constant-viscosity/>`_
 
 
 
@@ -78,7 +78,7 @@ df_log = ot.logparser.fill_ogs_context(df_records)
 # The predefined analyses only work with logs from ``ogs`` run with level ``info`` or finer (`debug`), like `ogs -l info` or `ogs - l debug`.
 # (see
 # `OGS Developer Guide - log and debug output
-# <https://www.opengeosys.org/docs/devguide/advanced/log-and-debug-output>`_
+# <https://www.opengeosys.org/stable/docs/devguide/advanced/log-and-debug-output/>`_
 
 df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
 # The result is a pandas.DataFrame. You may manipulate the dataframe to your

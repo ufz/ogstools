@@ -10,6 +10,7 @@ import numpy as np
 import pyvista as pv
 from matplotlib.figure import Figure
 
+from ogstools.mesh.utils import ordered_cell_ids, unique_cell_types
 from ogstools.plot import setup, utils
 from ogstools.variables import Variable, _normalize_vars
 
@@ -177,16 +178,26 @@ def line(
         mesh_ = mesh.cell_centers() if use_cells else mesh
         if not sort or (mesh_.n_points != data_len):
             return slice(None)
+        # linesamples do have one single polyline, where this approach doesn't
+        # work, there we just sort by coordinates
+        if mesh.n_cells > 1 and mesh.GetMaxSpatialDimension() == 1:
+            ids = ordered_cell_ids(mesh)
+            if use_cells:
+                return np.asarray(ids)
+            points_ids = np.asarray([cell.point_ids[0] for cell in mesh.cell])
+            return np.append(
+                points_ids[ids], mesh.get_cell(ids[-1]).point_ids[-1]
+            )
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
         return np.argsort(mesh_.points[:, sort_idx])
 
     ##### plotting ###########################################################
-    cell_types = np.unique(
-        getattr(mesh, "celltypes", {cell.type for cell in mesh.cell})
+    only_points = all(ct < 2 for ct in unique_cell_types(mesh))
+    strip = (
+        mesh.extract_surface(algorithm="dataset_surface").strip(join=True)
+        if mesh.n_cells > 0
+        else mesh
     )
-    only_points = cell_types in [{0}, {1}]
-    surf: pv.PolyData = mesh.extract_surface(algorithm="dataset_surface")
-    strip: pv.PolyData = surf.strip(join=True)
 
     if is_meshseries or only_points or strip.n_cells <= 1:
         x_sort_ids = sorted_ids(

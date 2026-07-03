@@ -2,7 +2,6 @@
 
 import shutil
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -150,6 +149,22 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
     assert (ids.isdisjoint if invert else ids.issubset)(set(range(*bounds)))
 
 
+@pytest.fixture(scope="module")
+def mesh(request) -> pv.UnstructuredGrid:
+    match request.param:
+        case "mechanics_2D":
+            return examples.load_mesh_mechanics_2D()
+        case "mechanics_3D_cylinder":
+            return examples.load_mesh_mechanics_3D_cylinder()
+        case "THM_2D_PVD":
+            return examples.load_meshseries_THM_2D_PVD()[0]
+        case "CT_2D_XDMF":
+            return examples.load_meshseries_CT_2D_XDMF()[0]
+        case _:
+            msg = "unknown mesh fixture"
+            raise KeyError(msg)
+
+
 @pytest.mark.tools  # checkMesh
 @pytest.mark.skipif(
     shutil.which("checkMesh") is None, reason="checkMesh not found"
@@ -157,15 +172,14 @@ def test_threshold_ip_data(mat_ids: tuple, invert: bool):
 @pytest.mark.parametrize("strict", [True, False])
 @pytest.mark.parametrize(
     "mesh",
-    [
-        examples.load_mesh_mechanics_2D(),
-        examples.load_mesh_mechanics_3D_cylinder(),
-        examples.load_meshseries_THM_2D_PVD()[0],
-    ],
+    ["mechanics_2D", "mechanics_3D_cylinder", "THM_2D_PVD"],
+    # not testing CT_2D_XDMF, as it has malformed elements, due to it being
+    # a slice of 3D meshseries of single element thickness (for compression)
+    indirect=True,
 )
-def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
+def test_mesh_validate(mesh: pv.UnstructuredGrid, strict: bool):
     assert ot.mesh.validate(mesh, strict=strict)
-    # intentionally reversing the node order with method 0
+    # intentionally reversing the node order
     wrong_mesh = (
         mesh.copy().extract_surface(algorithm="dataset_surface").flip_faces()
     )
@@ -174,3 +188,28 @@ def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
             ot.mesh.validate(wrong_mesh, strict=strict)
     else:
         assert not ot.mesh.validate(wrong_mesh, strict=strict)
+
+
+def test_mesh_dont_copy_filepath():
+    mesh = ot.mesh.read(examples.mechanics_2D)
+    assert hasattr(mesh, "filepath")
+    assert not hasattr(mesh.copy(), "filepath")
+
+
+@pytest.mark.tools  # convertToLinearMesh, createQuadraticMesh
+@pytest.mark.skipif(
+    shutil.which("convertToLinearMesh") is None, reason="checkMesh not found"
+)
+@pytest.mark.parametrize(
+    "mesh",
+    ["mechanics_2D", "THM_2D_PVD", "CT_2D_XDMF"],
+    # not testing mechanics_3D_cylinder as element type PRISM15 is not supported
+    # by convertToLinearMesh
+    indirect=True,
+)
+def test_linear_quadratic_roundtrip(mesh: pv.UnstructuredGrid):
+    ref_mesh = mesh.copy()
+    ref_mesh.clear_data()
+    mesh_quad = ot.mesh.utils.to_quadratic(ref_mesh)
+    mesh_lin = ot.mesh.utils.to_linear(mesh_quad)
+    assert mesh_lin == ref_mesh

@@ -17,13 +17,30 @@ OGS 6.5.8 -
 
 ## Bugfixes
 
+- fixed sorting in Meshes.from_files (if key was not in the beginning, it didn't sort correctly)
+- fixed broken weblinks in documentation
+- allow values for group based parameters in `Project.parameters` (allows to set vectorial or anisotropic group values. Previously, only allowed scalars)
+
 ## Features
 
+- plot
+  - added `xlim` and `ylim` as arguments for `contourf`
+  - improved `meshes.plot`
+  - fixed line ordering by trying to sort by cell adjacency
+- meshes
+  - `Meshes.from_mesh` supports quadratic mesh
+- mesh
+  - `filepath` is now attached to mesh upon reading (with `ot.mesh.read`)
+
 ## Infrastructure
+
+- added lychee make command to check for broken links in the docs
 
 ## Documentation
 
 ### New Examples
+
+- new meshes example (Selke)
 
 ### Updated Examples
 

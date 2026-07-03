@@ -50,7 +50,7 @@ def element_edges(
     lin_mesh = mesh.linear_copy() if hasattr(mesh, "linear_copy") else mesh
     cell_points = [cell.points for cell in lin_mesh.cell]
     cell_types = getattr(
-        lin_mesh, "celltypes", [cell.type for cell in mesh.cell]
+        lin_mesh, "celltypes", [cell.type for cell in lin_mesh.cell]
     )
     for cell_type in np.unique(cell_types):
         cell_pts = [
@@ -60,7 +60,9 @@ def element_edges(
         ]
         verts = np.delete(cell_pts, projection, -1)
         lw = 0.5 * setup.linewidth
-        pc = PolyCollection(verts.tolist(), fc="None", ec="black", lw=lw)
+        pc = PolyCollection(
+            verts.tolist(), fc="None", ec="black", lw=lw, zorder=1
+        )
         ax.add_collection(pc)
 
 

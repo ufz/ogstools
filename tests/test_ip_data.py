@@ -64,7 +64,7 @@ def test_modify_simple():
 
 @pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-def test_modify_complex() -> plt.Figure:
+def test_plot_modify_complex() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()
     ip_data = ot.mesh.IPdata(mesh)
     ip_mesh = ot.mesh.to_ip_mesh(mesh)
@@ -106,7 +106,7 @@ def test_to_ip_mesh_mixed(tmp_path, mixed):
 
 @pytest.mark.tools  # ipDataToPointCloud
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
-def test_modify_material() -> plt.Figure:
+def test_plot_modify_material() -> plt.Figure:
     mesh = examples.load_mesh_mechanics_2D()
     ip_data = ot.mesh.IPdata(mesh)
     ip_cloud = ot.mesh.to_ip_point_cloud(mesh)

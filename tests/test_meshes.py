@@ -38,6 +38,28 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
+def test_meshes_from_mesh_quadratic():
+    mesh_lin = examples.load_meshseries_THM_2D_PVD()[0]
+    mesh_quad = ot.mesh.utils.to_quadratic(mesh_lin)
+    boundaries = ot.Meshes.from_mesh(mesh_quad)
+    # not recommended, but here we are only interested in the boundaries
+    boundaries.pop("domain")
+
+    assert len(boundaries) == 4
+    np.testing.assert_array_equal(
+        [mesh.n_cells for mesh in boundaries.values()], [83, 83, 44, 44]
+    )
+    assert np.all([mesh.n_cells > 1 for mesh in boundaries.values()])
+    assert np.all(boundaries["left"].points[:, 0] == mesh_quad.bounds[0])
+    assert np.all(boundaries["right"].points[:, 0] == mesh_quad.bounds[1])
+    assert all(
+        all(cell.type == pv.CellType.QUADRATIC_EDGE for cell in mesh.cell)
+        for mesh in boundaries.values()
+    )
+    assert boundaries["bottom"].bounds[2] == mesh_quad.bounds[2]
+    assert boundaries["top"].bounds[3] == mesh_quad.bounds[3]
+
+
 @pytest.mark.tools  # ExtractSurface
 @pytest.mark.parametrize(
     "load_meshseries",

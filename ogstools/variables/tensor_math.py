@@ -14,7 +14,7 @@ the form of:
 
 This notation style is the default output of OGS:
 
-<https://www.opengeosys.org/docs/userguide/basics/conventions/#a-namesymmetric-tensorsa--symmetric-tensors-and-kelvin-mapping>
+<https://www.opengeosys.org/stable/docs/userguide/basics/conventions/#a-namesymmetric-tensorsa--symmetric-tensors-and-kelvin-mapping>
 
 A better overview for the theoretical background of the equations can be found
 here, for example:
