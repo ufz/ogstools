@@ -181,3 +181,37 @@ def reshape_obs_points(
                 pts_pyvista[:, col_id] = pts[:, pts_id]
                 pts_id = pts_id + 1
     return pts_pyvista
+
+
+def ordered_cell_ids(edges: pv.PolyData) -> list[int]:
+    n_cells = edges.n_cells
+    # shape=(n_cells, 2, 3), the 2 is for pointA and pointB
+    cell_pts = np.asarray([cell.points for cell in edges.cell])
+
+    ordered_cell_ids = [0]
+    cell_id = 0
+    compare_idx = 1
+    for _ in range(n_cells - 1):
+        matching = np.equal(
+            cell_pts[cell_id, compare_idx], cell_pts[:, 1 - compare_idx]
+        ).all(axis=1)
+        if not any(matching):
+            ordered_cell_ids = ordered_cell_ids[::-1]
+            compare_idx = 1 - compare_idx
+            matching = np.equal(
+                cell_pts[ordered_cell_ids[-1], compare_idx],
+                cell_pts[:, 1 - compare_idx],
+            ).all(axis=1)
+            if not any(matching):
+                next_id = next(
+                    idx
+                    for idx in range(n_cells)
+                    if idx not in sorted(ordered_cell_ids)
+                )
+            else:
+                next_id = np.argmax(matching)
+        else:
+            next_id = np.argmax(matching)
+        ordered_cell_ids += [int(next_id)]
+        cell_id = int(next_id)
+    return ordered_cell_ids
