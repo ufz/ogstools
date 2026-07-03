@@ -1,6 +1,7 @@
 """Unit tests for plotting."""
 
 from collections.abc import Callable
+from itertools import pairwise
 from pathlib import Path
 from typing import ClassVar
 from unittest.mock import patch
@@ -313,6 +314,31 @@ class TestPlotting:
         fig = ot.plot.line(sample, var1=var, label=f"{name}-sampling line")
         fig.tight_layout()
         return fig
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        ("xvar", "yvar"), [("x", "y"), ("displacement_x", "y")]
+    )
+    def test_plot_lines_from_points(self, xvar: str, yvar: str) -> plt.Figure:
+        """Test plot.line from sampled profile data via image comparison."""
+        mesh = examples.load_mesh_mechanics_2D()
+        pts = mesh.clip("x").extract_feature_edges().points
+        is_top_bot = np.isin(pts[:, 1], mesh.bounds[2:4])
+        is_left = pts[:, 0] == 0
+        sample = pv.PointSet(pts[np.invert(is_top_bot | is_left)]).sample(mesh)
+        return ot.plot.line(sample, xvar, yvar)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    @pytest.mark.parametrize(
+        ("xvar", "yvar"), [("x", "y"), ("displacement_x", "y")]
+    )
+    def test_plot_lines_repeated_pts(self, xvar: str, yvar: str) -> plt.Figure:
+        """Test plot.line from sampled profile data via image comparison."""
+        mesh = examples.load_mesh_mechanics_2D()
+        pts = np.asarray([[150, -460, 0], [50, -650, 0], [150, -800, 0]])
+        pts = np.vstack([np.linspace(p1, p2, 50) for p1, p2 in pairwise(pts)])
+        sample = pv.lines_from_points(pts).sample(mesh)
+        return ot.plot.line(sample, xvar, yvar)
 
     @pytest.mark.parametrize(
         ("var1", "var2", "n_pts"),

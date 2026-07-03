@@ -193,8 +193,11 @@ def line(
 
     ##### plotting ###########################################################
     only_points = all(ct < 2 for ct in unique_cell_types(mesh))
-    surf: pv.PolyData = mesh.extract_surface(algorithm="dataset_surface")
-    strip: pv.PolyData = surf.strip(join=True)
+    strip = (
+        mesh.extract_surface(algorithm="dataset_surface").strip(join=True)
+        if mesh.n_cells > 0
+        else mesh
+    )
 
     if is_meshseries or only_points or strip.n_cells <= 1:
         x_sort_ids = sorted_ids(

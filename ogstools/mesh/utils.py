@@ -191,6 +191,10 @@ def ordered_cell_ids(edges: pv.PolyData) -> list[int]:
     ordered_cell_ids = [0]
     cell_id = 0
     compare_idx = 1
+
+    def next_unused(length: int, used: list[int]) -> int:
+        return next(idx for idx in range(length) if idx not in sorted(used))
+
     for _ in range(n_cells - 1):
         matching = np.equal(
             cell_pts[cell_id, compare_idx], cell_pts[:, 1 - compare_idx]
@@ -203,15 +207,14 @@ def ordered_cell_ids(edges: pv.PolyData) -> list[int]:
                 cell_pts[:, 1 - compare_idx],
             ).all(axis=1)
             if not any(matching):
-                next_id = next(
-                    idx
-                    for idx in range(n_cells)
-                    if idx not in sorted(ordered_cell_ids)
-                )
+                next_id = next_unused(n_cells, ordered_cell_ids)
             else:
                 next_id = np.argmax(matching)
         else:
             next_id = np.argmax(matching)
+
+        if next_id in ordered_cell_ids:
+            next_id = next_unused(n_cells, ordered_cell_ids)
         ordered_cell_ids += [int(next_id)]
         cell_id = int(next_id)
     return ordered_cell_ids
