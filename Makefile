@@ -86,10 +86,15 @@ coverage:  ## Runs the unit tests generating code coverage reports
 check:  ## Runs various checks with pre-commit
 	pre-commit run --all-files
 
+link_check:  ## Runs lychee to check if external weblinks are functioning
+	lychee docs/examples docs/user-guide --extensions md,py --exclude rst \
+	--exclude reference\/ogstools --cache --max-cache-age 2d -vv
+
 clean:  ## Cleans up temporary files
 	rm -r .coverage htmlcov
 
-docs:  ## Builds the documentation
+
+docs:   ## Builds the documentation
 	make html -C docs
 
 cleandocs:  ## Cleans up temporary documentation files
