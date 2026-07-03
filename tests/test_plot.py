@@ -537,6 +537,14 @@ class TestPlotting:
         )
         assert (tmp_path / "test.png").is_file()
 
+    # ### Testing meshes plot ###################################################
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 40})
+    def test_meshes_plot(self):
+        meshes = examples.load_meshes_selke()
+        ot.plot.setup.linewidth = 0.25
+        return meshes.plot(fontsize=16)
+
     # ### Testing model plot ###################################################
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 40})

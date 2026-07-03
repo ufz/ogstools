@@ -230,6 +230,7 @@ def subplot(
     cmap, norm = utils.get_cmap_norm(levels, variable, **kwargs)
 
     conti_cmap = kwargs.get("continuous_cmap", setup.continuous_cmap)
+    alpha = kwargs.get("alpha", 1)
     # norm.__call__ overflows if vals are all equal
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -237,14 +238,15 @@ def subplot(
         if variable.data_name in surf_tri.point_data:
             tri_levels = 255 if conti_cmap else kwargs.get("levels", levels)
             ax.tricontourf(
-                triangulation, values, levels=tri_levels,
+                triangulation, values, levels=tri_levels, alpha=alpha,
                 cmap=cmap, norm=norm, extend="both"
             )  # fmt: skip
             if variable.bilinear_cmap:
                 ax.tricontour(triangulation, values, levels=[0], colors="w")
         else:
             ax.tripcolor(
-                triangulation, facecolors=values, cmap=cmap, norm=norm
+                triangulation, facecolors=values,
+                cmap=cmap, norm=norm, alpha=alpha,
             )  # fmt: skip
             if variable.is_mask():
                 mask_triangulation = Triangulation(
@@ -369,7 +371,7 @@ def label_sec_ax(
     mesh: pv.UnstructuredGrid, ax: plt.Axes, x2_var: Variable, fontsize: float
 ) -> None:
     _, _, projection, mean_normal = utils.get_projection(mesh)
-    if abs(max(mean_normal) - 1) <= 1e-6:
+    if abs(max(mean_normal) - 1) <= 1e-2:
         return
     sec_id = np.argmax(np.delete(mean_normal, projection))
     sec_labels = []
@@ -492,6 +494,7 @@ def contourf(
         - show_region_bounds: show the edges of the different regions
         - vmin:               minimum value
         - vmax:               maximum value
+        - alpha:              opaqueness (1: opaque, 0: transparent)
     """
 
     shape = utils.get_rows_cols(meshes)

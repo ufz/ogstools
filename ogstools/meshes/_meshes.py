@@ -791,9 +791,14 @@ class Meshes(MutableMapping, StorageBase):
 
         keyword arguments: see :func:`ogstools.plot.contourf`
         """
+        # TODO: 1D, 3D
         self.sort()
 
+        from matplotlib import colormaps
+        from matplotlib.colors import ListedColormap
+
         from ogstools import plot
+        from ogstools.variables import Scalar
 
         fontsize = kwargs.pop("fontsize", plot.setup.fontsize)
         lw = kwargs.get("lw", kwargs.get("linewidth", 2))
@@ -804,6 +809,7 @@ class Meshes(MutableMapping, StorageBase):
         else:
             var = "None"
         cbar = kwargs.pop("cbar", var != "None")
+        clip_on = kwargs.get("clip_on", False)
         fig = plot.contourf(
             self.domain, var, show_edges=show_edges, cbar=cbar, **kwargs
         )
@@ -813,26 +819,47 @@ class Meshes(MutableMapping, StorageBase):
             fig = kwargs.get("fig")
         assert isinstance(fig, plt.Figure)
         ax: plt.Axes = fig.axes[0]
+        colors_2D = iter(colormaps["Set2"].colors)
+        colors_1D = iter(colormaps["Set1"].colors)
+        colors_0D = iter(colormaps["Pastel1"].colors)
 
-        for i, (name, mesh) in enumerate(self.items()):
-            color = kwargs.get("color", plt.get_cmap("Set2")(i))
-
-            # TODO: 1D, 3D
-            if mesh.GetMaxSpatialDimension() == 1:
+        for name, mesh in self.items():
+            if name == self.domain_name:
+                ax.plot([], [], "s", label=name, c="lightgrey", ms=8 * lw)
+            elif mesh.GetMaxSpatialDimension() == 2:
+                color = next(colors_2D)
+                subvar = Scalar(
+                    (
+                        var
+                        if var in mesh.point_data or var in mesh.cell_data
+                        else "None"
+                    ),
+                    cmap=ListedColormap([color]),
+                )
+                alpha = 0.5 if var == "MaterialIDs" else 1.0
+                plot.contourf(
+                    mesh, subvar, show_edges=False, cbar=False, fig=fig, ax=ax,
+                    alpha=alpha
+                )  # fmt: skip
+                ax.plot([], [], "s", label=name, c=color, ms=8 * lw)
+            elif mesh.GetMaxSpatialDimension() == 1:
+                color = next(colors_1D)
                 plot.line(
                     mesh, ax=ax, label=name, lw=lw, color=color,
-                    fontsize=fontsize, clip_on=False
+                    fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
                 if name == self.domain_name:
                     ax.plot([], [], "s", label=name, c="lightgrey", ms=16 * lw)
                 else:
                     axes = plot.utils.get_projection(self.domain)[:2]
+                    color = next(colors_0D)
                     ax.plot(
-                        *mesh.points[:, axes].T, "o",
-                        label=name, clip_on=False, color=color, ms=8 * lw
+                        *mesh.points[:, axes].T, "o", label=name,
+                        clip_on=clip_on, color=color, ms=8 * lw
                     )  # fmt: skip
 
+        plot.utils.update_font_sizes(fig.axes, fontsize)
         ax.legend(
             loc="upper left",
             bbox_to_anchor=(1.05, 1),

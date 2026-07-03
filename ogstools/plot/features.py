@@ -60,7 +60,9 @@ def element_edges(
         ]
         verts = np.delete(cell_pts, projection, -1)
         lw = 0.5 * setup.linewidth
-        pc = PolyCollection(verts.tolist(), fc="None", ec="black", lw=lw)
+        pc = PolyCollection(
+            verts.tolist(), fc="None", ec="black", lw=lw, zorder=1
+        )
         ax.add_collection(pc)
 
 

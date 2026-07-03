@@ -10,6 +10,7 @@ import numpy as np
 import pyvista as pv
 from matplotlib.figure import Figure
 
+from ogstools.mesh.utils import ordered_cell_ids
 from ogstools.plot import setup, utils
 from ogstools.variables import Variable, _normalize_vars
 
@@ -177,6 +178,16 @@ def line(
         mesh_ = mesh.cell_centers() if use_cells else mesh
         if not sort or (mesh_.n_points != data_len):
             return slice(None)
+        # linesamples do have one single polyline, where this approach doesn't
+        # work, there we just sort by coordinates
+        if mesh.n_cells > 1 and mesh.GetMaxSpatialDimension() == 1:
+            ids = ordered_cell_ids(mesh)
+            if use_cells:
+                return np.asarray(ids)
+            points_ids = np.asarray([cell.point_ids[0] for cell in mesh.cell])
+            return np.append(
+                points_ids[ids], mesh.get_cell(ids[-1]).point_ids[-1]
+            )
         sort_idx = np.argmax(np.abs(np.diff(np.reshape(mesh.bounds, (3, 2)))))
         return np.argsort(mesh_.points[:, sort_idx])
 
