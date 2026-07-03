@@ -276,4 +276,9 @@ class Parameters(build_tree.BuildTree):
         for idx, value in index_values.items():
             idx_val_elem = self.populate_tree(param, "index_values")
             self.populate_tree(idx_val_elem, "index", str(idx))
-            self.populate_tree(idx_val_elem, "value", str(value))
+            if isinstance(value, Sequence) and not isinstance(value, str):
+                self.populate_tree(
+                    idx_val_elem, "values", " ".join(str(v) for v in value)
+                )
+            else:
+                self.populate_tree(idx_val_elem, "value", str(value))

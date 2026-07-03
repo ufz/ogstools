@@ -1151,15 +1151,25 @@ class TestiOGS:
         param = prj.parameters.set_group_parameter(
             "test", "MaterialIDs", {0: 0, 1: 10}
         )
-        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 2
-        prj.parameters.add_index_values_to_group("test", {2: 20})
-        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 3
-        prj.parameters.add_index_values_to_group(param, {3: 30})
-        assert len(prj.parameters.tree.findall(xpath + "/index_values")) == 4
+        findall = prj.parameters.tree.findall
+        add_to_group = prj.parameters.add_index_values_to_group
+
+        assert len(findall(xpath + "/index_values")) == 2
+        add_to_group("test", {2: 20})
+
+        assert len(findall(xpath + "/index_values")) == 3
+        add_to_group(param, {3: 30})
+
+        assert len(findall(xpath + "/index_values")) == 4
+        add_to_group(param, {4: [1, 2, 3]})
+
+        assert len(findall(xpath + "/index_values")) == 5
+        assert len(findall(xpath + "/index_values/values")) == 1
+
         with pytest.raises(KeyError, match="Couldn't find"):
-            prj.parameters.add_index_values_to_group("abcd", {0: 0})
+            add_to_group("abcd", {0: 0})
         with pytest.raises(KeyError, match="not of type 'Group'"):
-            prj.parameters.add_index_values_to_group("zero", {0: 0})
+            add_to_group("zero", {0: 0})
 
     def test_timedependenthet_param(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "timedephetparam.prj"
