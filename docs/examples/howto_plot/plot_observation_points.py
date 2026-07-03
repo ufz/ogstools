@@ -7,7 +7,7 @@ timesteps. Since requested observation points don't necessarily coincide with
 actual nodes of the mesh different interpolation options are available. See
 :meth:`~ogstools.MeshSeries.probe` for more details.
 Here we use a component transport example from the ogs benchmark gallery
-(https://www.opengeosys.org/docs/benchmarks/hydro-component/elder/).
+(https://www.opengeosys.org/stable/docs/benchmarks/hydro-component/elder_jupyter/).
 """
 
 # %%

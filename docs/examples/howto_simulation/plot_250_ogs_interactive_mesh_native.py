@@ -44,7 +44,7 @@ model = load_model_liquid_flow_simple()
 # =============================
 #
 # We now start and connect to a running OGS simulation and access its meshes using the native Co-Simulation interface.
-# For further details search for OGSSimulation in https://doxygen.opengeosys.org/search.html?query=OGSSimulation.
+# For further details search for OGSSimulation in https://doxygen.opengeosys.org/stable/search.html?query=OGSSimulation.
 
 
 model.save()
@@ -119,7 +119,7 @@ sim3.execute_simulation()
 sim3.close()
 
 # For boundary conditions only (no interaction), see
-# `Defining boundary conditions with Python <https://www.opengeosys.org/docs/userguide/features/python_bc/>`_.
+# `Defining boundary conditions with Python <https://www.opengeosys.org/stable/docs/userguide/features/python_bc/>`_.
 
 # %%
 # Visualization

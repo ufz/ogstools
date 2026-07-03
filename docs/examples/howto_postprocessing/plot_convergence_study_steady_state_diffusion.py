@@ -6,7 +6,7 @@ This example shows one possible implementation of how to do a convergence study.
 It uses the project file from the following benchmark with multiple
 discretizations to evaluate the accuracy of the numerical solutions.
 `ogs: elliptic neumann benchmark
-<https://www.opengeosys.org/docs/benchmarks/elliptic/elliptic-neumann/>`_
+<https://www.opengeosys.org/stable/docs/benchmarks/elliptic/elliptic-neumann/>`_
 
 Here is some theoretical background for the topic of grid convergence:
 

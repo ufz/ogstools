@@ -145,4 +145,4 @@ fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
 
 # %%
 # Note: Alternatively, for boundary conditions only (no interaction), have a look at our guide about
-# `Defining boundary conditions with Python <https://www.opengeosys.org/docs/userguide/features/python_bc/>`_.
+# `Defining boundary conditions with Python <https://www.opengeosys.org/stable/docs/userguide/features/python_bc/>`_.

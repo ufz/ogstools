@@ -40,7 +40,7 @@ model.execution.interactive = True
 # ========================================
 # Use the same arguments as when calling OGS from command line, a list of
 # possible argument are documented under
-# https://www.opengeosys.org/docs/userguide/basics/cli-arguments/
+# https://www.opengeosys.org/stable/docs/userguide/basics/cli-arguments/
 
 
 # %%

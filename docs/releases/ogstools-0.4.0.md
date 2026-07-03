@@ -8,7 +8,7 @@ First release after integration of ogs6py. The state of ogs6py corresponds to th
 
 ## OGS
 
-[OpenGeoSys](https://www.opengeosys.org/) version: 6.5.3
+[OpenGeoSys](https://www.opengeosys.org/stable) version: 6.5.3
 
 ## Migration strategy from ogs6py to ogstools
 

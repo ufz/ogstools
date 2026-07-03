@@ -33,7 +33,7 @@ The current status enables:
 
 ### specific features
 
-- Get points, cells and celltypes to array according to pyvista convention for [pyvista.UnstructuredGrid](https://docs.pyvista.org/version/stable/api/core/_autosummary/pyvista.UnstructuredGrid.html)
+- Get points, cells and celltypes to array according to pyvista convention for [pyvista.UnstructuredGrid](https://docs.pyvista.org/api/core/_autosummary/pyvista.unstructuredgrid)
 - Write Material properties in a dictionary
 - Convert only the geometry of input data
 - Update the geometry with point and cell data

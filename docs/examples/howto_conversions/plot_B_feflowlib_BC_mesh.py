@@ -27,7 +27,7 @@ print(mesh)
 fig = ot.plot.contourf(mesh, "P_TEMP", show_edges=True)
 # %%
 # 3. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
-# Further information can be found at https://docs.pyvista.org/version/stable/user-guide/simple.html.
+# Further information can be found at https://docs.pyvista.org/user-guide/.
 # For example it can be saved as a VTK Unstructured Grid File (\*.vtu).
 # This allows to use the FEFLOW model for ``OGS`` simulation or to observe it in ``Paraview```.
 ot.mesh.save(mesh, temp_dir / "HT_mesh.vtu")
