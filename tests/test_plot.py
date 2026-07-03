@@ -112,8 +112,8 @@ class TestPlotting:
         (ot.variables.pressure.get_mask(), {}),
         (ot.variables.velocity, {"arrowsize": 2}),
         (ot.variables.displacement[1], {"log_scaled": True}),
-        (ot.variables.stress, {}),
-        (ot.variables.stress.von_Mises, {}),
+        (ot.variables.stress, {"xlim": [2, 5]}),
+        (ot.variables.stress.von_Mises, {"xlim": [2, 5], "ylim": [-1.1, None]}),
     ]
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
@@ -125,7 +125,7 @@ class TestPlotting:
         ot.plot.setup.material_names = {
             i + 1: f"Layer {i + 1}" for i in range(26)
         }
-        ms = examples.load_meshseries_THM_2D_PVD()
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(ms[1], var, **kwargs)
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
@@ -144,7 +144,7 @@ class TestPlotting:
         self, var: ot.variables.Variable, kwargs: dict
     ) -> plt.Figure:
         """Test creation of difference plots via image comparison."""
-        ms = examples.load_meshseries_THM_2D_PVD()
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(
             ot.mesh.difference(ms[1], ms[0], var), var.difference, **kwargs
         )
