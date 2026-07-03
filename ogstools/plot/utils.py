@@ -123,20 +123,33 @@ def update_font_sizes(
     return
 
 
-def get_data_aspect(mesh: pv.UnstructuredGrid) -> float:
+def xy_limits(mesh: pv.UnstructuredGrid, **kwargs: Any) -> list[float]:
+    """Returns x- and y- bounds constrained by xlim and ylim.
+
+    Returned list consists of [xmin, xmax, ymin, ymax]."""
+    x_id, y_id, _, _ = get_projection(mesh)
+    result = []
+    for index, key in zip([2 * x_id, 2 * y_id], "xy", strict=True):
+        id_lim = kwargs.get(f"{key}lim", [-np.inf, np.inf])
+        if None not in id_lim:
+            assert id_lim[1] > id_lim[0], "xy_limits must be ascending"
+
+        bounds = mesh.bounds[index:][:2]
+        limit = np.clip(bounds, *id_lim)
+        if (limit[0] >= bounds[1]) or (limit[1] <= bounds[0]):
+            msg = f"Given limits for {key}: {id_lim} outside of {bounds=}."
+            raise ValueError(msg)
+
+        result.extend(limit)
+    return result
+
+
+def get_data_aspect(mesh: pv.UnstructuredGrid, **kwargs: Any) -> float:
     """
     Calculate the data aspect ratio of a 2D mesh.
     """
-    mean_normal = np.abs(
-        np.mean(
-            mesh.extract_surface(algorithm="dataset_surface").cell_normals,
-            axis=0,
-        )
-    )
-    projection = int(np.argmax(mean_normal))
-    x_id, y_id = 2 * np.delete([0, 1, 2], projection)
-    lims = mesh.bounds
-    return abs(lims[x_id + 1] - lims[x_id]) / abs(lims[y_id + 1] - lims[y_id])
+    limits = xy_limits(mesh, **kwargs)
+    return abs(limits[1] - limits[0]) / abs(limits[3] - limits[2])
 
 
 def get_rows_cols(
@@ -193,7 +206,11 @@ def save_animation(anim: FuncAnimation, filename: str, fps: int) -> None:
     extension = Path(filename).suffix
     msg = ""
 
-    match extension, FFMpegWriter.isAvailable(), ImageMagickWriter.isAvailable():
+    match (
+        extension,
+        FFMpegWriter.isAvailable(),
+        ImageMagickWriter.isAvailable(),
+    ):
         case _, False, False:
             msg = """Neither .mp4 nor .gif writers are installed.\n
                      Try installing ffmpeg and/or ImageMagick

@@ -193,20 +193,13 @@ def subplot(
 
     x_id, y_id, projection, _ = utils.get_projection(mesh)
     if "xlim" in kwargs or "ylim" in kwargs:
-        lims = [-np.inf, np.inf]
-        ids = np.full(mesh.n_points, True)
-        for idx, lim_str in zip([x_id, y_id], ["xlim", "ylim"], strict=True):
-            vals = kwargs.get(lim_str, [None, None])
-            lim = [val or lim for val, lim in zip(vals, lims, strict=True)]
-            pts = mesh.points
-            ids &= (pts[:, idx] >= lim[0]) & (pts[:, idx] <= lim[1])
-        bounds = mesh.bounds
-        mesh = mesh.extract_points(np.argwhere(ids))
+        limits = utils.xy_limits(mesh, **kwargs)
+        pts = mesh.points
+        in_x = (pts[:, x_id] >= limits[0]) & (pts[:, x_id] <= limits[1])
+        in_y = (pts[:, y_id] >= limits[2]) & (pts[:, y_id] <= limits[3])
+        mesh = mesh.extract_points(np.argwhere(in_x & in_y))
         if mesh.n_points == 0:
-            msg = (
-                "Limits where chosen such, that no points remain. "
-                f"Original bounds: {bounds}"
-            )
+            msg = "Limits where chosen such, that no points remain. "
             raise ValueError(msg)
 
     surf_tri = mesh.triangulate().extract_surface(algorithm="dataset_surface")
@@ -536,7 +529,9 @@ def contourf(
         return plotters[0] if len(plotters) == 1 else plotters
 
     variable = Variable.find(variable, _meshes[0])
-    data_aspects = np.asarray([utils.get_data_aspect(mesh) for mesh in _meshes])
+    data_aspects = np.asarray(
+        [utils.get_data_aspect(mesh, **kwargs) for mesh in _meshes]
+    )
     min_ax_aspect = kwargs.get("min_ax_aspect", setup.min_ax_aspect)
     max_ax_aspect = kwargs.get("max_ax_aspect", setup.max_ax_aspect)
     if min_ax_aspect is None and max_ax_aspect is None:
