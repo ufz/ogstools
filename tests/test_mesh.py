@@ -174,3 +174,9 @@ def test_mesh_validate(mesh: pv.UnstructuredGrid | Path, strict: bool):
             ot.mesh.validate(wrong_mesh, strict=strict)
     else:
         assert not ot.mesh.validate(wrong_mesh, strict=strict)
+
+
+def test_mesh_dont_copy_filepath():
+    mesh = ot.mesh.read(examples.mechanics_2D)
+    assert hasattr(mesh, "filepath")
+    assert not hasattr(mesh.copy(), "filepath")

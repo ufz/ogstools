@@ -188,7 +188,7 @@ class Meshes(MutableMapping, StorageBase):
 
         meshes = cls(
             {
-                Path(m).stem: pv.read(m)
+                Path(m).stem: Mesh.read(m)
                 for m in sorted(
                     filepaths, key=lambda fp: str(fp).replace(domain_key, "")
                 )
@@ -358,7 +358,7 @@ class Meshes(MutableMapping, StorageBase):
             filename = str(file.stem)
             prefix = f"{gml_path.stem}_geometry_"
             prefix_offset = len(prefix) if filename.startswith(prefix) else 0
-            self[filename[prefix_offset:]] = pv.read(file)
+            self[filename[prefix_offset:]] = Mesh.read(file)
 
     def sort(self) -> None:
         "Sort the subdomains alphanumerically."
@@ -862,7 +862,7 @@ class Meshes(MutableMapping, StorageBase):
             i=str(cut_material_file),
             o=str(boundary_file),
         )
-        cut_boundary = pv.read(boundary_file)
+        cut_boundary = Mesh.read(boundary_file)
 
         self["cut_boundary"] = cut_boundary
 
