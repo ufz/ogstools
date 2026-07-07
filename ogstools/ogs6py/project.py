@@ -955,6 +955,8 @@ class Project(StorageBase):
             "petsc_prefix": "./linear_solvers/linear_solver/petsc/prefix",
             "petsc_parameters": "./linear_solvers/linear_solver/petsc/parameters",
             "compensate_displacement": "./process_variables/process_variable[name='displacement']/compensate_non_equilibrium_initial_residuum",
+            "compensate_temperature": "./process_variables/process_variable[name='temperature']/compensate_non_equilibrium_initial_residuum",
+            "compensate_pressure": "./process_variables/process_variable[name='pressure']/compensate_non_equilibrium_initial_residuum",
             "compensate_all": "./process_variables/process_variable/compensate_non_equilibrium_initial_residuum",
         }
         for key, val in args.items():

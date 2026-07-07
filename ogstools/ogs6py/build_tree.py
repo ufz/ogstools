@@ -28,7 +28,7 @@ class BuildTree:
     def populate_tree(
         parent: ET.Element,
         tag: str,
-        text: str | None = None,
+        text: str | Any | None = None,
         attr: dict[str, str] | None = None,
         overwrite: bool = False,
     ) -> ET.Element:
@@ -44,7 +44,10 @@ class BuildTree:
             if element is None:
                 element = ET.SubElement(parent, tag)
             if text is not None:
-                element.text = str(text)
+                if isinstance(text, bool):
+                    element.text = str(text).lower()
+                else:
+                    element.text = str(text)
             if attr is not None:
                 for key, val in attr.items():
                     element.set(key, str(val))

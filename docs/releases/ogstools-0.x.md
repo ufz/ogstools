@@ -20,6 +20,8 @@ OGS 6.5.8 -
 - fixed sorting in Meshes.from_files (if key was not in the beginning, it didn't sort correctly)
 - fixed broken weblinks in documentation
 - allow values for group based parameters in `Project.parameters` (allows to set vectorial or anisotropic group values. Previously, only allowed scalars)
+- fixed `Project.process_variables.add_bc` and `Project.process_variables.add_st` to allow all different kinds of types. Previously, some
+  checks caused unintentional errors.
 
 ## Features
 
