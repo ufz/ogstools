@@ -602,8 +602,8 @@
             <name>displacement</name>
             <components>2</components>
             <order>1</order>
-            <compensate_non_equilibrium_initial_residuum>true</compensate_non_equilibrium_initial_residuum>
             <initial_condition>displacement_ic</initial_condition>
+            <compensate_non_equilibrium_initial_residuum>true</compensate_non_equilibrium_initial_residuum>
             <boundary_conditions>
                 <boundary_condition>
                     <type>Dirichlet</type>
