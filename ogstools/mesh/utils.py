@@ -74,13 +74,19 @@ def check_datatypes(
     elem_ids = mesh.cell_data.get("bulk_element_ids", np.uint64(0))
     node_ids = mesh.point_data.get("bulk_node_ids", np.uint64(0))
     type_map = {
-        mesh.points.dtype: ("Point coordinates", np.double),
-        mat_ids.dtype: ("'MaterialIDs'", np.int32),
-        elem_ids.dtype: ("'bulk_element_ids'", np.uint64),
-        node_ids.dtype: ("'bulk_node_ids'", np.uint64),
+        "Point coordinates": (
+            mesh.points.dtype,
+            {np.dtype("float32"), np.dtype("float64")},
+        ),
+        "'MaterialIDs'": (
+            mat_ids.dtype,
+            {np.dtype("int32"), np.dtype("uint32")},
+        ),
+        "'bulk_element_ids'": (elem_ids.dtype, {np.dtype("uint64")}),
+        "'bulk_node_ids'": (node_ids.dtype, {np.dtype("uint64")}),
     }
-    for datatype, (name, ref_type) in type_map.items():
-        if datatype != ref_type:
+    for name, (datatype, ref_type) in type_map.items():
+        if datatype not in ref_type:
             msg = (
                 f"{name} datatype needs to be {ref_type} for OGS, "
                 f"but instead it is {datatype}. "
