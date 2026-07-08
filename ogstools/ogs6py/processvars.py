@@ -112,3 +112,20 @@ class ProcessVars(build_tree.BuildTree):
         self.populate_tree(source_term, "type", text=type)
         for tag, value in kwargs.items():
             self.populate_tree(source_term, tag, value)
+
+    def deactivate_subdomain(
+        self, process_variable_name: str, **kwargs: Any
+    ) -> None:
+        """
+        Deactivate subdomain/s for a specific process variable.
+
+        https://doxygen.opengeosys.org/stable/da/d70/ogs_file_param__prj__process_variables__process_variable__deactivated_subdomains__deactivated_subdomain.html
+
+        :param process_variable_name:   name of the process variable
+        """
+        self._convertargs(kwargs)
+        pv = self._find_process_var(process_variable_name)
+        deact_subs = self.find_or_populate(pv, "deactivated_subdomains")
+        deact_sub = self.populate_tree(deact_subs, tag="deactivated_subdomain")
+        for tag, value in kwargs.items():
+            self.populate_tree(deact_sub, tag, value)

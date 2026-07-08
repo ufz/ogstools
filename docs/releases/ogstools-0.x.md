@@ -33,6 +33,10 @@ OGS 6.5.8 -
   - `Meshes.from_mesh` supports quadratic mesh
 - mesh
   - `filepath` is now attached to mesh upon reading (with `ot.mesh.read`)
+- Project
+  - `BuildTree.populate_tree` now can handle dicts as the element text
+    (in this case the key and value pairs will create corresponding subelements)
+  - Added `added deactivate_subdomain` to `Project.process_variables`
 
 ## Infrastructure
 
