@@ -441,7 +441,7 @@ class Project(StorageBase):
                 self.remove_element(".", tag=entry.tag, text=None)
         for element in empty_el_list:
             entry = root.find(element)
-            if (entry is not None) and (len(entry.getchildren()) == 0):
+            if (entry is not None) and (len(list(entry)) == 0):
                 entry.getparent().remove(entry)
 
     def dependencies(
@@ -754,8 +754,7 @@ class Project(StorageBase):
                 element.getparent().remove(element)
         else:
             for element in elements:
-                sub_elements = element.getchildren()
-                for sub_element in sub_elements:
+                for sub_element in list(element):
                     if sub_element.tag == tag and sub_element.text == text:
                         sub_element.getparent().remove(sub_element)
 
@@ -840,8 +839,7 @@ class Project(StorageBase):
         root = self._get_root()
         parameterpath = "./parameters/parameter[name='" + name + "']"
         parent = root.find(parameterpath)
-        children = parent.getchildren()
-        for child in children:
+        for child in list(parent):
             if child.tag not in ["name", "type"]:
                 self.remove_element(f"{parameterpath}/{child.tag}")
         paramtype = root.find(f"{parameterpath}/type")
