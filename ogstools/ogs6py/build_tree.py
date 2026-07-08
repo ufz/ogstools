@@ -54,6 +54,14 @@ class BuildTree:
         return element
 
     @staticmethod
+    def find_or_populate(parent: ET.Element, tag: str) -> ET.Element:
+        "Find an existing tag in parent or create it."
+        elem = parent.find(tag)
+        if elem is None:
+            elem = BuildTree.populate_tree(parent, tag)
+        return elem
+
+    @staticmethod
     def get_child_tag(
         parent: ET.Element,
         tag: str,
