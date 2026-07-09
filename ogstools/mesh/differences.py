@@ -1,14 +1,20 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from __future__ import annotations
+
 import logging
 from itertools import product
+from typing import TYPE_CHECKING
 from warnings import warn
 
 import numpy as np
 import pyvista as pv
 
 from ogstools.variables import Variable
+
+if TYPE_CHECKING:
+    from pint import Quantity
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +23,9 @@ def _is_same_topology(
     mesh_a: pv.UnstructuredGrid, mesh_b: pv.UnstructuredGrid
 ) -> bool:
     # Checkout !151
-    if not np.array_equal(mesh_a.points, mesh_b.points):
+    if mesh_a.points.shape != mesh_b.points.shape or not np.allclose(
+        mesh_a.points, mesh_b.points, atol=0, rtol=1e-15
+    ):
         return False
 
     has_cells_a = hasattr(mesh_a, "cells")
@@ -36,7 +44,9 @@ def _is_same_topology(
 
 
 def _raw_differences_all_data(
-    base_mesh: pv.UnstructuredGrid, subtract_mesh: pv.UnstructuredGrid
+    base_mesh: pv.UnstructuredGrid,
+    subtract_mesh: pv.UnstructuredGrid,
+    spatial_unit: Quantity | None = None,
 ) -> pv.UnstructuredGrid:
     diff = base_mesh.copy(deep=True)
     for point_data_key in base_mesh.point_data:
@@ -47,6 +57,10 @@ def _raw_differences_all_data(
         if cell_data_key == "MaterialIDs":
             continue
         diff.cell_data[cell_data_key] -= subtract_mesh.cell_data[cell_data_key]
+
+    if spatial_unit is not None:
+        pv.set_new_attribute(diff, "spatial_unit", spatial_unit)
+
     return diff
 
 
@@ -62,34 +76,81 @@ def difference(
     :param subtract_mesh:   The mesh whose data is to be subtracted.
     :param variable:        The variable of interest. If not given, all
                             point and cell_data will be processed raw.
-    :returns:   A new mesh containing the difference of `variable` or
-                of all datasets between both meshes.
+    :returns:               A new mesh containing the difference of `variable` or
+                            of all datasets between both meshes.
+    :warns RuntimeWarning:  - If only one input mesh defines a spatial unit, a warning is emitted
+                              and that unit is assumed for both meshes.
+                            - If both input meshes define spatial units and they differ, a copy of
+                              ``subtract_mesh`` is rescaled to match the spatial unit of
+                              ``base_mesh`` before the difference is computed.
+                            - If the topology of the input meshes differs, ``subtract_mesh`` is
+                              spatially resampled to match ``base_mesh``.
     """
-    is_same_topology = _is_same_topology(base_mesh, subtract_mesh)
-    if is_same_topology:
-        sub_mesh = subtract_mesh
-        mask = None
-    else:
-        msg = """
-        The topologies of base_mesh and subtract_mesh aren't identical.
-        In order to compute difference, subtract_mesh will be spatially
-        resampled.
-        """
+    from ogstools.variables import u_reg
+
+    subtract_mesh_ = subtract_mesh.copy()
+
+    # Check spatial units
+    base_spatial_unit = getattr(base_mesh, "spatial_unit", None)
+    subtract_spatial_unit = getattr(subtract_mesh, "spatial_unit", None)
+
+    spatial_unit = (
+        base_spatial_unit
+        if base_spatial_unit is not None
+        else subtract_spatial_unit
+    )
+    if spatial_unit is not None:
+        if (base_spatial_unit is None) != (subtract_spatial_unit is None):
+            msg = (
+                "Only one input mesh defines a spatial unit. "
+                f"Assuming both meshes use the spatial unit `{spatial_unit}`"
+            )
+            warn(msg, RuntimeWarning, stacklevel=2)
+
+        elif base_spatial_unit != subtract_spatial_unit:
+            msg = (
+                "Input meshes have different spatial units: "
+                f"{base_spatial_unit} vs {subtract_spatial_unit}. "
+                "A copy of `subtract_mesh` will be rescaled to match `base_mesh`."
+            )
+            warn(msg, RuntimeWarning, stacklevel=2)
+
+            spatial_factor = u_reg.Quantity(
+                subtract_spatial_unit, base_spatial_unit
+            ).magnitude
+
+            subtract_mesh_.scale(spatial_factor, inplace=True)
+            pv.set_new_attribute(
+                subtract_mesh_, "spatial_unit", base_spatial_unit
+            )
+
+    # Check topology
+    is_same_topology = _is_same_topology(base_mesh, subtract_mesh_)
+    mask = None
+    if not is_same_topology:
+        msg = (
+            "The topologies of base_mesh and subtract_mesh aren't identical. "
+            "In order to compute difference, subtract_mesh will be spatially "
+            "resampled."
+        )
         warn(msg, RuntimeWarning, stacklevel=2)
         # sample will always interpolate to point_data. Thus, for proper
         # comparison of cell_data, we will have to convert cell_data to
         # point_data of the base mesh and the sub_mesh
-        sub_mesh = base_mesh.sample(
-            subtract_mesh.ctp(),
+        subtract_mesh_ = base_mesh.sample(
+            subtract_mesh_.ctp(),
             pass_cell_data=False,
             pass_point_data=False,
             pass_field_data=False,
         )
-        mask = sub_mesh["vtkValidPointMask"] == 0
+        mask = subtract_mesh_["vtkValidPointMask"] == 0
 
     base_mesh_ = base_mesh if is_same_topology else base_mesh.ctp()
     if variable is None:
-        return _raw_differences_all_data(base_mesh_, sub_mesh)
+        return _raw_differences_all_data(
+            base_mesh_, subtract_mesh_, spatial_unit
+        )
+
     if isinstance(variable, str):
         variable = Variable(data_name=variable, output_name=variable)
 
@@ -98,12 +159,16 @@ def difference(
     diff_mesh.clear_cell_data()
     outname = variable.difference.output_name
     vals = np.asarray(
-        [variable.transform(mesh) for mesh in [base_mesh_, sub_mesh]]
+        [variable.transform(mesh) for mesh in [base_mesh_, subtract_mesh_]]
     )
     diff_mesh[outname] = np.empty(vals.shape[1:])
     diff_mesh[outname] = vals[0] - vals[1]
     if mask is not None:
         diff_mesh[outname][mask] = np.nan
+
+    if spatial_unit is not None:
+        pv.set_new_attribute(diff_mesh, "spatial_unit", spatial_unit)
+
     return diff_mesh
 
 
