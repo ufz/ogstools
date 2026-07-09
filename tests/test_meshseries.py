@@ -467,8 +467,6 @@ def test_diff_meshseries(ms, var: ot.variables.Variable):
     ],
 )
 def test_raw_diff_meshseries(ms):
-    ms = examples.load_meshseries_THM_2D_PVD()
-
     # Diff with self, should result in only 0 values
     ms_diff = ot.MeshSeries.difference(ms, ms)
     assert isinstance(ms_diff, ot.MeshSeries)
@@ -481,6 +479,57 @@ def test_raw_diff_meshseries(ms):
         if key == "MaterialIDs":
             continue
         assert np.count_nonzero(ms_diff[key]) == 0
+
+
+def test_diff_meshseries_units():
+    ms = examples.load_meshseries_THM_2D_PVD().scale(spatial="km", time="min")
+
+    diff = ot.MeshSeries.difference(ms, ms)
+
+    assert diff.spatial_unit == ms.spatial_unit
+    assert diff.time_unit == ms.time_unit
+
+
+def test_diff_mesh_units():
+    ms = examples.load_meshseries_THM_2D_PVD().scale(spatial="km")
+
+    # A) identity
+    mesh = ms[0]
+
+    diff = ot.mesh.difference(mesh, mesh)
+    assert diff.spatial_unit == mesh.spatial_unit
+
+    diff = ot.mesh.difference(mesh, mesh, variable="temperature")
+    assert diff.spatial_unit == mesh.spatial_unit
+
+    # B) different spatial units
+    mesh_m = ms.copy().scale(spatial="m")[0]
+
+    with pytest.warns(
+        RuntimeWarning,
+        match="Input meshes have different spatial units",
+    ):
+        diff = ot.mesh.difference(mesh, mesh_m)
+    assert diff.spatial_unit == mesh.spatial_unit
+
+    # C) only base has spatial unit
+    mesh_no_unit = ms.copy()[0]
+    mesh_no_unit.spatial_unit = None
+
+    with pytest.warns(
+        RuntimeWarning,
+        match="Only one input mesh defines a spatial unit",
+    ):
+        diff = ot.mesh.difference(mesh, mesh_no_unit)
+    assert diff.spatial_unit == mesh.spatial_unit
+
+    # D) only subtract has spatial unit
+    with pytest.warns(
+        RuntimeWarning,
+        match="Only one input mesh defines a spatial unit",
+    ):
+        diff = ot.mesh.difference(mesh_no_unit, mesh)
+    assert diff.spatial_unit == mesh.spatial_unit
 
 
 @pytest.mark.parametrize(
