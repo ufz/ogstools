@@ -3,6 +3,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pytest
 from lxml import etree as ET
 
@@ -515,145 +516,22 @@ class TestiOGS:
         model.parameters.add_parameter(
             name="heater", type="Constant", value="88.9686017167718"
         )
+        model.parameters.add_parameter(
+            name="pressure_tunnel", type="Constant", value="1e5"
+        )
         model.curves.add_curve(
             name="ThermalConductivityBent",
-            coords=[
-                0.00,
-                0.05,
-                0.10,
-                0.15,
-                0.20,
-                0.25,
-                0.30,
-                0.35,
-                0.40,
-                0.45,
-                0.50,
-                0.55,
-                0.60,
-                0.65,
-                0.70,
-                0.75,
-                0.80,
-                0.85,
-                0.90,
-                0.95,
-                1.00,
-            ],
-            values=[
-                0.3500,
-                0.3925,
-                0.4350,
-                0.4775,
-                0.5200,
-                0.5625,
-                0.6050,
-                0.6475,
-                0.6900,
-                0.7325,
-                0.7750,
-                0.8175,
-                0.8600,
-                0.9025,
-                0.9450,
-                0.9875,
-                1.0300,
-                1.0725,
-                1.1150,
-                1.1575,
-                1.2000,
-            ],
+            coords=np.arange(0.0, 1.01, 0.05).round(2),
+            values=np.arange(0.35, 1.21, 0.0425).round(4),
         )
         model.curves.add_curve(
             name="ThermalConductivityBlock",
-            coords=[
-                0.00,
-                0.05,
-                0.10,
-                0.15,
-                0.20,
-                0.25,
-                0.30,
-                0.35,
-                0.40,
-                0.45,
-                0.50,
-                0.55,
-                0.60,
-                0.65,
-                0.70,
-                0.75,
-                0.80,
-                0.85,
-                0.90,
-                0.95,
-                1.00,
-            ],
-            values=[
-                0.260,
-                0.295,
-                0.330,
-                0.365,
-                0.400,
-                0.435,
-                0.470,
-                0.505,
-                0.540,
-                0.575,
-                0.610,
-                0.645,
-                0.680,
-                0.715,
-                0.750,
-                0.785,
-                0.820,
-                0.855,
-                0.890,
-                0.925,
-                0.960,
-            ],
+            coords=np.arange(0.0, 1.01, 0.05).round(2),
+            values=np.arange(0.26, 0.961, 0.035).round(3),
         )
         model.curves.add_curve(
             name="ViscosityWater",
-            coords=[
-                273.15,
-                278.15,
-                283.15,
-                288.15,
-                293.15,
-                298.15,
-                303.15,
-                308.15,
-                313.15,
-                318.15,
-                323.15,
-                328.15,
-                333.15,
-                338.15,
-                343.15,
-                348.15,
-                353.15,
-                358.15,
-                363.15,
-                368.15,
-                373.15,
-                378.15,
-                383.15,
-                388.15,
-                393.15,
-                398.15,
-                403.15,
-                408.15,
-                413.15,
-                418.15,
-                423.15,
-                428.15,
-                433.15,
-                438.15,
-                443.15,
-                448.15,
-                453.15,
-            ],
+            coords=np.arange(273.15, 453.151, 5).round(2),
             values=[
                 0.001791443824493071,
                 0.001518096315579494,
@@ -693,6 +571,11 @@ class TestiOGS:
                 0.000154558662138820,
                 0.000150001126288821,
             ],
+        )
+        model.curves.add_curve(
+            name="excavation_curve",
+            coords=[0, 432000, 864000],
+            values=[0, 0.5, 0.5],
         )
         model.process_variables.set_ic(
             compensate_non_equilibrium_initial_residuum="true",
@@ -777,6 +660,11 @@ class TestiOGS:
             order="1",
             initial_condition="pressure_ic",
         )
+        model.process_variables.deactivate_subdomain(
+            "pressure",
+            material_ids=[1, 2],
+            time_interval={"start": 0, "end": 1e99},
+        )
         model.process_variables.set_ic(
             process_variable_name="temperature",
             components="1",
@@ -788,6 +676,18 @@ class TestiOGS:
             mesh="Decovalex-0-Boundary-Heater-mapped-plain",
             type="Neumann",
             parameter="heater",
+        )
+        model.process_variables.deactivate_subdomain(
+            "displacement",
+            ball={"center": [0, 0, 0], "radius": 1},
+            time_interval={"start": 0, "end": 864000},
+            boundary_parameter="pressure_tunnel",
+        )
+        model.process_variables.deactivate_subdomain(
+            "displacement",
+            time_curve="excavation_curve",
+            line_segment={"start": [0, 0, 0], "end": [0, 0.4, 0]},
+            material_ids=1,
         )
 
         model.nonlinear_solvers.add_non_lin_solver(

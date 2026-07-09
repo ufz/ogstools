@@ -25,33 +25,57 @@ class BuildTree:
                 args[item] = str(value)
 
     @staticmethod
+    def _to_str(text: Any) -> str:
+        if isinstance(text, list):
+            return " ".join(str(t) for t in text)
+        if isinstance(text, bool):
+            return str(text).lower()
+        return str(text)
+
+    @staticmethod
     def populate_tree(
         parent: ET.Element,
         tag: str,
-        text: str | Any | None = None,
+        text: Any | list | dict | None = None,
         attr: dict[str, str] | None = None,
         overwrite: bool = False,
     ) -> ET.Element:
-        """
-        Method to create dictionary from an xml entity.
+        """Add an element to the xml tree.
+
+        :param parent:      Parent of the new element.
+        :param tag:         Tag of the new element.
+        :param text:        Text / value of the new element. If given a dict,
+                            the key and value pairs will create corresponding
+                            subelements.
+        :param attr:        Attributes of the new element.
+        :param overwrite:   If True, overrides the last child of parent with a
+                            matching tag.
         """
         element = None
         if tag is not None:
-            if overwrite is True:
+            if overwrite:
                 for child in parent:
                     if child.tag == tag:
                         element = child
             if element is None:
                 element = ET.SubElement(parent, tag)
-            if text is not None:
-                if isinstance(text, bool):
-                    element.text = str(text).lower()
-                else:
-                    element.text = str(text)
+            if isinstance(text, dict):
+                for key, value in text.items():
+                    BuildTree.populate_tree(element, key, value)
+            elif text is not None:
+                element.text = BuildTree._to_str(text)
             if attr is not None:
                 for key, val in attr.items():
                     element.set(key, str(val))
         return element
+
+    @staticmethod
+    def find_or_populate(parent: ET.Element, tag: str) -> ET.Element:
+        "Find an existing tag in parent or create it."
+        elem = parent.find(tag)
+        if elem is None:
+            elem = BuildTree.populate_tree(parent, tag)
+        return elem
 
     @staticmethod
     def get_child_tag(

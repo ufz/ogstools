@@ -50,6 +50,15 @@ class ProcessVars(build_tree.BuildTree):
         for tag, value in kwargs.items():
             self.populate_tree(pv, tag, value)
 
+    def _find_process_var(self, process_variable_name: str) -> ET.Element:
+        pv = self.root.find(
+            f"./process_variables/process_variable[name='{process_variable_name}']"
+        )
+        if pv is None:
+            msg = "You need to set initial condition for that process variable first."
+            raise KeyError(msg)
+        return pv
+
     def _check_mesh_or_geometry(self, **kwargs: Any) -> None:
         if "geometrical_set" not in kwargs and "mesh" not in kwargs:
             msg = "Please provide either a geometrical set or a mesh."
@@ -72,17 +81,10 @@ class ProcessVars(build_tree.BuildTree):
         :param type:                    type of the boundary condition
         """
         self._convertargs(kwargs)
-        pv = self.root.find(
-            f"./process_variables/process_variable[name='{process_variable_name}']"
-        )
-        if pv is None:
-            msg = "You need to set initial condition for that process variable first."
-            raise KeyError(msg)
+        pv = self._find_process_var(process_variable_name)
         self._check_mesh_or_geometry(**kwargs)
 
-        bcs_element = pv.find("./boundary_conditions")
-        if bcs_element is None:
-            bcs_element = self.populate_tree(pv, "boundary_conditions")
+        bcs_element = self.find_or_populate(pv, "boundary_conditions")
         bc_element = self.populate_tree(bcs_element, "boundary_condition")
         self.populate_tree(bc_element, "type", type)
         for tag, value in kwargs.items():
@@ -102,18 +104,28 @@ class ProcessVars(build_tree.BuildTree):
         :param type:                    type of the source term
         """
         self._convertargs(kwargs)
-        pv = self.root.find(
-            f"./process_variables/process_variable[name='{process_variable_name}']"
-        )
-        if pv is None:
-            msg = "You need to set initial condition for that process variable first."
-            raise KeyError(msg)
+        pv = self._find_process_var(process_variable_name)
         self._check_mesh_or_geometry(**kwargs)
 
-        source_terms = pv.find("./source_terms")
-        if source_terms is None:
-            source_terms = self.populate_tree(pv, "source_terms")
+        source_terms = self.find_or_populate(pv, "source_terms")
         source_term = self.populate_tree(source_terms, "source_term")
         self.populate_tree(source_term, "type", text=type)
         for tag, value in kwargs.items():
             self.populate_tree(source_term, tag, value)
+
+    def deactivate_subdomain(
+        self, process_variable_name: str, **kwargs: Any
+    ) -> None:
+        """
+        Deactivate subdomain/s for a specific process variable.
+
+        https://doxygen.opengeosys.org/stable/da/d70/ogs_file_param__prj__process_variables__process_variable__deactivated_subdomains__deactivated_subdomain.html
+
+        :param process_variable_name:   name of the process variable
+        """
+        self._convertargs(kwargs)
+        pv = self._find_process_var(process_variable_name)
+        deact_subs = self.find_or_populate(pv, "deactivated_subdomains")
+        deact_sub = self.populate_tree(deact_subs, tag="deactivated_subdomain")
+        for tag, value in kwargs.items():
+            self.populate_tree(deact_sub, tag, value)

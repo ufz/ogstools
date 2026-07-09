@@ -45,7 +45,7 @@ class Display:
                         "./time_loop/processes/process/time_stepping/t_initial"
                     ).text
                 )
-                display(Markdown(f"**Simulation time:** {t_end-t_init}"))
+                display(Markdown(f"**Simulation time:** {t_end - t_init}"))
             with suppress(AttributeError):
                 proc_vars = tree.findall("./process_variables/process_variable")
                 with suppress(AttributeError):
@@ -56,8 +56,7 @@ class Display:
                     )
                 display(Markdown("### Boundary conditions"))
                 for var in proc_vars:
-                    proc_var_entries = var.getchildren()
-                    for entry in proc_var_entries:
+                    for entry in list(var):
                         if entry.tag == "name":
                             display(
                                 Markdown(f"**Process Variable:** {entry.text}")
@@ -71,10 +70,8 @@ class Display:
                         if entry.tag == "order":
                             display(Markdown(f" - **Order:** {entry.text}"))
                         if entry.tag == "boundary_conditions":
-                            bcs = entry.getchildren()
-                            for bc in bcs:
-                                bc_entries = bc.getchildren()
-                                for subentry in bc_entries:
+                            for bc in list(entry):
+                                for subentry in list(bc):
                                     if subentry.tag == "type":
                                         display(
                                             Markdown(

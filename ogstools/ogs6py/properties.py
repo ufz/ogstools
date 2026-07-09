@@ -184,8 +184,7 @@ def _expand_tensors(
         tobedeleted = []
         for prop in const_props:
             proplist = prop.text.split(" ")
-            tags = prop.getparent().getchildren()
-            for tag in tags:
+            for tag in list(prop.getparent()):
                 if tag.tag == "name":
                     name = tag.text
                     multidim_prop[medium_id][name] = len(proplist)
@@ -219,15 +218,14 @@ def _expand_van_genuchten(
         tobedeleted = []
         for vg_property in vg_properties:
             for prop in vg_property:
-                proplist = prop.getchildren()
                 const_taglist = ["name", "type", "value"]
                 prefix = ""
-                for subprop in proplist:
+                for subprop in list(prop):
                     if "SaturationVanGenuchten" in subprop.text:
                         prefix = "vgsat_"
                     elif "RelativePermeabilityVanGenuchten" in subprop.text:
                         prefix = "vgrelperm_"
-                for subprop in proplist:
+                for subprop in list(prop):
                     if subprop.tag not in ["name", "type"]:
                         const_textlist = [
                             prefix + subprop.tag,
