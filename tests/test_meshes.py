@@ -54,8 +54,8 @@ def test_datatypes(load_meshseries):
     meshes.identify_subdomain()
 
     domain["MaterialIDs"] = np.zeros(domain.n_cells, dtype=np.int64)
-    meshes["top"].points = np.astype(meshes["top"].points, np.float32)
-    meshes["bottom"].points = np.astype(meshes["bottom"].points, np.float32)
+    meshes["top"].points = np.astype(meshes["top"].points, np.int32)
+    meshes["bottom"].points = np.astype(meshes["bottom"].points, np.int32)
     meshes["left"]["bulk_node_ids"] = np.astype(
         meshes["left"]["bulk_node_ids"], np.int32
     )
