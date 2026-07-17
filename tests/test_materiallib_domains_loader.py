@@ -10,6 +10,8 @@ import yaml  # type: ignore[import]
 
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.material_manager import MaterialManager
+from ogstools.materiallib.core.property import ParameterValue
+from ogstools.materiallib.distributions import UniformDistribution
 
 
 @pytest.fixture
@@ -75,6 +77,74 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
     assert "domains" in copied_raw
     assert "properties" not in copied_raw
     assert copied_raw["domains"][0]["domain"] == "phase"
+
+
+def test_material_parses_wrapped_parameter_value(write_yaml) -> None:
+    file_path = write_yaml(
+        "distributed_porosity.yml",
+        {
+            "name": "porous_medium",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": {
+                            "type": "Constant",
+                            "value": {
+                                "base_value": 0.15,
+                                "distribution": {
+                                    "type": "uniform",
+                                    "lower": 0.10,
+                                    "upper": 0.20,
+                                },
+                            },
+                        }
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    value = material["porosity"].parameters["value"]
+    assert value == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+
+
+def test_material_preserves_wrapped_parameter_value_after_raw_rebuild(
+    tmp_path: Path, write_yaml
+) -> None:
+    file_path = write_yaml(
+        "distributed_porosity.yml",
+        {
+            "name": "porous_medium",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": {
+                            "type": "Constant",
+                            "value": {"base_value": 0.15},
+                        }
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+    material.filter_properties("porosity")
+
+    target = tmp_path / "porous_medium_copy.yml"
+    material.to_file(target)
+
+    copied_raw = yaml.safe_load(target.read_text(encoding="utf-8"))
+    assert copied_raw["domains"][0]["properties"]["porosity"]["value"] == {
+        "base_value": 0.15
+    }
 
 
 def test_material_rejects_unsupported_top_level_properties_key(

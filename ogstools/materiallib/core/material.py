@@ -14,12 +14,13 @@ from typing import Any, ClassVar
 import yaml
 
 from ogstools._internal import deprecated
+from ogstools.materiallib.distributions import parse_distribution
 from ogstools.materiallib.schema.required_properties import (
     required_property_names,
 )
 from ogstools.property_types import PROPERTY_TYPES
 
-from .property import MaterialProperty
+from .property import MaterialProperty, ParameterValue
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,60 @@ class Material(Mapping[str, MaterialProperty]):
             )
             raise ValueError(msg)
 
+    @staticmethod
+    def _parse_parameter_value(value: Any) -> Any:
+        if not isinstance(value, Mapping):
+            # Temporary compatibility: plain scalars remain unchanged. A follow-up MR
+            # will normalize all parameter values to ParameterValue.
+            return value
+
+        wrapper_keys = {"base_value", "distribution"}
+        value_keys = set(value)
+        if not (value_keys & wrapper_keys):
+            return value
+
+        unknown_keys = value_keys - wrapper_keys
+        if unknown_keys:
+            msg = (
+                "Parameter wrapper contains unsupported key(s): "
+                f"{', '.join(sorted(unknown_keys))}."
+            )
+            raise ValueError(msg)
+
+        if "base_value" not in value:
+            msg = "Parameter wrapper must define 'base_value'."
+            raise ValueError(msg)
+
+        distribution = value.get("distribution")
+        if distribution is not None:
+            if not isinstance(distribution, dict):
+                msg = "Parameter wrapper key 'distribution' must be a mapping."
+                raise ValueError(msg)
+            parsed_distribution = parse_distribution(distribution)
+        else:
+            parsed_distribution = None
+
+        return ParameterValue(
+            base_value=value["base_value"],
+            distribution=parsed_distribution,
+        )
+
+    @staticmethod
+    def _serialize_parameter_value(value: Any) -> Any:
+        if not isinstance(value, ParameterValue):
+            return value
+
+        serialized = {"base_value": value.base_value}
+        if value.distribution is not None:
+            from ogstools.materiallib.distributions import (
+                serialize_distribution,
+            )
+
+            serialized["distribution"] = serialize_distribution(
+                value.distribution
+            )
+        return serialized
+
     def _parse_properties(self) -> None:
         for domain_block in self.raw["domains"]:
             domain_name = domain_block["domain"]
@@ -169,7 +224,10 @@ class Material(Mapping[str, MaterialProperty]):
 
                 type_ = entry["type"]
                 spec = PROPERTY_TYPES[type_]
-                parameters = {k: entry[k] for k in spec.parameters}
+                parameters = {
+                    k: self._parse_parameter_value(entry[k])
+                    for k in spec.parameters
+                }
                 extra = {k: entry[k] for k in spec.metadata_keys if k in entry}
 
                 self._validate_property_payload(
@@ -320,7 +378,10 @@ class Material(Mapping[str, MaterialProperty]):
 
             entry = {
                 "type": p.type,
-                **p.parameters,
+                **{
+                    key: Material._serialize_parameter_value(value)
+                    for key, value in p.parameters.items()
+                },
                 **metadata,
             }
 
