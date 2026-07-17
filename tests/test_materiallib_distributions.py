@@ -58,7 +58,7 @@ def test_serialize_distribution(
 
 @pytest.mark.parametrize(
     "distribution",
-    [(distribution,) for _, distribution in _DISTRIBUTION_CASES],
+    [distribution for _, distribution in _DISTRIBUTION_CASES],
 )
 def test_distribution_roundtrip(distribution: Distribution) -> None:
     roundtrip = parse_distribution(serialize_distribution(distribution))

@@ -1,7 +1,16 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Any
+
+from ogstools.materiallib.distributions import Distribution
+
+
+@dataclass(frozen=True)
+class ParameterValue:
+    base_value: Any
+    distribution: Distribution | None = None
 
 
 class MaterialProperty:
