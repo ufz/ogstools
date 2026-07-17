@@ -9,6 +9,8 @@ from ogstools import Project, examples
 from ogstools.materiallib.core import component, components, material_manager
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.media import MediaSet
+from ogstools.materiallib.core.property import ParameterValue
+from ogstools.materiallib.distributions import UniformDistribution
 from ogstools.materiallib.schema import process_schema, required_properties
 
 
@@ -1722,6 +1724,62 @@ class TestMedium:
         assert "<type>AqueousLiquid</type>" in xml_text
         assert "<name>Viscosity</name>" in xml_text
         assert "<value>1.0</value>" in xml_text
+
+    def test_media_import_ignores_distribution_metadata_in_xml(
+        self, make_filtered_db, tmp_path
+    ):
+        materials = {
+            "clay": _grouped_raw_data(
+                "clay",
+                {
+                    "porosity": {
+                        "type": "Constant",
+                        "value": {
+                            "base_value": 0.15,
+                            "distribution": {
+                                "type": "uniform",
+                                "lower": 0.10,
+                                "upper": 0.20,
+                            },
+                        },
+                    }
+                },
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
+        }
+        schema = {
+            "properties": ["porosity"],
+            "phases": [{"type": "AqueousLiquid", "properties": ["Viscosity"]}],
+        }
+        subdomains = [
+            {"subdomain": "region1", "material": "clay", "material_ids": [1]}
+        ]
+        fluids = {"AqueousLiquid": "water"}
+
+        filtered = make_filtered_db(materials, schema, subdomains, fluids)
+        media = MediaSet(filtered)
+
+        porosity = media["region1"].properties[0]
+        assert porosity.parameters["value"] == ParameterValue(
+            base_value=0.15,
+            distribution=UniformDistribution(lower=0.10, upper=0.20),
+        )
+
+        prj = Project()
+        prj.set_media(media)
+
+        xml_file = tmp_path / "distributed_export.prj"
+        prj.write_input(xml_file)
+        xml_text = xml_file.read_text()
+
+        assert "<name>porosity</name>" in xml_text
+        assert "<value>0.15</value>" in xml_text
+        assert "distribution" not in xml_text
+        assert "base_value" not in xml_text
 
     def test_media_import_exports_with_components_two_phase(
         self, make_filtered_db, tmp_path
