@@ -215,3 +215,116 @@ def test_material_manager_loads_grouped_domain_repository(
     manager = MaterialManager(data_dir=tmp_path)
 
     assert "granite" in manager.materials_db
+
+
+def test_material_medium_property_accessor_returns_medium_property(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "domain_navigation.yml",
+        {
+            "name": "domain_navigation",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2700}
+                    },
+                },
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 999}
+                    },
+                },
+                {
+                    "domain": "component",
+                    "properties": {
+                        "MolarMass": {"type": "Constant", "value": 18.0}
+                    },
+                },
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    assert material.medium.property("Density").parameters["value"] == 2700
+
+
+def test_material_phase_property_accessor_returns_phase_property(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "domain_navigation.yml",
+        {
+            "name": "domain_navigation",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 2700}
+                    },
+                },
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 999}
+                    },
+                },
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    assert material.phase.property("Density").parameters["value"] == 999
+
+
+def test_material_component_property_accessor_returns_component_property(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "domain_navigation.yml",
+        {
+            "name": "domain_navigation",
+            "domains": [
+                {
+                    "domain": "component",
+                    "properties": {
+                        "MolarMass": {"type": "Constant", "value": 18.0}
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    assert material.component.property("MolarMass").parameters["value"] == 18.0
+
+
+def test_material_property_accessor_rejects_missing_property_in_domain(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "domain_navigation.yml",
+        {
+            "name": "domain_navigation",
+            "domains": [
+                {
+                    "domain": "phase",
+                    "properties": {
+                        "Density": {"type": "Constant", "value": 999}
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    with pytest.raises(
+        KeyError, match="No property with name Density found in domain medium"
+    ):
+        material.medium.property("Density")

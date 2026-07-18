@@ -25,6 +25,46 @@ from .property import MaterialProperty, ParameterValue
 logger = logging.getLogger(__name__)
 
 
+class _MaterialPropertyAccessor:
+    """Private helper for domain-based property navigation on ``Material``.
+
+    For review (to be removed later): Material YAML now groups properties by top-level ``domain`` blocks, but the
+    in-memory Python model intentionally remains flat:
+
+    ``Material.properties: list[MaterialProperty]``
+
+    with the selected domain still stored on each property as
+    ``prop.extra["domain"]``. Since there is no dedicated domain object in the
+    current material model, this accessor provides the minimal bridge needed
+    for structured navigation such as ``mat.medium.property("porosity")``
+    without changing the underlying storage model.
+    """
+
+    def __init__(self, material: Material, domain: str):
+        self._material = material
+        self._domain = domain
+
+    def property(self, name: str) -> MaterialProperty:
+        matches = [
+            prop
+            for prop in self._material.properties
+            if prop.name == name and prop.extra.get("domain") == self._domain
+        ]
+        if matches:
+            return matches[0]
+
+        available = [
+            prop.name
+            for prop in self._material.properties
+            if prop.extra.get("domain") == self._domain
+        ]
+        msg = (
+            f"No property with name {name} found in domain {self._domain}. "
+            "Available properties are: " + ", ".join(dict.fromkeys(available))
+        )
+        raise KeyError(msg)
+
+
 class Material(Mapping[str, MaterialProperty]):
     """
     Represents a single material.
@@ -349,6 +389,18 @@ class Material(Mapping[str, MaterialProperty]):
 
     def __bool__(self) -> bool:
         return bool(self.name)
+
+    @property
+    def medium(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "medium")
+
+    @property
+    def phase(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "phase")
+
+    @property
+    def component(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "component")
 
     @staticmethod
     def _raw_from_properties(
