@@ -304,6 +304,93 @@ def test_material_component_property_accessor_returns_component_property(
     assert material.component.property("MolarMass").parameters["value"] == 18.0
 
 
+def test_material_property_parameter_returns_plain_scalar_value(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "parameter_navigation.yml",
+        {
+            "name": "parameter_navigation",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": {"type": "Constant", "value": 0.15}
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    assert material.medium.property("porosity").parameter("value") == 0.15
+
+
+def test_material_property_parameter_returns_wrapped_parameter_value(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "parameter_navigation.yml",
+        {
+            "name": "parameter_navigation",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": {
+                            "type": "Constant",
+                            "value": {
+                                "base_value": 0.15,
+                                "distribution": {
+                                    "type": "uniform",
+                                    "lower": 0.10,
+                                    "upper": 0.20,
+                                },
+                            },
+                        }
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    assert material.medium.property("porosity").parameter(
+        "value"
+    ) == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+
+
+def test_material_property_parameter_rejects_missing_parameter(
+    write_yaml,
+) -> None:
+    file_path = write_yaml(
+        "parameter_navigation.yml",
+        {
+            "name": "parameter_navigation",
+            "domains": [
+                {
+                    "domain": "medium",
+                    "properties": {
+                        "porosity": {"type": "Constant", "value": 0.15}
+                    },
+                }
+            ],
+        },
+    )
+
+    material = Material.from_file(file_path)
+
+    with pytest.raises(
+        KeyError, match="Property porosity has no parameter called 'missing'"
+    ):
+        material.medium.property("porosity").parameter("missing")
+
+
 def test_material_property_accessor_rejects_missing_property_in_domain(
     write_yaml,
 ) -> None:

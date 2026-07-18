@@ -39,6 +39,15 @@ class MaterialProperty:
             lines.append(f"  {k}: {v}")
         return "\n".join(lines)
 
+    def parameter(self, name: str) -> Any:
+        if name not in self.parameters:
+            msg = f"Property {self.name} has no parameter called '{name}'."
+            raise KeyError(msg)
+        # Temporary compatibility: plain scalar YAML values still remain raw
+        # scalars internally, while wrapped values are parsed as ParameterValue.
+        # A follow-up MR should normalize all parameter values to ParameterValue.
+        return self.parameters[name]
+
     def get(self, key: str, default: str | None = None) -> Any:
         if key in ["name", "type", "parameters"]:
             return getattr(self, key)
