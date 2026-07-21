@@ -20,7 +20,7 @@ from ogstools import plot
 from ogstools._internal import copy_function_signature, deprecated
 from ogstools.core.storage import StorageBase
 from ogstools.mesh import read
-from ogstools.mesh.utils import reshape_obs_points
+from ogstools.mesh.utils import pv_set_attr, reshape_obs_points
 from ogstools.plot.lineplots import line
 from ogstools.variables import Variable, _normalize_vars, u_reg
 
@@ -500,10 +500,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             ("spatial_unit", self.spatial_unit),
             ("time_unit", self.time_unit),
         ]:
-            if not hasattr(pv, "set_new_attribute") or hasattr(mesh, attr):
-                setattr(mesh, attr, val)
-            else:
-                pv.set_new_attribute(mesh, attr, val)
+            pv_set_attr(mesh, attr, val)
         return mesh
 
     def rawdata_file(self) -> Path | None:

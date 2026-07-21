@@ -11,6 +11,7 @@ from warnings import warn
 import numpy as np
 import pyvista as pv
 
+from ogstools.mesh.utils import pv_set_attr
 from ogstools.variables import Variable
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ def _raw_differences_all_data(
         diff.cell_data[cell_data_key] -= subtract_mesh.cell_data[cell_data_key]
 
     if spatial_unit is not None:
-        pv.set_new_attribute(diff, "spatial_unit", spatial_unit)
+        pv_set_attr(diff, "spatial_unit", spatial_unit)
 
     return diff
 
@@ -120,9 +121,7 @@ def difference(
             ).magnitude
 
             subtract_mesh_.scale(spatial_factor, inplace=True)
-            pv.set_new_attribute(
-                subtract_mesh_, "spatial_unit", base_spatial_unit
-            )
+            pv_set_attr(subtract_mesh_, "spatial_unit", base_spatial_unit)
 
     # Check topology
     is_same_topology = _is_same_topology(base_mesh, subtract_mesh_)
@@ -167,7 +166,7 @@ def difference(
         diff_mesh[outname][mask] = np.nan
 
     if spatial_unit is not None:
-        pv.set_new_attribute(diff_mesh, "spatial_unit", spatial_unit)
+        pv_set_attr(diff_mesh, "spatial_unit", spatial_unit)
 
     return diff_mesh
 
