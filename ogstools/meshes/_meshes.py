@@ -393,12 +393,7 @@ class Meshes(MutableMapping, StorageBase):
             for name, mesh in self._meshes.items():
                 check_datatypes(mesh, strict=True, meshname=name)
                 filepath = active_path / f"{name}.vtu"
-                if not hasattr(pv, "set_new_attribute") or hasattr(
-                    mesh, "filepath"
-                ):
-                    mesh.filepath = filepath
-                else:
-                    pv.set_new_attribute(mesh, "filepath", filepath)
+                utils.pv_set_attr(mesh, "filepath", filepath)
                 Mesh.save(mesh, filepath, **kwargs)
 
             meta_dict = {

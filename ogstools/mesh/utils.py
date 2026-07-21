@@ -4,6 +4,7 @@
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pyvista as pv
@@ -225,3 +226,16 @@ def unique_cell_types(mesh: pv.DataSet) -> list[pv.CellType]:
     if hasattr(mesh, "celltypes"):
         return np.unique(mesh.celltypes).tolist()
     return list({cell.type for cell in mesh.cell})
+
+
+def pv_set_attr(mesh: pv.DataSet, attr: str, value: Any) -> None:
+    """
+    Set a PyVista mesh attribute.
+
+    Updates the attribute if it already exists; otherwise creates it
+    using :func:`pyvista.set_new_attribute`.
+    """
+    if hasattr(mesh, attr):
+        setattr(mesh, attr, value)
+    else:
+        pv.set_new_attribute(mesh, attr, value)
