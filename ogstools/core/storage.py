@@ -362,7 +362,7 @@ class StorageBase(abc.ABC):
                 msg = (
                     f"You are trying to overwrite the {type}: {self.next_target} "
                     f"with a new version of {self.class_id}. "
-                    "If you really want this set overwrite_allowed to True."
+                    "If you really want this set overwrite to True."
                 )
                 raise ValueError(msg)
 
