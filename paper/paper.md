@@ -96,9 +96,6 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
 
-### Decentralised code
-
-
 ## State of the field
 
 Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages bridge a domain-specific simulator to a general-purpose programming language ecosystem (e.g. Python), typically to cover pre-processing, execution, and post-processing conducted on a single programmatic platform.
@@ -129,7 +126,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 **Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritising early failure over silent pass-through.
 
-**Large data awareness:** Meshes can exceed one million cells. The top-level API is designed to be approachable for small datasets at entry level, while experts working with large data can tune performance via lower-level API access or fall back to command-line tools and custom code.
+**Large data awareness:** The top-level API is designed to be approachable for small datasets at entry level, while experts working with large data can tune performance via lower-level API access or fall back to command-line tools and custom code.
 
 **Infrastructure:** Code development is centralised on a self-hosted GitLab instance. A multi-platform CI pipeline (Linux, Windows, macOS) enforces code quality and reports test coverage. Examples are organised as plain Python scripts automatically converted to Jupyter notebooks, with Binder integration for every release. To address the need for a versioned analysis environment [@Blomer2014], OGSTools ships a pinned dependency environment updated with every release, while continuously tested against the latest dependencies.
 
