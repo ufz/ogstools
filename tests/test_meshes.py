@@ -52,10 +52,13 @@ def test_datatypes(load_meshseries):
     domain: pv.UnstructuredGrid = load_meshseries()[0]
     meshes = ot.Meshes.from_mesh(domain)
     meshes.identify_subdomain()
-
     domain["MaterialIDs"] = np.zeros(domain.n_cells, dtype=np.int64)
     meshes["top"].points = np.astype(meshes["top"].points, np.int32)
     meshes["bottom"].points = np.astype(meshes["bottom"].points, np.int32)
+    if "front" in meshes:
+        meshes["front"].points = np.astype(meshes["front"].points, np.float32)
+    if "back" in meshes:
+        meshes["back"].points = np.astype(meshes["back"].points, np.float64)
     meshes["left"]["bulk_node_ids"] = np.astype(
         meshes["left"]["bulk_node_ids"], np.int32
     )
@@ -64,9 +67,10 @@ def test_datatypes(load_meshseries):
     )
     for name, mesh in meshes.items():
         if name in ["front", "back"]:
+            ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
             continue
         with pytest.raises(TypeError):
-            ot.mesh.check_datatypes(mesh, strict=True, name=name)
+            ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
         assert not ot.mesh.check_datatypes(mesh, strict=False)
 
 
