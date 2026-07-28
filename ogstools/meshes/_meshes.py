@@ -438,8 +438,9 @@ class Meshes(MutableMapping, StorageBase):
 
         This function will perform identifySubdomains, if not yet been done.
 
-        :param target:      Optional path to the folder where meshes
-                            should be saved. If None, a temporary folder will be used.
+        :param target:      Optional path to the folder where meshes should be saved.
+                            If None and meshes were created from a folder, that folder will be used.
+                            Otherwise, a temporary folder will be used.
 
         :param overwrite:   If True, existing mesh files will be overwritten.
                             If False, an error is raised if any file already exists.
