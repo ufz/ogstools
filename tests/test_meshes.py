@@ -48,11 +48,11 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     ],
 )
 def test_datatypes(load_meshseries):
-    "Test `check_datatypes` actually fails with erroneous data."
+    """Test `check_datatypes` actually fails with erroneous data."""
     domain: pv.UnstructuredGrid = load_meshseries()[0]
     meshes = ot.Meshes.from_mesh(domain)
     meshes.identify_subdomain()
-    "Set up meshes with deliberately wrong datatypes"
+    # Set up meshes with deliberately wrong datatypes
     domain["MaterialIDs"] = np.zeros(domain.n_cells, dtype=np.int64)
     meshes["top"].points = np.astype(meshes["top"].points, np.int32)
     meshes["bottom"].points = np.astype(meshes["bottom"].points, np.int32)
@@ -62,18 +62,18 @@ def test_datatypes(load_meshseries):
     meshes["right"]["bulk_element_ids"] = np.astype(
         meshes["right"]["bulk_element_ids"], np.int32
     )
-    "Only load_meshseries_diffusion_3D returns Meshes with front and back meshes."
-    "Deliberately set them up with each of the accepted point coordinate types"
+    # Only load_meshseries_diffusion_3D returns Meshes with front and back meshes.
+    # Deliberately set them up with each of the accepted point coordinate types
     if "front" in meshes:
         meshes["front"].points = np.astype(meshes["front"].points, np.float32)
     if "back" in meshes:
         meshes["back"].points = np.astype(meshes["back"].points, np.float64)
     for name, mesh in meshes.items():
         if name in ["front", "back"]:
-            "Check that both correct types for point coordinates are accepted"
+            # Check that both correct types for point coordinates are accepted
             ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
             continue
-        "Check that incorrect datatypes raise TypeErrors"
+        # Check that incorrect datatypes raise TypeErrors
         with pytest.raises(TypeError):
             ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
         assert not ot.mesh.check_datatypes(mesh, strict=False)
@@ -81,7 +81,7 @@ def test_datatypes(load_meshseries):
 
 @pytest.mark.tools
 def test_meshes_from_mesh_3D_simple(tmp_path):
-    "Test extracted boundaries from 3D mesh are correctly labeled."
+    """Test extracted boundaries from 3D mesh are correctly labeled."""
     mesh_path = tmp_path / "mesh.msh"
     ot.gmsh_tools.cuboid(
         lengths=[4, 3, 2], n_edge_cells=(2, 3, 4), out_name=mesh_path
@@ -113,7 +113,7 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
 def test_meshes_from_mesh_3D(
     discretization: Callable[[LS], ot.mesh.create.RegionSet],
 ):
-    "Test extracted boundaries from 3D mesh are correctly labeled."
+    """Test extracted boundaries from 3D mesh are correctly labeled."""
     surfaces = [
         ot.mesh.create.Surface(surf, material_id=mat_id)
         for mat_id, surf in enumerate(examples.surface_paths)
@@ -136,7 +136,7 @@ def test_meshes_from_mesh_3D(
 
 @pytest.mark.system
 def test_meshes_from_mesh_2D_run(tmp_path):
-    "Test using extracted boundaries for a simulation."
+    """Test using extracted boundaries for a simulation."""
     domain = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=(2, 4)))[
         "domain"
     ]
@@ -178,7 +178,7 @@ def meshing(draw: st.DrawFn):
     deadline=None,
 )
 def test_identify_subdomains(tmp_path, meshing_data, failcase):
-    "Testing parity between py and C++ (CLI) implementation."
+    """Testing parity between py and C++ (CLI) implementation."""
     from ogstools.meshes.subdomains import identify_subdomains
 
     mesh_func, n_cells, n_layers, rand_id = meshing_data
@@ -249,7 +249,7 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
 
 @pytest.mark.tools  # NodeReordering
 def test_meshes_saving_reading():
-    "Check, that saving+reading meshes equal the original."
+    """Check, that saving+reading meshes equal the original."""
     meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
     files = meshes.save()  # serial mesh only
     assert meshes.validate()
@@ -270,12 +270,12 @@ def test_meshes_saving_reading():
 )
 def test_meshes_save_parallel(partition, dry_run):
     """
+    Checks the number of saved files
     Test object: Meshes.save()
     Use Case: Stores Meshes object and optionally performs partitioning
     Assumes: A Meshes object is present. The folder is already present and empty.
     Checks: Return value of test object and that these files are existing.
     """
-    "Checks the number of saved files"
     meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
     meshes.num_partitions = partition
     files = meshes.save(dry_run=dry_run)
@@ -387,7 +387,7 @@ def test_meshes_rename(tmp_path):
 
 @pytest.mark.tools  # NodeReordering
 def test_meshes_from_prj():
-    "Check, that the mesh paths generated from a Project are correct."
+    """Check, that the mesh paths generated from a Project are correct."""
     meshes_ref = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(), log=False)
     written_files = meshes_ref.save()
     assert len(written_files) == 6  # 5 VTU meshes + meta.yaml
