@@ -74,6 +74,7 @@ def check_datatypes(
     elem_ids = mesh.cell_data.get("bulk_element_ids", np.uint64(0))
     node_ids = mesh.point_data.get("bulk_node_ids", np.uint64(0))
     type_map = {
+        # Point coordinates is chosen as alternative/easier to read name for mesh.points
         "Point coordinates": (
             mesh.points.dtype,
             {np.dtype("float32"), np.dtype("float64")},

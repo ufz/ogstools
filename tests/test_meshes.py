@@ -52,23 +52,28 @@ def test_datatypes(load_meshseries):
     domain: pv.UnstructuredGrid = load_meshseries()[0]
     meshes = ot.Meshes.from_mesh(domain)
     meshes.identify_subdomain()
+    "Set up meshes with deliberately wrong datatypes"
     domain["MaterialIDs"] = np.zeros(domain.n_cells, dtype=np.int64)
     meshes["top"].points = np.astype(meshes["top"].points, np.int32)
     meshes["bottom"].points = np.astype(meshes["bottom"].points, np.int32)
-    if "front" in meshes:
-        meshes["front"].points = np.astype(meshes["front"].points, np.float32)
-    if "back" in meshes:
-        meshes["back"].points = np.astype(meshes["back"].points, np.float64)
     meshes["left"]["bulk_node_ids"] = np.astype(
         meshes["left"]["bulk_node_ids"], np.int32
     )
     meshes["right"]["bulk_element_ids"] = np.astype(
         meshes["right"]["bulk_element_ids"], np.int32
     )
+    "Only load_meshseries_diffusion_3D returns Meshes with front and back meshes."
+    "Deliberately set them up with each of the accepted point coordinate types"
+    if "front" in meshes:
+        meshes["front"].points = np.astype(meshes["front"].points, np.float32)
+    if "back" in meshes:
+        meshes["back"].points = np.astype(meshes["back"].points, np.float64)
     for name, mesh in meshes.items():
         if name in ["front", "back"]:
+            "Check that both correct types for point coordinates are accepted"
             ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
             continue
+        "Check that incorrect datatypes raise TypeErrors"
         with pytest.raises(TypeError):
             ot.mesh.check_datatypes(mesh, strict=True, meshname=name)
         assert not ot.mesh.check_datatypes(mesh, strict=False)
