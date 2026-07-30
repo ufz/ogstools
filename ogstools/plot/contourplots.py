@@ -193,11 +193,26 @@ def subplot(
 
     x_id, y_id, projection, _ = utils.get_projection(mesh)
     if "xlim" in kwargs or "ylim" in kwargs:
-        limits = utils.xy_limits(mesh, **kwargs)
+        limits = np.asarray(utils.xy_limits(mesh, **kwargs))
         pts = mesh.points
         in_x = (pts[:, x_id] >= limits[0]) & (pts[:, x_id] <= limits[1])
         in_y = (pts[:, y_id] >= limits[2]) & (pts[:, y_id] <= limits[3])
-        mesh = mesh.extract_points(np.argwhere(in_x & in_y))
+        point_ids = np.argwhere(in_x & in_y)
+
+        # explicitly checking corner cells, as they might be missing if only
+        # checking for the points being inside the limits.
+        lim_ids_pairs = [[0, 2], [1, 2], [1, 3], [0, 3]]
+        z = np.median(mesh.points[:, projection])
+        corner_pts = np.hstack([limits[lim_ids_pairs], [[z]] * 4])
+        ids_ = mesh.find_containing_cell(corner_pts)
+        corner_cells = [ids_] if isinstance(ids_, int) else ids_
+        for edge_cell in [idx for idx in corner_cells if idx != -1]:
+            new_ids = mesh.get_cell(edge_cell).point_ids
+            point_ids = np.append(
+                point_ids, [new_ids] if isinstance(new_ids, int) else new_ids
+            )
+
+        mesh = mesh.extract_points(point_ids.astype(int))
         if mesh.n_points == 0:
             msg = "Limits where chosen such, that no points remain. "
             raise ValueError(msg)

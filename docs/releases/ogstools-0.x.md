@@ -29,6 +29,7 @@ OGS 6.5.8 -
   - added `xlim` and `ylim` as arguments for `contourf`
   - improved `meshes.plot`
   - fixed line ordering by trying to sort by cell adjacency
+  - `contourf`: corner elements were missing if none of their points were in the selected x- or y-limits; now they are checked explicitly.
 - meshes
   - `Meshes.from_mesh` supports quadratic mesh
 - mesh

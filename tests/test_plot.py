@@ -130,6 +130,13 @@ class TestPlotting:
         return contourf(ms[1], var, **kwargs)
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    def test_limits(self) -> plt.Figure:
+        msh = ot.gmsh_tools.rect(n_edge_cells=10, structured_grid=False)
+        mesh = ot.Meshes.from_gmsh(msh, log=False).domain
+        lim = [0.1, 0.9]
+        return ot.plot.contourf(mesh, "MaterialIDs", xlim=lim, ylim=lim)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_shape_on_top(self) -> plt.Figure:
         "Test plotting the shape on top of a contourplot via image comparison."
         ms = examples.load_meshseries_THM_2D_PVD()
