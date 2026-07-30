@@ -708,6 +708,21 @@ def test_xdmf_quadratic(tmp_path):
     assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
 
 
+@pytest.mark.system
+def test_xdmf_materialIDs(tmp_path):
+    "Test reading of MaterialIDs from xdmf meshseries works as expected."
+    meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=2, n_layers=2))
+    model = ot.Model(examples.prj_mechanics, meshes)
+    model.project.replace_text("XDMF", xpath="./time_loop/output/type")
+    sim = model.run(target=tmp_path)
+    assert sim.status == sim.Status.done, sim.status_str
+    assert "MaterialIDs" in sim.meshseries[-1].cell_data
+    assert all(np.isin(np.unique(sim.meshseries[-1]["MaterialIDs"]), [0, 1]))
+    assert all(np.isin(np.unique(sim.meshseries.values("MaterialIDs")), [0, 1]))
+    sim.meshseries.clear_cache()
+    assert all(sim.meshseries.probe([0, 0, 0])["MaterialIDs"] == 0)
+
+
 def test_indexing():
     ms = examples.load_meshseries_HT_2D_XDMF()
     assert isinstance(ms[1], pv.UnstructuredGrid)

@@ -563,19 +563,28 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return np.arange(len(self.timevalues), dtype=int)
 
     def _xdmf_values(self, variable_name: str) -> np.ndarray:
-        dataitems = self._xdmf_reader.data_items[variable_name]
+        dataitem = self._xdmf_reader.data_items[variable_name]
         # pv filters produces these arrays, which we can use for slicing
         # to also reflect the previous use of self.transform here
         mask_map = {
             "vtkOriginalPointIds": self.mesh(0).point_data,
             "vtkOriginalCellIds": self.mesh(0).cell_data,
         }
+        if len(dataitem.items) == 1:
+            time_indices = slice(None)
+        else:
+            time_indices = self._time_indices[0]
         for mask, data in mask_map.items():
             if variable_name in data and mask in data:
-                result = dataitems[self._time_indices[0], self.mesh(0)[mask]]
+                mesh_indices = self.mesh(0)[mask]
                 break
         else:
-            result = dataitems[self._time_indices[0]]
+            mesh_indices = slice(None)
+        result = dataitem[time_indices, mesh_indices]
+        # workaround buggy xdmf data
+        if len(dataitem.items) == 1:
+            result = result[([0] * len(self))[self._time_indices[0]]]
+
         for index in self._time_indices[1:]:
             result = result[index]
         if self._mesh_func_opt is not None and not any(
@@ -703,6 +712,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         meshio_mesh = meshio.Mesh(
             points, cells, point_data, cell_data, field_data
         )
+        # workaround for buggy xdmf data
+        if timestep > 0:
+            xdmf_data = self._xdmf_reader.data_items
+            xdmf_cell_keys = {
+                k for k, v in xdmf_data.items() if v.center == "Cell"
+            }
+            mesh_cell_keys = set(meshio_mesh.cell_data.keys())
+            if len(xdmf_cell_keys) != len(mesh_cell_keys):
+                cell_data_0 = self._xdmf_reader.read_data(0)[2]
+                for key in xdmf_cell_keys - mesh_cell_keys:
+                    meshio_mesh.cell_data[key] = cell_data_0[key]
+
         # pv.from_meshio does not copy field_data (fix in pyvista?)
         pv_mesh = pv.from_meshio(meshio_mesh)
         pv_mesh.field_data.update(field_data)
