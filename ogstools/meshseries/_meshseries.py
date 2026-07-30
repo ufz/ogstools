@@ -810,8 +810,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         values = np.swapaxes(values, 0, 1)
         geom = self.mesh(0).points
 
-        if values.shape[0] != geom.shape[0]:
-            # assume cell_data
+        is_cell_data = values.shape[0] != geom.shape[0]
+        if is_cell_data:
             geom = self.mesh(0).cell_centers().points
 
         # remove flat dimensions for interpolation
@@ -833,6 +833,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 result = np.swapaxes(
                     LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
                 )
+                if is_cell_data and np.any(np.isnan(result)):
+                    # Probing cell_data with the linear interpolation method
+                    # near the boundary can yield nan values, as the cell
+                    # centers are used as the geometry for interpolation.
+                    # In that case we use nearest interpolation as a remedy.
+                    from scipy.interpolate import NearestNDInterpolator
+
+                    result[np.isnan(result)] = np.swapaxes(
+                        NearestNDInterpolator(geom, values)(pts), 0, 1
+                    )[np.isnan(result)]
             case False, kind:
                 from scipy.interpolate import interp1d
 
