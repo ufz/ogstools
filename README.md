@@ -1,3 +1,7 @@
+<a href="paper/figures/graphical_abstract/graphical_abstract.html">
+  <img src="paper/figures/graphical_abstract.svg" alt="OGSTools graphical abstract: pre-processing, simulation execution, and post-processing workflow (click to open the full HTML version)" width="100%">
+</a>
+
 ![OGSTools](https://ogstools.opengeosys.org/stable/_static/ogstools.png "Supporting complex workflows - from preprocessing to simulation to postprocessing")
 
 is a:

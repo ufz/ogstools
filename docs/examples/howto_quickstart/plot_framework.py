@@ -178,6 +178,9 @@ times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
 ax = df_ts.plot.area(x="time_step", y=times, ylabel="clock time [s]", grid=True)
 ax.get_figure().show()
 
+# Plot convergence behaviour
+fig = sim.log.plot_convergence()
+
 # %% [markdown]
 # The convergence plot shows how the nonlinear solver converged at each
 # time step, helping you identify potential numerical issues.
