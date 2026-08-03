@@ -94,7 +94,8 @@ print(material_file.read_text(encoding="utf-8"))
 # Load the material
 # -----------------
 #
-# The material is loaded with :meth:`Material.from_file`.
+# The material is loaded with :meth:`~ogstools.materiallib.core.material.Material.from_file`.
+
 
 # %%
 material = Material.from_file(material_file)
