@@ -26,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class _MaterialPropertyAccessor:
-    """Private helper for domain-based property navigation on ``Material``.
+    """:meta public:
+
+    Private helper for domain-based property navigation on ``Material``.
 
     For review (to be removed later): Material YAML now groups properties by top-level ``domain`` blocks, but the
     in-memory Python model intentionally remains flat:
