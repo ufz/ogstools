@@ -104,12 +104,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 self.time_unit != u_reg.Quantity(1, time_unit)):  # fmt: skip
             self.scale(spatial_unit, time_unit)
 
+        self._dataitems: dict[str, Any] = {}
         if filepath is None:
             self.filepath = self._data_type = None
             return
         self.filepath = Path(filepath)
         self._data_type = self.filepath.suffix
-        self._dataitems: dict[str, Any] = {}
         match self._data_type:
             case ".pvd":
                 self._pvd_reader = pv.PVDReader(self.filepath)
@@ -467,9 +467,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
 
-    def data(self, variable_name: str) -> DataItems:
+    def data(
+        self, variable: str | Variable | list[str | Variable]
+    ) -> DataItems | PVDDataItems | list[DataItems | PVDDataItems]:
         """
-        Returns an DataItems object, that allows array indexing.
+        Returns a DataItems object, that allows array indexing or a list of DataItems.
         To get "geometry"/"points" or "topology"/"cells" read the first time step and use
         pyvista functionality
         Selection example:
@@ -477,14 +479,40 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         temp = ms.data("temperature")
         time_step1_temps = temp[1,:]
         temps_at_some_points = temp[:,1:3]
-        :param variable_name: Name the variable (e.g."temperature")
-        :returns:   Returns an objects that allows array indexing.
+        :param variable: the variables either as ot.Variable or as string of the variable name (e.g."temperature") or a list of the previous
+        :returns:   Returns an object that allows array indexing or a list of these objects.
         """
+        if isinstance(variable, list):
+            return [self._data(var) for var in variable]
+        return self._data(variable)
+
+    def _data(self, variable: str | Variable) -> DataItems | PVDDataItems:
+        if isinstance(variable, Variable):
+            if variable.mesh_dependent:
+                return PVDDataItems(
+                    np.asarray([variable.transform(mesh) for mesh in self])
+                )
+            if (
+                variable.data_name != variable.output_name
+                and variable.output_name
+                in set().union(self.point_data, self.cell_data)
+            ):
+                variable_name = variable.output_name
+                do_transform = False
+            else:
+                variable_name = variable.data_name
+                do_transform = True
+        else:
+            variable_name = variable
 
         if self._data_type == "xdmf":
             return self._xdmf_reader.data_items[variable_name]
         # for pvd and vtu check if data is already read or construct it
         if self._dataitems and self._dataitems[variable_name]:
+            if isinstance(variable, Variable) and do_transform:
+                result = self._dataitems[variable_name]
+                result.values = variable.transform(result.values)
+                return result
             return self._dataitems[variable_name]
 
         all_meshes = [self.mesh(i) for i in self.timesteps]
@@ -495,6 +523,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             key: PVDDataItems(np.asarray(value))
             for key, value in dataitems.items()
         }
+        if isinstance(variable, Variable) and do_transform:
+            result = self._dataitems[variable_name]
+            result.values = variable.transform(result.values)
+            return result
         return self._dataitems[variable_name]
 
     def _structure_dataitems(
@@ -958,7 +990,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
         pts = reshape_obs_points(points, self.mesh(0))
-        values = self.values(data_name)
+        data = self.data(data_name)
+        if isinstance(data, list):
+            values = []
+            for dataitem in data:
+                if isinstance(dataitem, DataItems):
+                    values.append(dataitem[:])
+                else:
+                    values.append(dataitem.values)
+        elif isinstance(data, DataItems):
+            values = data[:]
+        else:
+            values = data.values
         if isinstance(data_name, list):
             components = [
                 1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
