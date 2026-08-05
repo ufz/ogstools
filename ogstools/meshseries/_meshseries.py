@@ -25,6 +25,17 @@ from ogstools.plot.lineplots import line
 from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 
 from .data_dict import DataDict
+from .xdmf_reader import DataItems
+
+
+class PVDDataItems:
+    def __init__(self, values: np.ndarray) -> None:
+        self.values = values
+
+    def __getitem__(
+        self, index: tuple | int | slice | np.ndarray
+    ) -> np.ndarray:
+        return self.values[index]
 
 
 class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
@@ -98,6 +109,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             return
         self.filepath = Path(filepath)
         self._data_type = self.filepath.suffix
+        self._dataitems: dict[str, Any] = {}
         match self._data_type:
             case ".pvd":
                 self._pvd_reader = pv.PVDReader(self.filepath)
@@ -454,6 +466,55 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             f"reader:           {reader}\n"
             f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
+
+    def data(self, variable_name: str) -> DataItems:
+        """
+        Returns an DataItems object, that allows array indexing.
+        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
+        pyvista functionality
+        Selection example:
+        ms = MeshSeries()
+        temp = ms.data("temperature")
+        time_step1_temps = temp[1,:]
+        temps_at_some_points = temp[:,1:3]
+        :param variable_name: Name the variable (e.g."temperature")
+        :returns:   Returns an objects that allows array indexing.
+        """
+
+        if self._data_type == "xdmf":
+            return self._xdmf_reader.data_items[variable_name]
+        # for pvd and vtu check if data is already read or construct it
+        if self._dataitems and self._dataitems[variable_name]:
+            return self._dataitems[variable_name]
+
+        all_meshes = [self.mesh(i) for i in self.timesteps]
+
+        dataitems = self._structure_dataitems(all_meshes)
+        # Lazy dataitems
+        self._dataitems = {
+            key: PVDDataItems(np.asarray(value))
+            for key, value in dataitems.items()
+        }
+        return self._dataitems[variable_name]
+
+    def _structure_dataitems(
+        self, all_meshes: list[pv.UnstructuredGrid]
+    ) -> dict[str, list]:
+        # Reads all meshes and returns a dict with variables as key
+        # (e.g. "temperature")
+        dataitems: dict[str, list] = {}
+        for mesh in all_meshes:
+            for name in mesh.cell_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.cell_data[name])
+                else:
+                    dataitems[name] = [mesh.cell_data[name]]
+            for name in mesh.point_data:
+                if name in dataitems:
+                    dataitems[name].append(mesh.point_data[name])
+                else:
+                    dataitems[name] = [mesh.point_data[name]]
+        return dataitems
 
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
