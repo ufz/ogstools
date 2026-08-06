@@ -710,7 +710,11 @@ def test_xdmf_quadratic(tmp_path):
 
 @pytest.mark.system
 def test_xdmf_materialIDs(tmp_path):
-    "Test reading of MaterialIDs from xdmf meshseries works as expected."
+    """
+    MaterialIDs is written once and referenced via <xi:include> by every
+    later timestep. Checks the per-timestep and bulk read paths agree, plus
+    xi:include resolution/caching internals, against real ogs output.
+    """
     meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect(n_edge_cells=2, n_layers=2))
     model = ot.Model(examples.prj_mechanics, meshes)
     model.project.replace_text("XDMF", xpath="./time_loop/output/type")

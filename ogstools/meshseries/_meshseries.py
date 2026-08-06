@@ -570,10 +570,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             "vtkOriginalPointIds": self.mesh(0).point_data,
             "vtkOriginalCellIds": self.mesh(0).cell_data,
         }
-        if len(dataitem.items) == 1:
-            time_indices = slice(None)
-        else:
-            time_indices = self._time_indices[0]
+        time_indices = self._time_indices[0]
         for mask, data in mask_map.items():
             if variable_name in data and mask in data:
                 mesh_indices = self.mesh(0)[mask]
