@@ -269,8 +269,31 @@ class DataItems:
                 return self.items[key[0]][key[1:]]
             arrays = [item[key[1:]] for item in all_time_steps]
             return np.stack(arrays)
-        # If all items are stored within same h5 file, take info from 1st time step
-        return self.items[0][key]
+
+        # row i isn't always timestep i for xi:include-resolved data.
+        rest = key[1:]
+        physical_rows = self._row_offsets[key[0]]
+
+        if physical_rows.ndim == 0:
+            return self.items[0][(int(physical_rows), *rest)]
+
+        if physical_rows.size == 0:
+            return self.items[0][(physical_rows, *rest)]
+
+        if np.array_equal(
+            physical_rows,
+            np.arange(physical_rows[0], physical_rows[0] + physical_rows.size),
+        ):
+            # Avoids pairing a fancy row index with a fancy `rest`.
+            row_selector = slice(
+                int(physical_rows[0]), int(physical_rows[-1]) + 1
+            )
+            return self.items[0][(row_selector, *rest)]
+
+        # h5py fancy indices must be unique/increasing; dedupe and re-expand.
+        unique_rows, inverse = np.unique(physical_rows, return_inverse=True)
+        raw = self.items[0][(unique_rows, *rest)]
+        return raw[inverse]
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
