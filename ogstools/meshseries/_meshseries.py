@@ -581,9 +581,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             mesh_indices = slice(None)
         result = dataitem[time_indices, mesh_indices]
-        # workaround buggy xdmf data
-        if len(dataitem.items) == 1:
-            result = result[([0] * len(self))[self._time_indices[0]]]
 
         for index in self._time_indices[1:]:
             result = result[index]
@@ -703,6 +700,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # `pv.from_meshio` requires the cell.data to be a 2D array
         # OGS xdmf point meshes do not satisfy this (maybe bug in xdmfwriter of
         # OGS or bug / differing behavior in meshio)
+
         for cell in cells:
             if cell.data.ndim == 1:
                 cell.data = np.asarray([cell.data])
