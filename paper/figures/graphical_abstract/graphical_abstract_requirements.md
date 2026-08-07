@@ -261,3 +261,26 @@ https://claude.ai/code/artifact/943f8add-e44c-4448-8d7c-08fcbf9776a8
   wording, "Aggregation · Probing · Differencing"; Plot's feature-description line (previously
   "contourf · Variable presets (stress, strain, displacement)") now reads "Spatial / Temporal
   plots · Variables with physical units".
+
+## Fixes applied post-v43, round 5
+
+- **Every internet-sourced icon converted from inline base64 to a real file, referenced by
+  path** (`<img src="assets/...">` instead of a `data:` URI): the THMC tetrahedron icon, the
+  OpenGeoSys wordmark, the Monitor Bokeh screenshot, and the gmsh / Matplotlib / NumPy / pandas /
+  PyVista / Pint notes-row icons. The 5 that had never been saved as separate files before
+  (gmsh, Matplotlib, NumPy, pandas, PyVista) were extracted byte-for-byte from what was already
+  embedded (not re-fetched) so nothing changes visually, and saved as
+  `assets/{gmsh,matplotlib,numpy,pandas,pyvista}_logo.{png,svg}`. Locally-generated plot
+  thumbnails (from real OGSTools simulations, not third-party art) are unaffected and stay
+  base64-embedded. Confirmed `render_graphical_abstract_svg()`'s print-to-PDF step resolves these
+  relative `assets/` paths the same way it always resolved everything else (Chromium loads the
+  page via a `file://` URI either way) - the exported `graphical_abstract.svg` itself is
+  unaffected (PDF export always embeds all rendered raster content regardless of how the source
+  HTML referenced it). Note: gmsh/Matplotlib/NumPy/pandas/PyVista still have no fetch-based
+  generator function and no independently re-verified source URL - they're committed as static
+  files, same treatment as the pre-existing NumPy/OGS logo provenance entries above, not
+  reproducible from scratch by the script.
+- **Monitor's Bokeh screenshot enlarged**: 280px → 400px tall, for legibility of its 4 small
+  subplot labels.
+- **`paper/` branch not yet pushed to GitLab** (not a page bug): the graphical-abstract commits
+  only exist locally; `git push origin paper` is needed before the README/SVG/HTML show up there.
