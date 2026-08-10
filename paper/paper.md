@@ -96,7 +96,7 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 ### Educational Jupyter notebooks
 
-OGS is already being used in academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
+OGS is well suited for academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
 
 ## State of the field
 
@@ -108,8 +108,6 @@ OGSTools follows the simulator-specific companion library pattern, here for Open
 
 An alternative to scripting-based companion libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the DataExplorer [@Rink2012] for OpenGeoSys.
 
-## Software Design
-
 ### Build vs. contribute
 
 OGSTools contains only functionality that is explicitly specific to [OpenGeoSys](https://www.opengeosys.org) — domain-specific data structures, OGS input/output formats, and process-specific defaults. General-purpose functionality is deliberately left to established libraries (PyVista, Pandas, NumPy, Pint), which OGSTools relies on.
@@ -117,6 +115,8 @@ OGSTools contains only functionality that is explicitly specific to [OpenGeoSys]
 Previously, without any centralisation to contribute OGS-specific pre- and postprocessing code, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation, quality and maintenance efforts.
 Further, OGSTools enables the transfer of years of experience in maintaining the OGS core [@Bilke2019] to the pre- and post-processing code.
 For the centralised approach, preceding work on `msh2vtu` [@msh2vtu], `ogs6py and VTUInterface` [@Buchwald2021] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
+
+## Software Design
 
 ### Design choices
 
@@ -150,17 +150,19 @@ meshes = ot.Meshes.from_gmsh(ot.gmsh_tools.rect((8,4),8,2))
 meshes["left"].point_data["pressure"] = 2.9e7
 meshes["right"].point_data["pressure"] = 3.1e7
 model = ot.Model(project=project, meshes=meshes)
-# Visualize setup with boundary conditions (Figure 1)
+# Visualize setup with boundary conditions (Figure 2)
 model.plot_constraints()
 
 # 2. Run: Execute Simulation
 sim = model.run()
 
 # 3. Post-processing: Analyse results
-# Plot final pressure distribution (Figure 2)
-ot.plot.contourf(sim.meshseries[-1], "pressure")
+
 # Plot convergence behaviour (Figure 3)
 sim.log.plot_convergence()
+
+# Plot final pressure distribution (Figure 4)
+ot.plot.contourf(sim.meshseries[-1], "pressure")
 
 # 4. Store: Save Simulation
 sim.save(id = "mysim", archive=True)
@@ -203,12 +205,13 @@ In the writing of this manuscript, the authors used Anthropic's Claude and OpenA
 ## Acknowledgements
 
 This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
-The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under (grant \[Grant Number\]) by `Deutsche Forschungsgemeinschaft` (DFG)
+The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under grant 528785032[^6] by `Deutsche Forschungsgemeinschaft` (DFG)
 
 [^1]: https://ogstools.opengeosys.org
-[^2]: https://www.opengeosys.org/6.5.7/docs/processes/liquid-flow/liquidflow/
-[^3]: https://www.opengeosys.org/6.5.7/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
-[^4]: https://ogs.ogs.xyz/tools/ogstools/auto_examples/howto_quickstart/plot_framework.html
-[^5]: https://www.opengeosys.org/6.5.7/docs/tools/getting-started/overview/
+[^2]: https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/
+[^3]: https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
+[^4]: https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html
+[^5]: https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/
+[^6]: https://gepris.dfg.de/gepris/projekt/528785032
 
 ## References
