@@ -22,6 +22,8 @@ OGS 6.5.8 -
 - allow values for group based parameters in `Project.parameters` (allows to set vectorial or anisotropic group values. Previously, only allowed scalars)
 - fixed `Project.process_variables.add_bc` and `Project.process_variables.add_st` to allow all different kinds of types. Previously, some
   checks caused unintentional errors.
+- fixed `Meshseries.probe` with linear interpolation and cell_data yielding nan at the mesh boundary as cell centers are used for interpolation. Now used nearest neighbor as a fallback.
+- fixed reading xdmf data where some data field are only present in the first timestep. Now they will also be read for later timesteps.
 
 ## Features
 

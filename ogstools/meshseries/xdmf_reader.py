@@ -18,6 +18,7 @@ to be read like::
 
 """
 
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
 from xml.etree.ElementTree import Element
@@ -228,6 +229,7 @@ class DataItems:
     def __init__(self, items: list[DataItem], center: str):
         self.items = items
         self.center = center
+        self._row_offsets: np.ndarray = np.array([], dtype=np.int64)
 
         # Actually, `NumberType` is XDMF2 and `DataType` XDMF3, but many files out there
         # use both keys interchangeably.
@@ -249,6 +251,14 @@ class DataItems:
             return
 
         self.fast_access = all_in_h5 and all_in_same_file
+        # Physical row per item; xi:include-resolved items share one row.
+        self._row_offsets = np.asarray(
+            [
+                item.selection[0].start if item.selection else 0  # type: ignore[attr-defined]
+                for item in self.items
+            ],
+            dtype=np.int64,
+        )
 
     def __getitem__(self, args: tuple | slice | int) -> np.ndarray:
         key = args if isinstance(args, tuple) else (args,)
@@ -259,8 +269,31 @@ class DataItems:
                 return self.items[key[0]][key[1:]]
             arrays = [item[key[1:]] for item in all_time_steps]
             return np.stack(arrays)
-        # If all items are stored within same h5 file, take info from 1st time step
-        return self.items[0][key]
+
+        # row i isn't always timestep i for xi:include-resolved data.
+        rest = key[1:]
+        physical_rows = self._row_offsets[key[0]]
+
+        if physical_rows.ndim == 0:
+            return self.items[0][(int(physical_rows), *rest)]
+
+        if physical_rows.size == 0:
+            return self.items[0][(physical_rows, *rest)]
+
+        if np.array_equal(
+            physical_rows,
+            np.arange(physical_rows[0], physical_rows[0] + physical_rows.size),
+        ):
+            # Avoids pairing a fancy row index with a fancy `rest`.
+            row_selector = slice(
+                int(physical_rows[0]), int(physical_rows[-1]) + 1
+            )
+            return self.items[0][(row_selector, *rest)]
+
+        # h5py fancy indices must be unique/increasing; dedupe and re-expand.
+        unique_rows, inverse = np.unique(physical_rows, return_inverse=True)
+        raw = self.items[0][(unique_rows, *rest)]
+        return raw[inverse]
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
@@ -274,32 +307,47 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
         self.data_items: dict[str, DataItems] = {}
         data_attribute: dict[str, str] = {}
 
+        # Cache for xi:include-resolved reads, keyed by id(<DataItem>).
+        self._xinclude_cache: dict[int, np.ndarray] = {}
+
         self.t = None
         for grid in self.collection:
             for item in grid:
                 if item.tag == "Time":
                     self.t = float(item.attrib["Value"])
                 elif item.tag == "Attribute":
-                    name = item.get("Name")
-                    if len(list(item)) != 1:
-                        raise ReadError()
-                    data_item = next(iter(item))
-                    if item.get("Center") not in [
-                        "Node",
-                        "Cell",
-                        "Other",
-                    ]:
-                        raise ReadError()
-                    center = item.get("Center")
-                    data = self.select_item(data_item)
-                    if name in data_items:
-                        data_items[name].append(data)
-                    else:
-                        data_items[name] = [data]
-                        data_attribute[name] = center
+                    self._collect_attribute(item, data_items, data_attribute)
+                elif "XInclude" in item.tag:
+                    resolved = self._resolve_xinclude(item)
+                    if resolved.tag == "Attribute":
+                        self._collect_attribute(
+                            resolved, data_items, data_attribute
+                        )
 
         for key, value in data_items.items():
             self.data_items[key] = DataItems(value, data_attribute[key])
+
+    def _collect_attribute(
+        self,
+        item: Element,
+        data_items: dict[str, list[DataItem]],
+        data_attribute: dict[str, str],
+    ) -> None:
+        name = item.get("Name")
+        if name is None:
+            raise ReadError()
+        if len(list(item)) != 1:
+            raise ReadError()
+        data_item = next(iter(item))
+        center = item.get("Center")
+        if center not in ["Node", "Cell", "Other"]:
+            raise ReadError()
+        data = self.select_item(data_item)
+        if name in data_items:
+            data_items[name].append(data)
+        else:
+            data_items[name] = [data]
+            data_attribute[name] = center
 
     def has_fast_access(self, key: str | None = None) -> bool:
         if len(self.data_items) == 0:
@@ -326,10 +374,82 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             return self.data_items[key].items[0].rawdata_path
         return self.filename
 
+    def _assign_attribute_data(
+        self,
+        c: Element,
+        data: np.ndarray,
+        point_data: dict,
+        cell_data_raw: dict,
+        other_data: dict,
+    ) -> None:
+        name = c.get("Name")
+        if c.get("Center") == "Node":
+            point_data[name] = data
+        elif c.get("Center") == "Cell":
+            cell_data_raw[name] = data
+        elif c.get("Center") == "Other":
+            other_data[name] = data
+        else:
+            raise ReadError()
+
+    def _process_attribute(
+        self,
+        c: Element,
+        point_data: dict,
+        cell_data_raw: dict,
+        other_data: dict,
+    ) -> None:
+        if len(list(c)) != 1:
+            raise ReadError()
+        data_item = next(iter(c))
+        data = self._read_data_item(data_item)
+        self._assign_attribute_data(
+            c, data, point_data, cell_data_raw, other_data
+        )
+
+    def _process_included_attribute(
+        self,
+        c: Element,
+        point_data: dict,
+        cell_data_raw: dict,
+        other_data: dict,
+    ) -> None:
+        # Many timesteps often resolve to the same source (constant fields).
+        if len(list(c)) != 1:
+            raise ReadError()
+        data_item = next(iter(c))
+        cached = self._xinclude_cache.get(id(data_item))
+        if cached is None:
+            cached = self._read_data_item(data_item)
+            self._xinclude_cache[id(data_item)] = cached
+        self._assign_attribute_data(
+            c, cached.copy(), point_data, cell_data_raw, other_data
+        )
+
+    def _resolve_xinclude(self, c: Element) -> Element:
+        # xpointer e.g. "element(/1/1/2/1/3)": 1-based path; first 3
+        # segments == self.collection, drop them, rest is 0-based into it.
+        xpointer = c.get("xpointer")
+        if xpointer is None:
+            raise ReadError()
+        match = re.fullmatch(r"element\((/\d+)+\)", xpointer)
+        if match is None:
+            raise ReadError()
+        path = [
+            int(segment)
+            for segment in xpointer[len("element(") : -1].split("/")[1:]
+        ]
+        indices = [segment - 1 for segment in path[3:]]
+
+        target: Element = self.collection
+        for index in indices:
+            target = target[index]
+        return target
+
     def read_data(self, k: int) -> tuple[float, dict, dict, dict]:
-        point_data = {}
+        point_data: dict = {}
         cell_data_raw: dict = {}
-        other_data = {}
+        other_data: dict = {}
         t = None
         cell_data = cell_data_from_raw(self.cells, cell_data_raw)
 
@@ -337,24 +457,18 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             if c.tag == "Time":
                 t = float(c.attrib["Value"])
             elif c.tag == "Attribute":
-                name = c.get("Name")
-
-                if len(list(c)) != 1:
-                    raise ReadError()
-                data_item = next(iter(c))
-                data = self._read_data_item(data_item)
-
-                if c.get("Center") == "Node":
-                    point_data[name] = data
-                elif c.get("Center") == "Cell":
-                    cell_data_raw[name] = data
-                elif c.get("Center") == "Other":
-                    other_data[name] = data
-                else:
-                    raise ReadError()
-
+                self._process_attribute(
+                    c, point_data, cell_data_raw, other_data
+                )
+            elif c.tag == "Topology" or c.tag == "Geometry":
+                continue
+            elif "XInclude" in c.tag:
+                resolved = self._resolve_xinclude(c)
+                if resolved.tag == "Attribute":
+                    self._process_included_attribute(
+                        resolved, point_data, cell_data_raw, other_data
+                    )
             else:
-                # skip the xi:included mesh
                 continue
 
         if self.cells is None:
