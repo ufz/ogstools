@@ -591,11 +591,11 @@ class Meshes(MutableMapping, StorageBase):
         self.modify_names(prefix="physical_group_")
 
     def rename_output_names(self, rename_map: dict[str, str]) -> None:
-        """ "
+        """
         Rename the output_names of the meshes according to specified mapping.
         Not all meshes have to be included but no non-existent meshes may be included
-        :param rename_map:  A dictionary mapping mesh names -> output names.
-                            e.g. {'left':'Left Side'}
+
+        :param rename_map:  A dictionary mapping mesh names -> output names (e.g. {'left':'Left Side'}).
                             Note that dictionary keys have to be the actual mesh names not current output names
         """
         invalid = [name for name in rename_map if name not in self._meshes]
