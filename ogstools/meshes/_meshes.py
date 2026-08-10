@@ -49,6 +49,7 @@ class Meshes(MutableMapping, StorageBase):
         self._meshes = meshes
         self.has_identified_subdomains: bool = False
         self._num_partitions: list[int] = []
+        self.output_names = {name: name for name in meshes}
 
     @property
     def num_partitions(self) -> list[int]:
@@ -149,6 +150,7 @@ class Meshes(MutableMapping, StorageBase):
         new = self.__class__(meshes=meshes_copy)
         new.has_identified_subdomains = self.has_identified_subdomains
         new.num_partitions = copy.deepcopy(self.num_partitions, memo)
+        new.output_names = self.output_names
 
         memo[id(self)] = new
         return new
@@ -162,9 +164,12 @@ class Meshes(MutableMapping, StorageBase):
     def __setitem__(self, key: str, mesh: pv.UnstructuredGrid) -> None:
         self.has_identified_subdomains = False
         self._meshes[key] = mesh
+        if key not in self.output_names:
+            self.output_names[key] = key
 
     def __delitem__(self, key: str) -> None:
         del self._meshes[key]
+        del self.output_names[key]
 
     def __len__(self) -> int:
         return len(self._meshes)
@@ -585,6 +590,21 @@ class Meshes(MutableMapping, StorageBase):
         """
         self.modify_names(prefix="physical_group_")
 
+    def rename_output_names(self, rename_map: dict[str, str]) -> None:
+        """ "
+        Rename the output_names of the meshes according to specified mapping.
+        Not all meshes have to be included but no non-existent meshes may be included
+        :param rename_map:  A dictionary mapping mesh names -> output names.
+                            e.g. {'left':'Left Side'}
+                            Note that dictionary keys have to be the actual mesh names not current output names
+        """
+        invalid = [name for name in rename_map if name not in self._meshes]
+        if invalid:
+            msg = f"Invalid mesh names: {invalid}. Valid names: {list(self._meshes.keys())}"
+            raise KeyError(msg)
+        for mesh, outputname in rename_map.items():
+            self.output_names[mesh] = outputname
+
     @staticmethod
     def create_metis(
         domain_file: Path | str, output_path: Path | str, dry_run: bool = False
@@ -818,7 +838,14 @@ class Meshes(MutableMapping, StorageBase):
 
         for name, mesh in self.items():
             if name == self.domain_name:
-                ax.plot([], [], "s", label=name, c="lightgrey", ms=8 * lw)
+                ax.plot(
+                    [],
+                    [],
+                    "s",
+                    label=self.output_names[name],
+                    c="lightgrey",
+                    ms=8 * lw,
+                )
             elif mesh.GetMaxSpatialDimension() == 2:
                 color = next(colors_2D)
                 subvar = Scalar(
@@ -834,21 +861,35 @@ class Meshes(MutableMapping, StorageBase):
                     mesh, subvar, show_edges=False, cbar=False, fig=fig, ax=ax,
                     alpha=alpha
                 )  # fmt: skip
-                ax.plot([], [], "s", label=name, c=color, ms=8 * lw)
+                ax.plot(
+                    [],
+                    [],
+                    "s",
+                    label=self.output_names[name],
+                    c=color,
+                    ms=8 * lw,
+                )
             elif mesh.GetMaxSpatialDimension() == 1:
                 color = next(colors_1D)
                 plot.line(
-                    mesh, ax=ax, label=name, lw=lw, color=color,
+                    mesh, ax=ax, label=self.output_names[name], lw=lw, color=color,
                     fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
                 if name == self.domain_name:
-                    ax.plot([], [], "s", label=name, c="lightgrey", ms=16 * lw)
+                    ax.plot(
+                        [],
+                        [],
+                        "s",
+                        label=self.output_names[name],
+                        c="lightgrey",
+                        ms=16 * lw,
+                    )
                 else:
                     axes = plot.utils.get_projection(self.domain)[:2]
                     color = next(colors_0D)
                     ax.plot(
-                        *mesh.points[:, axes].T, "o", label=name,
+                        *mesh.points[:, axes].T, "o", label=self.output_names[name],
                         clip_on=clip_on, color=color, ms=8 * lw
                     )  # fmt: skip
 
