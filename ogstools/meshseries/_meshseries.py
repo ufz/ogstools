@@ -505,14 +505,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             variable_name = variable
 
-        if self._data_type == "xdmf":
+        if self._data_type == ".xdmf":
             return self._xdmf_reader.data_items[variable_name]
         # for pvd and vtu check if data is already read or construct it
         if self._dataitems and self._dataitems[variable_name]:
             if isinstance(variable, Variable) and do_transform:
-                result = self._dataitems[variable_name]
-                result.values = variable.transform(result.values)
-                return result
+                return PVDDataItems(
+                    variable.transform(
+                        self._dataitems[variable_name].values.copy()
+                    )
+                )
             return self._dataitems[variable_name]
 
         all_meshes = [self.mesh(i) for i in self.timesteps]
@@ -524,9 +526,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             for key, value in dataitems.items()
         }
         if isinstance(variable, Variable) and do_transform:
-            result = self._dataitems[variable_name]
-            result.values = variable.transform(result.values)
-            return result
+            return PVDDataItems(
+                variable.transform(self._dataitems[variable_name].values.copy())
+            )
         return self._dataitems[variable_name]
 
     def _structure_dataitems(
@@ -994,14 +996,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         if isinstance(data, list):
             values = []
             for dataitem in data:
-                if isinstance(dataitem, DataItems):
-                    values.append(dataitem[:])
-                else:
-                    values.append(dataitem.values)
-        elif isinstance(data, DataItems):
-            values = data[:]
+                values.append(dataitem[:])
         else:
-            values = data.values
+            values = data[:]
         if isinstance(data_name, list):
             components = [
                 1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
