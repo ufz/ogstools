@@ -217,7 +217,7 @@ class TestPlotting:
         results = examples.load_meshseries_CT_2D_XDMF()
         points = np.linspace([0, 0, 70], [150, 0, 70], num=100)
         ms_pts = results.probe(points)
-        return ms_pts.plot_time_slice(*args, variable="Saturation", **kwargs)
+        return ms_pts.plot_time_slice(*args, variable="saturation", **kwargs)
 
     def test_time_slice_failing_args(self):
         """Test time slice for expected errors when given wrong arguments."""

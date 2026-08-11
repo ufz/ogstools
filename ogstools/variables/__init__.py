@@ -14,7 +14,7 @@ from .custom_colormaps import integrity_cmap, none_cmap, temperature_cmap
 from .matrix import Matrix
 from .unit_registry import u_reg
 from .variable import Scalar, Variable
-from .vector import BHE_Vector, Vector
+from .vector import Components_BHE, Vector
 
 __all__ = ["Matrix", "Scalar", "Variable", "Vector", "u_reg"]
 
@@ -92,7 +92,7 @@ displacement = Vector(
 strain = Matrix(
     data_name="epsilon",
     data_unit="",
-    output_unit="percent",
+    output_unit="%",
     output_name="strain",
     symbol=r"\varepsilon",
     color=COLOR_MECH,
@@ -173,11 +173,11 @@ saturation = Scalar(
     data_name="Si",
     data_unit="",
     output_unit="%",
-    output_name="Saturation",
+    output_name="saturation",
     symbol="s",
 )
 
-temperature_BHE = BHE_Vector(
+temperature_BHE = Components_BHE(
     data_name="temperature_BHE",
     data_unit="K",
     output_unit="°C",

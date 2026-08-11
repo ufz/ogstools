@@ -362,7 +362,7 @@ class Variable:
         return self.difference.replace(
             data_name=f"{self.data_name}_rel_error",
             data_unit="",
-            output_unit="percent",
+            output_unit="%",
             output_name="relative_error",
             symbol="\\epsilon_\\mathrm{rel}",
             cmap="PuOr",

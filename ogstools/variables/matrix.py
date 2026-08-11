@@ -256,7 +256,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name="qp_ratio",
-            output_unit="percent",
+            output_unit="%",
             symbol="qp",
             func=lambda x: tensor_math.qp_ratio(self.func(x)),
             process_with_units=True,

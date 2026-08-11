@@ -60,6 +60,9 @@ ot.variables.strain["xx"].transform(
 # %%
 ot.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 
+# %%
+ot.variables.temperature_BHE["in"].transform([285.15, 285.65], strip_unit=False)
+
 # %% [markdown]
 # We suggest specifying the variables and their transformations once.
 # These can be reused in different kind of post processing. When plotting

@@ -209,7 +209,7 @@ class TestPhysicalVariable:
     def test_BHE_temperature(self):
         with pytest.raises(TypeError):
             _ = ov.temperature_BHE.magnitude.transform(1)
-        for _, components in ov.BHE_Vector.BHE_COMPONENTS.items():
+        for _, components in ov.temperature_BHE.COMPONENTS.items():
             values = 273.15 + np.arange(len(components))
             for index, component in enumerate(components):
                 assert index == ov.temperature_BHE[component].transform(values)
@@ -229,9 +229,7 @@ class TestPhysicalVariable:
             assert np.all(var[i, "out"].transform(mesh) == -i)
             assert np.all(var[i, "grout"].transform(mesh) == 0.5 * i)
 
-    @pytest.mark.parametrize(
-        "bhe_type", list(ov.temperature_BHE.BHE_COMPONENTS)
-    )
+    @pytest.mark.parametrize("bhe_type", list(ov.temperature_BHE.COMPONENTS))
     @pytest.mark.parametrize(
         "index_gen",
         [
@@ -243,7 +241,7 @@ class TestPhysicalVariable:
     )
     def test_BHE_temperature_component_indexing(self, bhe_type, index_gen):
         ms = bhe_mesh_series[bhe_type]
-        index_combinations = index_gen(ov.BHE_Vector.BHE_COMPONENTS[bhe_type])
+        index_combinations = index_gen(ov.temperature_BHE.COMPONENTS[bhe_type])
         temp = [
             ms.probe_values((0, 0, 0), ov.temperature_BHE[1, idx])[0]
             for idx in index_combinations
