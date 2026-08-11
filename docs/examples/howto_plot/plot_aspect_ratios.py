@@ -20,7 +20,12 @@ print(f"{ot.plot.setup.min_ax_aspect=}")
 print(f"{ot.plot.setup.max_ax_aspect=}")
 
 
-# sphinx_gallery_start_ignore
+# %% [markdown]
+# For brevity, we define a small helper to build a custom mesh with the
+# given dimensions.
+
+
+# %%
 # TODO: move to examples
 def custom_mesh(dx: float, dy: float):
     number_of_points = 50
@@ -35,8 +40,6 @@ def custom_mesh(dx: float, dy: float):
     )
     return mesh
 
-
-# sphinx_gallery_end_ignore
 
 # %% [markdown]
 # The following fits inside the defined limits and gets displayed with true

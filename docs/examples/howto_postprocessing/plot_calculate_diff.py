@@ -19,13 +19,11 @@ import matplotlib.pyplot as plt
 import ogstools as ot
 from ogstools import examples
 
-# sphinx_gallery_start_ignore
-
-
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
 
 
+# %%
 def custom_mesh(lengths: int, element_order: int, quads: bool):
     "Creates a custom mesh and runs a Mechanics simulation on it."
 
@@ -45,8 +43,6 @@ def custom_mesh(lengths: int, element_order: int, quads: bool):
     sim = model.run()
     return sim.meshseries.mesh(-1)
 
-
-# sphinx_gallery_end_ignore
 
 # %% [markdown]
 # Difference between two meshes
