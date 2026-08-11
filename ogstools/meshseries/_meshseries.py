@@ -467,6 +467,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
 
+    @overload
+    def data(self, variable: str | Variable) -> DataItems | PVDDataItems: ...
+
+    @overload
+    def data(
+        self, variable: list[str | Variable]
+    ) -> list[DataItems | PVDDataItems]: ...
+
     def data(
         self, variable: str | Variable | list[str | Variable]
     ) -> DataItems | PVDDataItems | list[DataItems | PVDDataItems]:
@@ -498,23 +506,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 in set().union(self.point_data, self.cell_data)
             ):
                 variable_name = variable.output_name
-                do_transform = False
             else:
                 variable_name = variable.data_name
-                do_transform = True
         else:
             variable_name = variable
 
-        if self._data_type == ".xdmf":
+        if (
+            self._data_type == ".xdmf"
+            and variable_name in self._xdmf_reader.data_items
+        ):
             return self._xdmf_reader.data_items[variable_name]
         # for pvd and vtu check if data is already read or construct it
         if self._dataitems and self._dataitems[variable_name]:
-            if isinstance(variable, Variable) and do_transform:
-                return PVDDataItems(
-                    variable.transform(
-                        self._dataitems[variable_name].values.copy()
-                    )
-                )
             return self._dataitems[variable_name]
 
         all_meshes = [self.mesh(i) for i in self.timesteps]
@@ -525,10 +528,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             key: PVDDataItems(np.asarray(value))
             for key, value in dataitems.items()
         }
-        if isinstance(variable, Variable) and do_transform:
-            return PVDDataItems(
-                variable.transform(self._dataitems[variable_name].values.copy())
-            )
         return self._dataitems[variable_name]
 
     def _structure_dataitems(
@@ -958,11 +957,25 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return original_list
 
     def extractfromXDMF(self, data: DataItems) -> np.ndarray:
-        meshtmp = MeshSeries(self._xdmf_reader.filename)[0]
-        ids = []
-        for point in self[0].points:
-            ids.append(meshtmp.find_closest_point(point))
-        return data[:, ids]
+        mstmp = MeshSeries(self._xdmf_reader.filename).scale(
+            spatial=str(self.spatial_unit.units), time=str(self.time_unit.units)
+        )
+        ptids = []
+        timeids = []
+        if self[0].n_points != mstmp[0].n_points:
+            for point in self[0].points:
+                ptids.append(mstmp[0].find_closest_point(point))
+        if len(self.timevalues) != len(mstmp.timevalues):
+            for timevalue in self.timevalues:
+                timeids.append(mstmp.closest_timestep(timevalue))
+        if timeids:
+            result = data[timeids, :]
+            if ptids:
+                return result[:, ptids]
+            return result
+        if ptids:
+            return data[:, ptids]
+        return data[:]
 
     def probe_values(
         self,
@@ -1000,20 +1013,33 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             raise TypeError(msg)
         pts = reshape_obs_points(points, self.mesh(0))
         data = self.data(data_name)
-        print("test")
-        print(self._mesh_func_opt)
-        if isinstance(data, list):
+        if isinstance(data, list) and isinstance(data_name, list):
             values = []
-            for dataitem in data:
+            for dataname, dataitem in zip(data_name, data, strict=True):
                 if isinstance(dataitem, DataItems):
-                    values.append(self.extractfromXDMF(dataitem))
+                    value = self.extractfromXDMF(dataitem)
                 else:
-                    values.append(dataitem[:])
+                    value = dataitem[:]
+                if isinstance(dataname, Variable) and not (
+                    dataname.mesh_dependent
+                    and dataname.data_name != dataname.output_name
+                    and dataname.output_name
+                    in set().union(self.point_data, self.cell_data)
+                ):
+                    value = dataname.transform(value)
+                values.append(value)
         else:
             if isinstance(data, DataItems):
                 values = self.extractfromXDMF(data)
             else:
                 values = data[:]
+            if isinstance(data_name, Variable) and not (
+                data_name.mesh_dependent
+                and data_name.data_name != data_name.output_name
+                and data_name.output_name
+                in set().union(self.point_data, self.cell_data)
+            ):
+                values = data_name.transform(values)
         if isinstance(data_name, list):
             components = [
                 1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
