@@ -44,17 +44,11 @@ See :py:class:`ogstools.core.execution.Execution` for the full list of options.
 
 import ogstools as ot
 
-results_dir = ot.definitions.temp_dir(prefix="simulate", dir="examples")
-prj_path_in = ot.definitions.EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
-prj_path_out = results_dir / "simple_mechanics_modified.prj"
-prj = ot.Project(
-    input_file=prj_path_in, output_file=prj_path_out, output_dir=results_dir
-)
-
-model = ot.Model(prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
+model = ot.Model(ot.definitions.EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
 sim = model.run()
 # Optionally save the simulation data
 sim.save()
+assert sim.status == ot.Simulation.Status.done
 print(sim)
 
 
@@ -68,8 +62,7 @@ print(sim)
 # The subsequent code would work but for clarity we recommend saving 2 different states of the prj object into 2 different files.
 
 # Either tell that you are going to change prj object (prj.copy) OR do prj.save() after you have changed but before you run the simulation.
-prj2 = prj.copy()
-
+prj2 = model.project.copy()
 
 # %%
 prj2.replace_parameter_value(name="E", value=1e9)
@@ -87,8 +80,10 @@ prj2.replace_phase_property_value(
 # before. You have to prj.save(new_name) here, or beforehand by prj2.copy.
 
 model2 = ot.Model(prj2, meshes=model.meshes)
-sim = model2.run()
-print(sim)
+sim2 = model2.run()
+print(sim2)
+assert sim2.status == ot.Simulation.Status.done
+assert sim2.meshseries != sim.meshseries
 
 # %%
 # Alternatively, for more control
