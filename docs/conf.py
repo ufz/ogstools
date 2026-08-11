@@ -298,6 +298,8 @@ nitpick_ignore_regex = [
     ("py:class", "numpy.array"),
     # meshio has no Sphinx docs site with objects.inv.
     ("py:class", r"meshio\..*"),
+    # numpy's private generic-alias plumbing has no public docs/inventory entry.
+    ("py:class", "numpy._typing._array_like.GenericAlias"),
     ("py:class", "bokeh.io.notebook.CommsHandle"),
     ("py:class", "bokeh.plotting._figure.figure"),
     # sphinx cannot reference this class
