@@ -30,12 +30,9 @@ section = mesh.clip("y", origin=(0, 20, 0))
 #    )
 #
 
-# only plotting a part of the example, as using opacities is expensive
-# performance-wise and the example is big.
 # sphinx_gallery_start_ignore
-ot.plot.contourf(
-    section, data, show_edges=False, opacities={0: 0.2}
-).screenshot(return_img=False)
+plotter = ot.plot.contourf(section, data, show_edges=False, opacities={0: 0.2})
+plotter.show()
 # sphinx_gallery_end_ignore
 
 
