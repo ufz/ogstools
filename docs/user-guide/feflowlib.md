@@ -78,7 +78,7 @@ classDef TemplateStyle fill:#009c21, color:#ffffff
 **OR**:
 
 - FEFLOW
-- ogstools and a FEFLOW installation (`pip install ogstools[feflow]`)
+- ogstools and a FEFLOW installation (`pip install "ogstools[feflow]"`)
 
 ## Installation
 
@@ -121,7 +121,7 @@ The installation of the FEFLOW converter with `ogstools` is optional.
 The option can be selected with the following `pip`-command.
 
 ```
-pip install ogstools[feflow]
+pip install "ogstools[feflow]"
 ```
 
 ## Command line usage

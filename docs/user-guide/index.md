@@ -18,7 +18,7 @@ it:
 :sync: unix
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
@@ -50,7 +50,27 @@ The latest release of ogstools can be installed from [PyPI](https://pypi.org/pro
 `pip`:
 
 ```bash
-pip install ogstools[all]
+pip install "ogstools[all]"
+```
+
+Setting up a development environment instead? See the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html).
+
+You can verify the installation with:
+
+```python
+import ogstools as ot
+
+ot.status(verbose=True)
+```
+
+If the installation succeeded, this prints something similar to the following and returns `True`:
+
+```
+OGS_BIN_PATH:  None .
+
+OGS wheel:  ModuleSpec(name='ogs', loader=<_frozen_importlib_external.SourceFileLoader object at 0x...>, origin='/path/to/.venv/lib/python3.X/site-packages/ogs/__init__.py', submodule_search_locations=['/path/to/.venv/lib/python3.X/site-packages/ogs']) .
+
+OGS in PATH (and not in wheel):  set() .
 ```
 
 :::{admonition} Install development version
@@ -94,11 +114,7 @@ export PATH=path_to_your_custom_ogs/bin:$PATH
 
 3. Test
 
-```python
-import ogstools as ot
-
-ot.status(verbose=True)
-```
+Run the same check as above (see [Installation](#installation)).
 
 ### First steps
 
