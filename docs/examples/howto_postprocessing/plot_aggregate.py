@@ -41,10 +41,15 @@ saturation = ot.variables.saturation
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
 # equal to the aggregation functions name. The plot function will find the
 # correct data anyway if given the original variable
+#
+# Due to numerical oscillations, this dataset contains a few cells with
+# slightly unphysical saturation (below 0% or above 100%). We clip the
+# colorbar at ``vmin=0, vmax=100`` to avoid these values dominating the
+# plotted range.
 
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.max)
-fig = ot.plot.contourf(mesh, saturation)
+fig = ot.plot.contourf(mesh, saturation, vmin=0, vmax=100)
 plt.show()
 
 # %% [markdown]
@@ -55,7 +60,7 @@ plt.show()
 # %%
 mesh = mesh_series.time_of_max(saturation)
 fig = ot.plot.contourf(
-    mesh, ot.variables.Scalar("max_Saturation_time", "a", "a")
+    mesh, ot.variables.Scalar("max_saturation_time", "a", "a")
 )
 plt.show()
 
