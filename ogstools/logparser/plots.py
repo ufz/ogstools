@@ -7,6 +7,7 @@ from typing import Any, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
 from ogstools.plot import heatmap
 from ogstools.variables import Scalar
@@ -27,6 +28,7 @@ def _format_fig(
 ) -> plt.Figure:
     ax.set_xticks(x_ticks, minor=True)
     ax.set_yticks(y_ticks, minor=True)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.set_xlabel(x_label.replace("_", " "))
     ax.set_ylabel("iteration")
     fig.tight_layout()
