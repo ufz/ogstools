@@ -18,6 +18,7 @@ other and can be utilized separately as needed.
 # %%
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -51,7 +52,8 @@ df_ts
 df_ts.groupby("time_step").max()
 
 # %%
-df_ts[["output_time", "assembly_time"]].boxplot()
+ax = df_ts[["output_time", "assembly_time"]].boxplot()
+plt.show()
 
 # %% [markdown]
 # Reduce computation time to process logs

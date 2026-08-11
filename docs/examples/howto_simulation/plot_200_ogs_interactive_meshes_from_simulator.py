@@ -23,6 +23,7 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 # %%
 from time import sleep  # For simulation pause / interrupt
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -120,6 +121,7 @@ while (
 # Let us just plot the pressure field.
 
 fig = ot.plot.contourf(domain_mesh, "pressure")
+plt.show()
 
 # %%
 # Continue the ("paused") simulation
@@ -141,6 +143,7 @@ ms = sim.meshseries
 points = np.linspace([0, 1, 0], [10, 1, 0], 100)
 ms_probe = ms.probe(points, "pressure")
 fig = ms_probe.plot_time_slice("time", "x", variable="pressure", num_levels=20)
+plt.show()
 
 
 # %%

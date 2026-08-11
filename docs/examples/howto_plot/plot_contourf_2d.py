@@ -11,6 +11,8 @@ available as keyword arguments in the function call. Please see
 """
 
 # %%
+import matplotlib.pyplot as plt
+
 import ogstools as ot
 from ogstools import examples
 
@@ -34,6 +36,7 @@ mesh = ms.mesh(1)
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.material_id)
+plt.show()
 
 # %% [markdown]
 # Plotting Point Data
@@ -47,6 +50,7 @@ fig = ot.plot.contourf(mesh, ot.variables.material_id)
 fig = ot.plot.contourf(
     mesh, ot.variables.temperature, xlim=[2, 5], ylim=[-1.1, -0.7]
 )
+plt.show()
 
 # %% [markdown]
 # We can also plot components of vector variables:
@@ -55,9 +59,11 @@ fig = ot.plot.contourf(
 fig = ot.plot.contourf(
     mesh, ot.variables.displacement[0], show_min=True, show_max=True
 )
+plt.show()
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.displacement[1], show_max=True)
+plt.show()
 
 # %% [markdown]
 # To have a continuous colormap instead of discrete colors per level pass a
@@ -68,6 +74,7 @@ fig = ot.plot.contourf(mesh, ot.variables.displacement[1], show_max=True)
 
 # %%
 fig = ot.plot.contourf(mesh, "displacement_y", continuous_cmap=True)
+plt.show()
 
 # %% [markdown]
 # Plotting with deactivated subdomains
@@ -77,9 +84,11 @@ fig = ot.plot.contourf(mesh, "displacement_y", continuous_cmap=True)
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.pressure.get_mask(), fontsize=40)
+plt.show()
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.pressure)
+plt.show()
 
 # %% [markdown]
 # Plotting vector data
@@ -89,9 +98,11 @@ fig = ot.plot.contourf(mesh, ot.variables.pressure)
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.velocity, show_region_bounds=False)
+plt.show()
 
 # %% [markdown]
 # Let's plot it again, this time log-scaled.
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.velocity, log_scaled=True, vmin=-8)
+plt.show()

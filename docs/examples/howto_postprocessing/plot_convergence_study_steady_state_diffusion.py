@@ -31,6 +31,7 @@ First, the required packages are imported and an output directory is created:
 """
 
 # %%
+import matplotlib.pyplot as plt
 from IPython.display import HTML
 
 import ogstools as ot
@@ -82,6 +83,7 @@ solution = examples.anasol.diffusion_head_analytical(
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
+plt.show()
 analytical_solution_path = ot.mesh.save(solution)
 
 # %% [markdown]

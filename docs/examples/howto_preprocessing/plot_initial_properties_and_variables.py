@@ -6,6 +6,7 @@ For this example we use an existing mesh file and add the required arrays.
 """
 
 # %%
+import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -44,6 +45,7 @@ mat_ids = np.array([material_ids(pt) for pt in ccp], dtype=np.int32)
 mesh.cell_data.set_array(mat_ids, "MaterialIDs")
 
 fig = ot.plot.contourf(mesh, ot.variables.material_id)
+plt.show()
 
 # %% [markdown]
 # Likewise material properties / MeshElement parameters can be set
@@ -63,6 +65,7 @@ p = 1e6 * y / (np.min(y) - np.max(y)) + 4e6
 mesh.point_data.set_array(p, "pressure_gradient")
 
 fig = ot.plot.contourf(mesh, "pressure_gradient")
+plt.show()
 
 # %%
 # This also works with multidimensional data.
@@ -95,5 +98,7 @@ p0_new[bentonite["vtkOriginalPointIds"]] = -1.2e8
 mesh.point_data.set_array(p0_new, "initial_pressure_second-variant")
 
 
-fig = ot.plot.contourf(mesh, "initial_pressure")
-fig = ot.plot.contourf(mesh, "initial_pressure_second-variant")
+fig1 = ot.plot.contourf(mesh, "initial_pressure")
+plt.show()
+fig2 = ot.plot.contourf(mesh, "initial_pressure_second-variant")
+plt.show()

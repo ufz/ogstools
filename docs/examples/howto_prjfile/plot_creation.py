@@ -11,6 +11,7 @@ The names of the method calls are based on the corresponding XML tags.
 # %%
 # Initialize the ogs6py object:
 
+import matplotlib.pyplot as plt
 
 import ogstools as ot
 
@@ -155,5 +156,6 @@ prj.linear_solvers.add_lin_solver(
 # %%
 m = ot.Model(project=prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
 fig = m.plot_constraints()
+plt.show()
 # %%
 m.run()

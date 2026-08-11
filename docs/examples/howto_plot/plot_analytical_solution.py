@@ -72,6 +72,7 @@ x_edge.plot_line("x", temp.anasol, ax=axs[0], ls="--")
 x_edge.plot_line("x", temp.abs_error, ax=axs[1])
 x_edge.plot_line("x", temp.rel_error, ax=axs[2])
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # Comparing data of multiple points over time
@@ -90,6 +91,7 @@ probe.plot_line(temp.anasol, ax=axs[0], ls="--")
 probe.plot_line(temp.abs_error, ax=axs[1])
 probe.plot_line(temp.rel_error, ax=axs[2])
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # Comparing data of a 2D slice in a contourplot
@@ -106,6 +108,7 @@ ot.plot.contourf(y_slice, temp, fig=fig, ax=axs[0])
 ot.plot.contourf(y_slice, temp.abs_error, fig=fig, ax=axs[1])
 ot.plot.contourf(y_slice, temp.rel_error, fig=fig, ax=axs[2])
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # Comparing the transient data of a line
@@ -123,6 +126,7 @@ x_edge.plot_time_slice("x", "time", temp, fig=fig, ax=axs[0])
 x_edge.plot_time_slice("x", "time", temp.abs_error, fig=fig, ax=axs[1])
 x_edge.plot_time_slice("x", "time", temp.rel_error, fig=fig, ax=axs[2])
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # We can also increase the resolution, by using a large number of probing points
@@ -141,3 +145,4 @@ for i, var in enumerate([temp, temp.abs_error, temp.rel_error]):
         "time", "x", var, fig=fig, ax=axs[i], time_logscale=True
     )
 fig.tight_layout()
+plt.show()

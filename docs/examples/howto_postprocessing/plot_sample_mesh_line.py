@@ -38,6 +38,7 @@ mesh = examples.load_mesh_mechanics_2D()
 sample = mesh.sample_over_line([25, -460, 0], [100, -800, 0])
 fig = ot.plot.contourf(mesh, ot.variables.temperature)
 fig = ot.plot.line(sample, ax=fig.axes[0], linestyle="--")
+plt.show()
 
 # %% [markdown]
 # Now we plot the temperature data. The spatial coordinate for the x-axis is
@@ -46,6 +47,7 @@ fig = ot.plot.line(sample, ax=fig.axes[0], linestyle="--")
 # %%
 fig = ot.plot.line(sample, ot.variables.temperature)
 fig.tight_layout()
+plt.show()
 
 
 # %% [markdown]
@@ -66,6 +68,7 @@ ot.plot.contourf(mesh, ot.variables.displacement["x"], fig=fig, ax=axs[1])
 ot.plot.line(sample, ax=axs[1], lw=3, color="red")
 ot.plot.line(sample, ot.variables.displacement["x"], ax=axs[0])
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # Other methods to setup the sampling line
@@ -138,6 +141,7 @@ for i, sample in enumerate([sample_1, sample_2, sample_3, sample_4]):
     ot.plot.line(sample, ax=axs[1], linestyle="--", color=c)
     ot.plot.line(sample, u_x, "y", ax=axs[0], label=f"sample {i + 1}", color=c)
 fig.tight_layout()
+plt.show()
 
 # %% [markdown]
 # If you want to sample data over multiple timesteps in a MeshSeries, have a

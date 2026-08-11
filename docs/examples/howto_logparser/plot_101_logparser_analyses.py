@@ -19,6 +19,7 @@ and for the **staggered scheme** we use a prj from
 # sphinx_gallery_end_ignore
 
 # %%
+import matplotlib.pyplot as plt
 import pandas as pd
 
 import ogstools as ot
@@ -67,9 +68,10 @@ df_ts
 
 # %%
 # Selecting specific metrics (3) and plotting using pandas plot function.
-df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
+ax = df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
     logy=True, grid=True
 )
+plt.show()
 
 # %% [markdown]
 # Analysis of convergence criteria - Newton iterations
@@ -133,7 +135,10 @@ records = ot.logparser.parse_file(log_adaptive_timestepping)
 df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 df_t = ot.logparser.model_and_clock_time(df_log)
-df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)
+axs = df_t[["step_size", "clock_time", "iterations"]].plot(
+    grid=True, subplots=True
+)
+plt.show()
 
 # %% [markdown]
 # To get an overview of the convergence behavior of the nonlinear solver over
@@ -141,6 +146,7 @@ df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)
 
 # %%
 fig = ot.logparser.plot_convergence(df_log, "dx_x")
+plt.show()
 
 # %% [markdown]
 # We can also plot this data over the model time. Note, that the last timesteps
@@ -148,6 +154,7 @@ fig = ot.logparser.plot_convergence(df_log, "dx_x")
 
 # %%
 fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
+plt.show()
 
 # %% [markdown]
 # Further we can calculate the convergence order and plot it in the same manner.
@@ -159,3 +166,4 @@ fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
 
 # %%
 fig = ot.logparser.plot_convergence_order(df_log)
+plt.show()
