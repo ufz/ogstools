@@ -103,7 +103,9 @@ class OGSInteractiveController(SimulationController):
             else None
         )
 
-        # TODO: Apply all model execution parameters
+        os.environ.update(model_ref.execution.env)
+
+        # TODO: mpi_ranks, ogs_path, mpi_wrapper, wrapper not applicable here.
         log_level = model_ref.execution.log_level
         extra_args = model_ref.execution.args
         self._args_list = [

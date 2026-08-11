@@ -24,6 +24,7 @@ This tutorial builds on the :ref:`sphx_glr_auto_examples_howto_simulation_plot_1
 # Imports and definitions
 # =======================
 
+
 import matplotlib.pyplot as plt
 import numpy as np
 from ogs import OGSMesh
@@ -46,7 +47,6 @@ model = load_model_liquid_flow_simple()
 #
 # We now start and connect to a running OGS simulation and access its meshes using the native Co-Simulation interface.
 # For further details search for OGSSimulation in https://doxygen.opengeosys.org/stable/search.html?query=OGSSimulation.
-
 
 model.save()
 sim_output = ot.definitions.temp_dir("interactive_mesh", "examples")

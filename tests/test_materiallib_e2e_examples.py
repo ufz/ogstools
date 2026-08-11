@@ -109,7 +109,7 @@ def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
     )
 
     project.set_media(MediaSet(filtered))
-    model = ot.Model(project)
+    model = ot.Model(project, execution=ot.Execution(omp_num_threads=4))
     simulation = model.run(target=project_dir / "run")
 
     assert simulation.status == ot.Simulation.Status.done
