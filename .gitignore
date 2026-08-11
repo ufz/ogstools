@@ -186,3 +186,4 @@ uv.lock
 
 # Large Language Models
 .continue
+.envrc
