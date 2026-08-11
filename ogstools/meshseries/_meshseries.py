@@ -957,6 +957,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             idx += comp
         return original_list
 
+    def extractfromXDMF(self, data: DataItems) -> np.ndarray:
+        meshtmp = MeshSeries(self._xdmf_reader.filename)[0]
+        ids = []
+        for point in self[0].points:
+            ids.append(meshtmp.find_closest_point(point))
+        return data[:, ids]
+
     def probe_values(
         self,
         points: np.ndarray | list,
@@ -993,12 +1000,20 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             raise TypeError(msg)
         pts = reshape_obs_points(points, self.mesh(0))
         data = self.data(data_name)
+        print("test")
+        print(self._mesh_func_opt)
         if isinstance(data, list):
             values = []
             for dataitem in data:
-                values.append(dataitem[:])
+                if isinstance(dataitem, DataItems):
+                    values.append(self.extractfromXDMF(dataitem))
+                else:
+                    values.append(dataitem[:])
         else:
-            values = data[:]
+            if isinstance(data, DataItems):
+                values = self.extractfromXDMF(data)
+            else:
+                values = data[:]
         if isinstance(data_name, list):
             components = [
                 1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
