@@ -77,8 +77,8 @@ class Meshes(MutableMapping, StorageBase):
     @classmethod
     def from_folder(cls, filepath: str | Path) -> Meshes:
         """
-        Create a Meshes object from a folder of already save Meshes.
-        Reverse of .save. It need a meta.yaml file in the specified folder.
+        Create a Meshes object from a folder of already saved Meshes.
+        Reverse of .save. It needs a meta.yaml file in the specified folder.
         """
         filepath = Path(filepath)
         import yaml
@@ -99,6 +99,9 @@ class Meshes(MutableMapping, StorageBase):
         )
         meshes.has_identified_subdomains = has_identified_subdomain
         meshes.num_partitions = num_partitions
+        output_dict = restored_data.get("output_names", None)
+        if output_dict:
+            meshes.rename_output_names(output_dict)
 
         return meshes
 
@@ -234,7 +237,9 @@ class Meshes(MutableMapping, StorageBase):
             "has_identified_subdomains", False
         )
         meshes.num_partitions = restored_data.get("num_partitions", None)
-
+        output_dict = restored_data.get("output_names", None)
+        if output_dict:
+            meshes.rename_output_names(output_dict)
         return meshes
 
     @classmethod
@@ -405,6 +410,11 @@ class Meshes(MutableMapping, StorageBase):
                 "meshes": list(self._meshes.keys()),
                 "has_identified_subdomains": self.has_identified_subdomains,
                 "num_partitions": self.num_partitions,
+                "output_names": {
+                    key: value
+                    for key, value in self.output_names.items()
+                    if key != value
+                },
             }
 
             yaml_string = yaml.dump(meta_dict)
