@@ -60,6 +60,7 @@ exclude_patterns = [
 ]
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
+myst_fence_as_directive = ["mermaid"]
 myst_heading_anchors = 3
 # myst_title_to_header = True
 
@@ -92,7 +93,13 @@ html_theme_options = {
             "url": "https://gitlab.opengeosys.org/ogs/tools/ogstools",
             "icon": "fa-brands fa-square-gitlab",
             "type": "fontawesome",
-        }
+        },
+        {
+            "name": "Contributing",
+            "url": "https://ogs.ogs.xyz/tools/ogstools/contributing.html",
+            "icon": "fa-solid fa-hammer",
+            "type": "fontawesome",
+        },
     ],
     "navigation_with_keys": True,
     "switcher": {
