@@ -12,6 +12,7 @@ def test_property_type_spec_defaults() -> None:
 
 
 def test_property_types_registry_contains_expected_examples() -> None:
+    """Guard representative entries so accidental registry drift is caught."""
     assert PROPERTY_TYPES["Constant"].parameters == ("value",)
     assert PROPERTY_TYPES["SaturationVanGenuchten"].parameters == (
         "exponent",
