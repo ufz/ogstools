@@ -479,6 +479,7 @@ check web links:
   stage: test
   tags: [shell, envinf]
   allow_failure: true
+  retry: 2
   script:
     - make link_check
   cache:
