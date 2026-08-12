@@ -886,22 +886,12 @@ class Meshes(MutableMapping, StorageBase):
                     fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
-                if name == self.domain_name:
-                    ax.plot(
-                        [],
-                        [],
-                        "s",
-                        label=self.output_names[name],
-                        c="lightgrey",
-                        ms=16 * lw,
-                    )
-                else:
-                    axes = plot.utils.get_projection(self.domain)[:2]
-                    color = next(colors_0D)
-                    ax.plot(
-                        *mesh.points[:, axes].T, "o", label=self.output_names[name],
-                        clip_on=clip_on, color=color, ms=8 * lw
-                    )  # fmt: skip
+                axes = plot.utils.get_projection(self.domain)[:2]
+                color = next(colors_0D)
+                ax.plot(
+                    *mesh.points[:, axes].T, "o", label=self.output_names[name],
+                    clip_on=clip_on, color=color, ms=8 * lw
+                )  # fmt: skip
 
         plot.utils.update_font_sizes(fig.axes, fontsize)
         ax.legend(
