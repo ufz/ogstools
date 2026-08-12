@@ -283,6 +283,7 @@ def test_output_names():
     assert (
         meshes.output_names["Selke_Basin_PL_Wipper"] == "Selke_Basin_PL_Wipper"
     )
+    assert meshes.output_names["Selke_Basin_PL_Bode"] == "Selke_Basin_PL_Bode"
     # Trying to change non-existent name results in key error
     with pytest.raises(KeyError):
         meshes.rename_output_names({"Selke_Basin_not_there": "not there"})
@@ -294,9 +295,11 @@ def test_output_names():
     ax: plt.Axes = fig.axes[0]
     _, labels = ax.get_legend_handles_labels()
     labels.index("River Wipper")
+    labels.index("Selke_Basin_PL_Bode")
     files = meshes.copy().save()
     meshes = ot.Meshes.from_file(files[-1])
     assert meshes.output_names["Selke_Basin_PL_Wipper"] == "River Wipper"
+    assert meshes.output_names["Selke_Basin_PL_Bode"] == "Selke_Basin_PL_Bode"
 
 
 @pytest.mark.tools  # NodeReordering

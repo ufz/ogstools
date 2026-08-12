@@ -606,7 +606,8 @@ class Meshes(MutableMapping, StorageBase):
         Not all meshes have to be included but no non-existent meshes may be included
 
         :param rename_map:  A dictionary mapping mesh names -> output names (e.g. {'left':'Left Side'}).
-                            Note that dictionary keys have to be the actual mesh names not current output names
+                            Note that dictionary keys have to be the actual mesh names not current output names.
+                            To find the actual names, use `keys`
         """
         invalid = [name for name in rename_map if name not in self._meshes]
         if invalid:
