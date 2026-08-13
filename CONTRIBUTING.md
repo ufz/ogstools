@@ -21,7 +21,7 @@ Planning a new module, a significant feature, or a breaking change? Open an issu
 
 Start with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) for setting up your environment, running tests, building the docs and running the pre-commit checks.
 
-New to `ogstools`? Look for issues labeled [`Good first issue`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/issues?label_name%5B%5D=Good%20first%20issue) — these are scoped to be small and self-contained, a good way to get familiar with the codebase and the contribution flow below before tackling something bigger. If nothing fits, feel free to ask on [Discourse](https://discourse.opengeosys.org) for a pointer.
+New to `ogstools`? Look for issues labeled [`Good first issue`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/issues?label_name%5B%5D=Good%20first%20issue) — these are scoped to be small and self-contained, a good way to get familiar with the codebase and the contribution flow below before tackling something bigger. If nothing fits, feel free to ask on [Discourse](https://discourse.opengeosys.org) for directions.
 
 ```mermaid
 flowchart TD
@@ -35,7 +35,7 @@ flowchart TD
     E -- yes --> G[workflow::please review]
 ```
 
-MRs carry the `workflow::in development` label while open; once CI is green, that's swapped for `workflow::please review` to request review.
+MRs should carry the `workflow::in development` label while open; once CI is green, that should be swapped for `workflow::please review` to request review.
 
 - If you have (or can request) a GitLab account: fork the repository on [GitLab](https://gitlab.opengeosys.org/ogs/tools/ogstools) and open a merge request.
 - Otherwise: open a pull request on the [GitHub mirror](https://github.com/ufz/ogstools) — these are welcome and will be reviewed and merged upstream. Since GitHub PRs can't set GitLab labels directly, a maintainer applies `workflow::please review` once it's ready.
