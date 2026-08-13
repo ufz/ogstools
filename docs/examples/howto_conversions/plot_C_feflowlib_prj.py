@@ -9,8 +9,6 @@ This example shows how to convert a FEFLOW model and how to modify the correspon
 # 0. Necessary imports
 import xml.etree.ElementTree as ET
 
-import matplotlib.pyplot as plt
-
 import ogstools as ot
 from ogstools.examples import feflow_model_2D_CT_t_560
 
@@ -31,7 +29,7 @@ feflow_model.run()
 ms = ot.MeshSeries(temp_dir / "CT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 fig = ot.plot.contourf(ogs_sim_res, "single_species")
-plt.show()
+fig.show()
 # %%
 # 4. Replace the scalar pore diffusion constant by a tensor to introducec anisotropy.
 # How to manipulate a prj file also is explained in this example:
@@ -59,4 +57,4 @@ feflow_model.run(overwrite=True)
 ms = ot.MeshSeries(temp_dir / "CT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 fig = ot.plot.contourf(ogs_sim_res, "single_species")
-plt.show()
+fig.show()

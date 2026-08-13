@@ -14,7 +14,6 @@ This example shows how to calculate differences between meshes.
 
 # sphinx_gallery_end_ignore
 
-import matplotlib.pyplot as plt
 
 import ogstools as ot
 from ogstools import examples
@@ -64,7 +63,7 @@ mesh2 = mesh_series.mesh(-1)
 # %%
 mesh_diff = ot.mesh.difference(mesh1, mesh2, ot.variables.temperature)
 fig = ot.plot.contourf(mesh_diff, ot.variables.temperature)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Difference between two meshes of different topology
@@ -82,7 +81,7 @@ tri_mesh = custom_mesh(lengths=1, element_order=2, quads=False)
 
 # %%
 fig = ot.plot.contourf([quad_mesh, tri_mesh], ot.variables.stress["xx"])
-plt.show()
+fig.show()
 
 # %% [markdown]
 # To better quantify it we form the difference and plot the result. The base
@@ -93,7 +92,7 @@ plt.show()
 # %%
 diff_mesh = ot.mesh.difference(quad_mesh, tri_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Doing it the other way around shows the difference on the tri-mesh. Here, we
@@ -103,7 +102,7 @@ plt.show()
 # %%
 diff_mesh = ot.mesh.difference(tri_mesh, quad_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Differences between multiple meshes
@@ -236,11 +235,11 @@ diff_ms = ot.MeshSeries.difference(ms2, ms, ot.variables.pressure)
 
 # %%
 fig_T = ot.plot.contourf(ms[-1], ot.variables.pressure, show_edges=False)
-plt.show()
+fig_T.show()
 
 # %%
 fig_T_2 = ot.plot.contourf(ms2[-1], ot.variables.pressure, show_edges=False)
-plt.show()
+fig_T_2.show()
 
 # %% [markdown]
 # The MeshSeries object returned by the difference() method, can be used in the
@@ -252,7 +251,7 @@ plt.show()
 fig_T_diff = ot.plot.contourf(
     diff_ms[-1], ot.variables.pressure.difference, show_edges=True
 )
-plt.show()
+fig_T_diff.show()
 # fig_T_diff = ot.plot.contourf(diff_ms[-1], "pore_pressure_difference")
 
 # %%

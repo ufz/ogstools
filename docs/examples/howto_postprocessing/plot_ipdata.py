@@ -18,8 +18,6 @@ represented by one subsection of a cell.
 # :meth:`~ogstools.MeshSeries.ip_tesselated`
 
 
-import matplotlib.pyplot as plt
-
 import ogstools as ot
 from ogstools import examples
 
@@ -57,12 +55,12 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     fig1.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
-    plt.show()
+    fig1.show()
     fig2 = ot.plot.contourf(ip_mesh, sigma_ip)
     fig2.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
-    plt.show()
+    fig2.show()
 
 
 # %% [markdown]

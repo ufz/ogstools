@@ -8,7 +8,6 @@ First we will change the values of the boundary conditions and later we will sho
 
 # %%
 # 0. Necessary imports
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -26,7 +25,7 @@ print(mesh)
 # %%
 # 2. Plot the temperature simulated in FEFLOW on the mesh.
 fig = ot.plot.contourf(mesh, "P_TEMP", show_edges=True)
-plt.show()
+fig.show()
 # %%
 # 3. As the FEFLOW data now are a pyvista.UnstructuredGrid, all pyvista functionalities can be applied to it.
 # Further information can be found at https://docs.pyvista.org/user-guide/.
@@ -42,7 +41,7 @@ ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
 # 5. Plot the temperature simulated in OGS.
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 fig = ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
-plt.show()
+fig.show()
 # %%
 # 6. The boundary meshes are manipulated to alter the model.
 # The original boundary conditions are shown in this example: :ref:`sphx_glr_auto_examples_howto_conversions_plot_F_feflowlib_HT_simulation.py`
@@ -58,7 +57,7 @@ ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
 # Read the last timestep:
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 fig = ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
-plt.show()
+fig.show()
 # %%
 # 6.4 Create a new boundary mesh and overwrite the existing subdomains with this boundary mesh.
 assign_bulk_ids(mesh)
@@ -79,4 +78,4 @@ feflow_model.run(overwrite=True)
 ms = ot.MeshSeries(temp_dir / "HT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
 fig = ot.plot.contourf(ogs_sim_res, ot.variables.temperature)
-plt.show()
+fig.show()

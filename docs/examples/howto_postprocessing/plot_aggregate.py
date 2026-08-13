@@ -12,7 +12,6 @@ To see this benchmark results over all timesteps have a look at
 """
 
 # %%
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -50,7 +49,7 @@ saturation = ot.variables.saturation
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.max)
 fig = ot.plot.contourf(mesh, saturation, vmin=0, vmax=100)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
@@ -62,7 +61,7 @@ mesh = mesh_series.time_of_max(saturation)
 fig = ot.plot.contourf(
     mesh, ot.variables.Scalar("max_saturation_time", "a", "a")
 )
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
@@ -71,7 +70,7 @@ plt.show()
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.var)
 fig = ot.plot.contourf(mesh, saturation)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Difference between the last and the first timestep:
@@ -79,7 +78,7 @@ plt.show()
 # %%
 mesh = ot.mesh.difference(mesh_series.mesh(-1), mesh_series.mesh(0), saturation)
 fig = ot.plot.contourf(mesh, saturation)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # It's also possible to aggregate the data per timestep to return a timeseries
@@ -97,4 +96,4 @@ mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
 # %%
 fig = mesh_series.plot_line(saturation.std)
 fig.tight_layout()
-plt.show()
+fig.show()

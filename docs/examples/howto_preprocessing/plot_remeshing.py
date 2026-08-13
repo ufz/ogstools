@@ -16,7 +16,6 @@ to adapt.
 
 # sphinx_gallery_end_ignore
 
-import matplotlib.pyplot as plt
 
 import ogstools as ot
 from ogstools import examples
@@ -28,7 +27,7 @@ mesh = examples.load_meshseries_THM_2D_PVD().mesh(1)
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.material_id)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Here, we do the remeshing and convert the resulting msh file to an
@@ -48,6 +47,6 @@ msh_path = ot.gmsh_tools.remesh_with_triangles(
 )
 meshes = ot.Meshes.from_gmsh(msh_path, reindex=False, log=False)
 fig = ot.plot.contourf(meshes["domain"], ot.variables.material_id)
-plt.show()
+fig.show()
 
 # %%

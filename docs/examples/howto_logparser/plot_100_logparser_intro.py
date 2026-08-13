@@ -16,7 +16,6 @@ Here we utilize the project file from the benchmark titled:
 # Complete example
 # ================
 # For detailed explanation see all sections below.
-import matplotlib.pyplot as plt
 import pandas as pd
 
 import ogstools as ot
@@ -114,4 +113,4 @@ ax_right.tick_params(axis="y", colors="C1")
 lines, labels = ax.get_legend_handles_labels()
 lines2, labels2 = ax_right.get_legend_handles_labels()
 ax.legend(lines + lines2, labels + labels2, loc="upper left")
-plt.show()
+ax.get_figure().show()

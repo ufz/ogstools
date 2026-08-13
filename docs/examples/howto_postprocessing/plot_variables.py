@@ -8,7 +8,6 @@ mesh data. There are also several predefined variables.
 """
 
 # %%
-import matplotlib.pyplot as plt
 
 import ogstools as ot
 from ogstools import examples
@@ -60,9 +59,6 @@ ot.variables.strain["xx"].transform(
 # %%
 ot.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 
-# %%
-ot.variables.temperature_BHE["in"].transform([285.15, 285.65], strip_unit=False)
-
 # %% [markdown]
 # We suggest specifying the variables and their transformations once.
 # These can be reused in different kind of post processing. When plotting
@@ -73,7 +69,7 @@ ot.variables.temperature_BHE["in"].transform([285.15, 285.65], strip_unit=False)
 fig = ot.plot.contourf(
     examples.load_mesh_mechanics_2D(), ot.variables.stress.von_Mises
 )
-plt.show()
+fig.show()
 
 # %% [markdown]
 # Have a look at

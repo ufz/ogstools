@@ -48,7 +48,7 @@ fig = ot.plot.contourf(mesh_series.mesh(0), si, vmin=0, vmax=100)
 fig.axes[0].scatter(rows[..., 0], rows[..., 2], s=50, fc="none", ec="r", lw=3)
 for i, pt in enumerate(rows.reshape(-1, 3)):
     fig.axes[0].annotate(str(i), (pt[0], pt[2] - 5), va="top", fontsize=32)
-plt.show()
+fig.show()
 
 # %% [markdown]
 # And now probe the points and plot the values over time.
@@ -61,7 +61,7 @@ labels = [
 probes = [mesh_series.probe(pts) for pts in rows]
 fig = probes[0].plot_line(si, labels=labels[0], monospace=True)
 fig.tight_layout()
-plt.show()
+fig.show()
 
 
 # %% [markdown]
@@ -83,4 +83,4 @@ for index in range(2):
     fig.axes[index].plot(ts, mean_values, "rk"[index], lw=4)
     fig.axes[index].legend(labels[index] + ["mean"], fontsize=20)
 fig.tight_layout()
-plt.show()
+fig.show()

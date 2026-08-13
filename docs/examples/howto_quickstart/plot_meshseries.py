@@ -5,7 +5,6 @@ Read mesh from file (vtu or xdmf) into pyvista mesh
 """
 
 # %%
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -108,4 +107,4 @@ print("Data on clipped domain:", np.shape(temp_right_half))
 
 # %%
 fig = ot.plot.contourf(ms_right_half[-1], "temperature")
-plt.show()
+fig.show()

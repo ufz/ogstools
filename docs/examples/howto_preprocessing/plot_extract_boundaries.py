@@ -12,8 +12,6 @@ a continuous boundary mesh.
 # %%
 
 
-import matplotlib.pyplot as plt
-
 import ogstools as ot
 from ogstools import examples
 
@@ -36,7 +34,7 @@ for name, mesh in meshes.subdomains.items():
 
 # %%
 fig = meshes.plot()
-plt.show()
+fig.show()
 
 # %%
 meshes.save()  # optionally, provide a path
@@ -49,7 +47,7 @@ meshes.save()  # optionally, provide a path
 depth = ot.mesh.depth(meshes.domain, meshes["top"])
 meshes.domain.point_data["pressure"] = 1000 * 9.81 * depth
 fig = ot.plot.contourf(meshes.domain, "pressure")
-plt.show()
+fig.show()
 
 
 # %% [markdown]
@@ -65,6 +63,6 @@ mat_ids = domain["MaterialIDs"]
 mat_ids[(mat_ids <= 3) & (x < 0)] = 99
 meshes.remove_material(99)
 fig = meshes.plot()
-plt.show()
+fig.show()
 
 # %%

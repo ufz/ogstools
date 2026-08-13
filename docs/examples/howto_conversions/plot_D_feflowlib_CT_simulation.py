@@ -38,7 +38,7 @@ clipped_mesh = feflow_model.mesh.clip_scalar(
     scalars="single_species", invert=False, value=1.0e-9
 )
 fig = ot.plot.contourf(clipped_mesh, concentration)
-plt.show()
+fig.show()
 # %%
 # 2. Setup a prj-file to run a OGS-simulation.
 time_steps = list(zip([10] * 8, [8.64 * 10**i for i in range(8)], strict=False))
@@ -63,14 +63,14 @@ for i, mesh in enumerate([ogs_sim_res, feflow_model.mesh]):
         sample, concentration, ax=ax, color="kr"[i], label=label, ls="-:"[i]
     )
 fig.tight_layout()
-plt.show()
+fig.show()
 # %%
 # 5. Concentration difference plotted on the mesh.
 
 diff = ot.mesh.difference(feflow_model.mesh, ogs_sim_res, concentration)
 diff_clipped = diff.clip_box([0.038, 0.045, 0, 0.01, 0, 0], invert=False)
 fig = ot.plot.contourf(diff_clipped, concentration.difference, fontsize=20)
-plt.show()
+fig.show()
 # %%
 # 5.1 Concentration difference plotted along a line.
 diff_sample = diff.sample_over_line(*pts)
@@ -78,4 +78,4 @@ fig = ot.plot.line(
     diff_sample, concentration.difference, label="Difference FEFLOW-OGS"
 )
 fig.tight_layout()
-plt.show()
+fig.show()

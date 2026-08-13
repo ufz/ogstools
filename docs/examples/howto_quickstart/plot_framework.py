@@ -19,7 +19,6 @@ For detailed information on each component, see the linked examples throughout t
 """
 
 # %%
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ogstools as ot
@@ -62,7 +61,7 @@ meshes["right"].point_data["pressure"] = np.full(meshes["left"].n_points, 3.1e7)
 
 # Visualize the mesh topology
 fig_topology = meshes.plot()
-plt.show()
+fig_topology.show()
 
 # %% [markdown]
 # **See also:**
@@ -89,7 +88,7 @@ model = ot.Model(project=project, meshes=meshes)
 
 # Visualize the model setup with boundary conditions
 fig_constraints = model.plot_constraints()
-plt.show()
+fig_constraints.show()
 
 # %% [markdown]
 # The constraints plot shows your model domain with annotated boundary conditions
@@ -149,7 +148,7 @@ print(f"Simulation status: {sim.status_str}")
 
 # Get the final timestep and plot pressure distribution
 fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
-plt.show()
+fig.show()
 
 # %% [markdown]
 # **MeshSeries capabilities:**
@@ -177,7 +176,7 @@ plt.show()
 df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
 times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
 ax = df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
-plt.show()
+ax.get_figure().show()
 
 # %% [markdown]
 # The convergence plot shows how the nonlinear solver converged at each

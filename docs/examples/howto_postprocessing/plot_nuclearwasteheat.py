@@ -57,7 +57,7 @@ for model in models:
     ax.loglog(time, q, label=model.name, lw=2.5)
 format_ax(ax)
 ax.set_ylim([1e-4, 5])
-plt.show()
+fig.show()
 
 # %%
 # The bumps in the curves stem from the different leading nuclides in the
@@ -80,7 +80,7 @@ for ax, model, color in zip(axs, models, colors, strict=False):
         ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c=color, ls=ls[i])
     format_ax(ax)
     ax.set_ylim([1e-4, 20])
-plt.show()
+fig.show()
 
 # %%
 # When taking the interim storage time and the time to fill the repository
@@ -102,7 +102,7 @@ ax.loglog(time, repo_heat[1], "k", label="DWR-Mix + WWER + CSD", lw=2, ls=ls[1])
 ax.loglog(time, repo_heat[2], "k", label="RK-BE + RK-HA", lw=2, ls=ls[2])
 format_ax(ax)
 ax.set_ylim([9, 25000])
-plt.show()
+fig.show()
 
 
 # %%
@@ -114,4 +114,4 @@ for i, _ in enumerate(nuclear.repo_2020_conservative.waste[0].nuclide_powers):
     ax.loglog(time, q, label=f"Nuclide {i}", lw=1.5, c="k", ls=ls[i])
 format_ax(ax)
 ax.set_ylim([9, 25000])
-plt.show()
+fig.show()

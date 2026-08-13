@@ -11,7 +11,6 @@ This is a condensed version of the OGSTools workflow.
 # For detailed explanations of each step, see :ref:`sphx_glr_auto_examples_howto_quickstart_plot_framework.py`.
 
 # %%
-import matplotlib.pyplot as plt
 
 import ogstools as ot
 from ogstools.examples import load_meshes_simple_lf, load_project_simple_lf
@@ -26,7 +25,7 @@ meshes = load_meshes_simple_lf()
 model = ot.Model(project=project, meshes=meshes)
 # Visualize setup with boundary conditions
 fig = model.plot_constraints()
-plt.show()
+fig.show()
 
 # %%
 # 2. Run: Execute Simulation
@@ -41,7 +40,7 @@ print(f"Simulation status: {sim.status_str}")
 
 # Plot final pressure distribution
 fig = ot.plot.contourf(sim.meshseries[-1], "pressure")
-plt.show()
+fig.show()
 
 
 # %%
@@ -49,7 +48,7 @@ plt.show()
 df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
 times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
 ax = df_ts.plot.area(x="time_step", y=times, ylabel="time / s", grid=True)
-plt.show()
+ax.get_figure().show()
 
 # %%
 # 4. Store: Save Simulation

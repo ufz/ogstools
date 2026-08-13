@@ -10,7 +10,6 @@ behaviour.
 """
 
 # %%
-import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
 
@@ -47,14 +46,14 @@ def custom_mesh(dx: float, dy: float):
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi * 2, np.pi), "example")
-plt.show()
+fig.show()
 # %% [markdown]
 # This one would be too wide and thus and gets compressed to fit the maximum
 # aspect ratio.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi * 4, np.pi), "example")
-plt.show()
+fig.show()
 # %% [markdown]
 # When plotting multiple meshes together, this applies to each subplot.
 # So here each subplot has true proportions again since each one fits the limits.
@@ -63,14 +62,14 @@ plt.show()
 fig = ot.plot.contourf(
     [custom_mesh(np.pi * 2, np.pi), custom_mesh(np.pi * 2, np.pi)], "example"
 )
-plt.show()
+fig.show()
 # %% [markdown]
 # The following figure would be to tall and is clipped to the minimum aspect
 # ratio.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
-plt.show()
+fig.show()
 # %% [markdown]
 # The same is true here:
 
@@ -78,7 +77,7 @@ plt.show()
 fig = ot.plot.contourf(
     [custom_mesh(np.pi, np.pi * 3), custom_mesh(np.pi, np.pi * 3)], "example"
 )
-plt.show()
+fig.show()
 
 # %% [markdown]
 # You can enforce true proportions regardless of the resulting figures
@@ -89,11 +88,11 @@ plt.show()
 ot.plot.setup.min_ax_aspect = None
 ot.plot.setup.max_ax_aspect = None
 fig = ot.plot.contourf(custom_mesh(np.pi * 3, np.pi), "example")
-plt.show()
+fig.show()
 
 # %% [markdown]
 # And in this case we get a very tall figure.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
-plt.show()
+fig.show()
