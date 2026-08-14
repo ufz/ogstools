@@ -92,6 +92,7 @@ def test_framework_prj():
 
 
 @pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 def test_framework_model():
     from ogstools.examples import load_model_liquid_flow_simple
 
@@ -142,6 +143,7 @@ def test_framework_meshes():
 
 
 @pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 @pytest.mark.parametrize(
     "interactive",
     [
@@ -177,6 +179,7 @@ def test_framework_simulation(interactive):
 
 
 @pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 @pytest.mark.parametrize(
     "interactive",
     [
@@ -272,20 +275,27 @@ def assert_framework_object_contract(
         pytest.param(
             lambda: load_model_liquid_flow_simple().execution,
             lambda m: setattr(m, "omp_num_threads", 2),
-            marks=pytest.mark.tools(),
+            marks=[
+                pytest.mark.tools(),  # NodeReordering
+                pytest.mark.system(),
+            ],
             id="Execution",
         ),
         # 3 Model (objects)
         pytest.param(
             load_model_liquid_flow_simple,
             lambda m: setattr(m.execution, "omp_num_threads", 2),
-            marks=pytest.mark.tools(),
+            marks=[
+                pytest.mark.tools(),  # NodeReordering
+                pytest.mark.system(),
+            ],
             id="Model(objects)",
         ),
         # 4 Model (prj_file)
         pytest.param(
             model_liquid_flow_simple_prjfile,
             lambda m: setattr(m.execution, "omp_num_threads", 2),
+            marks=pytest.mark.system(),
             id="Model(prj-file)",
         ),
         # 5 Model (from folder)
@@ -329,6 +339,7 @@ def test_framework_objects(factory, mutate):
         pytest.param(
             "Execution",
             lambda: Execution(omp_num_threads=2),
+            marks=pytest.mark.system(),
             id="Execution",
         ),
         pytest.param(
@@ -340,12 +351,18 @@ def test_framework_objects(factory, mutate):
         pytest.param(
             "Model",
             load_model_liquid_flow_simple,
-            marks=pytest.mark.tools(),
+            marks=[
+                pytest.mark.tools(),  # NodeReordering
+                pytest.mark.system(),
+            ],
             id="Model",
         ),
         pytest.param("MeshSeries", load_meshseries_CT_2D_XDMF, id="MeshSeries"),
         pytest.param(
-            "Simulation", load_simulation_smalldeformation, id="Simulation"
+            "Simulation",
+            load_simulation_smalldeformation,
+            marks=pytest.mark.system(),
+            id="Simulation",
         ),
     ],
 )

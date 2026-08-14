@@ -38,6 +38,7 @@ def test_meshes_from_mesh(threshold_angle: None | float, angle_y: float):
     assert boundaries["top"].bounds[3] == mesh.bounds[3]
 
 
+@pytest.mark.tools  # convertToLinearMesh, createQuadraticMesh
 def test_meshes_from_mesh_quadratic():
     mesh_lin = examples.load_meshseries_THM_2D_PVD()[0]
     mesh_quad = ot.mesh.utils.to_quadratic(mesh_lin)
@@ -156,6 +157,7 @@ def test_meshes_from_mesh_3D(
     assert meshes["top"].bounds[5] == domain.bounds[5]
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_meshes_from_mesh_2D_run(tmp_path):
     """Test using extracted boundaries for a simulation."""

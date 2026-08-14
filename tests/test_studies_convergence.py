@@ -12,6 +12,7 @@ from ogstools.studies import convergence
 class TestConvergence:
     """Test case for convergent meshes."""
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.system
     def test_steady_state_diffusion(self):
         sim_results = []

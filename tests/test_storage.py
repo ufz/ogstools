@@ -197,7 +197,14 @@ class TestStorage:
         [
             pytest.param(ot.Project, id="Project"),
             pytest.param(ot.Meshes, marks=pytest.mark.tools(), id="Meshes"),
-            pytest.param(ot.Model, marks=pytest.mark.tools(), id="Model"),
+            pytest.param(
+                ot.Model,
+                marks=[
+                    pytest.mark.tools(),  # NodeReordering
+                    pytest.mark.system(),
+                ],
+                id="Model",
+            ),
             pytest.param(ot.Simulation, id="Simulation"),
             pytest.param(ot.MeshSeries, id="MeshSeries"),
         ],
@@ -219,6 +226,7 @@ class TestStorage:
         assert prj1 == prj2
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     def test_model_save_load_roundtrip(self):
 
         meshes = ot.Meshes.from_gmsh(rect())
@@ -249,6 +257,7 @@ class TestStorage:
         assert meshes3 != meshes1
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     def test_sim_save_load_roundtrip(self):
         # ToDo example ot.Simulation()
         prj1 = ot.Project(input_file=prj_mechanics).copy()
@@ -363,6 +372,7 @@ class TestStorage:
         assert_files_saved(files_copy, expected_count=3)  # default.prj + 2 .bin
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     def test_storage_model_1(self, tmp_path):
         prj1 = ot.Project(input_file=prj_mechanics, output_file="mechanics")
         meshes1 = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
@@ -391,6 +401,7 @@ class TestStorage:
         assert model.active_target.exists()
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     def test_storage_model(self, tmp_path):
         model = load_model_liquid_flow_simple()
         model.save(tmp_path / "mytest", overwrite=True)
@@ -413,6 +424,7 @@ class TestStorage:
         meshseries1.save(overwrite=True)
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     @pytest.mark.parametrize(
         "save_strategy",
         ["id", "target", None],
@@ -513,6 +525,7 @@ class TestStorage:
         assert len(files) == 6
 
     @pytest.mark.tools  # NodeReordering
+    @pytest.mark.system
     @pytest.mark.parametrize("dry_run", [False, True])
     def test_save_returns_written_files(self, tmp_path, dry_run):
         """Test that all _save_impl methods return the actual written file paths.
@@ -600,6 +613,7 @@ class TestStorage:
     def model_link(self, prj_link, meshes_link):
         return ot.Model(prj_link, meshes_link)
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.system
     @pytest.mark.parametrize(
         "model_save", [0, 1, 2], ids=["save_only", "run_only", "save_then_run"]

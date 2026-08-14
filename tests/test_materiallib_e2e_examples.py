@@ -38,6 +38,7 @@ TH2M is no longer read (and errors as an unconsumed key if present)."""
 # TODO(ogs-version): drop once minimum supported ogs is newer than this.
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_heat_conduction_project_runs_with_grouped_domain_materials(
     tmp_path: Path,

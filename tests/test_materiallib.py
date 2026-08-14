@@ -2464,6 +2464,7 @@ class TestOgstoolsInternalDB:
         assert "AqueousLiquid" in text
         assert "thermal_conductivity" in text
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.system
     @pytest.mark.parametrize(
         ("process", "input_prj"),

@@ -1,3 +1,4 @@
+import pytest
 import pyvista as pv
 
 import ogstools as ot
@@ -21,6 +22,7 @@ def test_model_construct_without_explicit_meshes():
     assert len(m.meshes) == 5
 
 
+@pytest.mark.system  # ogs --version check on model.save()
 def test_model_deep_copy_with_changed_project(tmp_path):
     prj_file = EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
     model = ot.Model(prj_file)

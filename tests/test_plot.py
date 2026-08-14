@@ -129,6 +129,7 @@ class TestPlotting:
         ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(ms[1], var, **kwargs)
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_limits(self) -> plt.Figure:
         msh = ot.gmsh_tools.rect(n_edge_cells=10, structured_grid=False)

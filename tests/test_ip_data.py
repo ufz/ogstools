@@ -78,8 +78,9 @@ def test_plot_modify_complex() -> plt.Figure:
     return ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
 
 
-@pytest.mark.parametrize("mixed", [False, True])
+@pytest.mark.tools  # NodeReordering, ipDataToPointCloud
 @pytest.mark.system
+@pytest.mark.parametrize("mixed", [False, True])
 def test_to_ip_mesh_mixed(tmp_path, mixed):
     "Test to_ip_mesh works with single and mixed cell types."
     rect = ot.gmsh_tools.rect(
