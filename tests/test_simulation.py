@@ -279,7 +279,7 @@ def test_plot_simulation_log_convergence() -> plt.Figure:
     return sim.log.plot_convergence()
 
 
-@pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_plot_simulation_log_convergence_order() -> plt.figure:
     # Example with enough nonlinear iterations to have data to plot.
