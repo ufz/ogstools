@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
+import os
+import sys
 from itertools import cycle, islice
 from math import nextafter
 from pathlib import Path
 from typing import Any
 from warnings import warn
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
@@ -21,6 +24,52 @@ from ogstools.plot.levels import level_boundaries
 from ogstools.variables import Variable
 
 from .shared import setup
+
+
+def _non_interactive_backends() -> set[str]:
+    try:
+        from matplotlib.backends import BackendFilter, backend_registry
+
+        return {
+            b.lower()
+            for b in backend_registry.list_builtin(
+                BackendFilter.NON_INTERACTIVE
+            )
+        }
+    except ImportError:  # matplotlib < 3.9
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", mpl.MatplotlibDeprecationWarning)
+            from matplotlib.rcsetup import non_interactive_bk
+
+            return {b.lower() for b in non_interactive_bk}
+
+
+def warn_if_non_interactive_backend() -> None:
+    """Warn once if a display is available but fig.show() still won't work.
+
+    matplotlib itself stays silent on genuine headless Linux (no
+    ``$DISPLAY``) and sphinx-gallery forces ``Agg`` on purpose for doc
+    builds; both are excluded here.
+    """
+    backend = mpl.get_backend().lower()
+    if backend not in _non_interactive_backends():
+        return
+    if sys.platform == "linux" and not os.environ.get("DISPLAY"):
+        return
+    if "sphinx_gallery" in sys.modules:
+        return
+    warn(
+        f"matplotlib is using the non-interactive backend '{backend}', so "
+        "fig.show() will not display a window, even though a display "
+        "appears to be available. This usually means no GUI toolkit is "
+        "installed for matplotlib to use. See "
+        "https://matplotlib.org/stable/users/explain/figure/backends.html "
+        "for how to select and install one.",
+        UserWarning,
+        stacklevel=2,
+    )
 
 
 def justified_labels(points: np.ndarray) -> list[str]:
