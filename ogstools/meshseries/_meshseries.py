@@ -977,6 +977,139 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             return data[:, ptids]
         return data[:]
 
+    @classmethod
+    def probe_file(
+        cls,
+        filepath: str | Path,
+        point_ids: np.ndarray | list,
+        data_name: str | Variable | list[str | Variable],
+        timeslice: slice = slice(None),
+    ) -> np.ndarray | list[np.ndarray]:
+        filepath = Path(filepath)
+        data_type = filepath.suffix
+        returnslist = True
+        if isinstance(data_name, (str, Variable)):
+            returnslist = False
+            data_name = [data_name]
+        result = []
+        allfound = True
+        match data_type:
+            case ".xdmf" | ".xmf":
+                from .xdmf_reader import XDMFReader
+
+                data_type = ".xdmf"
+                reader = XDMFReader(filepath)
+                for name in data_name:
+                    if isinstance(name, str) and name in reader.data_items:
+                        result.append(
+                            reader.data_items[name][timeslice, point_ids]
+                        )
+                    elif (
+                        isinstance(name, Variable)
+                        and name.data_name in reader.data_items
+                    ):
+                        result.append(
+                            reader.data_items[name.data_name][
+                                timeslice, point_ids
+                            ]
+                        )
+                    elif (
+                        isinstance(name, Variable)
+                        and name.output_name in reader.data_items
+                    ):
+                        result.append(
+                            reader.data_items[name.output_name][
+                                timeslice, point_ids
+                            ]
+                        )
+                    else:
+                        allfound = False
+                        break
+            case ".pvd":
+                reader = pv.PVDReader(filepath)
+                reader.set_active_time_point(
+                    0
+                )  # TODO: replace with first timestep index
+                mesh = reader.read()[0]
+                variable_names = []
+                for name in data_name:
+                    if isinstance(name, str) and name in mesh.point_data:
+                        variable_names.append(name)
+                    elif (
+                        isinstance(name, Variable)
+                        and name.data_name in mesh.point_data
+                    ):
+                        variable_names.append(name.data_name)
+                    elif (
+                        isinstance(name, Variable)
+                        and name.output_name in mesh.point_data
+                    ):
+                        variable_names.append(name.output_name)
+                    else:
+                        allfound = False
+                        break
+                    result.append(
+                        np.zeros(
+                            (len(reader.time_values[timeslice]), len(point_ids))
+                        )
+                    )
+                if allfound:
+                    for timeindex, time in enumerate(
+                        reader.time_values[timeslice]
+                    ):  # TODO: replace with timeslice
+                        reader.set_active_time_value(time)
+                        mesh = reader.read()[0]
+                        for nameindex, name in enumerate(variable_names):
+                            result[nameindex][timeindex] = np.asarray(
+                                mesh.point_data[name][point_ids]
+                            )
+            case ".vtu":
+                reader = pv.XMLUnstructuredGridReader(filepath)
+                mesh = reader.read()
+                for name in data_name:
+                    if isinstance(name, str) and name in mesh.point_data:
+                        result.append(
+                            [np.asarray(mesh.point_data[name][point_ids])]
+                        )
+                    elif (
+                        isinstance(name, Variable)
+                        and name.data_name in mesh.point_data
+                    ):
+                        result.append(
+                            [
+                                np.asarray(
+                                    mesh.point_data[name.data_name][point_ids]
+                                )
+                            ]
+                        )
+                    elif (
+                        isinstance(name, Variable)
+                        and name.output_name in mesh.point_data
+                    ):
+                        result.append(
+                            [
+                                np.asarray(
+                                    mesh.point_data[name.output_name][point_ids]
+                                )
+                            ]
+                        )
+                    else:
+                        allfound = False
+                        break
+            case suffix:
+                msg = (
+                    "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or "
+                    f"'vtu' files, but not '{suffix}'"
+                )
+                raise TypeError(msg)
+        if allfound:
+            if returnslist:
+                return result
+            return result[0]
+        ms = MeshSeries(filepath=filepath)
+        points = [ms[0].points[i] for i in point_ids]
+        return ms.probe_values(points=points, data_name=data_name)
+
     def probe_values(
         self,
         points: np.ndarray | list,
