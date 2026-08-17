@@ -4,7 +4,7 @@
       <PointData>
       </PointData>
       <CellData Scalars="MaterialIDs">
-        <DataArray type="Int64" Name="MaterialIDs" format="ascii" RangeMin="0" RangeMax="0">
+        <DataArray type="Int32" Name="MaterialIDs" format="ascii" RangeMin="0" RangeMax="0">
           0 0 0 0 0 0
           0 0 0 0 0 0
           0 0 0 0 0 0

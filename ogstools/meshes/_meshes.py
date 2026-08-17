@@ -49,6 +49,7 @@ class Meshes(MutableMapping, StorageBase):
         self._meshes = meshes
         self.has_identified_subdomains: bool = False
         self._num_partitions: list[int] = []
+        self.output_names = {name: name for name in meshes}
 
     @property
     def num_partitions(self) -> list[int]:
@@ -76,8 +77,8 @@ class Meshes(MutableMapping, StorageBase):
     @classmethod
     def from_folder(cls, filepath: str | Path) -> Meshes:
         """
-        Create a Meshes object from a folder of already save Meshes.
-        Reverse of .save. It need a meta.yaml file in the specified folder.
+        Create a Meshes object from a folder of already saved Meshes.
+        Reverse of .save. It needs a meta.yaml file in the specified folder.
         """
         filepath = Path(filepath)
         import yaml
@@ -98,6 +99,9 @@ class Meshes(MutableMapping, StorageBase):
         )
         meshes.has_identified_subdomains = has_identified_subdomain
         meshes.num_partitions = num_partitions
+        output_dict = restored_data.get("output_names", None)
+        if output_dict:
+            meshes.rename_output_names(output_dict)
 
         return meshes
 
@@ -149,6 +153,7 @@ class Meshes(MutableMapping, StorageBase):
         new = self.__class__(meshes=meshes_copy)
         new.has_identified_subdomains = self.has_identified_subdomains
         new.num_partitions = copy.deepcopy(self.num_partitions, memo)
+        new.output_names = self.output_names
 
         memo[id(self)] = new
         return new
@@ -162,9 +167,12 @@ class Meshes(MutableMapping, StorageBase):
     def __setitem__(self, key: str, mesh: pv.UnstructuredGrid) -> None:
         self.has_identified_subdomains = False
         self._meshes[key] = mesh
+        if key not in self.output_names:
+            self.output_names[key] = key
 
     def __delitem__(self, key: str) -> None:
         del self._meshes[key]
+        del self.output_names[key]
 
     def __len__(self) -> int:
         return len(self._meshes)
@@ -229,7 +237,9 @@ class Meshes(MutableMapping, StorageBase):
             "has_identified_subdomains", False
         )
         meshes.num_partitions = restored_data.get("num_partitions", None)
-
+        output_dict = restored_data.get("output_names", None)
+        if output_dict:
+            meshes.rename_output_names(output_dict)
         return meshes
 
     @classmethod
@@ -400,6 +410,11 @@ class Meshes(MutableMapping, StorageBase):
                 "meshes": list(self._meshes.keys()),
                 "has_identified_subdomains": self.has_identified_subdomains,
                 "num_partitions": self.num_partitions,
+                "output_names": {
+                    key: value
+                    for key, value in self.output_names.items()
+                    if key != value
+                },
             }
 
             yaml_string = yaml.dump(meta_dict)
@@ -585,6 +600,22 @@ class Meshes(MutableMapping, StorageBase):
         Add to the name physical_group to restore legacy convention
         """
         self.modify_names(prefix="physical_group_")
+
+    def rename_output_names(self, rename_map: dict[str, str]) -> None:
+        """
+        Rename the output_names of the meshes according to specified mapping.
+        Not all meshes have to be included but no non-existent meshes may be included
+
+        :param rename_map:  A dictionary mapping mesh names -> output names (e.g. {'left':'Left Side'}).
+                            Note that dictionary keys have to be the actual mesh names not current output names.
+                            To find the actual names, use `keys`
+        """
+        invalid = [name for name in rename_map if name not in self._meshes]
+        if invalid:
+            msg = f"Invalid mesh names: {invalid}. Valid names: {list(self._meshes.keys())}"
+            raise KeyError(msg)
+        for mesh, outputname in rename_map.items():
+            self.output_names[mesh] = outputname
 
     @staticmethod
     def create_metis(
@@ -818,8 +849,9 @@ class Meshes(MutableMapping, StorageBase):
         colors_0D = iter(colormaps["Pastel1"].colors)
 
         for name, mesh in self.items():
+            label = self.output_names[name]
             if name == self.domain_name:
-                ax.plot([], [], "s", label=name, c="lightgrey", ms=8 * lw)
+                ax.plot([], [], "s", label=label, c="lightgrey", ms=8 * lw)
             elif mesh.GetMaxSpatialDimension() == 2:
                 color = next(colors_2D)
                 subvar = Scalar(
@@ -835,23 +867,20 @@ class Meshes(MutableMapping, StorageBase):
                     mesh, subvar, show_edges=False, cbar=False, fig=fig, ax=ax,
                     alpha=alpha
                 )  # fmt: skip
-                ax.plot([], [], "s", label=name, c=color, ms=8 * lw)
+                ax.plot([], [], "s", label=label, c=color, ms=8 * lw)
             elif mesh.GetMaxSpatialDimension() == 1:
                 color = next(colors_1D)
                 plot.line(
-                    mesh, ax=ax, label=name, lw=lw, color=color,
+                    mesh, ax=ax, label=label, lw=lw, color=color,
                     fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
-                if name == self.domain_name:
-                    ax.plot([], [], "s", label=name, c="lightgrey", ms=16 * lw)
-                else:
-                    axes = plot.utils.get_projection(self.domain)[:2]
-                    color = next(colors_0D)
-                    ax.plot(
-                        *mesh.points[:, axes].T, "o", label=name,
-                        clip_on=clip_on, color=color, ms=8 * lw
-                    )  # fmt: skip
+                axes = plot.utils.get_projection(self.domain)[:2]
+                color = next(colors_0D)
+                ax.plot(
+                    *mesh.points[:, axes].T, "o", label=label,
+                    clip_on=clip_on, color=color, ms=8 * lw
+                )  # fmt: skip
 
         plot.utils.update_font_sizes(fig.axes, fontsize)
         ax.legend(

@@ -269,6 +269,39 @@ def test_identify_subdomains(tmp_path, meshing_data, failcase):
             _check(mesh, cli_subdomain, "bulk_element_ids")
 
 
+def test_output_names():
+    """Check that meshes.output_names behaves as intended"""
+    meshes = examples.load_meshes_selke()
+    # Initializing meshes creates output_names
+    assert len(meshes) == len(meshes.output_names)
+    mesh_wipper = meshes["Selke_Basin_PL_Wipper"]
+    del meshes["Selke_Basin_PL_Wipper"]
+    # Removing a mesh removes its name from output_names
+    assert len(meshes) == len(meshes.output_names)
+    meshes["Selke_Basin_PL_Wipper"] = mesh_wipper
+    # Adding a mesh adds its name to output_names
+    assert (
+        meshes.output_names["Selke_Basin_PL_Wipper"] == "Selke_Basin_PL_Wipper"
+    )
+    assert meshes.output_names["Selke_Basin_PL_Bode"] == "Selke_Basin_PL_Bode"
+    # Trying to change non-existent name results in key error
+    with pytest.raises(KeyError):
+        meshes.rename_output_names({"Selke_Basin_not_there": "not there"})
+    # Setting an output name and plotting names the output_name in the figures label
+    meshes.rename_output_names({"Selke_Basin_PL_Wipper": "River Wipper"})
+    from matplotlib import pyplot as plt
+
+    fig = meshes.plot()
+    ax: plt.Axes = fig.axes[0]
+    _, labels = ax.get_legend_handles_labels()
+    labels.index("River Wipper")
+    labels.index("Selke_Basin_PL_Bode")
+    files = meshes.copy().save()
+    meshes = ot.Meshes.from_file(files[-1])
+    assert meshes.output_names["Selke_Basin_PL_Wipper"] == "River Wipper"
+    assert meshes.output_names["Selke_Basin_PL_Bode"] == "Selke_Basin_PL_Bode"
+
+
 @pytest.mark.tools  # NodeReordering
 def test_meshes_saving_reading():
     """Check, that saving+reading meshes equal the original."""
