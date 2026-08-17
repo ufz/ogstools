@@ -137,7 +137,7 @@ df_t = ot.logparser.model_and_clock_time(df_log)
 axs = df_t[["step_size", "clock_time", "iterations"]].plot(
     grid=True, subplots=True
 )
-axs.flatten()[0].get_figure().show()
+axs[0].get_figure().show()
 
 # %% [markdown]
 # To get an overview of the convergence behavior of the nonlinear solver over
