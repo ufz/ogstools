@@ -12,6 +12,7 @@ import pyvista as pv
 from shapely import Polygon
 
 import ogstools as ot
+from ogstools import examples
 from ogstools.meshes.gmsh_BHE import BHE, Groundwater, gen_bhe_mesh
 
 # %% [markdown]
@@ -169,3 +170,26 @@ bhe_meshes = gen_bhe_mesh(
 
 # %%
 load_and_plot(bhe_meshes)
+
+# %% [markdown]
+# Accessing simulated BHE temperatures
+# --------------------------------------
+# BHE simulation results store temperature per pipe instead of as a single
+# vector. Which component names exist depends on the BHE type - a single
+# U-tube (``1U``) has one pipe loop (``in``, ``out``, ``grout1``, ``grout2``),
+# while a double U-tube (``2U``) has two independent loops in the same
+# borehole (``in1``/``in2``, ``out1``/``out2``, ``grout1``..``grout4``).
+# :py:class:`~ogstools.variables.vector.Components_BHE`
+# (e.g. ``ot.variables.temperature_BHE``) knows this per-type layout.
+#
+# For a mesh with several boreholes, indexing takes a second, separate
+# argument: the BHE number. E.g. in the mesh below, BHE 1 and 3 are ``1U``
+# and BHE 2 is ``2U``. We probe the inflow temperature at the top of each
+# borehole over time:
+
+# %%
+mesh_series = examples.load_meshseries_BHEs_3D("full", ".pvd")
+bhe_tops = [(-6.0, 25.0, -27.0), (0.0, 25.0, -27.0), (6.0, 25.0, -27.0)]
+mesh_series.probe_values(bhe_tops[0], ot.variables.temperature_BHE[1, "in"])
+mesh_series.probe_values(bhe_tops[1], ot.variables.temperature_BHE[2, "in1"])
+mesh_series.probe_values(bhe_tops[1], ot.variables.temperature_BHE[2, "in2"])
