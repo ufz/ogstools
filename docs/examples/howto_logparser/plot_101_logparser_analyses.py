@@ -137,6 +137,10 @@ df_t = ot.logparser.model_and_clock_time(df_log)
 axs = df_t[["step_size", "clock_time", "iterations"]].plot(
     grid=True, subplots=True
 )
+axs[-1].set_xlabel("model time [s]")
+axs[0].set_ylabel("step size [s]")
+axs[1].set_ylabel("clock time [s]")
+axs[2].set_ylabel("iterations")
 axs[0].get_figure().show()
 
 # %% [markdown]

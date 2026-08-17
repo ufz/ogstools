@@ -107,7 +107,7 @@ ax.set_ylabel("iteration number")
 ax.yaxis.label.set_color("C0")  # colour matches the left line
 ax.tick_params(axis="y", colors="C0")
 ax_right = ax.right_ax
-ax_right.set_ylabel("simulation time")
+ax_right.set_ylabel("model time [s]")
 ax_right.yaxis.label.set_color("C1")
 ax_right.tick_params(axis="y", colors="C1")
 lines, labels = ax.get_legend_handles_labels()

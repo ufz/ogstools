@@ -26,10 +26,14 @@ def _format_fig(
     y_ticks: np.ndarray,
     x_label: str,
 ) -> plt.Figure:
+    x_axis_labels = {
+        "time_step": "time step",
+        "model_time": "model time [s]",
+    }
     ax.set_xticks(x_ticks, minor=True)
     ax.set_yticks(y_ticks, minor=True)
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax.set_xlabel(x_label.replace("_", " "))
+    ax.set_xlabel(x_axis_labels.get(x_label, x_label.replace("_", " ")))
     ax.set_ylabel("iteration")
     fig.tight_layout()
     return fig
@@ -77,7 +81,8 @@ def plot_convergence_order(
     :param df:          Dataframe of a simulation log.
     :param n:           Number of error values to use to estimate the
                         convergence order.
-    :param x_metric:    x_axis can represent either "time_step" or "model_time"
+    :param x_metric:    x_axis can represent either "time_step" or
+                        "model_time" (not computation time)
 
     Keyword Arguments:
         - see: :func:`~ogstools.plot.heatmaps.heatmap`)
@@ -115,7 +120,8 @@ def plot_convergence(
     :param df:          Dataframe of a simulation log.
     :param metric:      Which metric / column of the Dataframe to plot.
                         dx (absolute error), dx_x (relative error), x (residual)
-    :param x_metric:    x_axis can represent either "time_step" or "model_time"
+    :param x_metric:    x_axis can represent either "time_step" or
+                        "model_time" (not computation time)
 
     Keyword Arguments:
         - see: :func:`~ogstools.plot.heatmaps.heatmap`)

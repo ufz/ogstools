@@ -73,7 +73,7 @@ class Monitor:
             "dx_x_5",
         ]
         self.ylabels = {
-            "step_start_time": "time (s)",
+            "step_start_time": "model time (s)",
             "step_size": "time step size (s)",
             "assembly_time": "assembly time (s)",
             "linear_solver_time": "linear solver time (s)",
@@ -87,7 +87,7 @@ class Monitor:
             "dx_x_5": "dx_x_5",
         }
         self.titles = {
-            "step_start_time": "Simulation Time",
+            "step_start_time": "Model Time",
             "step_size": "Step Size",
             "assembly_time": "Assembly Time per time step",
             "linear_solver_time": "Linear Solver Time per time step",
