@@ -1027,9 +1027,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                         break
             case ".pvd":
                 reader = pv.PVDReader(filepath)
-                reader.set_active_time_point(
-                    0
-                )  # TODO: replace with first timestep index
+                reader.set_active_time_point(0)
                 mesh = reader.read()[0]
                 variable_names = []
                 for name in data_name:
@@ -1056,7 +1054,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 if allfound:
                     for timeindex, time in enumerate(
                         reader.time_values[timeslice]
-                    ):  # TODO: replace with timeslice
+                    ):
                         reader.set_active_time_value(time)
                         mesh = reader.read()[0]
                         for nameindex, name in enumerate(variable_names):
@@ -1144,8 +1142,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
+        # if (
+        #     isinstance(data_name, list)
+        #     and any(key in self.point_data for key in data_name)
+        # ) or data_name in self.point_data:
+        #     probe_data_type = "point data"
+        # else:
+        #     probe_data_type = "cell data"
         pts = reshape_obs_points(points, self.mesh(0))
-        print("New")
         data = self.data(data_name)
         if self._data_type == ".xdmf":
             timeslice = self._time_indices[0]
@@ -1153,7 +1157,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             timeslice = slice(None)
         geom_ids = []
         for point in pts:
-            if np.array_equal(point, self[0].find_closest_point(point)):
+            if np.array_equal(
+                point, self[0].points[self[0].find_closest_point(point)]
+            ):
                 print("Here")
                 geom_ids.append(self[0].find_closest_point(point))
             else:
