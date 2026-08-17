@@ -48,7 +48,7 @@ df_log = ot.logparser.fill_ogs_context(df_records)
 #
 # :py:mod:`ogstools.logparser.analysis_time_step`
 df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
-df_ts_it
+print(df_ts_it)
 
 
 # %%
@@ -63,7 +63,7 @@ df_ts_it
 df_ts = ot.logparser.analysis_time_step(df_log)
 df_ts = df_ts.loc[0]
 # Removing MPI_process (index=0) from result (all are 0) for serial log.
-df_ts
+print(df_ts)
 
 # %%
 # Selecting specific metrics (3) and plotting using pandas plot function.
@@ -101,7 +101,7 @@ ax.get_figure().show()
 
 # %%
 
-ot.logparser.analysis_convergence_newton_iteration(df_log)
+print(ot.logparser.analysis_convergence_newton_iteration(df_log))
 
 
 # %%
@@ -118,7 +118,7 @@ df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 
 # Only for staggered coupled processes !
-ot.logparser.analysis_convergence_coupling_iteration(df_log)
+print(ot.logparser.analysis_convergence_coupling_iteration(df_log))
 
 # %% [markdown]
 # Analysis of model time and clock time
