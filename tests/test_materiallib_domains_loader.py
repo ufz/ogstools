@@ -32,7 +32,7 @@ def test_material_from_file_accepts_grouped_domains(write_yaml) -> None:
                 {
                     "domain": "medium",
                     "properties": {
-                        "Density": [{"type": "Constant", "value": 2700}]
+                        "Density": {"type": "Constant", "value": 2700}
                     },
                 }
             ],
@@ -58,7 +58,7 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
                 {
                     "domain": "phase",
                     "properties": {
-                        "Viscosity": [{"type": "Constant", "value": 1.0}]
+                        "Viscosity": {"type": "Constant", "value": 1.0}
                     },
                 }
             ],
@@ -77,7 +77,9 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
     assert copied_raw["domains"][0]["domain"] == "phase"
 
 
-def test_material_rejects_flat_top_level_properties(write_yaml) -> None:
+def test_material_rejects_unsupported_top_level_properties_key(
+    write_yaml,
+) -> None:
     file_path = write_yaml(
         "legacy.yml",
         {
@@ -86,11 +88,12 @@ def test_material_rejects_flat_top_level_properties(write_yaml) -> None:
         },
     )
 
-    with pytest.raises(ValueError, match="top-level 'domains'"):
+    with pytest.raises(ValueError, match=r"top-level key.*properties"):
         Material.from_file(file_path)
 
 
 def test_material_rejects_duplicate_domain_blocks(write_yaml) -> None:
+
     file_path = write_yaml(
         "duplicate.yml",
         {
@@ -132,7 +135,7 @@ def test_material_manager_loads_grouped_domain_repository(
                 {
                     "domain": "medium",
                     "properties": {
-                        "Density": [{"type": "Constant", "value": 2700}]
+                        "Density": {"type": "Constant", "value": 2700}
                     },
                 }
             ],

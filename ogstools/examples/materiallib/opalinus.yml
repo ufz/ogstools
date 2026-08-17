@@ -1,114 +1,106 @@
-group: medium
 name: opalinus_clay
 domains:
   - domain: medium
     properties:
       biot_coefficient:
-        - type: Constant
-          value: 0.6
-          unit: 1
+        type: Constant
+        value: 0.6
+        unit: 1
       bishops_effective_stress:
-        - type: BishopsPowerLaw
-          exponent: 1
-          unit: 1
+        type: BishopsPowerLaw
+        exponent: 1
+        unit: 1
       density:
-        - type: Constant
-          value: 2600
-          unit: kg/m³
+        type: Constant
+        value: 2600
+        unit: kg/m³
       permeability:
-        - type: Constant
-          value: 1.e-21
-          unit: m²
+        type: Constant
+        value: 1.e-21
+        unit: m²
       poisson_ratio:
-        - type: Constant
-          value: 0.23
-          unit: 1
+        type: Constant
+        value: 0.23
+        unit: 1
       porosity:
-        - type: Constant
-          value: 0.15
-          unit: 1
+        type: Constant
+        value: 0.15
+        unit: 1
       storage:
-        - type: Constant
-          value: 2e-10
-          unit: kg/(m²Pa)
+        type: Constant
+        value: 2e-10
+        unit: kg/(m²Pa)
       reference_temperature:
-        - type: Constant
-          value: 293.15
-          unit: K
+        type: Constant
+        value: 293.15
+        unit: K
       saturation:
-        - type: SaturationVanGenuchten
-          exponent: 0.2
-          p_b: 48000000
-          residual_gas_saturation: 0.01
-          residual_liquid_saturation: 0.01
+        type: SaturationVanGenuchten
+        exponent: 0.2
+        p_b: 48000000
+        residual_gas_saturation: 0.01
+        residual_liquid_saturation: 0.01
       specific_heat_capacity:
-        - type: Constant
-          value: 995
-          unit: J/(kg·K)
+        type: Constant
+        value: 995
+        unit: J/(kg·K)
       thermal_conductivity:
-        - type: SaturationWeightedThermalConductivity
-          mean_type: arithmetic_squareroot
-          dry_thermal_conductivity: 1.36
-          wet_thermal_conductivity: 1.7
-          unit: W/(m·K)
-        - type: EffectiveThermalConductivityPorosityMixing
-          unit: W/(m·K)
-        - type: Constant
-          value: 1.7
-          unit: W/(m·K)
+        type: Constant
+        value: 1.7
+        unit: W/(m·K)
       thermal_expansivity:
-        - type: Constant
-          value: 1.7e-5
-          unit: 1/K
+        type: Constant
+        value: 1.7e-5
+        unit: 1/K
       thermal_longitudinal_dispersivity:
-        - type: Constant
-          value: 0
-          unit: m
+        type: Constant
+        value: 0
+        unit: m
       thermal_transversal_dispersivity:
-        - type: Constant
-          value: 0
-          unit: m
+        type: Constant
+        value: 0
+        unit: m
       tortuosity:
-        - type: Constant
-          value: 1
-          unit: 1
+        type: Constant
+        value: 1
+        unit: 1
       youngs_modulus:
-        - type: Constant
-          value: 6500000000
-          unit: Pa
+        type: Constant
+        value: 6500000000
+        unit: Pa
       relative_permeability:
-        - type: RelativePermeabilityVanGenuchten
-          residual_liquid_saturation: 0.01
-          residual_gas_saturation: 0.01
-          exponent: 0.2
-          minimum_relative_permeability_liquid: 1e-12
-          unit: 1
+        type: RelativePermeabilityVanGenuchten
+        residual_liquid_saturation: 0.01
+        residual_gas_saturation: 0.01
+        exponent: 0.2
+        minimum_relative_permeability_liquid: 1e-12
+        unit: 1
       relative_permeability_nonwetting_phase:
-        - type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
-          residual_liquid_saturation: 0.01
-          residual_gas_saturation: 0.01
-          exponent: 0.2
-          min_relative_permeability: 1e-5
-          unit: 1
+        type: RelativePermeabilityNonWettingPhaseVanGenuchtenMualem
+        residual_liquid_saturation: 0.01
+        residual_gas_saturation: 0.01
+        exponent: 0.2
+        min_relative_permeability: 1e-5
+        unit: 1
   - domain: phase
     properties:
       density:
-        - type: Constant
-          value: 2600
-          unit: kg/m³
+        type: Constant
+        value: 2600
+        unit: kg/m³
       specific_heat_capacity:
-        - type: Constant
-          value: 995
-          unit: J/(kg·K)
+        type: Constant
+        value: 995
+        unit: J/(kg·K)
       thermal_conductivity:
-        - type: Constant
-          value: 1.7
-          unit: W/(m·K)
+        type: Constant
+        value: 1.7
+        unit: W/(m·K)
       thermal_expansivity:
-        - type: Constant
-          value: 1.7e-5
-          unit: 1/K
+        type: Constant
+        value: 1.7e-5
+        unit: 1/K
       storage:
-        - type: Constant
-          value: 2e-10
-          unit: kg/(m²Pa)
+        type: Constant
+        value: 2e-10
+        unit: kg/(m²Pa)

@@ -55,13 +55,11 @@ def test_medium_loads_only_medium_domain_properties(
         [
             {
                 "domain": "medium",
-                "properties": {
-                    "Density": [{"type": "Constant", "value": 2400}]
-                },
+                "properties": {"Density": {"type": "Constant", "value": 2400}},
             },
             {
                 "domain": "phase",
-                "properties": {"Density": [{"type": "Constant", "value": 999}]},
+                "properties": {"Density": {"type": "Constant", "value": 999}},
             },
         ],
     )
@@ -71,8 +69,8 @@ def test_medium_loads_only_medium_domain_properties(
             {
                 "domain": "phase",
                 "properties": {
-                    "Density": [{"type": "Constant", "value": 999}],
-                    "Viscosity": [{"type": "Constant", "value": 1.0}],
+                    "Density": {"type": "Constant", "value": 999},
+                    "Viscosity": {"type": "Constant", "value": 1.0},
                 },
             }
         ],
@@ -87,7 +85,9 @@ def test_medium_loads_only_medium_domain_properties(
     )
 
     assert [
-        prop.value for prop in medium.properties if prop.name == "Density"
+        prop.parameters["value"]
+        for prop in medium.properties
+        if prop.name == "Density"
     ] == [2400]
     assert medium.properties[0].extra["domain"] == "medium"
 
@@ -98,15 +98,13 @@ def test_phase_loads_only_phase_domain_properties(grouped_schema: str) -> None:
         [
             {
                 "domain": "medium",
-                "properties": {
-                    "Density": [{"type": "Constant", "value": 2400}]
-                },
+                "properties": {"Density": {"type": "Constant", "value": 2400}},
             },
             {
                 "domain": "phase",
                 "properties": {
-                    "Density": [{"type": "Constant", "value": 999}],
-                    "Viscosity": [{"type": "Constant", "value": 1.0}],
+                    "Density": {"type": "Constant", "value": 999},
+                    "Viscosity": {"type": "Constant", "value": 1.0},
                 },
             },
         ],
@@ -119,7 +117,7 @@ def test_phase_loads_only_phase_domain_properties(grouped_schema: str) -> None:
     )
 
     density = next(prop for prop in phase.properties if prop.name == "Density")
-    assert density.value == 999
+    assert density.parameters["value"] == 999
     assert density.extra["domain"] == "phase"
 
 
@@ -132,13 +130,13 @@ def test_component_loads_only_component_domain_properties(
             {
                 "domain": "phase",
                 "properties": {
-                    "MolarMass": [{"type": "Constant", "value": 18.0}]
+                    "MolarMass": {"type": "Constant", "value": 18.0}
                 },
             },
             {
                 "domain": "component",
                 "properties": {
-                    "MolarMass": [{"type": "Constant", "value": 18.0}]
+                    "MolarMass": {"type": "Constant", "value": 18.0}
                 },
             },
         ],

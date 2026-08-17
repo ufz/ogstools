@@ -52,6 +52,7 @@ class Component:
         and the role (gas or liquid).
         """
         required_properties = set()
+        filtered_properties: list[MaterialProperty] = []
 
         logger.debug("===============================================")
 
@@ -89,7 +90,9 @@ class Component:
                         self.D,
                     )
                     prop = MaterialProperty(
-                        name="diffusion", type_="Constant", value=self.D
+                        name="diffusion",
+                        type_="Constant",
+                        parameters={"value": self.D},
                     )
                     filtered_properties.append(prop)
                 else:
