@@ -848,15 +848,9 @@ class Meshes(MutableMapping, StorageBase):
         colors_0D = iter(colormaps["Pastel1"].colors)
 
         for name, mesh in self.items():
+            label = self.output_names[name]
             if name == self.domain_name:
-                ax.plot(
-                    [],
-                    [],
-                    "s",
-                    label=self.output_names[name],
-                    c="lightgrey",
-                    ms=8 * lw,
-                )
+                ax.plot([], [], "s", label=label, c="lightgrey", ms=8 * lw)
             elif mesh.GetMaxSpatialDimension() == 2:
                 color = next(colors_2D)
                 subvar = Scalar(
@@ -872,25 +866,18 @@ class Meshes(MutableMapping, StorageBase):
                     mesh, subvar, show_edges=False, cbar=False, fig=fig, ax=ax,
                     alpha=alpha
                 )  # fmt: skip
-                ax.plot(
-                    [],
-                    [],
-                    "s",
-                    label=self.output_names[name],
-                    c=color,
-                    ms=8 * lw,
-                )
+                ax.plot([], [], "s", label=label, c=color, ms=8 * lw)
             elif mesh.GetMaxSpatialDimension() == 1:
                 color = next(colors_1D)
                 plot.line(
-                    mesh, ax=ax, label=self.output_names[name], lw=lw, color=color,
+                    mesh, ax=ax, label=label, lw=lw, color=color,
                     fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
                 axes = plot.utils.get_projection(self.domain)[:2]
                 color = next(colors_0D)
                 ax.plot(
-                    *mesh.points[:, axes].T, "o", label=self.output_names[name],
+                    *mesh.points[:, axes].T, "o", label=label,
                     clip_on=clip_on, color=color, ms=8 * lw
                 )  # fmt: skip
 
