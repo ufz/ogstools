@@ -57,35 +57,9 @@ class Variable:
     color: str | None = None
     """Default color for plotting"""
 
-    def __init__(
-        self,
-        data_name: str,
-        data_unit: str = "",
-        output_unit: str = "",
-        output_name: str = "",
-        symbol: str = "",
-        mask: str = "",
-        func: Callable = identity,
-        mesh_dependent: bool = False,
-        process_with_units: bool = False,
-        cmap: Colormap | str = "coolwarm",
-        bilinear_cmap: bool = False,
-        categoric: bool = False,
-        color: str | None = None,
-    ) -> None:
-        self.data_name = data_name
-        self.data_unit = data_unit
-        self.output_unit = str(output_unit) if output_unit != "" else data_unit
-        self.output_name = str(output_name) if output_name != "" else data_name
-        self.symbol = symbol
-        self.mask = mask
-        self.func = func
-        self.mesh_dependent = mesh_dependent
-        self.process_with_units = process_with_units
-        self.cmap = cmap
-        self.bilinear_cmap = bilinear_cmap
-        self.categoric = categoric
-        self.color = color
+    def __post_init__(self) -> None:
+        self.output_unit = str(self.output_unit or self.data_unit)
+        self.output_name = str(self.output_name or self.data_name)
 
     def __str__(self) -> str:
         return self.data_name
