@@ -278,8 +278,8 @@ def test_aggregate_time_of_limit():
     assert not np.any(np.isnan(max_mesh["max_temperature_time"]))
 
 
-def test_temporal_aggregate_mesh_dependent():
-    "Test aggregation of mesh_dependent variable on meshseries."
+def test_temporal_aggregate_integrity():
+    "Test aggregation of integrity variables on meshseries."
     mesh_series = examples.load_meshseries_THM_2D_PVD()
     prop = ot.variables.dilatancy_alkan
     agg_mesh = mesh_series.aggregate_temporal(prop, np.max)

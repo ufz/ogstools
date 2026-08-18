@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pyvista as pv
 
-from . import mesh_dependent, tensor_math
+from . import integrity, tensor_math
 from .custom_colormaps import integrity_cmap, none_cmap, temperature_cmap
 from .matrix import Matrix
 from .unit_registry import u_reg
@@ -123,7 +123,7 @@ dilatancy_critescu_tot = Scalar(
     output_unit="",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    func=mesh_dependent.dilatancy_critescu,
+    func=integrity.dilatancy_critescu,
     mask=M_MASK,
     color=COLOR_MECH,
     mesh_dependent=True,
@@ -132,7 +132,7 @@ dilatancy_critescu_tot = Scalar(
 )
 dilatancy_critescu_eff = dilatancy_critescu_tot.replace(
     output_name="effective_dilatancy_criterion",
-    func=partial(mesh_dependent.dilatancy_critescu, effective=True),
+    func=partial(integrity.dilatancy_critescu, effective=True),
 )
 
 dilatancy_alkan = Scalar(
@@ -141,7 +141,7 @@ dilatancy_alkan = Scalar(
     output_unit="MPa",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    func=mesh_dependent.dilatancy_alkan,
+    func=integrity.dilatancy_alkan,
     mask=M_MASK,
     color=COLOR_MECH,
     mesh_dependent=True,
@@ -150,7 +150,7 @@ dilatancy_alkan = Scalar(
 )
 dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
-    func=partial(mesh_dependent.dilatancy_alkan, effective=True),
+    func=partial(integrity.dilatancy_alkan, effective=True),
 )
 
 fluid_pressure_crit = Scalar(
@@ -159,7 +159,7 @@ fluid_pressure_crit = Scalar(
     output_unit="MPa",
     output_name="fluid_pressure_criterion",
     symbol="F_p",
-    func=mesh_dependent.fluid_pressure_criterion,
+    func=integrity.fluid_pressure_criterion,
     mask=M_MASK,
     color=COLOR_MECH,
     mesh_dependent=True,

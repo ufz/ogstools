@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
-
 import shutil
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -246,3 +246,56 @@ def pv_set_attr(mesh: pv.DataSet, attr: str, value: Any) -> None:
         setattr(mesh, attr, value)
     else:
         pv.set_new_attribute(mesh, attr, value)
+
+
+def angles(
+    dataset: pv.DataSet | Sequence[pv.DataSet],
+    center: Sequence = (0.0, 0.0, 0.0),
+    normal: Sequence = (0.0, 0.0, 1.0),
+) -> np.ndarray:
+    """Compute the angles of the mesh's points around a normal and center.
+
+    :param mesh:    For the points of this mesh the angles are computed.
+    :param center:  Center of rotation.
+    :param normal:  Normal axis of rotation.
+    """
+    mesh = dataset if isinstance(dataset, pv.DataSet) else dataset[0]
+
+    n = np.asarray(normal, dtype=float)
+    assert n.shape == (3,), "normal must be length-3"
+    assert not np.allclose(n, [0, 0, 0]), "normal must have a length"
+    n_unit = n / np.linalg.norm(n)
+
+    vecs = mesh.points - np.asarray(center, dtype=float)
+    # project each vector into the plane
+    v_dot_n = np.dot(vecs, n_unit)  # (N,)
+    v_proj = vecs - np.outer(v_dot_n, n_unit)  # (N,3)
+
+    trial_axis = np.array([1.0, 0.0, 0.0])
+    if abs(np.dot(trial_axis, n_unit)) > 0.9:
+        trial_axis = np.array([0.0, 1.0, 0.0])
+
+    u_axis = trial_axis - np.dot(trial_axis, n_unit) * n_unit
+    u_unit = u_axis / np.linalg.norm(u_axis)
+    v_axis = np.cross(n_unit, u_unit)
+    v_unit = v_axis / np.linalg.norm(v_axis)
+
+    # coordinates in plane
+    x = np.dot(v_proj, u_unit)
+    y = np.dot(v_proj, v_unit)
+
+    result = np.arctan2(y, x)  # in radians, range (-pi, pi]
+    return np.where(np.hypot(x, y) > 1e-12, result, 0.0)
+
+
+def azimuth(dataset: pv.DataSet | pv.DataSet) -> np.ndarray | None:
+    "Calculate the azimuth angle with regards to the z-axis"
+    mesh = dataset if isinstance(dataset, pv.DataSet) else dataset[0]
+
+    if mesh.GetMaxSpatialDimension() == 2:
+        return None
+    pts, z = (mesh.points, mesh.points[:, 2])
+    r = np.hypot(*pts[:, [0, 1]].T)
+    return np.arctan(
+        np.divide(r, z, out=np.ones_like(z) * 1e12, where=z != 0.0)
+    )

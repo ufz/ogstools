@@ -117,7 +117,7 @@ fig = ot.plot.contourf(mesh, ot.variables.pressure)
 # %% [markdown]
 # Dilantancy criterion
 # --------------------
-# see: :func:`ogstools.variables.mesh_dependent.dilatancy_critescu`
+# see: :func:`ogstools.variables.integrity.dilatancy_critescu`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_tot)
@@ -126,7 +126,7 @@ fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
 # %% [markdown]
 # Fluid pressure criterion
 # ------------------------
-# see: :func:`ogstools.variables.mesh_dependent.fluid_pressure_criterion`
+# see: :func:`ogstools.variables.integrity.fluid_pressure_criterion`
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_crit)

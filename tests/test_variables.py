@@ -8,6 +8,7 @@ from pint.facets.plain import PlainQuantity
 
 from ogstools import examples
 from ogstools import variables as ov
+from ogstools.mesh.utils import angles
 
 Qty = ov.u_reg.Quantity
 
@@ -300,7 +301,7 @@ class TestPhysicalVariable:
         mesh = examples.load_mesh_mechanics_2D()
         sig = mesh["sigma"]
         center = (150, -650, 0)
-        phi = ov.mesh_dependent.angles(mesh, center)
+        phi = angles(mesh, center)
         ref_phi = np.atan2(
             mesh.points[:, 1] - center[1], mesh.points[:, 0] - center[0]
         )
