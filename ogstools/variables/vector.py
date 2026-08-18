@@ -42,11 +42,14 @@ class Vector(Variable):
             msg = "Vector index can only be 'x', 'y', 'z' or an int."
             raise KeyError(msg)
         int_index = index if isinstance(index, int) else "xyz".index(index)
+        output_name = self.output_name + f"_{index}" if self.output_name else ""
+        symbol = f"{{{self.symbol}}}_{index}" if self.symbol else index
+
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + f"_{index}",
-            symbol=f"{{{self.symbol}}}_{index}",
-            func=lambda x: self.func(x)[..., int_index],
+            output_name=output_name,
+            symbol=symbol,
+            func=lambda x: x[..., int_index],
             bilinear_cmap=True,
         )
 
@@ -57,7 +60,7 @@ class Vector(Variable):
             self,
             output_name=self.output_name + "_magnitude",
             symbol=f"||{{{self.symbol}}}||",
-            func=lambda x: vector_norm(self.func(x)),
+            func=vector_norm,
         )
 
 
@@ -101,8 +104,7 @@ class BHE_Vector(Variable):
             comp_index: int | str | list[int] | list[str],
         ) -> Callable:
 
-            def component_selector(x: T) -> T:
-                data: np.ndarray = self.func(x)
+            def component_selector(data: np.ndarray) -> np.ndarray:
                 len_data = data.shape[-1]
 
                 for _, components in BHE_Vector.BHE_COMPONENTS.items():
@@ -163,5 +165,5 @@ class VectorList(Variable):
             self,
             output_name=self.output_name + f"_{index}",
             symbol=f"{{{self.symbol}}}_{index}",
-            func=lambda x: np.take(self.func(x), index, axis=-1),
+            func=lambda x: np.take(x, index, axis=-1),
         )

@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
-from dataclasses import dataclass, replace
-from typing import Any
+from dataclasses import InitVar, dataclass, field, replace
+from typing import Any, TypeAlias, cast
 
 import numpy as np
 import pyvista as pv
@@ -22,8 +22,13 @@ from pint.facets.plain import PlainQuantity
 from typing_extensions import Self
 
 from .custom_colormaps import mask_cmap
+from .func import Function
 from .tensor_math import identity
 from .unit_registry import u_reg
+
+Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
+MeshOrSeries: TypeAlias = Mesh | Sequence[Mesh]
+Data: TypeAlias = int | float | np.ndarray | MeshOrSeries
 
 
 @dataclass
@@ -36,17 +41,16 @@ class Variable:
     """The unit of the variable data in the mesh."""
     output_unit: str = ""
     """The output unit of the variable."""
-    output_name: str = ""
+    output_name: str = cast(str, None)
     """The output name of the variable."""
     symbol: str = ""
     """The symbol representing this variable."""
     mask: str = ""
     """The name of the mask data in the mesh."""
-    func: Callable = identity
-    """The function to be applied on the data.
-       .. seealso:: :meth:`~ogstools.variables.Variable.transform`"""
-    mesh_dependent: bool = False
-    """If the function to be applied is dependent on the mesh itself"""
+    func: InitVar[Function | Callable | None] = None
+    """The function to be applied on the data."""
+    functions: list[Function] = field(default_factory=list)
+    """Contains this and all previous functions."""
     process_with_units: bool = False
     """If true, apply the function on values with units."""
     cmap: Colormap | str = "coolwarm"
@@ -58,12 +62,35 @@ class Variable:
     color: str | None = None
     """Default color for plotting"""
 
-    def __post_init__(self) -> None:
-        self.output_unit = str(self.output_unit or self.data_unit)
-        self.output_name = str(self.output_name or self.data_name)
+    def __post_init__(self, func: Function | Callable | None) -> None:
+        self.output_unit = self.output_unit or self.data_unit
+        self.output_name = (
+            self.data_name if self.output_name is None else self.output_name
+        )
+        if func is not None:
+            self.function = func
 
     def __str__(self) -> str:
         return self.data_name
+
+    @property
+    def function(self) -> Function | None:
+        """Returns the final function"""
+        return self.functions[-1] if self.functions else None
+
+    @function.setter
+    def function(self, func: Callable | Function | list[Function]) -> None:
+        """Set's this Variable's function.
+
+        If given a list of functions, all stored functions are overwritten."""
+        if isinstance(func, list):
+            self.functions = func
+            return
+        new_func = func if isinstance(func, Function) else Function(func)
+        if len(self.functions) == 0:
+            self.functions = [new_func]
+        else:
+            self.functions[-1] = new_func
 
     @property
     def type_name(self) -> str:
@@ -95,26 +122,30 @@ class Variable:
         return copy(self)
 
     @classmethod
-    def from_variable(cls, new_variable: Variable, **changes: Any) -> Self:
+    def from_variable(cls, variable: Variable, **changes: Any) -> Self:
         "Create a new Variable object with modified attributes."
+        functions = variable.functions.copy()
+        if (func := changes.pop("func", None)) is not None:
+            functions.append(
+                func if isinstance(func, Function) else Function(func)
+            )
         return cls(
-            data_name=new_variable.data_name,
-            data_unit=new_variable.data_unit,
-            output_unit=new_variable.output_unit,
-            output_name=new_variable.output_name,
-            symbol=new_variable.symbol,
-            mask=new_variable.mask,
-            func=new_variable.func,
-            mesh_dependent=new_variable.mesh_dependent,
-            process_with_units=new_variable.process_with_units,
-            cmap=new_variable.cmap,
-            bilinear_cmap=new_variable.bilinear_cmap,
-            categoric=new_variable.categoric,
-            color=new_variable.color,
+            data_name=variable.data_name,
+            data_unit=variable.data_unit,
+            output_unit=variable.output_unit,
+            output_name=variable.output_name,
+            symbol=variable.symbol,
+            mask=variable.mask,
+            functions=functions,
+            process_with_units=variable.process_with_units,
+            cmap=variable.cmap,
+            bilinear_cmap=variable.bilinear_cmap,
+            categoric=variable.categoric,
+            color=variable.color,
         ).replace(**changes)
 
     @classmethod
-    def find(cls, variable: Variable | str, mesh: pv.DataSet) -> Variable:
+    def find(cls, variable: Variable | str, data: MeshOrSeries) -> Variable:
         """
         Returns a Variable preset or creates one with correct type.
 
@@ -128,25 +159,28 @@ class Variable:
         :param mesh:        The mesh containing the variable data.
         :returns: A corresponding Variable preset or a new Variable of correct type.
         """
+        mesh = data[0] if isinstance(data, Sequence) else data
         data_keys: list[str] = list(
             set().union(mesh.point_data, mesh.cell_data, mesh.field_data)
         )
+        all_keys = data_keys + dir(data)
         error_msg = f"'{variable}' not found in dataset. Available data names are {data_keys}. "
         var_name = variable if isinstance(variable, str) else variable.data_name
-        if var_name in ["x", "y", "z"]:
-            return _spatial_preset(var_name, getattr(mesh, "spatial_unit", "m"))
-        if var_name == "time":
-            return _time_preset(getattr(mesh, "time_unit", "s"))
+
+        if var_name in ["x", "y", "z"] or var_name.startswith("points"):
+            return spatial_var(var_name, data)
+        if var_name in ["t", "time", "timevalues"]:
+            return time_var(var_name, data)
 
         if isinstance(variable, Variable):
-            if variable.data_name in data_keys + ["None"]:
+            if variable.data_name in all_keys + ["None"]:
                 return variable
             matches = [
-                variable.output_name in data_key for data_key in data_keys
+                variable.output_name in data_key for data_key in all_keys
             ]
             if not any(matches):
                 raise KeyError(error_msg)
-            data_key = data_keys[matches.index(True)]
+            data_key = all_keys[matches.index(True)]
             if data_key == variable.difference.output_name:
                 return variable.difference
             if data_key in variable._agg_names:
@@ -156,8 +190,7 @@ class Variable:
                     output_unit=variable.output_unit,
                     output_name=data_key,
                     symbol=variable.symbol,
-                    func=identity,
-                    mesh_dependent=False,
+                    func=[Function(identity)],
                 )
             return variable.replace(data_name=data_key, output_name=data_key)
 
@@ -168,8 +201,8 @@ class Variable:
         suffix = ""
         if (
             "_" in variable
-            and variable not in data_keys
-            and variable.rsplit("_", 1)[0] in data_keys
+            and variable not in all_keys
+            and variable.rsplit("_", 1)[0] in all_keys
         ):
             variable, suffix = variable.rsplit("_", 1)
 
@@ -186,17 +219,21 @@ class Variable:
             if prop.data_name == variable:
                 return component(prop, suffix)
         for prop in all_variables:
-            if prop.output_name == variable:
-                if prop.data_name in data_keys:
+            if prop.output_name == variable and variable != "":
+                if prop.data_name in all_keys:
                     return component(prop, suffix)
-                return component(
-                    prop.replace(data_name=prop.output_name), suffix
-                )
+                if prop.output_name in all_keys:
+                    return component(
+                        prop.replace(data_name=prop.output_name), suffix
+                    )
 
-        if variable not in data_keys:
+        if variable not in all_keys:
             raise KeyError(error_msg)
 
-        data_shape = mesh[variable].shape
+        if variable in dir(data):
+            data_shape = getattr(mesh, variable).shape
+        else:
+            data_shape = mesh[variable].shape
         if len(data_shape) == 1:
             return component(Scalar(variable), suffix)
         subclasses = Variable.__subclasses__()
@@ -206,11 +243,24 @@ class Variable:
             return component(vector(variable), suffix)
         return component(matrix(variable), suffix)
 
-    def transform(
-        self,
-        data: int | float | np.ndarray | pv.UnstructuredGrid | Sequence,
-        strip_unit: bool = True,
+    def _get_input_values(
+        self, data: Data, input: Callable | str
     ) -> np.ndarray:
+
+        if isinstance(input, str):
+            is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
+            if isinstance(data, pv.DataSet) or is_ms:
+                return data[input]  # type: ignore[reportReturnType, call-overload, index]
+            msg = (
+                f"{self} requires input {input}, thus it can only be "
+                "applied on a mesh or a meshseries."
+            )
+            raise TypeError(msg)
+        return input(data)
+
+    def transform(
+        self, data: Data, strip_unit: bool = True
+    ) -> np.ndarray | PlainQuantity:
         """
         Return the transformed data values.
 
@@ -219,26 +269,28 @@ class Variable:
         default without units. if `strip_unit` is False, a quantity is returned.
 
         Note:
-        If `self.mesh_dependent` is True, `self.func` is applied directly to the
-        mesh. Otherwise, it is determined by `self.process_with_units` if the
-        data is passed to the function with units (i.e. as a pint quantity) or
-        without.
+        If applied on a mesh or a meshseries, the data_name is read from the
+        dataset and passed to the stored function. If applied on numeric data,
+        it is passed to the function.
+        if `process_with_units` is True data is passed to the function with
+        units (i.e. as a pint quantity).
         """
-        Qty, d_u, o_u = u_reg.Quantity, self.data_unit, self.output_unit
-        is_ms = isinstance(data, Sequence) and isinstance(data[0], pv.DataSet)
-        if self.mesh_dependent:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
-                result = Qty(Qty(self.func(data), d_u), o_u)
-            else:
-                msg = "This variable can only be evaluated on a mesh."
-                raise TypeError(msg)
-        else:
-            if isinstance(data, pv.DataSet | pv.UnstructuredGrid) or is_ms:
-                result = Qty(self.func(Qty(self._get_data(data), d_u)), o_u)
-            elif self.process_with_units:
-                result = Qty(self.func(Qty(data, d_u)), o_u)
-            else:
-                result = Qty(Qty(self.func(np.asarray(data)), d_u), o_u)
+        is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
+        is_dataset = isinstance(data, pv.DataSet) or is_ms
+        result = self._get_data(data) if is_dataset else np.asarray(data)
+        if self.process_with_units:
+            result = u_reg.Quantity(result, self.data_unit)
+
+        for function in self.functions:
+            result = function.callable(
+                result,
+                *(self._get_input_values(data, inp) for inp in function.args),
+                **function.params,
+            )
+
+        if not self.process_with_units:
+            result = u_reg.Quantity(result, self.data_unit)
+        result = u_reg.Quantity(result, self.output_unit)
         return result.magnitude if strip_unit else result
 
     @property
@@ -263,8 +315,9 @@ class Variable:
         vector = next(x for x in subclasses if x.__name__ == "Vector")
         matrix = next(x for x in subclasses if x.__name__ == "Matrix")
         index = -2 if isinstance(self, vector | matrix) else -1
-        return self.replace(
-            func=lambda x: func(self.func(x), axis=index),
+        return type(self).from_variable(
+            self,
+            func=lambda x: func(x, axis=index),
             output_name="_".join([self.output_name, func.__name__]),
             symbol=new_symbol,
         )
@@ -311,14 +364,18 @@ class Variable:
             output_unit=square_unit(self.output_unit),
         )
 
-    @property
-    def difference(self) -> Variable:
-        "A variable relating to differences in this quantity."
-        quantity = u_reg.Quantity(1, self.output_unit)
+    def _diff_unit(self, unit: str) -> str:
+        quantity = u_reg.Quantity(1, unit)
         diff_quantity: PlainQuantity = quantity - quantity
         diff_unit = str(diff_quantity.units)
         if str(diff_quantity.units) in ["degC", "°C"]:
             diff_unit = "kelvin"
+        return diff_unit
+
+    @property
+    def difference(self) -> Variable:
+        "A variable relating to differences in this quantity."
+        diff_unit = self._diff_unit(self.output_unit)
         outname = self.output_name + "_difference"
         return self.replace(
             data_name=outname,
@@ -327,8 +384,7 @@ class Variable:
             output_name=outname,
             symbol=r"\Delta " + self.symbol,
             bilinear_cmap=True,
-            func=identity,
-            mesh_dependent=False,
+            func=[Function(identity)],
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
@@ -405,6 +461,9 @@ class Variable:
                 mesh0.point_data, mesh0.cell_data, mesh0.field_data
             )
         ):
+            for data in [mesh0, dataset]:
+                if hasattr(data, self.data_name):
+                    return getattr(data, self.data_name)
             if self.data_name in ["MaterialIDs", "None"]:
                 return np.full(mesh0.number_of_cells, 0)
             msg = (
@@ -479,45 +538,26 @@ class Scalar(Variable):
     "Represent a scalar variable."
 
 
-def _spatial_preset(axis: str, unit: PlainQuantity | str) -> Scalar:
-    def get_pts(
-        index: int,
-    ) -> Callable[[pv.UnstructuredGrid | Sequence], np.ndarray]:
-        "Returns the coordinates of all points with the given index"
-
-        def get_pts_coordinate(
-            dataset: pv.UnstructuredGrid | Sequence,
-        ) -> np.ndarray:
-            mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
-            return mesh.points[:, index]
-
-        return get_pts_coordinate
-
+def _quantity_to_str(unit: PlainQuantity | str) -> str:
     if isinstance(unit, PlainQuantity):
-        unit_str = str(unit) if unit.magnitude != 1 else unit.units
-    else:
-        unit_str = unit
-    return Scalar(
-        "",
-        unit_str,
-        unit_str,
-        symbol=axis,
-        mesh_dependent=True,
-        func=get_pts("xyz".index(axis)),
-        color="k",
-    )
+        return str(unit if unit.magnitude != 1 else unit.units)
+    return unit
 
 
-def _time_preset(unit: PlainQuantity | str) -> Scalar:
-    if isinstance(unit, PlainQuantity):
-        unit_str = str(unit) if unit.magnitude != 1 else unit.units
-    else:
-        unit_str = unit
-    return Scalar(
-        "time",
-        unit_str,
-        unit_str,
-        symbol="t",
-        mesh_dependent=True,
-        func=lambda ms: getattr(ms, "timevalues", range(len(ms))),
-    )
+def spatial_var(var_name: str, data: Data) -> Variable:
+
+    unit = _quantity_to_str(getattr(data, "spatial_unit", "m"))
+
+    from .vector import Vector
+
+    pts_var = Vector("points", unit, unit, "", color="k")
+    if var_name == "points":
+        return pts_var
+    if ("_" in var_name) and (suffix := var_name.rsplit("_", 1)[1]):
+        return pts_var[suffix]  # type: ignore[index]
+    return pts_var[var_name]  # type: ignore[index]
+
+
+def time_var(var_name: str, data: Data) -> Scalar:
+    unit = _quantity_to_str(getattr(data, "time_unit", "s"))
+    return Scalar("timevalues", unit, unit, var_name, symbol="t")

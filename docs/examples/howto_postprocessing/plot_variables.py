@@ -70,5 +70,20 @@ fig = ot.plot.contourf(
 )
 
 # %% [markdown]
+# Some variables store functions with arguments or parameters.
+
+# %%
+ot.variables.fluid_pressure_criterion.function
+
+# %% [markdown]
+# These can be changed in the following way.
+
+# %%
+# create a copy of the variables to not modify the original:
+fpc = ot.variables.fluid_pressure_criterion.copy()
+fpc.function.params["biot"] = 0.6  # change a parameter
+fpc.function
+
+# %% [markdown]
 # Have a look at
 # :ref:`sphx_glr_auto_examples_howto_plot` for more examples.

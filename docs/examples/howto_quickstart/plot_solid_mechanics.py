@@ -109,6 +109,8 @@ for comp in ["rr", "tt", "pp"]:
 # Evaluating models regarding their integrity is often dependent on the fluid
 # pressure. If not already present, we have to calculate it manually, e.g. as a
 # hypothetical water column proportional to the depth.
+# note: The large violation of the criterion in this example is due to the
+# large diameter of the tunnel.
 
 # %%
 mesh["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
@@ -120,7 +122,7 @@ fig = ot.plot.contourf(mesh, ot.variables.pressure)
 # see: :func:`ogstools.variables.integrity.dilatancy_critescu`
 
 # %%
-fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_tot)
+fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu)
 fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
 
 # %% [markdown]
@@ -129,4 +131,4 @@ fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
 # see: :func:`ogstools.variables.integrity.fluid_pressure_criterion`
 
 # %%
-fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_crit)
+fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_criterion)

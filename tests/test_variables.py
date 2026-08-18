@@ -115,9 +115,9 @@ class TestPhysicalVariable:
         mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
         assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
         assert np.max(ov.dilatancy_alkan_eff.transform(mesh)) > 0
-        assert np.max(ov.dilatancy_critescu_tot.transform(mesh)) > 0
+        assert np.max(ov.dilatancy_critescu.transform(mesh)) > 0
         assert np.max(ov.dilatancy_critescu_eff.transform(mesh)) > 0
-        assert np.max(ov.fluid_pressure_crit.transform(mesh)) > 0
+        assert np.max(ov.fluid_pressure_criterion.transform(mesh)) > 0
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
@@ -393,9 +393,9 @@ class TestPhysicalVariable:
         def equal(name: str, var: ov.Variable) -> None:
             str_var = ov.Variable.find(name, mesh)
             for key in vars(var):
-                if key == "func":
+                if key == "functions":
                     # a simple comparison like var == str_var would fail due to
-                    # the funcs being stored in different memory locations
+                    # the functions being stored in different memory locations
                     continue
                 assert getattr(str_var, key) == getattr(var, key)
             np.testing.assert_equal(
