@@ -997,7 +997,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             case ".xdmf" | ".xmf":
                 from .xdmf_reader import XDMFReader
 
-                data_type = ".xdmf"
                 reader = XDMFReader(filepath)
                 for name in data_name:
                     if isinstance(name, str) and name in reader.data_items:
@@ -1142,13 +1141,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
-        # if (
-        #     isinstance(data_name, list)
-        #     and any(key in self.point_data for key in data_name)
-        # ) or data_name in self.point_data:
-        #     probe_data_type = "point data"
-        # else:
-        #     probe_data_type = "cell data"
+        if (
+            isinstance(data_name, list)
+            and any(key in self.point_data for key in data_name)
+        ) or data_name in self.point_data:
+            probe_data_type = "point data"
+        else:
+            probe_data_type = "cell data"
         pts = reshape_obs_points(points, self.mesh(0))
         data = self.data(data_name)
         if self._data_type == ".xdmf":
@@ -1156,19 +1155,25 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             timeslice = slice(None)
         geom_ids = []
-        for point in pts:
-            if np.array_equal(
-                point, self[0].points[self[0].find_closest_point(point)]
-            ):
-                print("Here")
-                geom_ids.append(self[0].find_closest_point(point))
-            else:
-                print("There")
-                geom_ids += (
-                    self[0]
-                    .get_cell(self[0].find_containing_cell(point))
-                    .point_ids
-                )
+        if probe_data_type == "point data":
+            for point in pts:
+                if np.array_equal(
+                    point, self[0].points[self[0].find_closest_point(point)]
+                ):
+                    print("Here")
+                    geom_ids.append(self[0].find_closest_point(point))
+                else:
+                    print("There")
+                    geom_ids += (
+                        self[0]
+                        .get_cell(self[0].find_containing_cell(point))
+                        .point_ids
+                    )
+        else:
+            for point in pts:
+                containing_id = self[0].find_containing_cell(point)
+                geom_ids.append(containing_id)
+                geom_ids += self[0].cell_neighbors(containing_id)
         geom_ids = sorted(set(geom_ids))
         if isinstance(data, list):
             values = []
@@ -1182,7 +1187,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             ]
             values = np.moveaxis(self._flatten_vectors(values), 0, -1)
         values = np.swapaxes(values, 0, 1)
-        geom = [self[0].points[id] for id in geom_ids]
+        if probe_data_type == "point data":
+            geom = [self[0].points[id] for id in geom_ids]
+        else:
+            geom = self[0].cell_centers().points[geom_ids]
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
         pts = np.delete(pts, flat_axis, 1)
@@ -1325,6 +1333,94 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     result[np.isnan(result)] = np.swapaxes(
                         NearestNDInterpolator(geom, values)(pts), 0, 1
                     )[np.isnan(result)]
+            case False, kind:
+                from scipy.interpolate import interp1d
+
+                result = interp1d(geom[:, 0], values.T, kind=kind)(
+                    np.squeeze(pts, 1)
+                )
+            case _, _:
+                msg = (
+                    "No interpolation method implemented for mesh of "
+                    f"{self.dim=} and {interp_method=}"
+                )
+                raise TypeError(msg)
+
+        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+            result = np.squeeze(result, axis=1)
+        if isinstance(data_name, list):
+            if more_than_1d:
+                result = np.moveaxis(result, -1, 0)
+            result = self._restore_vectors(result, components)
+        return result
+
+    def probe_values_expensive(
+        self,
+        points: np.ndarray | list,
+        data_name: str | Variable | list[str | Variable],
+        interp_method: Literal["nearest", "linear"] = "linear",
+    ) -> np.ndarray | list[np.ndarray]:
+        """
+        Return the sampled data of the MeshSeries at observation points.
+
+        Similar to :func:`~ogstools.MeshSeries.probe` but returns the
+        data directly instead of creating a new MeshSeries.
+
+        :param points:          The observation points to sample at.
+        :param data_name:       Data to sample. If provided as a Variable, the
+                                output will transformed accordingly. Can also be
+                                a list of str or Variable.
+        :param interp_method:   Interpolation method, defaults to `linear`
+
+        :returns:   `numpy` array/s of interpolated data at observation points
+                    with the following shape:
+
+                    - multiple points: (n_timesteps, n_points, [n_components])
+                    - single points: (n_timesteps, [n_components])
+
+                    If `data_name` is a list, a corresponding list of arrays is
+                    returned.
+        """
+        if (
+            isinstance(data_name, list)
+            and any(key in self.point_data for key in data_name)
+            and any(key in self.cell_data for key in data_name)
+        ):
+            msg = "Cannot probe point and cell data together."
+            raise TypeError(msg)
+        pts = reshape_obs_points(points, self.mesh(0))
+        values = self.values(data_name)
+        if isinstance(data_name, list):
+            components = [
+                1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
+            ]
+            values = np.moveaxis(self._flatten_vectors(values), 0, -1)
+        values = np.swapaxes(values, 0, 1)
+        geom = self.mesh(0).points
+
+        if values.shape[0] != geom.shape[0]:
+            # assume cell_data
+            geom = self.mesh(0).cell_centers().points
+
+        # remove flat dimensions for interpolation
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        geom = np.delete(geom, flat_axis, 1)
+        pts = np.delete(pts, flat_axis, 1)
+        more_than_1d = self.dim > 1 or len(flat_axis) < 2
+
+        match more_than_1d, interp_method:
+            case True, "nearest":
+                from scipy.interpolate import NearestNDInterpolator
+
+                result = np.swapaxes(
+                    NearestNDInterpolator(geom, values)(pts), 0, 1
+                )
+            case True, "linear":
+                from scipy.interpolate import LinearNDInterpolator
+
+                result = np.swapaxes(
+                    LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
+                )
             case False, kind:
                 from scipy.interpolate import interp1d
 
