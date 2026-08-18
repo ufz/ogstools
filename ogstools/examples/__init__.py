@@ -99,6 +99,14 @@ def load_meshseries_HT_2D_paraview_XMF():
     )
 
 
+def load_meshseries_mechanics_3D_XDMF():
+    # ogs/Tests/Data/Mechanics/Ehlers/cube_1e0.prj
+    # modifications: xdmf output, only every 10 timesteps
+    return ot.MeshSeries(
+        str(_meshseries_dir / "3D_mechanics" / "cube_1e0.xdmf")
+    )
+
+
 def load_meshseries_diffusion_3D(
     Tb=373.15,
     Ta=293.15,
