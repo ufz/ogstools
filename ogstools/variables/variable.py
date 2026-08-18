@@ -11,6 +11,7 @@ via pint.
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from copy import copy, deepcopy
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -79,7 +80,19 @@ class Variable:
 
         :returns: A copy of the Variable with changed attributes.
         """
-        return replace(self, **changes)
+        if not set(changes).issubset(set(dir(self))):
+            wrong_keys = ", ".join(set(changes) - (set(dir(self))))
+            msg = (
+                "The following arguments are no attributes of "
+                f"{type(self).__name__}: {wrong_keys}"
+            )
+            raise KeyError(msg)
+        return replace(self.copy(), **changes)
+
+    def copy(self, deep: bool = True) -> Self:
+        if deep:
+            return deepcopy(self)
+        return copy(self)
 
     @classmethod
     def from_variable(cls, new_variable: Variable, **changes: Any) -> Self:
