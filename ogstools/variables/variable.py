@@ -400,25 +400,25 @@ class Variable:
             )
             raise KeyError(msg)
 
-        output_dataset = dataset[self.data_name]  # type: ignore[call-overload]
+        values = dataset[self.data_name]  # type: ignore[call-overload]
         if masked and self.mask_used(dataset):
             mask0 = np.asarray(mesh0.ctp(pass_cell_data=False)[self.mask] == 0)
             if not isinstance(dataset, Sequence):
-                output_dataset[mask0] = np.nan
-                return output_dataset
+                values[mask0] = np.nan
+                return values
 
             if np.all(dataset[self.mask] == mesh0[self.mask]):  # type: ignore[call-overload]
                 # Masks are time-invariant
-                output_dataset[:, mask0] = np.nan
-                return output_dataset
+                values[:, mask0] = np.nan
+                return values
 
             # Masks differ with time
             for i, _mesh in enumerate(dataset):
                 mask = np.asarray(
                     _mesh.ctp(pass_cell_data=False)[self.mask] == 0
                 )
-                output_dataset[i, mask] = np.nan
-        return output_dataset
+                values[i, mask] = np.nan
+        return values
 
     def get_label(self, split_at: int | None = None) -> str:
         "Creates variable label in format 'variable_name / variable_unit'"
