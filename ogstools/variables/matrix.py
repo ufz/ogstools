@@ -107,7 +107,7 @@ class Matrix(Variable):
             self,
             output_name=self.output_name + "_trace",
             symbol=rf"\mathrm{{tr}}({{{self.symbol}}})",
-            func=tensor_math.trace,
+            func=lambda x: tensor_math.trace(self.func(x)),
         )
 
     @property
