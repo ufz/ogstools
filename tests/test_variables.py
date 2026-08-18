@@ -305,6 +305,13 @@ class TestPhysicalVariable:
             np.testing.assert_array_less(0.0, np.nan_to_num(values, nan=1e-12))
         assert not np.any(np.isnan(ms.probe_values((0, 0, 0), var)[1:]))
 
+    def test_abs(self):
+        "Tests rate computation"
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        var = ov.saturation.abs
+        for values in [var.transform(ms), ms.values(var)]:
+            assert np.all(values >= 0.0)
+
     @pytest.mark.parametrize(
         "ms",
         [

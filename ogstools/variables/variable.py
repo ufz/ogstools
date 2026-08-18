@@ -364,6 +364,16 @@ class Variable:
             output_unit=square_unit(self.output_unit),
         )
 
+    @property
+    def abs(self) -> Self:
+        "A variable relating to absolute value of this quantity."
+        return type(self).from_variable(
+            self,
+            output_name=f"absolute_{self.output_name}",
+            symbol=rf"|{self.symbol}|",
+            func=np.abs,
+        )
+
     def _diff_unit(self, unit: str) -> str:
         quantity = u_reg.Quantity(1, unit)
         diff_quantity: PlainQuantity = quantity - quantity
