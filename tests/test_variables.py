@@ -424,9 +424,9 @@ class TestPhysicalVariable:
         "Test if meaningful error messages are given upon faulty input."
         mesh = examples.load_meshseries_THM_2D_PVD()[-1]
         failcases = [
-            ("", "not found in mesh."),
-            ("Temperature", "Temperature not found in mesh."),
-            ("temperature_x", "Scalar temperature has no component x"),
+            ("", "'' not found in dataset."),
+            ("Temperature", "'Temperature' not found in dataset."),
+            ("temperature_x", "Scalar 'temperature' has no component x"),
             ("velocity_xx", "Vector index can only be 'x', 'y', 'z' or an int"),
             ("sigma_x", "Matrix index can only be an int or one of"),
         ]  # fmt: skip

@@ -39,7 +39,7 @@ class Parameters(build_tree.BuildTree):
         elif isinstance(value, Sequence):
             self.set_constant_parameter(key, values=" ".join(map(str, value)))
         else:
-            msg = "`__setitem__` is not implemented for values of this type."
+            msg = f"`__setitem__` is not implemented for {type(value)=}."
             raise TypeError(msg)
 
     def add_parameter(self, **kwargs: Any) -> None:

@@ -131,7 +131,7 @@ class Variable:
         data_keys: list[str] = list(
             set().union(mesh.point_data, mesh.cell_data, mesh.field_data)
         )
-        error_msg = f"{variable} not found in mesh. Available data names are {data_keys}. "
+        error_msg = f"'{variable}' not found in dataset. Available data names are {data_keys}. "
         var_name = variable if isinstance(variable, str) else variable.data_name
         if var_name in ["x", "y", "z"]:
             return _spatial_preset(var_name, getattr(mesh, "spatial_unit", "m"))
@@ -178,7 +178,7 @@ class Variable:
             if suffix == "":
                 return var
             if isinstance(var, Scalar):
-                msg = f"Scalar {var.data_name} has no component {suffix}."
+                msg = f"Scalar '{var.data_name}' has no component {suffix}."
                 raise KeyError(msg)
             return var[suffix_]  # type: ignore[index]
 
@@ -408,7 +408,7 @@ class Variable:
             if self.data_name in ["MaterialIDs", "None"]:
                 return np.full(mesh0.number_of_cells, 0)
             msg = (
-                f"Data name {self.data_name} not found in mesh. "
+                f"Data name '{self.data_name}' not found in mesh. "
                 f"Available data names are {', '.join(data_keys)}. "
             )
             raise KeyError(msg)
