@@ -388,6 +388,35 @@ class Variable:
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
+    def rate(self, time_unit: str = "s") -> Self:
+        "A variable relating to rate change of this quantity."
+        diff_unit = self._diff_unit(self.output_unit)
+        rate_unit = f"{diff_unit or 1}/{time_unit}"
+        outname = self.output_name + "_rate"
+
+        def compute_rate(
+            values: np.ndarray, timevalues: np.ndarray, data_time_unit: str
+        ) -> np.ndarray:
+            factor = u_reg.Quantity(data_time_unit).to(time_unit).magnitude
+            delta = np.diff(values, axis=0, prepend=np.nan)
+            # The following is required for numpy to correctly broadcast for
+            # scalar and vector/matrix inputs
+            dt_dim_expansion = (slice(None),) + (None,) * (len(delta.shape) - 1)
+            dt = np.diff(timevalues * factor, prepend=1)[dt_dim_expansion]
+            return delta / dt
+
+        return type(self).from_variable(
+            self,
+            data_name=self.data_name,
+            data_unit=rate_unit,
+            output_unit=rate_unit,
+            output_name=outname,
+            symbol=rf"\dot{{{self.symbol}}}",
+            func=Function(compute_rate, ["timevalues", "time_unit"]),
+            bilinear_cmap=True,
+            cmap=self.cmap if self.bilinear_cmap else "coolwarm",
+        )
+
     @property
     def abs_error(self) -> Variable:
         "A variable relating to an absolute error of this quantity."

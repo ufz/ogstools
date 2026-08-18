@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from pint.facets.plain import PlainQuantity
 
+import ogstools as ot
 from ogstools import examples
 from ogstools import variables as ov
 from ogstools.mesh.utils import angles
@@ -295,6 +296,38 @@ class TestPhysicalVariable:
         check_limits(ov.temperature, 7.9, 50)
         check_limits(ov.pressure, 0, 8)
         check_limits(ov.displacement.magnitude, 0, 0.3)
+
+    def test_variable_rate(self):
+        "Tests rate computation"
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        var = ov.saturation.rate("d")
+        for values in [var.mean.transform(ms), ms.values(var.mean)]:
+            np.testing.assert_array_less(0.0, np.nan_to_num(values, nan=1e-12))
+        assert not np.any(np.isnan(ms.probe_values((0, 0, 0), var)[1:]))
+
+    @pytest.mark.parametrize(
+        "ms",
+        [
+            examples.load_meshseries_THM_2D_PVD(),
+            examples.load_meshseries_mechanics_3D_XDMF(),
+        ],
+    )
+    def test_transform_order_invariance(self, ms: ot.MeshSeries):
+        "Tests that some variable operations are invariant to their order."
+        variables = [
+            ov.strain.trace.mean.rate(),
+            ov.strain.trace.rate().mean,
+            ov.strain.mean.trace.rate(),
+            ov.strain.mean.rate().trace,
+            ov.strain.rate().trace.mean,
+            ov.strain.rate().mean.trace,
+        ]
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ref_vals = variables[0].transform(ms)
+        for var in variables[1:]:
+            # not testing for full equality as the order of operations will
+            # cause floating point differences.
+            np.testing.assert_allclose(var.transform(ms), ref_vals, rtol=1e-12)
 
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."
