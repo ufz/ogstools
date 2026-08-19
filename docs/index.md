@@ -10,9 +10,9 @@ hidden:
 ---
 User Guide <user-guide/index>
 Examples <auto_examples/index>
-API reference <reference/index>
+API <reference/index>
 Contributing <contributing>
-Release notes <releases/index>
+Releases <releases/index>
 Motivation <user-guide/introduction/motivation>
 ```
 
