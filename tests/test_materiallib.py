@@ -13,6 +13,10 @@ from ogstools.materiallib.core.property import ParameterValue
 from ogstools.materiallib.distributions import UniformDistribution
 from ogstools.materiallib.schema import process_schema, required_properties
 
+EXAMPLES_DIR = (
+    Path(__file__).resolve().parents[1] / "ogstools/examples/materiallib"
+)
+
 
 def _grouped_raw_data(
     name: str,
@@ -51,6 +55,19 @@ def write_yaml(tmp_path):
         return path
 
     return _write
+
+
+@pytest.fixture
+def copy_example_material(tmp_path):
+    """Copy one material example YAML into tmp_path and return the new path."""
+
+    def _copy(filename: str) -> Path:
+        source = EXAMPLES_DIR / filename
+        target = tmp_path / filename
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        return target
+
+    return _copy
 
 
 @pytest.fixture
@@ -258,31 +275,19 @@ def medium_properties_from_xml(xml_file: Path, medium_id: int) -> dict:
 
 
 class TestMaterialLib:
-    def test_material_from_file_creates_material(self, write_yaml):
+    def test_material_from_file_creates_material(self):
         """Material.from_file should build a Material instance from valid YAML."""
-        file_path = write_yaml(
-            "granite.yml",
-            _grouped_raw_data(
-                "granite", {"Density": {"type": "Constant", "value": 2700}}
-            ),
-        )
+        file_path = EXAMPLES_DIR / "opalinus.yml"
 
         mat = Material.from_file(file_path)
 
         assert mat is not None
-        assert mat.name == "granite"
-        assert "Density" in mat
+        assert mat.name == "opalinus_clay"
+        assert "porosity" in mat
 
-    def test_material_to_file_roundtrip(self, tmp_path, write_yaml):
+    def test_material_to_file_roundtrip(self, tmp_path):
         """Material.to_file should write YAML that can be loaded with Material.from_file."""
-        source = write_yaml(
-            "water.yml",
-            _grouped_raw_data(
-                "water",
-                {"Viscosity": {"type": "Constant", "value": 1.0}},
-                domain="phase",
-            ),
-        )
+        source = EXAMPLES_DIR / "water.yml"
         mat = Material.from_file(source)
         assert mat is not None
 
@@ -292,7 +297,7 @@ class TestMaterialLib:
 
         assert copied is not None
         assert copied.name == "water"
-        assert copied["Viscosity"].parameters["value"] == 1.0
+        assert copied["viscosity"].parameters["value"] == 1.0e-3
         assert copied == mat
 
     def test_material_parses_properties_from_raw_data(self):
@@ -423,41 +428,29 @@ class TestMaterialLib:
 
 
 class TestMaterialManager:
-    def test_materialdb_loads_yaml_files(self, tmp_path, write_yaml):
+    def test_materialdb_loads_yaml_files(self, tmp_path, copy_example_material):
         """MaterialManager should load all YAML files in the given directory into Material objects."""
-        write_yaml(
-            "rock.yml",
-            _grouped_raw_data(
-                "granite", {"Density": {"type": "Constant", "value": 2700}}
-            ),
-        )
+        copy_example_material("opalinus.yml")
 
         db = material_manager.MaterialManager(data_dir=str(tmp_path))
-        mat = db.get_material("granite")
+        mat = db.get_material("opalinus_clay")
 
         assert mat is not None
-        assert mat.name == "granite"
-        assert "Density" in mat
+        assert mat.name == "opalinus_clay"
+        assert "porosity" in mat
 
     def test_materialdb_get_material_returns_correct_object(
-        self, tmp_path, write_yaml
+        self, tmp_path, copy_example_material
     ):
         """MaterialManager.get_material should return the correct Material instance by name."""
-        write_yaml(
-            "water.yml",
-            _grouped_raw_data(
-                "water",
-                {"Viscosity": {"type": "Constant", "value": 1.0}},
-                domain="phase",
-            ),
-        )
+        copy_example_material("water.yml")
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
         mat = db.get_material("water")
 
         assert mat is not None
         assert mat.name == "water"
-        assert "Viscosity" in mat
+        assert "viscosity" in mat
 
     def test_materialdb_list_materials_returns_all_names(
         self, tmp_path, write_yaml

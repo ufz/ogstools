@@ -1,0 +1,40 @@
+name: distributed_demo
+domains:
+  - domain: medium
+    properties:
+      density:
+        type: Constant
+        value: 2700
+      porosity:
+        type: Constant
+        value:
+          base_value: 0.15
+          distribution:
+            type: uniform
+            lower: 0.10
+            upper: 0.20
+      storage:
+        type: Constant
+        value:
+          base_value: 2.0e-10
+      saturation:
+        type: SaturationVanGenuchten
+        exponent:
+          base_value: 0.2
+          distribution:
+            type: uniform
+            lower: 0.15
+            upper: 0.30
+        p_b: 48000000
+        residual_gas_saturation: 0.01
+        residual_liquid_saturation: 0.01
+  - domain: phase
+    properties:
+      density:
+        type: Constant
+        value: 999
+  - domain: component
+    properties:
+      molar_mass:
+        type: Constant
+        value: 0.018016
