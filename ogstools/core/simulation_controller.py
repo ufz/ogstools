@@ -3,6 +3,7 @@
 
 
 import abc
+import subprocess
 import typing
 from enum import Enum
 from pathlib import Path
@@ -70,6 +71,13 @@ class SimulationController(abc.ABC):
         self.result.next_target.mkdir(parents=True, exist_ok=True)
 
         self._interrupted = False
+        self._dashboard_processes: list[subprocess.Popen] = []
+
+    def _close_dashboards(self) -> None:
+        """Terminates all monitors opened from this controller"""
+        for process in self._dashboard_processes:
+            if process.poll() is None:
+                process.terminate()
 
     def _handler(self, signum: int, _: typing.Any) -> None:
         self._interrupted = True
@@ -153,6 +161,49 @@ class SimulationController(abc.ABC):
     def log_file(self) -> Path:
         """Get the path to the log file."""
         return self.result.log_file
+
+    def plot_log(
+        self,
+        log_data: str | list[list[str]] = "step_start_time",
+        time_y_axis_type: str = "linear",
+        time_window_length: int = 0,
+        iteration_window_length: int = 0,
+        update_interval: float = 2.0,
+    ) -> subprocess.Popen:
+        """
+        Open the interactive Bokeh monitoring dashboard for this simulation.
+
+        This launches the same dashboard as the ``ogsmonitor`` command line
+        tool, in a real browser tab, rather than trying to embed a live plot
+        directly in a notebook cell's output — which does not render
+        reliably across notebook environments (plain Jupyter, JupyterLab,
+        VS Code's Jupyter extension, ...).
+
+        :param log_data:  Plot type. Can be a single string or a list of list of strings.
+                            E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
+        :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
+        :param time_window_length:     Length of the time window (number of timesteps) for the plot. 0 Plots the whole log file.
+        :param iteration_window_length: Length of the iteration window (number of iterations) for the plot. 0 Plots the whole log file.
+        :param update_interval:        Interval in seconds between plot updates.
+        :returns: The running Bokeh server subprocess. It is also closed by
+                  :meth:`terminate`; call ``.terminate()`` on it directly for
+                  earlier, standalone control.
+        """
+        from ogstools.logparser.monitor_cli import (
+            launch_dashboard,
+            write_monitor_config,
+        )
+
+        config = write_monitor_config(
+            log_data=log_data,
+            time_y_axis_type=time_y_axis_type,
+            time_window_length=time_window_length,
+            iteration_window_length=iteration_window_length,
+            update_interval=update_interval,
+        )
+        process = launch_dashboard(self.log_file, config=config)
+        self._dashboard_processes.append(process)
+        return process
 
     @property
     def meshseries_file(self) -> Path:

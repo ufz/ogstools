@@ -4,6 +4,7 @@
 
 import atexit
 import importlib.util
+import json
 import logging
 import socket
 import subprocess
@@ -70,6 +71,81 @@ def _stream_stdin_to_file(dest: Path, done: threading.Event) -> None:
             f.write(line)
             f.flush()
     done.set()
+
+
+def _find_app_filename() -> str:
+    spec = importlib.util.find_spec("ogstools.logparser.monitor_app")
+    if spec is None or spec.origin is None:
+        msg = "Could not find module 'ogstools.logparser.monitor_app'"
+        raise ImportError(msg)
+    return spec.origin
+
+
+def write_monitor_config(
+    log_data: str | list[list[str]] = "step_start_time",
+    time_y_axis_type: str = "linear",
+    time_window_length: int = 0,
+    iteration_window_length: int = 0,
+    update_interval: float = 2.0,
+) -> Path:
+    """
+    Write a temporary monitor.json config for the ogsmonitor dashboard app.
+
+    :param log_data:  Plot type. Can be a single string or a list of list of strings.
+                        E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
+    :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
+    :param time_window_length:     Length of the time window (number of timesteps) for the plot. 0 plots the whole log file.
+    :param iteration_window_length: Length of the iteration window (number of iterations) for the plot. 0 plots the whole log file.
+    :param update_interval: Interval in seconds between plot updates.
+    :returns: Path to the written JSON config file.
+    """
+    config = {
+        "liveplot": False,
+        "log_data": log_data,
+        "time_y_axis_type": time_y_axis_type,
+        "data_collect_time": update_interval,
+        "update_plot_time": int(update_interval * 1000),
+        "time_window_length": time_window_length,
+        "iteration_window_length": iteration_window_length,
+    }
+    config_file = temp_file(".json", "ogsmonitor_")
+    config_file.write_text(json.dumps(config))
+    return config_file
+
+
+def launch_dashboard(
+    logfile: Path,
+    config: Path | None = None,
+    show: bool = True,
+) -> subprocess.Popen:
+    """
+    Launch the ogsmonitor Bokeh dashboard for a log file, without blocking.
+
+    This starts the same ``bokeh serve`` process used by the ``ogsmonitor``
+    command line tool, so the dashboard opens in a real browser tab rather
+    than trying to embed a live plot in a notebook cell's output.
+
+    :param logfile: Path to the OGS log file to monitor.
+    :param config:  Optional JSON configuration file to fine-tune the plot.
+    :param show:    If True, open a browser tab automatically.
+    :returns: The running Bokeh server subprocess. Call ``.terminate()`` on
+              it to close the dashboard.
+    """
+    app_filename = _find_app_filename()
+    cmd = [
+        "bokeh",
+        "serve",
+        "--port",
+        "0",  # let the OS assign a free port
+        app_filename,
+        "--args",
+        str(logfile),
+    ]
+    if show:
+        cmd.insert(2, "--show")
+    if config is not None:
+        cmd.append(str(config))
+    return subprocess.Popen(cmd)
 
 
 def cli() -> int:

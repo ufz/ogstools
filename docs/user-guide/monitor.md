@@ -7,7 +7,9 @@
 
 `ogsmonitor` is a Python utility that uses BokehJS to display the STDOUT log of **OpenGeoSys (OGS)**.
 Internally it uses the [`logparser`](../auto_examples/howto_logparser/plot_100_logparser_intro.rst) for analysing the output.
-It can be used as a standalone command line utility (see below) or within a Jupyer notebook.
+It can be used as a standalone command line utility (see below) or, via `plot_log()`, within a Jupyter
+notebook — see the [monitoring section](../auto_examples/howto_simulation/plot_010_simulate.rst) of the
+"Run a simulation" example.
 
 ## Requirements
 

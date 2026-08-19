@@ -86,15 +86,53 @@ assert sim2.status == ot.Simulation.Status.done
 assert sim2.meshseries != sim.meshseries
 
 # %%
-# Alternatively, for more control
-simc = model2.controller()  # this call is not blocking
-simc.terminate()  # do something while the simulation is running
-simc.run()  # this call is blocking, it waits for the simulation to finish
+# Alternatively, this call is not blocking:
+simc_a = model2.controller()
+simc_b = model2.controller()  # As an example: Fire up a second simulation
+# simc_a.terminate() aborts a simulation early, if needed
+sim_a, sim_b = (
+    simc_a.run(),
+    simc_b.run(),
+)  # Both run concurrently, here we wait for both to finish
 
 
 # %% [markdown]
-# .. image:: /examples/howto_simulation/bokeh_logs.png
-#    :alt: Bokeh log plot
+# Monitoring a running simulation
+# ================================
+# ``controller()`` starts the simulation but does not block, so you can watch
+# its progress live while it runs. ``plot_log()`` opens the same interactive
+# Bokeh dashboard as the ``ogsmonitor`` command line tool, in a real browser tab
+
+# %%
+simc = model2.controller()
+dashboard = simc.plot_log(
+    log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x_0"]]
+)
+
+# %% [markdown]
+# Now a dashboard opens. You need to switch to the browser tab that just
+# opened with live charts (see screenshot below). You can follow the
+# evolution of this simulation in real time.
+#
+# Here we close it again immediately, only so that building these docs
+# doesn't leave a dashboard process running.
+
+# %%
+dashboard.terminate()
+
+# %% [markdown]
+# .. note::
+#    Equivalently, from a separate terminal::
+#
+#        ogsmonitor /path/to/log.txt
+#
+#    See :doc:`the monitor user guide </user-guide/monitor>` for more details.
+#
+# .. figure:: /examples/howto_simulation/bokeh_logs.png
+#    :alt: Screenshot of interactive ogs monitor
+#
+#    Screenshot of the interactive Bokeh dashboard opened by ``plot_log()``
+#    or ``ogsmonitor``.
 
 # %% [markdown]
 # Creating a Project from scratch

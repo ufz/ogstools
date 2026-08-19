@@ -158,6 +158,8 @@ class OGSInteractiveController(SimulationController):
 
         :returns: True if termination was successful.
         """
+        self._close_dashboards()
+
         self.runtime_end = time.time()
         ret = self.sim.close()
         if self._capture:

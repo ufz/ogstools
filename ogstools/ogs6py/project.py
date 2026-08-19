@@ -23,6 +23,7 @@ import pandas as pd
 from lxml import etree as ET
 from typing_extensions import Self
 
+from ogstools._internal import deprecated
 from ogstools.core.storage import StorageBase
 from ogstools.logparser.monitor import Monitor
 from ogstools.materiallib.core.media import MediaSet
@@ -1327,6 +1328,12 @@ class Project(StorageBase):
             self._failed_run_print_log_tail(write_logs)
         return self.process
 
+    @deprecated(
+        "Embedding the plot in a notebook cell via push_notebook() does not "
+        "render reliably across notebook environments. Use "
+        "model.controller().plot_log(...) instead, which opens the "
+        "dashboard in a browser tab."
+    )
     def plot_log(
         self,
         log_data: str | list[list[str]] = "step_start_time",
@@ -1337,6 +1344,13 @@ class Project(StorageBase):
     ) -> None:
         """Plots the log file.
 
+        .. deprecated::
+            Use :meth:`ogstools.core.simulation_controller.SimulationController.plot_log`
+            (via ``model.controller().plot_log(...)``) instead. It opens the
+            same dashboard in a browser tab, which works reliably across
+            notebook environments; this method embeds the plot inline via
+            ``push_notebook()``, which does not.
+
         :param log_data:  Plot type. Can be a single string or a list of list of strings.
                             E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
         :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
@@ -1344,7 +1358,6 @@ class Project(StorageBase):
         :param iteration_window_length: Length of the iteration window (number of iterations) for the plot. 0 Plots the whole log file.
         :param update_interval:        Interval in seconds to update the plot.
         """
-
         grid_layout = None
 
         if isinstance(log_data, str):
