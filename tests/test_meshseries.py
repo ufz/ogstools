@@ -446,6 +446,71 @@ def test_probe():
     )
 
 
+@pytest.mark.parametrize(("type"), ["xdmf", "pvd"])
+@pytest.mark.parametrize(
+    ("points", "var", "timeslice", "shape"),
+    [
+        (2, ot.variables.temperature, slice(None), (97,)),
+        ([2, 5], "darcy_velocity", slice(7, 85, 4), (20, 2, 2)),
+    ],
+)
+def test_probe_values_file(type, points, var, timeslice, shape):
+    """Check correct behavior of Mesheries.probe_values_file()"""
+    from ogstools.definitions import EXAMPLES_DIR
+
+    path = (
+        EXAMPLES_DIR
+        / "meshseries"
+        / ("2D_single_fracture_HT_2D_single_fracture." + type)
+    )
+    values = ot.MeshSeries.probe_values_file(path, points, var, timeslice, True)
+    assert values.shape == shape
+
+
+@pytest.mark.parametrize(("type"), ["xdmf", "pvd"])
+def test_probe_values_file_multiples(type):
+    """Check correct behavior of Mesheries.probe_values_file() if probing multiple variables at the same time"""
+    from ogstools.definitions import EXAMPLES_DIR
+
+    path = (
+        EXAMPLES_DIR
+        / "meshseries"
+        / ("2D_single_fracture_HT_2D_single_fracture." + type)
+    )
+    values = ot.MeshSeries.probe_values_file(
+        path,
+        [2, 5],
+        ["darcy_velocity", "temperature"],
+        ignore_performance_warning=True,
+    )
+    assert values[0].shape == (97, 2, 2)
+    assert values[1].shape == (97, 2)
+
+
+def test_probe_values_file_failure():
+    """Check that Mesheries.probe_values_file() fails on wrong inputs and warns about pvd performance"""
+    from ogstools.definitions import EXAMPLES_DIR
+
+    path = (
+        EXAMPLES_DIR
+        / "meshseries"
+        / "2D_single_fracture_HT_2D_single_fracture.pvd"
+    )
+    with pytest.warns(RuntimeWarning, match="pvd"):
+        ot.MeshSeries.probe_values_file(path, 2, "temperature")
+    with pytest.raises(ValueError, match="found as variable"):
+        ot.MeshSeries.probe_values_file(
+            path, 2, "bad_variable", ignore_performance_warning=True
+        )
+    with pytest.raises(ValueError, match="found as variable"):
+        ot.MeshSeries.probe_values_file(
+            path,
+            2,
+            ot.variables.dilatancy_alkan,
+            ignore_performance_warning=True,
+        )
+
+
 def test_temporal_resample():
     results = examples.load_meshseries_HT_2D_XDMF()
     in_between = 0.5 * (results.timevalues[:-1] + results.timevalues[1:])

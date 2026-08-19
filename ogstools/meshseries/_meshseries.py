@@ -1051,9 +1051,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 if isinstance(data_name, str):
                     if data_name in mesh.point_data:
                         variable_name = data_name
-                    msg = f"{data_name} can not be found as variable in {filepath}"
-                    raise ValueError(msg)
-                if data_name.data_name in mesh.point_data:
+                    else:
+                        msg = f"{data_name} can not be found as variable in {filepath}"
+                        raise ValueError(msg)
+                elif data_name.data_name in mesh.point_data:
                     variable_name = data_name.data_name
                 elif data_name.output_name in mesh.point_data:
                     variable_name = data_name.output_name
@@ -1061,7 +1062,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     msg = f"Neither {data_name.data_name} nor {data_name.output_name} can be found as variable in {filepath}"
                     raise ValueError(msg)
                 result = np.zeros(
-                    (len(reader.time_values[timeslice]), len(point_ids))
+                    (
+                        len(reader.time_values[timeslice]),
+                        *mesh.point_data[variable_name][point_ids].shape,
+                    )
                 )
                 for timeindex, time in enumerate(reader.time_values[timeslice]):
                     reader.set_active_time_value(time)
