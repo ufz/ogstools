@@ -1128,6 +1128,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             probe_data_type = "point data"
         else:
             probe_data_type = "cell data"
+            # Getting cell_data values at a point requires interpolation in any case
             need_interpolation = True
         pts = reshape_obs_points(points, self.mesh(0))
         data = self.data(data_name)
@@ -1158,40 +1159,64 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 ):
                     geom_ids.append(self[0].find_closest_point(point))
                 else:
-                    geom_ids += (
-                        self[0]
-                        .get_cell(self[0].find_containing_cell(point))
-                        .point_ids
-                    )
+                    # if any of the probed points is not already a point of the mesh, its values need to be interpolated from the vertices of its containing cell
                     need_interpolation = True
+                    if self[0].find_containing_cell(point) != -1:
+                        geom_ids += (
+                            self[0]
+                            .get_cell(self[0].find_containing_cell(point))
+                            .point_ids
+                        )
+                    else:
+                        # if any of the probed points is neither a point of the mesh nor within a cell, fall back on interpolating over all points of the mesh
+                        geom_ids = list(range(self[0].n_points))
+                        break
         else:
             for point in pts:
                 containing_id = self[0].find_containing_cell(point)
                 geom_ids.append(containing_id)
                 geom_ids += self[0].cell_neighbors(containing_id)
         geom_ids = sorted(set(geom_ids))
+        if (
+            self._data_type == ".xdmf"
+            and self._mesh_func_opt is not None
+            and probe_data_type == "point data"
+        ):
+            if "vtkOriginalPointIds" not in self[0].point_data:
+                msg = f"The meshseries was spatialy modified but vtkOriginalPointIds was not recorded. Impossible to match points to data in {self._xdmf_reader.filename}"
+                raise ValueError(msg)
+            data_ids = [
+                self[0].point_data["vtkOriginalPointIds"][i] for i in geom_ids
+            ]
+        else:
+            data_ids = geom_ids
         if isinstance(data, list):
             values = []
             for dataitem in data:
-                values.append(dataitem[timeslice, geom_ids])
+                if isinstance(dataitem, DataItems):
+                    values.append(dataitem[timeslice, data_ids])
+                else:
+                    values.append(dataitem[timeslice, geom_ids])
         else:
-            values = data[timeslice, geom_ids]
-        if isinstance(data_name, list):
-            components = [
-                1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
-            ]
-            values = np.moveaxis(self._flatten_vectors(values), 0, -1)
-
-        values = np.swapaxes(values, 0, 1)
-        if probe_data_type == "point data":
-            geom = [self[0].points[id] for id in geom_ids]
-        else:
-            geom = self[0].cell_centers().points[geom_ids]
-        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
-        geom = np.delete(geom, flat_axis, 1)
-        pts = np.delete(pts, flat_axis, 1)
-        more_than_1d = self.dim > 1 or len(flat_axis) < 2
+            if isinstance(data, DataItems):
+                values = data[timeslice, data_ids]
+            else:
+                values = data[timeslice, geom_ids]
         if need_interpolation:
+            if isinstance(data_name, list):
+                components = [
+                    1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
+                ]
+                values = np.moveaxis(self._flatten_vectors(values), 0, -1)
+            values = np.swapaxes(values, 0, 1)
+            if probe_data_type == "point data":
+                geom = [self[0].points[id] for id in geom_ids]
+            else:
+                geom = self[0].cell_centers().points[geom_ids]
+            flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+            geom = np.delete(geom, flat_axis, 1)
+            pts = np.delete(pts, flat_axis, 1)
+            more_than_1d = self.dim > 1 or len(flat_axis) < 2
             match more_than_1d, interp_method:
                 case True, "nearest":
                     from scipy.interpolate import NearestNDInterpolator
@@ -1227,14 +1252,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                         f"{self.dim=} and {interp_method=}"
                     )
                     raise TypeError(msg)
+            if isinstance(data_name, list):
+                if more_than_1d:
+                    result = np.moveaxis(result, -1, 0)
+                result = self._restore_vectors(result, components)
         else:
-            result = np.swapaxes(values, 0, 1)
+            result = values
         if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
             result = np.squeeze(result, axis=1)
-        if isinstance(data_name, list):
-            if more_than_1d:
-                result = np.moveaxis(result, -1, 0)
-            result = self._restore_vectors(result, components)
         if isinstance(data_name, list):
             for index, dataname in enumerate(data_name):
                 if isinstance(dataname, Variable) and not (
