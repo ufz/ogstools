@@ -959,133 +959,120 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     @classmethod
     def probe_values_file(
         cls,
-        filepath: str | Path,  # filepath or folder
-        point_ids: np.ndarray | list,  # sequences of ints
+        filepath: str | Path,
+        point_ids: int | list[int],
         data_name: str | Variable | list[str | Variable],
         timeslice: slice = slice(None),
+        ignore_performance_warning: bool = False,
     ) -> np.ndarray | list[np.ndarray]:
-        # Documentation and Tests
+        """
+        Return the data of the MeshSeries directly from file without initializing
+        :class:`~ogstools.MeshSeries`.
+
+        Best performance is achieved reading .xdmf files
+
+        :param filepath:                    Path of file where MeshSeries data is stored. Accepts .pvd, .xdmf and .xmf
+        :param point_ids:                   The mesh points to sample at given by their id.
+        :param data_name:                   Data to sample. Can also be a list of str or Variable.
+        :param timeslice:                   Slice denoting timesteps which are to be read. Default is all timesteps
+        :param ignore_performance_warning:  Do not warn about reduced performance for .pvd files. Default is False
+
+        :returns:   `numpy` array/s of data at observation points
+                    with the following shape:
+
+                    - multiple points: (n_timesteps, n_points, [n_components])
+                    - single points: (n_timesteps, [n_components])
+
+                    If `data_name` is a list, a corresponding list of arrays is
+                    returned.
+        """
+        if isinstance(data_name, list):
+            return [
+                cls._probe_values_file(
+                    filepath,
+                    point_ids,
+                    dataname,
+                    timeslice,
+                    ignore_performance_warning,
+                )
+                for dataname in data_name
+            ]
+        return cls._probe_values_file(
+            filepath,
+            point_ids,
+            data_name,
+            timeslice,
+            ignore_performance_warning,
+        )
+
+    @classmethod
+    def _probe_values_file(
+        cls,
+        filepath: str | Path,
+        point_ids: np.ndarray | list,
+        data_name: str | Variable,
+        timeslice: slice = slice(None),
+        ignore_performance_warning: bool = False,
+    ) -> np.ndarray:
         filepath = Path(filepath)
         data_type = filepath.suffix
-        returnslist = True
-        if isinstance(data_name, (str, Variable)):
-            returnslist = False
-            data_name = [data_name]
-        result = []
-        allfound = True
         match data_type:
             case ".xdmf" | ".xmf":
                 from .xdmf_reader import XDMFReader
 
                 reader = XDMFReader(filepath)
-                for name in data_name:
-                    if isinstance(name, str) and name in reader.data_items:
-                        result.append(
-                            reader.data_items[name][timeslice, point_ids]
-                        )
-                    elif (
-                        isinstance(name, Variable)
-                        and name.data_name in reader.data_items
-                    ):
-                        result.append(
-                            reader.data_items[name.data_name][
-                                timeslice, point_ids
-                            ]
-                        )
-                    elif (
-                        isinstance(name, Variable)
-                        and name.output_name in reader.data_items
-                    ):
-                        result.append(
-                            reader.data_items[name.output_name][
-                                timeslice, point_ids
-                            ]
-                        )
-                    else:
-                        allfound = False
-                        break
+                if isinstance(data_name, str):
+                    if data_name in reader.data_items:
+                        return reader.data_items[data_name][
+                            timeslice, point_ids
+                        ]
+                    msg = f"Variable {data_name} can not be found in {filepath}"
+                    raise ValueError(msg)
+                if data_name.data_name in reader.data_items:
+                    return reader.data_items[data_name.data_name][
+                        timeslice, point_ids
+                    ]
+                if data_name.output_name in reader.data_items:
+                    return reader.data_items[data_name.output_name][
+                        timeslice, point_ids
+                    ]
+                msg = f"Neither {data_name.data_name} nor {data_name.output_name} can be found in {filepath}"
+                raise ValueError(msg)
             case ".pvd":
-                # Performance Warning, convert to xdmf or construct MeshSeries and probe for multiple probings
+                if not ignore_performance_warning:
+                    msg = (
+                        "Probing .pvd files is much more computation intensive (and therefore time-consuming) then probing .xdmf. To improve performance for additional probings, convert to .xdmf (fastest)"
+                        " or initialize as MeshSeries and use probe_values() to make use of caching. To suppress this warning set ignore_performance_warning to True"
+                    )
+                    warn(msg, RuntimeWarning, stacklevel=2)
                 reader = pv.PVDReader(filepath)
                 reader.set_active_time_point(0)
                 mesh = reader.read()[0]
-                variable_names = []
-                for name in data_name:
-                    if isinstance(name, str) and name in mesh.point_data:
-                        variable_names.append(name)
-                    elif (
-                        isinstance(name, Variable)
-                        and name.data_name in mesh.point_data
-                    ):
-                        variable_names.append(name.data_name)
-                    elif (
-                        isinstance(name, Variable)
-                        and name.output_name in mesh.point_data
-                    ):
-                        variable_names.append(name.output_name)
-                    else:
-                        allfound = False
-                        break
-                    result.append(
-                        np.zeros(
-                            (len(reader.time_values[timeslice]), len(point_ids))
-                        )
-                    )
-                if allfound:
-                    for timeindex, time in enumerate(
-                        reader.time_values[timeslice]
-                    ):
-                        reader.set_active_time_value(time)
-                        mesh = reader.read()[0]
-                        for nameindex, name in enumerate(variable_names):
-                            result[nameindex][timeindex] = np.asarray(
-                                mesh.point_data[name][point_ids]
-                            )
-            # case ".vtu":
-            #     reader = pv.XMLUnstructuredGridReader(filepath)
-            #     mesh = reader.read()
-            #     for name in data_name:
-            #         if isinstance(name, str) and name in mesh.point_data:
-            #             result.append(
-            #                 [np.asarray(mesh.point_data[name][point_ids])]
-            #             )
-            #         elif (
-            #             isinstance(name, Variable)
-            #             and name.data_name in mesh.point_data
-            #         ):
-            #             result.append(
-            #                 [
-            #                     np.asarray(
-            #                         mesh.point_data[name.data_name][point_ids]
-            #                     )
-            #                 ]
-            #             )
-            #         elif (
-            #             isinstance(name, Variable)
-            #             and name.output_name in mesh.point_data
-            #         ):
-            #             result.append(
-            #                 [
-            #                     np.asarray(
-            #                         mesh.point_data[name.output_name][point_ids]
-            #                     )
-            #                 ]
-            #             )
-            #         else:
-            #             allfound = False
-            #             break
-            case suffix:
-                msg = (
-                    "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or "
-                    f"'vtu' files, but not '{suffix}'"
+                if isinstance(data_name, str):
+                    if data_name in mesh.point_data:
+                        variable_name = data_name
+                    msg = f"{data_name} can not be found as variable in {filepath}"
+                    raise ValueError(msg)
+                if data_name.data_name in mesh.point_data:
+                    variable_name = data_name.data_name
+                elif data_name.output_name in mesh.point_data:
+                    variable_name = data_name.output_name
+                else:
+                    msg = f"Neither {data_name.data_name} nor {data_name.output_name} can be found as variable in {filepath}"
+                    raise ValueError(msg)
+                result = np.zeros(
+                    (len(reader.time_values[timeslice]), len(point_ids))
                 )
+                for timeindex, time in enumerate(reader.time_values[timeslice]):
+                    reader.set_active_time_value(time)
+                    mesh = reader.read()[0]
+                    result[timeindex] = np.asarray(
+                        mesh.point_data[variable_name][point_ids]
+                    )
+                return result
+            case suffix:
+                msg = f"Can only read 'pvd', 'xdmf' and 'xmf'(from Paraview) files, but not '{suffix}'"
                 raise TypeError(msg)
-        if returnslist:
-            return result
-        return result[0]
-        # ms = MeshSeries(filepath=filepath)
-        # points = [ms[0].points[i] for i in point_ids]
-        # return ms.probe_values(points=points, data_name=data_name)
 
     def probe_values(
         self,
@@ -1093,12 +1080,15 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
-        # Use probe_file for performance for single probings
         """
         Return the sampled data of the MeshSeries at observation points.
 
         Similar to :func:`~ogstools.MeshSeries.probe` but returns the
         data directly instead of creating a new MeshSeries.
+
+        For single probings (in particular for MeshSeries generated from
+        .xdmf files) use :func:`~ogstools.MeshSeries.probe_values_file`
+        for improved performance
 
         :param points:          The observation points to sample at.
         :param data_name:       Data to sample. If provided as a Variable, the
