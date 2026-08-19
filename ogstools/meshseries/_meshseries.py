@@ -957,13 +957,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return original_list
 
     @classmethod
-    def probe_file(
+    def probe_values_file(
         cls,
-        filepath: str | Path,
-        point_ids: np.ndarray | list,
+        filepath: str | Path,  # filepath or folder
+        point_ids: np.ndarray | list,  # sequences of ints
         data_name: str | Variable | list[str | Variable],
         timeslice: slice = slice(None),
     ) -> np.ndarray | list[np.ndarray]:
+        # Documentation and Tests
         filepath = Path(filepath)
         data_type = filepath.suffix
         returnslist = True
@@ -1004,6 +1005,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                         allfound = False
                         break
             case ".pvd":
+                # Performance Warning, convert to xdmf or construct MeshSeries and probe for multiple probings
                 reader = pv.PVDReader(filepath)
                 reader.set_active_time_point(0)
                 mesh = reader.read()[0]
@@ -1039,52 +1041,51 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                             result[nameindex][timeindex] = np.asarray(
                                 mesh.point_data[name][point_ids]
                             )
-            case ".vtu":
-                reader = pv.XMLUnstructuredGridReader(filepath)
-                mesh = reader.read()
-                for name in data_name:
-                    if isinstance(name, str) and name in mesh.point_data:
-                        result.append(
-                            [np.asarray(mesh.point_data[name][point_ids])]
-                        )
-                    elif (
-                        isinstance(name, Variable)
-                        and name.data_name in mesh.point_data
-                    ):
-                        result.append(
-                            [
-                                np.asarray(
-                                    mesh.point_data[name.data_name][point_ids]
-                                )
-                            ]
-                        )
-                    elif (
-                        isinstance(name, Variable)
-                        and name.output_name in mesh.point_data
-                    ):
-                        result.append(
-                            [
-                                np.asarray(
-                                    mesh.point_data[name.output_name][point_ids]
-                                )
-                            ]
-                        )
-                    else:
-                        allfound = False
-                        break
+            # case ".vtu":
+            #     reader = pv.XMLUnstructuredGridReader(filepath)
+            #     mesh = reader.read()
+            #     for name in data_name:
+            #         if isinstance(name, str) and name in mesh.point_data:
+            #             result.append(
+            #                 [np.asarray(mesh.point_data[name][point_ids])]
+            #             )
+            #         elif (
+            #             isinstance(name, Variable)
+            #             and name.data_name in mesh.point_data
+            #         ):
+            #             result.append(
+            #                 [
+            #                     np.asarray(
+            #                         mesh.point_data[name.data_name][point_ids]
+            #                     )
+            #                 ]
+            #             )
+            #         elif (
+            #             isinstance(name, Variable)
+            #             and name.output_name in mesh.point_data
+            #         ):
+            #             result.append(
+            #                 [
+            #                     np.asarray(
+            #                         mesh.point_data[name.output_name][point_ids]
+            #                     )
+            #                 ]
+            #             )
+            #         else:
+            #             allfound = False
+            #             break
             case suffix:
                 msg = (
                     "Can only read 'pvd', 'xdmf', 'xmf'(from Paraview) or "
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        if allfound:
-            if returnslist:
-                return result
-            return result[0]
-        ms = MeshSeries(filepath=filepath)
-        points = [ms[0].points[i] for i in point_ids]
-        return ms.probe_values(points=points, data_name=data_name)
+        if returnslist:
+            return result
+        return result[0]
+        # ms = MeshSeries(filepath=filepath)
+        # points = [ms[0].points[i] for i in point_ids]
+        # return ms.probe_values(points=points, data_name=data_name)
 
     def probe_values(
         self,
@@ -1092,6 +1093,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
+        # Use probe_file for performance for single probings
         """
         Return the sampled data of the MeshSeries at observation points.
 
@@ -1177,31 +1179,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 geom_ids.append(containing_id)
                 geom_ids += self[0].cell_neighbors(containing_id)
         geom_ids = sorted(set(geom_ids))
-        if (
-            self._data_type == ".xdmf"
-            and self._mesh_func_opt is not None
-            and probe_data_type == "point data"
-        ):
-            if "vtkOriginalPointIds" not in self[0].point_data:
-                msg = f"The meshseries was spatialy modified but vtkOriginalPointIds was not recorded. Impossible to match points to data in {self._xdmf_reader.filename}"
-                raise ValueError(msg)
-            data_ids = [
-                self[0].point_data["vtkOriginalPointIds"][i] for i in geom_ids
-            ]
-        else:
-            data_ids = geom_ids
         if isinstance(data, list):
             values = []
             for dataitem in data:
-                if isinstance(dataitem, DataItems):
-                    values.append(dataitem[timeslice, data_ids])
-                else:
-                    values.append(dataitem[timeslice, geom_ids])
+                values.append(dataitem[timeslice, geom_ids])
         else:
-            if isinstance(data, DataItems):
-                values = data[timeslice, data_ids]
-            else:
-                values = data[timeslice, geom_ids]
+            values = data[timeslice, geom_ids]
         if need_interpolation:
             if isinstance(data_name, list):
                 components = [
@@ -1252,14 +1235,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                         f"{self.dim=} and {interp_method=}"
                     )
                     raise TypeError(msg)
+            if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+                result = np.squeeze(result, axis=1)
             if isinstance(data_name, list):
                 if more_than_1d:
                     result = np.moveaxis(result, -1, 0)
                 result = self._restore_vectors(result, components)
         else:
             result = values
-        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
-            result = np.squeeze(result, axis=1)
+            if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+                result = np.squeeze(result, axis=1)
         if isinstance(data_name, list):
             for index, dataname in enumerate(data_name):
                 if isinstance(dataname, Variable) and not (
@@ -1628,7 +1613,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 np.arange(mesh.n_points)[index]
             ),
         }
-        return self.transform(func[preference])
+        result = self.transform(func[preference])
+        result._data_type = None
+        if result._mesh_func_opt:
+            extracted_meshes = [
+                result._mesh_func_opt(self.mesh(i)) for i in self.timesteps
+            ]
+        else:
+            extracted_meshes = [self.mesh(i) for i in self.timesteps]
+        result._mesh_cache.update(
+            dict(zip(result.timevalues, extracted_meshes, strict=True))
+        )
+        return result
 
     def _rename_vtufiles(self, new_pvd_fn: Path, fns: list[Path]) -> list:
         fns_new: list[Path] = []
