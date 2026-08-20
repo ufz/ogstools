@@ -19,6 +19,7 @@ except ImportError as e:
     msg = "Monitor() requires extra dependency 'bokeh'. Install with: pip install ogstools[monitor] or pip install bokeh"
     raise RuntimeError(msg) from e
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
 
 from ogstools.logparser import regexes as log_regex
 from ogstools.logparser.log_file_handler import LogFileHandler
@@ -56,7 +57,7 @@ class Monitor:
         )
         self._records: Queue = Queue()
         self._status: log_regex.Context = log_regex.Context()
-        self._observer: Observer | None = None
+        self._observer: BaseObserver | None = None
         self._log_file_handler: LogFileHandler | None = None
         self.time_step_based_data = [
             "step_start_time",
@@ -120,14 +121,16 @@ class Monitor:
 
         observer = Observer()
         self._observer = observer
+
+        def _handle_stop() -> None:
+            print("Stop Observer")
+            observer.stop()
+
         self._log_file_handler = LogFileHandler(
             log_file,
             queue=self._records,
             status=self._status,
-            stop_callback=lambda: (
-                print("Stop Observer"),
-                observer.stop(),
-            ),
+            stop_callback=_handle_stop,
         )
 
         self._observer.schedule(
@@ -243,7 +246,7 @@ class Monitor:
         handle_line_chart: CommsHandle,
         time_window_length: int,
         iteration_window_length: int,
-        update_interval: int = 2,
+        update_interval: float = 2,
     ) -> None:
         """Update the data source with new records from the queue.
         :param handle_line_chart: The handle for the Bokeh line chart.

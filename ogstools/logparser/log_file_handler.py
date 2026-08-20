@@ -30,7 +30,7 @@ class LogFileHandler(FileSystemEventHandler):
         file_name: str | Path,
         queue: Queue,
         status: Context,
-        stop_callback: Callable[[], tuple[None, Any]],
+        stop_callback: Callable[[], None],
         line_limit: int = 0,
     ):
         """

@@ -7,7 +7,7 @@
 
 - [tqdm](https://github.com/tqdm/tqdm): progress bars in computionally
   expensive loops
-  - if you want to globally deactivate them please set the following environt
+  - if you want to globally deactivate them please set the following environment
     variable: `os.environ["TQDM_DISABLE"] = "1"`
 
 It also relies on the following external (non-pip) applications:

@@ -106,19 +106,35 @@ sim_a, sim_b = (
 # %%
 simc = model2.controller()
 dashboard = simc.plot_log(
-    log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x_0"]]
+    log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x_0"]],
+    notebook=False,
 )
 
 # %% [markdown]
-# Now a dashboard opens. You need to switch to the browser tab that just
-# opened with live charts (see screenshot below). You can follow the
-# evolution of this simulation in real time.
+# ``plot_log()`` also accepts a ``notebook`` flag: with ``notebook=True`` the
+# plot is embedded directly in the notebook cell's output instead.
 #
-# Here we close it again immediately, only so that building these docs
-# doesn't leave a dashboard process running.
+# .. warning::
+#    In VS Code's Jupyter extension, ``notebook=True`` does not live-update:
+#    this is an unresolved upstream limitation
+#    (`bokeh/jupyter_bokeh#199 <https://github.com/bokeh/jupyter_bokeh/issues/199>`_),
+#    not something ogstools can work around.
+#
+# For that reason, ``notebook=False`` (default) is
+# recommended, including in VS Code. A dashboard opens in a real browser tab.
+# You need to switch to that tab to see the live charts (see screenshot
+# below).
+#
+# Here we wait for the simulation to finish and then close the dashboard, so
+# building these docs doesn't leave a dashboard process running.
 
 # %%
-dashboard.terminate()
+simc.run()
+# simc.terminate() stops the simulation *and* closes any dashboards opened
+# from it. The returned `dashboard`
+# additionally supports its own .terminate() (notebook=False only) to close
+# just the browser tab while leaving the simulation running.
+simc.terminate()
 
 # %% [markdown]
 # .. note::
