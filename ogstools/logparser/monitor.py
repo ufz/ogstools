@@ -8,8 +8,10 @@ from pathlib import Path
 from queue import Empty, Queue
 
 try:
+    import numpy as np
     from bokeh.io import push_notebook
     from bokeh.io.notebook import CommsHandle
+    from bokeh.layouts import layout
     from bokeh.models import ColumnDataSource
     from bokeh.plotting import figure
 
@@ -136,6 +138,46 @@ class Monitor:
         print("Starting observer...")
 
         self._observer.start()
+
+    def build_layout(
+        self, log_data: str | list[list[str]], time_y_axis_type: str
+    ) -> figure | layout:
+        """Builds a Bokeh figure, or a grid layout of figures, for ``log_data``.
+
+        :param log_data:  Plot type. Can be a single string or a list of list of strings.
+                            E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
+        :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
+        """
+        if isinstance(log_data, str):
+            return self.generate_figure(
+                log_data, time_y_axis_type=time_y_axis_type
+            )
+
+        if len(log_data) == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        try:
+            rows, cols = np.shape(log_data)
+        except ValueError:
+            print("log_data needs to be a list of lists.")
+        if rows == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        if cols == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        return layout(
+            [
+                [
+                    self.generate_figure(
+                        log_data[row][col],
+                        time_y_axis_type=time_y_axis_type,
+                    )
+                    for col in range(cols)
+                ]
+                for row in range(rows)
+            ]
+        )
 
     def generate_figure(self, log_data: str, time_y_axis_type: str) -> figure:
         """Generates a Bokeh figure for the given log data."""
