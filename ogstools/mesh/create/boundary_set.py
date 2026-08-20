@@ -294,6 +294,9 @@ class LayerSet(BoundarySet):
             - The `resolution` parameter determines the desired spatial resolution of the mesh.
             - The function utilizes tetrahedral meshing using Tetgen software to create the meshed representation.
             - The resulting mesh is tetrahedral, and material IDs are assigned to mesh cells based on the geological layers.
+            - Tetgen is an optional, external (non-pip) dependency with limited
+              version/platform test coverage - see the note in
+              `docs/user-guide/third-party.md`.
 
         example:
             layer_set = LayerSet(...)
