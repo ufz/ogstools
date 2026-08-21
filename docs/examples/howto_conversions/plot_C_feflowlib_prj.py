@@ -28,7 +28,8 @@ feflow_model.run()
 # 3. Plot the results.
 ms = ot.MeshSeries(temp_dir / "CT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
-ot.plot.contourf(ogs_sim_res, "single_species")
+fig = ot.plot.contourf(ogs_sim_res, "single_species")
+fig.show()
 # %%
 # 4. Replace the scalar pore diffusion constant by a tensor to introducec anisotropy.
 # How to manipulate a prj file also is explained in this example:
@@ -55,4 +56,5 @@ feflow_model.subdomains["single_species_P_BC_MASS"] = new_bc_mesh
 feflow_model.run(overwrite=True)
 ms = ot.MeshSeries(temp_dir / "CT_model.pvd")
 ogs_sim_res = ms.mesh(ms.timesteps[-1])
-ot.plot.contourf(ogs_sim_res, "single_species")
+fig = ot.plot.contourf(ogs_sim_res, "single_species")
+fig.show()

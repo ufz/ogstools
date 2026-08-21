@@ -8,8 +8,10 @@ from pathlib import Path
 from queue import Empty, Queue
 
 try:
+    import numpy as np
     from bokeh.io import push_notebook
     from bokeh.io.notebook import CommsHandle
+    from bokeh.layouts import layout
     from bokeh.models import ColumnDataSource
     from bokeh.plotting import figure
 
@@ -17,6 +19,7 @@ except ImportError as e:
     msg = "Monitor() requires extra dependency 'bokeh'. Install with: pip install ogstools[monitor] or pip install bokeh"
     raise RuntimeError(msg) from e
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
 
 from ogstools.logparser import regexes as log_regex
 from ogstools.logparser.log_file_handler import LogFileHandler
@@ -54,7 +57,7 @@ class Monitor:
         )
         self._records: Queue = Queue()
         self._status: log_regex.Context = log_regex.Context()
-        self._observer: Observer | None = None
+        self._observer: BaseObserver | None = None
         self._log_file_handler: LogFileHandler | None = None
         self.time_step_based_data = [
             "step_start_time",
@@ -73,7 +76,7 @@ class Monitor:
             "dx_x_5",
         ]
         self.ylabels = {
-            "step_start_time": "time (s)",
+            "step_start_time": "model time (s)",
             "step_size": "time step size (s)",
             "assembly_time": "assembly time (s)",
             "linear_solver_time": "linear solver time (s)",
@@ -87,7 +90,7 @@ class Monitor:
             "dx_x_5": "dx_x_5",
         }
         self.titles = {
-            "step_start_time": "Simulation Time",
+            "step_start_time": "Model Time",
             "step_size": "Step Size",
             "assembly_time": "Assembly Time per time step",
             "linear_solver_time": "Linear Solver Time per time step",
@@ -118,14 +121,16 @@ class Monitor:
 
         observer = Observer()
         self._observer = observer
+
+        def _handle_stop() -> None:
+            print("Stop Observer")
+            observer.stop()
+
         self._log_file_handler = LogFileHandler(
             log_file,
             queue=self._records,
             status=self._status,
-            stop_callback=lambda: (
-                print("Stop Observer"),
-                observer.stop(),
-            ),
+            stop_callback=_handle_stop,
         )
 
         self._observer.schedule(
@@ -136,6 +141,46 @@ class Monitor:
         print("Starting observer...")
 
         self._observer.start()
+
+    def build_layout(
+        self, log_data: str | list[list[str]], time_y_axis_type: str
+    ) -> figure | layout:
+        """Builds a Bokeh figure, or a grid layout of figures, for ``log_data``.
+
+        :param log_data:  Plot type. Can be a single string or a list of list of strings.
+                            E.g., [['step_start_time', 'step_size'], ['assembly_time', 'linear_solver_time']]
+        :param time_y_axis_type: Type of the y-axis ('linear' or 'log') for simulation time-based data.
+        """
+        if isinstance(log_data, str):
+            return self.generate_figure(
+                log_data, time_y_axis_type=time_y_axis_type
+            )
+
+        if len(log_data) == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        try:
+            rows, cols = np.shape(log_data)
+        except ValueError:
+            print("log_data needs to be a list of lists.")
+        if rows == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        if cols == 0:
+            msg = "log_data list cannot be empty."
+            raise ValueError(msg)
+        return layout(
+            [
+                [
+                    self.generate_figure(
+                        log_data[row][col],
+                        time_y_axis_type=time_y_axis_type,
+                    )
+                    for col in range(cols)
+                ]
+                for row in range(rows)
+            ]
+        )
 
     def generate_figure(self, log_data: str, time_y_axis_type: str) -> figure:
         """Generates a Bokeh figure for the given log data."""
@@ -201,7 +246,7 @@ class Monitor:
         handle_line_chart: CommsHandle,
         time_window_length: int,
         iteration_window_length: int,
-        update_interval: int = 2,
+        update_interval: float = 2,
     ) -> None:
         """Update the data source with new records from the queue.
         :param handle_line_chart: The handle for the Bokeh line chart.

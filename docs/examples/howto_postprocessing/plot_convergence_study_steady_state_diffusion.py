@@ -82,6 +82,7 @@ solution = examples.anasol.diffusion_head_analytical(
 )
 ot.plot.setup.show_element_edges = True
 fig = ot.plot.contourf(solution, ot.variables.hydraulic_head)
+fig.show()
 analytical_solution_path = ot.mesh.save(solution)
 
 # %% [markdown]

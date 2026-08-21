@@ -8,6 +8,7 @@ mesh data. There are also several predefined variables.
 """
 
 # %%
+
 import ogstools as ot
 from ogstools import examples
 
@@ -68,6 +69,7 @@ ot.variables.displacement.magnitude.transform([0.03, 0.04], strip_unit=False)
 fig = ot.plot.contourf(
     examples.load_mesh_mechanics_2D(), ot.variables.stress.von_Mises
 )
+fig.show()
 
 # %% [markdown]
 # Have a look at

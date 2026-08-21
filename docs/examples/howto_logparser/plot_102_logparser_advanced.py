@@ -51,7 +51,8 @@ df_ts
 df_ts.groupby("time_step").max()
 
 # %%
-df_ts[["output_time", "assembly_time"]].boxplot()
+ax = df_ts[["output_time", "assembly_time"]].boxplot()
+ax.get_figure().show()
 
 # %% [markdown]
 # Reduce computation time to process logs

@@ -166,11 +166,13 @@ evolution_metrics = studies.convergence.convergence_metrics_evolution(
 fig = studies.convergence.plot_convergence_error_evolution(
     evolution_metrics, error_type="absolute"
 )
+fig.show()
 
 # %%
 fig = studies.convergence.plot_convergence_error_evolution(
     evolution_metrics, error_type="relative"
 )
+fig.show()
 
 # %% [markdown]
 # A look at the convergence order evolution shows almost quadratic convergence
@@ -179,3 +181,4 @@ fig = studies.convergence.plot_convergence_error_evolution(
 
 # %%
 fig = studies.convergence.plot_convergence_order_evolution(evolution_metrics)
+fig.show()

@@ -155,5 +155,6 @@ prj.linear_solvers.add_lin_solver(
 # %%
 m = ot.Model(project=prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
 fig = m.plot_constraints()
+fig.show()
 # %%
 m.run()

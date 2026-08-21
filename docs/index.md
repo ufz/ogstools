@@ -10,9 +10,9 @@ hidden:
 ---
 User Guide <user-guide/index>
 Examples <auto_examples/index>
-API reference <reference/index>
-Development <development/index>
-Release notes <releases/index>
+API <reference/index>
+Contributing <contributing>
+Releases <releases/index>
 Motivation <user-guide/introduction/motivation>
 ```
 
@@ -81,8 +81,8 @@ To the API reference
 :::{grid-item-card} Developer guide
 :text-align: center
 
-Learn how to setup a development environment and how contribute your code to
-help improving the OpenGeoSys tools ecosystem.
+Learn how to setup a development environment and how to contribute your code
+to help improving the OpenGeoSys tools ecosystem.
 
 +++
 

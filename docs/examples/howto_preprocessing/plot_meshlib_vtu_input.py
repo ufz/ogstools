@@ -37,7 +37,8 @@ layer_set1 = create.LayerSet(layers=[layer1, layer2, layer3])
 sm = layer_set1.to_region_simplified(xy_resolution=200, rank=3).mesh
 pm = layer_set1.to_region_prism(resolution=200).mesh
 vm = layer_set1.to_region_voxel(resolution=[200, 200, 50]).mesh
-# an optional requirement (needs to be installed on system or via pip)
+# Tetgen is an optional, external (non-pip) requirement - see the note in
+# `docs/user-guide/third-party.md` for supported versions/platforms.
 tetgen_present = which("tetgen") is not None
 if tetgen_present:
     tm = layer_set1.to_region_tetrahedron(resolution=200).mesh

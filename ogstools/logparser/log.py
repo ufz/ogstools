@@ -96,7 +96,7 @@ class Log:
                             - "x": residual
         :param x_metric:    x_axis representation:
                             - "time_step": timestep number
-                            - "model_time": simulation time
+                            - "model_time": model time (not computation time)
         :param kwargs:      Additional arguments passed to heatmap function
                             (see :func:`~ogstools.plot.heatmaps.heatmap`).
 
@@ -124,7 +124,7 @@ class Log:
                             convergence order (3 or 4).
         :param x_metric:    x_axis representation:
                             - "time_step": timestep number
-                            - "model_time": simulation time
+                            - "model_time": model time (not computation time)
         :param kwargs:      Additional arguments passed to heatmap function.
                             Default scale is limited to 0-2 for meaningful data.
 

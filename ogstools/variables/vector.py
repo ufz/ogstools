@@ -61,10 +61,10 @@ class Vector(Variable):
         )
 
 
-class BHE_Vector(Variable):
+class Components_BHE(Variable):
     """
     ========= ===========================
-    BHE type  available Vector components
+    BHE type  available components
     ========= ===========================
     1U        in, out, grout1, grout2
     2U        in1, in2, out1, out2, grout1, grout2, grout3, grout4
@@ -74,7 +74,7 @@ class BHE_Vector(Variable):
     ========= ===========================
     """
 
-    BHE_COMPONENTS: ClassVar[dict[str, list[str]]] = {
+    COMPONENTS: ClassVar[dict[str, list[str]]] = {
         "1U":  ["in", "out", "grout1", "grout2"],
         "2U":  ["in1", "in2", "out1", "out2", "grout1", "grout2", "grout3", "grout4"],
         "CXC": ["in", "out", "grout"],
@@ -105,7 +105,7 @@ class BHE_Vector(Variable):
                 data: np.ndarray = self.func(x)
                 len_data = data.shape[-1]
 
-                for _, components in BHE_Vector.BHE_COMPONENTS.items():
+                for _, components in Components_BHE.COMPONENTS.items():
                     if len_data == len(components):
                         if isinstance(comp_index, list):
                             if all(isinstance(i, int) for i in comp_index):
@@ -149,7 +149,7 @@ class BHE_Vector(Variable):
         msg = """You tried to get the magnitude of a BHE temperature vector,
         which most likely is unintended. Please access the different components
         via indexing: e.g. ot.variables.temperature_BHE["T_in"].\n""" + str(
-            BHE_Vector.__doc__
+            Components_BHE.__doc__
         )
         raise TypeError(msg)
 

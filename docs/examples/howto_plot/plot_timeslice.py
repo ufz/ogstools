@@ -32,6 +32,7 @@ pts_diag = np.linspace([25, 0, 75], [100, 0, 0], num=300)
 fig = ot.plot.contourf(mesh_series.mesh(-1), si, vmin=0)
 fig.axes[0].plot(pts_vert[:, 0], pts_vert[:, 2], "-k", linewidth=3)
 fig.axes[0].plot(pts_diag[:, 0], pts_diag[:, 2], "-.k", linewidth=3)
+fig.show()
 
 # %% [markdown]
 # Here, we first show a regular line sample plot for the vertical sampling line
@@ -42,6 +43,7 @@ ms_vert = mesh_series.probe(pts_vert)
 labels = [f"{tv:.1f} a" for tv in ms_vert.timevalues]
 fig = ms_vert.plot_line(si, "z", labels=labels, colors="coolwarm")
 fig.tight_layout()
+fig.show()
 
 # %% [markdown]
 # As the above kind of plot is getting cluttered for lots of timesteps we
@@ -51,6 +53,7 @@ fig.tight_layout()
 
 # %%
 fig = ms_vert.plot_time_slice("time", "z", si, vmin=0, vmax=100)
+fig.show()
 
 # %% [markdown]
 # The stepping in this heatmap corresponds to the individual timesteps.
@@ -61,6 +64,7 @@ ms_vert_fine = ms_vert.resample_temporal(np.linspace(0, 4.2, 300))
 fig = ms_vert_fine.plot_time_slice(
     "time", "z", si, vmin=0, vmax=100, time_logscale=True
 )
+fig.show()
 
 # %% [markdown]
 # You can also change the order of the arguments for spatial coordinate and time
@@ -71,3 +75,4 @@ ms_diag = mesh_series.probe(pts_diag)
 ms_diag_fine = ms_diag.resample_temporal(np.linspace(0, 4.2, 300))
 fig = ms_diag_fine.plot_time_slice("x", "time", si, vmin=0, vmax=100)
 fig.axes[0].invert_yaxis()
+fig.show()

@@ -26,6 +26,7 @@ reference_solution_path = None
 # pylint:disable=C0413
 import numpy as np
 import pyvista as pv
+from IPython.display import display
 
 import ogstools as ot
 from ogstools import studies
@@ -33,6 +34,14 @@ from ogstools import studies
 ot.plot.setup.reset()
 ot.plot.setup.show_element_edges = True
 ot.plot.setup.combined_colorbar = False
+
+
+def _show_with_alt(fig: object, alt: str) -> None:
+    """Display a matplotlib figure with alt text, then close it."""
+    if isinstance(fig, ot.plot.contourplots.plt.Figure):
+        display(fig, metadata={"image/png": {"alt": alt}})
+        ot.plot.contourplots.plt.close(fig)
+
 
 # %% tags=["remove_input"]
 # Here, the meshes are read, a Variable object is created from the variable
@@ -57,6 +66,9 @@ richardson = studies.convergence.richardson_extrapolation(
 
 # %% tags=["remove_input"]
 fig = ot.plot.contourf(richardson, "grid_convergence")
+_show_with_alt(
+    fig, "Contour plot of the grid convergence index across the mesh."
+)
 
 # %% [markdown]
 # ## Grid comparison
@@ -65,6 +77,10 @@ fig = ot.plot.contourf(richardson, "grid_convergence")
 
 # %% tags=["remove_input"]
 fig = ot.plot.contourf(meshes[-3:], variable)
+_show_with_alt(
+    fig,
+    f"Contour plots of {variable.output_name} on the 3 finest discretizations.",
+)
 
 # %% [markdown]
 # ## Richardson extrapolation
@@ -76,6 +92,10 @@ fig = ot.plot.contourf(meshes[-3:], variable)
 
 # %% tags=["remove_input"]
 fig = ot.plot.contourf(richardson, variable)
+_show_with_alt(
+    fig,
+    f"Contour plot of the Richardson extrapolation of {variable.output_name}.",
+)
 
 data_key = variable.data_name
 if reference_solution_path is None:
@@ -83,12 +103,22 @@ if reference_solution_path is None:
         richardson, topology.sample(meshes[-1]), variable
     )
     fig = ot.plot.contourf(diff_mesh, variable)
+    _show_with_alt(
+        fig,
+        f"Contour plot of the difference in {variable.output_name} between "
+        "the finest discretization and the Richardson extrapolation.",
+    )
 else:
     ms = ot.MeshSeries(reference_solution_path)
     timestep = ms.closest_timestep(timevalue)
     reference_solution = topology.sample(ms.mesh(timestep))
     diff_mesh = ot.mesh.difference(reference_solution, richardson, variable)
     fig = ot.plot.contourf(diff_mesh, variable)
+    _show_with_alt(
+        fig,
+        f"Contour plot of the difference in {variable.output_name} between "
+        "the reference solution and the Richardson extrapolation.",
+    )
 
 # %% [markdown]
 # ## Convergence metrics
@@ -105,9 +135,15 @@ metrics.style.format("{:,.5g}").hide()
 # %% tags=["remove_input"]
 ot.plot.contourplots.plt.rcdefaults()
 fig = studies.convergence.plot_convergence_errors(metrics)
+_show_with_alt(
+    fig, f"Plot of the relative convergence errors of {variable.output_name}."
+)
 
 # %% [markdown]
 # ## Absolute values
 
 # %% tags=["remove_input"]
 fig = studies.convergence.plot_convergence(metrics, variable)
+_show_with_alt(
+    fig, f"Plot of the absolute convergence values of {variable.output_name}."
+)

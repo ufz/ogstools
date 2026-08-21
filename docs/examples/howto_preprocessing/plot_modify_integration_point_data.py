@@ -38,6 +38,7 @@ sigma_ip = ot.variables.stress.replace(
 )
 ip_mesh = ot.mesh.to_ip_mesh(mesh)
 fig = ot.plot.contourf(ip_mesh, sigma_ip.trace)
+fig.show()
 
 # %%
 # There are multiple ways in which you can modify the integration point data.
@@ -95,6 +96,7 @@ with np.printoptions(precision=2):
 
 # %%
 fig = ot.plot.contourf(ot.mesh.to_ip_mesh(mesh), sigma_ip.trace)
+fig.show()
 
 # %%
 # Remove a material group
@@ -113,4 +115,5 @@ for data in ot.mesh.IPdata(modified).values():
 
 # %%
 fig = ot.plot.contourf(ot.mesh.to_ip_mesh(modified), sigma_ip.trace)
+fig.show()
 # %%

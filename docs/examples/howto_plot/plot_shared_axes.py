@@ -23,6 +23,7 @@ temperature = ot.variables.temperature
 # axes labels and tick label.
 
 fig = ot.plot.contourf([mesh_0, mesh_1], temperature)
+fig.show()
 
 # %%
 # On user defined figure and axis the axis belonging to specific subplot has to
@@ -36,3 +37,4 @@ ot.plot.contourf(mesh_1, temperature, fig=fig, ax=axs[1][0])
 ot.plot.contourf(diff_a, temperature, fig=fig, ax=axs[0][1])
 ot.plot.contourf(diff_b, temperature, fig=fig, ax=axs[1][1])
 fig.tight_layout()
+fig.show()

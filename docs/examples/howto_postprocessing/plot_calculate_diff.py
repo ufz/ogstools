@@ -14,16 +14,15 @@ This example shows how to calculate differences between meshes.
 
 # sphinx_gallery_end_ignore
 
+
 import ogstools as ot
 from ogstools import examples
-
-# sphinx_gallery_start_ignore
-
 
 ot.plot.setup.dpi = 75
 ot.plot.setup.show_element_edges = True
 
 
+# %%
 def custom_mesh(lengths: int, element_order: int, quads: bool):
     "Creates a custom mesh and runs a Mechanics simulation on it."
 
@@ -43,8 +42,6 @@ def custom_mesh(lengths: int, element_order: int, quads: bool):
     sim = model.run()
     return sim.meshseries.mesh(-1)
 
-
-# sphinx_gallery_end_ignore
 
 # %% [markdown]
 # Difference between two meshes
@@ -66,6 +63,7 @@ mesh2 = mesh_series.mesh(-1)
 # %%
 mesh_diff = ot.mesh.difference(mesh1, mesh2, ot.variables.temperature)
 fig = ot.plot.contourf(mesh_diff, ot.variables.temperature)
+fig.show()
 
 # %% [markdown]
 # Difference between two meshes of different topology
@@ -83,6 +81,7 @@ tri_mesh = custom_mesh(lengths=1, element_order=2, quads=False)
 
 # %%
 fig = ot.plot.contourf([quad_mesh, tri_mesh], ot.variables.stress["xx"])
+fig.show()
 
 # %% [markdown]
 # To better quantify it we form the difference and plot the result. The base
@@ -93,6 +92,7 @@ fig = ot.plot.contourf([quad_mesh, tri_mesh], ot.variables.stress["xx"])
 # %%
 diff_mesh = ot.mesh.difference(quad_mesh, tri_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
+fig.show()
 
 # %% [markdown]
 # Doing it the other way around shows the difference on the tri-mesh. Here, we
@@ -102,6 +102,7 @@ fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
 # %%
 diff_mesh = ot.mesh.difference(tri_mesh, quad_mesh, ot.variables.stress)
 fig = ot.plot.contourf(diff_mesh, ot.variables.stress.difference["xx"])
+fig.show()
 
 # %% [markdown]
 # Differences between multiple meshes
@@ -234,9 +235,11 @@ diff_ms = ot.MeshSeries.difference(ms2, ms, ot.variables.pressure)
 
 # %%
 fig_T = ot.plot.contourf(ms[-1], ot.variables.pressure, show_edges=False)
+fig_T.show()
 
 # %%
 fig_T_2 = ot.plot.contourf(ms2[-1], ot.variables.pressure, show_edges=False)
+fig_T_2.show()
 
 # %% [markdown]
 # The MeshSeries object returned by the difference() method, can be used in the
@@ -248,6 +251,7 @@ fig_T_2 = ot.plot.contourf(ms2[-1], ot.variables.pressure, show_edges=False)
 fig_T_diff = ot.plot.contourf(
     diff_ms[-1], ot.variables.pressure.difference, show_edges=True
 )
+fig_T_diff.show()
 # fig_T_diff = ot.plot.contourf(diff_ms[-1], "pore_pressure_difference")
 
 # %%

@@ -13,7 +13,8 @@ from shutil import which
 import ogstools as ot
 from ogstools.mesh import create
 
-# an optional requirement (needs to be installed on system or via pip)
+# Tetgen is an optional, external (non-pip) requirement - see the note in
+# `docs/user-guide/third-party.md` for supported versions/platforms.
 tetgen_present = which("tetgen") is not None
 
 if tetgen_present:

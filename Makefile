@@ -1,7 +1,7 @@
 help:  ## Show this help
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | column -t -s :
 
-.PHONY : setup pip_setup_headless test coverage check clean docs cleandocs preview pull_containers
+.PHONY : setup pip_setup_headless setup_maintainer test test_maintainer coverage check clean docs cleandocs preview pull_containers
 
 setup:  ## Setup a virtual environment and install all development dependencies
 	if command -v uv > /dev/null 2>&1; then \
@@ -49,6 +49,13 @@ pip_setup_latest:
 	@echo "ATTENTION: You need to activate the virtual environment in every shell with:"
 	@echo "source .venv/bin/activate"
 
+# Tracks the latest OGS pre-release, in its own .venv_maintain, mirroring
+# CI's maintenance jobs so upstream OGS failures can be reproduced locally.
+setup_maintainer:  ## Setup a maintainer environment tracking the latest of everything (including an unreleased OGS)
+	python -m venv .venv_maintain --upgrade-deps
+	.venv_maintain/bin/pip install -e .[all,dev,test,docs]
+	.venv_maintain/bin/pip install ogs --index-url https://gitlab.opengeosys.org/api/v4/projects/120/packages/pypi/simple --pre --upgrade
+
 # Assumes ogstools is already installed
 pip_setup_headless:  ## Install gmsh without X11 dependencies
 	.venv/bin/pip uninstall gmsh -y
@@ -66,6 +73,10 @@ setup_devcontainer:  ## Internal usage [CI]
 test:  ## Runs the unit tests
 	python scripts/pull_containers.py
 	pytest --mpl --mpl-baseline-path=tests/baseline --mpl-generate-summary=html -n auto
+
+test_maintainer:  ## Runs the unit tests against the maintainer environment's OGS pre-release
+	.venv_maintain/bin/python scripts/pull_containers.py
+	.venv_maintain/bin/python -m pytest -n auto
 
 test_figures:  ## Create the reference figures for the plot tests
 	rm -rf tests/baseline

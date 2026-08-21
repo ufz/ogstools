@@ -48,7 +48,7 @@ df_log = ot.logparser.fill_ogs_context(df_records)
 #
 # :py:mod:`ogstools.logparser.analysis_time_step`
 df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
-df_ts_it
+print(df_ts_it)
 
 
 # %%
@@ -63,13 +63,14 @@ df_ts_it
 df_ts = ot.logparser.analysis_time_step(df_log)
 df_ts = df_ts.loc[0]
 # Removing MPI_process (index=0) from result (all are 0) for serial log.
-df_ts
+print(df_ts)
 
 # %%
 # Selecting specific metrics (3) and plotting using pandas plot function.
-df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
+ax = df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
     logy=True, grid=True
 )
+ax.get_figure().show()
 
 # %% [markdown]
 # Analysis of convergence criteria - Newton iterations
@@ -100,7 +101,7 @@ df_ts[["assembly_time", "dirichlet_time", "linear_solver_time"]].plot(
 
 # %%
 
-ot.logparser.analysis_convergence_newton_iteration(df_log)
+print(ot.logparser.analysis_convergence_newton_iteration(df_log))
 
 
 # %%
@@ -117,7 +118,7 @@ df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 
 # Only for staggered coupled processes !
-ot.logparser.analysis_convergence_coupling_iteration(df_log)
+print(ot.logparser.analysis_convergence_coupling_iteration(df_log))
 
 # %% [markdown]
 # Analysis of model time and clock time
@@ -133,7 +134,14 @@ records = ot.logparser.parse_file(log_adaptive_timestepping)
 df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 df_t = ot.logparser.model_and_clock_time(df_log)
-df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)
+axs = df_t[["step_size", "clock_time", "iterations"]].plot(
+    grid=True, subplots=True
+)
+axs[-1].set_xlabel("model time [s]")
+axs[0].set_ylabel("step size [s]")
+axs[1].set_ylabel("clock time [s]")
+axs[2].set_ylabel("iterations")
+axs[0].get_figure().show()
 
 # %% [markdown]
 # To get an overview of the convergence behavior of the nonlinear solver over
@@ -141,6 +149,7 @@ df_t[["step_size", "clock_time", "iterations"]].plot(grid=True, subplots=True)
 
 # %%
 fig = ot.logparser.plot_convergence(df_log, "dx_x")
+fig.show()
 
 # %% [markdown]
 # We can also plot this data over the model time. Note, that the last timesteps
@@ -148,6 +157,7 @@ fig = ot.logparser.plot_convergence(df_log, "dx_x")
 
 # %%
 fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
+fig.show()
 
 # %% [markdown]
 # Further we can calculate the convergence order and plot it in the same manner.
@@ -159,3 +169,4 @@ fig = ot.logparser.plot_convergence(df_log, "dx_x", x_metric="model_time")
 
 # %%
 fig = ot.logparser.plot_convergence_order(df_log)
+fig.show()

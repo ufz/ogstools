@@ -74,6 +74,8 @@ class OGSNativeController(SimulationController):
 
         :returns: True if the run was terminated successfully, False otherwise.
         """
+        self._close_dashboards()
+
         timeout = 3
         proc = self.process
 

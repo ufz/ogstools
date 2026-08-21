@@ -108,7 +108,7 @@ def matrix_trace(values: ValType) -> ValType:
 def eigenvalues(values: ValType) -> ValType:
     "Return the eigenvalues."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals: np.ndarray = LA.eigvals(mat_vals)
+    eigvals: np.ndarray = LA.eigvalsh(mat_vals)
     eigvals.sort(axis=-1)
     assert np.all(eigvals[..., 0] <= eigvals[..., 1])
     assert np.all(eigvals[..., 1] <= eigvals[..., 2])
@@ -118,7 +118,7 @@ def eigenvalues(values: ValType) -> ValType:
 def eigenvectors(values: ValType) -> ValType:
     "Return the eigenvectors."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals, eigvecs = LA.eig(mat_vals)
+    eigvals, eigvecs = LA.eigh(mat_vals)
     ids = eigvals.argsort(axis=-1)
     eigvals = np.take_along_axis(eigvals, ids, axis=-1)
     eigvecs = np.take_along_axis(eigvecs, ids[:, np.newaxis], axis=-1)

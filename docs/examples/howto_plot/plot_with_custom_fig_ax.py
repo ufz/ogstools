@@ -33,6 +33,7 @@ ot.plot.contourf(
     meshseries.mesh(1), ot.variables.displacement, fig=fig, ax=ax[1]
 )
 fig.tight_layout()
+fig.show()
 
 # %% [markdown]
 # Plot two time steps and their difference
@@ -61,3 +62,4 @@ ax[0].set_title(r"$T(\mathrm{t}_{0})$", fontsize=32)
 ax[1].set_title(r"$T(\mathrm{t}_{end})$", fontsize=32)
 ax[2].set_title(r"$T(\mathrm{t}_{end})$-$T(\mathrm{t}_{0})$", fontsize=32)
 fig.tight_layout()
+fig.show()

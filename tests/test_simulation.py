@@ -34,6 +34,7 @@ def model(request: pytest.FixtureRequest) -> ot.Model:
     return request.getfixturevalue(request.param)
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_simulation_simple(tmp_path: Path, good_model: ot.Model):
     sim = good_model.copy().run()
@@ -46,6 +47,7 @@ def test_simulation_simple(tmp_path: Path, good_model: ot.Model):
     assert (sim_out / "result").is_symlink()
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_simulation_simple_xdmf_obs_pts(tmp_path: Path, good_model: ot.Model):
     """Checks generation and reading of point-only-xdmf-meshseries works."""
@@ -71,6 +73,7 @@ def test_simulation_simple_xdmf_obs_pts(tmp_path: Path, good_model: ot.Model):
     assert ot.MeshSeries(obs_pt_res)[0]["pressure"]
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_simulation_simple2(tmp_path: Path, good_model: ot.Model):
     sim_out = tmp_path / "Simulation" / "sim_good_model"
@@ -83,6 +86,7 @@ def test_simulation_simple2(tmp_path: Path, good_model: ot.Model):
     sim.save(tmp_path / "Simulation" / "model_save_as")
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_simulation_simple_archive(tmp_path: Path, good_model: ot.Model):
     sim_out = tmp_path / "Simulation" / "sim_good_model"
@@ -94,6 +98,7 @@ def test_simulation_simple_archive(tmp_path: Path, good_model: ot.Model):
     assert (sim_out / "model").is_dir()
 
 
+@pytest.mark.tools  # NodeReordering, partmesh, pvtu2vtu
 @pytest.mark.system
 @pytest.mark.skipif(
     (os.cpu_count() or 0) < 3 or sys.platform != "linux",
@@ -126,6 +131,7 @@ def test_simulation_parallel(good_model: ot.Model, n: int):
     assert sim.status == sim.Status.done, f"Simulation status: {sim.status_str}"
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 @pytest.mark.xfail(
     sys.platform == "darwin",
@@ -164,6 +170,7 @@ def test_simulation_ogs_asm_threads():
     assert "Threads used for ParallelVectorMatrixAssembler: 1" in log_no_asm
 
 
+@pytest.mark.tools  # NodeReordering, partmesh
 @pytest.mark.system
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux only")
 @pytest.mark.usefixtures("require_ogs_containers")
@@ -181,6 +188,7 @@ def test_simulation_container(good_model: ot.Model):
     assert "-l debug" in cmd
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 @pytest.mark.parametrize("do_kill", [False, True], ids=["no-kill", "kill"])
 @pytest.mark.parametrize(
@@ -231,6 +239,7 @@ def test_abort_run_and_status(
 
 # ToDo: Issue #3589 + Console capture not thread safe - Test interactive
 @pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 def test_parallel_runs():
     """Simulations can run in parallel (native) or sequentially (interactive)."""
     model = examples.load_model_liquid_flow_simple()
@@ -246,6 +255,7 @@ def test_parallel_runs():
     assert sims[0].meshseries == sims[1].meshseries
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_simulation_cmd_reproduces_result(tmp_path: Path, good_model: ot.Model):
     """Run a simulation, save as archive, delete original, re-run via cmd."""
@@ -272,6 +282,7 @@ def test_simulation_cmd_reproduces_result(tmp_path: Path, good_model: ot.Model):
 
 
 @pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_plot_simulation_log_convergence() -> plt.Figure:
     model = examples.load_model_liquid_flow_simple()
@@ -279,14 +290,16 @@ def test_plot_simulation_log_convergence() -> plt.Figure:
     return sim.log.plot_convergence()
 
 
-@pytest.mark.tools  # NodeReordering
+@pytest.mark.system
 @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
 def test_plot_simulation_log_convergence_order() -> plt.figure:
-    model = examples.load_model_liquid_flow_simple()
+    # Example with enough nonlinear iterations to have data to plot.
+    model = examples.load_simulation_smalldeformation().model.copy()
     sim = model.run()
     return sim.log.plot_convergence_order()
 
 
+@pytest.mark.system  # ogs --version check on model_restart.save()
 def test_mock_model_restart() -> None:
     sim_dir = ot.definitions.EXAMPLES_DIR / "simulation/restart/sim"
     sim = ot.Simulation.from_folder(sim_dir)
@@ -298,7 +311,8 @@ def test_mock_model_restart() -> None:
     assert prj_ref == model_restart.project
 
 
-@pytest.mark.tools  # NodeReordering
+@pytest.mark.tools  # NodeReordering, partmesh
+@pytest.mark.system
 @pytest.mark.usefixtures("require_ogs_containers")
 def test_execution_defaults_from_env(monkeypatch, good_model: ot.Model):
     """OGS_EXECUTION_DEFAULTS env var loads settings from the example YAML."""
@@ -336,6 +350,7 @@ def test_restart_error_cases():
     return
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_model_restart(tmp_path: Path) -> None:
     model = ot.examples.load_model_liquid_flow_simple().copy()

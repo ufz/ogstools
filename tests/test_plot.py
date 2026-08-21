@@ -129,6 +129,7 @@ class TestPlotting:
         ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(ms[1], var, **kwargs)
 
+    @pytest.mark.tools  # NodeReordering
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_limits(self) -> plt.Figure:
         msh = ot.gmsh_tools.rect(n_edge_cells=10, structured_grid=False)
@@ -217,7 +218,7 @@ class TestPlotting:
         results = examples.load_meshseries_CT_2D_XDMF()
         points = np.linspace([0, 0, 70], [150, 0, 70], num=100)
         ms_pts = results.probe(points)
-        return ms_pts.plot_time_slice(*args, variable="Saturation", **kwargs)
+        return ms_pts.plot_time_slice(*args, variable="saturation", **kwargs)
 
     def test_time_slice_failing_args(self):
         """Test time slice for expected errors when given wrong arguments."""

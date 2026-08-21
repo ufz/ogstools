@@ -32,7 +32,8 @@ def jupyter_to_html(input_path: Path, show_input: bool = False) -> str:
     if not show_input:
         hide_input_tags += ["remove_input"]
     conf.TagRemovePreprocessor.remove_input_tags = hide_input_tags
-    exporter = HTMLExporter(config=conf)
+    # "classic" template renders alt text from output metadata; "lab" doesn't.
+    exporter = HTMLExporter(config=conf, template_name="classic")
     exporter.register_preprocessor(TagRemovePreprocessor(config=conf), True)
     exporter.exclude_input_prompt = True
     exporter.exclude_output_prompt = True

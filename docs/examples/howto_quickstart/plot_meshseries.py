@@ -107,3 +107,4 @@ print("Data on clipped domain:", np.shape(temp_right_half))
 
 # %%
 fig = ot.plot.contourf(ms_right_half[-1], "temperature")
+fig.show()

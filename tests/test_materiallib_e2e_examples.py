@@ -16,6 +16,29 @@ from ogstools.materiallib.core.material_manager import MaterialManager
 from ogstools.materiallib.core.media import MediaSet
 
 
+def _ogs_version_newer_than(base: str) -> bool:
+    """True if the installed ogs is a dev build past release `base`.
+
+    Dev builds report a version like "6.5.8-382-g21257daf" (commits ahead
+    of tag 6.5.8); plain releases report just "6.5.8".
+    """
+    import ogs
+
+    base_part, _, suffix = ogs.OGS_VERSION.partition("-")
+    base_tuple = tuple(int(x) for x in base.split("."))
+    installed_tuple = tuple(int(x) for x in base_part.split("."))
+    if installed_tuple != base_tuple:
+        return installed_tuple > base_tuple
+    return bool(suffix)
+
+
+_TH2M_PT_REFERENCE_TEMPERATURE_VERSION = "6.5.8"
+"""ogs release after which `processes/process/reference_temperature` for
+TH2M is no longer read (and errors as an unconsumed key if present)."""
+# TODO(ogs-version): drop once minimum supported ogs is newer than this.
+
+
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_heat_conduction_project_runs_with_grouped_domain_materials(
     tmp_path: Path,
@@ -62,9 +85,8 @@ def test_heat_conduction_project_runs_with_grouped_domain_materials(
     assert "opalinus_clay" not in text
 
 
-@pytest.mark.system
-def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
-    tmp_path: Path,
+def _run_th2m_pt_example_with_grouped_domain_materials(
+    tmp_path: Path, *, for_upcoming_ogs_version: bool
 ) -> None:
     source_project_dir = (
         Path(__file__).resolve().parents[1]
@@ -95,6 +117,11 @@ def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
         input_file=project_dir / "th2m_phase_transition.prj"
     ).copy()
 
+    if for_upcoming_ogs_version:
+        project.remove_element(
+            "./processes/process", tag="reference_temperature", text="T0"
+        )
+
     db = MaterialManager(data_dir=material_dir)
     filtered = db.filter(
         process="TH2M_PT",
@@ -109,7 +136,7 @@ def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
     )
 
     project.set_media(MediaSet(filtered))
-    model = ot.Model(project)
+    model = ot.Model(project, execution=ot.Execution(omp_num_threads=4))
     simulation = model.run(target=project_dir / "run")
 
     assert simulation.status == ot.Simulation.Status.done
@@ -120,3 +147,31 @@ def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
     assert "Gas" in text
     assert "opalinus_clay" not in text
     assert "hydrogen" in text
+
+
+@pytest.mark.system
+@pytest.mark.skipif(
+    _ogs_version_newer_than(_TH2M_PT_REFERENCE_TEMPERATURE_VERSION),
+    reason=f"ogs > {_TH2M_PT_REFERENCE_TEMPERATURE_VERSION} rejects "
+    "processes/process/reference_temperature for TH2M as unread",
+)
+def test_th2m_pt_example_project_runs_with_grouped_domain_materials(
+    tmp_path: Path,
+) -> None:
+    _run_th2m_pt_example_with_grouped_domain_materials(
+        tmp_path, for_upcoming_ogs_version=False
+    )
+
+
+@pytest.mark.system
+@pytest.mark.skipif(
+    not _ogs_version_newer_than(_TH2M_PT_REFERENCE_TEMPERATURE_VERSION),
+    reason=f"ogs <= {_TH2M_PT_REFERENCE_TEMPERATURE_VERSION} requires "
+    "processes/process/reference_temperature for TH2M",
+)
+def test_th2m_pt_example_project_runs_with_grouped_domain_materials_no_reference_temperature(
+    tmp_path: Path,
+) -> None:
+    _run_th2m_pt_example_with_grouped_domain_materials(
+        tmp_path, for_upcoming_ogs_version=True
+    )

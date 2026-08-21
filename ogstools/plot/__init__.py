@@ -14,6 +14,8 @@ from .lineplots import line
 from .contourplots_pv import contourf_pv
 from .vectorplots import quiver, streamlines
 
+utils.warn_if_non_interactive_backend()
+
 __all__ = [
     "animate",
     "compute_levels",

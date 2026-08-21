@@ -318,7 +318,7 @@ pinned = [
 
 
 dev = ["pre-commit>=2.20", "build", "black==24.4.0", "types-lxml>=2025.8.0",]
-test = ["coverage", "hypothesis", "pytest", "pytest-xdist", "pytest-dependency"]
+test = ["coverage", "hypothesis", "pytest", "pytest-cov", "pytest-xdist", "pytest-dependency"]
 docs = [
   "livereload",
   "myst-parser",
@@ -338,7 +338,7 @@ docs = [
 ]
 feflow = ["ifm_contrib>=0.2.4"]
 ogs = ["ogs>=6.5.8"]
-monitor = ["bokeh>=3.6.0", "ipykernel>5"]
+monitor = ["bokeh>=3.6.0", "ipykernel>5", "jupyter_bokeh>=3.0.0"]
 # all features (not extra for developer tasks (test,docs,dev,...))
 all = ["ogstools[ogs,monitor]"]
 

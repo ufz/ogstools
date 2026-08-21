@@ -19,7 +19,12 @@ print(f"{ot.plot.setup.min_ax_aspect=}")
 print(f"{ot.plot.setup.max_ax_aspect=}")
 
 
-# sphinx_gallery_start_ignore
+# %% [markdown]
+# For brevity, we define a small helper to build a custom mesh with the
+# given dimensions.
+
+
+# %%
 # TODO: move to examples
 def custom_mesh(dx: float, dy: float):
     number_of_points = 50
@@ -35,20 +40,20 @@ def custom_mesh(dx: float, dy: float):
     return mesh
 
 
-# sphinx_gallery_end_ignore
-
 # %% [markdown]
 # The following fits inside the defined limits and gets displayed with true
 # proportions.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi * 2, np.pi), "example")
+fig.show()
 # %% [markdown]
 # This one would be too wide and thus and gets compressed to fit the maximum
 # aspect ratio.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi * 4, np.pi), "example")
+fig.show()
 # %% [markdown]
 # When plotting multiple meshes together, this applies to each subplot.
 # So here each subplot has true proportions again since each one fits the limits.
@@ -57,12 +62,14 @@ fig = ot.plot.contourf(custom_mesh(np.pi * 4, np.pi), "example")
 fig = ot.plot.contourf(
     [custom_mesh(np.pi * 2, np.pi), custom_mesh(np.pi * 2, np.pi)], "example"
 )
+fig.show()
 # %% [markdown]
 # The following figure would be to tall and is clipped to the minimum aspect
 # ratio.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
+fig.show()
 # %% [markdown]
 # The same is true here:
 
@@ -70,6 +77,7 @@ fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
 fig = ot.plot.contourf(
     [custom_mesh(np.pi, np.pi * 3), custom_mesh(np.pi, np.pi * 3)], "example"
 )
+fig.show()
 
 # %% [markdown]
 # You can enforce true proportions regardless of the resulting figures
@@ -80,9 +88,11 @@ fig = ot.plot.contourf(
 ot.plot.setup.min_ax_aspect = None
 ot.plot.setup.max_ax_aspect = None
 fig = ot.plot.contourf(custom_mesh(np.pi * 3, np.pi), "example")
+fig.show()
 
 # %% [markdown]
 # And in this case we get a very tall figure.
 
 # %%
 fig = ot.plot.contourf(custom_mesh(np.pi, np.pi * 3), "example")
+fig.show()

@@ -60,6 +60,7 @@ def plot_contourf(timevalue: float, mesh) -> None:
 
 
 anim = ot.plot.animate(fig, plot_contourf, ms_r.timevalues, ms_r)
+# in a notebook: from IPython.display import HTML; HTML(anim.to_jshtml())
 
 # %% [markdown]
 # You can also use any other function to create an animation this way.
@@ -81,6 +82,7 @@ def plot_line(mesh) -> None:
 
 
 anim = ot.plot.animate(fig, plot_line, ms_x)
+# in a notebook: from IPython.display import HTML; HTML(anim.to_jshtml())
 
 # %% [markdown]
 # The animation can be saved (as mp4) like so:

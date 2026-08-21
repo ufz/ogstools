@@ -40,10 +40,16 @@ saturation = ot.variables.saturation
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
 # equal to the aggregation functions name. The plot function will find the
 # correct data anyway if given the original variable
+#
+# Due to numerical oscillations, this dataset contains a few cells with
+# slightly unphysical saturation (below 0% or above 100%). We clip the
+# colorbar at ``vmin=0, vmax=100`` to avoid these values dominating the
+# plotted range.
 
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.max)
-fig = ot.plot.contourf(mesh, saturation)
+fig = ot.plot.contourf(mesh, saturation, vmin=0, vmax=100)
+fig.show()
 
 # %% [markdown]
 # It is also possible to plot the time when the minimum or maximum occurs.
@@ -53,8 +59,9 @@ fig = ot.plot.contourf(mesh, saturation)
 # %%
 mesh = mesh_series.time_of_max(saturation)
 fig = ot.plot.contourf(
-    mesh, ot.variables.Scalar("max_Saturation_time", "a", "a")
+    mesh, ot.variables.Scalar("max_saturation_time", "a", "a")
 )
+fig.show()
 
 # %% [markdown]
 # Likewise we can calculate and visualize the variance of the saturation:
@@ -63,6 +70,7 @@ fig = ot.plot.contourf(
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.var)
 fig = ot.plot.contourf(mesh, saturation)
+fig.show()
 
 # %% [markdown]
 # Difference between the last and the first timestep:
@@ -70,6 +78,7 @@ fig = ot.plot.contourf(mesh, saturation)
 # %%
 mesh = ot.mesh.difference(mesh_series.mesh(-1), mesh_series.mesh(0), saturation)
 fig = ot.plot.contourf(mesh, saturation)
+fig.show()
 
 # %% [markdown]
 # It's also possible to aggregate the data per timestep to return a timeseries
@@ -87,3 +96,4 @@ mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
 # %%
 fig = mesh_series.plot_line(saturation.std)
 fig.tight_layout()
+fig.show()

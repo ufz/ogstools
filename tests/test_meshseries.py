@@ -26,6 +26,7 @@ def test_meshseries_xdmf():
     assert xmf_ms.rawdata_path().suffix in [".xdmf", ".xmf"]
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 @pytest.mark.parametrize("quads", [True, False], ids=["quads", "no quads"])
 def test_read_quadratic_xdmf(tmp_path, quads):
@@ -636,6 +637,7 @@ def test_compare_meshseries_tol(tols):
         (2, True, 4, False),
     ],
 )
+@pytest.mark.tools  # NodeReordering, ipDataToPointCloud
 @pytest.mark.system
 def test_ip_mesh(tmp_path, elem_order, quads, intpt_order, mixed):
     "Test creation of integration point meshes."
@@ -687,6 +689,7 @@ def test_xdmf_symlink():
     assert not np.any(np.isnan(ms.values("Si")))
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_xdmf_quadratic(tmp_path):
     "Test reading of quadratic elements in xdmf."
@@ -708,6 +711,7 @@ def test_xdmf_quadratic(tmp_path):
     assert not np.any(np.isnan(ot.variables.stress.transform(mesh)))
 
 
+@pytest.mark.tools  # NodeReordering
 @pytest.mark.system
 def test_xdmf_materialIDs(tmp_path):
     """

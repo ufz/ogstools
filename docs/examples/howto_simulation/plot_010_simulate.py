@@ -44,17 +44,11 @@ See :py:class:`ogstools.core.execution.Execution` for the full list of options.
 
 import ogstools as ot
 
-results_dir = ot.definitions.temp_dir(prefix="simulate", dir="examples")
-prj_path_in = ot.definitions.EXAMPLES_DIR / "prj" / "simple_mechanics.prj"
-prj_path_out = results_dir / "simple_mechanics_modified.prj"
-prj = ot.Project(
-    input_file=prj_path_in, output_file=prj_path_out, output_dir=results_dir
-)
-
-model = ot.Model(prj, meshes=ot.definitions.EXAMPLES_DIR / "prj")
+model = ot.Model(ot.definitions.EXAMPLES_DIR / "prj" / "simple_mechanics.prj")
 sim = model.run()
 # Optionally save the simulation data
 sim.save()
+assert sim.status == ot.Simulation.Status.done
 print(sim)
 
 
@@ -68,8 +62,9 @@ print(sim)
 # The subsequent code would work but for clarity we recommend saving 2 different states of the prj object into 2 different files.
 
 # Either tell that you are going to change prj object (prj.copy) OR do prj.save() after you have changed but before you run the simulation.
-prj2 = prj.copy()
 
+# %%
+prj2 = model.project.copy()
 
 # %%
 prj2.replace_parameter_value(name="E", value=1e9)
@@ -86,20 +81,77 @@ prj2.replace_phase_property_value(
 # After modifying the Project you can execute the model in the same way as
 # before. You have to prj.save(new_name) here, or beforehand by prj2.copy.
 
+# %%
 model2 = ot.Model(prj2, meshes=model.meshes)
-sim = model2.run()
-print(sim)
+sim2 = model2.run()
+print(sim2)
+assert sim2.status == ot.Simulation.Status.done
+assert sim2.meshseries != sim.meshseries
 
 # %%
-# Alternatively, for more control
-simc = model2.controller()  # this call is not blocking
-simc.terminate()  # do something while the simulation is running
-simc.run()  # this call is blocking, it waits for the simulation to finish
+# Alternatively, this call is not blocking:
+simc_a = model2.controller()
+simc_b = model2.controller()  # As an example: Fire up a second simulation
+# simc_a.terminate() aborts a simulation early, if needed
+sim_a, sim_b = (
+    simc_a.run(),
+    simc_b.run(),
+)  # Both run concurrently, here we wait for both to finish
 
 
 # %% [markdown]
-# .. image:: /examples/howto_simulation/bokeh_logs.png
-#    :alt: Bokeh log plot
+# Monitoring a running simulation
+# ================================
+# ``controller()`` starts the simulation but does not block, so you can watch
+# its progress live while it runs. ``plot_log()`` opens the same interactive
+# Bokeh dashboard as the ``ogsmonitor`` command line tool, in a real browser tab
+
+# %%
+simc = model2.controller()
+dashboard = simc.plot_log(
+    log_data=[["step_start_time", "step_size"], ["iteration_number", "dx_x_0"]],
+    notebook=False,
+)
+
+# %% [markdown]
+# ``plot_log()`` also accepts a ``notebook`` flag: with ``notebook=True`` the
+# plot is embedded directly in the notebook cell's output instead.
+#
+# .. warning::
+#    In VS Code's Jupyter extension, ``notebook=True`` does not live-update:
+#    this is an unresolved upstream limitation
+#    (`bokeh/jupyter_bokeh#199 <https://github.com/bokeh/jupyter_bokeh/issues/199>`_),
+#    not something ogstools can work around.
+#
+# For that reason, ``notebook=False`` (default) is
+# recommended, including in VS Code. A dashboard opens in a real browser tab.
+# You need to switch to that tab to see the live charts (see screenshot
+# below).
+#
+# Here we wait for the simulation to finish and then close the dashboard, so
+# building these docs doesn't leave a dashboard process running.
+
+# %%
+simc.run()
+# simc.terminate() stops the simulation *and* closes any dashboards opened
+# from it. The returned `dashboard`
+# additionally supports its own .terminate() (notebook=False only) to close
+# just the browser tab while leaving the simulation running.
+simc.terminate()
+
+# %% [markdown]
+# .. note::
+#    Equivalently, from a separate terminal::
+#
+#        ogsmonitor /path/to/log.txt
+#
+#    See :doc:`the monitor user guide </user-guide/monitor>` for more details.
+#
+# .. figure:: /examples/howto_simulation/bokeh_logs.png
+#    :alt: Screenshot of interactive ogs monitor
+#
+#    Screenshot of the interactive Bokeh dashboard opened by ``plot_log()``
+#    or ``ogsmonitor``.
 
 # %% [markdown]
 # Creating a Project from scratch

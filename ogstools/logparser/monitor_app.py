@@ -8,9 +8,7 @@ import sys
 from pathlib import Path
 from typing import cast
 
-import numpy as np
 from bokeh.io import curdoc
-from bokeh.layouts import layout
 
 from ogstools.logparser.monitor import Monitor
 
@@ -39,44 +37,15 @@ if __name__.split("_")[0] == "bokeh":
     monitor = Monitor(notebook_execution=False)
     monitor.start_log_file_handler(logfile)
 
-    log_data = config["log_data"]
+    log_data: str | list[list[str]] = cast(
+        "str | list[list[str]]", config["log_data"]
+    )
     time_y_axis_type: str = cast(str, config["time_y_axis_type"])
     time_window_length: int = cast(int, config["time_window_length"])
     iteration_window_length: int = cast(int, config["iteration_window_length"])
     update_plot_time = config["update_plot_time"]
     data_collect_time: int = cast(int, config["data_collect_time"])
-    grid_layout = None
-
-    if isinstance(log_data, str):
-        grid_layout = monitor.generate_figure(
-            log_data, time_y_axis_type=time_y_axis_type
-        )
-    elif isinstance(log_data, list):
-        if len(log_data) == 0:
-            msg = "log_data list cannot be empty."
-            raise ValueError(msg)
-        try:
-            rows, cols = np.shape(log_data)
-        except ValueError:
-            print("log_data needs to be a list of lists.")
-        if rows == 0:
-            msg = "log_data list cannot be empty."
-            raise ValueError(msg)
-        if cols == 0:
-            msg = "log_data list cannot be empty."
-            raise ValueError(msg)
-        grid_layout = layout(
-            [
-                [
-                    monitor.generate_figure(
-                        log_data[row][col],
-                        time_y_axis_type=time_y_axis_type,
-                    )
-                    for col in range(cols)
-                ]
-                for row in range(rows)
-            ]
-        )
+    grid_layout = monitor.build_layout(log_data, time_y_axis_type)
     if config["liveplot"] is False:
         os.utime(logfile, None)
 

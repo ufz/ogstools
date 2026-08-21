@@ -25,7 +25,7 @@ records = ot.logparser.parse_file(log_const_viscosity_thermal_convection)
 df_records = pd.DataFrame(records)
 df_log = ot.logparser.fill_ogs_context(df_records)
 df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
-df_ts_it
+print(df_ts_it)
 
 # %%
 
@@ -84,7 +84,7 @@ df_ts_it = ot.logparser.time_step_vs_iterations(df_log)
 # The result is a pandas.DataFrame. You may manipulate the dataframe to your
 # needs with pandas functionality.
 pd.set_option("display.max_rows", 8)  # for visualization only
-df_ts_it
+print(df_ts_it)
 
 # %%
 # Pandas to plot
@@ -107,9 +107,10 @@ ax.set_ylabel("iteration number")
 ax.yaxis.label.set_color("C0")  # colour matches the left line
 ax.tick_params(axis="y", colors="C0")
 ax_right = ax.right_ax
-ax_right.set_ylabel("simulation time")
+ax_right.set_ylabel("model time [s]")
 ax_right.yaxis.label.set_color("C1")
 ax_right.tick_params(axis="y", colors="C1")
 lines, labels = ax.get_legend_handles_labels()
 lines2, labels2 = ax_right.get_legend_handles_labels()
 ax.legend(lines + lines2, labels + labels2, loc="upper left")
+ax.get_figure().show()

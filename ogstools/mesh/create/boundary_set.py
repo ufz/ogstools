@@ -294,6 +294,9 @@ class LayerSet(BoundarySet):
             - The `resolution` parameter determines the desired spatial resolution of the mesh.
             - The function utilizes tetrahedral meshing using Tetgen software to create the meshed representation.
             - The resulting mesh is tetrahedral, and material IDs are assigned to mesh cells based on the geological layers.
+            - Tetgen is an optional, external (non-pip) dependency with limited
+              version/platform test coverage - see the note in
+              `docs/user-guide/third-party.md`.
 
         example:
             layer_set = LayerSet(...)
@@ -345,29 +348,35 @@ class LayerSet(BoundarySet):
         )
 
         pv_mesh = mesh.read(outfile)
-        region_attribute_name = "cell_scalars"
-        if region_attribute_name in pv_mesh.cell_data:
-            pv_mesh.cell_data["MaterialIDs"] = pv_mesh.cell_data.pop(
-                region_attribute_name
+        cell_data_names = list(pv_mesh.cell_data.keys())
+        if len(cell_data_names) != 1:
+            m = (
+                "Expected tetgen to write exactly one cell data array "
+                f"holding the region attribute, found: {cell_data_names}. "
+                "This may indicate an unsupported tetgen version."
             )
+            raise ValueError(m)
+        region_attribute_name = cell_data_names[0]
+        pv_mesh.cell_data["MaterialIDs"] = pv_mesh.cell_data.pop(
+            region_attribute_name
+        )
 
-            intermediate_vtu_ids = sorted(
-                dict.fromkeys(pv_mesh.cell_data["MaterialIDs"])
+        intermediate_vtu_ids = sorted(
+            dict.fromkeys(pv_mesh.cell_data["MaterialIDs"])
+        )
+        # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
+        # up, but we number the layers from top to bottom
+        id_mapping = dict(
+            zip(
+                intermediate_vtu_ids,
+                materials_in_domain[::-1],
+                strict=False,
             )
-            # reversed bc createLayeredMeshFromRasters starts numbering from the bottom
-            # up, but we number the layers from top to bottom
-            id_mapping = dict(
-                zip(
-                    intermediate_vtu_ids,
-                    materials_in_domain[::-1],
-                    strict=False,
-                )
-            )
-            new_ids = [
-                id_mapping[old_id]
-                for old_id in pv_mesh.cell_data["MaterialIDs"]
-            ]
-            pv_mesh.cell_data["MaterialIDs"].setfield(new_ids, np.uint32)
+        )
+        new_ids = [
+            id_mapping[old_id] for old_id in pv_mesh.cell_data["MaterialIDs"]
+        ]
+        pv_mesh.cell_data["MaterialIDs"].setfield(new_ids, np.uint32)
 
         return RegionSet(input=pv_mesh)
 

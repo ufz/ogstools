@@ -51,14 +51,16 @@ def simulate_and_plot(elem_order: int, quads: bool, intpt_order: int):
     int_pts = ot.mesh.to_ip_point_cloud(mesh)
     ip_mesh = ot.mesh.to_ip_mesh(mesh)
 
-    fig = ot.plot.contourf(mesh, ot.variables.stress)
-    fig.axes[0].scatter(
+    fig1 = ot.plot.contourf(mesh, ot.variables.stress)
+    fig1.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
-    fig = ot.plot.contourf(ip_mesh, sigma_ip)
-    fig.axes[0].scatter(
+    fig1.show()
+    fig2 = ot.plot.contourf(ip_mesh, sigma_ip)
+    fig2.axes[0].scatter(
         int_pts.points[:, 0], int_pts.points[:, 1], color="k", s=10
     )
+    fig2.show()
 
 
 # %% [markdown]
