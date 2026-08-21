@@ -198,14 +198,14 @@ OGSTools emerged from and is used in the following research projects. The AREHS-
 
 The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication have been reduced, allowing especially inexperienced users to focus on the important part of the notebook.
 
-## AI usage disclosure
-
-In the writing of this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT for grammar and spelling corrections. For all contributions to the software project the use of Large Language Models (LLMs) is in principle permitted, but all contributions must pass through a review process by the developers, maintainers, and authors.
-
 ## Acknowledgements
 
 This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
 The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under grant 528785032[^6] by `Deutsche Forschungsgemeinschaft` (DFG)
+
+## AI usage disclosure
+
+In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections. For all contributions to the software project the use of Large Language Models (LLMs) is in principle permitted, but all contributions must pass through a review process by the developers, maintainers, and authors.
 
 [^1]: https://ogstools.opengeosys.org
 [^2]: https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/
