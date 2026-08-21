@@ -7,10 +7,14 @@
 
 - [tqdm](https://github.com/tqdm/tqdm): progress bars in computionally
   expensive loops
+
   - if you want to globally deactivate them please set the following environment
     variable: `os.environ["TQDM_DISABLE"] = "1"`
 
-It also relies on the following external (non-pip) applications:
+- a matplotlib GUI backend (e.g. TkAgg, QtAgg): needed for interactive
+  `fig.show()` windows when running plain Python scripts (not needed in
+  Jupyter notebooks). See the
+  [matplotlib backends docs](https://matplotlib.org/stable/users/explain/figure/backends.html).
 
 - [Tetgen](https://wias-berlin.de/software/tetgen/): optional, used by
   {py:meth}`ogstools.mesh.create.LayerSet.to_region_tetrahedron` to build
