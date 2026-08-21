@@ -25,33 +25,31 @@ _yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
 def load_meshseries_THM_2D_PVD():
-    return ot.MeshSeries(str(_meshseries_dir / "2D.pvd"))
+    return ot.MeshSeries(_meshseries_dir / "2D.pvd")
 
 
 def load_meshseries_CT_2D_XDMF():
-    ms = ot.MeshSeries(str(_meshseries_dir / "elder.xdmf"))
+    ms = ot.MeshSeries(_meshseries_dir / "elder.xdmf")
     return ms.transform(lambda mesh: mesh.translate([0, -mesh.center[1], 0]))
 
 
 def load_meshseries_HT_2D_XDMF():
     return ot.MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf")
+        _meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xdmf"
     )
 
 
 def load_meshseries_HT_2D_PVD():
     return ot.MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd")
+        _meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.pvd"
     )
 
 
 def load_meshseries_HT_2D_VTU():
     return ot.MeshSeries(
-        str(
-            _meshseries_dir
-            / "2D_single_fracture_HT_2D_single_fracture"
-            / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"
-        )
+        _meshseries_dir
+        / "2D_single_fracture_HT_2D_single_fracture"
+        / "2D_single_fracture_HT_2D_single_fracture_0_96.vtu"
     )
 
 
@@ -95,16 +93,14 @@ def load_meshseries_BHEs_3D(kind: Literal["full", "line", "lines"], ext: str):
 
 def load_meshseries_HT_2D_paraview_XMF():
     return ot.MeshSeries(
-        str(_meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf")
+        _meshseries_dir / "2D_single_fracture_HT_2D_single_fracture.xmf"
     )
 
 
 def load_meshseries_mechanics_3D_XDMF():
     # ogs/Tests/Data/Mechanics/Ehlers/cube_1e0.prj
     # modifications: xdmf output, only every 10 timesteps
-    return ot.MeshSeries(
-        str(_meshseries_dir / "3D_mechanics" / "cube_1e0.xdmf")
-    )
+    return ot.MeshSeries(_meshseries_dir / "3D_mechanics" / "cube_1e0.xdmf")
 
 
 def load_meshseries_diffusion_3D(
@@ -128,7 +124,7 @@ def load_meshseries_diffusion_3D(
 
 def load_meshseries_PETSc_2D():
     return ot.MeshSeries(
-        str(_meshseries_dir / "2D_PETSC" / "square_1e1_neumann.pvd"),
+        _meshseries_dir / "2D_PETSC" / "square_1e1_neumann.pvd",
         time_unit=("a", "a"),
     )
 
