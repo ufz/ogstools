@@ -119,9 +119,9 @@ def line(
         msg = "Please provide at least one variable."
         raise UserWarning(msg)
     mesh: pv.DataSet = dataset[0] if is_meshseries else dataset
-    default = ["time", "time", "time"] if is_meshseries else ["x", "y", "z"]
-    x_var, y_var = _normalize_vars(var1, var2, mesh, default)
-    pure_spatial = y_var.data_name in "xyz" and x_var.data_name in "xyz"
+    default = ["time"] * 3 if is_meshseries else ["x", "y", "z"]
+    x_var, y_var = _normalize_vars(var1, var2, dataset, default)
+    pure_spatial = y_var.data_name == x_var.data_name == "points"
 
     # prefer point data over cell data
     x_cell_data = (x_var.data_name in mesh.cell_data) and (

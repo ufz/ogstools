@@ -43,8 +43,9 @@ def contourf_pv(
     variable_ = Variable.find(variable, mesh)
 
     # converting to float as the interactive plot seems to have trouble with int
-    # taking magnitude of pint quantities to prevent numpy warning
-    plot_var = variable_.replace(func=lambda x: variable_.func(x).astype(float))
+    plot_var = variable_.from_variable(
+        variable_, func=lambda x: np.astype(x, float)
+    )
 
     levels = combined_levels(np.array([mesh]), plot_var)
     if categoric is None:
@@ -96,12 +97,10 @@ def contourf_pv(
         # unfortunately the categoric values are then sorted alphanumerically,
         # thus we need to add leading zeros. As this is can be performance heavy
         # we do it for the smallest viable subset.
-        categoric_var = plot_var.replace(
-            func=lambda x: np.char.zfill(
-                plot_var.func(getattr(x, "magnitude", x))
-                .astype(int).astype(str), 2
-            )
-        )  # fmt: skip
+        categoric_var = plot_var.from_variable(
+            plot_var,
+            func=lambda x: np.char.zfill(np.astype(x, int).astype(str), 2),
+        )
         plot_mesh = plot_mesh.extract_cells(
             np.unique(plot_mesh[plot_var.data_name], return_index=True)[1]
         )

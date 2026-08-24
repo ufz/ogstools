@@ -22,7 +22,7 @@ from ogstools.core.storage import StorageBase
 from ogstools.mesh import read
 from ogstools.mesh.utils import pv_set_attr, reshape_obs_points
 from ogstools.plot.lineplots import line
-from ogstools.variables import Variable, _normalize_vars, u_reg
+from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 
 from .data_dict import DataDict
 
@@ -629,8 +629,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def _values(self, variable: str | Variable) -> np.ndarray:
         if isinstance(variable, Variable):
-            if variable.mesh_dependent:
-                return np.asarray([variable.transform(mesh) for mesh in self])
             if (
                 variable.data_name != variable.output_name
                 and variable.output_name
@@ -644,6 +642,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             variable_name = variable
 
+        if hasattr(self, variable_name):
+            return getattr(self, variable_name)
         all_cached = self._is_all_cached
         if (
             self._data_type == ".xdmf"
@@ -661,7 +661,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 ]
             )
         if isinstance(variable, Variable) and do_transform:
-            return variable.transform(result)
+            return variable.transform(self)
         return result
 
     @property
@@ -939,7 +939,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         var_z = Variable.find(variable, self.mesh(0))
         var_x, var_y = _normalize_vars(x, y, self.mesh(0), ["time", "time"])
-        time_var = var_x if var_x.data_name == "time" else var_y
+        time_var = var_x if var_x.data_name == "timevalues" else var_y
         unit = self.time_unit
         time_var.data_unit = time_var.output_unit = str(
             unit if unit.magnitude != 1 else unit.units
@@ -954,8 +954,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     log10vals[0] = log10vals[1] - (log10vals[2] - log10vals[1])
                 return log10vals
 
-            get_time = time_var.func
-            time_var.func = lambda ms: log10time(get_time(ms))
+            time_var.functions += [Function(log10time)]
             time_label = time_var.get_label()
             time_var.get_label = (  # type: ignore[assignment]
                 lambda *_: f"log$_{{10}}$( {time_label} )"

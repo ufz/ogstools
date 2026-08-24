@@ -40,6 +40,11 @@ OGS 6.5.8 -
   - `BuildTree.populate_tree` now can handle dicts as the element text
     (in this case the key and value pairs will create corresponding subelements)
   - Added `added deactivate_subdomain` to `Project.process_variables`
+- variables
+  - dataname of a variable is now also looked for in the attributes of mesh (e.g. points) or meshseries (e.g. timevalues)
+  - functions of nested variables are now stored in list of Functions (instead of nested lambdas) which allows to retrospectively modify arguments and parameters
+  - arguments of stored functions can be strings which represent the names of data inside a mesh or meshseries to allow for variables depending on different input data
+  - outputname can now explicitly be an empty string
 
 ## Infrastructure
 

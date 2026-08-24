@@ -6,8 +6,10 @@ import numpy as np
 import pytest
 from pint.facets.plain import PlainQuantity
 
+import ogstools as ot
 from ogstools import examples
 from ogstools import variables as ov
+from ogstools.mesh.utils import angles
 
 Qty = ov.u_reg.Quantity
 
@@ -114,9 +116,9 @@ class TestPhysicalVariable:
         mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
         assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
         assert np.max(ov.dilatancy_alkan_eff.transform(mesh)) > 0
-        assert np.max(ov.dilatancy_critescu_tot.transform(mesh)) > 0
+        assert np.max(ov.dilatancy_critescu.transform(mesh)) > 0
         assert np.max(ov.dilatancy_critescu_eff.transform(mesh)) > 0
-        assert np.max(ov.fluid_pressure_crit.transform(mesh)) > 0
+        assert np.max(ov.fluid_pressure_criterion.transform(mesh)) > 0
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
@@ -293,12 +295,51 @@ class TestPhysicalVariable:
         check_limits(ov.pressure, 0, 8)
         check_limits(ov.displacement.magnitude, 0, 0.3)
 
+    def test_variable_rate(self):
+        "Tests rate computation"
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        var = ov.saturation.rate("d")
+        for values in [var.mean.transform(ms), ms.values(var.mean)]:
+            np.testing.assert_array_less(0.0, np.nan_to_num(values, nan=1e-12))
+        assert not np.any(np.isnan(ms.probe_values((0, 0, 0), var)[1:]))
+
+    def test_abs(self):
+        "Tests rate computation"
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        var = ov.saturation.abs
+        for values in [var.transform(ms), ms.values(var)]:
+            assert np.all(values >= 0.0)
+
+    @pytest.mark.parametrize(
+        "ms",
+        [
+            examples.load_meshseries_THM_2D_PVD(),
+            examples.load_meshseries_mechanics_3D_XDMF(),
+        ],
+    )
+    def test_transform_order_invariance(self, ms: ot.MeshSeries):
+        "Tests that some variable operations are invariant to their order."
+        variables = [
+            ov.strain.trace.mean.rate(),
+            ov.strain.trace.rate().mean,
+            ov.strain.mean.trace.rate(),
+            ov.strain.mean.rate().trace,
+            ov.strain.rate().trace.mean,
+            ov.strain.rate().mean.trace,
+        ]
+        ms = examples.load_meshseries_THM_2D_PVD()
+        ref_vals = variables[0].transform(ms)
+        for var in variables[1:]:
+            # not testing for full equality as the order of operations will
+            # cause floating point differences.
+            np.testing.assert_allclose(var.transform(ms), ref_vals, rtol=1e-12)
+
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."
         mesh = examples.load_mesh_mechanics_2D()
         sig = mesh["sigma"]
         center = (150, -650, 0)
-        phi = ov.mesh_dependent.angles(mesh, center)
+        phi = angles(mesh, center)
         ref_phi = np.atan2(
             mesh.points[:, 1] - center[1], mesh.points[:, 0] - center[0]
         )
@@ -390,9 +431,9 @@ class TestPhysicalVariable:
         def equal(name: str, var: ov.Variable) -> None:
             str_var = ov.Variable.find(name, mesh)
             for key in vars(var):
-                if key == "func":
+                if key == "functions":
                     # a simple comparison like var == str_var would fail due to
-                    # the funcs being stored in different memory locations
+                    # the functions being stored in different memory locations
                     continue
                 assert getattr(str_var, key) == getattr(var, key)
             np.testing.assert_equal(
@@ -421,9 +462,9 @@ class TestPhysicalVariable:
         "Test if meaningful error messages are given upon faulty input."
         mesh = examples.load_meshseries_THM_2D_PVD()[-1]
         failcases = [
-            ("", "not found in mesh."),
-            ("Temperature", "Temperature not found in mesh."),
-            ("temperature_x", "Scalar temperature has no component x"),
+            ("", "'' not found in dataset."),
+            ("Temperature", "'Temperature' not found in dataset."),
+            ("temperature_x", "Scalar 'temperature' has no component x"),
             ("velocity_xx", "Vector index can only be 'x', 'y', 'z' or an int"),
             ("sigma_x", "Matrix index can only be an int or one of"),
         ]  # fmt: skip

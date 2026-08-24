@@ -4,15 +4,15 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 from typing import Literal
 
-import numpy as np
-from pyvista import UnstructuredGrid
-
+from ogstools.mesh.utils import angles, azimuth
 from ogstools.variables import tensor_math
-from ogstools.variables.mesh_dependent import angles
 from ogstools.variables.variable import Scalar, Variable
 from ogstools.variables.vector import Vector, VectorList
+
+from .func import Function
 
 
 class Matrix(Variable):
@@ -54,7 +54,7 @@ class Matrix(Variable):
             self,
             output_name=self.output_name + f"_{index}",
             symbol=f"{{{self.symbol}}}_{{{index}}}",
-            func=lambda x: self.func(x)[..., int_index],
+            func=lambda x: x[..., int_index],
             bilinear_cmap=True,
         )
 
@@ -65,28 +65,11 @@ class Matrix(Variable):
 
         For 3D only spherical coordinate system is implemented for now.
         """
-
-        def _get_mesh(
-            dataset: UnstructuredGrid | Sequence[UnstructuredGrid],
-        ) -> UnstructuredGrid:
-            return dataset[0] if isinstance(dataset, Sequence) else dataset
-
-        def theta(mesh: UnstructuredGrid) -> np.ndarray | None:
-            "Calculate the azimuth angle with regards to the z-axis"
-            if np.shape(mesh[self.data_name])[-1] == 4:  # 2D
-                return None
-            pts, z = (mesh.points, mesh.points[:, 2])
-            r = np.hypot(*pts[:, [0, 1]].T)
-            return np.arctan(
-                np.divide(r, z, out=np.ones_like(z) * 1e12, where=z != 0.0)
-            )
-
-        return self.replace(
-            mesh_dependent=True,
-            func=lambda dataset: tensor_math.to_polar(
-                self.func(self._get_data(dataset)),
-                angles(_get_mesh(dataset), center, normal),
-                theta(_get_mesh(dataset)),
+        return Matrix.from_variable(
+            self,
+            func=Function(
+                tensor_math.to_polar,
+                [partial(angles, center=center, normal=normal), azimuth],
             ),
         )
 
@@ -97,7 +80,7 @@ class Matrix(Variable):
             self,
             output_name=self.output_name + "_magnitude",
             symbol=rf"||{{{self.symbol}}}||_\mathrm{{F}}",
-            func=lambda x: tensor_math.frobenius_norm(self.func(x)),
+            func=tensor_math.frobenius_norm,
         )
 
     @property
@@ -117,7 +100,7 @@ class Matrix(Variable):
             self,
             output_name=self.output_name + "_eigenvalues",
             symbol=r"\lambda",
-            func=lambda x: tensor_math.eigenvalues(self.func(x)),
+            func=tensor_math.eigenvalues,
         )
 
     @property
@@ -129,7 +112,7 @@ class Matrix(Variable):
             symbol="v",
             data_unit="",
             output_unit="",
-            func=lambda x: tensor_math.eigenvectors(self.func(x)),
+            func=tensor_math.eigenvectors,
         )
 
     @property
@@ -140,8 +123,8 @@ class Matrix(Variable):
             output_name=self.output_name + "_det",
             output_unit=self.output_unit + "^2",
             symbol=rf"\mathrm{{det}} {{{self.symbol}}}",
-            func=lambda x: tensor_math.det(self.func(x)),
             process_with_units=True,
+            func=tensor_math.det,
         )
 
     @property
@@ -150,7 +133,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_I1",
-            func=lambda x: tensor_math.invariant_1(self.func(x)),
+            func=tensor_math.invariant_1,
         )
 
     @property
@@ -160,7 +143,7 @@ class Matrix(Variable):
             self,
             output_unit=self.output_unit + "^2",
             output_name=self.output_name + "_I2",
-            func=lambda x: tensor_math.invariant_2(self.func(x)),
+            func=tensor_math.invariant_2,
             process_with_units=True,
         )
 
@@ -170,7 +153,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_I3",
-            func=lambda x: tensor_math.invariant_3(self.func(x)),
+            func=tensor_math.invariant_3,
         )
 
     @property
@@ -180,7 +163,7 @@ class Matrix(Variable):
             self,
             output_name="mean_" + self.output_name,
             symbol=r"\pi",
-            func=lambda x: tensor_math.mean(self.func(x)),
+            func=tensor_math.mean,
         )
 
     @property
@@ -190,7 +173,7 @@ class Matrix(Variable):
             self,
             output_name="hydrostatic_" + self.output_name + "_component",
             symbol=rf"p^{{{self.symbol}}}",
-            func=lambda x: tensor_math.hydrostatic_component(self.func(x)),
+            func=tensor_math.hydrostatic_component,
         )
 
     @property
@@ -200,7 +183,7 @@ class Matrix(Variable):
             self,
             output_name=self.output_name + "_deviator",
             symbol=rf"s^{{{self.symbol}}}",
-            func=lambda x: tensor_math.deviator(self.func(x)),
+            func=tensor_math.deviator,
         )
 
     @property
@@ -209,7 +192,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_J1",
-            func=lambda x: tensor_math.deviator_invariant_1(self.func(x)),
+            func=tensor_math.deviator_invariant_1,
         )
 
     @property
@@ -218,7 +201,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_J2",
-            func=lambda x: tensor_math.deviator_invariant_2(self.func(x)),
+            func=tensor_math.deviator_invariant_2,
         )
 
     @property
@@ -227,7 +210,7 @@ class Matrix(Variable):
         return Scalar.from_variable(
             self,
             output_name=self.output_name + "_J3",
-            func=lambda x: tensor_math.deviator_invariant_3(self.func(x)),
+            func=tensor_math.deviator_invariant_3,
         )
 
     @property
@@ -237,7 +220,7 @@ class Matrix(Variable):
             self,
             output_name="octahedral_shear_" + self.output_name,
             symbol=r"\tau_\mathrm{oct}",
-            func=lambda x: tensor_math.octahedral_shear(self.func(x)),
+            func=tensor_math.octahedral_shear,
         )
 
     @property
@@ -247,7 +230,7 @@ class Matrix(Variable):
             self,
             output_name="von_Mises_" + self.output_name,
             symbol=rf"{{{self.symbol}}}_\mathrm{{v}}",
-            func=lambda x: tensor_math.von_mises(self.func(x)),
+            func=tensor_math.von_mises,
         )
 
     @property
@@ -258,6 +241,6 @@ class Matrix(Variable):
             output_name="qp_ratio",
             output_unit="%",
             symbol="qp",
-            func=lambda x: tensor_math.qp_ratio(self.func(x)),
+            func=tensor_math.qp_ratio,
             process_with_units=True,
         )

@@ -3,14 +3,15 @@
 
 """Predefined variables for data and unit transformation."""
 
-from functools import partial
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 import pyvista as pv
 
-from . import mesh_dependent, tensor_math
+from . import integrity, tensor_math
 from .custom_colormaps import integrity_cmap, none_cmap, temperature_cmap
+from .func import Function
 from .matrix import Matrix
 from .unit_registry import u_reg
 from .variable import Scalar, Variable
@@ -117,22 +118,27 @@ effective_pressure = Scalar(
     mask=M_MASK,
     color=COLOR_MECH,
 )
-dilatancy_critescu_tot = Scalar(
+dilatancy_critescu = Scalar(
     data_name="sigma",
     data_unit="",
     output_unit="",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    func=mesh_dependent.dilatancy_critescu,
+    func=Function(
+        integrity.dilatancy_critescu,
+        ["pressure"],
+        {"a": -0.01697, "b": 0.8996},
+    ),
     mask=M_MASK,
     color=COLOR_MECH,
-    mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
-dilatancy_critescu_eff = dilatancy_critescu_tot.replace(
+dilatancy_critescu_eff = dilatancy_critescu.replace(
     output_name="effective_dilatancy_criterion",
-    func=partial(mesh_dependent.dilatancy_critescu, effective=True),
+    func=Function(
+        integrity.dilatancy_critescu, [], {"a": -0.01697, "b": 0.8996}
+    ),
 )
 
 dilatancy_alkan = Scalar(
@@ -141,28 +147,30 @@ dilatancy_alkan = Scalar(
     output_unit="MPa",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
-    func=mesh_dependent.dilatancy_alkan,
+    func=Function(
+        integrity.dilatancy_alkan, ["pressure"], {"b": 0.04, "tau_max": 33e6}
+    ),
     mask=M_MASK,
     color=COLOR_MECH,
-    mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
 dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
-    func=partial(mesh_dependent.dilatancy_alkan, effective=True),
+    func=Function(integrity.dilatancy_alkan, [], {"b": 0.04, "tau_max": 33e6}),
 )
 
-fluid_pressure_crit = Scalar(
+fluid_pressure_criterion = Scalar(
     data_name="sigma",
     data_unit="Pa",
     output_unit="MPa",
     output_name="fluid_pressure_criterion",
-    symbol="F_p",
-    func=mesh_dependent.fluid_pressure_criterion,
+    symbol=r"\sigma_{III}'",
+    func=Function(
+        integrity.fluid_pressure_criterion, ["pressure"], {"biot": 1.0}
+    ),
     mask=M_MASK,
     color=COLOR_MECH,
-    mesh_dependent=True,
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
@@ -183,6 +191,10 @@ temperature_BHE = Components_BHE(
     output_unit="°C",
     symbol="T",
 )
+
+time = Scalar("timevalues", "s", "s", output_name="time", symbol="t")
+
+points = Vector("points", "m", "m", output_name="", color="k")
 
 none = Scalar("None", output_name="", cmap=none_cmap, categoric=True, mask="")
 
@@ -223,10 +235,11 @@ def get_dataframe() -> pd.DataFrame:
 def _normalize_vars(
     var1: str | Variable | None,
     var2: str | Variable | None,
-    mesh: pv.DataSet,
+    dataset: pv.DataSet | Sequence[pv.DataSet],
     default: str | list[str],
 ) -> tuple[Variable, Variable]:
     "Normalize arguments to return two Variables."
+    mesh = dataset[0] if isinstance(dataset, Sequence) else dataset
     axes_idx = np.argwhere(
         np.invert(np.all(np.isclose(mesh.points, mesh.points[0]), axis=0))
     ).ravel()
@@ -236,15 +249,15 @@ def _normalize_vars(
         case None, None:
             if len(axes_idx) <= 1:
                 axes_idx = [0, axes_idx[0] if axes_idx[0] != 0 else 1]
-            x_var = Variable.find(default[axes_idx[0]], mesh)
-            y_var = Variable.find(default[axes_idx[1]], mesh)
+            x_var = Variable.find(default[axes_idx[0]], dataset)
+            y_var = Variable.find(default[axes_idx[1]], dataset)
         case var1, None:
-            x_var = Variable.find(default[axes_idx[0]], mesh)
-            y_var = Variable.find(var1, mesh).magnitude  # type: ignore[arg-type]
+            x_var = Variable.find(default[axes_idx[0]], dataset)
+            y_var = Variable.find(var1, dataset).magnitude  # type: ignore[arg-type]
         case None, var2:
-            x_var = Variable.find(default[axes_idx[0]], mesh)
-            y_var = Variable.find(var2, mesh).magnitude  # type: ignore[arg-type]
+            x_var = Variable.find(default[axes_idx[0]], dataset)
+            y_var = Variable.find(var2, dataset).magnitude  # type: ignore[arg-type]
         case var1, var2:
-            x_var = Variable.find(var1, mesh).magnitude  # type: ignore[arg-type]
-            y_var = Variable.find(var2, mesh).magnitude  # type: ignore[arg-type]
+            x_var = Variable.find(var1, dataset).magnitude  # type: ignore[arg-type]
+            y_var = Variable.find(var2, dataset).magnitude  # type: ignore[arg-type]
     return x_var, y_var
