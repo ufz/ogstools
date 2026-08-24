@@ -6,6 +6,7 @@ from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import Project, examples
+from ogstools.definitions import ROOT_DIR
 from ogstools.materiallib.core import component, components, material_manager
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.media import MediaSet
@@ -13,9 +14,7 @@ from ogstools.materiallib.core.property import ParameterValue
 from ogstools.materiallib.distributions import UniformDistribution
 from ogstools.materiallib.schema import process_schema, required_properties
 
-EXAMPLES_DIR = (
-    Path(__file__).resolve().parents[1] / "ogstools/examples/materiallib"
-)
+EXAMPLES_DIR = ROOT_DIR / "examples" / "materiallib"
 
 
 def _grouped_raw_data(

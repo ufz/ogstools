@@ -8,14 +8,13 @@ from pathlib import Path
 import pytest
 import yaml  # type: ignore[import]
 
+from ogstools.definitions import ROOT_DIR
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.material_manager import MaterialManager
 from ogstools.materiallib.core.property import ParameterValue
 from ogstools.materiallib.distributions import UniformDistribution
 
-EXAMPLES_DIR = (
-    Path(__file__).resolve().parents[1] / "ogstools/examples/materiallib"
-)
+EXAMPLES_DIR = ROOT_DIR / "examples" / "materiallib"
 
 
 @pytest.fixture
