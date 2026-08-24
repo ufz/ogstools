@@ -62,8 +62,11 @@ def copy_example_material(tmp_path):
 
     def _copy(filename: str) -> Path:
         source = EXAMPLES_DIR / filename
+        material = Material.from_file(source)
+        assert material is not None
+
         target = tmp_path / filename
-        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        material.copy().to_file(target)
         return target
 
     return _copy
