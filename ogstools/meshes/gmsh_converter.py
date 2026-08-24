@@ -64,7 +64,7 @@ def meshes_from_gmsh(
     read_cells = mesh.cell_sets.copy()
     mesh.cell_sets = None
     pv_mesh: pv.UnstructuredGrid = pv.from_meshio(mesh).clean()
-    pv_mesh = node_reordering(pv_mesh, 1)
+    pv_mesh = node_reordering(pv_mesh, 1, log=log)
     mesh.cell_sets = read_cells
 
     # Code without workaround:

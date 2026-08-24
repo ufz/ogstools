@@ -16,7 +16,7 @@ from .file_io import save
 
 
 def node_reordering(
-    mesh: pv.UnstructuredGrid, method: int = 1
+    mesh: pv.UnstructuredGrid, method: int = 1, log: bool = True
 ) -> pv.UnstructuredGrid:
     """Reorders mesh nodes to make a mesh compatible with OGS6.
 
@@ -29,10 +29,13 @@ def node_reordering(
            to prism-elements).\n
         3: Re-ordering of mesh node vector such that all base nodes are
            sorted before all nonlinear nodes.
+    :param log: If False, silence the NodeReordering tool's own log output.
     """
     tmp_file = temp_file(".vtu", "node_reordering")
     save(mesh, tmp_file)
-    cli().NodeReordering(i=str(tmp_file), o=str(tmp_file), m=method)
+    cli().NodeReordering(
+        i=str(tmp_file), o=str(tmp_file), m=method, l="info" if log else "none"
+    )
     return pv.XMLUnstructuredGridReader(tmp_file).read()
 
 
