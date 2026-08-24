@@ -34,7 +34,6 @@ from ogstools.examples import load_model_liquid_flow_simple
 model = load_model_liquid_flow_simple()
 model.execution.interactive = True
 
-
 # %%
 # Initialize the simulation and first step
 # ========================================
