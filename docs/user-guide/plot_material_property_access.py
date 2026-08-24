@@ -126,12 +126,8 @@ print("Component molar mass:", component_property)
 #
 # Parameters can now be accessed explicitly from a property object.
 #
-# At the moment, :meth:`material_property.parameter(name)
-# <ogstools.materiallib.core.property.MaterialProperty.parameter>` returns
-# either a plain scalar or a
-# :class:`~ogstools.materiallib.core.property.ParameterValue`, depending on
-# the YAML input form. This transitional behavior is intentional and is
-# expected to be normalized in a later merge request.
+# They are exposed uniformly as
+# :class:`~ogstools.materiallib.core.property.ParameterValue`.
 
 # %%
 porosity_value = medium_property.parameter("value")
@@ -154,8 +150,10 @@ print("Component molar mass parameter:", component_molar_mass)
 
 # %%
 assert isinstance(porosity_value, ParameterValue)
+assert isinstance(storage_value, ParameterValue)
 
 print("Base value:", porosity_value.base_value)
+print("Storage base value:", storage_value.base_value)
 
 if porosity_value.distribution is not None:
     print("Distribution type:", type(porosity_value.distribution).__name__)

@@ -11,6 +11,7 @@ from ogstools.materiallib.core.component import Component
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.medium import Medium
 from ogstools.materiallib.core.phase import Phase
+from ogstools.materiallib.core.property import ParameterValue
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 EXAMPLES_DIR = (
@@ -71,7 +72,7 @@ def test_medium_loads_only_medium_domain_properties(
         prop.parameters["value"]
         for prop in medium.properties
         if prop.name == "density"
-    ] == [2700]
+    ] == [ParameterValue(base_value=2700)]
     assert medium.properties[0].extra["domain"] == "medium"
 
 
@@ -85,7 +86,7 @@ def test_phase_loads_only_phase_domain_properties(grouped_schema: str) -> None:
     )
 
     density = next(prop for prop in phase.properties if prop.name == "density")
-    assert density.parameters["value"] == 1000
+    assert density.parameters["value"] == ParameterValue(base_value=1000)
     assert density.extra["domain"] == "phase"
 
 

@@ -79,7 +79,7 @@ def test_material_parses_wrapped_parameter_value() -> None:
     )
 
 
-def test_material_preserves_wrapped_parameter_value_after_raw_rebuild(
+def test_material_serializes_wrapped_parameter_without_distribution_as_scalar(
     tmp_path: Path,
 ) -> None:
     file_path = EXAMPLES_DIR / "distributed_demo.yml"
@@ -91,9 +91,21 @@ def test_material_preserves_wrapped_parameter_value_after_raw_rebuild(
     material.to_file(target)
 
     copied_raw = yaml.safe_load(target.read_text(encoding="utf-8"))
-    assert copied_raw["domains"][0]["properties"]["storage"]["value"] == {
-        "base_value": 2.0e-10
-    }
+    assert copied_raw["domains"][0]["properties"]["storage"]["value"] == 2.0e-10
+
+
+def test_material_serializes_plain_parameter_value_back_to_scalar(
+    tmp_path: Path,
+) -> None:
+    material = Material.from_file(EXAMPLES_DIR / "opalinus.yml")
+    assert material is not None
+    material.filter_properties("porosity")
+
+    target = tmp_path / "opalinus_copy.yml"
+    material.to_file(target)
+
+    copied_raw = yaml.safe_load(target.read_text(encoding="utf-8"))
+    assert copied_raw["domains"][0]["properties"]["porosity"]["value"] == 0.15
 
 
 def test_material_rejects_unsupported_top_level_properties_key(
@@ -158,7 +170,9 @@ def test_material_medium_property_accessor_returns_medium_property() -> None:
 
     material = Material.from_file(file_path)
 
-    assert material.medium.property("density").parameters["value"] == 2700
+    assert material.medium.property("density").parameters[
+        "value"
+    ] == ParameterValue(base_value=2700)
 
 
 def test_material_phase_property_accessor_returns_phase_property() -> None:
@@ -166,7 +180,9 @@ def test_material_phase_property_accessor_returns_phase_property() -> None:
 
     material = Material.from_file(file_path)
 
-    assert material.phase.property("density").parameters["value"] == 999
+    assert material.phase.property("density").parameters[
+        "value"
+    ] == ParameterValue(base_value=999)
 
 
 def test_material_component_property_accessor_returns_component_property() -> (
@@ -176,18 +192,19 @@ def test_material_component_property_accessor_returns_component_property() -> (
 
     material = Material.from_file(file_path)
 
-    assert (
-        material.component.property("molar_mass").parameters["value"]
-        == 0.018016
-    )
+    assert material.component.property("molar_mass").parameters[
+        "value"
+    ] == ParameterValue(base_value=0.018016)
 
 
-def test_material_property_parameter_returns_plain_scalar_value() -> None:
+def test_material_property_parameter_normalizes_plain_scalar_value() -> None:
     file_path = EXAMPLES_DIR / "opalinus.yml"
 
     material = Material.from_file(file_path)
 
-    assert material.medium.property("porosity").parameter("value") == 0.15
+    assert material.medium.property("porosity").parameter(
+        "value"
+    ) == ParameterValue(base_value=0.15)
 
 
 def test_material_property_parameter_returns_wrapped_parameter_value() -> None:

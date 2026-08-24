@@ -7,7 +7,7 @@ from typing import Any
 from ogstools.materiallib.schema.process_schema import PROCESS_SCHEMAS
 
 from .material import Material
-from .property import MaterialProperty
+from .property import MaterialProperty, ParameterValue
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class Component:
                     prop = MaterialProperty(
                         name="diffusion",
                         type_="Constant",
-                        parameters={"value": self.D},
+                        parameters={"value": ParameterValue(base_value=self.D)},
                     )
                     filtered_properties.append(prop)
                 else:

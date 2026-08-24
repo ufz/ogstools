@@ -299,7 +299,9 @@ class TestMaterialLib:
 
         assert copied is not None
         assert copied.name == "water"
-        assert copied["viscosity"].parameters["value"] == 1.0e-3
+        assert copied["viscosity"].parameters["value"] == ParameterValue(
+            base_value=1.0e-3
+        )
         assert copied == mat
 
     def test_material_parses_properties_from_raw_data(self):
@@ -408,7 +410,9 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].parameters["value"] == 2500
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
         with pytest.raises(KeyError, match="No property with name"):
             mat["porosity"]
 
@@ -420,13 +424,21 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].parameters["value"] == 2500
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
 
         mat_2000 = mat.copy()
         assert mat_2000 == mat
-        mat_2000["Density"].parameters["value"] = 2000
-        assert mat_2000["Density"].parameters["value"] == 2000
-        assert mat["Density"].parameters["value"] == 2500
+        mat_2000["Density"].parameters["value"] = ParameterValue(
+            base_value=2000
+        )
+        assert mat_2000["Density"].parameters["value"] == ParameterValue(
+            base_value=2000
+        )
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
 
 
 class TestMaterialManager:
