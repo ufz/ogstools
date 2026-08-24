@@ -26,20 +26,10 @@ logger = logging.getLogger(__name__)
 
 
 class _MaterialPropertyAccessor:
-    """:meta public:
+    """Provide domain-based navigation of a material's flat property list.
+    Bridge grouped YAML domains and the flat in-memory representation.
 
-    Private helper for domain-based property navigation on ``Material``.
-
-    For review (to be removed later): Material YAML now groups properties by top-level ``domain`` blocks, but the
-    in-memory Python model intentionally remains flat:
-
-    ``Material.properties: list[MaterialProperty]``
-
-    with the selected domain still stored on each property as
-    ``prop.extra["domain"]``. Since there is no dedicated domain object in the
-    current material model, this accessor provides the minimal bridge needed
-    for structured navigation such as ``mat.medium.property("porosity")``
-    without changing the underlying storage model.
+    :meta public:
     """
 
     def __init__(self, material: Material, domain: str):
@@ -200,8 +190,8 @@ class Material(Mapping[str, MaterialProperty]):
     @staticmethod
     def _parse_parameter_value(value: Any) -> Any:
         if not isinstance(value, Mapping):
-            # Temporary compatibility: plain scalars remain unchanged. A follow-up MR
-            # will normalize all parameter values to ParameterValue.
+            # TODO: https://gitlab.opengeosys.org/ogs/tools/ogstools/-/work_items/195
+            # Normalize all parameter values to ParameterValue.
             return value
 
         wrapper_keys = {"base_value", "distribution"}
