@@ -7,6 +7,10 @@ OGS 6.5.8 -
 
 ## API breaking changes
 
+- materiallib YAML schema tightened: a property entry must now be a single mapping (lists of entries are no longer accepted), the `type` key is required, and unsupported keys are rejected. Property parameters are validated against a shared type registry. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
+- materiallib YAML schema: materials must now group their properties under top-level `domains` (`medium`/`phase`/`component`) instead of a flat `properties` block. Bundled example materials were migrated accordingly. ([!451](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/451))
+- ogs6py: BHE `flow_and_temperature_control` types were renamed/consolidated to match OGS 6.5.8 (e.g. `FixedPowerConstantFlow` and the various curve-based variants are replaced by `InflowTemperature`, `Power`, `BuildingPower`), and `flow_rate` is now supplied as a Parameter for every type. ([!455](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/455))
+
 ## Deprecations
 
 ### Removed Modules
@@ -24,6 +28,13 @@ OGS 6.5.8 -
   checks caused unintentional errors. ([!471](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/471))
 - fixed `Meshseries.probe` with linear interpolation and cell_data yielding nan at the mesh boundary as cell centers are used for interpolation. Now used nearest neighbor as a fallback. ([!473](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/473))
 - fixed reading xdmf data where some data field are only present in the first timestep. Now they will also be read for later timesteps. ([!473](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/473))
+- fixed `model.plot_constraints` unintentionally deleting meshes from `model` as a side effect; it now operates on a copy. ([!463](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/463))
+- fixed `plot.contourf` raising `unexpected keyword argument 'mask'`. ([!467](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/467))
+- fixed the data aspect ratio in `plot.contourf` when `xlim`/`ylim` are given. ([!470](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/470))
+- fixed the error message raised by `StorageBase._pre_save` to reference the correct `overwrite` argument. ([!479](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/479))
+- relaxed datatype validation for point coordinates and `MaterialIDs` so `float32`/`int32`/`uint32` variants are also accepted, not just the exact reference dtype. ([!475](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/475))
+- `ot.mesh.difference` no longer drops the `spatial_unit` attribute of the resulting mesh. ([!468](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/468))
+- storage paths/filenames may now contain `~`. ([!461](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/461))
 
 ## Features
 
@@ -34,8 +45,11 @@ OGS 6.5.8 -
   - `contourf`: corner elements were missing if none of their points were in the selected x- or y-limits; now they are checked explicitly. ([!482](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/482))
 - meshes
   - `Meshes.from_mesh` supports quadratic mesh ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
+  - `Meshes` now support `output_names`, saved/restored via `Meshes.save()`/`from_file()`/`from_folder()` and used by `Meshes.plot` and `Model.plot_constraints` for labeling ([!484](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/484))
 - mesh
   - `filepath` is now attached to mesh upon reading (with `ot.mesh.read`) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
+  - added `ogstools.mesh.utils.pv_set_attr` helper, replacing direct use of the deprecated `pyvista.set_new_attribute` ([!474](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/474))
+  - `node_reordering` (and the `NodeReordering` CLI call it wraps) gained a `log` parameter to control/silence its log output ([!488](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/488))
 - Project
   - `BuildTree.populate_tree` now can handle dicts as the element text
     (in this case the key and value pairs will create corresponding subelements) ([!472](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/472))
@@ -49,8 +63,11 @@ OGS 6.5.8 -
 ## Infrastructure
 
 - added lychee make command to check for broken links in the docs ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
+- CI no longer pins a specific Python version, just `3.x`. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
 
 ## Documentation
+
+- added CONTRIBUTING.md and linked it from the README, docs nav, and docs site; split developer and maintainer guides; fixed install instructions per the JOSS review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
 
 ### New Examples
 
@@ -58,7 +75,12 @@ OGS 6.5.8 -
 
 ### Updated Examples
 
+- reworked simple simulation example, added missing `print()`/`plt.show()` calls across gallery examples, and other example polish from the JOSS paper review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
+- BHE example additionally shows how to access temperatures via the `componenents_bhe` structure. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
+
 ### Tests
+
+- added end-to-end example-project test coverage and shared property-type-registry tests for materiallib. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
 
 ### Imports
 
