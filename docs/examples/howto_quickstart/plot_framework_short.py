@@ -45,7 +45,7 @@ fig.show()
 
 # %%
 # Plot convergence behavior
-fig = sim.log.plot_convergence()
+fig = sim.log.plot_convergence(metric="dx_x")
 fig.show()
 
 
