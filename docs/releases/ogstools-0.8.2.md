@@ -1,15 +1,13 @@
-# OGSTools 0.x Release Notes
+# OGSTools 0.8.2 Release Notes
 
 Python 3.12-3.14
-OGS 6.5.8 -
+OGS 6.5.8
 
 # Breaking changes
 
 ## API breaking changes
 
-- materiallib YAML schema tightened: a property entry must now be a single mapping (lists of entries are no longer accepted), the `type` key is required, and unsupported keys are rejected. Property parameters are validated against a shared type registry. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
-- materiallib YAML schema: materials must now group their properties under top-level `domains` (`medium`/`phase`/`component`) instead of a flat `properties` block. Bundled example materials were migrated accordingly. ([!451](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/451))
-- ogs6py: BHE `flow_and_temperature_control` types were renamed/consolidated to match OGS 6.5.8 (e.g. `FixedPowerConstantFlow` and the various curve-based variants are replaced by `InflowTemperature`, `Power`, `BuildingPower`), and `flow_rate` is now supplied as a Parameter for every type. ([!455](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/455))
+- ogs6py: BHE `flow_and_temperature_control` types were renamed/consolidated to match OGS 6.5.8.dev (e.g. `FixedPowerConstantFlow` and the various curve-based variants are replaced by `InflowTemperature`, `Power`, `BuildingPower`), and `flow_rate` is now supplied as a Parameter for every type. ([!455](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/455))
 
 ## Deprecations
 
@@ -22,7 +20,6 @@ OGS 6.5.8 -
 ## Bugfixes
 
 - fixed sorting in Meshes.from_files (if key was not in the beginning, it didn't sort correctly) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
-- fixed broken weblinks in documentation ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
 - allow values for group based parameters in `Project.parameters` (allows to set vectorial or anisotropic group values. Previously, only allowed scalars) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
 - fixed `Project.process_variables.add_bc` and `Project.process_variables.add_st` to allow all different kinds of types. Previously, some
   checks caused unintentional errors. ([!471](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/471))
@@ -68,6 +65,7 @@ OGS 6.5.8 -
 ## Documentation
 
 - added CONTRIBUTING.md and linked it from the README, docs nav, and docs site; split developer and maintainer guides; fixed install instructions per the JOSS review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
+- fixed broken weblinks in documentation ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
 
 ### New Examples
 
@@ -81,6 +79,11 @@ OGS 6.5.8 -
 ### Tests
 
 - added end-to-end example-project test coverage and shared property-type-registry tests for materiallib. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
+
+### Beta testing features
+
+- materiallib YAML schema tightened: a property entry must now be a single mapping (lists of entries are no longer accepted), the `type` key is required, and unsupported keys are rejected. Property parameters are validated against a shared type registry. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
+- materiallib YAML schema: materials must now group their properties under top-level `domains` (`medium`/`phase`/`component`) instead of a flat `properties` block. Bundled example materials were migrated accordingly. ([!451](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/451))
 
 ### Imports
 
