@@ -5,7 +5,7 @@ OGS 6.5.8
 
 # Highlights
 
-- **OGSTools paper submitted to the Journal of Open Source Software** (`paper/paper.md`, `paper/paper.bib`), with a graphical abstract linked from the README. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
+- **OGSTools paper submitted to the Journal of Open Source Software** (`paper/paper.md`, `paper/paper.bib`) ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
 
 # Breaking changes
 
