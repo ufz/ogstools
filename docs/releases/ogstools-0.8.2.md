@@ -3,6 +3,10 @@
 Python 3.12-3.14
 OGS 6.5.8
 
+# Highlights
+
+- **OGSTools paper submitted to the Journal of Open Source Software** (`paper/paper.md`, `paper/paper.bib`), with a graphical abstract linked from the README. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
+
 # Breaking changes
 
 ## API breaking changes
@@ -61,11 +65,13 @@ OGS 6.5.8
 
 - added lychee make command to check for broken links in the docs ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
 - CI no longer pins a specific Python version, just `3.x`. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
+- gallery hash checks now exclude plots whose figures embed computational metrics (e.g. solver time), since those vary between runs; pre-commit no longer reformats `paper.md`, and codespell now also skips `*.svg`/`*.html`. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
 
 ## Documentation
 
 - added CONTRIBUTING.md and linked it from the README, docs nav, and docs site; split developer and maintainer guides; fixed install instructions per the JOSS review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
 - fixed broken weblinks in documentation ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
+- submitted the OGSTools paper to the Journal of Open Source Software (`paper/paper.md`, `paper/paper.bib`); added a graphical abstract linked from the README. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
 
 ### New Examples
 
@@ -75,6 +81,7 @@ OGS 6.5.8
 
 - reworked simple simulation example, added missing `print()`/`plt.show()` calls across gallery examples, and other example polish from the JOSS paper review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
 - BHE example additionally shows how to access temperatures via the `componenents_bhe` structure. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
+- quickstart examples now plot convergence behaviour as a heatmap of the relative error per iteration/timestep (`SimulationLog.plot_convergence(metric="dx_x")`) instead of clock time per solver phase. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
 
 ### Tests
 
