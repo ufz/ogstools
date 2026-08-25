@@ -108,6 +108,53 @@ def test_material_serializes_plain_parameter_value_back_to_scalar(
     assert copied_raw["domains"][0]["properties"]["porosity"]["value"] == 0.15
 
 
+def test_material_normalizes_all_parameters_of_multi_parameter_property() -> (
+    None
+):
+    material = Material.from_file(EXAMPLES_DIR / "distributed_demo.yml")
+    prop = material.medium.property("saturation")
+
+    assert all(
+        isinstance(value, ParameterValue) for value in prop.parameters.values()
+    )
+    assert prop.parameter("exponent").base_value == 0.2
+    assert prop.parameter("exponent").distribution is not None
+    assert prop.parameter("p_b").base_value == 4.8e7
+    assert prop.parameter("p_b").distribution is None
+
+
+def test_material_roundtrip_preserves_mixed_parameter_values(
+    tmp_path: Path,
+) -> None:
+    material = Material.from_file(EXAMPLES_DIR / "distributed_demo.yml")
+    assert material is not None
+
+    target = tmp_path / "distributed_demo_copy.yml"
+    material.to_file(target)
+
+    copied = Material.from_file(target)
+    assert copied is not None
+
+    assert copied.medium.property("porosity").parameter(
+        "value"
+    ) == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+    assert copied.medium.property("storage").parameter(
+        "value"
+    ) == ParameterValue(base_value=2.0e-10)
+    assert copied.medium.property("saturation").parameter(
+        "exponent"
+    ) == ParameterValue(
+        base_value=0.2,
+        distribution=UniformDistribution(lower=0.15, upper=0.30),
+    )
+    assert copied.medium.property("saturation").parameter(
+        "p_b"
+    ) == ParameterValue(base_value=4.8e7)
+
+
 def test_material_rejects_unsupported_top_level_properties_key(
     write_yaml,
 ) -> None:
@@ -202,9 +249,10 @@ def test_material_property_parameter_normalizes_plain_scalar_value() -> None:
 
     material = Material.from_file(file_path)
 
-    assert material.medium.property("porosity").parameter(
-        "value"
-    ) == ParameterValue(base_value=0.15)
+    value = material.medium.property("porosity").parameter("value")
+
+    assert value.base_value == 0.15
+    assert value.distribution is None
 
 
 def test_material_property_parameter_returns_wrapped_parameter_value() -> None:
