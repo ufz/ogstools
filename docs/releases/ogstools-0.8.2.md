@@ -13,12 +13,6 @@ OGS 6.5.8
 
 - ogs6py: BHE `flow_and_temperature_control` types were renamed/consolidated to match OGS 6.5.8.dev (e.g. `FixedPowerConstantFlow` and the various curve-based variants are replaced by `InflowTemperature`, `Power`, `BuildingPower`), and `flow_rate` is now supplied as a Parameter for every type. ([!455](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/455))
 
-## Deprecations
-
-### Removed Modules
-
-### Examples
-
 # Changes (non API-breaking)
 
 ## Bugfixes
@@ -91,11 +85,3 @@ OGS 6.5.8
 
 - materiallib YAML schema tightened: a property entry must now be a single mapping (lists of entries are no longer accepted), the `type` key is required, and unsupported keys are rejected. Property parameters are validated against a shared type registry. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
 - materiallib YAML schema: materials must now group their properties under top-level `domains` (`medium`/`phase`/`component`) instead of a flat `properties` block. Bundled example materials were migrated accordingly. ([!451](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/451))
-
-### Imports
-
-## Maintainer TODOs
-
-### next sub release
-
-### next main release
