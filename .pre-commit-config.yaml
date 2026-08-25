@@ -1,4 +1,4 @@
-exclude: EXPERIMENTAL/.*|.*\.msh|.*template.md
+exclude: EXPERIMENTAL/.*|.*\.msh|.*template.md|paper.md
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

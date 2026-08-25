@@ -44,11 +44,10 @@ fig.show()
 
 
 # %%
-# Plot clock time per solver phase
-df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
-times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
-ax = df_ts.plot.area(x="time_step", y=times, ylabel="clock time [s]", grid=True)
-ax.get_figure().show()
+# Plot convergence behavior
+fig = sim.log.plot_convergence(metric="dx_x")
+fig.show()
+
 
 # %%
 # 4. Store: Save Simulation

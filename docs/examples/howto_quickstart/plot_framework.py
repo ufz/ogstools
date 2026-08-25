@@ -176,11 +176,20 @@ fig.show()
 df_ts = ot.logparser.analysis_time_step(sim.log.df_log).reset_index()
 times = ["assembly_time", "dirichlet_time", "linear_solver_time"]
 ax = df_ts.plot.area(x="time_step", y=times, ylabel="clock time [s]", grid=True)
+ax.get_figure().tight_layout()
 ax.get_figure().show()
 
+# %%
+# Plot convergence behaviour
+
+fig = sim.log.plot_convergence(metric="dx_x")
+fig.show()
+
 # %% [markdown]
-# The convergence plot shows how the nonlinear solver converged at each
-# time step, helping you identify potential numerical issues.
+# The convergence plot is a heatmap of the relative error at each iteration
+# and time step, giving an overview of how the nonlinear solver converged
+# over the entire simulation and helping you identify potential numerical
+# issues. In this simple example all timesteps converge in 2 iterations.
 #
 # **Log analysis capabilities:**
 #

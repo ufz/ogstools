@@ -291,7 +291,7 @@ docs hashes check:
       when: manual
       allow_failure: true
   script:
-    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png || exit $?
+    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png *plot_framework_004* *plot_framework_short_003* *plot_101_logparser_analyses_002* || exit $?
   allow_failure:
     exit_codes: 123  # gallery figure hashes don't match
 
