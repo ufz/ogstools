@@ -153,7 +153,7 @@ class Meshes(MutableMapping, StorageBase):
         new = self.__class__(meshes=meshes_copy)
         new.has_identified_subdomains = self.has_identified_subdomains
         new.num_partitions = copy.deepcopy(self.num_partitions, memo)
-        new.output_names = self.output_names
+        new.output_names = copy.deepcopy(self.output_names, memo)
 
         memo[id(self)] = new
         return new
