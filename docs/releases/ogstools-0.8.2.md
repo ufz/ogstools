@@ -38,18 +38,18 @@ OGS 6.5.8
   - improved `Meshes.plot` ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
   - fixed line ordering by trying to sort by cell adjacency ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
   - `contourf`: corner elements were missing if none of their points were in the selected x- or y-limits; now they are checked explicitly. ([!482](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/482))
-- meshes
+- `Meshes`
   - `Meshes.from_mesh` supports quadratic mesh ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
   - `Meshes` now support `output_names`, saved/restored via `Meshes.save()`/`from_file()`/`from_folder()` and used by `Meshes.plot` and `Model.plot_constraints` for labeling ([!484](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/484))
-- mesh
+- `mesh`
   - `filepath` is now attached to the mesh upon reading (with `ot.mesh.read`) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
   - added `ogstools.mesh.utils.pv_set_attr` helper, replacing direct use of the deprecated `pyvista.set_new_attribute` ([!474](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/474))
   - `node_reordering` (and the `NodeReordering` CLI call it wraps) gained a `log` parameter to control/silence its log output ([!488](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/488))
-- Project
+- `Project`
   - `BuildTree.populate_tree` now can handle dicts as the element text
     (in this case the key and value pairs will create corresponding subelements) ([!472](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/472))
   - Added `deactivate_subdomain` to `Project.process_variables` ([!472](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/472))
-- variables
+- `Variable`
   - `data_name` of a `Variable` is now also looked for in the attributes of a mesh (e.g. `points`) or `MeshSeries` (e.g. `timevalues`) ([!487](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/487))
   - functions of nested `Variable`s are now stored internally as a list (instead of nested lambdas), which allows retrospectively modifying arguments and parameters ([!487](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/487))
   - arguments of these stored functions can be strings which represent the names of data inside a mesh or `MeshSeries`, to allow for `Variable`s depending on different input data ([!487](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/487))
@@ -69,17 +69,17 @@ OGS 6.5.8
 
 ### New Examples
 
-- new meshes example (Selke) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
+- new `Meshes` example (Selke) ([!465](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/465))
 
 ### Updated Examples
 
 - reworked simple simulation example, added missing `print()`/`plt.show()` calls across gallery examples, and other example polish from the JOSS paper review. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
 - BHE example additionally shows how to access temperatures via the `Components_BHE` structure. ([!480](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/480))
-- quickstart examples now plot convergence behaviour as a heatmap of the relative error per iteration/timestep (`sim.log.plot_convergence(metric="dx_x")`) instead of clock time per solver phase. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
+- quickstart examples now `plot_convergence` behaviour as a heatmap of the relative error per iteration/timestep (`sim.log.plot_convergence(metric="dx_x")`) instead of clock time per solver phase. ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
 
 ### Tests
 
-- added end-to-end example-project test coverage and shared property-type-registry tests for `materiallib`. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
+- added end-to-end example-`Project` test coverage and shared property-type-registry tests for `materiallib`. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
 
 ### Beta testing features
 
