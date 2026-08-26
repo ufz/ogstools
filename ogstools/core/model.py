@@ -458,9 +458,9 @@ class Model(StorageBase):
 
         handles, labels = ax.get_legend_handles_labels()
         for meshname, label in constraints.items():
-            idx = labels.index(self.meshes.output_names[meshname])
+            idx = labels.index(meshes.output_names[meshname])
             new_label = label.replace(
-                meshname, self.meshes.output_names[meshname], 1
+                meshname, meshes.output_names[meshname], 1
             )
             labels[idx] = new_label
         ax.legend(
