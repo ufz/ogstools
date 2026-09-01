@@ -158,6 +158,7 @@ intersphinx_mapping = {
     "pillow": ("https://pillow.readthedocs.io/en/stable/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "lxml": ("https://lxml.de/apidoc/", None),
+    "geopandas": ("https://geopandas.org/en/stable/", None),
 }
 
 show_authors = True

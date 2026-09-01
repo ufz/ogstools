@@ -10,7 +10,10 @@ from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
 from typing import Any, Self
 
+import geopandas as gpd
+import gmsh
 import numpy as np
+import pandas as pd
 import pyvista as pv
 import yaml
 from matplotlib import pyplot as plt
@@ -345,6 +348,164 @@ class Meshes(MutableMapping, StorageBase):
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = False
         return meshes_obj
+
+    @classmethod
+    def from_gpkg(
+        cls,
+        filename: str | Path,
+        domain: str,
+        cellsize: float,
+        silence_gmsh_log: bool = True,
+    ) -> Meshes:
+        """Create Meshes by meshing a GeoPackage via gmsh.
+
+        :param filename:            The path of the geopackage
+        :param domain:              The name of the layer which corresponds to the domain. This layer must contain all other layers
+        :param cellsize:            Maximal size of the cells
+        :param silence_gmsh_log:    if does not print out log from gmsh during meshing
+        :returns:                   A Meshes object.
+        """
+        filename = Path(filename)
+        layer_dict = {
+            layer: gpd.read_file(filename, layer=layer).explode()
+            for layer in gpd.list_layers(filename)["name"]
+        }
+        if domain not in layer_dict or not set(
+            layer_dict[domain]["geometry"].geom_type.to_numpy()
+        ).issubset({"Polygon", "MultiPolygon"}):
+            msg = f"{domain} does not exist in {filename} or is no polygon"
+            raise ValueError(msg)
+        gmsh.initialize()
+        if silence_gmsh_log:
+            gmsh.option.setNumber("General.Terminal", 0)
+        coords = pd.concat(
+            [
+                layer_dict[name].get_coordinates(include_z=True)
+                for name in layer_dict
+            ],
+            ignore_index=True,
+        ).drop_duplicates(subset=["x", "y", "z"])
+        coord_tags = {}
+        for point in coords.itertuples():
+            ptid = gmsh.model.geo.add_point(
+                point.x, point.y, 0.0, cellsize
+            )  # TODO: Fix use of z-coordinates
+            coord_tags[(point.x, point.y, point.z)] = ptid
+        domain_layer = layer_dict.pop(domain)
+        line_ids: dict[tuple[int, int], int] = {}
+        domain_boundary_ids = []
+        for polygon in domain_layer["geometry"]:
+            for start, end in zip(
+                polygon.boundary.coords[:-1],
+                polygon.boundary.coords[1:],
+                strict=True,
+            ):
+                if (coord_tags[start], coord_tags[end]) in line_ids:
+                    domain_boundary_ids.append(
+                        line_ids[(coord_tags[start], coord_tags[end])]
+                    )
+                else:
+                    lnid = gmsh.model.geo.add_line(
+                        coord_tags[start], coord_tags[end]
+                    )
+                    domain_boundary_ids.append(lnid)
+                    line_ids[(coord_tags[start], coord_tags[end])] = lnid
+        gmsh.model.geo.addCurveLoop(domain_boundary_ids, 1)
+        points: dict[str, list[int]] = {}
+        lines: dict[str, list[int]] = {}
+        lines_groups: dict[str, list[int]] = {}
+        polygons: dict[str, list[int]] = {}
+        poly_bdry_tags = []
+        for name, layer in layer_dict.items():
+            if set(layer["geometry"].geom_type.to_numpy()).issubset(
+                {"Polygon", "MultiPolygon"}
+            ):
+                layer_boundary_ids = []
+                for polygon in layer["geometry"]:
+                    for start, end in zip(
+                        polygon.boundary.coords[:-1],
+                        polygon.boundary.coords[1:],
+                        strict=True,
+                    ):
+                        if (coord_tags[start], coord_tags[end]) in line_ids:
+                            layer_boundary_ids.append(
+                                line_ids[(coord_tags[start], coord_tags[end])]
+                            )
+                        else:
+                            lnid = gmsh.model.geo.add_line(
+                                coord_tags[start], coord_tags[end]
+                            )
+                            layer_boundary_ids.append(lnid)
+                            line_ids[(coord_tags[start], coord_tags[end])] = (
+                                lnid
+                            )
+                layer_loop_tag = gmsh.model.geo.addCurveLoop(layer_boundary_ids)
+                poly_bdry_tags.append(layer_loop_tag)
+                layer_poly_tag = gmsh.model.geo.addPlaneSurface(
+                    [layer_loop_tag]
+                )
+                polygons[name] = layer_poly_tag
+            elif set(layer["geometry"].geom_type.to_numpy()).issubset(
+                {"Point", "MultiPoint"}
+            ):
+                coords = layer.get_coordinates(include_z=True)
+                point_ids = [
+                    coord_tags[(coordinate.x, coordinate.y, coordinate.z)]
+                    for coordinate in coords.itertuples()
+                ]
+                points[name] = point_ids
+
+            elif set(layer["geometry"].geom_type.to_numpy()).issubset(
+                {"LineString", "MultiLine"}
+            ):
+                lines[name] = []
+                lines_groups[name] = []
+                for line in layer["geometry"]:
+                    for start, end in zip(
+                        line.coords[:-1], line.coords[1:], strict=True
+                    ):
+                        if (coord_tags[start], coord_tags[end]) in line_ids:
+                            cur_tag = line_ids[
+                                (coord_tags[start], coord_tags[end])
+                            ]
+                            lines_groups[name].append(cur_tag)
+                            if cur_tag not in domain_boundary_ids:
+                                lines[name].append(cur_tag)
+                        else:
+                            lnid = gmsh.model.geo.add_line(
+                                coord_tags[start], coord_tags[end]
+                            )
+                            lines[name].append(lnid)
+                            lines_groups[name].append(lnid)
+                            line_ids[(coord_tags[start], coord_tags[end])] = (
+                                lnid
+                            )
+            else:
+                msg = "Layer has mixed or disallowed geometry. Allowed geometries are Polygon/Multipolygon, LineString/MultiLine, Point/Multipoint"
+                raise ValueError(msg)
+        domain_surface = gmsh.model.geo.addPlaneSurface([1, *poly_bdry_tags])
+        print("Domain tag:", domain_surface)
+        gmsh.model.geo.synchronize()
+        gmsh.model.addPhysicalGroup(
+            2, [domain_surface], name="domain_remove_after_meshing"
+        )
+        for _name, line_tags in lines.items():
+            gmsh.model.mesh.embed(1, line_tags, 2, domain_surface)
+        for name, line_tags in lines_groups.items():
+            gmsh.model.addPhysicalGroup(1, line_tags, name=name)
+        for name, point_tags in points.items():
+            gmsh.model.mesh.embed(0, point_tags, 2, domain_surface)
+            gmsh.model.addPhysicalGroup(0, point_tags, name=name)
+        for name, poly_tags in polygons.items():
+            gmsh.model.addPhysicalGroup(2, [poly_tags], name=name)
+        gmsh.model.mesh.generate(2)
+        gmsh.write("tmp_mesh_output.msh")
+        gmsh.finalize()
+        meshes = Meshes.from_gmsh(
+            "tmp_mesh_output.msh", log=False, reindex=False
+        )
+        del meshes["domain_remove_after_meshing"]
+        return meshes
 
     def add_gml_subdomains(
         self,
