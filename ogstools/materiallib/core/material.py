@@ -188,16 +188,14 @@ class Material(Mapping[str, MaterialProperty]):
             raise ValueError(msg)
 
     @staticmethod
-    def _parse_parameter_value(value: Any) -> Any:
-        if not isinstance(value, Mapping):
-            # TODO: https://gitlab.opengeosys.org/ogs/tools/ogstools/-/work_items/195
-            # Normalize all parameter values to ParameterValue.
-            return value
-
+    def _parse_parameter_value(value: Any) -> ParameterValue:
         wrapper_keys = {"base_value", "distribution"}
+        if not isinstance(value, Mapping):
+            return ParameterValue(base_value=value)
+
         value_keys = set(value)
         if not (value_keys & wrapper_keys):
-            return value
+            return ParameterValue(base_value=value)
 
         unknown_keys = value_keys - wrapper_keys
         if unknown_keys:
@@ -221,8 +219,7 @@ class Material(Mapping[str, MaterialProperty]):
             parsed_distribution = None
 
         return ParameterValue(
-            base_value=value["base_value"],
-            distribution=parsed_distribution,
+            base_value=value["base_value"], distribution=parsed_distribution
         )
 
     @staticmethod
@@ -230,16 +227,15 @@ class Material(Mapping[str, MaterialProperty]):
         if not isinstance(value, ParameterValue):
             return value
 
-        serialized = {"base_value": value.base_value}
-        if value.distribution is not None:
-            from ogstools.materiallib.distributions import (
-                serialize_distribution,
-            )
+        if value.distribution is None:
+            return value.base_value
 
-            serialized["distribution"] = serialize_distribution(
-                value.distribution
-            )
-        return serialized
+        from ogstools.materiallib.distributions import serialize_distribution
+
+        return {
+            "base_value": value.base_value,
+            "distribution": serialize_distribution(value.distribution),
+        }
 
     def _parse_properties(self) -> None:
         for domain_block in self.raw["domains"]:
