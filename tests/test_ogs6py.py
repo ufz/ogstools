@@ -1756,3 +1756,49 @@ class TestiOGS:
         prj2 = ot.Project.from_folder(tmp_path / "test")
         np.testing.assert_array_equal(prj2.curves.coords("FileCurve"), coords)
         np.testing.assert_array_equal(prj2.curves.values("FileCurve"), values)
+
+    @pytest.mark.parametrize("id_", [None, "0, 1"])
+    def test_set_ice_constitutive_relation(self, id_: str | None) -> None:
+        prj = ot.Project()
+        parameter_map = {
+            "type": "LinearElasticIsotropic",
+            "youngs_modulus": "_E",
+            "poissons_ratio": "_nu",
+        }
+        if id_ is not None:
+            parameter_map["id"] = id_
+
+        prj.processes.set_ice_constitutive_relation(**parameter_map)
+
+        root = prj._get_root()
+        assert len(root.findall("./processes/process")) == 1
+
+        ice_const_rel = root.find(
+            "./processes/process/ice_constitutive_relation"
+        )
+        assert ice_const_rel is not None
+        assert ice_const_rel.findtext("youngs_modulus") == "_E"
+        assert ice_const_rel.findtext("poissons_ratio") == "_nu"
+
+        if id_ is not None:
+            assert ice_const_rel.attrib.get("id") == id_
+        else:
+            assert "id" not in ice_const_rel.attrib
+
+    def test_set_ice_constitutive_relation_multiple(self) -> None:
+        prj = ot.Project()
+        parameter_map = {
+            "type": "LinearElasticIsotropic",
+            "youngs_modulus": "_E",
+            "poissons_ratio": "_nu",
+        }
+        for x in range(2):
+            prj.processes.set_ice_constitutive_relation(id=x, **parameter_map)
+
+        root = prj._get_root()
+        ice_const_rel = root.findall(
+            "./processes/process/ice_constitutive_relation"
+        )
+        assert len(ice_const_rel) == 2
+        assert ice_const_rel[0].attrib["id"] == "0"
+        assert ice_const_rel[1].attrib["id"] == "1"

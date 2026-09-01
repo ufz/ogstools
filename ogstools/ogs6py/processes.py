@@ -348,3 +348,38 @@ class Processes(build_tree.BuildTree):
         )
         self.populate_tree(surfaceflux, "mesh", args["mesh"])
         self.populate_tree(surfaceflux, "property_name", args["property_name"])
+
+    def set_ice_constitutive_relation(
+        self, *, id: str | None = None, **args: Any
+    ) -> None:
+        """
+        Sets ice constituitive relation.
+
+        :param args:
+            Keyword arguments describing the constitutive relation.
+            Any ``property="parameter_name"`` pair is translated to
+            ``<property>parameter_name</property>`` in the
+            ``ice_constitutive_relation`` section.
+
+        :Example:
+            >>> project.processes.set_ice_constitutive_relation(
+            ...     type="LinearElasticIsotropic",
+            ...     youngs_modulus="E",
+            ...     poissons_ratio="nu",
+            ... )
+        """
+        self._convertargs(args)
+
+        attr = {}
+        if id is not None:
+            attr["id"] = id
+
+        ice_const_rel = self.populate_tree(
+            self.process,
+            "ice_constitutive_relation",
+            attr=attr,
+            overwrite=id is None,
+        )
+        # `overwrite=id is None` is added mirror to mirror the behaviour of `set_constitutive_relation`
+        for key, value in args.items():
+            self.populate_tree(ice_const_rel, key, text=value, overwrite=True)
