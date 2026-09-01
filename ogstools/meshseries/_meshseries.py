@@ -40,14 +40,17 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         spatial_unit: str | Sequence[str] = "m",
         time_unit: str | Sequence[str] = "s",
         id: str | None = None,
+        pvtu2vtu: bool | Literal["auto"] = "auto",
     ) -> None:
         """
         Initialize a MeshSeries object
 
-            :param filepath:        Path to the PVD or XDMF file.
-            :param spatial_unit:    Unit/s of the mesh points. See note.
-            :param time_unit:       Unit/s of the timevalues. See note.
-            :returns:               A MeshSeries object
+        :param filepath:            Path to the PVD or XDMF file.
+        :param spatial_unit:        Unit/s of the mesh points. See note.
+        :param time_unit:           Unit/s of the timevalues. See note.
+        :param pvtu2vtu:            Only relevant for pvd series backed
+                                     by parallel (pvtu) results. See note.
+        :returns:               A MeshSeries object
 
         :note:
             If given as a single string, the data is read in SI units i.e. in
@@ -56,6 +59,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             output_unit. E.g.: ``ot.MeshSeries(filepath, "km", ("a", "d"))``
             would read in the spatial data in meters and convert to kilometers
             and read in the timevalues in years and convert to days.
+
+            For pvd series backed by parallel (pvtu) results,
+            ``pvtu2vtu`` trades speed for a correctly merged mesh.
+            ``"auto"`` (default) picks the fast, unmerged read and warns
+            once with the details.
         """
         # TODO: if filepath extension = Path(filepath).suffix to also support xdmf
         super().__init__("MeshSeries", file_ext="pvd", id=id)
@@ -98,7 +106,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     for dataset in self._pvd_reader.datasets
                 ]
                 self._timevalues = np.asarray(self._pvd_reader.time_values)
-                self.skip_pvtu2vtu = False
+                self.pvtu2vtu = pvtu2vtu
+                is_pvtu = self.timestep_files[0].endswith(".pvtu")
+                if pvtu2vtu == "auto" and is_pvtu:
+                    self._warn_pvtu_not_merged()
             case ".xdmf" | ".xmf":
                 from .xdmf_reader import XDMFReader
 
@@ -468,7 +479,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             match self._data_type:
                 case ".pvd":
                     suffix = self.timestep_files[data_timestep].split(".")[-1]
-                    if suffix == "pvtu" and not self.skip_pvtu2vtu:
+                    if suffix == "pvtu" and self.pvtu2vtu is True:
                         from ogstools._find_ogs import cli
                         from ogstools.core.storage import _date_temp_path
 
@@ -689,6 +700,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     def _read_pvd(self, timestep: int) -> pv.UnstructuredGrid:
         self._pvd_reader.set_active_time_point(timestep)
         return self._pvd_reader.read()[0]
+
+    def _warn_pvtu_not_merged(self) -> None:
+        "Warn that a parallel (pvtu) result is read without merging."
+        msg = (
+            "This is a parallel (pvtu) result, read natively (fast) "
+            "instead of merged. This leaves ghost cells/boundary points "
+            "duplicated, and integration-point data (e.g. '*_ip') may come "
+            "from only one partition. Pass pvtu2vtu=True for a "
+            "correctly merged mesh (slower), or pvtu2vtu=False "
+            "to silence this warning."
+        )
+        warn(msg, RuntimeWarning, stacklevel=2)
 
     def _read_xdmf(self, timestep: int) -> pv.UnstructuredGrid:
         import meshio

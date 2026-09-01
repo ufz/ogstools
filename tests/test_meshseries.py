@@ -926,7 +926,7 @@ def test_read_from_parallel_results():
     """
 
     ms_s = ot.MeshSeries(examples.pvd_serial_2D)
-    ms_p = ot.MeshSeries(examples.pvd_parallel_2D)
+    ms_p = ot.MeshSeries(examples.pvd_parallel_2D, pvtu2vtu=True)
     assert ms_p["sigma_ip"].shape == ms_s["sigma_ip"].shape
 
     # Ordering of point and integration point in the meshes from a parallel
@@ -936,3 +936,25 @@ def test_read_from_parallel_results():
     reordering = tree.query(ot.mesh.to_ip_point_cloud(ms_s[-1]).points)[1]
     diff = ms_s[-1]["sigma_ip"] - ms_p[-1]["sigma_ip"][reordering]
     np.testing.assert_array_less(np.abs(diff), 1e-4)
+
+
+def test_read_from_parallel_results_fast():
+    """pvtu2vtu=False (and the "auto" default) is fast but does
+    not merge partitions: ghost cells/boundary nodes stay duplicated and
+    integration point data reflects only one partition. Explicitly passing
+    False silences the warning "auto" would give for the same read."""
+
+    ms_s = ot.MeshSeries(examples.pvd_serial_2D)
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        ms_p_fast = ot.MeshSeries(examples.pvd_parallel_2D, pvtu2vtu=False)
+    assert ms_p_fast[-1].n_cells > ms_s[-1].n_cells
+    assert ms_p_fast[-1].n_points > ms_s[-1].n_points
+    assert ms_p_fast["sigma_ip"].shape != ms_s["sigma_ip"].shape
+
+
+def test_pvtu2vtu_auto_warns_for_multi_partition():
+    with pytest.warns(RuntimeWarning):
+        ot.MeshSeries(examples.pvd_parallel_2D)
