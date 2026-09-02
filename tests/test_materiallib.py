@@ -6,10 +6,15 @@ from lxml import etree as ET
 
 import ogstools as ot
 from ogstools import Project, examples
+from ogstools.definitions import ROOT_DIR
 from ogstools.materiallib.core import component, components, material_manager
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.media import MediaSet
+from ogstools.materiallib.core.property import ParameterValue
+from ogstools.materiallib.distributions import UniformDistribution
 from ogstools.materiallib.schema import process_schema, required_properties
+
+EXAMPLES_DIR = ROOT_DIR / "examples" / "materiallib"
 
 
 def _grouped_raw_data(
@@ -49,6 +54,22 @@ def write_yaml(tmp_path):
         return path
 
     return _write
+
+
+@pytest.fixture
+def copy_example_material(tmp_path):
+    """Copy one material example YAML into tmp_path and return the new path."""
+
+    def _copy(filename: str) -> Path:
+        source = EXAMPLES_DIR / filename
+        material = Material.from_file(source)
+        assert material is not None
+
+        target = tmp_path / filename
+        material.copy().to_file(target)
+        return target
+
+    return _copy
 
 
 @pytest.fixture
@@ -256,31 +277,19 @@ def medium_properties_from_xml(xml_file: Path, medium_id: int) -> dict:
 
 
 class TestMaterialLib:
-    def test_material_from_file_creates_material(self, write_yaml):
+    def test_material_from_file_creates_material(self):
         """Material.from_file should build a Material instance from valid YAML."""
-        file_path = write_yaml(
-            "granite.yml",
-            _grouped_raw_data(
-                "granite", {"Density": {"type": "Constant", "value": 2700}}
-            ),
-        )
+        file_path = EXAMPLES_DIR / "opalinus.yml"
 
         mat = Material.from_file(file_path)
 
         assert mat is not None
-        assert mat.name == "granite"
-        assert "Density" in mat
+        assert mat.name == "opalinus_clay"
+        assert "porosity" in mat
 
-    def test_material_to_file_roundtrip(self, tmp_path, write_yaml):
+    def test_material_to_file_roundtrip(self, tmp_path):
         """Material.to_file should write YAML that can be loaded with Material.from_file."""
-        source = write_yaml(
-            "water.yml",
-            _grouped_raw_data(
-                "water",
-                {"Viscosity": {"type": "Constant", "value": 1.0}},
-                domain="phase",
-            ),
-        )
+        source = EXAMPLES_DIR / "water.yml"
         mat = Material.from_file(source)
         assert mat is not None
 
@@ -290,7 +299,9 @@ class TestMaterialLib:
 
         assert copied is not None
         assert copied.name == "water"
-        assert copied["Viscosity"].parameters["value"] == 1.0
+        assert copied["viscosity"].parameters["value"] == ParameterValue(
+            base_value=1.0e-3
+        )
         assert copied == mat
 
     def test_material_parses_properties_from_raw_data(self):
@@ -399,7 +410,9 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].parameters["value"] == 2500
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
         with pytest.raises(KeyError, match="No property with name"):
             mat["porosity"]
 
@@ -411,51 +424,47 @@ class TestMaterialLib:
                 "Viscosity": {"type": "Constant", "value": 1.0},
             }
         )
-        assert mat["Density"].parameters["value"] == 2500
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
 
         mat_2000 = mat.copy()
         assert mat_2000 == mat
-        mat_2000["Density"].parameters["value"] = 2000
-        assert mat_2000["Density"].parameters["value"] == 2000
-        assert mat["Density"].parameters["value"] == 2500
+        mat_2000["Density"].parameters["value"] = ParameterValue(
+            base_value=2000
+        )
+        assert mat_2000["Density"].parameters["value"] == ParameterValue(
+            base_value=2000
+        )
+        assert mat["Density"].parameters["value"] == ParameterValue(
+            base_value=2500
+        )
 
 
 class TestMaterialManager:
-    def test_materialdb_loads_yaml_files(self, tmp_path, write_yaml):
+    def test_materialdb_loads_yaml_files(self, tmp_path, copy_example_material):
         """MaterialManager should load all YAML files in the given directory into Material objects."""
-        write_yaml(
-            "rock.yml",
-            _grouped_raw_data(
-                "granite", {"Density": {"type": "Constant", "value": 2700}}
-            ),
-        )
+        copy_example_material("opalinus.yml")
 
         db = material_manager.MaterialManager(data_dir=str(tmp_path))
-        mat = db.get_material("granite")
+        mat = db.get_material("opalinus_clay")
 
         assert mat is not None
-        assert mat.name == "granite"
-        assert "Density" in mat
+        assert mat.name == "opalinus_clay"
+        assert "porosity" in mat
 
     def test_materialdb_get_material_returns_correct_object(
-        self, tmp_path, write_yaml
+        self, tmp_path, copy_example_material
     ):
         """MaterialManager.get_material should return the correct Material instance by name."""
-        write_yaml(
-            "water.yml",
-            _grouped_raw_data(
-                "water",
-                {"Viscosity": {"type": "Constant", "value": 1.0}},
-                domain="phase",
-            ),
-        )
+        copy_example_material("water.yml")
 
         db = material_manager.MaterialManager(data_dir=tmp_path)
         mat = db.get_material("water")
 
         assert mat is not None
         assert mat.name == "water"
-        assert "Viscosity" in mat
+        assert "viscosity" in mat
 
     def test_materialdb_list_materials_returns_all_names(
         self, tmp_path, write_yaml
@@ -1722,6 +1731,62 @@ class TestMedium:
         assert "<type>AqueousLiquid</type>" in xml_text
         assert "<name>Viscosity</name>" in xml_text
         assert "<value>1.0</value>" in xml_text
+
+    def test_media_import_ignores_distribution_metadata_in_xml(
+        self, make_filtered_db, tmp_path
+    ):
+        materials = {
+            "clay": _grouped_raw_data(
+                "clay",
+                {
+                    "porosity": {
+                        "type": "Constant",
+                        "value": {
+                            "base_value": 0.15,
+                            "distribution": {
+                                "type": "uniform",
+                                "lower": 0.10,
+                                "upper": 0.20,
+                            },
+                        },
+                    }
+                },
+            ),
+            "water": _grouped_raw_data(
+                "water",
+                {"Viscosity": {"type": "Constant", "value": 1.0}},
+                domain="phase",
+            ),
+        }
+        schema = {
+            "properties": ["porosity"],
+            "phases": [{"type": "AqueousLiquid", "properties": ["Viscosity"]}],
+        }
+        subdomains = [
+            {"subdomain": "region1", "material": "clay", "material_ids": [1]}
+        ]
+        fluids = {"AqueousLiquid": "water"}
+
+        filtered = make_filtered_db(materials, schema, subdomains, fluids)
+        media = MediaSet(filtered)
+
+        porosity = media["region1"].properties[0]
+        assert porosity.parameters["value"] == ParameterValue(
+            base_value=0.15,
+            distribution=UniformDistribution(lower=0.10, upper=0.20),
+        )
+
+        prj = Project()
+        prj.set_media(media)
+
+        xml_file = tmp_path / "distributed_export.prj"
+        prj.write_input(xml_file)
+        xml_text = xml_file.read_text()
+
+        assert "<name>porosity</name>" in xml_text
+        assert "<value>0.15</value>" in xml_text
+        assert "distribution" not in xml_text
+        assert "base_value" not in xml_text
 
     def test_media_import_exports_with_components_two_phase(
         self, make_filtered_db, tmp_path

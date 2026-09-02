@@ -1,20 +1,33 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Any
+
+from ogstools.materiallib.distributions import Distribution
+
+
+@dataclass(frozen=True)
+class ParameterValue:
+    base_value: Any
+    distribution: Distribution | None = None
 
 
 class MaterialProperty:
     def __init__(
-        self, name: str, type_: str, parameters: dict[str, Any], **extra: Any
+        self,
+        name: str,
+        type_: str,
+        parameters: dict[str, ParameterValue],
+        **extra: Any,
     ):
         self.name = name
         self.type = type_
         self.parameters = parameters
         self.extra = extra  # e.g. unit, slope, source, ...
 
-    def to_dict(self) -> dict:
-        d = {"name": self.name, "type": self.type}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"name": self.name, "type": self.type}
         d.update(self.parameters)
         d.update(self.extra)
         return d
@@ -29,6 +42,12 @@ class MaterialProperty:
         for k, v in self.extra.items():
             lines.append(f"  {k}: {v}")
         return "\n".join(lines)
+
+    def parameter(self, name: str) -> ParameterValue:
+        if name not in self.parameters:
+            msg = f"Property {self.name} has no parameter called '{name}'."
+            raise KeyError(msg)
+        return self.parameters[name]
 
     def get(self, key: str, default: str | None = None) -> Any:
         if key in ["name", "type", "parameters"]:

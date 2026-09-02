@@ -14,14 +14,47 @@ from typing import Any, ClassVar
 import yaml
 
 from ogstools._internal import deprecated
+from ogstools.materiallib.distributions import parse_distribution
 from ogstools.materiallib.schema.required_properties import (
     required_property_names,
 )
 from ogstools.property_types import PROPERTY_TYPES
 
-from .property import MaterialProperty
+from .property import MaterialProperty, ParameterValue
 
 logger = logging.getLogger(__name__)
+
+
+class _MaterialPropertyAccessor:
+    """Provide domain-based navigation of a material's flat property list.
+    Bridge grouped YAML domains and the flat in-memory representation.
+
+    :meta public:
+    """
+
+    def __init__(self, material: Material, domain: str):
+        self._material = material
+        self._domain = domain
+
+    def property(self, name: str) -> MaterialProperty:
+        matches = [
+            prop
+            for prop in self._material.properties
+            if prop.name == name and prop.extra.get("domain") == self._domain
+        ]
+        if matches:
+            return matches[0]
+
+        available = [
+            prop.name
+            for prop in self._material.properties
+            if prop.extra.get("domain") == self._domain
+        ]
+        msg = (
+            f"No property with name {name} found in domain {self._domain}. "
+            "Available properties are: " + ", ".join(dict.fromkeys(available))
+        )
+        raise KeyError(msg)
 
 
 class Material(Mapping[str, MaterialProperty]):
@@ -154,6 +187,56 @@ class Material(Mapping[str, MaterialProperty]):
             )
             raise ValueError(msg)
 
+    @staticmethod
+    def _parse_parameter_value(value: Any) -> ParameterValue:
+        wrapper_keys = {"base_value", "distribution"}
+        if not isinstance(value, Mapping):
+            return ParameterValue(base_value=value)
+
+        value_keys = set(value)
+        if not (value_keys & wrapper_keys):
+            return ParameterValue(base_value=value)
+
+        unknown_keys = value_keys - wrapper_keys
+        if unknown_keys:
+            msg = (
+                "Parameter wrapper contains unsupported key(s): "
+                f"{', '.join(sorted(unknown_keys))}."
+            )
+            raise ValueError(msg)
+
+        if "base_value" not in value:
+            msg = "Parameter wrapper must define 'base_value'."
+            raise ValueError(msg)
+
+        distribution = value.get("distribution")
+        if distribution is not None:
+            if not isinstance(distribution, dict):
+                msg = "Parameter wrapper key 'distribution' must be a mapping."
+                raise ValueError(msg)
+            parsed_distribution = parse_distribution(distribution)
+        else:
+            parsed_distribution = None
+
+        return ParameterValue(
+            base_value=value["base_value"], distribution=parsed_distribution
+        )
+
+    @staticmethod
+    def _serialize_parameter_value(value: Any) -> Any:
+        if not isinstance(value, ParameterValue):
+            return value
+
+        if value.distribution is None:
+            return value.base_value
+
+        from ogstools.materiallib.distributions import serialize_distribution
+
+        return {
+            "base_value": value.base_value,
+            "distribution": serialize_distribution(value.distribution),
+        }
+
     def _parse_properties(self) -> None:
         for domain_block in self.raw["domains"]:
             domain_name = domain_block["domain"]
@@ -169,7 +252,10 @@ class Material(Mapping[str, MaterialProperty]):
 
                 type_ = entry["type"]
                 spec = PROPERTY_TYPES[type_]
-                parameters = {k: entry[k] for k in spec.parameters}
+                parameters = {
+                    k: self._parse_parameter_value(entry[k])
+                    for k in spec.parameters
+                }
                 extra = {k: entry[k] for k in spec.metadata_keys if k in entry}
 
                 self._validate_property_payload(
@@ -292,6 +378,18 @@ class Material(Mapping[str, MaterialProperty]):
     def __bool__(self) -> bool:
         return bool(self.name)
 
+    @property
+    def medium(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "medium")
+
+    @property
+    def phase(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "phase")
+
+    @property
+    def component(self) -> _MaterialPropertyAccessor:
+        return _MaterialPropertyAccessor(self, "component")
+
     @staticmethod
     def _raw_from_properties(
         name: str, properties: list[MaterialProperty]
@@ -320,7 +418,10 @@ class Material(Mapping[str, MaterialProperty]):
 
             entry = {
                 "type": p.type,
-                **p.parameters,
+                **{
+                    key: Material._serialize_parameter_value(value)
+                    for key, value in p.parameters.items()
+                },
                 **metadata,
             }
 

@@ -8,8 +8,13 @@ from pathlib import Path
 import pytest
 import yaml  # type: ignore[import]
 
+from ogstools.definitions import ROOT_DIR
 from ogstools.materiallib.core.material import Material
 from ogstools.materiallib.core.material_manager import MaterialManager
+from ogstools.materiallib.core.property import ParameterValue
+from ogstools.materiallib.distributions import UniformDistribution
+
+EXAMPLES_DIR = ROOT_DIR / "examples" / "materiallib"
 
 
 @pytest.fixture
@@ -23,47 +28,32 @@ def write_yaml(tmp_path: Path):
     return _write
 
 
-def test_material_from_file_accepts_grouped_domains(write_yaml) -> None:
-    file_path = write_yaml(
-        "granite.yml",
-        {
-            "name": "granite",
-            "domains": [
-                {
-                    "domain": "medium",
-                    "properties": {
-                        "Density": {"type": "Constant", "value": 2700}
-                    },
-                }
-            ],
-        },
-    )
+@pytest.fixture
+def copy_example_material(tmp_path: Path):
+    def _copy(filename: str) -> Path:
+        source = EXAMPLES_DIR / filename
+        target = tmp_path / filename
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        return target
+
+    return _copy
+
+
+def test_material_from_file_accepts_grouped_domains() -> None:
+    file_path = EXAMPLES_DIR / "opalinus.yml"
 
     material = Material.from_file(file_path)
 
     assert material is not None
-    assert material.name == "granite"
-    assert "Density" in material
-    assert material["Density"].extra["domain"] == "medium"
+    assert material.name == "opalinus_clay"
+    assert "porosity" in material
+    assert material["porosity"].extra["domain"] == "medium"
 
 
 def test_material_to_file_roundtrip_preserves_grouped_domains(
-    tmp_path: Path, write_yaml
+    tmp_path: Path,
 ) -> None:
-    file_path = write_yaml(
-        "water.yml",
-        {
-            "name": "water",
-            "domains": [
-                {
-                    "domain": "phase",
-                    "properties": {
-                        "Viscosity": {"type": "Constant", "value": 1.0}
-                    },
-                }
-            ],
-        },
-    )
+    file_path = EXAMPLES_DIR / "water.yml"
 
     material = Material.from_file(file_path)
     assert material is not None
@@ -75,6 +65,94 @@ def test_material_to_file_roundtrip_preserves_grouped_domains(
     assert "domains" in copied_raw
     assert "properties" not in copied_raw
     assert copied_raw["domains"][0]["domain"] == "phase"
+
+
+def test_material_parses_wrapped_parameter_value() -> None:
+    file_path = EXAMPLES_DIR / "distributed_demo.yml"
+
+    material = Material.from_file(file_path)
+
+    value = material["porosity"].parameters["value"]
+    assert value == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+
+
+def test_material_serializes_wrapped_parameter_without_distribution_as_scalar(
+    tmp_path: Path,
+) -> None:
+    file_path = EXAMPLES_DIR / "distributed_demo.yml"
+
+    material = Material.from_file(file_path)
+    material.filter_properties("storage")
+
+    target = tmp_path / "distributed_demo_copy.yml"
+    material.to_file(target)
+
+    copied_raw = yaml.safe_load(target.read_text(encoding="utf-8"))
+    assert copied_raw["domains"][0]["properties"]["storage"]["value"] == 2.0e-10
+
+
+def test_material_serializes_plain_parameter_value_back_to_scalar(
+    tmp_path: Path,
+) -> None:
+    material = Material.from_file(EXAMPLES_DIR / "opalinus.yml")
+    assert material is not None
+    material.filter_properties("porosity")
+
+    target = tmp_path / "opalinus_copy.yml"
+    material.to_file(target)
+
+    copied_raw = yaml.safe_load(target.read_text(encoding="utf-8"))
+    assert copied_raw["domains"][0]["properties"]["porosity"]["value"] == 0.15
+
+
+def test_material_normalizes_all_parameters_of_multi_parameter_property() -> (
+    None
+):
+    material = Material.from_file(EXAMPLES_DIR / "distributed_demo.yml")
+    prop = material.medium.property("saturation")
+
+    assert all(
+        isinstance(value, ParameterValue) for value in prop.parameters.values()
+    )
+    assert prop.parameter("exponent").base_value == 0.2
+    assert prop.parameter("exponent").distribution is not None
+    assert prop.parameter("p_b").base_value == 4.8e7
+    assert prop.parameter("p_b").distribution is None
+
+
+def test_material_roundtrip_preserves_mixed_parameter_values(
+    tmp_path: Path,
+) -> None:
+    material = Material.from_file(EXAMPLES_DIR / "distributed_demo.yml")
+    assert material is not None
+
+    target = tmp_path / "distributed_demo_copy.yml"
+    material.to_file(target)
+
+    copied = Material.from_file(target)
+    assert copied is not None
+
+    assert copied.medium.property("porosity").parameter(
+        "value"
+    ) == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+    assert copied.medium.property("storage").parameter(
+        "value"
+    ) == ParameterValue(base_value=2.0e-10)
+    assert copied.medium.property("saturation").parameter(
+        "exponent"
+    ) == ParameterValue(
+        base_value=0.2,
+        distribution=UniformDistribution(lower=0.15, upper=0.30),
+    )
+    assert copied.medium.property("saturation").parameter(
+        "p_b"
+    ) == ParameterValue(base_value=4.8e7)
 
 
 def test_material_rejects_unsupported_top_level_properties_key(
@@ -125,23 +203,91 @@ def test_material_rejects_invalid_domain_name(write_yaml) -> None:
 
 
 def test_material_manager_loads_grouped_domain_repository(
-    tmp_path: Path, write_yaml
+    tmp_path: Path, copy_example_material
 ) -> None:
-    write_yaml(
-        "granite.yml",
-        {
-            "name": "granite",
-            "domains": [
-                {
-                    "domain": "medium",
-                    "properties": {
-                        "Density": {"type": "Constant", "value": 2700}
-                    },
-                }
-            ],
-        },
-    )
+    copy_example_material("opalinus.yml")
 
     manager = MaterialManager(data_dir=tmp_path)
 
-    assert "granite" in manager.materials_db
+    assert "opalinus_clay" in manager.materials_db
+
+
+def test_material_medium_property_accessor_returns_medium_property() -> None:
+    file_path = EXAMPLES_DIR / "distributed_demo.yml"
+
+    material = Material.from_file(file_path)
+
+    assert material.medium.property("density").parameters[
+        "value"
+    ] == ParameterValue(base_value=2700)
+
+
+def test_material_phase_property_accessor_returns_phase_property() -> None:
+    file_path = EXAMPLES_DIR / "distributed_demo.yml"
+
+    material = Material.from_file(file_path)
+
+    assert material.phase.property("density").parameters[
+        "value"
+    ] == ParameterValue(base_value=999)
+
+
+def test_material_component_property_accessor_returns_component_property() -> (
+    None
+):
+    file_path = EXAMPLES_DIR / "water.yml"
+
+    material = Material.from_file(file_path)
+
+    assert material.component.property("molar_mass").parameters[
+        "value"
+    ] == ParameterValue(base_value=0.018016)
+
+
+def test_material_property_parameter_normalizes_plain_scalar_value() -> None:
+    file_path = EXAMPLES_DIR / "opalinus.yml"
+
+    material = Material.from_file(file_path)
+
+    value = material.medium.property("porosity").parameter("value")
+
+    assert value.base_value == 0.15
+    assert value.distribution is None
+
+
+def test_material_property_parameter_returns_wrapped_parameter_value() -> None:
+    file_path = EXAMPLES_DIR / "distributed_demo.yml"
+
+    material = Material.from_file(file_path)
+
+    assert material.medium.property("porosity").parameter(
+        "value"
+    ) == ParameterValue(
+        base_value=0.15,
+        distribution=UniformDistribution(lower=0.10, upper=0.20),
+    )
+
+
+def test_material_property_parameter_rejects_missing_parameter() -> None:
+    file_path = EXAMPLES_DIR / "opalinus.yml"
+
+    material = Material.from_file(file_path)
+
+    with pytest.raises(
+        KeyError, match="Property porosity has no parameter called 'missing'"
+    ):
+        material.medium.property("porosity").parameter("missing")
+
+
+def test_material_property_accessor_rejects_missing_property_in_domain() -> (
+    None
+):
+    file_path = EXAMPLES_DIR / "water.yml"
+
+    material = Material.from_file(file_path)
+
+    with pytest.raises(
+        KeyError,
+        match="No property with name density found in domain medium",
+    ):
+        material.medium.property("density")

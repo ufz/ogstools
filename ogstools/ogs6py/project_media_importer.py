@@ -15,7 +15,7 @@ from ogstools.materiallib.core.component import Component
 from ogstools.materiallib.core.media import MediaSet
 from ogstools.materiallib.core.medium import Medium
 from ogstools.materiallib.core.phase import Phase
-from ogstools.materiallib.core.property import MaterialProperty
+from ogstools.materiallib.core.property import MaterialProperty, ParameterValue
 from ogstools.ogs6py.media import Media as OGS6pyMedia
 
 logger = logging.getLogger(__name__)
@@ -115,6 +115,12 @@ class _ProjectMediaImporter:
     # ------------------------------------------------------------------
     # Property
     # ------------------------------------------------------------------
+    @staticmethod
+    def _to_ogs_parameter(value: object) -> object:
+        if isinstance(value, ParameterValue):
+            return value.base_value
+        return value
+
     def set_property(
         self,
         prop: MaterialProperty,
@@ -131,7 +137,10 @@ class _ProjectMediaImporter:
             "medium_id": medium_id,
             "name": prop.name,
             "type": prop.type,
-            **prop.parameters,
+            **{
+                key: self._to_ogs_parameter(value)
+                for key, value in prop.parameters.items()
+            },
             **extra,
         }
         if phase_type is not None:
