@@ -5,6 +5,7 @@
 maxdepth: 3
 ---
 0.x (upcoming release)  <ogstools-0.x>
+0.8.2 <ogstools-0.8.2>
 0.8.1 <ogstools-0.8.1>
 0.8.0 <ogstools-0.8.0>
 0.7.1 <ogstools-0.7.1>

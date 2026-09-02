@@ -16,7 +16,6 @@ tags:
 authors:
 - name: Tobias Meisel
   orcid: 0009-0009-8790-8903
-  equal-contrib: true
   affiliation: 1
 - name: Florian Zill
   orcid: 0000-0002-5177-401X

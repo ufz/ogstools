@@ -1,5 +1,12 @@
 # Development setup
 
+```{toctree}
+---
+hidden:
+---
+Maintainer Guide <maintainer>
+```
+
 # Cloning the Source Repository
 
 You can clone the source repository from https://gitlab.opengeosys.org/ogs/tools/ogstools and install the latest version by running:
@@ -250,11 +257,4 @@ If you work on ogstools and another project using it at the same time, install o
 
 ```bash
 pip install -e "/path/to/ogstools[all]" --config-settings editable_mode=compat
-```
-
-```{toctree}
----
-hidden:
----
-Maintainer Guide <maintainer>
 ```
