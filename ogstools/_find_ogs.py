@@ -4,6 +4,7 @@
 import importlib.util
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -132,6 +133,55 @@ def status(verbose: bool = False) -> bool:
     if msg and verbose:
         print(msg)
     return not msg
+
+
+def _ogs_cli_version(ogs_bin: Path) -> str | None:
+    """Parse the version from ``<ogs_bin> --version`` output, or None."""
+    try:
+        completed = subprocess.run(
+            [str(ogs_bin), "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    for line in completed.stdout.splitlines():
+        if "version:" in line:
+            return line.partition("version:")[2].strip() or None
+    return None
+
+
+def ogs_version() -> str | None:
+    """Version string of the OGS that ogstools would invoke, or None.
+
+    Resolution order mirrors :func:`cli`: a binary on ``OGS_BIN_PATH``, then
+    the ``ogs`` Python wheel, then ``ogs`` on ``PATH``. Container-based
+    executions (see :class:`~ogstools.Execution`) are not covered.
+
+    :returns: A version like ``6.5.8`` for a release or
+        ``6.5.8-382-g21257daf`` for a development build, or None if no ogs
+        can be located.
+    """
+    try:
+        ogs_bin_path = read_ogs_path()
+    except ImportError:
+        # OGS_BIN_PATH set but invalid
+        ogs_bin_path = None
+    if ogs_bin_path is not None:
+        return _ogs_cli_version(ogs_bin_path / "ogs")
+
+    if has_ogs_wheel():
+        import ogs
+
+        if (version := getattr(ogs, "OGS_VERSION", None)) is not None:
+            return str(version)
+
+    if (ogs_on_path := shutil.which("ogs")) is not None:
+        return _ogs_cli_version(Path(ogs_on_path))
+
+    return None
 
 
 def cli(check: bool = False) -> Any:

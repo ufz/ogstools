@@ -12,6 +12,7 @@ import yaml  # type: ignore[import]
 
 import ogstools as ot
 from ogstools import Project, examples
+from ogstools._find_ogs import ogs_version
 from ogstools.materiallib.core.material_manager import MaterialManager
 from ogstools.materiallib.core.media import MediaSet
 
@@ -20,11 +21,14 @@ def _ogs_version_newer_than(base: str) -> bool:
     """True if the installed ogs is a dev build past release `base`.
 
     Dev builds report a version like "6.5.8-382-g21257daf" (commits ahead
-    of tag 6.5.8); plain releases report just "6.5.8".
+    of tag 6.5.8); plain releases report just "6.5.8". Returns False when no
+    ogs is available (the relevant system tests are deselected then anyway).
     """
-    import ogs
+    version = ogs_version()
+    if version is None:
+        return False
 
-    base_part, _, suffix = ogs.OGS_VERSION.partition("-")
+    base_part, _, suffix = version.partition("-")
     base_tuple = tuple(int(x) for x in base.split("."))
     installed_tuple = tuple(int(x) for x in base_part.split("."))
     if installed_tuple != base_tuple:
