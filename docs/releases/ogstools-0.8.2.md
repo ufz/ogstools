@@ -3,9 +3,7 @@
 Python 3.12-3.14
 OGS 6.5.8
 
-# Highlights
-
-- **OGSTools paper submitted to the Journal of Open Source Software** (`paper/paper.md`, `paper/paper.bib`) ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
+3rd of September 2026
 
 # Breaking changes
 
@@ -85,3 +83,7 @@ OGS 6.5.8
 
 - `materiallib` YAML schema tightened: a property entry must now be a single mapping (lists of entries are no longer accepted), the `type` key is required, and unsupported keys are rejected. Property parameters are validated against a shared type registry. ([!464](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/464))
 - `materiallib` YAML schema: materials must now group their properties under top-level `domains` (`medium`/`phase`/`component`) instead of a flat `properties` block. Bundled example materials were migrated accordingly. ([!451](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/451))
+
+# JOSS paper
+
+- **OGSTools paper draft submitted to the Journal of Open Source Software** (`paper/paper.md`, `paper/paper.bib`) ([!321](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/321))
