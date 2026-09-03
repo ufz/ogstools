@@ -201,6 +201,6 @@ This work has been supported by multiple funding sources, including `SUTOGS` (St
 
 ## AI usage disclosure
 
-In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections. For all contributions to the software project the use of Large Language Models (LLMs) is in principle permitted, but all contributions must pass through a review process by the developers, maintainers, and authors.
+In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections, which the authors reviewed. For contributions to the software itself, the use of LLMs is permitted. Contributors are currently not required to disclose it; all contributions instead pass through a review process by the developers, maintainers, and authors.
 
 ## References
