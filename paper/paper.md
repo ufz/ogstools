@@ -191,7 +191,7 @@ Like `OpenGeoSys`, `OGSTools` is available via `PyPI` and `conda-forge`.
 
 ### Workflows
 
-OGSTools emerged from and is used in the following research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2025] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
+OGSTools emerged from and is used in several research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2025] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
 
 ### OpenGeoSys benchmarks
 
@@ -199,8 +199,7 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 
 ## Acknowledgements
 
-This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
-The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft` (DFG)
+This work has been supported by multiple funding sources, including `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft` (DFG), `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`, and `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`.
 
 ## AI usage disclosure
 
