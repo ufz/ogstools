@@ -123,7 +123,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 **Open interfaces to common Python libraries:** Each sub-library either transforms OpenGeoSys specific data into common Python data structures (e.g. PyVista, Pandas, NumPy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
 
-**Reuse OGS command line tools:** The new functionality combines the OGS command line tools [^5] to cover more complex tasks than any single tool can handle alone.
+**Reuse OGS command line tools:** The new functionality combines the [OGS command line tools](https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/) to cover more complex tasks than any single tool can handle alone.
 
 **Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritising early failure over silent pass-through.
 
@@ -133,9 +133,9 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 ### Example
 
-The following example shows a complete `OGS` Liquid Flow [^2] simulation workflow, adapted to 2D from [^3].
-First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` \[@sullivan2019pyvista\] functionality.
-After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An extended version of this example is available in the OGSTools documentation [^4].
+The following example shows a complete [`OGS` Liquid Flow](https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/) simulation workflow, adapted to 2D from [an OGS benchmark](https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/).
+First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` [@sullivan2019pyvista] functionality.
+After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An extended version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html).
 
 ```python
 import numpy as np
@@ -183,7 +183,7 @@ The simulation execution part covers running simulations with the `OGS` core via
 
 Post-processing includes domain-specific evaluation and visualisation of simulation results for temporal and spatial distribution analysis, with sensible defaults and OGS-specific standards for plotting, and comparison against experimental data or analytical solutions.
 
-The complete feature list is found in the online documentation [^1].
+The complete feature list is found in the [online documentation](https://ogstools.opengeosys.org).
 Containers are provided for reproducibility, benefiting both developers and users [@Bilke2025].
 Like `OpenGeoSys`, `OGSTools` is available via `PyPI` and `conda-forge`.
 
@@ -200,17 +200,10 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 ## Acknowledgements
 
 This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
-The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under grant 528785032[^6] by `Deutsche Forschungsgemeinschaft` (DFG)
+The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft` (DFG)
 
 ## AI usage disclosure
 
 In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections. For all contributions to the software project the use of Large Language Models (LLMs) is in principle permitted, but all contributions must pass through a review process by the developers, maintainers, and authors.
-
-[^1]: https://ogstools.opengeosys.org
-[^2]: https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/
-[^3]: https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
-[^4]: https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html
-[^5]: https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/
-[^6]: https://gepris.dfg.de/gepris/projekt/528785032
 
 ## References
