@@ -133,7 +133,9 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 The following example shows a complete [`OGS` Liquid Flow](https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/) simulation workflow, adapted to 2D from [an OGS benchmark](https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/).
 First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` [@sullivan2019pyvista] functionality.
-After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An extended version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html).
+After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An annotated version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html).
+
+The example is deliberately kept minimal to keep the code listing short. OGSTools handles considerably more complex workflows, e.g. with more elaborate geometries or physical processes, as shown by benchmark A and benchmark B.
 
 ```python
 import numpy as np
@@ -189,7 +191,7 @@ Like `OpenGeoSys`, `OGSTools` is available via `PyPI` and `conda-forge`.
 
 ### Workflows
 
-OGSTools emerged from and is used in several research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2025] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
+OGSTools emerged from and is used in several research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2024] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
 
 ### OpenGeoSys benchmarks
 
@@ -197,7 +199,7 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 
 ## Acknowledgements
 
-This work has been supported by multiple funding sources, including `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft` (DFG), `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`, and `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`.
+This work has been supported by multiple funding sources, including `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft (DFG)`, `OpenWorkFlow` under [grant STAFuE-21-05-Klei](https://www.bge.de/fileadmin/user_upload/Standortsuche/Forschung/2021-07-06_Steckbrief_Forschungsvorhaben_-_Synthese-Plattform_fuer_Sicherheitsuntersuchungen_im_Standortauswahlverfahren__barrierefrei_.pdf) by `Bundesgesellschaft für Endlagerung (BGE)`, `AREHS` under [grant 4719F10402](https://www.base.bund.de/de/forschung/themenfelder/endlagerung/_documents/arehs.html) by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `DigBen` under [grant 03G0927A](https://www.projektfoerderung-geo-meeresforschung.de/geowissenschaften/details?action=ShowForm&id=3571) by `Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR)`.
 
 ## AI usage disclosure
 
