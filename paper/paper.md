@@ -99,13 +99,11 @@ OGS is well suited for academic courses and teaching environments. With Jupyter 
 
 ## State of the field
 
-Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages bridge a domain-specific simulator to a general-purpose programming language ecosystem (e.g. Python), typically to cover pre-processing, execution, and post-processing conducted on a single programmatic platform.
+Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages connect a domain-specific simulator with the data structures and tooling of a general-purpose programming ecosystem (e.g. Python), typically covering pre-processing, execution, and post-processing on a single programmatic platform. OGSTools follows this pattern, in this case with OGS as the simulator.
 
-In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks. DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
+In computational geoscience, several simulators have companion libraries of this kind. FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model, and toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. Outside this group, DOLFINx [@Baratta2023] takes a different approach: it exposes FEM assembly and solving directly through a Python API rather than wrapping an external solver.
 
-OGSTools follows the simulator-specific companion library pattern, here for OpenGeoSys.
-
-An alternative to scripting-based companion libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the DataExplorer [@Rink2012] for OpenGeoSys.
+An alternative to these scripting-based libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the Data Explorer [@Rink2012] for OpenGeoSys.
 
 ### Build vs. contribute
 
