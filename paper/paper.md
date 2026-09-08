@@ -16,7 +16,7 @@ tags:
 authors:
 - name: Tobias Meisel
   orcid: 0009-0009-8790-8903
-  affiliation: 1
+  affiliation: 1, 4
 - name: Florian Zill
   orcid: 0000-0002-5177-401X
   equal-contrib: true
@@ -66,7 +66,7 @@ affiliations:
   index: 4
   ror: 042aqky30
 
-date: 17 March 2025
+date: 04 September 2026
 bibliography: paper.bib
 
 ---
@@ -74,9 +74,7 @@ bibliography: paper.bib
 ## Summary
 
 `OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) — a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media [@bilke_2025_14672997; @kolditz2012opengeosys].
-`OGSTools` [@ogstools2025] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows.
-
-![OGSTools graphical abstract: pre-processing, simulation execution, and post-processing for a single simulation; combining multiple simulations; and application areas.](figures/graphical_abstract.svg){#fig:graphical-abstract width="100%"}
+`OGSTools` [@ogstools2025] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, and examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows. \autoref{fig:graphical-abstract} summarises these capabilities graphically.
 
 ## Statement of need
 
@@ -97,15 +95,15 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 OGS is well suited for academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
 
+![OGSTools graphical abstract: pre-processing, simulation execution, and post-processing for a single simulation; combining multiple simulations; and application areas.](figures/graphical_abstract.svg){#fig:graphical-abstract width="100%"}
+
 ## State of the field
 
-Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages bridge a domain-specific simulator to a general-purpose programming language ecosystem (e.g. Python), typically to cover pre-processing, execution, and post-processing conducted on a single programmatic platform.
+Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages connect a domain-specific simulator with the data structures and tooling of a general-purpose programming ecosystem (e.g. Python), typically covering pre-processing, execution, and post-processing on a single programmatic platform. OGSTools follows this pattern, in this case with OGS as the simulator.
 
-In subsurface hydrology, FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model. toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. In energy systems modelling, otoole [@Barnes2023] supports users of OSeMOSYS to formalise pre- and post-processing tasks. DOLFINx [@Baratta2023] is worth noting despite a fundamental architectural difference: rather than wrapping an external solver such as OGS, it exposes FEM assembly and solving directly through a Python API. It partially shares the same tooling ecosystem as OGSTools — gmsh, PyVista, and VTK/XDMF.
+In computational geoscience, several simulators have companion libraries of this kind. FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model, and toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. Outside this group, DOLFINx [@Baratta2023] takes a different approach: it exposes FEM assembly and solving directly through a Python API rather than wrapping an external solver.
 
-OGSTools follows the simulator-specific companion library pattern, here for OpenGeoSys.
-
-An alternative to scripting-based companion libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the DataExplorer [@Rink2012] for OpenGeoSys.
+An alternative to these scripting-based libraries is a dedicated companion GUI — as with ModelMuse [@Winston2019] for MODFLOW and the Data Explorer [@Rink2012] for OpenGeoSys.
 
 ### Build vs. contribute
 
@@ -123,7 +121,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 **Open interfaces to common Python libraries:** Each sub-library either transforms OpenGeoSys specific data into common Python data structures (e.g. PyVista, Pandas, NumPy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
 
-**Reuse OGS command line tools:** The new functionality combines the OGS command line tools [^5] to cover more complex tasks than any single tool can handle alone.
+**Reuse OGS command line tools:** The new functionality combines the [OGS command line tools](https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/) to cover more complex tasks than any single tool can handle alone.
 
 **Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritising early failure over silent pass-through.
 
@@ -133,12 +131,12 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 ### Example
 
-The following example shows a complete `OGS` Liquid Flow [^2] simulation workflow, adapted to 2D from [^3].
-First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` \[@sullivan2019pyvista\] functionality.
-After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An extended version of this example is available in the OGSTools documentation [^4].
+The following example shows a complete [`OGS` Liquid Flow](https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/) simulation workflow, adapted to 2D from [an OGS benchmark](https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/).
+First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` [@sullivan2019pyvista] functionality.
+After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An annotated version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html).
+The example is deliberately kept minimal to keep the code listing short. OGSTools handles considerably more elaborate examples (e.g. complex geometries or coupled physical processes), as shown by the OGS benchmarks for the [GREAT cell benchmark suite](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/greatcellm/), [excavation under two-phase flow](https://www.opengeosys.org/6.5.8/docs/benchmarks/th2m/excavation_th2m/), and [Kirsch's problem](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/kirsch/).
 
 ```python
-import numpy as np
 import ogstools as ot
 from ogstools.examples import load_project_simple_lf
 
@@ -183,15 +181,15 @@ The simulation execution part covers running simulations with the `OGS` core via
 
 Post-processing includes domain-specific evaluation and visualisation of simulation results for temporal and spatial distribution analysis, with sensible defaults and OGS-specific standards for plotting, and comparison against experimental data or analytical solutions.
 
-The complete feature list is found in the online documentation [^1].
+The complete feature list is found in the [online documentation](https://ogstools.opengeosys.org).
 Containers are provided for reproducibility, benefiting both developers and users [@Bilke2025].
-Like `OpenGeoSys`, `OGSTools` is available on `PyPI` and `Conda`.
+Like `OpenGeoSys`, `OGSTools` is available via `PyPI` and `conda-forge`.
 
 ## Research impact
 
 ### Workflows
 
-OGSTools emerged from and is used in the following research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2025] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
+OGSTools emerged from and is used in several research projects. The AREHS-Project [@Kahnt2021] is focused on modelling the effects of the glacial cycle on hydro-geological parameters in potential geological nuclear waste repositories in Germany. Within this project, @Zill2024 and @Silbermann2025 conducted their work using automated OGSTools workflows, with all material available at @arehs2024. `OpenWorkFlow` [@lehmann2024] is a project for an open-source, modular synthesis platform designed for safety assessment in the nuclear waste site selection procedure of Germany. `ThEDi`, a completed study on optimal disposal container packing to meet repository temperature limits, is one of multiple studies within `OpenWorkFlow`, mostly implemented using OGSTools.
 
 ### OpenGeoSys benchmarks
 
@@ -199,18 +197,10 @@ The OGS benchmark gallery is a collection of web documents (mostly generated fro
 
 ## Acknowledgements
 
-This work has been supported by multiple funding sources, including `AREHS` under grant 4719F10402 by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `OpenWorkFlow` under grant STAFuE-21-05-Klei by `Bundesgesellschaft für Endlagerung (BGE)`.
-The authors also acknowledge ongoing support from `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under grant 528785032[^6] by `Deutsche Forschungsgemeinschaft` (DFG)
+This work has been supported by multiple funding sources, including `SUTOGS` (Streamlining Usability and Testing of OpenGeoSys) under [grant 528785032](https://gepris.dfg.de/gepris/projekt/528785032) by `Deutsche Forschungsgemeinschaft (DFG)`, `OpenWorkFlow` under [grant STAFuE-21-05-Klei](https://www.bge.de/fileadmin/user_upload/Standortsuche/Forschung/2021-07-06_Steckbrief_Forschungsvorhaben_-_Synthese-Plattform_fuer_Sicherheitsuntersuchungen_im_Standortauswahlverfahren__barrierefrei_.pdf) by `Bundesgesellschaft für Endlagerung (BGE)`, `AREHS` under [grant 4719F10402](https://www.base.bund.de/de/forschung/themenfelder/endlagerung/_documents/arehs.html) by `Bundesamt für die Sicherheit der nuklearen Entsorgung (BASE)`, and `DigBen` under [grant 03G0927A](https://www.projektfoerderung-geo-meeresforschung.de/geowissenschaften/details?action=ShowForm&id=3571) by `Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR)`.
 
 ## AI usage disclosure
 
-In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections. For all contributions to the software project the use of Large Language Models (LLMs) is in principle permitted, but all contributions must pass through a review process by the developers, maintainers, and authors.
-
-[^1]: https://ogstools.opengeosys.org
-[^2]: https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/
-[^3]: https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/
-[^4]: https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html
-[^5]: https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/
-[^6]: https://gepris.dfg.de/gepris/projekt/528785032
+In preparing this manuscript, the authors used Anthropic's Claude and OpenAI's ChatGPT, predominantly for grammar and spelling corrections, which the authors reviewed. For contributions to the software itself, the use of LLMs is permitted. Contributors are currently not required to disclose it; all contributions instead pass through a review process by the developers, maintainers, and authors.
 
 ## References
