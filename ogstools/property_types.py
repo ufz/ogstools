@@ -14,6 +14,7 @@ class PropertyTypeSpec:
 
     parameters: tuple[str, ...]
     metadata_keys: tuple[str, ...] = ("unit", "source")
+    independent_variable_parameters: tuple[str, ...] = ()
 
 
 PROPERTY_TYPES: dict[str, PropertyTypeSpec] = {
@@ -84,7 +85,11 @@ PROPERTY_TYPES: dict[str, PropertyTypeSpec] = {
             "initial_porosity",
         )
     ),
-    "Linear": PropertyTypeSpec(parameters=("reference_value",)),
+    "Linear": PropertyTypeSpec(
+        parameters=("reference_value",),
+        metadata_keys=("unit", "source", "independent_variables"),
+        independent_variable_parameters=("reference_condition", "slope"),
+    ),
     "LinearSaturationSwellingStress": PropertyTypeSpec(
         parameters=(
             "coefficient",

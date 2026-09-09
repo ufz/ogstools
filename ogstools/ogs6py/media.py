@@ -37,8 +37,9 @@ class Media(build_tree.BuildTree):
         for var, param in args["independent_variables"].items():
             ind_var = self.populate_tree(property_, "independent_variable")
             self.populate_tree(ind_var, "variable_name", text=var)
-            attributes = ["reference_condition", "slope"]
-            for attrib in attributes:
+            for attrib in PROPERTY_TYPES[
+                "Linear"
+            ].independent_variable_parameters:
                 self.populate_tree(ind_var, attrib, text=str(param[attrib]))
 
     def _generate_function_property(

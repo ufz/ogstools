@@ -187,6 +187,59 @@ class Material(Mapping[str, MaterialProperty]):
             )
             raise ValueError(msg)
 
+        if type_ == "Linear":
+            independent_variables = metadata.get("independent_variables")
+            if (
+                not isinstance(independent_variables, Mapping)
+                or not independent_variables
+            ):
+                msg = (
+                    f"Material '{material_name}' property '{property_name}' in "
+                    f"domain '{domain_name}' of type 'Linear' must define a "
+                    "non-empty 'independent_variables' mapping."
+                )
+                raise ValueError(msg)
+
+            required_variable_keys = set(spec.independent_variable_parameters)
+            for variable_name, variable in independent_variables.items():
+                if not isinstance(variable_name, str):
+                    msg = (
+                        f"Material '{material_name}' property '{property_name}' "
+                        "has an independent variable name that must be a string, "
+                        f"not {type(variable_name).__name__}."
+                    )
+                    raise ValueError(msg)
+
+                if not isinstance(variable, Mapping):
+                    msg = (
+                        f"Material '{material_name}' property '{property_name}' "
+                        f"independent variable '{variable_name}' must be a "
+                        f"mapping, not {type(variable).__name__}."
+                    )
+                    raise ValueError(msg)
+
+                variable_keys = set(variable)
+                missing_keys = required_variable_keys - variable_keys
+                unknown_keys = variable_keys - required_variable_keys
+                if missing_keys or unknown_keys:
+                    details: list[str] = []
+                    if missing_keys:
+                        details.append(
+                            "missing key(s): " + ", ".join(sorted(missing_keys))
+                        )
+                    if unknown_keys:
+                        details.append(
+                            "unsupported key(s): "
+                            + ", ".join(sorted(unknown_keys))
+                        )
+                    msg = (
+                        f"Material '{material_name}' property '{property_name}' "
+                        f"independent variable '{variable_name}' has "
+                        + "; ".join(details)
+                        + "."
+                    )
+                    raise ValueError(msg)
+
     @staticmethod
     def _parse_parameter_value(value: Any) -> ParameterValue:
         wrapper_keys = {"base_value", "distribution"}
