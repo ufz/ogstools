@@ -230,10 +230,12 @@ class Variable:
         if variable not in all_keys:
             raise KeyError(error_msg)
 
-        if variable in dir(data):
-            data_shape = getattr(mesh, variable).shape
-        else:
+        if variable in data_keys:
             data_shape = mesh[variable].shape
+        elif variable in dir(data):
+            data_shape = getattr(getattr(mesh, variable), "shape", [0])
+        else:
+            raise KeyError(error_msg)
         if len(data_shape) == 1:
             return component(Scalar(variable), suffix)
         subclasses = Variable.__subclasses__()

@@ -330,6 +330,99 @@ class TestMaterialLib:
                 }
             )
 
+    def test_material_parses_linear_property_with_multiple_variables(self):
+        """Linear properties preserve every independent variable."""
+        independent_variables = {
+            "temperature": {"reference_condition": 293.15, "slope": -2e-4},
+            "liquid_phase_pressure": {
+                "reference_condition": 1e5,
+                "slope": 5e-10,
+            },
+            "concentration": {"reference_condition": 0.0, "slope": 0.1},
+        }
+        material = make_material(
+            {
+                "density": {
+                    "type": "Linear",
+                    "reference_value": 1000,
+                    "unit": "kg/m³",
+                    "source": "example",
+                    "independent_variables": independent_variables,
+                }
+            }
+        )
+
+        density = material.medium.property("density")
+
+        assert density.parameters["reference_value"] == ParameterValue(
+            base_value=1000
+        )
+        assert density.extra["independent_variables"] == independent_variables
+        assert density.extra["unit"] == "kg/m³"
+        assert density.extra["source"] == "example"
+
+    @pytest.mark.parametrize(
+        ("linear_property", "match"),
+        [
+            ({"reference_value": 1000}, "must define a non-empty"),
+            (
+                {"reference_value": 1000, "independent_variables": {}},
+                "must define a non-empty",
+            ),
+            (
+                {
+                    "reference_value": 1000,
+                    "independent_variables": {"temperature": 293.15},
+                },
+                "independent variable 'temperature' must be a mapping",
+            ),
+            (
+                {
+                    "reference_value": 1000,
+                    "independent_variables": {"temperature": {"slope": -2e-4}},
+                },
+                "missing key\\(s\\): reference_condition",
+            ),
+            (
+                {
+                    "reference_value": 1000,
+                    "independent_variables": {
+                        "temperature": {"reference_condition": 293.15}
+                    },
+                },
+                "missing key\\(s\\): slope",
+            ),
+            (
+                {
+                    "reference_value": 1000,
+                    "independent_variables": {
+                        "temperature": {
+                            "reference_condition": 293.15,
+                            "slope": -2e-4,
+                            "unit": "K",
+                        }
+                    },
+                },
+                "unsupported key\\(s\\): unit",
+            ),
+            (
+                {
+                    "reference_value": 1000,
+                    "independent_variables": {
+                        1: {"reference_condition": 293.15, "slope": -2e-4}
+                    },
+                },
+                "independent variable name that must be a string",
+            ),
+        ],
+    )
+    def test_material_rejects_invalid_linear_independent_variables(
+        self, linear_property, match
+    ):
+        """Linear independent variables require the XML-supported structure."""
+        with pytest.raises(ValueError, match=match):
+            make_material({"density": {"type": "Linear", **linear_property}})
+
     def test_material_property_names_returns_all_names(self):
         """Material.property_names should return the names of all parsed properties."""
         mat = make_material(

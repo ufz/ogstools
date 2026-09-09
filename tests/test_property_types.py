@@ -9,6 +9,7 @@ def test_property_type_spec_defaults() -> None:
 
     assert spec.parameters == ("value",)
     assert spec.metadata_keys == ("unit", "source")
+    assert spec.independent_variable_parameters == ()
 
 
 def test_property_types_registry_contains_expected_examples() -> None:
@@ -19,6 +20,10 @@ def test_property_types_registry_contains_expected_examples() -> None:
         "p_b",
         "residual_gas_saturation",
         "residual_liquid_saturation",
+    )
+    assert PROPERTY_TYPES["Linear"].independent_variable_parameters == (
+        "reference_condition",
+        "slope",
     )
 
 

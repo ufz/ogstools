@@ -187,6 +187,15 @@ class TestPhysicalVariable:
         darcy = ov.Variable.find("darcy_velocity", mesh)
         assert darcy.data_name in mesh.point_data
 
+    def test_find_variable_prefers_mesh_data_over_attribute(self):
+        """Mesh data wins when its name collides with a mesh attribute."""
+        mesh = examples.load_mesh_mechanics_2D()
+        mesh.point_data["n_cells"] = np.arange(mesh.n_points)
+
+        variable = ov.Variable.find("n_cells", mesh)
+
+        assert all(variable.transform(mesh) == np.arange(mesh.n_points))
+
     def test_copy_ctor(self):
         """Test replace constructor."""
 
