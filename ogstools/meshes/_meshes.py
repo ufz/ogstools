@@ -355,6 +355,7 @@ class Meshes(MutableMapping, StorageBase):
         filename: str | Path,
         domain: str,
         cellsize: float,
+        height_data: np.ndarray | None = None,
         silence_gmsh_log: bool = True,
     ) -> Meshes:
         """Create Meshes by meshing a GeoPackage via gmsh.
@@ -362,7 +363,7 @@ class Meshes(MutableMapping, StorageBase):
         :param filename:            The path of the geopackage
         :param domain:              The name of the layer which corresponds to the domain. This layer must contain all other layers
         :param cellsize:            Maximal size of the cells
-        :param silence_gmsh_log:    if does not print out log from gmsh during meshing
+        :param silence_gmsh_log:    if True does not print out log from gmsh during meshing
         :returns:                   A Meshes object.
         """
         filename = Path(filename)
@@ -375,22 +376,40 @@ class Meshes(MutableMapping, StorageBase):
         ).issubset({"Polygon", "MultiPolygon"}):
             msg = f"{domain} does not exist in {filename} or is no polygon"
             raise ValueError(msg)
+        if height_data is not None and height_data.shape[1] != 3:
+            msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
+            raise ValueError(msg)
         gmsh.initialize()
         if silence_gmsh_log:
             gmsh.option.setNumber("General.Terminal", 0)
+        unique3d = np.unique(
+            pd.concat([layer.geometry.has_z for _, layer in layer_dict.items()])
+        )
+        if len(unique3d) != 1:
+            msg = "Geometries must all be of same dimension!"  # TODO: Write clearer message
+            raise ValueError(msg)
+        is_3d = unique3d[0]
+        if is_3d:
+            coords_3d = pd.concat(
+                [
+                    layer_dict[name].get_coordinates(include_z=True)
+                    for name in layer_dict
+                ],
+                ignore_index=True,
+            ).drop_duplicates(subset=["x", "y", "z"])
+            for name, value in layer_dict.items():
+                layer_dict[name]["geometry"] = value.force_2d()
         coords = pd.concat(
             [
-                layer_dict[name].get_coordinates(include_z=True)
+                layer_dict[name].get_coordinates(include_z=False)
                 for name in layer_dict
             ],
             ignore_index=True,
-        ).drop_duplicates(subset=["x", "y", "z"])
+        ).drop_duplicates(subset=["x", "y"])
         coord_tags = {}
         for point in coords.itertuples():
-            ptid = gmsh.model.geo.add_point(
-                point.x, point.y, 0.0, cellsize
-            )  # TODO: Fix use of z-coordinates
-            coord_tags[(point.x, point.y, point.z)] = ptid
+            ptid = gmsh.model.geo.add_point(point.x, point.y, 0.0, cellsize)
+            coord_tags[(point.x, point.y)] = ptid
         domain_layer = layer_dict.pop(domain)
         line_ids: dict[tuple[int, int], int] = {}
         domain_boundary_ids = []
@@ -448,10 +467,10 @@ class Meshes(MutableMapping, StorageBase):
             elif set(layer["geometry"].geom_type.to_numpy()).issubset(
                 {"Point", "MultiPoint"}
             ):
-                coords = layer.get_coordinates(include_z=True)
+                coords_layer = layer.get_coordinates(include_z=False)
                 point_ids = [
-                    coord_tags[(coordinate.x, coordinate.y, coordinate.z)]
-                    for coordinate in coords.itertuples()
+                    coord_tags[(coordinate.x, coordinate.y)]
+                    for coordinate in coords_layer.itertuples()
                 ]
                 points[name] = point_ids
 
@@ -484,7 +503,6 @@ class Meshes(MutableMapping, StorageBase):
                 msg = "Layer has mixed or disallowed geometry. Allowed geometries are Polygon/Multipolygon, LineString/MultiLine, Point/Multipoint"
                 raise ValueError(msg)
         domain_surface = gmsh.model.geo.addPlaneSurface([1, *poly_bdry_tags])
-        print("Domain tag:", domain_surface)
         gmsh.model.geo.synchronize()
         gmsh.model.addPhysicalGroup(
             2, [domain_surface], name="domain_remove_after_meshing"
@@ -505,6 +523,24 @@ class Meshes(MutableMapping, StorageBase):
             "tmp_mesh_output.msh", log=False, reindex=False
         )
         del meshes["domain_remove_after_meshing"]
+        if is_3d or height_data:
+            from scipy.interpolate import LinearNDInterpolator
+
+            if is_3d and height_data is not None:
+                geom = np.vstack(
+                    (coords_3d[["x", "y", "z"]].to_numpy(), height_data)
+                )
+            elif is_3d:
+                geom = coords_3d[["x", "y", "z"]].to_numpy()
+            else:
+                geom = height_data
+            height_interp = LinearNDInterpolator(
+                geom[:, :2], geom[:, 2], np.nan
+            )
+            for name in meshes:
+                meshes[name].points[:, 2] = height_interp(
+                    meshes[name].points[:, :2]
+                )
         return meshes
 
     def add_gml_subdomains(
