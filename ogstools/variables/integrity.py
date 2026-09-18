@@ -8,11 +8,7 @@ import numpy as np
 from .tensor_math import eigenvalues, mean, octahedral_shear
 
 
-def fluid_pressure_criterion(
-    stress: np.ndarray,
-    pressure: np.ndarray,
-    biot: float = 1.0,
-) -> np.ndarray:
+def fluid_pressure_criterion(effective_stress: np.ndarray) -> np.ndarray:
     """Calculates the maximum effective principal stress.
 
     The fluid pressure criterion is fulfilled when the third principal effective
@@ -23,8 +19,7 @@ def fluid_pressure_criterion(
 
         \\sigma_\\mathrm{III}' =  \\sigma_\\mathrm{III}^\\mathrm{tot} + \\alpha_B \\cdot p_\\mathrm{fl} < 0
     """
-    min_compressive_stress = eigenvalues(stress)[..., 2]
-    return min_compressive_stress + biot * pressure
+    return eigenvalues(effective_stress)[..., 2]
 
 
 def dilatancy_critescu(
