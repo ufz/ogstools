@@ -166,9 +166,7 @@ fluid_pressure_criterion = Scalar(
     output_unit="MPa",
     output_name="fluid_pressure_criterion",
     symbol=r"\sigma_{III}'",
-    func=Function(
-        integrity.fluid_pressure_criterion, ["pressure"], {"biot": 1.0}
-    ),
+    func=integrity.fluid_pressure_criterion,
     mask=M_MASK,
     color=COLOR_MECH,
     cmap=integrity_cmap,
