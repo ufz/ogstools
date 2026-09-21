@@ -15,6 +15,7 @@ import gmsh
 import numpy as np
 import pandas as pd
 import pyvista as pv
+import shapely
 import yaml
 from matplotlib import pyplot as plt
 
@@ -350,192 +351,309 @@ class Meshes(MutableMapping, StorageBase):
         return meshes_obj
 
     @classmethod
-    def from_gpkg(
+    def from_spatial_data(
         cls,
-        filename: str | Path,
-        domain: str,
+        files: str | Path | list[str | Path],
         cellsize: float,
+        domain: str | None = None,
         height_data: np.ndarray | None = None,
         silence_gmsh_log: bool = True,
+        gpkg_crs: str = "EPSG:4326",  # TODO: dynamically determine crs, decide whether to allow mixed crs
     ) -> Meshes:
-        """Create Meshes by meshing a GeoPackage via gmsh.
+        """Create Meshes by meshing spatial data via gmsh.
 
-        :param filename:            The path of the geopackage
-        :param domain:              The name of the layer which corresponds to the domain. This layer must contain all other layers
-        :param cellsize:            Maximal size of the cells
-        :param silence_gmsh_log:    if True does not print out log from gmsh during meshing
+        Every file and every layer within a geopackage corresponds to a submesh of the result
+        The domain of the resulting meshes object will be the union of all polygons in the files.
+
+        :param files:               Path or list of paths of file(s) to be meshed.
+        :param cellsize:            Maximal size of the cells #TODO: Decide whether to allow for automatic determination of cellsizes akin to the old read_shp
+        :param domain:              The name of the layer which corresponds to the domain and for which no submesh should be generated.
+        :param silence_gmsh_log:    if True does not show log from gmsh during meshing
         :returns:                   A Meshes object.
         """
-        filename = Path(filename)
-        layer_dict = {
-            layer: gpd.read_file(filename, layer=layer).explode()
-            for layer in gpd.list_layers(filename)["name"]
-        }
-        if domain not in layer_dict or not set(
-            layer_dict[domain]["geometry"].geom_type.to_numpy()
-        ).issubset({"Polygon", "MultiPolygon"}):
-            msg = f"{domain} does not exist in {filename} or is no polygon"
-            raise ValueError(msg)
+        if not isinstance(files, list):
+            files = [files]
+        layer_dict: dict[str, gpd.GeoDataFrame] = {}
+        for (
+            file
+        ) in (
+            files
+        ):  # TODO: Decide whether and how to deal with duplicate layer names
+            filepath = Path(file)
+            if filepath.suffix == ".gpkg":
+                for layer in gpd.list_layers(filepath)["name"]:
+                    name = (
+                        layer
+                        if layer not in layer_dict
+                        else (
+                            filepath.stem + "_" + layer
+                            if filepath.stem + "_" + layer not in layer_dict
+                            else filepath.name + "_" + layer
+                        )
+                    )
+                    layer_dict[name] = gpd.read_file(
+                        filepath, layer=layer
+                    ).explode()
+            elif filepath.suffix == ".shp":
+                name = (
+                    filepath.stem
+                    if filepath.stem not in layer_dict
+                    else filepath.name
+                )
+                layer_dict[name] = gpd.read_file(filepath).explode()
+            elif filepath.suffix == ".geojson":
+                frame = gpd.read_file(filepath).explode()
+                if frame.geom_type.isin(["Polygon", "MultiPolygon"]).any():
+                    layer_dict[filepath.stem + "_polygons"] = frame[
+                        frame.geom_type.isin(["Polygon", "MultiPolygon"])
+                    ].copy()
+                if frame.geom_type.isin(["LineString", "MultiLine"]).any():
+                    layer_dict[filepath.stem + "_lines"] = frame[
+                        frame.geom_type.isin(["LineString", "MultiLine"])
+                    ].copy()
+                if frame.geom_type.isin(["Point", "MultiPoint"]).any():
+                    layer_dict[filepath.stem + "_points"] = frame[
+                        frame.geom_type.isin(["Point", "MultiPoint"])
+                    ].copy()
+            else:
+                msg = f"Only .gpkg, .shp and .geojson are currently supported, not {filepath.suffix}"
+                raise ValueError(
+                    msg
+                )  # TODO: Decide which types of error are appropriate in which situation
+        # if domain and domain not in layer_dict or not set(
+        #     layer_dict[domain]["geometry"].geom_type.to_numpy()
+        # ).issubset({"Polygon", "MultiPolygon"}):
+        #     msg = f"{domain} does not exist in {files} or is no polygon"
+        #     raise ValueError(msg)
         if height_data is not None and height_data.shape[1] != 3:
             msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
             raise ValueError(msg)
         gmsh.initialize()
         if silence_gmsh_log:
             gmsh.option.setNumber("General.Terminal", 0)
-        unique3d = np.unique(
-            pd.concat([layer.geometry.has_z for _, layer in layer_dict.items()])
+        is_3d = any(
+            layer.geometry.has_z.any() for _, layer in layer_dict.items()
         )
-        if len(unique3d) != 1:
-            msg = "Geometries must all be of same dimension!"  # TODO: Write clearer message
-            raise ValueError(msg)
-        is_3d = unique3d[0]
         if is_3d:
             coords_3d = pd.concat(
                 [
-                    layer_dict[name].get_coordinates(include_z=True)
+                    layer_dict[name][
+                        layer_dict[name].geometry.has_z
+                    ].get_coordinates(include_z=True)
                     for name in layer_dict
                 ],
                 ignore_index=True,
             ).drop_duplicates(subset=["x", "y", "z"])
+            height_data = (
+                np.vstack((coords_3d[["x", "y", "z"]].to_numpy(), height_data))
+                if height_data is not None
+                else coords_3d[["x", "y", "z"]].to_numpy()
+            )
             for name, value in layer_dict.items():
                 layer_dict[name]["geometry"] = value.force_2d()
+        poly_dict = {
+            name: layer
+            for name, layer in layer_dict.items()
+            if set(layer["geometry"].geom_type.to_numpy()).issubset(
+                {"Polygon", "MultiPolygon"}
+            )
+        }
+        no_poly_dict = {
+            name: layer
+            for name, layer in layer_dict.items()
+            if not set(layer["geometry"].geom_type.to_numpy()).issubset(
+                {"Polygon", "MultiPolygon"}
+            )
+        }
+        poly_groups: dict[str, list[int]] = {name: [] for name in poly_dict}
+        dissolved_polys = gpd.GeoDataFrame(
+            geometry=shapely.get_parts(
+                shapely.polygonize(
+                    [
+                        shapely.union_all(
+                            [
+                                polygon.boundary
+                                for _, layer in poly_dict.items()
+                                for polygon in layer["geometry"]
+                            ]
+                        )
+                    ]
+                )
+            ),
+            crs=gpkg_crs,
+        )
+        all_polys = (
+            pd.concat(list(poly_dict.values()), keys=list(poly_dict.keys()))
+            .reset_index(level=0)
+            .rename(columns={"level_0": "phys_group"})
+        )  # TODO: Find a way to guarantee unique column name
+        sj = gpd.GeoDataFrame(
+            gpd.sjoin(
+                left_df=dissolved_polys,
+                right_df=all_polys,
+                how="left",
+                predicate="within",
+            )
+            .groupby("geometry")["phys_group"]
+            .apply(list)
+            .reset_index(),
+            geometry="geometry",
+            crs=gpkg_crs,
+        )
+        # TODO: Maybe don't group by geometry, which seems inelegant (though should at least always be correct)
         coords = pd.concat(
-            [
-                layer_dict[name].get_coordinates(include_z=False)
-                for name in layer_dict
+            [sj.get_coordinates(include_z=False)]
+            + [
+                no_poly_dict[name].get_coordinates(include_z=False)
+                for name in no_poly_dict
             ],
             ignore_index=True,
         ).drop_duplicates(subset=["x", "y"])
-        coord_tags = {}
+        coord_tags: dict[tuple[float, float], int] = {}
         for point in coords.itertuples():
-            ptid = gmsh.model.geo.add_point(point.x, point.y, 0.0, cellsize)
-            coord_tags[(point.x, point.y)] = ptid
-        domain_layer = layer_dict.pop(domain)
+            coord_tags[(point.x, point.y)] = gmsh.model.geo.add_point(
+                point.x, point.y, 0.0, cellsize
+            )
         line_ids: dict[tuple[int, int], int] = {}
-        domain_boundary_ids = []
-        for polygon in domain_layer["geometry"]:
+
+        def gmsh_add_lines(
+            lines: shapely.LineString | shapely.LinearRing,
+            coord_tags: dict[tuple[float, float], int],
+            line_ids: dict[tuple[int, int], int],
+        ) -> tuple[list[int], list[int]]:
+            """TODO: Figure out how to treat negative indices"""
+            result_ids = []
+            new_ids = []
             for start, end in zip(
-                polygon.boundary.coords[:-1],
-                polygon.boundary.coords[1:],
+                lines.coords[:-1],
+                lines.coords[1:],
                 strict=True,
             ):
                 if (coord_tags[start], coord_tags[end]) in line_ids:
-                    domain_boundary_ids.append(
+                    result_ids.append(
                         line_ids[(coord_tags[start], coord_tags[end])]
+                    )
+                elif (coord_tags[end], coord_tags[start]) in line_ids:
+                    result_ids.append(
+                        -line_ids[(coord_tags[end], coord_tags[start])]
                     )
                 else:
                     lnid = gmsh.model.geo.add_line(
                         coord_tags[start], coord_tags[end]
                     )
-                    domain_boundary_ids.append(lnid)
+                    result_ids.append(lnid)
+                    new_ids.append(lnid)
                     line_ids[(coord_tags[start], coord_tags[end])] = lnid
-        gmsh.model.geo.addCurveLoop(domain_boundary_ids, 1)
+            return result_ids, new_ids
+
+        def poly_from_row(row: pd.Series, groups: dict[str, list[int]]) -> int:
+            outer_boundary_ids, _ = gmsh_add_lines(
+                row["geometry"].exterior, coord_tags, line_ids
+            )
+            outer_id = gmsh.model.geo.addCurveLoop(outer_boundary_ids)
+            inner_ids = []
+            for ring in row["geometry"].interiors:
+                ring_ids, _ = gmsh_add_lines(ring, coord_tags, line_ids)
+                inner_ids.append(gmsh.model.geo.addCurveLoop(ring_ids))
+            result = gmsh.model.geo.addPlaneSurface([outer_id, *inner_ids])
+            for name in row["phys_group"]:
+                groups[name].append(result)
+            return result
+
+        poly_ids = dict(
+            zip(
+                sj.index,
+                sj.apply(lambda row: poly_from_row(row, poly_groups), axis=1),
+                strict=True,
+            )
+        )
         points: dict[str, list[int]] = {}
-        lines: dict[str, list[int]] = {}
+        point_embed: dict[int, int] = {}
+        line_embed: dict[int, int] = {}
         lines_groups: dict[str, list[int]] = {}
-        polygons: dict[str, list[int]] = {}
-        poly_bdry_tags = []
-        for name, layer in layer_dict.items():
+        for name, layer in no_poly_dict.items():
             if set(layer["geometry"].geom_type.to_numpy()).issubset(
-                {"Polygon", "MultiPolygon"}
-            ):
-                layer_boundary_ids = []
-                for polygon in layer["geometry"]:
-                    for start, end in zip(
-                        polygon.boundary.coords[:-1],
-                        polygon.boundary.coords[1:],
-                        strict=True,
-                    ):
-                        if (coord_tags[start], coord_tags[end]) in line_ids:
-                            layer_boundary_ids.append(
-                                line_ids[(coord_tags[start], coord_tags[end])]
-                            )
-                        else:
-                            lnid = gmsh.model.geo.add_line(
-                                coord_tags[start], coord_tags[end]
-                            )
-                            layer_boundary_ids.append(lnid)
-                            line_ids[(coord_tags[start], coord_tags[end])] = (
-                                lnid
-                            )
-                layer_loop_tag = gmsh.model.geo.addCurveLoop(layer_boundary_ids)
-                poly_bdry_tags.append(layer_loop_tag)
-                layer_poly_tag = gmsh.model.geo.addPlaneSurface(
-                    [layer_loop_tag]
-                )
-                polygons[name] = layer_poly_tag
-            elif set(layer["geometry"].geom_type.to_numpy()).issubset(
                 {"Point", "MultiPoint"}
             ):
-                coords_layer = layer.get_coordinates(include_z=False)
-                point_ids = [
-                    coord_tags[(coordinate.x, coordinate.y)]
-                    for coordinate in coords_layer.itertuples()
-                ]
+                point_sj = gpd.sjoin(
+                    layer,
+                    dissolved_polys,
+                    how="left",
+                    predicate="within",
+                )
+                coords_layer = point_sj.get_coordinates(include_z=False)
+                point_ids = coords_layer.apply(
+                    lambda row: coord_tags[(row["x"], row["y"])],
+                    axis=1,
+                ).tolist()
                 points[name] = point_ids
-
+                point_embed.update(
+                    dict(
+                        zip(
+                            point_sj.apply(
+                                lambda row: coord_tags[
+                                    (row["geometry"].x, row["geometry"].y)
+                                ],
+                                axis=1,
+                            ),
+                            point_sj.apply(
+                                lambda row: poly_ids[row["index_right"]], axis=1
+                            ),
+                            strict=True,
+                        )
+                    )
+                )
             elif set(layer["geometry"].geom_type.to_numpy()).issubset(
                 {"LineString", "MultiLine"}
             ):
-                lines[name] = []
                 lines_groups[name] = []
-                for line in layer["geometry"]:
-                    for start, end in zip(
-                        line.coords[:-1], line.coords[1:], strict=True
-                    ):
-                        if (coord_tags[start], coord_tags[end]) in line_ids:
-                            cur_tag = line_ids[
-                                (coord_tags[start], coord_tags[end])
-                            ]
-                            lines_groups[name].append(cur_tag)
-                            if cur_tag not in domain_boundary_ids:
-                                lines[name].append(cur_tag)
-                        else:
-                            lnid = gmsh.model.geo.add_line(
-                                coord_tags[start], coord_tags[end]
-                            )
-                            lines[name].append(lnid)
-                            lines_groups[name].append(lnid)
-                            line_ids[(coord_tags[start], coord_tags[end])] = (
-                                lnid
-                            )
+                line_sj = gpd.sjoin(
+                    layer,
+                    sj,
+                    how="left",
+                    predicate="within",
+                ).reset_index()
+                for _, line in line_sj.iterrows():
+                    all_lines, new_lines = gmsh_add_lines(
+                        line["geometry"],
+                        coord_tags=coord_tags,
+                        line_ids=line_ids,
+                    )
+                    line_embed.update(
+                        dict.fromkeys(new_lines, line["index_right"])
+                    )
+                    lines_groups[name] += [abs(line) for line in all_lines]
             else:
                 msg = "Layer has mixed or disallowed geometry. Allowed geometries are Polygon/Multipolygon, LineString/MultiLine, Point/Multipoint"
                 raise ValueError(msg)
-        domain_surface = gmsh.model.geo.addPlaneSurface([1, *poly_bdry_tags])
         gmsh.model.geo.synchronize()
-        gmsh.model.addPhysicalGroup(
-            2, [domain_surface], name="domain_remove_after_meshing"
-        )
-        for _name, line_tags in lines.items():
-            gmsh.model.mesh.embed(1, line_tags, 2, domain_surface)
+        for line, poly in line_embed.items():
+            gmsh.model.mesh.embed(
+                1, [line], 2, poly_ids[poly]
+            )  # TODO: switch axes of line_embed
         for name, line_tags in lines_groups.items():
             gmsh.model.addPhysicalGroup(1, line_tags, name=name)
+        for point, poly in point_embed.items():
+            gmsh.model.mesh.embed(
+                0, [point], 2, poly_ids[poly]
+            )  # TODO: switch axes of point_embed
         for name, point_tags in points.items():
-            gmsh.model.mesh.embed(0, point_tags, 2, domain_surface)
             gmsh.model.addPhysicalGroup(0, point_tags, name=name)
-        for name, poly_tags in polygons.items():
-            gmsh.model.addPhysicalGroup(2, [poly_tags], name=name)
+        for name, poly_tags in poly_groups.items():
+            gmsh.model.addPhysicalGroup(2, poly_tags, name=name)
         gmsh.model.mesh.generate(2)
         gmsh.write("tmp_mesh_output.msh")
         gmsh.finalize()
         meshes = Meshes.from_gmsh(
             "tmp_mesh_output.msh", log=False, reindex=False
         )
-        del meshes["domain_remove_after_meshing"]
-        if is_3d or height_data:
+        if domain is not None:
+            del meshes[domain]
+        if height_data is not None:
             from scipy.interpolate import LinearNDInterpolator
 
-            if is_3d and height_data is not None:
-                geom = np.vstack(
-                    (coords_3d[["x", "y", "z"]].to_numpy(), height_data)
-                )
-            elif is_3d:
-                geom = coords_3d[["x", "y", "z"]].to_numpy()
-            else:
-                geom = height_data
             height_interp = LinearNDInterpolator(
-                geom[:, :2], geom[:, 2], np.nan
+                height_data[:, :2], height_data[:, 2], np.nan
             )
             for name in meshes:
                 meshes[name].points[:, 2] = height_interp(
