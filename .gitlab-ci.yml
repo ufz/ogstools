@@ -14,13 +14,18 @@ variables:
   DOCKER_USER_IMAGE: registry.opengeosys.org/ogs/tools/ogstools/main-3.12-feflow-10.0
   ARTIFACTS_PAGES_URL: https://$CI_PROJECT_ROOT_NAMESPACE.$CI_PAGES_DOMAIN/-/$SUBGROUP_SLUG$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts
 
+default:
+  interruptible: true
+
 workflow:
   rules:
     - if: "$CI_MERGE_REQUEST_LABELS =~ /.*(workflow::paused|ci::skip).*/"
       when: never
     - if: $CI_MERGE_REQUEST_IID
-    - if: $CI_COMMIT_TAG
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH == "ogs/tools/ogstools"'
+    - if: '$CI_COMMIT_TAG || ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH == "ogs/tools/ogstools")'
+      auto_cancel:
+        on_new_commit: none
+        on_job_failure: none
 
 image: $DOCKER_IMAGE
 
