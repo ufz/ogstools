@@ -74,7 +74,7 @@ bibliography: paper.bib
 ## Summary
 
 `OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) — a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media [@bilke_2026_20269146; @kolditz2012opengeosys].
-`OGSTools` [@ogstools2025] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, and examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows. \autoref{fig:graphical-abstract} summarises these capabilities graphically.
+`OGSTools` [@ogstools2025] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions and examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows. \autoref{fig:graphical-abstract} summarises these capabilities graphically.
 
 ## Statement of need
 
@@ -93,13 +93,13 @@ In our scientific research, workflows integrate multiple steps — geological da
 
 ### Educational Jupyter notebooks
 
-OGS is well suited for academic courses and teaching environments. With Jupyter Notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
+OGS is well suited for academic courses and teaching environments. With Jupyter notebooks, students can explore interactive learning environments where they directly modify parameters, material laws, and other influencing factors, and instantly visualise the outcomes. OGSTools reduces the boilerplate and keeps notebooks focused on the learning objective.
 
 ![OGSTools graphical abstract: pre-processing, simulation execution, and post-processing for a single simulation; combining multiple simulations; and application areas.](figures/graphical_abstract.svg){#fig:graphical-abstract width="100%"}
 
 ## State of the field
 
-Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages connect a domain-specific simulator with the data structures and tooling of a general-purpose programming ecosystem (e.g. Python), typically covering pre-processing, execution, and post-processing on a single programmatic platform. OGSTools follows this pattern, in this case with OGS as the simulator.
+Simulator-specific companion libraries have emerged as a recurring pattern across scientific computing domains. These software packages connect a domain-specific simulator with the data structures and tooling of a general-purpose programming ecosystem (e.g., Python), typically covering pre-processing, execution, and post-processing on a single programmatic platform. OGSTools follows this pattern, in this case with OGS as the simulator.
 
 In computational geoscience, several simulators have companion libraries of this kind. FloPy [@Hughes2024] wraps the MODFLOW family of groundwater flow and transport models, supporting model creation, execution, and result analysis. pyGSFLOW [@Larsen2022] provides equivalent functionality for the GSFLOW integrated hydrologic model, and toughio [@Luu2020] covers pre- and post-processing for the TOUGH simulator family. Outside this group, DOLFINx [@Baratta2023] takes a different approach: it exposes FEM assembly and solving directly through a Python API rather than wrapping an external solver.
 
@@ -111,7 +111,7 @@ OGSTools contains only functionality that is explicitly specific to [OpenGeoSys]
 
 Previously, without any centralisation to contribute OGS-specific pre- and postprocessing code, the code base for Python-related tasks in OGS was fragmented, with components often developed for specific use cases and varying degrees of standardisation, quality and maintenance efforts.
 Further, OGSTools enables the transfer of years of experience in maintaining the OGS core [@Bilke2019] to the pre- and post-processing code.
-For the centralised approach, preceding work on `msh2vtu` [@msh2vtu], `ogs6py and VTUInterface` [@Buchwald2021] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
+For the centralised approach, preceding work on `msh2vtu` [@msh2vtu], `ogs6py and VTUinterface` [@Buchwald2021] and further not yet published functionalities have been adapted and integrated into `OGSTools`.
 
 ## Software Design
 
@@ -119,9 +119,9 @@ For the centralised approach, preceding work on `msh2vtu` [@msh2vtu], `ogs6py an
 
 The functionality is grouped thematically into sub-libraries. Beyond general software engineering best practices, the following design principles deserve particular attention.
 
-**Open interfaces to common Python libraries:** Each sub-library either transforms OpenGeoSys specific data into common Python data structures (e.g. PyVista, Pandas, NumPy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
+**Open interfaces to common Python libraries:** Each sub-library either transforms OGS-specific data into common Python data structures (e.g., PyVista, Pandas, NumPy, Matplotlib, Pint), or vice versa. Users can use any subset of the library without lock-in, including when preferring to run OpenGeoSys from the command line.
 
-**Reuse OGS command line tools:** The new functionality combines the [OGS command line tools](https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/) to cover more complex tasks than any single tool can handle alone.
+**Reuse OGS command-line tools:** The new functionality combines the [OGS command-line tools](https://www.opengeosys.org/6.5.8/docs/tools/getting-started/overview/) to cover more complex tasks than any single tool can handle alone.
 
 **Fail loudly:** Silently producing wrong results is the highest risk in our simulation workflows. OGSTools therefore raises errors immediately when constraints or plausibility checks are violated, prioritising early failure over silent pass-through.
 
@@ -134,7 +134,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 The following example shows a complete [`OGS` Liquid Flow](https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/) simulation workflow, adapted to 2D from [an OGS benchmark](https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/).
 First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` [@sullivan2019pyvista] functionality.
 After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An annotated version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.2/auto_examples/howto_quickstart/plot_framework.html).
-The example is deliberately kept minimal to keep the code listing short. OGSTools handles considerably more elaborate examples (e.g. complex geometries or coupled physical processes), as shown by the OGS benchmarks for the [GREAT cell benchmark suite](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/greatcellm/), [excavation under two-phase flow](https://www.opengeosys.org/6.5.8/docs/benchmarks/th2m/excavation_th2m/), and [Kirsch's problem](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/kirsch/).
+The example is deliberately kept minimal to keep the code listing short. OGSTools handles considerably more elaborate examples (e.g., complex geometries or coupled physical processes), as shown by the OGS benchmarks for the [GREAT cell benchmark suite](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/greatcellm/), [excavation under two-phase flow](https://www.opengeosys.org/6.5.8/docs/benchmarks/th2m/excavation_th2m/), and [Kirsch's problem](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/kirsch/).
 
 ```python
 import ogstools as ot
@@ -193,7 +193,7 @@ OGSTools emerged from and is used in several research projects. The AREHS-Projec
 
 ### OpenGeoSys benchmarks
 
-The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter Notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point of research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication have been reduced, allowing especially inexperienced users to focus on the important part of the notebook.
+The OGS benchmark gallery is a collection of web documents (mostly generated from `Jupyter notebooks`) that demonstrate how users can set up, adjust, execute, and analyse simulations. They are well-suited as a starting point for research, and can be downloaded, executed, and adapted interactively. With `OGSTools`, code complexity and code duplication have been reduced, allowing especially inexperienced users to focus on the important part of the notebook.
 
 ## Acknowledgements
 
