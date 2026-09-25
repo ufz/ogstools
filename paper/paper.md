@@ -73,7 +73,7 @@ bibliography: paper.bib
 
 ## Summary
 
-`OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) — a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media [@bilke_2025_14672997; @kolditz2012opengeosys].
+`OGSTools` (`OpenGeoSys` Tools) is a Python library for pre- and post-processing of `OpenGeoSys 6` (OGS) — a software package for simulating \mbox{thermo-hydro-mechanical-chemical} (THMC) processes in porous and fractured media [@bilke_2026_20269146; @kolditz2012opengeosys].
 `OGSTools` [@ogstools2025] provides an interface between OGS-specific data and well-established data structures of the Python ecosystem, as well as domain-specific solutions, and examples for OGS users and developers. The library's functionalities are designed to be used in the OGS benchmark gallery, the OGS test suite, and for automating repetitive tasks in the model development cycle — from simple daily tasks to complex automated workflows. \autoref{fig:graphical-abstract} summarises these capabilities graphically.
 
 ## Statement of need
@@ -133,7 +133,7 @@ The functionality is grouped thematically into sub-libraries. Beyond general sof
 
 The following example shows a complete [`OGS` Liquid Flow](https://www.opengeosys.org/6.5.8/docs/processes/liquid-flow/liquidflow/) simulation workflow, adapted to 2D from [an OGS benchmark](https://www.opengeosys.org/6.5.8/docs/benchmarks/liquid-flow/primary-variable-constrain-dirichlet-boundary-condition/).
 First, an OGS-capable mesh is generated and pressure boundary conditions are assigned to the boundary meshes (\autoref{fig:bc}), using standard `PyVista` [@sullivan2019pyvista] functionality.
-After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An annotated version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.1/auto_examples/howto_quickstart/plot_framework.html).
+After execution of the simulation, convergence metrics (\autoref{fig:convergence}) and the final pressure distribution (\autoref{fig:pressure}) are visualised. An annotated version of this example is available in the [OGSTools documentation](https://ogstools.opengeosys.org/0.8.2/auto_examples/howto_quickstart/plot_framework.html).
 The example is deliberately kept minimal to keep the code listing short. OGSTools handles considerably more elaborate examples (e.g. complex geometries or coupled physical processes), as shown by the OGS benchmarks for the [GREAT cell benchmark suite](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/greatcellm/), [excavation under two-phase flow](https://www.opengeosys.org/6.5.8/docs/benchmarks/th2m/excavation_th2m/), and [Kirsch's problem](https://www.opengeosys.org/6.5.8/docs/benchmarks/small-deformations/kirsch/).
 
 ```python
