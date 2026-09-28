@@ -353,7 +353,12 @@ class Meshes(MutableMapping, StorageBase):
     @classmethod
     def from_spatial_data(
         cls,
-        files: str | Path | list[str | Path],
+        files: (
+            Path
+            | str
+            | gpd.GeoDataFrame
+            | list[str | Path | gpd.GeoDataFrame | tuple[str, gpd.GeoDataFrame]]
+        ),
         cellsize: float,
         domain: str | None = None,
         height_data: np.ndarray | None = None,
@@ -374,52 +379,56 @@ class Meshes(MutableMapping, StorageBase):
         if not isinstance(files, list):
             files = [files]
         layer_dict: dict[str, gpd.GeoDataFrame] = {}
-        for (
-            file
-        ) in (
-            files
-        ):  # TODO: Decide whether and how to deal with duplicate layer names
-            filepath = Path(file)
-            if filepath.suffix == ".gpkg":
-                for layer in gpd.list_layers(filepath)["name"]:
-                    name = (
-                        layer
-                        if layer not in layer_dict
-                        else (
-                            filepath.stem + "_" + layer
-                            if filepath.stem + "_" + layer not in layer_dict
-                            else filepath.name + "_" + layer
-                        )
-                    )
-                    layer_dict[name] = gpd.read_file(
-                        filepath, layer=layer
-                    ).explode()
-            elif filepath.suffix == ".shp":
-                name = (
-                    filepath.stem
-                    if filepath.stem not in layer_dict
-                    else filepath.name
-                )
-                layer_dict[name] = gpd.read_file(filepath).explode()
-            elif filepath.suffix == ".geojson":
-                frame = gpd.read_file(filepath).explode()
-                if frame.geom_type.isin(["Polygon", "MultiPolygon"]).any():
-                    layer_dict[filepath.stem + "_polygons"] = frame[
-                        frame.geom_type.isin(["Polygon", "MultiPolygon"])
-                    ].copy()
-                if frame.geom_type.isin(["LineString", "MultiLine"]).any():
-                    layer_dict[filepath.stem + "_lines"] = frame[
-                        frame.geom_type.isin(["LineString", "MultiLine"])
-                    ].copy()
-                if frame.geom_type.isin(["Point", "MultiPoint"]).any():
-                    layer_dict[filepath.stem + "_points"] = frame[
-                        frame.geom_type.isin(["Point", "MultiPoint"])
-                    ].copy()
+        gdf = 1
+        for file in files:
+            # TODO: Decide whether and how to deal with duplicate layer names
+            if isinstance(file, gpd.GeoDataFrame):
+                layer_dict[f"frame_{gdf}"] = file
+                gdf += 1
+            elif isinstance(file, tuple):
+                layer_dict[file[0]] = file[1]
             else:
-                msg = f"Only .gpkg, .shp and .geojson are currently supported, not {filepath.suffix}"
-                raise ValueError(
-                    msg
-                )  # TODO: Decide which types of error are appropriate in which situation
+                filepath = Path(file)
+                if filepath.suffix == ".gpkg":
+                    for layer in gpd.list_layers(filepath)["name"]:
+                        name = (
+                            layer
+                            if layer not in layer_dict
+                            else (
+                                filepath.stem + "_" + layer
+                                if filepath.stem + "_" + layer not in layer_dict
+                                else filepath.name + "_" + layer
+                            )
+                        )
+                        layer_dict[name] = gpd.read_file(
+                            filepath, layer=layer
+                        ).explode()
+                elif filepath.suffix == ".shp":
+                    name = (
+                        filepath.stem
+                        if filepath.stem not in layer_dict
+                        else filepath.name
+                    )
+                    layer_dict[name] = gpd.read_file(filepath).explode()
+                elif filepath.suffix == ".geojson":
+                    frame = gpd.read_file(filepath).explode()
+                    if frame.geom_type.isin(["Polygon", "MultiPolygon"]).any():
+                        layer_dict[filepath.stem + "_polygons"] = frame[
+                            frame.geom_type.isin(["Polygon", "MultiPolygon"])
+                        ].copy()
+                    if frame.geom_type.isin(["LineString", "MultiLine"]).any():
+                        layer_dict[filepath.stem + "_lines"] = frame[
+                            frame.geom_type.isin(["LineString", "MultiLine"])
+                        ].copy()
+                    if frame.geom_type.isin(["Point", "MultiPoint"]).any():
+                        layer_dict[filepath.stem + "_points"] = frame[
+                            frame.geom_type.isin(["Point", "MultiPoint"])
+                        ].copy()
+                else:
+                    msg = f"Only .gpkg, .shp and .geojson are currently supported, not {filepath.suffix}. To mesh other file types read into geodataframe first."
+                    raise ValueError(
+                        msg
+                    )  # TODO: Decide which types of error are appropriate in which situation
         # if domain and domain not in layer_dict or not set(
         #     layer_dict[domain]["geometry"].geom_type.to_numpy()
         # ).issubset({"Polygon", "MultiPolygon"}):
@@ -487,6 +496,10 @@ class Meshes(MutableMapping, StorageBase):
             .reset_index(level=0)
             .rename(columns={"level_0": "phys_group"})
         )  # TODO: Find a way to guarantee unique column name
+        dissolved_polys["rep_point"] = (
+            dissolved_polys.geometry.representative_point()
+        )
+        dissolved_polys.set_geometry("rep_point", inplace=True)
         sj = gpd.GeoDataFrame(
             gpd.sjoin(
                 left_df=dissolved_polys,
@@ -494,13 +507,13 @@ class Meshes(MutableMapping, StorageBase):
                 how="left",
                 predicate="within",
             )
-            .groupby("geometry")["phys_group"]
-            .apply(list)
-            .reset_index(),
+            .groupby(level=0)
+            .agg({"geometry": "first", "phys_group": list})
+            .reset_index(drop=True),
             geometry="geometry",
             crs=gpkg_crs,
         )
-        # TODO: Maybe don't group by geometry, which seems inelegant (though should at least always be correct)
+        dissolved_polys.set_geometry("geometry", inplace=True)
         coords = pd.concat(
             [sj.get_coordinates(include_z=False)]
             + [
