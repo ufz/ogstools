@@ -735,25 +735,39 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # TODO: read time steps from fn string if available
         return np.arange(len(self.timevalues), dtype=int)
 
-    def _xdmf_values(self, variable_name: str) -> np.ndarray:
-        dataitem = self._xdmf_reader.data_items[variable_name]
+    def _xdmf_values(
+        self, variable_name: str, ids: int | list[int] | slice = slice(None)
+    ) -> np.ndarray:
+        dataitems = self._xdmf_reader.data_items[variable_name]
         # pv filters produces these arrays, which we can use for slicing
         # to also reflect the previous use of self.transform here
         mask_map = {
-            "vtkOriginalPointIds": self.mesh(0).point_data,
-            "vtkOriginalCellIds": self.mesh(0).cell_data,
+            "vtkOriginalPointIds": self.point_data,
+            "vtkOriginalCellIds": self.cell_data,
         }
-        time_indices = self._time_indices[0]
+        indices_inner = self._time_indices[0].indices(
+            self._xdmf_reader.num_steps
+        )
+        num_timesteps = self._xdmf_reader.num_steps
+        for n in self._time_indices[1:]:
+            indices_outer = n.indices(num_timesteps)
+            indices_inner = (
+                indices_inner[0] + indices_inner[2] * indices_outer[0],
+                indices_outer[1] * indices_inner[2] + indices_inner[0],
+                indices_inner[2] * indices_outer[2],
+            )
+            num_timesteps = (
+                abs(indices_outer[1] - indices_outer[0])
+                // abs(indices_outer[2])
+                + 1
+            )
+        timeslice = slice(indices_inner[0], indices_inner[1], indices_inner[2])
         for mask, data in mask_map.items():
             if variable_name in data and mask in data:
-                mesh_indices = self.mesh(0)[mask]
+                result = dataitems[timeslice, self[mask][ids]]
                 break
         else:
-            mesh_indices = slice(None)
-        result = dataitem[time_indices, mesh_indices]
-
-        for index in self._time_indices[1:]:
-            result = result[index]
+            result = dataitems[timeslice, ids]
         if self._mesh_func_opt is not None and not any(
             mask in data for mask, data in mask_map.items()
         ):
@@ -771,13 +785,23 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return result
 
     @overload
-    def values(self, variable: str | Variable) -> np.ndarray: ...
+    def values(
+        self,
+        variable: str | Variable,
+        ids: int | list[int] | slice = slice(None),
+    ) -> np.ndarray: ...
 
     @overload
-    def values(self, variable: list[str | Variable]) -> list[np.ndarray]: ...
+    def values(
+        self,
+        variable: list[str | Variable],
+        ids: int | list[int] | slice = slice(None),
+    ) -> list[np.ndarray]: ...
 
     def values(
-        self, variable: str | Variable | list[str | Variable]
+        self,
+        variable: str | Variable | list[str | Variable],
+        ids: int | list[int] | slice = slice(None),
     ) -> np.ndarray | list[np.ndarray]:
         """
         Get the data in the MeshSeries for all timesteps.
@@ -789,6 +813,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         :param variable:    Data to read/process from the MeshSeries. Can also
                             be a list of str or Variable.
+        :param ids:         If given, will only return values at specified
+                            point/cell ids. If None, returns all values
 
         :returns:   A numpy array of shape (n_timesteps, n_points/c_cells).
                     If given an argument of type Variable is given, its
@@ -797,10 +823,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     is returned.
         """
         if isinstance(variable, list):
-            return [self._values(var) for var in variable]
-        return self._values(variable)
+            return [self._values(var, ids) for var in variable]
+        return self._values(variable, ids)
 
-    def _values(self, variable: str | Variable) -> np.ndarray:
+    def _values(
+        self,
+        variable: str | Variable,
+        ids: int | list[int] | slice = slice(None),
+    ) -> np.ndarray:
         if isinstance(variable, Variable):
             if (
                 variable.data_name != variable.output_name
@@ -823,7 +853,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             and variable_name in self._xdmf_reader.data_items
             and not all_cached
         ):
-            result = self._xdmf_values(variable_name)
+            result = self._xdmf_values(variable_name, ids)
         else:
             from tqdm import tqdm
 
@@ -832,7 +862,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     mesh[variable_name]
                     for mesh in (self if all_cached else tqdm(self))
                 ]
-            )
+            )[ids]
         if isinstance(variable, Variable) and do_transform:
             return variable.transform(self)
         return result
@@ -1080,7 +1110,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def probe_values(
         self,
-        points: np.ndarray | list,
+        points: np.ndarray | int | list[np.ndarray] | list[int],
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
@@ -1090,11 +1120,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         Similar to :func:`~ogstools.MeshSeries.probe` but returns the
         data directly instead of creating a new MeshSeries.
 
-        For single probings (in particular for MeshSeries generated from
-        .xdmf files) use :func:`~ogstools.MeshSeries.probe_values_file`
-        for improved performance
-
-        :param points:          The observation points to sample at.
+        :param points:          The observation points to sample at. These can
+                                be provided as coordinates or ids (i.e. integers).
+                                If ids are given they are assumed to match
+                                data_type (i.e. the ids are treated as point ids
+                                if probing for point data and cell ids if probing
+                                for cell data) #TODO: maybe rename points if these might be cells
         :param data_name:       Data to sample. If provided as a Variable, the
                                 output will transformed accordingly. Can also be
                                 a list of str or Variable.
@@ -1116,145 +1147,85 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
-        need_interpolation = False
         if (
-            isinstance(data_name, list)
-            and any(key in self.point_data for key in data_name)
-        ) or data_name in self.point_data:
-            probe_data_type = "point data"
-        else:
-            probe_data_type = "cell data"
-            # Getting cell_data values at a point requires interpolation in any case
-            need_interpolation = True
-        pts = reshape_obs_points(points, self.mesh(0))
-        data = self.data(data_name)
-        timeslice = slice(None)
-        if self._data_type == ".xdmf":
-            indices_inner = timeslice.indices(self._xdmf_reader.num_steps)
-            num_timesteps = self._xdmf_reader.num_steps
-            for n in self._time_indices:
-                indices_outer = n.indices(num_timesteps)
-                indices_inner = (
-                    indices_inner[0] + indices_inner[2] * indices_outer[0],
-                    indices_outer[1] * indices_inner[2] + indices_inner[0],
-                    indices_inner[2] * indices_outer[2],
-                )
-                num_timesteps = (
-                    abs(indices_outer[1] - indices_outer[0])
-                    // abs(indices_outer[2])
-                    + 1
-                )
-            timeslice = slice(
-                indices_inner[0], indices_inner[1], indices_inner[2]
+            isinstance(points, list)
+            and any(isinstance(p, int) for p in points)
+            and not all(isinstance(p, int) for p in points)
+        ):
+            msg = (
+                "Cannot assign points by index and coordinates simultaneously."
             )
-        geom_ids = []
-        if probe_data_type == "point data":
-            for point in pts:
-                if np.array_equal(
-                    point, self[0].points[self[0].find_closest_point(point)]
-                ):
-                    geom_ids.append(self[0].find_closest_point(point))
-                else:
-                    # if any of the probed points is not already a point of the mesh, its values need to be interpolated from the vertices of its containing cell
-                    need_interpolation = True
-                    if self[0].find_containing_cell(point) != -1:
-                        geom_ids += (
-                            self[0]
-                            .get_cell(self[0].find_containing_cell(point))
-                            .point_ids
-                        )
-                    else:
-                        # if any of the probed points is neither a point of the mesh nor within a cell, fall back on interpolating over all points of the mesh
-                        geom_ids = list(range(self[0].n_points))
-                        break
-        else:
-            for point in pts:
-                containing_id = self[0].find_containing_cell(point)
-                geom_ids.append(containing_id)
-                geom_ids += self[0].cell_neighbors(containing_id)
-        geom_ids = sorted(set(geom_ids))
-        if isinstance(data, list):
-            values = []
-            for dataitem in data:
-                values.append(dataitem[timeslice, geom_ids])
-        else:
-            values = data[timeslice, geom_ids]
-        if need_interpolation:
-            if isinstance(data_name, list):
-                components = [
-                    1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
-                ]
-                values = np.moveaxis(self._flatten_vectors(values), 0, -1)
-            values = np.swapaxes(values, 0, 1)
-            if probe_data_type == "point data":
-                geom = [self[0].points[id] for id in geom_ids]
-            else:
-                geom = self[0].cell_centers().points[geom_ids]
-            flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
-            geom = np.delete(geom, flat_axis, 1)
-            pts = np.delete(pts, flat_axis, 1)
-            more_than_1d = self.dim > 1 or len(flat_axis) < 2
-            match more_than_1d, interp_method:
-                case True, "nearest":
+            raise TypeError(msg)
+        is_ids = isinstance(points, int) or (
+            isinstance(points, list) and any(isinstance(p, int) for p in points)
+        )
+        if is_ids:
+            return self.values(data_name, points)
+        pts = reshape_obs_points(points, self.mesh(0))
+        values = self.values(data_name)
+        if isinstance(data_name, list):
+            components = [
+                1 if arr.ndim == 2 else np.shape(arr)[-1] for arr in values
+            ]
+            values = np.moveaxis(self._flatten_vectors(values), 0, -1)
+        values = np.swapaxes(values, 0, 1)
+        geom = self.mesh(0).points
+        is_cell_data = (
+            isinstance(data_name, list)
+            and any(key in self.cell_data for key in data_name)
+        ) or data_name in self.cell_data
+        if is_cell_data:
+            geom = self.mesh(0).cell_centers().points
+
+        # remove flat dimensions for interpolation
+        flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
+        geom = np.delete(geom, flat_axis, 1)
+        pts = np.delete(pts, flat_axis, 1)
+        dim = self.mesh(0).GetMaxSpatialDimension()
+        more_than_1d = dim > 1 or len(flat_axis) < 2
+
+        match more_than_1d, interp_method:
+            case True, "nearest":
+                from scipy.interpolate import NearestNDInterpolator
+
+                result = np.swapaxes(
+                    NearestNDInterpolator(geom, values)(pts), 0, 1
+                )
+            case True, "linear":
+                from scipy.interpolate import LinearNDInterpolator
+
+                result = np.swapaxes(
+                    LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
+                )
+                if is_cell_data and np.any(np.isnan(result)):
+                    # Probing cell_data with the linear interpolation method
+                    # near the boundary can yield nan values, as the cell
+                    # centers are used as the geometry for interpolation.
+                    # In that case we use nearest interpolation as a remedy.
                     from scipy.interpolate import NearestNDInterpolator
 
-                    result = np.swapaxes(
+                    result[np.isnan(result)] = np.swapaxes(
                         NearestNDInterpolator(geom, values)(pts), 0, 1
-                    )
-                case True, "linear":
-                    from scipy.interpolate import LinearNDInterpolator
+                    )[np.isnan(result)]
+            case False, kind:
+                from scipy.interpolate import interp1d
 
-                    result = np.swapaxes(
-                        LinearNDInterpolator(geom, values, np.nan)(pts), 0, 1
-                    )
-                    if probe_data_type == "cell data" and np.any(np.isnan(result)):
-                        # Probing cell_data with the linear interpolation method
-                        # near the boundary can yield nan values, as the cell
-                        # centers are used as the geometry for interpolation.
-                        # In that case we use nearest interpolation as a remedy.
-                        from scipy.interpolate import NearestNDInterpolator
-    
-                        result[np.isnan(result)] = np.swapaxes(
-                            NearestNDInterpolator(geom, values)(pts), 0, 1
-                        )[np.isnan(result)]
-                case False, kind:
-                    from scipy.interpolate import interp1d
+                result = interp1d(geom[:, 0], values.T, kind=kind)(
+                    np.squeeze(pts, 1)
+                )
+            case _, _:
+                msg = (
+                    "No interpolation method implemented for mesh of "
+                    f"{dim=} and {interp_method=}"
+                )
+                raise TypeError(msg)
 
-                    result = interp1d(geom[:, 0], values.T, kind=kind)(
-                        np.squeeze(pts, 1)
-                    )
-                case _, _:
-                    msg = (
-                        "No interpolation method implemented for mesh of "
-                        f"{self.dim=} and {interp_method=}"
-                    )
-                    raise TypeError(msg)
-            if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
-                result = np.squeeze(result, axis=1)
-            if isinstance(data_name, list):
-                if more_than_1d:
-                    result = np.moveaxis(result, -1, 0)
-                result = self._restore_vectors(result, components)
-        else:
-            result = values
-            if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
-                result = np.squeeze(result, axis=1)
+        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+            result = np.squeeze(result, axis=1)
         if isinstance(data_name, list):
-            for index, dataname in enumerate(data_name):
-                if isinstance(dataname, Variable) and not (
-                    dataname.mesh_dependent
-                    and dataname.data_name != dataname.output_name
-                    and dataname.output_name
-                    in set().union(self.point_data, self.cell_data)
-                ):
-                    result[index] = dataname.transform(result[index])
-        elif isinstance(data_name, Variable) and not (
-            data_name.mesh_dependent
-            and data_name.data_name != data_name.output_name
-            and data_name.output_name
-            in set().union(self.point_data, self.cell_data)
-        ):
-            result = data_name.transform(result)
+            if more_than_1d:
+                result = np.moveaxis(result, -1, 0)
+            result = self._restore_vectors(result, components)
         return result
 
     @copy_function_signature(line)

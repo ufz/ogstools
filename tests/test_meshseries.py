@@ -387,6 +387,15 @@ def test_probe_2D_mesh():
     _check_probe(ms, points)
 
 
+def test_probe_xdmf_ids():
+    ms = examples.load_meshseries_HT_2D_XDMF()
+    ids = [2, 22, 135]
+    result_id = ms.probe_values(ids, "pressure")
+    coordinates = ms[0].points[ids]
+    result_coordinates = ms.probe_values(coordinates, "pressure")
+    np.testing.assert_allclose(result_id, result_coordinates)
+
+
 def test_probe_1D_mesh():
     "Test point probing on a 1D meshseries."
     ms = examples.load_meshseries_HT_2D_XDMF()
