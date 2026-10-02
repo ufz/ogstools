@@ -61,9 +61,15 @@ def heatmap(
     ax.grid(which="minor", color="0.95", linestyle="--")
     ax.minorticks_on()
     vals = variable.magnitude.transform(data)
+    log_scaled_with_zero = False
     if log_scaled:
         vals = data.copy()
         vals[vals > 0.0] = np.log10(vals[vals > 0.0])
+        if 0.0 in vals:
+            log_scaled_with_zero = True
+            minval = float(np.nanmin(vals[vals != 0.0]))
+            val0 = minval - 1 if minval.is_integer() else np.floor(minval)
+            vals[vals == 0.0] = val0
     else:
         vals = data
     vmin = kwargs.get("vmin", np.nanmin(vals))
@@ -76,9 +82,10 @@ def heatmap(
     ax.pcolormesh(x_vals, y_vals, vals, cmap=cmap, norm=norm, zorder=100)
     add_colorbars(fig, ax, variable, levels, cb_pad=0.02)
     if log_scaled:
-        log_y_labels = [
-            rf"$10^{{{t.get_text()}}}$" for t in fig.axes[-1].get_yticklabels()
-        ]
+        labels = fig.axes[-1].get_yticklabels()
+        log_y_labels = [rf"$10^{{{t.get_text()}}}$" for t in labels]
+        if log_scaled_with_zero:
+            log_y_labels[0] = r"$0.0$"
         fig.axes[-1].set_yticklabels(log_y_labels)
     update_font_sizes(fig.axes, kwargs.get("fontsize", 32))
     aspect_factor = np.ptp(x_vals) / np.ptp(y_vals)

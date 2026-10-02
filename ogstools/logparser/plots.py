@@ -131,10 +131,15 @@ def plot_convergence(
     errors = errors_per_ts_iteration(df, metric)
     x_vals, x_ticks = _x_data(df, x_metric, errors.shape[1])
     y_ticks = range(errors.shape[0])
-    names = {"dx": "absolute error", "dx_x": "relative error", "x": "residual"}
-    symbol = str(metric).replace("_", " / ")
-    err_var = Scalar(names[metric], cmap="viridis", symbol=symbol)
-    kwargs.setdefault("log_scaled", True)
+    names = {
+        "dx": "absolute error",
+        "dx_x": "relative error",
+        "x": "solution vector norm",
+    }
+    symbols = {"dx": r"\Delta x", "dx_x": r"\Delta x / |x|", "x": "|x|"}
+    err_var = Scalar(names[metric], cmap="viridis", symbol=symbols[metric])
+    if np.ptp(np.log10(errors[errors > 0])) >= 2:
+        kwargs.setdefault("log_scaled", True)
     res = heatmap(errors, err_var, x_vals=x_vals, **kwargs)
     fig: plt.Figure = kwargs.get("fig", res)
     ax = kwargs.get("ax", fig.axes[0])
