@@ -235,7 +235,7 @@ def line(
             msg = "Plotting CellData for interrupted lines currently not supported! Convert CellData to PointData to use this function."
             raise ValueError(msg)
         for cell_id, linestrip in enumerate(strip.cell):
-            sort_ids = strip.cell_data.get("vtkOriginalPointIds", orig_ids)[
+            sort_ids = strip.point_data.get("vtkOriginalPointIds", orig_ids)[
                 linestrip.point_ids
             ]
             label = kwargs.get("label") if cell_id == 0 else None
