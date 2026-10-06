@@ -25,7 +25,6 @@ from ogstools.plot.lineplots import line
 from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 
 from .data_dict import DataDict
-from .xdmf_reader import DataItems
 
 
 class PVDDataItems:
@@ -145,7 +144,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        self.dim = self.mesh(0).GetMaxSpatialDimension()
 
     @classmethod
     def from_data(
@@ -162,7 +160,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         new_ms._mesh_cache.update(
             dict(zip(new_ms.timevalues, deepcopy(meshes), strict=True))
         )
-        new_ms.dim = meshes[0].GetMaxSpatialDimension()
         return new_ms
 
     @classmethod
@@ -468,67 +465,60 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         )
 
     @overload
-    def data(self, variable: str | Variable) -> DataItems | PVDDataItems: ...
+    def _data(
+        self, variable: list[str | Variable], points: int | list[int]
+    ) -> list[np.ndarray]: ...
 
     @overload
-    def data(
-        self, variable: list[str | Variable]
-    ) -> list[DataItems | PVDDataItems]: ...
+    def _data(
+        self, variable: str | Variable, points: int | list[int]
+    ) -> np.ndarray | None: ...
 
-    def data(
-        self, variable: str | Variable | list[str | Variable]
-    ) -> DataItems | PVDDataItems | list[DataItems | PVDDataItems]:
-        """
-        Returns a DataItems object, that allows array indexing or a list of DataItems.
-        To get "geometry"/"points" or "topology"/"cells" read the first time step and use
-        pyvista functionality
-        Selection example:
-        ms = MeshSeries()
-        temp = ms.data("temperature")
-        time_step1_temps = temp[1,:]
-        temps_at_some_points = temp[:,1:3]
-        :param variable: the variables either as ot.Variable or as string of the variable name (e.g."temperature") or a list of the previous
-        :returns:   Returns an object that allows array indexing or a list of these objects.
-        """
+    def _data(
+        self,
+        variable: str | Variable | list[str | Variable],
+        points: int | list[int],
+    ) -> np.ndarray | list[np.ndarray] | None:
         if isinstance(variable, list):
-            return [self._data(var) for var in variable]
-        return self._data(variable)
-
-    def _data(self, variable: str | Variable) -> DataItems | PVDDataItems:
+            result = [self._data(var, points) for var in variable]
+            if all(item is not None for item in result):
+                return result
+            return None
         if isinstance(variable, Variable):
-            if variable.mesh_dependent:
-                return PVDDataItems(
-                    np.asarray([variable.transform(mesh) for mesh in self])
-                )
             if (
                 variable.data_name != variable.output_name
-                and variable.output_name
-                in set().union(self.point_data, self.cell_data)
+                and variable.output_name in self._xdmf_reader.data_items
             ):
                 variable_name = variable.output_name
             else:
                 variable_name = variable.data_name
         else:
             variable_name = variable
-
+        indices_inner = self._time_indices[0].indices(
+            self._xdmf_reader.num_steps
+        )
+        num_timesteps = self._xdmf_reader.num_steps
+        for n in self._time_indices[1:]:
+            indices_outer = n.indices(num_timesteps)
+            indices_inner = (
+                indices_inner[0] + indices_inner[2] * indices_outer[0],
+                indices_outer[1] * indices_inner[2] + indices_inner[0],
+                indices_inner[2] * indices_outer[2],
+            )
+            num_timesteps = (
+                abs(indices_outer[1] - indices_outer[0])
+                // abs(indices_outer[2])
+                + 1
+            )
+        timeslice = slice(indices_inner[0], indices_inner[1], indices_inner[2])
         if (
             self._data_type == ".xdmf"
             and variable_name in self._xdmf_reader.data_items
         ):
-            return self._xdmf_reader.data_items[variable_name]
-        # for pvd and vtu check if data is already read or construct it
-        if self._dataitems and self._dataitems[variable_name]:
-            return self._dataitems[variable_name]
-
-        all_meshes = [self.mesh(i) for i in self.timesteps]
-
-        dataitems = self._structure_dataitems(all_meshes)
-        # Lazy dataitems
-        self._dataitems = {
-            key: PVDDataItems(np.asarray(value))
-            for key, value in dataitems.items()
-        }
-        return self._dataitems[variable_name]
+            return self._xdmf_reader.data_items[variable_name][
+                timeslice, points
+            ]
+        return None
 
     def _structure_dataitems(
         self, all_meshes: list[pv.UnstructuredGrid]
@@ -734,6 +724,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         # TODO: read time steps from fn string if available
         return np.arange(len(self.timevalues), dtype=int)
+
+    @property
+    def dim(self) -> int:
+        return self.mesh(0).GetMaxSpatialDimension()
 
     def _xdmf_values(
         self, variable_name: str, ids: int | list[int] | slice = slice(None)
@@ -1160,7 +1154,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             isinstance(points, list) and any(isinstance(p, int) for p in points)
         )
         if is_ids:
-            return self.values(data_name, points)
+            results = self._data(data_name, points)
+            if results is not None:
+                return results
+            points = self[0].points[points]
         pts = reshape_obs_points(points, self.mesh(0))
         values = self.values(data_name)
         if isinstance(data_name, list):
@@ -1176,13 +1173,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ) or data_name in self.cell_data
         if is_cell_data:
             geom = self.mesh(0).cell_centers().points
-
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
         pts = np.delete(pts, flat_axis, 1)
-        dim = self.mesh(0).GetMaxSpatialDimension()
-        more_than_1d = dim > 1 or len(flat_axis) < 2
+        more_than_1d = self.dim > 1 or len(flat_axis) < 2
 
         match more_than_1d, interp_method:
             case True, "nearest":
@@ -1216,7 +1211,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             case _, _:
                 msg = (
                     "No interpolation method implemented for mesh of "
-                    f"{dim=} and {interp_method=}"
+                    f"{self.dim=} and {interp_method=}"
                 )
                 raise TypeError(msg)
 
@@ -1386,7 +1381,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 mesh_func(cache_mesh), deep=True
             )
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
-        ms_copy.dim = ms_copy.mesh(0).GetMaxSpatialDimension()
         return ms_copy
 
     def scale(

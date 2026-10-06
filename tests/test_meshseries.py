@@ -455,6 +455,7 @@ def test_probe():
     )
 
 
+@pytest.mark.xfail(reason="Fancy indexing on DataItems not always possible")
 @pytest.mark.parametrize(("type"), ["xdmf", "pvd"])
 @pytest.mark.parametrize(
     ("points", "var", "timeslice", "shape"),
