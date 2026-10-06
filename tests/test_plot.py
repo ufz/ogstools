@@ -481,6 +481,12 @@ class TestPlotting:
         fig.get_axes()[0].set_xlim(-810, -440)
         return fig
 
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
+    def test_lineplot_strip_reordering(self):
+        """Test that plot.line gets the correct vtkOriginalPointIds of the stripped surface"""
+        mesh = pv.read(EXAMPLES_DIR / "meshes" / "line_reordering.vtu")
+        return ot.plot.line(mesh)
+
     # ### Testing animation ####################################################
 
     @pytest.mark.parametrize(
