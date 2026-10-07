@@ -505,9 +505,30 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             self._data_type == ".xdmf"
             and variable_name in self._xdmf_reader.data_items
         ):
-            return self._xdmf_reader.data_items[variable_name][
-                timeslice, points
-            ]
+            if (
+                timeslice.step == 1
+                or timeslice.step is None
+                or isinstance(points, int)
+            ):
+                return self._xdmf_reader.data_items[variable_name][
+                    timeslice, points
+                ]
+            if len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
+                points
+            ):
+                return np.vstack(
+                    [
+                        self._xdmf_reader.data_items[variable_name][i, points]
+                        for i in range(self._xdmf_reader.num_steps)[timeslice]
+                    ]
+                )
+            np.column_stack(
+                [
+                    self._xdmf_reader.data_items[variable_name][timeslice, i]
+                    for i in points
+                ]
+            )
+
         return None
 
     # deliberately typing as Sequence and not as zip because typing as zip
