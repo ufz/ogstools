@@ -357,6 +357,7 @@ class Meshes(MutableMapping, StorageBase):
             Path
             | str
             | gpd.GeoDataFrame
+            | tuple[str, gpd.GeoDataFrame]
             | list[str | Path | gpd.GeoDataFrame | tuple[str, gpd.GeoDataFrame]]
         ),
         cellsize: float,
@@ -367,12 +368,41 @@ class Meshes(MutableMapping, StorageBase):
     ) -> Meshes:
         """Create Meshes by meshing spatial data via gmsh.
 
-        Every file and every layer within a geopackage corresponds to a submesh of the result
-        The domain of the resulting meshes object will be the union of all polygons in the files.
+        Every file/frame and every layer within a geopackage corresponds to a submesh of the result.
+        Geometric limitations:
+        1.  Only surfaces can be meshed (though lines and points may be created as submeshes).
+        2.  Geometries may have z-coordinates but everything is flattened during meshing and
+            later reattached using interpolation. This will distort cellsizes and may produce
+            unexpected results/crashes if the projection to the xy-plane is not 1-to-1
+        3.  Only Points, MultiPoints, LineStrings, MultiLines, Polygons and Multipolygons are
+            supported. Any other geometry is ignored
+        4.  Polygons may overlap but lines may only intersect each other/polygon boundaries if
+            the intersection is a vertex of both geometries.
+        5.  If a domain is specified the corresponding GeoDataFrame/layer/file may only contain polygons.
+        6.  All geometries are clipped to the domain layer before meshing (If no domain is
+            specified, the domain is assumed to be the union of all polygons)
 
-        :param files:               Path or list of paths of file(s) to be meshed.
-        :param cellsize:            Maximal size of the cells #TODO: Decide whether to allow for automatic determination of cellsizes akin to the old read_shp
-        :param domain:              The name of the layer which corresponds to the domain and for which no submesh should be generated.
+        :param files:               The geodata to be meshed. Can be given as path to a
+                                    .gpkg/.shp/.geojson file, GeoDataFrame, tuple of name and
+                                    GeoDataFrame or list of any of the above.
+                                    Several inputs must be given as a list, not as a
+                                    tuple, because a tuple is one named GeoDataFrame.
+                                    Each frame/file as well as each layer within a gpkg will
+                                    correspond to one mesh in the resulting Meshes object.
+                                    The naming convention for these meshes is:
+                                    - "filename"/"filename_layername" for meshes from files
+                                    - name for meshes from tuples of (name, GeoDataFrame)
+                                    - frame_i, i=1,... for GeoDataFrames
+                                    If any name should appear twice the second mesh overwrites the first.
+        :param cellsize:            Maximal size of the cells #TODO: Decide whether to allow for
+                                    automatic determination of cellsizes akin to the old read_shp
+        :param domain:              The name of the layer which corresponds to the domain to which
+                                    everything else will be clipped and for which no submesh should
+                                    be generated. If None, the domain is the union of all
+                                    polygons.
+        :param height_data:         Additional height_data provided as points with 3D coordinates.
+                                    These points will not be forced into the topology during meshing
+                                    but considered during height interpolation at the end
         :param silence_gmsh_log:    if True does not show log from gmsh during meshing
         :returns:                   A Meshes object.
         """
@@ -381,65 +411,28 @@ class Meshes(MutableMapping, StorageBase):
         layer_dict: dict[str, gpd.GeoDataFrame] = {}
         gdf = 1
         for file in files:
-            # TODO: Decide whether and how to deal with duplicate layer names
             if isinstance(file, gpd.GeoDataFrame):
-                layer_dict[f"frame_{gdf}"] = file
+                layer_dict[f"frame_{gdf}"] = file.copy()
                 gdf += 1
             elif isinstance(file, tuple):
-                layer_dict[file[0]] = file[1]
+                layer_dict[file[0]] = file[1].copy()
             else:
                 filepath = Path(file)
-                if filepath.suffix == ".gpkg":
-                    for layer in gpd.list_layers(filepath)["name"]:
-                        name = (
-                            layer
-                            if layer not in layer_dict
-                            else (
-                                filepath.stem + "_" + layer
-                                if filepath.stem + "_" + layer not in layer_dict
-                                else filepath.name + "_" + layer
-                            )
-                        )
-                        layer_dict[name] = gpd.read_file(
-                            filepath, layer=layer
-                        ).explode()
-                elif filepath.suffix == ".shp":
-                    name = (
-                        filepath.stem
-                        if filepath.stem not in layer_dict
-                        else filepath.name
-                    )
-                    layer_dict[name] = gpd.read_file(filepath).explode()
-                elif filepath.suffix == ".geojson":
-                    frame = gpd.read_file(filepath).explode()
-                    if frame.geom_type.isin(["Polygon", "MultiPolygon"]).any():
-                        layer_dict[filepath.stem + "_polygons"] = frame[
-                            frame.geom_type.isin(["Polygon", "MultiPolygon"])
-                        ].copy()
-                    if frame.geom_type.isin(["LineString", "MultiLine"]).any():
-                        layer_dict[filepath.stem + "_lines"] = frame[
-                            frame.geom_type.isin(["LineString", "MultiLine"])
-                        ].copy()
-                    if frame.geom_type.isin(["Point", "MultiPoint"]).any():
-                        layer_dict[filepath.stem + "_points"] = frame[
-                            frame.geom_type.isin(["Point", "MultiPoint"])
-                        ].copy()
-                else:
+                if filepath.suffix not in [".gpkg", ".shp", ".geojson"]:
                     msg = f"Only .gpkg, .shp and .geojson are currently supported, not {filepath.suffix}. To mesh other file types read into geodataframe first."
-                    raise ValueError(
-                        msg
-                    )  # TODO: Decide which types of error are appropriate in which situation
-        # if domain and domain not in layer_dict or not set(
-        #     layer_dict[domain]["geometry"].geom_type.to_numpy()
-        # ).issubset({"Polygon", "MultiPolygon"}):
-        #     msg = f"{domain} does not exist in {files} or is no polygon"
-        #     raise ValueError(msg)
+                    raise ValueError(msg)
+                for layer in gpd.list_layers(filepath)["name"]:
+                    name = (
+                        f"{filepath.stem}_{layer}"
+                        if filepath.suffix == ".gpkg"
+                        else filepath.stem
+                    )
+                    layer_dict[name] = gpd.read_file(
+                        filepath, layer=layer
+                    ).explode()
         if height_data is not None and height_data.shape[1] != 3:
             msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
             raise ValueError(msg)
-        gmsh.initialize()
-        if silence_gmsh_log:
-            gmsh.option.setNumber("General.Terminal", 0)
         is_3d = any(
             layer.geometry.has_z.any() for _, layer in layer_dict.items()
         )
@@ -495,7 +488,7 @@ class Meshes(MutableMapping, StorageBase):
             pd.concat(list(poly_dict.values()), keys=list(poly_dict.keys()))
             .reset_index(level=0)
             .rename(columns={"level_0": "phys_group"})
-        )  # TODO: Find a way to guarantee unique column name
+        )
         dissolved_polys["rep_point"] = (
             dissolved_polys.geometry.representative_point()
         )
@@ -514,6 +507,9 @@ class Meshes(MutableMapping, StorageBase):
             crs=gpkg_crs,
         )
         dissolved_polys.set_geometry("geometry", inplace=True)
+        gmsh.initialize()
+        if silence_gmsh_log:
+            gmsh.option.setNumber("General.Terminal", 0)
         coords = pd.concat(
             [sj.get_coordinates(include_z=False)]
             + [
