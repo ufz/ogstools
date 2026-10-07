@@ -364,23 +364,31 @@ class Meshes(MutableMapping, StorageBase):
         domain: str | None = None,
         height_data: np.ndarray | None = None,
         silence_gmsh_log: bool = True,
-        gpkg_crs: str = "EPSG:4326",  # TODO: dynamically determine crs, decide whether to allow mixed crs
     ) -> Meshes:
         """Create Meshes by meshing spatial data via gmsh.
 
         Every file/frame and every layer within a geopackage corresponds to a submesh of the result.
-        Geometric limitations:
+
+        **Geometric limitations**:
+
         1.  Only surfaces can be meshed (though lines and points may be created as submeshes).
+
         2.  Geometries may have z-coordinates but everything is flattened during meshing and
             later reattached using interpolation. This will distort cellsizes and may produce
             unexpected results/crashes if the projection to the xy-plane is not 1-to-1
+
         3.  Only Points, MultiPoints, LineStrings, MultiLines, Polygons and Multipolygons are
             supported. Any other geometry is ignored
+
         4.  Polygons may overlap but lines may only intersect each other/polygon boundaries if
             the intersection is a vertex of both geometries.
+
         5.  If a domain is specified the corresponding GeoDataFrame/layer/file may only contain polygons.
+
         6.  All geometries are clipped to the domain layer before meshing (If no domain is
             specified, the domain is assumed to be the union of all polygons)
+
+        7.  All files/GeoDataFrames must have the same crs attached.
 
         :param files:               The geodata to be meshed. Can be given as path to a
                                     .gpkg/.shp/.geojson file, GeoDataFrame, tuple of name and
@@ -390,9 +398,13 @@ class Meshes(MutableMapping, StorageBase):
                                     Each frame/file as well as each layer within a gpkg will
                                     correspond to one mesh in the resulting Meshes object.
                                     The naming convention for these meshes is:
+
                                     - "filename"/"filename_layername" for meshes from files
+
                                     - name for meshes from tuples of (name, GeoDataFrame)
+
                                     - frame_i, i=1,... for GeoDataFrames
+
                                     If any name should appear twice the second mesh overwrites the first.
         :param cellsize:            Maximal size of the cells #TODO: Decide whether to allow for
                                     automatic determination of cellsizes akin to the old read_shp
@@ -412,10 +424,10 @@ class Meshes(MutableMapping, StorageBase):
         gdf = 1
         for file in files:
             if isinstance(file, gpd.GeoDataFrame):
-                layer_dict[f"frame_{gdf}"] = file.copy()
+                layer_dict[f"frame_{gdf}"] = file.copy().explode()
                 gdf += 1
             elif isinstance(file, tuple):
-                layer_dict[file[0]] = file[1].copy()
+                layer_dict[file[0]] = file[1].copy().explode()
             else:
                 filepath = Path(file)
                 if filepath.suffix not in [".gpkg", ".shp", ".geojson"]:
@@ -430,6 +442,8 @@ class Meshes(MutableMapping, StorageBase):
                     layer_dict[name] = gpd.read_file(
                         filepath, layer=layer
                     ).explode()
+        for name, layer in layer_dict.items():
+            layer["original_layer"] = name
         if height_data is not None and height_data.shape[1] != 3:
             msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
             raise ValueError(msg)
@@ -453,41 +467,58 @@ class Meshes(MutableMapping, StorageBase):
             )
             for name, value in layer_dict.items():
                 layer_dict[name]["geometry"] = value.force_2d()
-        poly_dict = {
-            name: layer
-            for name, layer in layer_dict.items()
-            if set(layer["geometry"].geom_type.to_numpy()).issubset(
-                {"Polygon", "MultiPolygon"}
-            )
+        project_crs = next(iter(layer_dict.values())).crs
+        poly_frame = gpd.GeoDataFrame(
+            pd.concat(
+                [
+                    layer[layer.geom_type == "Polygon"]
+                    for _, layer in layer_dict.items()
+                ]
+            ),
+            crs=project_crs,
+        )
+        line_frame = gpd.GeoDataFrame(
+            pd.concat(
+                [
+                    layer[layer.geom_type == "LineString"]
+                    for _, layer in layer_dict.items()
+                ]
+            ),
+            crs=project_crs,
+        )
+        point_frame = gpd.GeoDataFrame(
+            pd.concat(
+                [
+                    layer[layer.geom_type == "Point"]
+                    for _, layer in layer_dict.items()
+                ]
+            ),
+            crs=project_crs,
+        )
+        if domain is not None:
+            poly_frame = gpd.clip(
+                poly_frame, layer_dict[domain], keep_geom_type=True
+            ).explode()
+        line_frame = gpd.clip(
+            line_frame, poly_frame, keep_geom_type=True
+        ).explode()
+        point_frame = gpd.clip(point_frame, poly_frame, keep_geom_type=True)
+        poly_groups: dict[str, list[int]] = {
+            name: [] for name in poly_frame["original_layer"].unique()
         }
-        no_poly_dict = {
-            name: layer
-            for name, layer in layer_dict.items()
-            if not set(layer["geometry"].geom_type.to_numpy()).issubset(
-                {"Polygon", "MultiPolygon"}
-            )
-        }
-        poly_groups: dict[str, list[int]] = {name: [] for name in poly_dict}
+        boundaries = gpd.GeoDataFrame(
+            geometry=[
+                shapely.union_all(
+                    [polygon.boundary for polygon in poly_frame["geometry"]]
+                )
+            ],
+            crs=project_crs,
+        )
         dissolved_polys = gpd.GeoDataFrame(
             geometry=shapely.get_parts(
-                shapely.polygonize(
-                    [
-                        shapely.union_all(
-                            [
-                                polygon.boundary
-                                for _, layer in poly_dict.items()
-                                for polygon in layer["geometry"]
-                            ]
-                        )
-                    ]
-                )
+                shapely.polygonize([shapely.union_all(boundaries.geometry)])
             ),
-            crs=gpkg_crs,
-        )
-        all_polys = (
-            pd.concat(list(poly_dict.values()), keys=list(poly_dict.keys()))
-            .reset_index(level=0)
-            .rename(columns={"level_0": "phys_group"})
+            crs=project_crs,
         )
         dissolved_polys["rep_point"] = (
             dissolved_polys.geometry.representative_point()
@@ -496,25 +527,25 @@ class Meshes(MutableMapping, StorageBase):
         sj = gpd.GeoDataFrame(
             gpd.sjoin(
                 left_df=dissolved_polys,
-                right_df=all_polys,
+                right_df=poly_frame,
                 how="left",
                 predicate="within",
             )
-            .groupby(level=0)
-            .agg({"geometry": "first", "phys_group": list})
+            .groupby(level=0)  # phys_group
+            .agg({"geometry": "first", "original_layer": list})
             .reset_index(drop=True),
             geometry="geometry",
-            crs=gpkg_crs,
+            crs=project_crs,
         )
         dissolved_polys.set_geometry("geometry", inplace=True)
         gmsh.initialize()
         if silence_gmsh_log:
             gmsh.option.setNumber("General.Terminal", 0)
         coords = pd.concat(
-            [sj.get_coordinates(include_z=False)]
-            + [
-                no_poly_dict[name].get_coordinates(include_z=False)
-                for name in no_poly_dict
+            [
+                sj.get_coordinates(include_z=False),
+                line_frame.get_coordinates(include_z=False),
+                point_frame.get_coordinates(include_z=False),
             ],
             ignore_index=True,
         ).drop_duplicates(subset=["x", "y"])
@@ -565,7 +596,7 @@ class Meshes(MutableMapping, StorageBase):
                 ring_ids, _ = gmsh_add_lines(ring, coord_tags, line_ids)
                 inner_ids.append(gmsh.model.geo.addCurveLoop(ring_ids))
             result = gmsh.model.geo.addPlaneSurface([outer_id, *inner_ids])
-            for name in row["phys_group"]:
+            for name in row["original_layer"]:  # phys_group
                 groups[name].append(result)
             return result
 
@@ -580,61 +611,71 @@ class Meshes(MutableMapping, StorageBase):
         point_embed: dict[int, int] = {}
         line_embed: dict[int, int] = {}
         lines_groups: dict[str, list[int]] = {}
-        for name, layer in no_poly_dict.items():
-            if set(layer["geometry"].geom_type.to_numpy()).issubset(
-                {"Point", "MultiPoint"}
-            ):
-                point_sj = gpd.sjoin(
-                    layer,
-                    dissolved_polys,
-                    how="left",
-                    predicate="within",
-                )
-                coords_layer = point_sj.get_coordinates(include_z=False)
-                point_ids = coords_layer.apply(
-                    lambda row: coord_tags[(row["x"], row["y"])],
-                    axis=1,
-                ).tolist()
-                points[name] = point_ids
-                point_embed.update(
-                    dict(
-                        zip(
-                            point_sj.apply(
-                                lambda row: coord_tags[
-                                    (row["geometry"].x, row["geometry"].y)
-                                ],
-                                axis=1,
-                            ),
-                            point_sj.apply(
-                                lambda row: poly_ids[row["index_right"]], axis=1
-                            ),
-                            strict=True,
-                        )
+        point_groups = {
+            name: points.get_coordinates(include_z=False)
+            .apply(
+                lambda row: coord_tags[(row["x"], row["y"])],
+                axis=1,
+            )
+            .tolist()
+            for name, points in point_frame.groupby("original_layer")
+        }
+        # TODO: Check if that is not the correct definition
+        # point_embed: dict[int, int] = {}
+        # line_embed: dict[int, int] = (
+        #     {}
+        # )  # Since we can only embed in polygon interiors we need to keep track which lines actually can/need to be embedded and which polygon they lie in
+        # lines_groups: dict[str, list[int]] = {
+        #     name: [] for name in line_frame["original_layer"].unique()
+        # }
+        point_sj = gpd.sjoin(
+            point_frame,
+            sj,
+            how="left",
+            predicate="within",
+        )
+        for name in point_frame[
+            "original_layer"
+        ].unique():  # TODO: This seems incorrect/inelegant
+            point_groups[name] = point_sj[
+                point_sj["original_layer_left"] == name
+            ]
+        if (
+            not point_sj.empty
+        ):  # TODO: Do we need update here? This seems to be the only change of point_embed
+            point_embed.update(
+                dict(
+                    zip(
+                        point_sj.apply(
+                            lambda row: coord_tags[
+                                (row["geometry"].x, row["geometry"].y)
+                            ],
+                            axis=1,
+                        ),
+                        point_sj.apply(
+                            lambda row: poly_ids[row["index_right"]], axis=1
+                        ),
+                        strict=True,
                     )
                 )
-            elif set(layer["geometry"].geom_type.to_numpy()).issubset(
-                {"LineString", "MultiLine"}
-            ):
-                lines_groups[name] = []
-                line_sj = gpd.sjoin(
-                    layer,
-                    sj,
-                    how="left",
-                    predicate="within",
-                ).reset_index()
-                for _, line in line_sj.iterrows():
-                    all_lines, new_lines = gmsh_add_lines(
-                        line["geometry"],
-                        coord_tags=coord_tags,
-                        line_ids=line_ids,
-                    )
-                    line_embed.update(
-                        dict.fromkeys(new_lines, line["index_right"])
-                    )
-                    lines_groups[name] += [abs(line) for line in all_lines]
-            else:
-                msg = "Layer has mixed or disallowed geometry. Allowed geometries are Polygon/Multipolygon, LineString/MultiLine, Point/Multipoint"
-                raise ValueError(msg)
+            )
+        line_sj = gpd.sjoin(
+            line_frame,
+            sj,
+            how="left",
+            predicate="within",
+        ).reset_index()
+        for _, line in line_sj.iterrows():
+            # TODO: rename all_lines
+            all_lines, new_lines = gmsh_add_lines(
+                line["geometry"],
+                coord_tags=coord_tags,
+                line_ids=line_ids,
+            )
+            line_embed.update(dict.fromkeys(new_lines, line["index_right"]))
+            lines_groups[line["original_layer_left"]] += [
+                abs(line) for line in all_lines
+            ]
         gmsh.model.geo.synchronize()
         for line, poly in line_embed.items():
             gmsh.model.mesh.embed(
