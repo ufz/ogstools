@@ -27,16 +27,6 @@ from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 from .data_dict import DataDict
 
 
-class PVDDataItems:
-    def __init__(self, values: np.ndarray) -> None:
-        self.values = values
-
-    def __getitem__(
-        self, index: tuple | int | slice | np.ndarray
-    ) -> np.ndarray:
-        return self.values[index]
-
-
 class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
@@ -520,25 +510,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             ]
         return None
 
-    def _structure_dataitems(
-        self, all_meshes: list[pv.UnstructuredGrid]
-    ) -> dict[str, list]:
-        # Reads all meshes and returns a dict with variables as key
-        # (e.g. "temperature")
-        dataitems: dict[str, list] = {}
-        for mesh in all_meshes:
-            for name in mesh.cell_data:
-                if name in dataitems:
-                    dataitems[name].append(mesh.cell_data[name])
-                else:
-                    dataitems[name] = [mesh.cell_data[name]]
-            for name in mesh.point_data:
-                if name in dataitems:
-                    dataitems[name].append(mesh.point_data[name])
-                else:
-                    dataitems[name] = [mesh.point_data[name]]
-        return dataitems
-
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
     # apparent fix
@@ -729,39 +700,25 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     def dim(self) -> int:
         return self.mesh(0).GetMaxSpatialDimension()
 
-    def _xdmf_values(
-        self, variable_name: str, ids: int | list[int] | slice = slice(None)
-    ) -> np.ndarray:
-        dataitems = self._xdmf_reader.data_items[variable_name]
+    def _xdmf_values(self, variable_name: str) -> np.ndarray:
+        dataitem = self._xdmf_reader.data_items[variable_name]
         # pv filters produces these arrays, which we can use for slicing
         # to also reflect the previous use of self.transform here
         mask_map = {
-            "vtkOriginalPointIds": self.point_data,
-            "vtkOriginalCellIds": self.cell_data,
+            "vtkOriginalPointIds": self.mesh(0).point_data,
+            "vtkOriginalCellIds": self.mesh(0).cell_data,
         }
-        indices_inner = self._time_indices[0].indices(
-            self._xdmf_reader.num_steps
-        )
-        num_timesteps = self._xdmf_reader.num_steps
-        for n in self._time_indices[1:]:
-            indices_outer = n.indices(num_timesteps)
-            indices_inner = (
-                indices_inner[0] + indices_inner[2] * indices_outer[0],
-                indices_outer[1] * indices_inner[2] + indices_inner[0],
-                indices_inner[2] * indices_outer[2],
-            )
-            num_timesteps = (
-                abs(indices_outer[1] - indices_outer[0])
-                // abs(indices_outer[2])
-                + 1
-            )
-        timeslice = slice(indices_inner[0], indices_inner[1], indices_inner[2])
+        time_indices = self._time_indices[0]
         for mask, data in mask_map.items():
             if variable_name in data and mask in data:
-                result = dataitems[timeslice, self[mask][ids]]
+                mesh_indices = self.mesh(0)[mask]
                 break
         else:
-            result = dataitems[timeslice, ids]
+            mesh_indices = slice(None)
+        result = dataitem[time_indices, mesh_indices]
+
+        for index in self._time_indices[1:]:
+            result = result[index]
         if self._mesh_func_opt is not None and not any(
             mask in data for mask, data in mask_map.items()
         ):
@@ -779,23 +736,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return result
 
     @overload
-    def values(
-        self,
-        variable: str | Variable,
-        ids: int | list[int] | slice = slice(None),
-    ) -> np.ndarray: ...
+    def values(self, variable: str | Variable) -> np.ndarray: ...
 
     @overload
-    def values(
-        self,
-        variable: list[str | Variable],
-        ids: int | list[int] | slice = slice(None),
-    ) -> list[np.ndarray]: ...
+    def values(self, variable: list[str | Variable]) -> list[np.ndarray]: ...
 
     def values(
-        self,
-        variable: str | Variable | list[str | Variable],
-        ids: int | list[int] | slice = slice(None),
+        self, variable: str | Variable | list[str | Variable]
     ) -> np.ndarray | list[np.ndarray]:
         """
         Get the data in the MeshSeries for all timesteps.
@@ -807,8 +754,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         :param variable:    Data to read/process from the MeshSeries. Can also
                             be a list of str or Variable.
-        :param ids:         If given, will only return values at specified
-                            point/cell ids. If None, returns all values
 
         :returns:   A numpy array of shape (n_timesteps, n_points/c_cells).
                     If given an argument of type Variable is given, its
@@ -817,14 +762,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     is returned.
         """
         if isinstance(variable, list):
-            return [self._values(var, ids) for var in variable]
-        return self._values(variable, ids)
+            return [self._values(var) for var in variable]
+        return self._values(variable)
 
-    def _values(
-        self,
-        variable: str | Variable,
-        ids: int | list[int] | slice = slice(None),
-    ) -> np.ndarray:
+    def _values(self, variable: str | Variable) -> np.ndarray:
         if isinstance(variable, Variable):
             if (
                 variable.data_name != variable.output_name
@@ -847,7 +788,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             and variable_name in self._xdmf_reader.data_items
             and not all_cached
         ):
-            result = self._xdmf_values(variable_name, ids)
+            result = self._xdmf_values(variable_name)
         else:
             from tqdm import tqdm
 
@@ -856,7 +797,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     mesh[variable_name]
                     for mesh in (self if all_cached else tqdm(self))
                 ]
-            )[ids]
+            )
         if isinstance(variable, Variable) and do_transform:
             return variable.transform(self)
         return result
@@ -979,128 +920,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             original_list.append(np.squeeze(stacked_array))
             idx += comp
         return original_list
-
-    @classmethod
-    def probe_values_file(
-        cls,
-        filepath: str | Path,
-        point_ids: int | list[int],
-        data_name: str | Variable | list[str | Variable],
-        timeslice: slice = slice(None),
-        ignore_performance_warning: bool = False,
-    ) -> np.ndarray | list[np.ndarray]:
-        """
-        Return the data of the MeshSeries directly from file without initializing
-        :class:`~ogstools.MeshSeries`.
-
-        Best performance is achieved reading .xdmf files
-
-        :param filepath:                    Path of file where MeshSeries data is stored. Accepts .pvd, .xdmf and .xmf
-        :param point_ids:                   The mesh points to sample at given by their id.
-        :param data_name:                   Data to sample. Can also be a list of str or Variable.
-        :param timeslice:                   Slice denoting timesteps which are to be read. Default is all timesteps
-        :param ignore_performance_warning:  Do not warn about reduced performance for .pvd files. Default is False
-
-        :returns:   `numpy` array/s of data at observation points
-                    with the following shape:
-
-                    - multiple points: (n_timesteps, n_points, [n_components])
-                    - single points: (n_timesteps, [n_components])
-
-                    If `data_name` is a list, a corresponding list of arrays is
-                    returned.
-        """
-        if isinstance(data_name, list):
-            return [
-                cls._probe_values_file(
-                    filepath,
-                    point_ids,
-                    dataname,
-                    timeslice,
-                    ignore_performance_warning,
-                )
-                for dataname in data_name
-            ]
-        return cls._probe_values_file(
-            filepath,
-            point_ids,
-            data_name,
-            timeslice,
-            ignore_performance_warning,
-        )
-
-    @classmethod
-    def _probe_values_file(
-        cls,
-        filepath: str | Path,
-        point_ids: np.ndarray | list,
-        data_name: str | Variable,
-        timeslice: slice = slice(None),
-        ignore_performance_warning: bool = False,
-    ) -> np.ndarray:
-        filepath = Path(filepath)
-        data_type = filepath.suffix
-        match data_type:
-            case ".xdmf" | ".xmf":
-                from .xdmf_reader import XDMFReader
-
-                reader = XDMFReader(filepath)
-                if isinstance(data_name, str):
-                    if data_name in reader.data_items:
-                        return reader.data_items[data_name][
-                            timeslice, point_ids
-                        ]
-                    msg = f"Variable {data_name} can not be found in {filepath}"
-                    raise ValueError(msg)
-                if data_name.data_name in reader.data_items:
-                    return reader.data_items[data_name.data_name][
-                        timeslice, point_ids
-                    ]
-                if data_name.output_name in reader.data_items:
-                    return reader.data_items[data_name.output_name][
-                        timeslice, point_ids
-                    ]
-                msg = f"Neither {data_name.data_name} nor {data_name.output_name} can be found in {filepath}"
-                raise ValueError(msg)
-            case ".pvd":
-                if not ignore_performance_warning:
-                    msg = (
-                        "Probing .pvd files is much more computation intensive (and therefore time-consuming) then probing .xdmf. To improve performance for additional probings, convert to .xdmf (fastest)"
-                        " or initialize as MeshSeries and use probe_values() to make use of caching. To suppress this warning set ignore_performance_warning to True"
-                    )
-                    warn(msg, RuntimeWarning, stacklevel=2)
-                reader = pv.PVDReader(filepath)
-                reader.set_active_time_point(0)
-                mesh = reader.read()[0]
-                if isinstance(data_name, str):
-                    if data_name in mesh.point_data:
-                        variable_name = data_name
-                    else:
-                        msg = f"{data_name} can not be found as variable in {filepath}"
-                        raise ValueError(msg)
-                elif data_name.data_name in mesh.point_data:
-                    variable_name = data_name.data_name
-                elif data_name.output_name in mesh.point_data:
-                    variable_name = data_name.output_name
-                else:
-                    msg = f"Neither {data_name.data_name} nor {data_name.output_name} can be found as variable in {filepath}"
-                    raise ValueError(msg)
-                result = np.zeros(
-                    (
-                        len(reader.time_values[timeslice]),
-                        *mesh.point_data[variable_name][point_ids].shape,
-                    )
-                )
-                for timeindex, time in enumerate(reader.time_values[timeslice]):
-                    reader.set_active_time_value(time)
-                    mesh = reader.read()[0]
-                    result[timeindex] = np.asarray(
-                        mesh.point_data[variable_name][point_ids]
-                    )
-                return result
-            case suffix:
-                msg = f"Can only read 'pvd', 'xdmf' and 'xmf'(from Paraview) files, but not '{suffix}'"
-                raise TypeError(msg)
 
     def probe_values(
         self,
