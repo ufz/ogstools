@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+import copy
 from pathlib import Path
 
 from lxml import etree as ET
@@ -39,6 +40,24 @@ class PythonScript(ReferencedFile):
             text=str(filename.name),
             overwrite=True,
         )
+
+    def _save_impl(self, dry_run: bool = False) -> list[Path]:
+        # OGS imports from the folder of the script, so the python files next
+        # to it are saved (linked) with it, the same way as the script.
+        files = super()._save_impl(dry_run)
+        source = self.active_target
+        if not files or source is None or not source.exists():
+            return files
+        target_dir = self.next_target.parent
+        if source.parent.resolve() == target_dir.resolve():
+            return files
+        for module in sorted(source.parent.glob("*.py")):
+            if module.name != source.name and module.is_file():
+                module_file = copy.copy(self)
+                module_file._active_target = module
+                module_file.link(target_dir / module.name, dry_run)
+                files.append(target_dir / module.name)
+        return files
 
     def set_pyscript(self, filename: str) -> None:
         """

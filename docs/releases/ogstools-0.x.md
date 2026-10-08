@@ -14,6 +14,8 @@
 
 ## Bugfixes
 
+- the python files next to the python script (`<python_script>`) are now saved with it, so a Python BC script run by `Model.run()` can import them.
+
 ## Features
 
 ## Infrastructure

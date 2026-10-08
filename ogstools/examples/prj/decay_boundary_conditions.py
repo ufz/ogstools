@@ -11,6 +11,8 @@ except ModuleNotFoundError:
         # this import works for binary version of ogs
         import OpenGeoSys
 
+from decay_parameters import boundary_len, repo_edge_len
+
 import ogstools.physics.nuclearwasteheat as nuclear
 
 
@@ -30,8 +32,6 @@ class T_RepositorySourceTerm(OpenGeoSys.BoundaryCondition):
 
     def getFlux(self, t, coords, primary_vars):  # noqa: ARG002
         self.update_t_prev(t)
-        boundary_len = 1500  # m
-        repo_edge_len = 1500  # m
         _t = self.temporal_split(t) if self.use_temporal_split else t
         value = self.repo.heat(_t) / repo_edge_len / boundary_len / 2.0
         # / 2.0 due to symmetry
