@@ -1207,21 +1207,38 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         mesh_func: Callable[
             [pv.UnstructuredGrid], pv.UnstructuredGrid
         ] = lambda mesh: mesh,
+        detach_file: bool = True,
     ) -> MeshSeries:
         """
         Apply a transformation function to the underlying mesh.
 
-        :param mesh_func: A function which expects to read a mesh and return a
-                          mesh. Useful for slicing / clipping / thresholding.
+        :param mesh_func:   A function which expects to read a mesh and return a
+                            mesh. Useful for slicing / clipping / thresholding.
+        :param detach_file: If True, detaches file from which the MeshSeries
+                            was originally read and caches all timesteps.
+                            Note, that if even if detach_file is False
+                            , the attached file will not be changed and some
+                            OGSTools functions, which expect the MeshSeries to
+                            be consistent with the attached file, will return
+                            unexpected results.
 
         :returns: A deep copy of this MeshSeries with transformed meshes.
         """
         ms_copy = self.copy(deep=True)
         # pylint: disable=protected-access
-        for cache_timevalue, cache_mesh in self._mesh_cache.items():
-            ms_copy._mesh_cache[cache_timevalue] = pv.UnstructuredGrid(
-                mesh_func(cache_mesh), deep=True
-            )
+        if detach_file:
+            ms_copy._data_type = None
+            ms_copy._mesh_cache = {
+                self.timevalues[i]: pv.UnstructuredGrid(
+                    mesh_func(self.mesh(i)), deep=True
+                )
+                for i in self.timesteps
+            }
+        else:
+            for cache_timevalue, cache_mesh in self._mesh_cache.items():
+                ms_copy._mesh_cache[cache_timevalue] = pv.UnstructuredGrid(
+                    mesh_func(cache_mesh), deep=True
+                )
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
         return ms_copy
 
@@ -1395,12 +1412,20 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self,
         index: slice | int | np.ndarray | list,
         preference: Literal["points", "cells"] = "points",
+        detach_file: bool = True,
     ) -> MeshSeries:
         """
         Extract a subset of the domain by point or cell indices.
 
         :param index:       Indices of points or cells to extract.
         :param preference:  Selected entities.
+        :param detach_file: If True, detaches file from which the MeshSeries
+                            was originally read and caches all timesteps.
+                            Note, that if even if detach_file is False
+                            , the attached file will not be changed and some
+                            OGSTools functions, which expect the MeshSeries to
+                            be consistent with the attached file, will return
+                            unexpected results.
 
         :returns: A MeshSeries with the selected domain subset.
         """
@@ -1414,18 +1439,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 np.arange(mesh.n_points)[index]
             ),
         }
-        result = self.transform(func[preference])
-        result._data_type = None
-        if result._mesh_func_opt:
-            extracted_meshes = [
-                result._mesh_func_opt(self.mesh(i)) for i in self.timesteps
-            ]
-        else:
-            extracted_meshes = [self.mesh(i) for i in self.timesteps]
-        result._mesh_cache.update(
-            dict(zip(result.timevalues, extracted_meshes, strict=True))
-        )
-        return result
+        return self.transform(func[preference], detach_file)
 
     def _rename_vtufiles(self, new_pvd_fn: Path, fns: list[Path]) -> list:
         fns_new: list[Path] = []
