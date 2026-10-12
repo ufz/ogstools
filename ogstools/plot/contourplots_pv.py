@@ -11,7 +11,7 @@ from matplotlib.colors import ListedColormap
 
 from ogstools.plot import setup, utils
 from ogstools.plot.levels import combined_levels
-from ogstools.variables import Variable
+from ogstools.variables import Function, Variable
 
 
 def contourf_pv(
@@ -43,9 +43,8 @@ def contourf_pv(
     variable_ = Variable.find(variable, mesh)
 
     # converting to float as the interactive plot seems to have trouble with int
-    plot_var = variable_.from_variable(
-        variable_, func=lambda x: np.astype(x, float)
-    )
+    plot_var = variable_.copy()
+    plot_var.functions.append(Function(lambda x: np.astype(x, float)))
 
     levels = combined_levels(np.array([mesh]), plot_var)
     if categoric is None:
@@ -97,9 +96,9 @@ def contourf_pv(
         # unfortunately the categoric values are then sorted alphanumerically,
         # thus we need to add leading zeros. As this is can be performance heavy
         # we do it for the smallest viable subset.
-        categoric_var = plot_var.from_variable(
-            plot_var,
-            func=lambda x: np.char.zfill(np.astype(x, int).astype(str), 2),
+        categoric_var = plot_var.copy()
+        categoric_var.functions.append(
+            Function(lambda x: np.char.zfill(np.astype(x, int).astype(str), 2))
         )
         plot_mesh = plot_mesh.extract_cells(
             np.unique(plot_mesh[plot_var.data_name], return_index=True)[1]

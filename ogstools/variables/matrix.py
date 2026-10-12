@@ -52,9 +52,9 @@ class Matrix(Variable):
 
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + f"_{index}",
-            symbol=f"{{{self.symbol}}}_{{{index}}}",
             func=lambda x: x[..., int_index],
+            suffix=index,
+            symbol=f"{{{self.symbol}}}_{{{index}}}",
             bilinear_cmap=True,
         )
 
@@ -71,6 +71,7 @@ class Matrix(Variable):
                 tensor_math.to_polar,
                 [partial(angles, center=center, normal=normal), azimuth],
             ),
+            prefix="polar",
         )
 
     @property
@@ -78,9 +79,9 @@ class Matrix(Variable):
         "A scalar variable as the frobenius norm of the matrix."
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + "_magnitude",
-            symbol=rf"||{{{self.symbol}}}||_\mathrm{{F}}",
             func=tensor_math.frobenius_norm,
+            suffix="magnitude",
+            symbol=rf"||{{{self.symbol}}}||_\mathrm{{F}}",
         )
 
     @property
@@ -88,9 +89,9 @@ class Matrix(Variable):
         "A scalar variable as the trace of the matrix."
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + "_trace",
-            symbol=rf"\mathrm{{tr}}({{{self.symbol}}})",
             func=tensor_math.trace,
+            suffix="trace",
+            symbol=rf"\mathrm{{tr}}({{{self.symbol}}})",
         )
 
     @property
@@ -98,9 +99,9 @@ class Matrix(Variable):
         "A vector variable as the eigenvalues of the matrix."
         return Vector.from_variable(
             self,
-            output_name=self.output_name + "_eigenvalues",
-            symbol=r"\lambda",
             func=tensor_math.eigenvalues,
+            suffix="eigenvalues",
+            symbol=r"\lambda",
         )
 
     @property
@@ -108,11 +109,11 @@ class Matrix(Variable):
         "A vector variable as the eigenvectors of the matrix."
         return VectorList.from_variable(
             self,
-            output_name=self.output_name + "_eigenvectors",
+            func=tensor_math.eigenvectors,
+            suffix="eigenvectors",
             symbol="v",
             data_unit="",
             output_unit="",
-            func=tensor_math.eigenvectors,
         )
 
     @property
@@ -120,20 +121,18 @@ class Matrix(Variable):
         "A scalar variable as the determinant of the matrix."
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + "_det",
+            func=tensor_math.det,
+            prefix="det",
             output_unit=self.output_unit + "^2",
             symbol=rf"\mathrm{{det}} {{{self.symbol}}}",
             process_with_units=True,
-            func=tensor_math.det,
         )
 
     @property
     def invariant_1(self) -> Scalar:
         "A scalar variable as the first invariant of the matrix."
         return Scalar.from_variable(
-            self,
-            output_name=self.output_name + "_I1",
-            func=tensor_math.invariant_1,
+            self, func=tensor_math.invariant_1, suffix="I1"
         )
 
     @property
@@ -141,9 +140,9 @@ class Matrix(Variable):
         "A scalar variable as the second invariant of the matrix."
         return Scalar.from_variable(
             self,
-            output_unit=self.output_unit + "^2",
-            output_name=self.output_name + "_I2",
             func=tensor_math.invariant_2,
+            suffix="I2",
+            output_unit=self.output_unit + "^2",
             process_with_units=True,
         )
 
@@ -151,19 +150,14 @@ class Matrix(Variable):
     def invariant_3(self) -> Scalar:
         "A scalar variable as the third invariant of the matrix."
         return Scalar.from_variable(
-            self,
-            output_name=self.output_name + "_I3",
-            func=tensor_math.invariant_3,
+            self, func=tensor_math.invariant_3, suffix="I3"
         )
 
     @property
     def tensor_mean(self) -> Scalar:
         "A scalar variable as the mean value of the matrix."
         return Scalar.from_variable(
-            self,
-            output_name="mean_" + self.output_name,
-            symbol=r"\pi",
-            func=tensor_math.mean,
+            self, func=tensor_math.mean, prefix="mean", symbol=r"\pi"
         )
 
     @property
@@ -171,9 +165,10 @@ class Matrix(Variable):
         "A vector variable as the effective pressure of the matrix."
         return Matrix.from_variable(
             self,
-            output_name="hydrostatic_" + self.output_name + "_component",
-            symbol=rf"p^{{{self.symbol}}}",
             func=tensor_math.hydrostatic_component,
+            prefix="hydrostatic",
+            suffix="component",
+            symbol=rf"p^{{{self.symbol}}}",
         )
 
     @property
@@ -181,36 +176,30 @@ class Matrix(Variable):
         "A vector variable as the deviator of the matrix."
         return Matrix.from_variable(
             self,
-            output_name=self.output_name + "_deviator",
-            symbol=rf"s^{{{self.symbol}}}",
             func=tensor_math.deviator,
+            suffix="deviator",
+            symbol=rf"s^{{{self.symbol}}}",
         )
 
     @property
     def deviator_invariant_1(self) -> Scalar:
         "A scalar variable as the first invariant of the matrix deviator."
         return Scalar.from_variable(
-            self,
-            output_name=self.output_name + "_J1",
-            func=tensor_math.deviator_invariant_1,
+            self, func=tensor_math.deviator_invariant_1, suffix="J1"
         )
 
     @property
     def deviator_invariant_2(self) -> Scalar:
         "A scalar variable as the second invariant of the matrix deviator."
         return Scalar.from_variable(
-            self,
-            output_name=self.output_name + "_J2",
-            func=tensor_math.deviator_invariant_2,
+            self, func=tensor_math.deviator_invariant_2, suffix="J2"
         )
 
     @property
     def deviator_invariant_3(self) -> Scalar:
         "A scalar variable as the third invariant of the matrix deviator."
         return Scalar.from_variable(
-            self,
-            output_name=self.output_name + "_J3",
-            func=tensor_math.deviator_invariant_3,
+            self, func=tensor_math.deviator_invariant_3, suffix="J3"
         )
 
     @property
@@ -218,9 +207,9 @@ class Matrix(Variable):
         "A scalar variable as the octahedral shear component of the matrix."
         return Scalar.from_variable(
             self,
-            output_name="octahedral_shear_" + self.output_name,
-            symbol=r"\tau_\mathrm{oct}",
             func=tensor_math.octahedral_shear,
+            prefix="octahedral_shear",
+            symbol=r"\tau_\mathrm{oct}",
         )
 
     @property
@@ -228,9 +217,9 @@ class Matrix(Variable):
         "A scalar variable as the von Mises stress."
         return Scalar.from_variable(
             self,
-            output_name="von_Mises_" + self.output_name,
-            symbol=rf"{{{self.symbol}}}_\mathrm{{v}}",
             func=tensor_math.von_mises,
+            prefix="von_Mises",
+            symbol=rf"{{{self.symbol}}}_\mathrm{{v}}",
         )
 
     @property
@@ -238,9 +227,10 @@ class Matrix(Variable):
         "A scalar variable as the qp stress ratio."
         return Scalar.from_variable(
             self,
-            output_name="qp_ratio",
+            func=tensor_math.qp_ratio,
+            prefix="qp_ratio (",
+            suffix=")",
             output_unit="%",
             symbol="qp",
-            func=tensor_math.qp_ratio,
             process_with_units=True,
         )

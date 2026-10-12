@@ -394,6 +394,8 @@ class TestPlotting:
         mesh = examples.load_meshseries_THM_2D_PVD()[-1]
         obs_pts = np.reshape(mesh.center * 2, (2, 3))
         obs_pts[:, 1] = mesh.bounds[2:4]
+        # remove same named cell data to ensure data is taken from point data
+        mesh.cell_data.remove("effective_pressure")
         sample = mesh.sample_over_line(obs_pts[0], obs_pts[1])
         sample[var1.data_name][sample[var1.data_name] == 0.0] = np.nan
         fig = ot.plot.line(sample, var1, var2, outer_legend=0.8)
