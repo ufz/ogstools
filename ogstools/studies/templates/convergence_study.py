@@ -99,10 +99,10 @@ _show_with_alt(
 
 data_key = variable.data_name
 if reference_solution_path is None:
-    diff_mesh = ot.mesh.difference(
-        richardson, topology.sample(meshes[-1]), variable
-    )
-    fig = ot.plot.contourf(diff_mesh, variable)
+    sub_mesh = topology.sample(meshes[-1])
+    ot.mesh.utils.pv_set_attr(sub_mesh, "spatial_unit", meshes[-1].spatial_unit)
+    diff_mesh = ot.mesh.difference(richardson, sub_mesh, variable)
+    fig = ot.plot.contourf(diff_mesh, variable.difference)
     _show_with_alt(
         fig,
         f"Contour plot of the difference in {variable.output_name} between "
@@ -112,8 +112,11 @@ else:
     ms = ot.MeshSeries(reference_solution_path)
     timestep = ms.closest_timestep(timevalue)
     reference_solution = topology.sample(ms.mesh(timestep))
+    ot.mesh.utils.pv_set_attr(
+        reference_solution, "spatial_unit", richardson.spatial_unit
+    )
     diff_mesh = ot.mesh.difference(reference_solution, richardson, variable)
-    fig = ot.plot.contourf(diff_mesh, variable)
+    fig = ot.plot.contourf(diff_mesh, variable.difference)
     _show_with_alt(
         fig,
         f"Contour plot of the difference in {variable.output_name} between "

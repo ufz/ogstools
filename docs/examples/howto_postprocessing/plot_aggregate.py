@@ -34,12 +34,13 @@ saturation = ot.variables.saturation
 
 # %% [markdown]
 # You aggregate the data in MeshSeries over all timesteps given some
-# aggregation function, e.g. np.min, np.max, np.var
+# aggregation function. The following are available:
+# ``min``, ``max``, ``mean``, ``median``, ``sum``, ``std``, ``var``.
 # (see: :meth:`~ogstools.MeshSeries.aggregate_temporal`).
 # The following code gets the maximum saturation for each point in the mesh over
 # all timesteps and plots it. Note: the data in the returned mesh has a suffix
-# equal to the aggregation functions name. The plot function will find the
-# correct data anyway if given the original variable
+# equal to the aggregation functions name. In the plot function use the method
+# with an equal name to plot it.
 #
 # Due to numerical oscillations, this dataset contains a few cells with
 # slightly unphysical saturation (below 0% or above 100%). We clip the
@@ -48,7 +49,7 @@ saturation = ot.variables.saturation
 
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.max)
-fig = ot.plot.contourf(mesh, saturation, vmin=0, vmax=100)
+fig = ot.plot.contourf(mesh, saturation.max, vmin=0, vmax=100)
 fig.show()
 
 # %% [markdown]
@@ -69,7 +70,7 @@ fig.show()
 
 # %%
 mesh = mesh_series.aggregate_temporal(saturation, np.var)
-fig = ot.plot.contourf(mesh, saturation)
+fig = ot.plot.contourf(mesh, saturation.var)
 fig.show()
 
 # %% [markdown]
@@ -77,7 +78,7 @@ fig.show()
 
 # %%
 mesh = ot.mesh.difference(mesh_series.mesh(-1), mesh_series.mesh(0), saturation)
-fig = ot.plot.contourf(mesh, saturation)
+fig = ot.plot.contourf(mesh, saturation.difference)
 fig.show()
 
 # %% [markdown]
@@ -88,12 +89,11 @@ fig.show()
 mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
 
 # %% [markdown]
-# Instead of calculating the array itself, you can also plot it directly by
-# using methods of the Variable which correspond to the equally named
-# ``numpy``-functions. The following are available:
-# ``min``, ``max``, ``mean``, ``median``, ``sum``, ``std``, ``var``.
+# Instead of calculating the array itself, you can also plot it directly:
 
 # %%
 fig = mesh_series.plot_line(saturation.std)
 fig.tight_layout()
 fig.show()
+
+# %%

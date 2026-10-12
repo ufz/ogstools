@@ -23,7 +23,6 @@ from typing_extensions import Self
 
 from .custom_colormaps import mask_cmap
 from .func import Function
-from .tensor_math import identity
 from .unit_registry import u_reg
 
 Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
@@ -173,26 +172,23 @@ class Variable:
             return time_var(var_name, data)
 
         if isinstance(variable, Variable):
-            if variable.data_name in all_keys + ["None"]:
+            if variable.data_name == "None":
                 return variable
-            matches = [
-                variable.output_name in data_key for data_key in all_keys
-            ]
-            if not any(matches):
+            if variable.output_name not in all_keys:
+                if variable.data_name in data_keys:
+                    return variable
                 raise KeyError(error_msg)
-            data_key = all_keys[matches.index(True)]
-            if data_key == variable.difference.output_name:
-                return variable.difference
-            if data_key in variable._agg_names:
+            data_key = variable.output_name
+
+            if len(variable.functions) > 0:
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
                     output_unit=variable.output_unit,
                     output_name=data_key,
-                    symbol=variable.symbol,
-                    func=[Function(identity)],
+                    func=[],
                 )
-            return variable.replace(data_name=data_key, output_name=data_key)
+            return variable.replace(data_name=data_key, func=[])
 
         # pylint: disable=import-outside-toplevel
         from ogstools.variables import all_variables
@@ -396,7 +392,7 @@ class Variable:
             output_name=outname,
             symbol=r"\Delta " + self.symbol,
             bilinear_cmap=True,
-            func=[Function(identity)],
+            func=[],
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 

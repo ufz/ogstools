@@ -12,6 +12,7 @@ from pint import UnitRegistry
 from tqdm import tqdm
 
 from ogstools import MeshSeries, variables
+from ogstools.mesh.utils import pv_set_attr
 
 u_reg: UnitRegistry = UnitRegistry()
 u_reg.formatter.default_format = "~.3g"
@@ -130,6 +131,8 @@ def richardson_extrapolation(
         diff.T, rpm1, out=np.zeros_like(f1.T), where=(rpm1 != 0)
     ).T
     results.point_data[variable.data_name] = f1 + delta
+    if hasattr(_meshes[-1], "spatial_unit"):
+        pv_set_attr(results, "spatial_unit", _meshes[-1].spatial_unit)
     return results
 
 
