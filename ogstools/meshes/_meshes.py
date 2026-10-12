@@ -9,6 +9,7 @@ import os
 from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
 from typing import Any, Self
+from warnings import warn
 
 import geopandas as gpd
 import gmsh
@@ -360,7 +361,7 @@ class Meshes(MutableMapping, StorageBase):
             | tuple[str, gpd.GeoDataFrame]
             | list[str | Path | gpd.GeoDataFrame | tuple[str, gpd.GeoDataFrame]]
         ),
-        cellsize: float,
+        cellsize: float | None = None,
         domain: str | None = None,
         height_data: np.ndarray | None = None,
         silence_gmsh_log: bool = True,
@@ -538,6 +539,10 @@ class Meshes(MutableMapping, StorageBase):
             crs=project_crs,
         )
         dissolved_polys.set_geometry("geometry", inplace=True)
+        if cellsize is None:
+            cellsize = np.sqrt(dissolved_polys.area.sum()) / 100
+            msg = f"Since no cellsize was specified it is set to {cellsize}"
+            warn(msg, RuntimeWarning, stacklevel=2)
         gmsh.initialize()
         if silence_gmsh_log:
             gmsh.option.setNumber("General.Terminal", 0)
@@ -608,9 +613,14 @@ class Meshes(MutableMapping, StorageBase):
             )
         )
         points: dict[str, list[int]] = {}
+        # Since we can only embed in polygon interiors we need to keep track
+        # which lines actually can/need to be embedded and which polygon they
+        # lie in
         point_embed: dict[int, int] = {}
         line_embed: dict[int, int] = {}
-        lines_groups: dict[str, list[int]] = {}
+        lines_groups: dict[str, list[int]] = {
+            name: [] for name in line_frame["original_layer"].unique()
+        }
         point_groups = {
             name: points.get_coordinates(include_z=False)
             .apply(
@@ -620,14 +630,6 @@ class Meshes(MutableMapping, StorageBase):
             .tolist()
             for name, points in point_frame.groupby("original_layer")
         }
-        # TODO: Check if that is not the correct definition
-        # point_embed: dict[int, int] = {}
-        # line_embed: dict[int, int] = (
-        #     {}
-        # )  # Since we can only embed in polygon interiors we need to keep track which lines actually can/need to be embedded and which polygon they lie in
-        # lines_groups: dict[str, list[int]] = {
-        #     name: [] for name in line_frame["original_layer"].unique()
-        # }
         point_sj = gpd.sjoin(
             point_frame,
             sj,
@@ -640,9 +642,7 @@ class Meshes(MutableMapping, StorageBase):
             point_groups[name] = point_sj[
                 point_sj["original_layer_left"] == name
             ]
-        if (
-            not point_sj.empty
-        ):  # TODO: Do we need update here? This seems to be the only change of point_embed
+        if not point_sj.empty:
             point_embed.update(
                 dict(
                     zip(
