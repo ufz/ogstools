@@ -469,6 +469,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         variable: str | Variable | list[str | Variable],
         points: int | list[int],
     ) -> np.ndarray | list[np.ndarray] | None:
+        # Reads data from attached xdmf-file.
+        # This is very fast but only works on xdmf
         if isinstance(variable, list):
             result = [self._data(var, points) for var in variable]
             if all(item is not None for item in result):
@@ -484,10 +486,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 variable_name = variable.data_name
         else:
             variable_name = variable
-        indices_inner = self._time_indices[0].indices(
-            self._xdmf_reader.num_steps
-        )
+        if (
+            self._data_type != ".xdmf"
+            or variable_name not in self._xdmf_reader.data_items
+        ):
+            return None
+        # Composes all slices in self._time_indices into one
+        # to only read strictly necessary timesteps and minimise
+        # reading time
         num_timesteps = self._xdmf_reader.num_steps
+        indices_inner = self._time_indices[0].indices(num_timesteps)
         for n in self._time_indices[1:]:
             indices_outer = n.indices(num_timesteps)
             indices_inner = (
@@ -502,34 +510,28 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             )
         timeslice = slice(indices_inner[0], indices_inner[1], indices_inner[2])
         if (
-            self._data_type == ".xdmf"
-            and variable_name in self._xdmf_reader.data_items
+            timeslice.step == 1
+            or timeslice.step is None
+            or isinstance(points, int)
         ):
-            if (
-                timeslice.step == 1
-                or timeslice.step is None
-                or isinstance(points, int)
-            ):
-                return self._xdmf_reader.data_items[variable_name][
-                    timeslice, points
-                ]
-            if len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
-                points
-            ):
-                return np.vstack(
-                    [
-                        self._xdmf_reader.data_items[variable_name][i, points]
-                        for i in range(self._xdmf_reader.num_steps)[timeslice]
-                    ]
-                )
-            np.column_stack(
+            return self._xdmf_reader.data_items[variable_name][
+                timeslice, points
+            ]
+        if len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
+            points
+        ):
+            return np.vstack(
                 [
-                    self._xdmf_reader.data_items[variable_name][timeslice, i]
-                    for i in points
+                    self._xdmf_reader.data_items[variable_name][i, points]
+                    for i in range(self._xdmf_reader.num_steps)[timeslice]
                 ]
             )
-
-        return None
+        return np.column_stack(
+            [
+                self._xdmf_reader.data_items[variable_name][timeslice, i]
+                for i in points
+            ]
+        )
 
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
@@ -944,7 +946,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def probe_values(
         self,
-        points: np.ndarray | int | list[np.ndarray] | list[int],
+        coords_or_ids: np.ndarray | int | list[np.ndarray] | list[int],
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
@@ -954,12 +956,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         Similar to :func:`~ogstools.MeshSeries.probe` but returns the
         data directly instead of creating a new MeshSeries.
 
-        :param points:          The observation points to sample at. These can
+        :param coords_or_ids:   The observation points to sample at. These can
                                 be provided as coordinates or ids (i.e. integers).
                                 If ids are given they are assumed to match
                                 data_type (i.e. the ids are treated as point ids
                                 if probing for point data and cell ids if probing
-                                for cell data) #TODO: maybe rename points if these might be cells
+                                for cell data)
         :param data_name:       Data to sample. If provided as a Variable, the
                                 output will transformed accordingly. Can also be
                                 a list of str or Variable.
@@ -982,23 +984,23 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
         if (
-            isinstance(points, list)
-            and any(isinstance(p, int) for p in points)
-            and not all(isinstance(p, int) for p in points)
+            isinstance(coords_or_ids, list)
+            and any(isinstance(p, int) for p in coords_or_ids)
+            and not all(isinstance(p, int) for p in coords_or_ids)
         ):
             msg = (
                 "Cannot assign points by index and coordinates simultaneously."
             )
             raise TypeError(msg)
-        is_ids = isinstance(points, int) or (
-            isinstance(points, list) and any(isinstance(p, int) for p in points)
-        )
-        if is_ids:
-            results = self._data(data_name, points)
+        if isinstance(coords_or_ids, int) or (
+            isinstance(coords_or_ids, list)
+            and all(isinstance(p, int) for p in coords_or_ids)
+        ):
+            results = self._data(data_name, coords_or_ids)
             if results is not None:
                 return results
-            points = self[0].points[points]
-        pts = reshape_obs_points(points, self.mesh(0))
+            coords_or_ids = self[0].points[coords_or_ids]
+        pts = reshape_obs_points(coords_or_ids, self.mesh(0))
         values = self.values(data_name)
         if isinstance(data_name, list):
             components = [
@@ -1055,7 +1057,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 )
                 raise TypeError(msg)
 
-        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
+        if np.shape(coords_or_ids)[0] != 1 and np.shape(result)[1] == 1:
             result = np.squeeze(result, axis=1)
         if isinstance(data_name, list):
             if more_than_1d:
