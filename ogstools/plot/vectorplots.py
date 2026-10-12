@@ -48,8 +48,11 @@ def _vectorfield(
     i_grid, j_grid = np.meshgrid(i_pts, j_pts, indexing="ij")
     grid_input = [i_grid, j_grid]
     grid_input.insert(projection, i_grid * 0)
-    grid = pv.StructuredGrid(*grid_input).sample(_mesh, pass_cell_data=False)
-    values = variable.transform(grid.point_data[variable.data_name])
+    grid = pv.StructuredGrid(*grid_input).sample(
+        _mesh,
+        pass_cell_data=True,  # to pass the potentially existing mask
+    )
+    values = variable.transform(grid)
 
     values[np.argwhere(grid["vtkValidPointMask"] == 0), :] = np.nan
     if np.shape(values)[-1] == 3:

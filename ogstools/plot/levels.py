@@ -87,12 +87,11 @@ def median_exponent(vals: np.ndarray) -> int:
 
 
 def combined_levels(
-    meshes: np.ndarray, variable: Variable | str, **kwargs: Any
+    meshes: np.ndarray, variable: Variable, **kwargs: Any
 ) -> np.ndarray:
     """
     Calculate well spaced levels for the encompassing variable range in meshes.
     """
-    variable = Variable.find(variable, meshes.ravel()[0])
     vmin, vmax = np.inf, -np.inf
     VMIN = kwargs.get("vmin", setup.vmin)
     VMAX = kwargs.get("vmax", setup.vmax)
