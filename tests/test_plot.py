@@ -485,7 +485,7 @@ class TestPlotting:
     def test_lineplot_strip_reordering(self):
         """Test that plot.line gets the correct vtkOriginalPointIds of the stripped surface"""
         mesh = ot.mesh.file_io.read(
-            EXAMPLES_DIR / "meshes" / "line_reordering.vtu"
+            EXAMPLES_DIR / "meshes" / "two_crossing_lines.vtu"
         )
         fig = ot.plot.line(mesh)
         fig.tight_layout()
