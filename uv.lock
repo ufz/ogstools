@@ -2527,7 +2527,6 @@ dependencies = [
     { name = "papermill" },
     { name = "pint" },
     { name = "psutil" },
-    { name = "pytest-mpl" },
     { name = "pyvista", extra = ["all"] },
     { name = "pyyaml" },
     { name = "scipy" },
@@ -2809,6 +2808,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-dependency" },
+    { name = "pytest-mpl" },
     { name = "pytest-xdist" },
 ]
 
@@ -2987,8 +2987,8 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pytest-dependency", marker = "extra == 'pinned'", specifier = "==0.6.1" },
     { name = "pytest-dependency", marker = "extra == 'test'" },
-    { name = "pytest-mpl", specifier = ">=0.17.0" },
     { name = "pytest-mpl", marker = "extra == 'pinned'", specifier = "==0.18.0" },
+    { name = "pytest-mpl", marker = "extra == 'test'", specifier = ">=0.17.0" },
     { name = "pytest-xdist", marker = "extra == 'pinned'", specifier = "==3.8.0" },
     { name = "pytest-xdist", marker = "extra == 'test'" },
     { name = "python-dateutil", marker = "extra == 'pinned'", specifier = "==2.9.0.post0" },
