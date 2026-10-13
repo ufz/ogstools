@@ -18,6 +18,7 @@
 - `plot.contourf` failed to plot a variable on celldata with a mask, but is now able to.
 - `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
+- fixed `ot.mesh.read` for a symbolic link to a file without extension; the reader is now chosen by the extension of the link name.
 
 ## Features
 

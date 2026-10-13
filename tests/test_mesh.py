@@ -2,6 +2,7 @@
 
 import shutil
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -195,6 +196,22 @@ def test_mesh_dont_copy_filepath():
     mesh = ot.mesh.read(examples.mechanics_2D)
     assert hasattr(mesh, "filepath")
     assert not hasattr(mesh.copy(), "filepath")
+
+
+def test_read_symlink_without_extension(tmp_path: Path) -> None:
+    """A symbolic link is read by the extension of its own name.
+
+    Content-addressed stores keep files without extension and link to them.
+
+    scope: unit (mesh.read) | oracle: consistency, reading the original file
+    """
+    target = tmp_path / "content_hash"
+    shutil.copy(examples.mechanics_2D, target)
+    link = tmp_path / "mesh.vtu"
+    link.symlink_to(target)
+    np.testing.assert_array_equal(
+        ot.mesh.read(link).points, ot.mesh.read(examples.mechanics_2D).points
+    )
 
 
 @pytest.mark.tools  # convertToLinearMesh, createQuadraticMesh
