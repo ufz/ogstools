@@ -129,7 +129,23 @@ class Variable:
         prefix: str | int | None = None,
         **changes: Any,
     ) -> Self:
-        "Create a new Variable object with modified attributes."
+        """
+        Create a new derived variable.
+
+        `func` is appended to the stored functions. `prefix` and/or `suffix` are
+        prepended to and appended to the base `output_name` (separated by "_");
+        at least one has to be set. To change other attributes pass them
+        as keyword arguments;
+
+        :param variable: The variable to base the new one on.
+        :param func: The function to append to the stored functions.
+        :param prefix: Prepend this to the `output_name`.
+        :param suffix: Append this to the `output_name`.
+        :param changes: Other attributes to override in the new variable.
+        :returns: A new Variable with the applied changes.
+        :raises KeyError: If neither `prefix` nor `suffix` is set, or if
+            ``output_name`` or ``functions`` are given in `changes`.
+        """
         for k, v in {"output_name": "suffix", "functions": "func"}.items():
             if k in changes:
                 msg = f"Please use `{v}` instead of `{k}`."
@@ -165,17 +181,25 @@ class Variable:
     @classmethod
     def find(cls, variable: Variable | str, data: MeshOrSeries) -> Variable:
         """
-        Returns a Variable preset or creates one with correct type.
+        Return a Variable corresponding to `variable` for the given `data`.
 
-        Searches for presets by data_name and output_name and returns if found.
-        If 'variable' is given as type Variable this will also look for
-        derived variables (difference, aggregate).
-        Otherwise create Scalar, Vector, or Matrix Variable depending on the shape
-        of data in mesh.
+        `data` may be a mesh or a MeshSeries. The name is resolved against
+        predefined variables (`data_name` and `output_name`), mesh data and
+        attributes of `data` (e.g. `points`, `timevalues`). "x", "y", "z" and
+        "points*" resolve to the coordinates and "t", "time", "timevalues" to
+        the time values; a trailing `_`-suffix (e.g. ``"displacement_0"``)
+        selects a component of a vector/matrix variable.
 
-        :param variable:    The variable to retrieve or its name if a string.
-        :param mesh:        The mesh containing the variable data.
-        :returns: A corresponding Variable preset or a new Variable of correct type.
+        A Variable `variable` whose `output_name` is found in the data is
+        returned reading that data directly (functions discarded); one
+        whose ``data_name`` is found is returned unchanged. Otherwise a new
+        Scalar, Vector or Matrix Variable is created depending on the shape
+        of the data in the mesh.
+
+        :param variable: The variable to retrieve or its name if a string.
+        :param data: The mesh or mesh series containing the variable data.
+        :returns: A matching predefined or new Variable.
+        :raises KeyError: If the variable cannot be found in the data.
         """
         mesh = data[0] if isinstance(data, Sequence) else data
         data_keys: list[str] = list(
@@ -205,9 +229,9 @@ class Variable:
                     data_unit=variable.output_unit,
                     output_unit=variable.output_unit,
                     output_name=data_key,
-                    func=[],
+                    functions=[],
                 )
-            return variable.replace(data_name=data_key, func=[])
+            return variable.replace(data_name=data_key)
 
         # pylint: disable=import-outside-toplevel
         from ogstools.variables import all_variables
