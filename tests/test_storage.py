@@ -313,8 +313,9 @@ class TestStorage:
 
         target = tmp_path / "test_pyscript"
         files = prj.save(target)
-        assert_files_saved(files, expected_count=2)
+        assert_files_saved(files, expected_count=3)
         assert prj.active_target == target
+        assert (target / "decay_parameters.py").exists()
 
         py_file = prj.python_script.active_target
         assert py_file is not None

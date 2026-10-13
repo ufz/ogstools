@@ -72,3 +72,15 @@ def test_domain_mesh_resolution(tmp_path):
 
     model = ot.Model(tmp_path / "default.prj")
     assert model.meshes.domain_name == "square_quad8"
+
+
+@pytest.mark.system
+def test_model_run_python_bc_imports_module_next_to_it(tmp_path):
+    """The python BC script imports decay_parameters.py, which lies next to it."""
+    from ogstools.examples import prj_nuclear_decay
+
+    meshes = ot.Meshes.from_gmsh(
+        ot.gmsh_tools.rect(lengths=100.0, n_edge_cells=(5, 1)), log=False
+    )
+    sim = ot.Model(ot.Project(prj_nuclear_decay), meshes).run(tmp_path / "sim")
+    assert sim.status == sim.Status.done, sim.status_str
