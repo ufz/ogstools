@@ -22,6 +22,7 @@
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - Masking a variable no longer writes NaN into the mesh data.
 - Eigenvalues and eigenvectors of masked tensors are NaN instead of raising an error or giving wrong values.
+- fixed `ot.mesh.read` for a symbolic link to a file without extension; the reader is now chosen by the extension of the link name ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
 
 ## Features
 
