@@ -23,7 +23,6 @@ from typing_extensions import Self
 
 from .custom_colormaps import mask_cmap
 from .func import Function
-from .tensor_math import identity
 from .unit_registry import u_reg
 
 Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
@@ -122,18 +121,53 @@ class Variable:
         return copy(self)
 
     @classmethod
-    def from_variable(cls, variable: Variable, **changes: Any) -> Self:
-        "Create a new Variable object with modified attributes."
+    def from_variable(
+        cls,
+        variable: Variable,
+        func: Callable | Function,
+        suffix: str | int | None = None,
+        prefix: str | int | None = None,
+        **changes: Any,
+    ) -> Self:
+        """
+        Create a new derived variable.
+
+        `func` is appended to the stored functions. `prefix` and/or `suffix` are
+        prepended to and appended to the base `output_name` (separated by "_");
+        at least one has to be set. To change other attributes pass them
+        as keyword arguments;
+
+        :param variable: The variable to base the new one on.
+        :param func: The function to append to the stored functions.
+        :param prefix: Prepend this to the `output_name`.
+        :param suffix: Append this to the `output_name`.
+        :param changes: Other attributes to override in the new variable.
+        :returns: A new Variable with the applied changes.
+        :raises KeyError: If neither `prefix` nor `suffix` is set, or if
+            ``output_name`` or ``functions`` are given in `changes`.
+        """
+        for k, v in {"output_name": "suffix", "functions": "func"}.items():
+            if k in changes:
+                msg = f"Please use `{v}` instead of `{k}`."
+                raise KeyError(msg)
+        if prefix is None and suffix is None:
+            msg = "At least one of `prefix` or `suffix` has to be set."
+            raise KeyError(msg)
+
         functions = variable.functions.copy()
-        if (func := changes.pop("func", None)) is not None:
-            functions.append(
-                func if isinstance(func, Function) else Function(func)
-            )
+        functions.append(func if isinstance(func, Function) else Function(func))
+        output_name = "_".join(
+            [
+                str("" if prefix is None else prefix),
+                variable.output_name or "",
+                str("" if suffix is None else suffix),
+            ]
+        ).strip("_")
         return cls(
             data_name=variable.data_name,
             data_unit=variable.data_unit,
             output_unit=variable.output_unit,
-            output_name=variable.output_name,
+            output_name=output_name,
             symbol=variable.symbol,
             mask=variable.mask,
             functions=functions,
@@ -147,17 +181,25 @@ class Variable:
     @classmethod
     def find(cls, variable: Variable | str, data: MeshOrSeries) -> Variable:
         """
-        Returns a Variable preset or creates one with correct type.
+        Return a Variable corresponding to `variable` for the given `data`.
 
-        Searches for presets by data_name and output_name and returns if found.
-        If 'variable' is given as type Variable this will also look for
-        derived variables (difference, aggregate).
-        Otherwise create Scalar, Vector, or Matrix Variable depending on the shape
-        of data in mesh.
+        `data` may be a mesh or a MeshSeries. The name is resolved against
+        predefined variables (`data_name` and `output_name`), mesh data and
+        attributes of `data` (e.g. `points`, `timevalues`). "x", "y", "z" and
+        "points*" resolve to the coordinates and "t", "time", "timevalues" to
+        the time values; a trailing `_`-suffix (e.g. ``"displacement_0"``)
+        selects a component of a vector/matrix variable.
 
-        :param variable:    The variable to retrieve or its name if a string.
-        :param mesh:        The mesh containing the variable data.
-        :returns: A corresponding Variable preset or a new Variable of correct type.
+        A Variable `variable` whose `output_name` is found in the data is
+        returned reading that data directly (functions discarded); one
+        whose ``data_name`` is found is returned unchanged. Otherwise a new
+        Scalar, Vector or Matrix Variable is created depending on the shape
+        of the data in the mesh.
+
+        :param variable: The variable to retrieve or its name if a string.
+        :param data: The mesh or mesh series containing the variable data.
+        :returns: A matching predefined or new Variable.
+        :raises KeyError: If the variable cannot be found in the data.
         """
         mesh = data[0] if isinstance(data, Sequence) else data
         data_keys: list[str] = list(
@@ -173,26 +215,23 @@ class Variable:
             return time_var(var_name, data)
 
         if isinstance(variable, Variable):
-            if variable.data_name in all_keys + ["None"]:
+            if variable.data_name == "None":
                 return variable
-            matches = [
-                variable.output_name in data_key for data_key in all_keys
-            ]
-            if not any(matches):
+            if variable.output_name not in all_keys:
+                if variable.data_name in data_keys:
+                    return variable
                 raise KeyError(error_msg)
-            data_key = all_keys[matches.index(True)]
-            if data_key == variable.difference.output_name:
-                return variable.difference
-            if data_key in variable._agg_names:
+            data_key = variable.output_name
+
+            if len(variable.functions) > 0:
                 return variable.replace(
                     data_name=data_key,
                     data_unit=variable.output_unit,
                     output_unit=variable.output_unit,
                     output_name=data_key,
-                    symbol=variable.symbol,
-                    func=[Function(identity)],
+                    functions=[],
                 )
-            return variable.replace(data_name=data_key, output_name=data_key)
+            return variable.replace(data_name=data_key)
 
         # pylint: disable=import-outside-toplevel
         from ogstools.variables import all_variables
@@ -320,7 +359,7 @@ class Variable:
         return type(self).from_variable(
             self,
             func=lambda x: func(x, axis=index),
-            output_name="_".join([self.output_name, func.__name__]),
+            suffix=func.__name__,
             symbol=new_symbol,
         )
 
@@ -370,10 +409,7 @@ class Variable:
     def abs(self) -> Self:
         "A variable relating to absolute value of this quantity."
         return type(self).from_variable(
-            self,
-            output_name=f"absolute_{self.output_name}",
-            symbol=rf"|{self.symbol}|",
-            func=np.abs,
+            self, func=np.abs, prefix="absolute", symbol=rf"|{self.symbol}|"
         )
 
     def _diff_unit(self, unit: str) -> str:
@@ -396,7 +432,7 @@ class Variable:
             output_name=outname,
             symbol=r"\Delta " + self.symbol,
             bilinear_cmap=True,
-            func=[Function(identity)],
+            func=[],
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )
 
@@ -404,7 +440,6 @@ class Variable:
         "A variable relating to rate change of this quantity."
         diff_unit = self._diff_unit(self.output_unit)
         rate_unit = f"{diff_unit or 1}/{time_unit}"
-        outname = self.output_name + "_rate"
 
         def compute_rate(
             values: np.ndarray, timevalues: np.ndarray, data_time_unit: str
@@ -419,12 +454,12 @@ class Variable:
 
         return type(self).from_variable(
             self,
+            func=Function(compute_rate, ["timevalues", "time_unit"]),
+            suffix="rate",
             data_name=self.data_name,
             data_unit=rate_unit,
             output_unit=rate_unit,
-            output_name=outname,
             symbol=rf"\dot{{{self.symbol}}}",
-            func=Function(compute_rate, ["timevalues", "time_unit"]),
             bilinear_cmap=True,
             cmap=self.cmap if self.bilinear_cmap else "coolwarm",
         )

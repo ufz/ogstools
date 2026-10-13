@@ -42,14 +42,14 @@ class Vector(Variable):
             msg = "Vector index can only be 'x', 'y', 'z' or an int."
             raise KeyError(msg)
         int_index = index if isinstance(index, int) else "xyz".index(index)
-        output_name = self.output_name + f"_{index}" if self.output_name else ""
+        suffix = index if self.output_name else ""
         symbol = f"{{{self.symbol}}}_{index}" if self.symbol else index
 
         return Scalar.from_variable(
             self,
-            output_name=output_name,
-            symbol=symbol,
             func=lambda x: x[..., int_index],
+            suffix=suffix,
+            symbol=symbol,
             bilinear_cmap=True,
         )
 
@@ -58,9 +58,9 @@ class Vector(Variable):
         ":returns: A scalar variable as the magnitude of the vector."
         return Scalar.from_variable(
             self,
-            output_name=self.output_name + "_magnitude",
-            symbol=f"||{{{self.symbol}}}||",
             func=vector_norm,
+            suffix="magnitude",
+            symbol=f"||{{{self.symbol}}}||",
         )
 
 
@@ -139,10 +139,10 @@ class Components_BHE(Variable):
 
         return Scalar.from_variable(
             self,
-            data_name=self.data_name + suffix,
-            output_name=self.output_name + suffix + f"_{comp_index}",
-            symbol=f"{{{self.symbol}}}_{comp_index}",
             func=get_component(comp_index),
+            suffix=suffix + f"_{comp_index}",
+            data_name=self.data_name + suffix,
+            symbol=f"{{{self.symbol}}}_{comp_index}",
         )
 
     @property
@@ -163,7 +163,7 @@ class VectorList(Variable):
         ":returns: A vector variable as a component of the vectorlist variable."
         return Vector.from_variable(
             self,
-            output_name=self.output_name + f"_{index}",
-            symbol=f"{{{self.symbol}}}_{index}",
             func=lambda x: np.take(x, index, axis=-1),
+            suffix=index,
+            symbol=f"{{{self.symbol}}}_{index}",
         )

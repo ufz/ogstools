@@ -34,7 +34,9 @@ diff_a = ot.mesh.difference(mesh_0, mesh_1, temperature)
 diff_b = ot.mesh.difference(mesh_1, mesh_0, temperature)
 ot.plot.contourf(mesh_0, temperature, fig=fig, ax=axs[0][0])
 ot.plot.contourf(mesh_1, temperature, fig=fig, ax=axs[1][0])
-ot.plot.contourf(diff_a, temperature, fig=fig, ax=axs[0][1])
-ot.plot.contourf(diff_b, temperature, fig=fig, ax=axs[1][1])
+ot.plot.contourf(diff_a, temperature.difference, fig=fig, ax=axs[0][1])
+ot.plot.contourf(diff_b, temperature.difference, fig=fig, ax=axs[1][1])
 fig.tight_layout()
 fig.show()
+
+# %%

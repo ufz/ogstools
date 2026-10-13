@@ -62,7 +62,7 @@ mesh2 = mesh_series.mesh(-1)
 
 # %%
 mesh_diff = ot.mesh.difference(mesh1, mesh2, ot.variables.temperature)
-fig = ot.plot.contourf(mesh_diff, ot.variables.temperature)
+fig = ot.plot.contourf(mesh_diff, ot.variables.temperature.difference)
 fig.show()
 
 # %% [markdown]
@@ -244,8 +244,8 @@ fig_T_2.show()
 # %% [markdown]
 # The MeshSeries object returned by the difference() method, can be used in the
 # same way as any other one. However, to plot the pressure difference either
-# use the string "pressure_difference" (see comment in the code block below) or the derived variable.
-# ot.variable.pressure.difference.
+# use the string "pore_pressure_difference" (see comment in the code block
+# below) or the derived variable ot.variable.pressure.difference.
 
 # %%
 fig_T_diff = ot.plot.contourf(
