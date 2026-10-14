@@ -930,7 +930,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def probe_values(
         self,
-        coords_or_ids: np.ndarray | int | list[np.ndarray] | list[int],
+        coords_or_ids: np.ndarray | int | list[float] | list[int],
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
     ) -> np.ndarray | list[np.ndarray]:
@@ -981,6 +981,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             isinstance(coords_or_ids, list)
             and all(isinstance(p, int) for p in coords_or_ids)
         ):
+            if isinstance(coords_or_ids, list):
+                coords_or_ids = [cast(int, index) for index in coords_or_ids]
             results = self._data(data_name, coords_or_ids)
             if results is not None:
                 return results
