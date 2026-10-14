@@ -20,5 +20,5 @@
 
 # Post-release procedure
 
-- Update ogstools version in OGS (Benchmarks)
+- Update the ogstools version in OGS (Benchmarks) in one MR: the pin `ogstools==` in `Tests/Data/pyproject.toml`, `binder_tag` in `Tests/Data/testrunner.py` (or wherever the pin's comment points) and `$tools_url` in `web/layouts/_partials/header.html`
 - Discourse announcement
