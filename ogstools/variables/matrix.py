@@ -60,6 +60,11 @@ class Matrix(Variable):
         )
 
     def col(self, index: int) -> Vector:
+        """A vector variable as the matrix column at index.
+
+        :param index: The index of the column.
+        :returns: The column as a `Vector`.
+        """
         return Vector.from_variable(
             self,
             func=Function(tensor_math.column, [], {"index": index}),
@@ -68,6 +73,11 @@ class Matrix(Variable):
         )
 
     def row(self, index: int) -> Vector:
+        """A vector variable as the matrix row at index.
+
+        :param index: The index of the row.
+        :returns: The row as a `Vector`.
+        """
         return Vector.from_variable(
             self,
             func=Function(tensor_math.row, [], {"index": index}),

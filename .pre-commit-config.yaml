@@ -1,4 +1,5 @@
 exclude: EXPERIMENTAL/.*|.*\.msh|.*template.md|paper.md
+default_install_hook_types: [pre-commit, commit-msg]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -74,3 +75,87 @@ repos:
     rev: 1.0.0
     hooks:
       - id: mdformat
+  - repo: local
+    hooks:
+      # Shared
+      - id: sphinx-returns
+        name: "docstrings use :returns:, not :return:"
+        language: pygrep
+        entry: ":return:"
+        files: ^ogstools/.*\.py$
+        # baseline: remove a file when it is fixed
+        exclude: ^ogstools/(core/simulation|feflowlib/(_feflowlib|_tools|feflow_model)|mesh/file_io)\.py$
+      - id: sphinx-docstring-fields
+        name: "docstrings use :param: fields, not NumPy or Google sections"
+        language: pygrep
+        entry: '^[ \t]+(Parameters|Returns|Raises|Yields|Attributes)\n[ \t]+-{3,}$|^[ \t]+(Args|Arguments|Returns|Raises|Yields|Attributes):$'
+        args: [--multiline]
+        files: ^ogstools/.*\.py$
+        # baseline: remove a file when it is fixed
+        exclude: ^ogstools/(core/simulation_controller|logparser/monitor_cli|materiallib/core/(components|material_manager|material|media|medium)|mesh/vtk_pyvista|ogs6py/(linsolvers|local_coordinate_system|media|nonlinsolvers|parameters|processes|project_media_importer|timeloop))\.py$
+      - id: deprecate-with-helper
+        name: "deprecate API with the package's deprecation helper"
+        language: pygrep
+        entry: '\bDeprecationWarning\b'
+        files: ^ogstools/.*\.py$
+        # baseline: remove a file when it is fixed
+        exclude: ^ogstools/(_internal|materiallib/core/material)\.py$
+      - id: no-np-testing-in-library
+        name: "no testing helpers in library code"
+        language: pygrep
+        entry: '\b(np|numpy)\.testing\b'
+        files: ^ogstools/.*\.py$
+      - id: yaml-extension
+        name: "YAML files end in .yaml"
+        language: fail
+        entry: "rename to .yaml"
+        files: \.yml$
+        # baseline: existing files keep their name
+        exclude: ^(\.gitlab-ci\.yml|ogstools/core/execution_default_example\.yml|ogstools/examples/(materiallib|meshlib/meshes_from_yaml)/.*\.yml)$
+      - id: no-notebooks-in-gallery
+        name: "commit gallery examples as Python scripts"
+        language: fail
+        entry: "commit the example as a .py script"
+        files: ^docs/.*\.ipynb$
+      - id: ruff-baseline-current
+        name: "ruff baseline lists only rules a file still breaks"
+        language: python
+        additional_dependencies: ["ruff==0.15.1"] # keep in sync with the ruff hook
+        entry: python scripts/check_ruff_baseline.py
+        pass_filenames: false
+        files: \.py$|^pyproject\.toml$
+      - id: no-co-authored-by
+        name: "no Co-authored-by trailer"
+        language: pygrep
+        entry: '(?i)^co-authored-by:'
+        stages: [commit-msg]
+      - id: spdx-header
+        name: "SPDX header in library files"
+        language: pygrep
+        entry: '\A(#!.*\n)?# SPDX-FileCopyrightText: Copyright \(c\) OpenGeoSys Community \(opengeosys\.org\)\n# SPDX-License-Identifier: BSD-3-Clause$'
+        args: [--multiline, --negate]
+        files: ^ogstools/.*\.py$
+      - id: no-subprocess-in-examples
+        name: "examples run OGS through OGSTools"
+        language: pygrep
+        entry: '^\s*(import subprocess|from subprocess )'
+        files: ^docs/examples/.*\.py$
+      - id: commit-subject-form
+        name: "commit subject: [scope] subject, scope: subject or type(scope): subject"
+        language: pygrep
+        entry: '\A(\[[\w./-]+\] |[a-z]+(\([\w./-]+\))?!?: |fixup! |squash! |amend! |Merge |Revert )'
+        args: [--multiline, --negate]
+        stages: [commit-msg]
+      - id: commit-subject-length
+        name: "commit subject at most 72 characters"
+        language: pygrep
+        entry: '\A[^\n]{73,}'
+        args: [--multiline]
+        stages: [commit-msg]
+      # OGSTools
+      - id: no-dunder-file-paths
+        name: "build package paths from ogstools.definitions"
+        language: pygrep
+        entry: '^[^#]*\b__file__\b'
+        files: ^ogstools/.*\.py$
+        exclude: ^ogstools/definitions\.py$

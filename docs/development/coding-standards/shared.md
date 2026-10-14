@@ -331,7 +331,6 @@ For a package that documents its features in a sphinx-gallery:
 - Use only numbers that stay true after the commit, such as a count that anyone can repeat.
   A run time depends on the machine and does not belong in the message.
 - Link the primary source that the message relies on.
-- Do not add `Co-authored-by` trailers, unless the author explicitly wants one for a specific commit.
 - Keep one concern per commit. Separate refactoring and formatting from functional changes.
 - A commit subject starts with its scope in brackets, as in OGS. Then it says what changes (`[meshseries] probe accepts XDMF series`).
   The scope is the affected subpackage in its exact spelling, or one of `docs`, `tests`, `ci`, `packaging`.

@@ -42,9 +42,11 @@ These notes are for the people who write and update the [coding standard](coding
 - A rule goes into `shared.md` when it holds for every Python project around OGS, and into `ogstools.md` when it holds for OGSTools only.
   `shared.md` names OGSTools only as the shared tool for running OGS, reading meshes, units and plots.
   An OGSTools example of a shared rule goes into `ogstools.md`.
+  The banned APIs in `pyproject.toml` and the local hooks in `.pre-commit-config.yaml` are grouped the same way. The ruff rule selection is shared. The formatter and the line length are set per project.
+  Paths, `exclude:` lists and baselines belong to the project, whatever the group of the rule.
 - The checklists list only rules that no tool checks.
   When a tool takes over a rule, remove the rule from its checklist.
-  The commit rules stay in the checklists, because commits made in the GitLab web interface skip the commit-msg hook.
+  CI runs the commit-msg hooks on each commit of an MR, so it also checks commits made in the GitLab web interface.
 - A new tool rule starts with a baseline: the files that violate it at that time.
   Generate the baseline when you enable the rule, in `[tool.ruff.lint.extend-per-file-ignores]` or in the `exclude:` of the hook.
 - `AGENTS.md` links to the coding standard and adds only what applies to agents. It does not repeat rules.

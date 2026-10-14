@@ -318,12 +318,13 @@ def copy_ogs_logo(out_name: str = "ogs_logo.png") -> Path:
     if out.exists():
         return out
     if not OGS_LOGO_SOURCE.exists():
-        raise FileNotFoundError(
+        msg = (
             f"{out} does not exist yet and OGS_LOGO_SOURCE "
             f"({OGS_LOGO_SOURCE}) was not found either. Set the "
             "OGS_LOGO_SOURCE env var to a local OGS web checkout's "
             "OGS-Logo.png, or copy assets/ogs_logo.png in from git."
         )
+        raise FileNotFoundError(msg)
     shutil.copyfile(OGS_LOGO_SOURCE, out)
     return out
 

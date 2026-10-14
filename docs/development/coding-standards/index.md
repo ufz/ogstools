@@ -29,21 +29,21 @@ The rules come in two checklists: one bullet per rule, grouped by area.
   Run `pre-commit install` once; it also installs the hook that checks commit messages.
 - Files that violated a rule when it was enabled are listed as a baseline: in `[tool.ruff.lint.extend-per-file-ignores]` and in the `exclude:` of a hook in `.pre-commit-config.yaml`.
   Remove a file from a baseline when you fix it. Never add a file.
-- CI runs the pre-commit hooks, ruff included, on the files that an MR changes, and fails on their findings.
-  It only reports mypy findings. Run `pre-commit run --all-files` before you ask for review.
+  A hook reports ruff baseline entries for rules that a file no longer breaks.
+- CI runs `pre-commit run --all-files`, ruff and mypy included, and the commit-msg hooks on each commit of the MR.
+  It fails on their findings.
 - Where no rule applies, follow the conventions of OGS.
   Where OGS has none, follow those of pyvista, then Python best practice.
 
 ## Check a change
 
-- `pre-commit run --from-ref origin/main --to-ref HEAD` runs the checks of CI on the commits of a branch.
+- `pre-commit run --all-files` runs the checks of CI. The hooks installed by `pre-commit install` check each commit message when you commit.
 - For the rules that no tool checks, read the checklists next to the diff, or let an LLM review it with the prompt below.
   Its findings are suggestions; you decide.
 
 ```text
 Review `git diff origin/main...HEAD` against docs/development/coding-standards/index.md and the pages it links.
 Comment only on added or changed lines. For each finding, name the rule and give file:line.
-Skip what pre-commit checks.
 ```
 
 ## Review a merge request
