@@ -15,6 +15,7 @@
 ## Bugfixes
 
 - the python files next to the python script (`<python_script>`) are now saved with it, so a Python BC script run by `Model.run()` can import them.
+- `plot.contourf` failed to plot a variable on celldata with a mask, but is now able to.
 
 ## Features
 
