@@ -470,6 +470,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     ) -> np.ndarray | list[np.ndarray] | None:
         # Reads data from attached xdmf-file.
         # This is very fast but only works on xdmf
+        if self._data_type != ".xdmf":
+            return None
         if isinstance(variable, list):
             result = [self._data(var, points) for var in variable]
             if all(item is not None for item in result):
@@ -487,10 +489,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 do_transform = True
         else:
             variable_name = variable
-        if (
-            self._data_type != ".xdmf"
-            or variable_name not in self._xdmf_reader.data_items
-        ):
+        if variable_name not in self._xdmf_reader.data_items:
             return None
         time_indices = list(range(self._xdmf_reader.num_steps))
         for timeslice in self._time_indices:
