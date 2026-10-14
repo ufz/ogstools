@@ -101,9 +101,7 @@ def combined_levels(
         values = variable.magnitude.transform(
             mesh
             if not variable.mask_used(mesh)
-            else mesh.ctp(pass_cell_data=True).threshold(
-                value=[1, 1], scalars=variable.mask
-            )
+            else mesh.threshold(value=[1, 1], scalars=variable.mask)
         )
         if (
             kwargs.get("log_scaled", setup.log_scaled)

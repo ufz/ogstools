@@ -187,9 +187,7 @@ def subplot(
             mesh.threshold([0, 0], scalars=variable.mask),
             var_mask, ax, **kwargs,
         )  # fmt: skip
-        mesh = mesh.ctp(pass_cell_data=True).threshold(
-            value=[1, 1], scalars=variable.mask
-        )
+        mesh = mesh.threshold(value=[1, 1], scalars=variable.mask)
 
     x_id, y_id, projection, _ = utils.get_projection(mesh)
     if "xlim" in kwargs or "ylim" in kwargs:

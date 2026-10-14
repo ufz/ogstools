@@ -550,7 +550,15 @@ class Variable:
 
         values = dataset[self.data_name]  # type: ignore[call-overload]
         if masked and self.mask_used(dataset):
-            mask0 = np.asarray(mesh0.ctp(pass_cell_data=False)[self.mask] == 0)
+
+            def mask_vals(mesh: pv.UnstructuredGrid) -> np.ndarray:
+                if self.data_name in mesh.point_data:
+                    mesh_ = mesh.ctp(pass_cell_data=False)
+                else:
+                    mesh_ = mesh
+                return np.asarray(mesh_[self.mask] == 0)
+
+            mask0 = mask_vals(mesh0)
             if not isinstance(dataset, Sequence):
                 values[mask0] = np.nan
                 return values
@@ -562,10 +570,7 @@ class Variable:
 
             # Masks differ with time
             for i, _mesh in enumerate(dataset):
-                mask = np.asarray(
-                    _mesh.ctp(pass_cell_data=False)[self.mask] == 0
-                )
-                values[i, mask] = np.nan
+                values[i, mask_vals(_mesh)] = np.nan
         return values
 
     def get_label(self, split_at: int | None = None) -> str:

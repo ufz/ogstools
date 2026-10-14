@@ -129,6 +129,12 @@ class TestPlotting:
         ms = examples.load_meshseries_THM_2D_PVD().scale("km")
         return contourf(ms[1], var, **kwargs)
 
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    def test_contourf_celldata_mask(self) -> plt.Figure:
+        """Test 2D contourplots masked cell data."""
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
+        return contourf(ms[1].ptc(), ot.variables.pressure)
+
     @pytest.mark.tools  # NodeReordering
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     def test_limits(self) -> plt.Figure:
