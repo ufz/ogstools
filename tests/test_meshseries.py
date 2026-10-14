@@ -387,13 +387,28 @@ def test_probe_2D_mesh():
     _check_probe(ms, points)
 
 
-def test_probe_xdmf_ids():
+@pytest.mark.parametrize(
+    "ids",
+    [5, [2, 22, 94]],
+)
+@pytest.mark.parametrize(
+    "variables",
+    [
+        "pressure",
+        ot.variables.pressure,
+        ["VolumetricFlowRate", ot.variables.pressure],
+        "MaterialIDs",
+    ],
+)
+def test_probe_xdmf_ids(ids: int | list[int], variables) -> None:
     """Test that probing xdmf files for point ids gives the same results as probing the corresponding coordinates"""
-    ms = examples.load_meshseries_HT_2D_XDMF()
-    ids = [2, 22, 135]
-    result_id = ms.probe_values(ids, "pressure")
-    coordinates = ms[0].points[ids]
-    result_coordinates = ms.probe_values(coordinates, "pressure")
+    ms = examples.load_meshseries_LF_2D_XDMF()
+    result_id = ms.probe_values(ids, variables)
+    if variables == "MaterialIDs":
+        coordinates = ms[0].cell_centers().points[ids]
+    else:
+        coordinates = ms[0].points[ids]
+    result_coordinates = ms.probe_values(coordinates, variables)
     np.testing.assert_allclose(result_id, result_coordinates)
 
 

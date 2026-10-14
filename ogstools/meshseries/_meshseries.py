@@ -482,8 +482,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 and variable.output_name in self._xdmf_reader.data_items
             ):
                 variable_name = variable.output_name
+                do_transform = False
             else:
                 variable_name = variable.data_name
+                do_transform = True
         else:
             variable_name = variable
         if (
@@ -514,24 +516,28 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             or timeslice.step is None
             or isinstance(points, int)
         ):
-            return self._xdmf_reader.data_items[variable_name][
+            result = self._xdmf_reader.data_items[variable_name][
                 timeslice, points
             ]
-        if len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
+        elif len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
             points
         ):
-            return np.vstack(
+            result = np.vstack(
                 [
                     self._xdmf_reader.data_items[variable_name][i, points]
                     for i in range(self._xdmf_reader.num_steps)[timeslice]
                 ]
             )
-        return np.column_stack(
-            [
-                self._xdmf_reader.data_items[variable_name][timeslice, i]
-                for i in points
-            ]
-        )
+        else:
+            result = np.column_stack(
+                [
+                    self._xdmf_reader.data_items[variable_name][timeslice, i]
+                    for i in points
+                ]
+            )
+        if isinstance(variable, Variable) and do_transform:
+            return variable.transform(result)
+        return result
 
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
@@ -976,6 +982,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     If `data_name` is a list, a corresponding list of arrays is
                     returned.
         """
+
         if (
             isinstance(data_name, list)
             and any(key in self.point_data for key in data_name)
@@ -999,6 +1006,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             results = self._data(data_name, coords_or_ids)
             if results is not None:
                 return results
+        is_cell_data = (
+            isinstance(data_name, list)
+            and any(key in self.cell_data for key in data_name)
+        ) or data_name in self.cell_data
+        if isinstance(coords_or_ids, int) or (
+            isinstance(coords_or_ids, list)
+            and all(isinstance(p, int) for p in coords_or_ids)
+        ):
+            if is_cell_data:
+                coords_or_ids = self[0].cells[coords_or_ids]
             coords_or_ids = self[0].points[coords_or_ids]
         pts = reshape_obs_points(coords_or_ids, self.mesh(0))
         values = self.values(data_name)
@@ -1009,10 +1026,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             values = np.moveaxis(self._flatten_vectors(values), 0, -1)
         values = np.swapaxes(values, 0, 1)
         geom = self.mesh(0).points
-        is_cell_data = (
-            isinstance(data_name, list)
-            and any(key in self.cell_data for key in data_name)
-        ) or data_name in self.cell_data
         if is_cell_data:
             geom = self.mesh(0).cell_centers().points
         # remove flat dimensions for interpolation
@@ -1216,7 +1229,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                             mesh. Useful for slicing / clipping / thresholding.
         :param detach_file: If True, detaches file from which the MeshSeries
                             was originally read and caches all timesteps.
-                            Note, that if even if detach_file is False
+                            Note, that even if detach_file is False
                             , the attached file will not be changed and some
                             OGSTools functions, which expect the MeshSeries to
                             be consistent with the attached file, will return
@@ -1421,7 +1434,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         :param preference:  Selected entities.
         :param detach_file: If True, detaches file from which the MeshSeries
                             was originally read and caches all timesteps.
-                            Note, that if even if detach_file is False
+                            Note, that even if detach_file is False
                             , the attached file will not be changed and some
                             OGSTools functions, which expect the MeshSeries to
                             be consistent with the attached file, will return

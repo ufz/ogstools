@@ -24,6 +24,10 @@ _surface_dir = EXAMPLES_DIR / "meshlib" / "mesh1" / "surface_data"
 _yaml_mesh_dir = EXAMPLES_DIR / "meshlib" / "meshes_from_yaml"
 
 
+def load_meshseries_LF_2D_XDMF() -> ot.MeshSeries:
+    return ot.MeshSeries(_meshseries_dir / "LiquidFlow_Simple.xdmf")
+
+
 def load_meshseries_THM_2D_PVD():
     return ot.MeshSeries(_meshseries_dir / "2D.pvd")
 
