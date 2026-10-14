@@ -93,7 +93,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 self.time_unit != u_reg.Quantity(1, time_unit)):  # fmt: skip
             self.scale(spatial_unit, time_unit)
 
-        self._dataitems: dict[str, Any] = {}
         if filepath is None:
             self.filepath = self._data_type = None
             return
@@ -493,45 +492,25 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             or variable_name not in self._xdmf_reader.data_items
         ):
             return None
-        # Composes all slices in self._time_indices into one
-        # to only read strictly necessary timesteps and minimise
-        # reading time
-        num_timesteps = self._xdmf_reader.num_steps
-        indices_inner = self._time_indices[0].indices(num_timesteps)
-        for n in self._time_indices[1:]:
-            indices_outer = n.indices(num_timesteps)
-            indices_inner = (
-                indices_inner[0] + indices_inner[2] * indices_outer[0],
-                indices_outer[1] * indices_inner[2] + indices_inner[0],
-                indices_inner[2] * indices_outer[2],
-            )
-            num_timesteps = (
-                abs(indices_outer[1] - indices_outer[0])
-                // abs(indices_outer[2])
-                + 1
-            )
-        timeslice = slice(indices_inner[0], indices_inner[1], indices_inner[2])
-        if (
-            timeslice.step == 1
-            or timeslice.step is None
-            or isinstance(points, int)
-        ):
+        time_indices = list(range(self._xdmf_reader.num_steps))
+        for timeslice in self._time_indices:
+            time_indices = time_indices[timeslice]
+        time_indices = list(time_indices)
+        if isinstance(points, int):
             result = self._xdmf_reader.data_items[variable_name][
-                timeslice, points
+                time_indices, points
             ]
-        elif len(list(range(self._xdmf_reader.num_steps)[timeslice])) < len(
-            points
-        ):
+        elif len(time_indices) < len(points):
             result = np.vstack(
                 [
                     self._xdmf_reader.data_items[variable_name][i, points]
-                    for i in range(self._xdmf_reader.num_steps)[timeslice]
+                    for i in time_indices
                 ]
             )
         else:
             result = np.column_stack(
                 [
-                    self._xdmf_reader.data_items[variable_name][timeslice, i]
+                    self._xdmf_reader.data_items[variable_name][time_indices, i]
                     for i in points
                 ]
             )
@@ -1229,10 +1208,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                             mesh. Useful for slicing / clipping / thresholding.
         :param detach_file: If True, detaches file from which the MeshSeries
                             was originally read and caches all timesteps.
-                            Note, that even if detach_file is False
-                            , the attached file will not be changed and some
-                            OGSTools functions, which expect the MeshSeries to
-                            be consistent with the attached file, will return
+                            Note: Even if detach_file is False, the attached
+                            file will not be changed and some OGSTools functions
+                            (like probe_values), which expect the MeshSeries to be
+                            consistent with the attached file, will return
                             unexpected results.
 
         :returns: A deep copy of this MeshSeries with transformed meshes.
@@ -1434,10 +1413,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         :param preference:  Selected entities.
         :param detach_file: If True, detaches file from which the MeshSeries
                             was originally read and caches all timesteps.
-                            Note, that even if detach_file is False
-                            , the attached file will not be changed and some
-                            OGSTools functions, which expect the MeshSeries to
-                            be consistent with the attached file, will return
+                            Note: Even if detach_file is False, the attached
+                            file will not be changed and some OGSTools functions
+                            (like probe_values), which expect the MeshSeries to be
+                            consistent with the attached file, will return
                             unexpected results.
 
         :returns: A MeshSeries with the selected domain subset.

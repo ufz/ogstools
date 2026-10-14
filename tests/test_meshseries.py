@@ -392,17 +392,23 @@ def test_probe_2D_mesh():
     [5, [2, 22, 94]],
 )
 @pytest.mark.parametrize(
-    "variables",
+    ("variables", "timeslice"),
     [
-        "pressure",
-        ot.variables.pressure,
-        ["VolumetricFlowRate", ot.variables.pressure],
-        "MaterialIDs",
+        ("pressure", slice(0, 5, 1)),
+        (ot.variables.pressure, [slice(0, 6, 1), slice(None, None, 2)]),
+        (["VolumetricFlowRate", ot.variables.pressure], slice(None, None, 2)),
+        ("MaterialIDs", slice(None, None, None)),
     ],
 )
-def test_probe_xdmf_ids(ids: int | list[int], variables) -> None:
+def test_probe_xdmf_ids(
+    ids: int | list[int], variables, timeslice: slice | list[slice]
+) -> None:
     """Test that probing xdmf files for point ids gives the same results as probing the corresponding coordinates"""
+    if not isinstance(timeslice, list):
+        timeslice = [timeslice]
     ms = examples.load_meshseries_LF_2D_XDMF()
+    for slice in timeslice:
+        ms = ms[slice]
     result_id = ms.probe_values(ids, variables)
     if variables == "MaterialIDs":
         coordinates = ms[0].cell_centers().points[ids]
