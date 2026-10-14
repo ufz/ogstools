@@ -959,6 +959,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
                     If `data_name` is a list, a corresponding list of arrays is
                     returned.
+
+        :Example:
+            >>> import matplotlib.pyplot as plt
+            >>>
+            >>> ms=ot.MeshSeries(filepath)
+            >>> temp_at_id=ms.probe_values(id, "temperature")
+            >>> plt.plot(ms.timevalues, temp_at_id)
         """
 
         if (
