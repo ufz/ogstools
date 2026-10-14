@@ -357,8 +357,15 @@ addopts = [
   "--log-cli-level=INFO",
   "--tb=short",
   "--mpl",
+  "--durations=0",
+  "--durations-min=10",
 ]
 xfail_strict = true
+markers = [
+  "system: runs an OGS simulation",
+  "tools: runs an OGS binary tool",
+]
+filterwarnings = ["ignore:Animation was deleted without rendering anything"]
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
 # tests
 #filterwarnings = ["error"]

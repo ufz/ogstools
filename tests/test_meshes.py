@@ -122,15 +122,17 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
 
 
 @pytest.mark.tools
-@pytest.mark.xfail(
-    shutil.which("tetgen") is None, reason="Tetgen not installed"
-)
 @pytest.mark.parametrize(
     "discretization",
     [
         lambda ls: cast(LS, ls).to_region_prism(resolution=400),
         lambda ls: cast(LS, ls).to_region_simplified(xy_resolution=400, rank=3),
-        lambda ls: cast(LS, ls).to_region_tetrahedron(resolution=800),
+        pytest.param(
+            lambda ls: cast(LS, ls).to_region_tetrahedron(resolution=800),
+            marks=pytest.mark.xfail(
+                shutil.which("tetgen") is None, reason="Tetgen not installed"
+            ),
+        ),
     ],
 )
 def test_meshes_from_mesh_3D(

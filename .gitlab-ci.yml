@@ -255,7 +255,12 @@ tests (mac - pip) (R):
     - *pip-setup-activate
     - pip install -e ".[pinned]"
   script:
-    - pytest
+    # the summary shows baseline, result and difference of each image test
+    - pytest --mpl-results-path=mpl-results --mpl-generate-summary=html
+  artifacts:
+    when: always
+    paths:
+      - mpl-results
 
 # Remove -j 1 when this is resolved:
 # https://github.com/pydata/pydata-sphinx-theme/issues/1643
