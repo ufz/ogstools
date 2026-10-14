@@ -4,10 +4,9 @@
 import typing
 from copy import deepcopy
 from pathlib import Path
-from typing import overload
+from typing import Self, overload
 
 import pyvista as pv
-from typing_extensions import Self
 
 from ogstools.core.model import Model
 from ogstools.core.result import Result

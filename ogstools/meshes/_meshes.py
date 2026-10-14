@@ -8,13 +8,12 @@ import logging as log
 import os
 from collections.abc import Iterator, MutableMapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import pyvista as pv
 import yaml
 from matplotlib import pyplot as plt
-from typing_extensions import Self
 
 import ogstools.mesh as Mesh
 from ogstools._internal import deprecated

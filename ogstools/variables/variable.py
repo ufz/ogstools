@@ -13,13 +13,12 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, get_args
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast, get_args
 
 import numpy as np
 import pyvista as pv
 from matplotlib.colors import Colormap
 from pint.facets.plain import PlainQuantity
-from typing_extensions import Self
 
 from .custom_colormaps import mask_cmap
 from .func import Function
