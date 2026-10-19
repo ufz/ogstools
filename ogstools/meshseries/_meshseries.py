@@ -461,22 +461,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     @overload
     def _data(
         self, variable: str | Variable, points: int | list[int]
-    ) -> np.ndarray | None: ...
+    ) -> np.ndarray: ...
 
     def _data(
         self,
         variable: str | Variable | list[str | Variable],
         points: int | list[int],
-    ) -> np.ndarray | list[np.ndarray] | None:
+    ) -> np.ndarray | list[np.ndarray]:
         # Reads data from attached xdmf-file.
         # This is very fast but only works on xdmf
         if self._data_type != ".xdmf":
-            return None
+            msg = "Ensure that data_type of the MeshSeries is xdmf before calling this function"
+            raise ValueError(msg)
         if isinstance(variable, list):
-            result = [self._data(var, points) for var in variable]
-            if all(item is not None for item in result):
-                return result
-            return None
+            return [self._data(var, points) for var in variable]
+        # TODO (FZ): reuse common logic in Variable.find
         if isinstance(variable, Variable):
             if (
                 variable.data_name != variable.output_name
@@ -490,7 +489,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         else:
             variable_name = variable
         if variable_name not in self._xdmf_reader.data_items:
-            return None
+            msg = "Variable not found in data_items"
+            raise ValueError(msg)
         time_indices = list(range(self._xdmf_reader.num_steps))
         for timeslice in self._time_indices:
             time_indices = time_indices[timeslice]
@@ -773,6 +773,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return self._values(variable)
 
     def _values(self, variable: str | Variable) -> np.ndarray:
+        # TODO (FZ): reuse common logic in Variable.find
         if isinstance(variable, Variable):
             if (
                 variable.data_name != variable.output_name
@@ -930,9 +931,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def probe_values(
         self,
-        coords_or_ids: np.ndarray | int | list[float] | list[int],
+        points: np.ndarray | list[float | list[float]],
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
+        ids: int | list[int] | None = None,
     ) -> np.ndarray | list[np.ndarray]:
         """
         Return the sampled data of the MeshSeries at observation points.
@@ -940,16 +942,19 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         Similar to :func:`~ogstools.MeshSeries.probe` but returns the
         data directly instead of creating a new MeshSeries.
 
-        :param coords_or_ids:   The observation points to sample at. These can
-                                be provided as coordinates or ids (i.e. integers).
-                                If ids are given they are assumed to match
-                                data_type (i.e. the ids are treated as point ids
-                                if probing for point data and cell ids if probing
-                                for cell data)
+        :param points:          The observation points to sample at. If an empty
+                                list/array is given will try to probe for ids
+                                instead.
         :param data_name:       Data to sample. If provided as a Variable, the
                                 output will transformed accordingly. Can also be
                                 a list of str or Variable.
         :param interp_method:   Interpolation method, defaults to `linear`
+        :param ids:             Alternative way to specify observation points
+                                to sample at. Probing by ids is very efficient for
+                                MeshSeries read from xdmf files. Ids are
+                                assumed to match data_type (i.e. the ids are
+                                treated as point ids if probing for point data
+                                and cell ids if probing for cell data).
 
         :returns:   `numpy` array/s of interpolated data at observation points
                     with the following shape:
@@ -967,7 +972,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             >>> temp_at_id=ms.probe_values(id, "temperature")
             >>> plt.plot(ms.timevalues, temp_at_id)
         """
-
         if (
             isinstance(data_name, list)
             and any(key in self.point_data for key in data_name)
@@ -975,36 +979,27 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
-        if (
-            isinstance(coords_or_ids, list)
-            and any(isinstance(p, int) for p in coords_or_ids)
-            and not all(isinstance(p, int) for p in coords_or_ids)
-        ):
+        if len(points) > 0 and ids:
             msg = (
                 "Cannot assign points by index and coordinates simultaneously."
             )
             raise TypeError(msg)
-        if isinstance(coords_or_ids, int) or (
-            isinstance(coords_or_ids, list)
-            and all(isinstance(p, int) for p in coords_or_ids)
-        ):
-            if isinstance(coords_or_ids, list):
-                coords_or_ids = [cast(int, index) for index in coords_or_ids]
-            results = self._data(data_name, coords_or_ids)
-            if results is not None:
-                return results
+        if len(points) == 0 and not ids:
+            msg = "Please specify points at which to probe"
+            raise TypeError(msg)
+        if ids and self._data_type == ".xdmf":
+            return self._data(data_name, ids)
         is_cell_data = (
             isinstance(data_name, list)
             and any(key in self.cell_data for key in data_name)
         ) or data_name in self.cell_data
-        if isinstance(coords_or_ids, int) or (
-            isinstance(coords_or_ids, list)
-            and all(isinstance(p, int) for p in coords_or_ids)
-        ):
-            if is_cell_data:
-                coords_or_ids = self[0].cells[coords_or_ids]
-            coords_or_ids = self[0].points[coords_or_ids]
-        pts = reshape_obs_points(coords_or_ids, self.mesh(0))
+        if ids:
+            points = (
+                self[0].cell_centers().points[ids]
+                if is_cell_data
+                else self[0].points[ids]
+            )
+        pts = reshape_obs_points(points, self.mesh(0))
         values = self.values(data_name)
         if isinstance(data_name, list):
             components = [
@@ -1057,7 +1052,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 )
                 raise TypeError(msg)
 
-        if np.shape(coords_or_ids)[0] != 1 and np.shape(result)[1] == 1:
+        if np.shape(points)[0] != 1 and np.shape(result)[1] == 1:
             result = np.squeeze(result, axis=1)
         if isinstance(data_name, list):
             if more_than_1d:
@@ -1207,7 +1202,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         mesh_func: Callable[
             [pv.UnstructuredGrid], pv.UnstructuredGrid
         ] = lambda mesh: mesh,
-        detach_file: bool = True,
+        detach_file: bool = False,
     ) -> MeshSeries:
         """
         Apply a transformation function to the underlying mesh.
@@ -1412,7 +1407,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self,
         index: slice | int | np.ndarray | list,
         preference: Literal["points", "cells"] = "points",
-        detach_file: bool = True,
+        detach_file: bool = False,
     ) -> MeshSeries:
         """
         Extract a subset of the domain by point or cell indices.
