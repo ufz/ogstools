@@ -38,6 +38,7 @@ from ogstools.ogs6py import (
     processes,
     processvars,
     python_script,
+    staggered,
     timeloop,
 )
 from ogstools.ogs6py.project_media_importer import _ProjectMediaImporter
@@ -1691,6 +1692,8 @@ class Project(StorageBase):
     def set_media(self, media_set: MediaSet) -> None:
         """Public API: import MediaSet into this Project."""
         _ProjectMediaImporter(self).set_media(media_set)
+
+    convert_to_staggered = staggered.convert_to_staggered
 
     def meshpaths(self, mesh_dir: Path | None = None) -> list[Path]:
         """Returns the filepaths to the given meshes in the Project.

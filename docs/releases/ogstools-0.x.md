@@ -37,6 +37,8 @@
 - `variables.dilatancy_critescu` and `variables.dilatancy_alkan` now assume effective stress and no longer read "pressure", so they behave the same as `variables.dilatancy_critescu_eff` and `variables.dilatancy_alkan_eff` as calculating from effective stress is the default for all OGS process (aside from TRM). For total stress input use e.g. `<variable>.from_total_stress(...)`.
 - added `variables.fluid_pressure_criterion_clay` (== `variables.fluid_pressure_criterion`) and `variables.fluid_pressure_criterion_salt`
 - The integrity criteria are masked by the field `variables.INTEGRITY_MASK` ("host_rock") instead of "displacement_active".
+- ogs6py
+  - added `Project.convert_to_staggered` (`ogstools.ogs6py.staggered`), which converts a monolithic HT, HYDRO_MECHANICS, RICHARDS_MECHANICS, THERMO_HYDRO_MECHANICS or THERMO_MECHANICS project to the staggered scheme: one time loop process per process variable, with the monolithic convergence criterion split by components and own copies of the nonlinear and linear solvers. ([!514](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/514))
 
 ## Infrastructure
 
