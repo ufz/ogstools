@@ -250,6 +250,10 @@ prj_heat_transport_bhe = _prj_dir / "HeatTransportBHE_ogs6py.prj"
 prj_heat_transport_bhe_simple = _prj_dir / "HeatTransportBHE_simple.prj"
 prj_staggered = _prj_dir / "hm1_3Dcube.prj"
 prj_staggered_ref = _prj_dir / "hm1_3Dcube_ref.prj"
+prj_thm_point_heat_source = _prj_dir / "thm_point_heat_source.prj"
+prj_thm_point_heat_source_staggered_ref = (
+    _prj_dir / "thm_point_heat_source_staggered_ref.prj"
+)
 prj_pid_timestepping = _prj_dir / "PID_timestepping.prj"
 prj_pid_timestepping_ref = _prj_dir / "PID_timestepping_ref.prj"
 prj_solid_inc_ref = _prj_dir / "tunnel_ogs6py_solid_inc_ref.prj"

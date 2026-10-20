@@ -32,6 +32,8 @@ from ogstools.examples import (
     prj_square_1e4_robin_ref,
     prj_staggered,
     prj_staggered_ref,
+    prj_thm_point_heat_source,
+    prj_thm_point_heat_source_staggered_ref,
     prj_time_dep_het_param,
     prj_time_dep_het_param_ref,
     prj_trm_from_scratch,
@@ -1211,6 +1213,94 @@ class TestiOGS:
 
         model.write_input()
         self.compare(prjfile, prj_staggered_ref)
+
+    def test_convert_to_staggered(self, tmp_path: Path) -> None:
+        prjfile = tmp_path / "thm_point_heat_source_staggered.prj"
+        model = ot.Project(
+            input_file=prj_thm_point_heat_source, output_file=prjfile
+        )
+        model.convert_to_staggered(
+            coupling_criteria=[
+                {
+                    "convergence_type": "DeltaX",
+                    "norm_type": "NORM2",
+                    "abstol": abstol,
+                    "reltol": reltol,
+                }
+                for abstol, reltol in [
+                    ("1.e-14", "1.e-08"),
+                    ("1.e-10", "1.e-9"),
+                    ("1.e-14", "1.e-10"),
+                ]
+            ],
+            max_iter=150,
+            coupling_scheme={
+                "type": "staggered",
+                "fixed_stress_stabilization_parameter": 0.6,
+            },
+            linear_solver_settings=[
+                {"eigen/error_tolerance": tolerance}
+                for tolerance in ["1e-16", "1e-14", "1e-10"]
+            ],
+        )
+        model.write_input()
+        self.compare(prjfile, prj_thm_point_heat_source_staggered_ref)
+
+    def test_convert_to_staggered_defaults(self) -> None:
+        model = ot.Project(input_file=prj_thm_point_heat_source)
+        model.convert_to_staggered(
+            coupling_criteria=[
+                {"convergence_type": "DeltaX", "norm_type": "NORM2"}
+            ]
+            * 3,
+            max_iter=10,
+        )
+        root = model.tree.getroot()
+        assert root.findtext("./processes/process/coupling_scheme/type") == (
+            "staggered"
+        )
+        criteria = root.findall(
+            "./time_loop/processes/process/convergence_criterion"
+        )
+        # The monolithic tolerances are split in the order T, p, u.
+        assert [
+            [criterion.findtext(tag) for tag in ("type", "abstol", "reltol")]
+            for criterion in criteria[:2]
+        ] == [["DeltaX", "1e-5", "1e-15"], ["DeltaX", "1e-5", "1e-13"]]
+        assert [
+            criteria[2].findtext(tag) for tag in ("type", "abstols", "reltols")
+        ] == ["PerComponentDeltaX", "1e-5 1e-5", "1e-14 1e-14"]
+        assert [
+            process.findtext("nonlinear_solver")
+            for process in root.findall("./time_loop/processes/process")
+        ] == [
+            "basic_newton_temperature",
+            "basic_newton_pressure",
+            "basic_newton_displacement",
+        ]
+        assert [
+            solver.findtext("name")
+            for solver in root.findall("./linear_solvers/linear_solver")
+        ] == [
+            "general_linear_solver_temperature",
+            "general_linear_solver_pressure",
+            "general_linear_solver_displacement",
+        ]
+        assert len(root.findall("./time_loop/global_process_coupling/*")) == 2
+
+    def test_convert_to_staggered_errors(self) -> None:
+        criterion = {"convergence_type": "DeltaX", "norm_type": "NORM2"}
+        model = ot.Project(input_file=prj_thm_point_heat_source)
+        with pytest.raises(ValueError, match="one entry per staggered"):
+            model.convert_to_staggered([criterion] * 2, max_iter=10)
+
+        model.convert_to_staggered([criterion] * 3, max_iter=10)
+        with pytest.raises(ValueError, match="already has a <coupling_scheme>"):
+            model.convert_to_staggered([criterion] * 3, max_iter=10)
+
+        model = ot.Project(input_file=prj_tunnel_trm)
+        with pytest.raises(ValueError, match="not supported for process type"):
+            model.convert_to_staggered([criterion] * 3, max_iter=10)
 
     def test_PID_controller(self, tmp_path: Path) -> None:
         prjfile = tmp_path / "pid_timestepping.prj"
