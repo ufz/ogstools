@@ -32,6 +32,7 @@ def dilatancy_critescu(
     pressure: np.ndarray | None = None,
     a: float = -0.01697,
     b: float = 0.8996,
+    sigma_0: float = 1e6,
 ) -> np.ndarray:
     """Compute the dilatancy criterion.
 
@@ -51,7 +52,6 @@ def dilatancy_critescu(
 
     <https://www.sciencedirect.com/science/article/pii/S0360544222000512?via%3Dihub>
     """
-    sigma_0 = 1e6
     sigma_m = mean(-stress)
     if pressure is not None:
         sigma_m -= pressure
@@ -66,6 +66,7 @@ def dilatancy_alkan(
     pressure: np.ndarray | None = None,
     b: float = 0.04,
     tau_max: float = 33e6,
+    sigma_0: float = 1e6,
 ) -> np.ndarray:
     """Compute the dilatancy criterion.
 
@@ -89,4 +90,4 @@ def dilatancy_alkan(
     if pressure is not None:
         sigma_m -= pressure
     tau = octahedral_shear(-stress)
-    return tau - tau_max * (b * sigma_m / (1e6 + b * sigma_m))
+    return tau - tau_max * (b * sigma_m / (sigma_0 + b * sigma_m))

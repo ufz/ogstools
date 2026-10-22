@@ -1,5 +1,7 @@
 """Unit tests for meshlib."""
 
+from collections.abc import Callable
+
 import numpy as np
 import pytest
 import pyvista as pv
@@ -261,32 +263,93 @@ def test_reindexing():
             np.testing.assert_array_equal(a, b)
 
 
-def test_temporal_aggregate():
+def test_temporal_aggregate(np_func: Callable):
     "Test aggregation of meshseries."
     mesh_series = examples.load_meshseries_HT_2D_XDMF()
-    funcs = [np.min, np.max, np.mean, np.median, np.sum, np.std, np.var]
-    for func in funcs:
-        agg_mesh = mesh_series.aggregate_temporal("temperature", func)
-        assert not np.any(np.isnan(agg_mesh["temperature_" + func.__name__]))
+    agg_mesh = mesh_series.aggregate_temporal("temperature", np_func)
+    key = ot.variables.temperature.aggregation_variable(np_func).output_name
+    assert not np.any(np.isnan(agg_mesh[key]))
+
+
+def test_temporal_aggregate_variable(np_func: Callable):
+    "An aggregating Variable gives the same result as variable + func."
+    mesh_series = examples.load_meshseries_HT_2D_XDMF()
+    variable = ot.variables.temperature
+    agg_variable = variable.aggregation_variable(np_func)
+    ref = mesh_series.aggregate_temporal(variable, np_func)
+    result = mesh_series.aggregate_temporal(agg_variable)
+    assert agg_variable.output_name in result.point_data
+    np.testing.assert_allclose(
+        result[agg_variable.output_name], ref[agg_variable.output_name]
+    )
+
+
+@pytest.mark.parametrize(
+    ("loader", "var_name"),
+    [
+        ("load_meshseries_HT_2D_XDMF", "temperature"),
+        ("load_meshseries_CT_2D_XDMF", "saturation"),
+    ],
+)
+def test_temporal_aggregate_variable_units(
+    np_func: Callable, loader: str, var_name: str
+):
+    "The direct form matches the manual form for offset and scaled units."
+    mesh_series = getattr(examples, loader)()
+    variable = getattr(ot.variables, var_name)
+    agg_variable = variable.aggregation_variable(np_func)
+    ref = mesh_series.aggregate_temporal(variable, np_func)
+    result = mesh_series.aggregate_temporal(agg_variable)
+    np.testing.assert_allclose(
+        result[agg_variable.output_name], ref[agg_variable.output_name]
+    )
+
+
+def test_temporal_aggregate_variable_slicing():
+    "A time slice is aggregated only over its own window."
+    mesh_series = examples.load_meshseries_HT_2D_XDMF()
+    sliced = mesh_series[2:8]
+    variable = ot.variables.temperature
+    key = variable.max.output_name
+    result = sliced.aggregate_temporal(variable.max)
+    ref = sliced.aggregate_temporal(variable, np.max)
+    np.testing.assert_allclose(result[key], ref[key])
+    full = mesh_series.aggregate_temporal(variable.max)
+    assert not np.allclose(result[key], full[key])
+
+
+def test_temporal_aggregate_errors():
+    "Ambiguous or missing aggregations raise informative errors."
+    mesh_series = examples.load_meshseries_HT_2D_XDMF()
+    variable = ot.variables.temperature
+    with pytest.raises(TypeError, match="Already got an aggregating variable"):
+        mesh_series.aggregate_temporal(variable.max, np.max)
+    no_agg = "does not specify a single aggregation"
+    with pytest.raises(TypeError, match=no_agg):
+        mesh_series.aggregate_temporal(variable)
+    with pytest.raises(TypeError, match=no_agg):
+        mesh_series.aggregate_temporal("temperature")
+    with pytest.raises(TypeError, match=no_agg):
+        mesh_series.aggregate_temporal(variable.max.min)
 
 
 def test_aggregate_time_of_limit():
     "Test aggregation of meshseries."
     mesh_series = examples.load_meshseries_HT_2D_XDMF()
     min_mesh = mesh_series.time_of_min("temperature")
-    assert not np.any(np.isnan(min_mesh["min_temperature_time"]))
+    assert not np.any(np.isnan(min_mesh["time_of_temperature_min"]))
     max_mesh = mesh_series.time_of_max("temperature")
-    assert not np.any(np.isnan(max_mesh["max_temperature_time"]))
+    assert not np.any(np.isnan(max_mesh["time_of_temperature_max"]))
 
 
 def test_temporal_aggregate_integrity():
     "Test aggregation of integrity variables on meshseries."
     mesh_series = examples.load_meshseries_THM_2D_PVD()
-    prop = ot.variables.dilatancy_alkan
+    prop = ot.variables.dilatancy_alkan_eff
     agg_mesh = mesh_series.aggregate_temporal(prop, np.max)
-    assert not np.any(np.isnan(agg_mesh[prop.output_name + "_max"]))
+    assert not np.any(np.isnan(agg_mesh[prop.max.output_name]))
     agg_mesh = mesh_series.time_of_max(prop)
-    assert not np.any(np.isnan(agg_mesh[f"max_{prop.output_name}_time"]))
+    assert not np.any(np.isnan(agg_mesh[prop.time_of_max.output_name]))
 
 
 def test_spatial_aggregate():

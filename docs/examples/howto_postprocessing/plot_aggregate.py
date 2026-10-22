@@ -3,7 +3,7 @@ Aggregation of Meshseries Data
 ==============================
 
 In this example we show how to aggregate data in a model over all timesteps as
-well as plot differences between to timesteps. For this purpose we use
+well as plot differences between two timesteps. For this purpose we use
 a component transport example from the ogs benchmark gallery
 (https://www.opengeosys.org/stable/docs/benchmarks/hydro-component/elder_jupyter/).
 
@@ -33,14 +33,14 @@ saturation = ot.variables.saturation
 # :ref:`sphx_glr_auto_examples_howto_postprocessing_plot_variables.py`
 
 # %% [markdown]
+# Plotting
+# --------
 # You aggregate the data in MeshSeries over all timesteps given some
 # aggregation function. The following are available:
-# ``min``, ``max``, ``mean``, ``median``, ``sum``, ``std``, ``var``.
-# (see: :meth:`~ogstools.MeshSeries.aggregate_temporal`).
+# ``min``, ``max``, ``mean``, ``median``, ``sum``, ``std``, ``var``,
+# ``argmin``, ``argmax``, ``time_of_min``, ``time_of_max``.
 # The following code gets the maximum saturation for each point in the mesh over
-# all timesteps and plots it. Note: the data in the returned mesh has a suffix
-# equal to the aggregation functions name. In the plot function use the method
-# with an equal name to plot it.
+# all timesteps and plots it.
 #
 # Due to numerical oscillations, this dataset contains a few cells with
 # slightly unphysical saturation (below 0% or above 100%). We clip the
@@ -48,20 +48,32 @@ saturation = ot.variables.saturation
 # plotted range.
 
 # %%
-mesh = mesh_series.aggregate_temporal(saturation, np.max)
-fig = ot.plot.contourf(mesh, saturation.max, vmin=0, vmax=100)
+fig = ot.plot.contourf(mesh_series, saturation.max, vmin=0, vmax=100)
 fig.show()
 
 # %% [markdown]
-# It is also possible to plot the time when the minimum or maximum occurs.
-# However, here we have to use a new variable for the plot to handle the
-# units correctly:
+# For any function which is not covered you can create a new variable for
+# further usage.
 
 # %%
-mesh = mesh_series.time_of_max(saturation)
-fig = ot.plot.contourf(
-    mesh, ot.variables.Scalar("max_saturation_time", "a", "a")
-)
+saturation.aggregate(np.nanmax)
+
+# %% [markdown]
+# If you want to have the data instead of a plot for further processing, you can
+# create a new mesh, with the aggregated data in it, either by passing a
+# variable and a numpy function or by passing a variable's aggregation directly:
+
+# %%
+mesh = mesh_series.aggregate_temporal(saturation, np.max)
+# The following works the same way:
+# mesh = mesh_series.aggregate_temporal(saturation.max)
+print(list(mesh.point_data.keys()))
+
+# %% [markdown]
+# It is also possible to plot the time when the minimum or maximum occurs.
+
+# %%
+fig = ot.plot.contourf(mesh_series, saturation.time_of_max)
 fig.show()
 
 # %% [markdown]
@@ -69,7 +81,7 @@ fig.show()
 
 
 # %%
-mesh = mesh_series.aggregate_temporal(saturation, np.var)
+mesh = mesh_series.aggregate_temporal(saturation.var)
 fig = ot.plot.contourf(mesh, saturation.var)
 fig.show()
 
@@ -77,7 +89,7 @@ fig.show()
 # Difference between the last and the first timestep:
 
 # %%
-mesh = ot.mesh.difference(mesh_series.mesh(-1), mesh_series.mesh(0), saturation)
+mesh = ot.mesh.difference(mesh_series[-1], mesh_series[0], saturation)
 fig = ot.plot.contourf(mesh, saturation.difference)
 fig.show()
 
@@ -86,7 +98,7 @@ fig.show()
 # of e.g. the max or mean value of a variable in the entire domain.
 
 # %%
-mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
+mean_saturation_array = mesh_series.aggregate_spatial(saturation.mean)
 
 # %% [markdown]
 # Instead of calculating the array itself, you can also plot it directly:
@@ -95,5 +107,35 @@ mean_satuarion_array = mesh_series.aggregate_spatial(saturation, np.mean)
 fig = mesh_series.plot_line(saturation.std)
 fig.tight_layout()
 fig.show()
+
+# %% [markdown]
+# Data inspection
+# ---------------
+# We can also use these aggregating variables to inspect the data directly.
+# By default the aggregation occurs over the last axis (for vector and matrix
+# data, the second last axis is chosen). Thus, the following code would first
+# compute the variance of the data field per timestep and then find the maximum
+# timestep index:
+
+# %%
+var_max_idx = saturation.var.argmax.transform(mesh_series)
+print(f"timestep index of maximum variance {var_max_idx}")
+var_max_time = saturation.var.time_of_max.transform(mesh_series)
+print(f"timevalue of maximum variance {var_max_time}")
+assert var_max_time == mesh_series.timevalues[var_max_idx]
+
+# %% [markdown]
+# And if you want to determine the point (or cell) index where
+# the total maximum or minimum is located you can manipulate the axis of the
+# aggregating function:
+
+# %%
+temporal_var = saturation.var.change_axis(0)
+var_max_pt_idx = temporal_var.argmax.transform(mesh_series)
+print(f"point index of maximum variance {var_max_pt_idx}")
+var_max = temporal_var.max.transform(mesh_series)
+print(f"maximum variance {var_max}")
+assert var_max == mesh_series.values(temporal_var)[var_max_pt_idx]
+
 
 # %%

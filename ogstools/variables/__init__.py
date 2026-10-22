@@ -120,24 +120,27 @@ effective_pressure = Scalar(
 )
 dilatancy_critescu = Scalar(
     data_name="sigma",
-    data_unit="",
+    data_unit="Pa",
     output_unit="",
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
     func=Function(
         integrity.dilatancy_critescu,
-        ["pressure"],
-        {"a": -0.01697, "b": 0.8996},
+        [pressure],
+        {"a": -0.01697, "b": 0.8996, "sigma_0": u_reg.Quantity(1e6, "Pa")},
     ),
     mask=M_MASK,
     color=COLOR_MECH,
     cmap=integrity_cmap,
     bilinear_cmap=True,
+    process_with_units=True,
 )
 dilatancy_critescu_eff = dilatancy_critescu.replace(
     output_name="effective_dilatancy_criterion",
     func=Function(
-        integrity.dilatancy_critescu, [], {"a": -0.01697, "b": 0.8996}
+        integrity.dilatancy_critescu,
+        [],
+        {"a": -0.01697, "b": 0.8996, "sigma_0": u_reg.Quantity(1e6, "Pa")},
     ),
 )
 
@@ -148,7 +151,13 @@ dilatancy_alkan = Scalar(
     output_name="dilatancy_criterion",
     symbol=r"F_\mathrm{dil}",
     func=Function(
-        integrity.dilatancy_alkan, ["pressure"], {"b": 0.04, "tau_max": 33e6}
+        integrity.dilatancy_alkan,
+        [pressure],
+        {
+            "b": 0.04,
+            "tau_max": u_reg.Quantity(33e6, "Pa"),
+            "sigma_0": u_reg.Quantity(1e6, "Pa"),
+        },
     ),
     mask=M_MASK,
     color=COLOR_MECH,
@@ -157,7 +166,15 @@ dilatancy_alkan = Scalar(
 )
 dilatancy_alkan_eff = dilatancy_alkan.replace(
     output_name="effective_dilatancy_criterion",
-    func=Function(integrity.dilatancy_alkan, [], {"b": 0.04, "tau_max": 33e6}),
+    func=Function(
+        integrity.dilatancy_alkan,
+        [],
+        {
+            "b": 0.04,
+            "tau_max": u_reg.Quantity(33e6, "Pa"),
+            "sigma_0": u_reg.Quantity(1e6, "Pa"),
+        },
+    ),
 )
 
 fluid_pressure_criterion = Scalar(
@@ -167,7 +184,7 @@ fluid_pressure_criterion = Scalar(
     output_name="fluid_pressure_criterion",
     symbol=r"\sigma_{III}'",
     func=Function(
-        integrity.fluid_pressure_criterion, ["pressure"], {"biot": 1.0}
+        integrity.fluid_pressure_criterion, [pressure], {"biot": 1.0}
     ),
     mask=M_MASK,
     color=COLOR_MECH,

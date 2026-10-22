@@ -1,5 +1,6 @@
 """Unit tests for variables."""
 
+from collections.abc import Callable
 from itertools import pairwise
 
 import numpy as np
@@ -109,16 +110,28 @@ class TestPhysicalVariable:
     def test_integrity_criteria(self):
         """Test integrity criteria."""
         sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
-        #  not working for arrays (only works for meshes)
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"requires input pressure"):
             ov.dilatancy_alkan.transform(sig)
         mesh = examples.load_mesh_mechanics_2D()
+        with pytest.raises(KeyError, match=r"not present"):  # pressure missing
+            ov.dilatancy_alkan.transform(mesh)
         mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
         assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
         assert np.max(ov.dilatancy_alkan_eff.transform(mesh)) > 0
         assert np.max(ov.dilatancy_critescu.transform(mesh)) > 0
         assert np.max(ov.dilatancy_critescu_eff.transform(mesh)) > 0
         assert np.max(ov.fluid_pressure_criterion.transform(mesh)) > 0
+
+    @pytest.mark.parametrize(
+        "var", [ov.dilatancy_alkan, ov.fluid_pressure_criterion]
+    )
+    def test_integrity_criteria_unit_correctness(self, var: ov.Variable):
+        """Test integrity criteria."""
+        mesh = examples.load_mesh_mechanics_2D()
+        mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
+        actual = var.transform(mesh)
+        ref = var.replace(process_with_units=True).transform(mesh)
+        np.testing.assert_allclose(actual, ref)
 
     def test_tensor_attributes(self):
         """Test that the access of tensor attributes works."""
@@ -304,6 +317,19 @@ class TestPhysicalVariable:
         check_limits(ov.pressure, 0, 8)
         check_limits(ov.displacement.magnitude, 0, 0.3)
 
+    def test_transform_variable_argument(self):
+
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        for var in [ov.pressure, ov.stress.det]:
+            var2 = type(var).from_variable(
+                var,
+                func=ov.Function(lambda x1, x2: x1 + x2, [var]),
+                suffix="double",
+            )
+            np.testing.assert_allclose(
+                var2.transform(mesh), 2.0 * var.transform(mesh)
+            )
+
     def test_variable_rate(self):
         "Tests rate computation"
         ms = examples.load_meshseries_CT_2D_XDMF()
@@ -395,6 +421,17 @@ class TestPhysicalVariable:
         for var in [si.mean, si.median, si.sum, si.var, si.std]:
             assert np.all(np.diff(var.transform(ms_bot)) >= 0)
 
+    def test_aggregation_unit_correctness(self):
+        "Test handling of temperature unit aggregations"
+        var = ov.temperature
+        vals = [373.15, 374.15, 375.15]
+        assert var.max.transform(vals) == pytest.approx(102.0)
+        assert var.mean.transform(vals) == pytest.approx(101.0)
+        assert var.min.transform(vals) == pytest.approx(100.0)
+        assert var.std.transform(vals) == pytest.approx(0.8164966)
+        assert var.var.transform(vals) == pytest.approx(0.6666666)
+        assert var.sum.transform(vals) == pytest.approx(303.0)
+
     def test_matrix_agg_on_single_mesh_shape(self):
         """Aggregation on Matrix/Vector must reduce to per-point, not per-component.
 
@@ -409,6 +446,29 @@ class TestPhysicalVariable:
         assert ov.stress.mean.transform(mesh).shape == (4,)
         # stress.tensor_mean gives hydrostatic stress per point → shape (n_pts,)
         assert ov.stress.tensor_mean.transform(mesh).shape == (n_pts,)
+
+    def test_aggregation_introspection(self, np_func: Callable):
+        """Aggregation variables expose their registered reducer and axis."""
+        assert ov.saturation.aggregation_variable(np_func).aggregations == 1
+        # Vector/matrix variables reduce over the points axis
+        assert ov.displacement.max.function.params["axis"] == -2
+        assert ov.stress.mean.function.params["axis"] == -2
+        # Variables without a registered reducer are not aggregations
+        assert ov.saturation.aggregations == 0
+        assert ov.saturation.abs.aggregations == 0
+        assert ov.saturation.rate("d").aggregations == 0
+        assert ov.stress.tensor_mean.aggregations == 0
+        # More than one registered reducer is ambiguous
+        assert ov.saturation.max.min.aggregations == 2
+        # A non-reducer transform preceding the reducer does not disqualify
+        assert ov.saturation.rate("d").max.aggregations == 1
+
+    def test_new_aggregations(self):
+        """Test functionality of not predefined aggregation functions."""
+        ms = examples.load_meshseries_THM_2D_PVD()
+        for func in [np.nanmax, np.nanargmax]:
+            agg_var = ov.temperature.aggregate(func)
+            assert not np.any(np.isnan(agg_var.transform(ms)))
 
     def test_get_data_mask(self):
         def _check_masked_data(ms_check, actual):
@@ -480,3 +540,9 @@ class TestPhysicalVariable:
         for key, message in failcases:
             with pytest.raises(KeyError, match=message):
                 ov.Variable.find(key, mesh)
+
+    def test_incompatible_units(self):
+        "Test error handling for incompatible units."
+        var = ov.Scalar("temperature", "K", "Pa")
+        with pytest.raises(TypeError, match="units are incompatible"):
+            var.transform(1)
