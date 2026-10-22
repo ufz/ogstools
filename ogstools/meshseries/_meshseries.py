@@ -20,6 +20,7 @@ from ogstools import plot
 from ogstools._internal import copy_function_signature, deprecated
 from ogstools.core.storage import StorageBase
 from ogstools.mesh import read
+from ogstools.mesh.derivatives import _get_data_names, calculate_derivative
 from ogstools.mesh.utils import pv_set_attr, reshape_obs_points
 from ogstools.plot.lineplots import line
 from ogstools.variables import Function, Variable, _normalize_vars, u_reg
@@ -1427,6 +1428,21 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 else:
                     msg = "array type unknown"
                     raise RuntimeError(msg)
+
+    def add_derivative(self, variable: Variable, **kwargs: Any) -> None:
+        for mesh_id in range(len(self)):
+            self[mesh_id][variable.output_name] = calculate_derivative(
+                self[mesh_id], variable, return_data=True, **kwargs
+            )
+
+    @property
+    def data_names(self) -> list[str]:
+        if len(self) == 0:
+            return []
+        names: set[str] = set()
+        for i in range(len(self)):
+            names.update(_get_data_names(self[i]))
+        return sorted(names)
 
     def _propagate_target(self) -> None:
         pass

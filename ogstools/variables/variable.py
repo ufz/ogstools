@@ -29,6 +29,8 @@ Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
 MeshOrSeries: TypeAlias = Mesh | Sequence[Mesh]
 Data: TypeAlias = int | float | np.ndarray | MeshOrSeries
 
+DERIVATIVE_SUFFIXES = ["gradient", "divergence", "vorticity", "qcriterion"]
+
 
 @dataclass
 class Variable:
@@ -60,6 +62,10 @@ class Variable:
     """Does this variable only have categoric values?"""
     color: str | None = None
     """Default color for plotting"""
+    spatial_unit: str = "m"
+    """Default spatial unit"""
+    temporal_unit: str = "s"
+    """Default temporal unit"""
 
     def __post_init__(self, func: Function | Callable | None) -> None:
         self.output_unit = (
@@ -247,7 +253,8 @@ class Variable:
             and variable not in all_keys
             and variable.rsplit("_", 1)[0] in all_keys
         ):
-            variable, suffix = variable.rsplit("_", 1)
+            parts = variable.rsplit("_", 1)
+            variable, suffix = parts[0], parts[1] if len(parts) > 1 else ""
 
         def component(var: Variable, suffix: str) -> Variable:
             suffix_ = int(suffix) if suffix.isdigit() else suffix
@@ -756,6 +763,75 @@ class Variable:
         if split_at is None:
             return label
         return self._split_long_label(split_at, name, label)
+
+    def _get_derivative(self, derivative_type: str = "gradient") -> Variable:
+
+        def derivative(
+            mesh: pv.UnstructuredGrid,
+            variable: Variable,
+            **kwargs: Any,
+        ) -> np.ndarray:
+            # pylint: disable=import-outside-toplevel
+            from ogstools.mesh.derivatives import calculate_derivative
+
+            # pylint: enable=import-outside-toplevel
+            derivative_data = calculate_derivative(
+                mesh, variable, return_data=True, **kwargs
+            )
+            assert isinstance(derivative_data, np.ndarray)
+            return derivative_data
+
+        # pylint: enable=import-outside-toplevel
+        new_data_unit = f"{self.data_unit}/{self.spatial_unit}"
+        new_output_unit = f"{self.output_unit}/{self.spatial_unit}"
+        if derivative_type == "gradient":
+            new_output_name = f"{self.output_name}_gradient"
+            new_symbol = rf"\nabla {self.symbol}"
+        elif derivative_type == "divergence":
+            new_output_name = f"{self.output_name}_divergence"
+            new_symbol = rf"\nabla\cdot {self.symbol}"
+        elif derivative_type == "vorticity":
+            new_output_name = f"{self.output_name}_vorticity"
+            new_symbol = rf"\omega \nabla\cdot {self.symbol}"
+        elif derivative_type == "qcriterion":
+            new_output_name = f"{self.output_name}_qcriterion"
+            new_symbol = rf"$Q$ {self.symbol}"
+        else:
+            msg = """Incorrect derivative type.\n
+                     Only gradient, divergence, vorticity and qcriterion are supported."""
+            raise ValueError(msg)
+
+        return type(self).from_variable(
+            self,
+            data_name=self.data_name,
+            data_unit=new_data_unit,
+            output_unit=new_output_unit,
+            output_name=new_output_name,
+            symbol=new_symbol,
+            mask=self.mask,
+            func=lambda data: derivative(deepcopy(data), self),
+            process_with_units=self.process_with_units,
+            cmap=self.cmap,
+            bilinear_cmap=self.bilinear_cmap,
+            categoric=self.categoric,
+            color=self.color,
+        )
+
+    @property
+    def gradient(self) -> Variable:
+        return self._get_derivative("gradient")
+
+    @property
+    def divergence(self) -> Variable:
+        return self._get_derivative("divergence")
+
+    @property
+    def vorticity(self) -> Variable:
+        return self._get_derivative("vorticity")
+
+    @property
+    def qcriterion(self) -> Variable:
+        return self._get_derivative("qcriterion")
 
     def _split_long_label(self, split_at: int, name: str, label: str) -> str:
         render_label = label.translate({ord(i): None for i in "{}$_^"})

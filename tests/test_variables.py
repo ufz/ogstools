@@ -369,6 +369,24 @@ class TestPhysicalVariable:
             # cause floating point differences.
             np.testing.assert_allclose(var.transform(ms), ref_vals, rtol=1e-12)
 
+    @pytest.mark.parametrize(
+        ("var", "derivative_type", "output_name", "output_type"),
+        [
+            (ov.temperature.gradient, "gradient", "temperature", ov.Scalar),
+            (ov.stress.gradient, "gradient", "stress", ov.Matrix),
+            (ov.stress.divergence, "divergence", "stress", ov.Matrix),
+            (ov.stress.vorticity, "vorticity", "stress", ov.Matrix),
+            (ov.velocity.gradient, "gradient", "darcy_velocity", ov.Vector),
+            (ov.velocity.divergence, "divergence", "darcy_velocity", ov.Vector),
+            (ov.velocity.vorticity, "vorticity", "darcy_velocity", ov.Vector),
+            (ov.velocity.qcriterion, "qcriterion", "darcy_velocity", ov.Vector),
+        ],
+    )
+    def test_derivatives(self, var, derivative_type, output_name, output_type):
+        correct_data_name = output_name + "_" + derivative_type
+        assert var.output_name == correct_data_name
+        assert isinstance(var, output_type)
+
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."
         mesh = examples.load_mesh_mechanics_2D()

@@ -3,6 +3,7 @@
 
 from . import create, utils
 from .cosim import from_simulator
+from .derivatives import calculate_derivative
 from .differences import difference, difference_matrix, difference_pairwise
 from .file_io import read, save
 from .geo import depth
@@ -16,6 +17,7 @@ from .utils import check_datatypes, node_reordering, validate
 
 __all__ = [
     "IPdata",
+    "calculate_derivative",
     "check_datatypes",
     "create",
     "depth",
