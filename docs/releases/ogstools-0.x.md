@@ -25,6 +25,8 @@
   - temperature\_{max|min|mean|median} -> {max|min|mean|median}\_temperature
   - temperature_std -> temperature_standard_deviation
   - temperature_var -> temperature_variance
+- variables now have methods for derivatives (`gradient`, `divergence`, `vorticity`, `qcriterion`) which can be computed or plotted on the fly.
+- meshseries now has a setitem method to set either data (`ms["new_data"] = ...`) or a mesh (`ms[-1] = ...` -> overwrites the last timestep)
 
 ## Infrastructure
 

@@ -7,7 +7,8 @@ from typing import ClassVar, Literal, TypeAlias, TypeVar
 import numpy as np
 from pint.facets.plain import PlainQuantity
 
-from ogstools.variables.variable import Scalar, Variable
+from ogstools.variables.scalar import Scalar
+from ogstools.variables.variable import Variable
 
 from .tensor_math import _split_quantity, _to_quantity
 

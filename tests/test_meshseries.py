@@ -813,11 +813,11 @@ def test_setitem():
         ms["fail_test"] = [np.arange(123)] * 2
 
 
-def test_add_data():
+def test_add_new_data():
     ms = examples.load_meshseries_THM_2D_PVD()
     var = ot.variables.temperature.gradient
     vals = var.transform(ms)
-    ms.add_data(var)
+    ms.add_new_data(var)
     assert var.output_name in ms.point_data
     np.testing.assert_array_equal(var.transform(ms), vals)
 

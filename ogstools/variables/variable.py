@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
-from typing import Any, Literal, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, get_args
 
 import numpy as np
 import pyvista as pv
@@ -25,11 +25,18 @@ from .custom_colormaps import mask_cmap
 from .func import Function
 from .unit_registry import u_reg
 
+if TYPE_CHECKING:
+    from .matrix import Matrix
+    from .scalar import Scalar
+    from .vector import Vector
+
 Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
 MeshOrSeries: TypeAlias = Mesh | Sequence[Mesh]
 Data: TypeAlias = int | float | np.ndarray | MeshOrSeries
 
-DERIVATIVE_SUFFIXES = ["gradient", "divergence", "vorticity", "qcriterion"]
+DERIVATIVE_SUFFIXES = Literal[
+    "gradient", "divergence", "vorticity", "qcriterion"
+]
 
 
 @dataclass
@@ -66,6 +73,7 @@ class Variable:
     """Default spatial unit"""
     temporal_unit: str = "s"
     """Default temporal unit"""
+    _parent: Variable | None = None
 
     def __post_init__(self, func: Function | Callable | None) -> None:
         self.output_unit = (
@@ -79,6 +87,10 @@ class Variable:
 
     def __str__(self) -> str:
         return self.data_name
+
+    @property
+    def parent(self) -> Variable:
+        return self._parent or self
 
     @property
     def function(self) -> Function | None:
@@ -184,6 +196,7 @@ class Variable:
             bilinear_cmap=variable.bilinear_cmap,
             categoric=variable.categoric,
             color=variable.color,
+            _parent=variable,
         ).replace(**changes)
 
     @classmethod
@@ -243,10 +256,8 @@ class Variable:
                 )
             return variable.replace(data_name=data_key)
 
-        # pylint: disable=import-outside-toplevel
         from ogstools.variables import all_variables
 
-        # pylint: enable=import-outside-toplevel
         suffix = ""
         if (
             "_" in variable
@@ -255,6 +266,8 @@ class Variable:
         ):
             parts = variable.rsplit("_", 1)
             variable, suffix = parts[0], parts[1] if len(parts) > 1 else ""
+
+        from .scalar import Scalar
 
         def component(var: Variable, suffix: str) -> Variable:
             suffix_ = int(suffix) if suffix.isdigit() else suffix
@@ -286,14 +299,15 @@ class Variable:
             data_shape = getattr(getattr(mesh, variable), "shape", [0])
         else:
             raise KeyError(error_msg)
+
+        from .matrix import Matrix
+        from .vector import Vector
+
         if len(data_shape) == 1:
             return component(Scalar(variable), suffix)
-        subclasses = Variable.__subclasses__()
-        vector = next(x for x in subclasses if x.__name__ == "Vector")
-        matrix = next(x for x in subclasses if x.__name__ == "Matrix")
-        if data_shape[1] in [2, 3]:
-            return component(vector(variable), suffix)
-        return component(matrix(variable), suffix)
+        if data_shape[-1] in [2, 3]:
+            return component(Vector(variable), suffix)
+        return component(Matrix(variable), suffix)
 
     def _get_input_values(
         self, data: Data, input: Callable | str | Variable
@@ -590,7 +604,7 @@ class Variable:
         diff_unit = str(diff_quantity.units)
         if str(diff_quantity.units) in ["degC", "°C"]:
             diff_unit = "kelvin"
-        return diff_unit
+        return diff_unit.replace(" ", "")
 
     @property
     def difference(self) -> Variable:
@@ -764,74 +778,89 @@ class Variable:
             return label
         return self._split_long_label(split_at, name, label)
 
-    def _get_derivative(self, derivative_type: str = "gradient") -> Variable:
+    def _get_derivative(
+        self, derivative: DERIVATIVE_SUFFIXES, **kwargs: Any
+    ) -> Variable:
 
-        def derivative(
-            mesh: pv.UnstructuredGrid,
-            variable: Variable,
-            **kwargs: Any,
+        assert derivative in get_args(DERIVATIVE_SUFFIXES), (
+            "Incorrect derivative type. Only gradient, divergence, vorticity "
+            " and qcriterion are supported."
+        )
+        from .matrix import Matrix
+        from .scalar import Scalar
+        from .vector import Vector
+
+        var_type: type[Matrix | Vector | Scalar]
+        if derivative == "gradient":
+            new_symbol = rf"\nabla {self.symbol}"
+            var_type = Matrix if isinstance(self, Vector) else Vector
+        elif derivative == "divergence":
+            new_symbol = rf"\nabla\cdot {self.symbol}"
+            var_type = Vector if isinstance(self, Matrix) else Scalar
+        elif derivative == "vorticity":
+            new_symbol = rf"\omega \nabla\cdot {self.symbol}"
+            var_type = Vector
+        elif derivative == "qcriterion":
+            new_symbol = rf"Q {self.symbol}"
+            var_type = Vector if isinstance(self, Matrix) else Scalar
+
+        def derivative_func(
+            data: np.ndarray, dataset: MeshOrSeries, **kwargs: Any
         ) -> np.ndarray:
-            # pylint: disable=import-outside-toplevel
+            data_converted = u_reg.Quantity(
+                u_reg.Quantity(data, self.data_unit), self.output_unit
+            ).magnitude
+            dataset[self.output_name] = data_converted  # type: ignore[index] # fmt: skip
             from ogstools.mesh.derivatives import calculate_derivative
 
-            # pylint: enable=import-outside-toplevel
-            derivative_data = calculate_derivative(
-                mesh, variable, return_data=True, **kwargs
+            _var = type(self).from_variable(
+                self,
+                func=lambda _: _,
+                suffix=derivative,
+                data_name=self.output_name,
             )
-            assert isinstance(derivative_data, np.ndarray)
-            return derivative_data
+            is_ms = isinstance(dataset, Sequence) and isinstance(
+                dataset[0], Mesh
+            )
+            if is_ms:
+                return np.asarray(
+                    [
+                        calculate_derivative(mesh, _var, **kwargs)
+                        for mesh in dataset  # pyright: ignore[reportGeneralTypeIssues]
+                    ]
+                )
+            return calculate_derivative(dataset, _var, **kwargs)
 
-        # pylint: enable=import-outside-toplevel
-        new_data_unit = f"{self.data_unit}/{self.spatial_unit}"
-        new_output_unit = f"{self.output_unit}/{self.spatial_unit}"
-        if derivative_type == "gradient":
-            new_output_name = f"{self.output_name}_gradient"
-            new_symbol = rf"\nabla {self.symbol}"
-        elif derivative_type == "divergence":
-            new_output_name = f"{self.output_name}_divergence"
-            new_symbol = rf"\nabla\cdot {self.symbol}"
-        elif derivative_type == "vorticity":
-            new_output_name = f"{self.output_name}_vorticity"
-            new_symbol = rf"\omega \nabla\cdot {self.symbol}"
-        elif derivative_type == "qcriterion":
-            new_output_name = f"{self.output_name}_qcriterion"
-            new_symbol = rf"$Q$ {self.symbol}"
-        else:
-            msg = """Incorrect derivative type.\n
-                     Only gradient, divergence, vorticity and qcriterion are supported."""
-            raise ValueError(msg)
-
-        return type(self).from_variable(
+        func = Function(
+            derivative_func,
+            # copy of mesh to avoid adding data to the user mesh
+            [lambda mesh: mesh.copy(deep=True)],
+            **kwargs,
+        )
+        return var_type.from_variable(
             self,
-            data_name=self.data_name,
-            data_unit=new_data_unit,
-            output_unit=new_output_unit,
-            output_name=new_output_name,
+            func=func,
+            suffix=derivative,
+            data_unit=f"{self._diff_unit(self.data_unit) or 1}/{self.spatial_unit}",
+            output_unit=f"{self._diff_unit(self.output_unit) or 1}/{self.spatial_unit}",
             symbol=new_symbol,
-            mask=self.mask,
-            func=lambda data: derivative(deepcopy(data), self),
-            process_with_units=self.process_with_units,
-            cmap=self.cmap,
-            bilinear_cmap=self.bilinear_cmap,
-            categoric=self.categoric,
-            color=self.color,
         )
 
     @property
-    def gradient(self) -> Variable:
-        return self._get_derivative("gradient")
+    def gradient(self) -> Vector | Matrix:
+        return self._get_derivative("gradient")  # type: ignore[return-value]
 
     @property
-    def divergence(self) -> Variable:
-        return self._get_derivative("divergence")
+    def divergence(self) -> Vector | Scalar:
+        return self._get_derivative("divergence")  # type: ignore[return-value]
 
     @property
-    def vorticity(self) -> Variable:
-        return self._get_derivative("vorticity")
+    def vorticity(self) -> Vector:
+        return self._get_derivative("vorticity")  # type: ignore[return-value]
 
     @property
-    def qcriterion(self) -> Variable:
-        return self._get_derivative("qcriterion")
+    def qcriterion(self) -> Vector | Scalar:
+        return self._get_derivative("qcriterion")  # type: ignore[return-value]
 
     def _split_long_label(self, split_at: int, name: str, label: str) -> str:
         render_label = label.translate({ord(i): None for i in "{}$_^"})
@@ -856,17 +885,13 @@ class Variable:
         return label
 
 
-class Scalar(Variable):
-    "Represent a scalar variable."
-
-
 def _quantity_to_str(unit: PlainQuantity | str) -> str:
     if isinstance(unit, PlainQuantity):
         return str(unit if unit.magnitude != 1 else unit.units)
     return unit
 
 
-def spatial_var(var_name: str, data: Data) -> Variable:
+def spatial_var(var_name: str, data: Data) -> Scalar | Vector:
 
     unit = _quantity_to_str(getattr(data, "spatial_unit", "m"))
 
@@ -886,4 +911,6 @@ def _time_unit(data: Data) -> str:
 
 def time_var(var_name: str, data: Data) -> Scalar:
     unit = _time_unit(data)
+    from .scalar import Scalar
+
     return Scalar("timevalues", unit, unit, var_name, symbol="t")

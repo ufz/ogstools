@@ -370,22 +370,26 @@ class TestPhysicalVariable:
             np.testing.assert_allclose(var.transform(ms), ref_vals, rtol=1e-12)
 
     @pytest.mark.parametrize(
-        ("var", "derivative_type", "output_name", "output_type"),
+        ("var", "output_type"),
         [
-            (ov.temperature.gradient, "gradient", "temperature", ov.Scalar),
-            (ov.stress.gradient, "gradient", "stress", ov.Matrix),
-            (ov.stress.divergence, "divergence", "stress", ov.Matrix),
-            (ov.stress.vorticity, "vorticity", "stress", ov.Matrix),
-            (ov.velocity.gradient, "gradient", "darcy_velocity", ov.Vector),
-            (ov.velocity.divergence, "divergence", "darcy_velocity", ov.Vector),
-            (ov.velocity.vorticity, "vorticity", "darcy_velocity", ov.Vector),
-            (ov.velocity.qcriterion, "qcriterion", "darcy_velocity", ov.Vector),
+            (ov.temperature.gradient, ov.Vector),
+            (ov.stress.von_Mises.gradient, ov.Vector),
+            (ov.velocity.divergence, ov.Scalar),
+            (ov.velocity.vorticity, ov.Vector),
+            (ov.velocity.qcriterion, ov.Scalar),
         ],
     )
-    def test_derivatives(self, var, derivative_type, output_name, output_type):
-        correct_data_name = output_name + "_" + derivative_type
-        assert var.output_name == correct_data_name
+    def test_derivatives(self, var: ot.variables.Variable, output_type: type):
         assert isinstance(var, output_type)
+
+    def test_divergence(self):
+        "Test approximate equality of strain trace and displacement divergence"
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        eps_trace = ov.strain.trace.replace(output_unit="")
+        u_div = ov.displacement.divergence
+        np.testing.assert_allclose(
+            u_div.transform(mesh), eps_trace.transform(mesh), atol=2.3e-5
+        )
 
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."

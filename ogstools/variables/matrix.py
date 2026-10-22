@@ -9,7 +9,8 @@ from typing import Literal
 
 from ogstools.mesh.utils import angles, azimuth
 from ogstools.variables import tensor_math
-from ogstools.variables.variable import Scalar, Variable
+from ogstools.variables.scalar import Scalar
+from ogstools.variables.variable import Variable
 from ogstools.variables.vector import Vector, VectorList
 
 from .func import Function

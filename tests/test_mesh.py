@@ -216,21 +216,8 @@ def test_linear_quadratic_roundtrip(mesh: pv.UnstructuredGrid):
     assert mesh_lin == ref_mesh
 
 
-def test_add_derivative_ms():
-    ms = examples.load_meshseries_THM_2D_PVD()
-    ms.add_derivative(
-        ot.variables.temperature.gradient,
-    )
-    assert isinstance(
-        ms[ot.variables.temperature.gradient.output_name], np.ndarray
-    )
-
-
 def test_calculate_derivative():
     ms = examples.load_meshseries_THM_2D_PVD()
-    _ = calculate_derivative(
-        ms[-1],
-        ot.variables.temperature.gradient,
-    )
-    assert np.max(ms[-1]["temperature_gradient"]) < 1
-    assert np.min(ms[-1]["temperature_gradient"]) > -1
+    grad_T = calculate_derivative(ms[-1], ot.variables.temperature.gradient)
+    assert np.max(grad_T) < 1
+    assert np.min(grad_T) > -1

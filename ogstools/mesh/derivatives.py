@@ -1,56 +1,47 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
+from __future__ import annotations
 
 import warnings
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, get_args
 
 import numpy as np
-import pyvista as pv
-
-DERIVATIVE_SUFFIXES = ["gradient", "divergence", "vorticity", "qcriterion"]
-# NOTE: Keep in sync with ogstools.variables.variable.DERIVATIVE_SUFFIXES
 
 from ogstools.variables.matrix import Matrix
-from ogstools.variables.variable import Variable
+from ogstools.variables.variable import DERIVATIVE_SUFFIXES, Variable
 from ogstools.variables.vector import Vector
+
+if TYPE_CHECKING:
+    from pyvista import UnstructuredGrid
 
 
 def calculate_derivative(
-    mesh: pv.UnstructuredGrid,
-    variable: str | Variable,
-    derivative: Literal[
-        "gradient", "divergence", "vorticity", "qcriterion", "all"
-    ] = "gradient",
-    return_data: bool = False,
-    **kwargs: Any,
-) -> np.ndarray | None:
+    mesh: UnstructuredGrid, variable: str | Variable, **kwargs: Any
+) -> np.ndarray:
     """
-    Calculate spatial gradient for specified variable.
+    Calculate the variable derivative for a given mesh.
 
-    :param mesh:       Mesh to compute gradient on
-    :param variable:   Variable of which the gradient should be computed
-    :param derivative: Name of derivative to compute
+    :param mesh:       Mesh to compute the derivative on
+    :param variable:   Variable of which the derivative should be computed
     :kwargs:           kwargs for pyvista.compute_derivative
                        (scalars is replaced by variable and will
                        be ignored)
     """
-
-    if "scalar" in kwargs:
-        kwargs.pop("scalar")
-        msg = """'scalar' key word argument will be ignored.\n
+    if "scalars" in kwargs:
+        kwargs.pop("scalars")
+        msg = """'scalars' key word argument will be ignored.
                     use variable key word argument instead."""
         warnings.warn(msg, UserWarning, stacklevel=3)
 
-    if any(key in kwargs for key in DERIVATIVE_SUFFIXES):
-        msg = """Defining derivative type using boolean is not supported.\n
-                 Provide a string for keyword parameter derivative instead."""
+    if any(key in kwargs for key in get_args(DERIVATIVE_SUFFIXES)):
+        msg = """Defining derivative type using boolean is not supported.
+                 Use variable methods instead, e.g.
+                 `ot.variables.temperature.gradient`."""
         raise RuntimeError(msg)
+    variable = Variable.find(variable, mesh)
 
-    if isinstance(variable, str):
-        variable = Variable.find(variable, mesh)
-
-    def _pre_process(mesh: pv.UnstructuredGrid, variable: Variable) -> str:
+    def _pre_process(mesh: UnstructuredGrid, variable: Variable) -> str:
         """
         Perform preprocessing required for computing divergence and vorticity
 
@@ -60,20 +51,20 @@ def calculate_derivative(
         :return output_name: Name of the preprocessed data set added to mesh.
         """
 
-        output_name = variable.data_name + "_preprocessed"  # type: ignore[union-attr]
+        output_name = f"{variable.output_name}_preprocessed"
 
         if output_name not in mesh.array_names:
             if isinstance(variable, Vector):
-                if mesh[variable.data_name].shape[1] == 2:
+                if mesh[variable.output_name].shape[1] == 2:
                     mesh[output_name] = np.pad(
-                        mesh[variable.data_name],
+                        mesh[variable.output_name],
                         ((0, 0), (0, 1)),
                         constant_values=0.0,
                     )
-                elif mesh[variable.data_name].shape[1] == 3:
-                    mesh[output_name] = mesh[variable.data_name]
+                elif mesh[variable.output_name].shape[1] == 3:
+                    mesh[output_name] = mesh[variable.output_name]
             elif isinstance(variable, Matrix):
-                mesh[output_name] = mesh[variable.data_name][:, 0:3]
+                mesh[output_name] = mesh[variable.output_name][:, 0:3]
             else:
                 msg = """Divergence or vorticity can be calculated only\n
                             for Vector or Matrix variables."""
@@ -81,46 +72,23 @@ def calculate_derivative(
 
         return output_name
 
-    derivatives = DERIVATIVE_SUFFIXES if derivative == "all" else [derivative]
+    derivative = variable.output_name.rsplit("_", 1)[-1]
+    if derivative not in get_args(DERIVATIVE_SUFFIXES):
+        msg = (
+            "Can only be called with a derivative variable."
+            f"Given suffix is {derivative}."
+            f"Possible are: {get_args(DERIVATIVE_SUFFIXES)}."
+        )
+        raise KeyError(msg)
+    base_var = variable.parent
+    if base_var.output_name not in mesh.array_names:
+        mesh[base_var.output_name] = base_var.transform(mesh)
+    if derivative in ["divergence", "vorticity", "qcriterion"]:
+        array_name = _pre_process(mesh, base_var)
+    else:  # if derivative == "gradient":
+        array_name = base_var.output_name
 
-    for derivative_name in derivatives:
-
-        if derivative_name in ["divergence", "vorticity", "qcriterion"]:
-            array_name = _pre_process(mesh, variable)
-        elif derivative_name == "gradient":
-            array_name = variable.data_name
-        else:
-            msg = """Incorrect derivative selected.\n
-                    Only gradient, divergence and vorticity are supported"""
-            raise RuntimeError(msg)
-
-        mesh[variable.output_name] = mesh.compute_derivative(  # type: ignore[call-overload]
-            scalars=array_name,
-            **kwargs,
-        )[
-            derivative_name
-        ]
-
-    if return_data:
-        return mesh[variable.output_name]
-    return None
-
-
-def _get_data_names(data: pv.UnstructuredGrid) -> list[str]:
-    """
-    Gives user list of all result data names in MeshSeries which can be
-    used for plotting, post-processing, etc.
-    Technical ones are ignored.
-    """
-    dn = (
-        list(data.field_data.keys())  # type: ignore[union-attr]
-        + list(data.point_data.keys())  # type: ignore[union-attr]
-        + list(data.cell_data.keys())  # type: ignore[union-attr]
-    )
-    ignored_names = [
-        "IntegrationPointMetaData",
-        "OGS_VERSION",
-        "_PYVISTA_USER_DICT",
-        "bulk_node_ids",
-    ]
-    return [key for key in dn if key not in ignored_names]
+    kwargs[derivative] = True
+    return mesh.compute_derivative(scalars=array_name, **kwargs)[
+        derivative
+    ]  # pyright: ignore[reportReturnType, reportIndexIssue]
