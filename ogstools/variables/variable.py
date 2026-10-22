@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
-from typing import Any, TypeAlias, cast
+from typing import Any, Literal, TypeAlias, cast
 
 import numpy as np
 import pyvista as pv
@@ -38,7 +38,7 @@ class Variable:
     """The name of the variable data in the mesh."""
     data_unit: str = ""
     """The unit of the variable data in the mesh."""
-    output_unit: str = ""
+    output_unit: str = cast(str, None)
     """The output unit of the variable."""
     output_name: str = cast(str, None)
     """The output name of the variable."""
@@ -62,7 +62,9 @@ class Variable:
     """Default color for plotting"""
 
     def __post_init__(self, func: Function | Callable | None) -> None:
-        self.output_unit = self.output_unit or self.data_unit
+        self.output_unit = (
+            self.data_unit if self.output_unit is None else self.output_unit
+        )
         self.output_name = (
             self.data_name if self.output_name is None else self.output_name
         )
@@ -222,6 +224,8 @@ class Variable:
                     return variable
                 raise KeyError(error_msg)
             data_key = variable.output_name
+            if variable.output_unit == "time_unit":
+                variable = variable.replace(output_unit=_time_unit(data))
 
             if len(variable.functions) > 0:
                 return variable.replace(
@@ -285,19 +289,40 @@ class Variable:
         return component(matrix(variable), suffix)
 
     def _get_input_values(
-        self, data: Data, input: Callable | str
-    ) -> np.ndarray:
+        self, data: Data, input: Callable | str | Variable
+    ) -> np.ndarray | PlainQuantity:
 
         if isinstance(input, str):
             is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
             if isinstance(data, pv.DataSet) or is_ms:
                 return data[input]  # type: ignore[reportReturnType, call-overload, index]
             msg = (
-                f"{self} requires input {input}, thus it can only be "
-                "applied on a mesh or a meshseries."
+                f"{self.output_name} requires input {input}, thus it can only "
+                "be applied on a mesh or a meshseries."
             )
             raise TypeError(msg)
+        if isinstance(input, Variable):
+            pwu = self.process_with_units
+            unit = input.output_unit if pwu else input.data_unit
+            var = input.replace(output_unit=unit, process_with_units=pwu)
+            # to ensure, that this is only used on datasets, we call
+            # _get_input_values again otherwise the same data will be
+            # interpreted as different variables
+            return var.transform(
+                self._get_input_values(data, var.data_name), strip_unit=not pwu
+            )
         return input(data)
+
+    def _preprocess_params(self, params: dict) -> dict:
+        return {
+            p: (
+                val.magnitude
+                if isinstance(val, u_reg.Quantity)
+                and not self.process_with_units
+                else val
+            )
+            for p, val in params.items()
+        }
 
     def transform(
         self, data: Data, strip_unit: bool = True
@@ -316,6 +341,20 @@ class Variable:
         if `process_with_units` is True data is passed to the function with
         units (i.e. as a pint quantity).
         """
+        if self.output_unit == "time_unit":
+            var = self.replace(output_unit=_time_unit(data))
+            return var.transform(data, strip_unit)
+        if (
+            not u_reg.is_compatible_with(self.data_unit, self.output_unit)
+            and not self.process_with_units
+        ):
+            msg = (
+                "The data and output units are incompatible "
+                f"({self.data_unit} -> {self.output_unit}). Please set "
+                "`process_with_units` to True, to be sure the result of "
+                "`transform` does not silently give false results."
+            )
+            raise TypeError(msg)
         is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
         is_dataset = isinstance(data, pv.DataSet) or is_ms
         result = self._get_data(data) if is_dataset else np.asarray(data)
@@ -326,7 +365,7 @@ class Variable:
             result = function.callable(
                 result,
                 *(self._get_input_values(data, inp) for inp in function.args),
-                **function.params,
+                **self._preprocess_params(function.params),
             )
 
         if not self.process_with_units:
@@ -334,76 +373,202 @@ class Variable:
         result = u_reg.Quantity(result, self.output_unit)
         return result.magnitude if strip_unit else result
 
+    def _unit_convert(self, values: np.ndarray) -> np.ndarray:
+        return u_reg.Quantity(
+            u_reg.Quantity(values, self.data_unit), self.output_unit
+        ).magnitude
+
     @property
     def get_output_unit(self) -> str:
         "Return the output unit"
         return "%" if self.output_unit == "percent" else self.output_unit
 
     @property
-    def _agg_names(self) -> list[str]:
-        return [
-            self.min.output_name,
-            self.max.output_name,
-            self.mean.output_name,
-            self.median.output_name,
-            self.sum.output_name,
-            self.std.output_name,
-            self.var.output_name,
-        ]
+    def aggregations(self) -> int:
+        "Returns the number of aggregating function stored in this Variable."
+        return sum(f.aggregating for f in self.functions)
 
-    def _agg(self, func: Callable, new_symbol: str | None) -> Self:
+    def aggregation_variable(self, func: Callable) -> Self:
+        "Returns an aggregating Variable corresponding to the function."
+        name = func.__name__
+        return getattr(
+            self, name, self.aggregate(func, symbol=self.symbol, prefix=name)
+        )
+
+    def aggregate(self, func: Callable, **kwargs: Any) -> Self:
+        """Creates a Variable aggregating the data with func."""
         subclasses = Variable.__subclasses__()
         vector = next(x for x in subclasses if x.__name__ == "Vector")
         matrix = next(x for x in subclasses if x.__name__ == "Matrix")
         index = -2 if isinstance(self, vector | matrix) else -1
-        return type(self).from_variable(
-            self,
-            func=lambda x: func(x, axis=index),
-            suffix=func.__name__,
-            symbol=new_symbol,
+        kwargs.setdefault(
+            "func", Function(func, params={"axis": index}, aggregating=True)
         )
+        if "suffix" not in kwargs:
+            kwargs.setdefault("prefix", func.__name__)
+        agg_var = type(self).from_variable(self, **kwargs)
+        if "process_with_units" in kwargs:
+            agg_var.functions.insert(-1, Function(self._unit_convert))
+        return agg_var
+
+    def normalize_aggregation(self, func: Callable | None = None) -> Self:
+        """Returns a variable with exactly one aggregation function.
+
+        If all previous functions plus the optionally given one contain not
+        exactly one aggregating function an Error is thrown.
+        """
+        if func is not None:
+            if self.aggregations > 0:
+                msg = (
+                    "Already got an aggregating variable. `func` may only be "
+                    "passed if the variable is not aggregating itself."
+                )
+                raise TypeError(msg)
+            return self.aggregation_variable(func)
+
+        if self.aggregations != 1:
+            msg = (
+                "`variable` does not specify a single aggregation. Pass "
+                "either an aggregating Variable with exactly one reduction "
+                "(e.g. .min, .max, .mean, .median, .sum, .std, .var) or a "
+                "variable together with a function, e.g. "
+                "aggregate_temporal(variable, np.max)."
+            )
+            raise TypeError(msg)
+        return self
+
+    def change_axis(self, axis: int) -> Self:
+        "Variable with an updated axis of its last aggregation function."
+        var = self.copy()
+        if var.aggregations == 0:
+            msg = "This variable has no aggregation function."
+            raise TypeError(msg)
+        agg_func = next(f for f in var.functions[::-1] if f.aggregating)
+        agg_func.params["axis"] = axis
+        return var
 
     @property
     def min(self) -> Self:
-        "A variable relating to minimum of this quantity."
-        return self._agg(np.min, f"{self.symbol}_{{min}}")
+        "A variable relating to the minimum of this quantity."
+        return self.aggregate(
+            np.min, symbol=f"{self.symbol}^{{min}}", prefix="min"
+        )
 
     @property
     def max(self) -> Self:
-        "A variable relating to maximum of this quantity."
-        return self._agg(np.max, f"{self.symbol}_{{max}}")
+        "A variable relating to the maximum of this quantity."
+        return self.aggregate(
+            np.max, symbol=f"{self.symbol}^{{max}}", prefix="max"
+        )
 
     @property
     def mean(self) -> Self:
-        "A variable relating to mean of this quantity."
-        return self._agg(np.mean, rf"\overline{{{self.symbol}}}")
+        "A variable relating to the mean of this quantity."
+        return self.aggregate(
+            np.mean, symbol=rf"\overline{{{self.symbol}}}", prefix="mean"
+        )
 
     @property
     def median(self) -> Self:
-        "A variable relating to median of this quantity."
-        return self._agg(np.median, rf"med({self.symbol})")
+        "A variable relating to the median of this quantity."
+        return self.aggregate(
+            np.median, symbol=rf"med({self.symbol})", prefix="median"
+        )
 
     @property
     def sum(self) -> Self:
-        "A variable relating to sum of this quantity."
-        return self._agg(np.sum, rf"\sum{{{self.symbol}}}")
+        "A variable relating to the sum of this quantity."
+        return self.aggregate(
+            np.sum,
+            symbol=rf"\sum{{{self.symbol}}}",
+            suffix="sum",
+            process_with_units=True,
+        )
 
     @property
     def std(self) -> Self:
-        "A variable relating to standard deviation of this quantity."
-        return self._agg(np.std, f"SD({self.symbol})")
+        "A variable relating to the standard deviation of this quantity."
+        return self.aggregate(
+            np.std,
+            symbol=f"SD({self.symbol})",
+            suffix="standard_deviation",
+            process_with_units=True,
+            bilinear_cmap=False,
+            cmap="coolwarm",
+        )
 
     @property
     def var(self) -> Self:
-        "A variable relating to variance of this quantity."
+        "A variable relating to the variance of this quantity."
 
         def square_unit(unit: str) -> str:
             return "" if unit == "" else unit + "**2"
 
-        return self._agg(np.var, f"Var({self.symbol})").replace(
-            data_unit=square_unit(self.data_unit),
-            output_unit=square_unit(self.output_unit),
+        output_unit = (
+            "" if self.output_unit in ["%", "percent"] else self.output_unit
         )
+
+        return self.replace(output_unit=output_unit).aggregate(
+            np.var,
+            symbol=f"Var({self.symbol})",
+            output_unit=square_unit(output_unit),
+            suffix="variance",
+            process_with_units=True,
+            bilinear_cmap=False,
+            cmap="coolwarm",
+        )
+
+    @property
+    def argmin(self) -> Self:
+        "A variable relating to the minimum index of this quantity."
+        symbol = f"index({self.symbol}^{{min}})"
+        return self.aggregate(
+            np.argmin,
+            symbol=symbol,
+            prefix="min",
+            suffix="index",
+            output_unit="",
+            process_with_units=True,
+        )
+
+    @property
+    def argmax(self) -> Self:
+        "A variable relating to the maximum index of this quantity."
+        symbol = f"index({self.symbol}^{{max}})"
+        return self.aggregate(
+            np.argmax,
+            symbol=symbol,
+            prefix="max",
+            suffix="index",
+            output_unit="",
+            process_with_units=True,
+        )
+
+    def _time_of(self, extremum: Literal["min", "max"]) -> Self:
+        agg_var = self.aggregate(
+            getattr(np, f"arg{extremum}"),
+            symbol=f"t({self.symbol}={self.symbol}^{{{extremum}}})",
+            prefix="time_of",
+            suffix=extremum,
+            output_unit="time_unit",
+            process_with_units=True,
+        )
+        time_func = Function(
+            lambda ids, tv, data: u_reg.Quantity(tv[ids], _time_unit(data)),
+            ["timevalues", lambda data: data],
+        )
+        agg_var.functions.append(time_func)
+        return agg_var
+
+    @property
+    def time_of_min(self) -> Self:
+        "A variable relating to the time of the minimum of this quantity."
+        return self._time_of("min")
+
+    @property
+    def time_of_max(self) -> Self:
+        "A variable relating to the time of the maximum of this quantity."
+        return self._time_of("max")
 
     @property
     def abs(self) -> Self:
@@ -639,6 +804,10 @@ def spatial_var(var_name: str, data: Data) -> Variable:
     return pts_var[var_name]  # type: ignore[index]
 
 
+def _time_unit(data: Data) -> str:
+    return _quantity_to_str(getattr(data, "time_unit", "s"))
+
+
 def time_var(var_name: str, data: Data) -> Scalar:
-    unit = _quantity_to_str(getattr(data, "time_unit", "s"))
+    unit = _time_unit(data)
     return Scalar("timevalues", unit, unit, var_name, symbol="t")

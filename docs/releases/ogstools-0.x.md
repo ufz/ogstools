@@ -19,6 +19,13 @@
 
 ## Features
 
+- variable aggregations over a meshseries can now be plotted directly e.g.:
+  `fig = ot.plot.contourf(meshseries, ot.variables.temperature.max)`
+- output names of variables aggregations have changed:
+  - temperature\_{max|min|mean|median} -> {max|min|mean|median}\_temperature
+  - temperature_std -> temperature_standard_deviation
+  - temperature_var -> temperature_variance
+
 ## Infrastructure
 
 ## Documentation

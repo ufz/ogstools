@@ -3,9 +3,11 @@
 
 """Plotting core utilitites."""
 
+from __future__ import annotations
+
 import warnings
 from math import nextafter
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pyvista as pv
@@ -26,6 +28,9 @@ from .contourplots_pv import contourf_pv
 from .levels import compute_levels, median_exponent
 from .shared import setup
 from .vectorplots import streamlines
+
+if TYPE_CHECKING:
+    from ogstools.meshseries._meshseries import MeshSeries
 
 # TODO: define default data_name for regions in setup
 
@@ -483,8 +488,33 @@ def _set_aspect(ax: plt.Axes, aspect: float, **kwargs: Any) -> None:
     ax.set_aspect(1.0 / aspect)
 
 
+def _aggregate_meshseries(
+    meshseries: MeshSeries, variable: Variable
+) -> pv.UnstructuredGrid:
+    """Collapse a ``MeshSeries`` over time using the aggregation in variable.
+
+    Raises ``TypeError`` if ``variable`` is not an aggregation, as plotting a
+    ``MeshSeries`` always means temporal aggregation.
+    """
+    if variable.aggregations == 1:
+        return meshseries.aggregate_temporal(variable)
+
+    msg = (
+        f"Cannot plot '{variable.output_name}' from a MeshSeries: it must "
+        f"carry a single aggregation, but has {variable.aggregations}. "
+        "Use only one aggregation (e.g. ot.variables.<name>.max), or index a "
+        "single timestep (e.g. contourf(meshseries[-1], variable))."
+    )
+    raise TypeError(msg)
+
+
 def contourf(
-    meshes: list[pv.UnstructuredGrid] | np.ndarray | pv.UnstructuredGrid,
+    meshes: (
+        list[pv.UnstructuredGrid]
+        | np.ndarray
+        | pv.UnstructuredGrid
+        | MeshSeries
+    ),
     variable: Variable | str,
     fig: plt.Figure | None = None,
     ax: plt.Axes | None = None,
@@ -497,8 +527,12 @@ def contourf(
     The resulting figure adheres to the configurations in plot.setup.
     For 2D meshes matplotlib backend is used, for 3D pyvista backend.
 
-    :param meshes:      Singular mesh of 2D numpy array of meshes
-    :param variable:    The field to be visualized on all meshes
+    Giving a ``MeshSeries`` always implies temporal aggregation. The given
+    variable in this case must must carry an aggregation (e.g. ``.max``).
+
+    :param meshes:      Singular mesh, ``MeshSeries``, or 2D numpy array of
+                        meshes.
+    :param variable:    The field to be visualized on all meshes.
     :param fig:         matplotlib figure to use for plotting
     :param ax:          matplotlib axis to use for plotting
     :param interactive: By default: 2D mesh -> matplotlib, 3D mesh -> pyvista,
@@ -529,6 +563,11 @@ def contourf(
         - ylim:               limits as [min, max], use None for auto limit
         - alpha:              opaqueness (1: opaque, 0: transparent)
     """
+    from ogstools.meshseries._meshseries import MeshSeries
+
+    if isinstance(meshes, MeshSeries):
+        variable = Variable.find(variable, meshes[0])
+        meshes = _aggregate_meshseries(meshes, variable)
 
     shape = utils.get_rows_cols(meshes)
     _meshes = np.reshape(meshes, shape).ravel()

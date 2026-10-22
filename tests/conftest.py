@@ -1,10 +1,22 @@
 import shutil
 import sys
 
+import numpy as np
 import pytest
 from hypothesis import Verbosity, settings
 
 import ogstools as ot
+
+
+@pytest.fixture(
+    params=sorted(
+        [ np.min, np.max, np.mean, np.median, np.sum, np.std, np.var, np.argmin, np.argmax],
+        key=lambda f: f.__name__,
+    ),
+    ids=lambda f: f.__name__,
+)  # fmt: skip
+def np_func(request):
+    return request.param
 
 
 @pytest.fixture

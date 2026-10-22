@@ -413,25 +413,43 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return zip(self.timevalues, self, strict=True)  # type: ignore[return-value]
 
     def aggregate_temporal(
-        self, variable: Variable | str, func: Callable
+        self, variable: Variable | str, func: Callable | None = None
     ) -> pv.UnstructuredGrid:
-        """Aggregate data over all timesteps using a specified function.
+        """Aggregate data over all timesteps.
 
-        :param variable:    The mesh variable to be aggregated.
+        An aggregation can be given in one of two ways:
+
+        - a plain variable (``str`` or ``Variable``) plus an aggregation
+          function, e.g. ``aggregate_temporal(saturation, np.max)``; or
+        - an aggregating ``Variable`` on its own, e.g.
+          ``aggregate_temporal(saturation.max)``.
+
+        Both forms describing the same reduction produce the same result and
+        the same output name (``max_saturation``); the aggregated field is keyed
+        by the ``output_name`` of the resulting ``Variable``.
+
+        :param variable:    The mesh variable to be aggregated. If it already
+                            carries an aggregation (e.g. ``.max``), ``func``
+                            must be omitted.
         :param func:        The aggregation function to apply. E.g. np.min,
-                            np.max, np.mean, np.median, np.sum, np.std, np.var
+                            np.max, np.mean, np.median, np.sum, np.std, np.var.
+                            Must be omitted if ``variable`` is already an
+                            aggregation.
         :returns:   A mesh with aggregated data according to the given function.
+        :raises TypeError:  If both an aggregating ``Variable`` and ``func``
+                            are given, or if neither an aggregation nor a
+                            ``func`` is given.
         """
-        # TODO: add function to create an empty mesh from a given on
+        # TODO: add function to create an empty mesh from a given one
         # custom field_data may need to be preserved
         mesh = self.mesh(0).copy(deep=True)
+        var = Variable.find(variable, mesh).copy()
+        var_temporal = var.normalize_aggregation(func).change_axis(0)
+
         mesh.clear_point_data()
         mesh.clear_cell_data()
-        if isinstance(variable, Variable):
-            output_name = f"{variable.output_name}_{func.__name__}"
-        else:
-            output_name = f"{variable}_{func.__name__}"
-        mesh[output_name] = func(self.values(variable), axis=0)
+        mesh[var_temporal.output_name] = var_temporal.transform(self)
+        pv_set_attr(mesh, "time_unit", self.time_unit)
         return mesh
 
     def clear_cache(self) -> None:
@@ -747,35 +765,22 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         pv_mesh.field_data.update(field_data)
         return pv_mesh
 
-    def _time_of_extremum(
-        self,
-        variable: Variable | str,
-        np_func: Callable,
-        prefix: Literal["min", "max"],
-    ) -> pv.UnstructuredGrid:
-        """Returns a Mesh with the time of a given variable extremum as data.
-
-        The data is named as `f'{prefix}_{variable.output_name}_time'`."""
-        mesh = self.mesh(0).copy(deep=True)
-        variable = Variable.find(variable, mesh)
-        mesh.clear_point_data()
-        mesh.clear_cell_data()
-        output_name = f"{prefix}_{variable.output_name}_time"
-        mesh[output_name] = self.timevalues[
-            np_func(self.values(variable), axis=0)
-        ]
-        return mesh
-
+    @deprecated("Please use `ms.aggregate_temporal(variable.time_of_min)`.")
     def time_of_min(self, variable: Variable | str) -> pv.UnstructuredGrid:
         "Returns a Mesh with the time of the variable minimum as data."
-        return self._time_of_extremum(variable, np.argmin, "min")
+        return self.aggregate_temporal(
+            Variable.find(variable, self).time_of_min
+        )
 
+    @deprecated("Please use `ms.aggregate_temporal(variable.time_of_max)`.")
     def time_of_max(self, variable: Variable | str) -> pv.UnstructuredGrid:
         "Returns a Mesh with the time of the variable maximum as data."
-        return self._time_of_extremum(variable, np.argmax, "max")
+        return self.aggregate_temporal(
+            Variable.find(variable, self).time_of_max
+        )
 
     def aggregate_spatial(
-        self, variable: Variable | str, func: Callable
+        self, variable: Variable | str, func: Callable | None = None
     ) -> np.ndarray:
         """Aggregate data over domain per timestep using a specified function.
 
@@ -785,7 +790,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         :returns:   A numpy array with aggregated data.
         """
-        return func(self.values(variable), axis=1)
+        var = Variable.find(variable, self).copy()
+        var_spatial = var.normalize_aggregation(func).change_axis(1)
+        return var_spatial.transform(self)
 
     def _flatten_vectors(self, data: list[np.ndarray]) -> list[np.ndarray]:
         return [
@@ -963,10 +970,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         var_z = Variable.find(variable, self.mesh(0))
         var_x, var_y = _normalize_vars(x, y, self.mesh(0), ["time", "time"])
         time_var = var_x if var_x.data_name == "timevalues" else var_y
-        unit = self.time_unit
-        time_var.data_unit = time_var.output_unit = str(
-            unit if unit.magnitude != 1 else unit.units
-        )
+        unit_ = self.time_unit
+        unit = str(unit_ if unit_.magnitude != 1 else unit_.units)
+        time_var.data_unit = time_var.output_unit = unit
         if time_logscale:
 
             def log10time(vals: np.ndarray) -> np.ndarray:

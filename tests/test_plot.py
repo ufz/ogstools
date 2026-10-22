@@ -195,13 +195,6 @@ class TestPlotting:
         contourf([ms[0], ms[1]], ot.variables.temperature, fig=fig)
         return fig
 
-    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
-    def test_aggregate_over_time(self) -> plt.Figure:
-        """Test creation of temporal aggregation plots via image comparison."""
-        ms = examples.load_meshseries_CT_2D_XDMF()
-        mesh = ms.aggregate_temporal("Si", np.var)
-        return contourf(mesh, "Si_var")
-
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 50})
     def test_spatial_aggregate(self):
         """Test creation of spatial aggregation plots via image comparison."""
@@ -209,6 +202,57 @@ class TestPlotting:
         fig = mesh_series.plot_line(ot.variables.temperature.max)
         fig.tight_layout()
         return fig
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    @pytest.mark.parametrize("agg", ["max", "var"])
+    def test_contourf_meshseries_aggregate(self, agg: str) -> plt.Figure:
+        """Temporal aggregation of a MeshSeries directly in contourf."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        variable = getattr(ot.variables.saturation, agg)
+        return contourf(ms, variable)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    @pytest.mark.parametrize("agg", ["max", "std"])
+    def test_contourf_dilatancy_aggregate(self, agg: str) -> plt.Figure:
+        """Temporal aggregation of dilatancy criterion."""
+        ms = examples.load_meshseries_THM_2D_PVD()
+        variable = getattr(ot.variables.dilatancy_alkan_eff, agg)
+        return contourf(ms, variable)
+
+    @pytest.mark.parametrize("agg", ["max", "var"])
+    def test_contourf_meshseries_matches_manual(self, agg: str) -> None:
+        """Direct aggregation equals the manual two-step workflow."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        variable = ot.variables.saturation
+        agg_variable = getattr(variable, agg)
+
+        def image(fig: plt.Figure) -> np.ndarray:
+            fig.canvas.draw()
+            return np.asarray(fig.canvas.buffer_rgba())
+
+        direct = contourf(ms, agg_variable)
+        manual = contourf(
+            ms.aggregate_temporal(variable, getattr(np, agg)), agg_variable
+        )
+        np.testing.assert_array_equal(image(direct), image(manual))
+
+    def test_contourf_meshseries_requires_aggregation(self) -> None:
+        """A MeshSeries with a non-aggregating variable raises a TypeError."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        match = "it must carry a single aggregation, but has 0"
+        with pytest.raises(TypeError, match=match):
+            contourf(ms, ot.variables.saturation)
+        with pytest.raises(TypeError, match=match):
+            contourf(ms, "saturation")
+
+    def test_contourf_meshseries_is_never_a_grid(self) -> None:
+        """A MeshSeries becomes one map; an explicit list stays a grid."""
+        ms = examples.load_meshseries_CT_2D_XDMF()
+        single = contourf(ms, ot.variables.saturation.max)
+        one_step = contourf(ms[0], ot.variables.saturation)
+        assert len(single.axes) == len(one_step.axes)
+        grid = contourf([ms[0], ms[1]], ot.variables.saturation)
+        assert len(grid.axes) > len(single.axes)
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
     @pytest.mark.parametrize(
