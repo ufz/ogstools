@@ -9,7 +9,8 @@ from typing import Literal
 
 from ogstools.mesh.utils import angles, azimuth
 from ogstools.variables import tensor_math
-from ogstools.variables.variable import Scalar, Variable
+from ogstools.variables.scalar import Scalar
+from ogstools.variables.variable import Variable
 from ogstools.variables.vector import Vector, VectorList
 
 from .func import Function
@@ -56,6 +57,22 @@ class Matrix(Variable):
             suffix=index,
             symbol=f"{{{self.symbol}}}_{{{index}}}",
             bilinear_cmap=True,
+        )
+
+    def col(self, index: int) -> Vector:
+        return Vector.from_variable(
+            self,
+            func=Function(tensor_math.column, [], {"index": index}),
+            suffix=f"column_{index}",
+            symbol=f"{{{self.symbol}}}{{{index}}}",
+        )
+
+    def row(self, index: int) -> Vector:
+        return Vector.from_variable(
+            self,
+            func=Function(tensor_math.row, [], {"index": index}),
+            suffix=f"row_{index}",
+            symbol=f"{{{self.symbol}}}{{{index}}}",
         )
 
     def to_polar(

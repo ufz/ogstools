@@ -369,6 +369,59 @@ class TestPhysicalVariable:
             # cause floating point differences.
             np.testing.assert_allclose(var.transform(ms), ref_vals, rtol=1e-12)
 
+    @pytest.mark.parametrize(
+        ("var", "output_type"),
+        [
+            (ov.temperature.gradient, ov.Vector),
+            (ov.stress.von_Mises.gradient, ov.Vector),
+            (ov.velocity.divergence, ov.Scalar),
+            (ov.velocity.vorticity, ov.Vector),
+            (ov.velocity.qcriterion, ov.Scalar),
+        ],
+    )
+    def test_derivatives(self, var: ot.variables.Variable, output_type: type):
+        assert isinstance(var, output_type)
+
+    def test_divergence(self):
+        "Test approximate equality of strain trace and displacement divergence"
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        eps_trace = ov.strain.trace.replace(output_unit="")
+        u_div = ov.displacement.divergence
+        np.testing.assert_allclose(
+            u_div.transform(mesh), eps_trace.transform(mesh), atol=2.3e-5
+        )
+
+    def test_divergence_matrix(self):
+        "Test divergence of a Matrix correctly reduces to a Vector."
+        ms = examples.load_meshseries_THM_2D_PVD()
+        var = ov.stress.divergence
+        assert var.transform(ms).shape == (len(ms), ms[0].n_points, 3)
+        assert var.transform(ms[-1]).shape == (ms[0].n_points, 3)
+
+    def test_derivative_units(self):
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        stress_pa = ov.stress.replace(output_unit="Pa")
+        div_pa = stress_pa.divergence.transform(mesh)
+        div_mpa = ov.stress.divergence.transform(mesh)
+        np.testing.assert_allclose(div_mpa, div_pa * 1e-6, 0, 0)
+
+        grad_pa = stress_pa.trace.gradient.transform(mesh)
+        grad_mpa = ov.stress.trace.gradient.transform(mesh)
+        np.testing.assert_allclose(grad_mpa, grad_pa * 1e-6, 0, 0)
+
+        velocity_mm_s = ov.velocity.replace(output_unit="mm/s")
+        div_mm_s = velocity_mm_s.divergence.transform(mesh)
+        div_m_s = ov.velocity.divergence.transform(mesh)
+        np.testing.assert_allclose(div_m_s, div_mm_s * 1e-3, 1e-15, 0)
+
+    def test_derivative_spatial_unit(self):
+        "Test correct handling of spatial unit of dataset."
+        ms = examples.load_meshseries_THM_2D_PVD()
+        var = ov.temperature.gradient
+        ref = var.transform(ms[-1])
+        actual = var.transform(ms.scale("km")[-1])
+        np.testing.assert_allclose(actual, 1e3 * ref)
+
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."
         mesh = examples.load_mesh_mechanics_2D()
@@ -490,6 +543,15 @@ class TestPhysicalVariable:
         ms_b.cell_data[var.mask] = np.broadcast_to(mask_a[-1], mask_a.shape)
         _check_masked_data(ms_b, var.transform(ms_b))
 
+    def test_matrix_col_row(self):
+        "Test matrix row and column equality due to symmetry."
+        var = ov.stress
+        for data in [np.arange(4), np.arange(6)]:
+            for i in range(3):
+                np.testing.assert_array_equal(
+                    var.col(i).transform(data), var.row(i).transform(data)
+                )
+
     def test_access_via_str(self):
         "Test accessing variables and their components via a string"
         mesh = examples.load_meshseries_THM_2D_PVD()[-1]
@@ -499,18 +561,20 @@ class TestPhysicalVariable:
 
         def equal(name: str, var: ov.Variable) -> None:
             str_var = ov.Variable.find(name, mesh)
-            for key in vars(var):
+            var_ = var.find(var, mesh)
+            for key in vars(var_):
                 if key == "functions":
                     # a simple comparison like var == str_var would fail due to
                     # the functions being stored in different memory locations
                     continue
-                assert getattr(str_var, key) == getattr(var, key)
+                assert getattr(str_var, key) == getattr(var_, key)
             np.testing.assert_equal(
-                var.transform(mesh), str_var.transform(mesh)
+                var_.transform(mesh), str_var.transform(mesh)
             )
 
         for name, var in [
             ("temperature", ov.temperature),
+            ("temperature_gradient", ov.temperature.gradient),
             ("displacement", ov.displacement),
             ("displacement_x", ov.displacement["x"]),
             ("displacement_0", ov.displacement[0]),

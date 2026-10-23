@@ -12,6 +12,7 @@ from hypothesis import strategies as st
 import ogstools as ot
 from ogstools import examples
 from ogstools.mesh import utils
+from ogstools.mesh.derivatives import calculate_derivative
 
 
 def test_diff_two_meshes():
@@ -213,3 +214,10 @@ def test_linear_quadratic_roundtrip(mesh: pv.UnstructuredGrid):
     mesh_quad = ot.mesh.utils.to_quadratic(ref_mesh)
     mesh_lin = ot.mesh.utils.to_linear(mesh_quad)
     assert mesh_lin == ref_mesh
+
+
+def test_calculate_derivative():
+    ms = examples.load_meshseries_THM_2D_PVD()
+    grad_T = calculate_derivative(ms[-1], ot.variables.temperature.gradient)
+    assert np.max(grad_T) < 1
+    assert np.min(grad_T) > -1

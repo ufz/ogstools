@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
-from typing import Any, Literal, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, get_args
 
 import numpy as np
 import pyvista as pv
@@ -25,9 +25,18 @@ from .custom_colormaps import mask_cmap
 from .func import Function
 from .unit_registry import u_reg
 
+if TYPE_CHECKING:
+    from .matrix import Matrix
+    from .scalar import Scalar
+    from .vector import Vector
+
 Mesh: TypeAlias = pv.DataSet | pv.UnstructuredGrid
 MeshOrSeries: TypeAlias = Mesh | Sequence[Mesh]
 Data: TypeAlias = int | float | np.ndarray | MeshOrSeries
+
+DERIVATIVE_SUFFIXES = Literal[
+    "gradient", "divergence", "vorticity", "qcriterion"
+]
 
 
 @dataclass
@@ -60,6 +69,7 @@ class Variable:
     """Does this variable only have categoric values?"""
     color: str | None = None
     """Default color for plotting"""
+    _parent: Variable | None = None
 
     def __post_init__(self, func: Function | Callable | None) -> None:
         self.output_unit = (
@@ -73,6 +83,10 @@ class Variable:
 
     def __str__(self) -> str:
         return self.data_name
+
+    @property
+    def parent(self) -> Variable:
+        return self._parent or self
 
     @property
     def function(self) -> Function | None:
@@ -178,6 +192,7 @@ class Variable:
             bilinear_cmap=variable.bilinear_cmap,
             categoric=variable.categoric,
             color=variable.color,
+            _parent=variable,
         ).replace(**changes)
 
     @classmethod
@@ -217,42 +232,44 @@ class Variable:
             return time_var(var_name, data)
 
         if isinstance(variable, Variable):
-            if variable.data_name == "None":
-                return variable
-            if variable.output_name not in all_keys:
-                if variable.data_name in data_keys:
-                    return variable
+            var = variable._finalize_units(data)
+            if var.data_name == "None":
+                return var
+            if var.output_name not in all_keys:
+                if var.data_name in data_keys:
+                    return var
                 raise KeyError(error_msg)
-            data_key = variable.output_name
-            if variable.output_unit == "time_unit":
-                variable = variable.replace(output_unit=_time_unit(data))
 
-            if len(variable.functions) > 0:
-                return variable.replace(
-                    data_name=data_key,
-                    data_unit=variable.output_unit,
-                    output_unit=variable.output_unit,
-                    output_name=data_key,
+            if len(var.functions) > 0:
+                return var.replace(
+                    data_name=var.output_name,
+                    data_unit=var.output_unit,
+                    output_unit=var.output_unit,
+                    output_name=var.output_name,
                     functions=[],
                 )
-            return variable.replace(data_name=data_key)
+            return var.replace(data_name=var.output_name)
 
-        # pylint: disable=import-outside-toplevel
         from ogstools.variables import all_variables
 
-        # pylint: enable=import-outside-toplevel
         suffix = ""
         if (
             "_" in variable
             and variable not in all_keys
             and variable.rsplit("_", 1)[0] in all_keys
         ):
-            variable, suffix = variable.rsplit("_", 1)
+            parts = variable.rsplit("_", 1)
+            variable, suffix = parts[0], parts[1] if len(parts) > 1 else ""
+
+        from .scalar import Scalar
 
         def component(var: Variable, suffix: str) -> Variable:
             suffix_ = int(suffix) if suffix.isdigit() else suffix
             if suffix == "":
                 return var
+            if hasattr(var, suffix):
+                var = cast(Variable, getattr(var, suffix))
+                return var._finalize_units(data)
             if isinstance(var, Scalar):
                 msg = f"Scalar '{var.data_name}' has no component {suffix}."
                 raise KeyError(msg)
@@ -279,14 +296,15 @@ class Variable:
             data_shape = getattr(getattr(mesh, variable), "shape", [0])
         else:
             raise KeyError(error_msg)
+
+        from .matrix import Matrix
+        from .vector import Vector
+
         if len(data_shape) == 1:
             return component(Scalar(variable), suffix)
-        subclasses = Variable.__subclasses__()
-        vector = next(x for x in subclasses if x.__name__ == "Vector")
-        matrix = next(x for x in subclasses if x.__name__ == "Matrix")
-        if data_shape[1] in [2, 3]:
-            return component(vector(variable), suffix)
-        return component(matrix(variable), suffix)
+        if data_shape[-1] in [2, 3]:
+            return component(Vector(variable), suffix)
+        return component(Matrix(variable), suffix)
 
     def _get_input_values(
         self, data: Data, input: Callable | str | Variable
@@ -324,6 +342,22 @@ class Variable:
             for p, val in params.items()
         }
 
+    def _finalize_units(self, data: Data) -> Self:
+        def final(unit: str) -> bool:
+            return not ("time_unit" in unit or "spatial_unit" in unit)
+
+        if final(self.data_unit) and final(self.output_unit):
+            return self
+        var = self.copy()
+        for unit_name in ["data_unit", "output_unit"]:
+            unit = getattr(var, unit_name)
+            unit = unit.replace("spatial_unit", _spatial_unit(data))
+            unit = unit.replace("time_unit", _time_unit(data))
+            unit = _quantity_to_str(unit)
+            unit = unit.replace(" ", "")
+            setattr(var, unit_name, unit)
+        return var
+
     def transform(
         self, data: Data, strip_unit: bool = True
     ) -> np.ndarray | PlainQuantity:
@@ -341,36 +375,34 @@ class Variable:
         if `process_with_units` is True data is passed to the function with
         units (i.e. as a pint quantity).
         """
-        if self.output_unit == "time_unit":
-            var = self.replace(output_unit=_time_unit(data))
-            return var.transform(data, strip_unit)
+        var = self._finalize_units(data)
         if (
-            not u_reg.is_compatible_with(self.data_unit, self.output_unit)
-            and not self.process_with_units
+            not u_reg.is_compatible_with(var.data_unit, var.output_unit)
+            and not var.process_with_units
         ):
             msg = (
                 "The data and output units are incompatible "
-                f"({self.data_unit} -> {self.output_unit}). Please set "
+                f"({var.data_unit} -> {var.output_unit}). Please set "
                 "`process_with_units` to True, to be sure the result of "
                 "`transform` does not silently give false results."
             )
             raise TypeError(msg)
         is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
         is_dataset = isinstance(data, pv.DataSet) or is_ms
-        result = self._get_data(data) if is_dataset else np.asarray(data)
-        if self.process_with_units:
-            result = u_reg.Quantity(result, self.data_unit)
+        result = var._get_data(data) if is_dataset else np.asarray(data)
+        if var.process_with_units:
+            result = u_reg.Quantity(result, var.data_unit)
 
-        for function in self.functions:
+        for function in var.functions:
             result = function.callable(
                 result,
-                *(self._get_input_values(data, inp) for inp in function.args),
-                **self._preprocess_params(function.params),
+                *(var._get_input_values(data, inp) for inp in function.args),
+                **var._preprocess_params(function.params),
             )
 
-        if not self.process_with_units:
-            result = u_reg.Quantity(result, self.data_unit)
-        result = u_reg.Quantity(result, self.output_unit)
+        if not var.process_with_units:
+            result = u_reg.Quantity(result, var.data_unit)
+        result = u_reg.Quantity(result, var.output_unit)
         return result.magnitude if strip_unit else result
 
     def _unit_convert(self, values: np.ndarray) -> np.ndarray:
@@ -583,7 +615,7 @@ class Variable:
         diff_unit = str(diff_quantity.units)
         if str(diff_quantity.units) in ["degC", "°C"]:
             diff_unit = "kelvin"
-        return diff_unit
+        return diff_unit.replace(" ", "")
 
     @property
     def difference(self) -> Variable:
@@ -757,6 +789,94 @@ class Variable:
             return label
         return self._split_long_label(split_at, name, label)
 
+    def _get_derivative(
+        self, derivative: DERIVATIVE_SUFFIXES, **kwargs: Any
+    ) -> Variable:
+
+        assert derivative in get_args(DERIVATIVE_SUFFIXES), (
+            "Incorrect derivative type. Only gradient, divergence, vorticity "
+            " and qcriterion are supported."
+        )
+        from .matrix import Matrix
+        from .scalar import Scalar
+        from .vector import Vector
+
+        var_type: type[Matrix | Vector | Scalar]
+        if derivative == "gradient":
+            new_symbol = rf"\nabla {self.symbol}"
+            var_type = Matrix if isinstance(self, Vector) else Vector
+        elif derivative == "divergence":
+            new_symbol = rf"\nabla\cdot {self.symbol}"
+            var_type = Vector if isinstance(self, Matrix) else Scalar
+        elif derivative == "vorticity":
+            new_symbol = rf"\omega \nabla\cdot {self.symbol}"
+            var_type = Vector
+        elif derivative == "qcriterion":
+            new_symbol = rf"Q {self.symbol}"
+            var_type = Vector if isinstance(self, Matrix) else Scalar
+
+        def derivative_func(
+            data: np.ndarray, dataset: MeshOrSeries, **kwargs: Any
+        ) -> np.ndarray:
+            dataset[self.output_name] = data  # type: ignore[index] # fmt: skip
+            from ogstools.mesh.derivatives import calculate_derivative
+
+            _var = type(self).from_variable(
+                self,
+                func=lambda _: _,
+                suffix=derivative,
+                data_name=self.output_name,
+            )
+            is_ms = isinstance(dataset, Sequence) and isinstance(
+                dataset[0], Mesh
+            )
+            if is_ms:
+                return np.asarray(
+                    [
+                        calculate_derivative(mesh, _var, **kwargs)
+                        for mesh in dataset  # pyright: ignore[reportGeneralTypeIssues]
+                    ]
+                )
+            return calculate_derivative(dataset, _var, **kwargs)
+
+        # copy of mesh to avoid adding data to the user mesh
+        func = Function(
+            derivative_func, [lambda mesh: mesh.copy(deep=True)], **kwargs
+        )
+
+        def derivative_unit(unit: str) -> str:
+            result = f"{self._diff_unit(unit) or 1}/spatial_unit"
+            if derivative == "qcriterion":
+                return f"({result})^2"
+            return result
+
+        return var_type.from_variable(
+            self,
+            func=func,
+            suffix=derivative,
+            data_unit=derivative_unit(self.data_unit),
+            output_unit=derivative_unit(self.output_unit),
+            symbol=new_symbol,
+        )
+
+    # TODO: add new class FullMatrix for correct return type of gradient
+
+    @property
+    def gradient(self) -> Vector | Matrix:
+        return self._get_derivative("gradient")  # type: ignore[return-value]
+
+    @property
+    def divergence(self) -> Vector | Scalar:
+        return self._get_derivative("divergence")  # type: ignore[return-value]
+
+    @property
+    def vorticity(self) -> Vector:
+        return self._get_derivative("vorticity")  # type: ignore[return-value]
+
+    @property
+    def qcriterion(self) -> Vector | Scalar:
+        return self._get_derivative("qcriterion")  # type: ignore[return-value]
+
     def _split_long_label(self, split_at: int, name: str, label: str) -> str:
         render_label = label.translate({ord(i): None for i in "{}$_^"})
         is_greek = False
@@ -780,19 +900,19 @@ class Variable:
         return label
 
 
-class Scalar(Variable):
-    "Represent a scalar variable."
-
-
 def _quantity_to_str(unit: PlainQuantity | str) -> str:
     if isinstance(unit, PlainQuantity):
         return str(unit if unit.magnitude != 1 else unit.units)
     return unit
 
 
-def spatial_var(var_name: str, data: Data) -> Variable:
+def _spatial_unit(data: Data) -> str:
+    return _quantity_to_str(getattr(data, "spatial_unit", "m"))
 
-    unit = _quantity_to_str(getattr(data, "spatial_unit", "m"))
+
+def spatial_var(var_name: str, data: Data) -> Scalar | Vector:
+
+    unit = _spatial_unit(data)
 
     from .vector import Vector
 
@@ -810,4 +930,6 @@ def _time_unit(data: Data) -> str:
 
 def time_var(var_name: str, data: Data) -> Scalar:
     unit = _time_unit(data)
+    from .scalar import Scalar
+
     return Scalar("timevalues", unit, unit, var_name, symbol="t")

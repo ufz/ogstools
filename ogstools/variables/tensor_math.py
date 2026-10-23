@@ -56,7 +56,7 @@ def identity(vals: T) -> T:
 def sym_tensor_to_mat(values: ValType) -> ValType:
     "Convert a symmetric tensor to a 3x3 matrix."
     vals, unit = _split_quantity(values)
-    assert np.shape(vals)[-1] in [4, 6]
+    assert np.shape(vals)[-1] in [4, 6], np.shape(vals)[-1]
     shape = list(np.shape(vals))[:-1] + [3, 3]
     mat = np.zeros(shape)
     mat[..., 0, 0] = vals[..., 0]
@@ -103,6 +103,18 @@ def matrix_trace(values: ValType) -> ValType:
     """
     vals, unit = _split_quantity(values)
     return _to_quantity(np.trace(vals, axis1=-2, axis2=-1), unit)
+
+
+def column(values: ValType, index: int) -> ValType:
+    "Return the indexed column."
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    return _to_quantity(mat_vals[..., index], unit)
+
+
+def row(values: ValType, index: int) -> ValType:
+    "Return the indexed row."
+    mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
+    return _to_quantity(np.moveaxis(mat_vals, -1, -2)[..., index], unit)
 
 
 def eigenvalues(values: ValType) -> ValType:

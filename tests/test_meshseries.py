@@ -805,6 +805,23 @@ def test_slice():
     assert len(ms.timevalues) >= 2 * len(ms_sliced.timevalues)
 
 
+def test_setitem():
+    ms = examples.load_meshseries_THM_2D_PVD()
+    ms["point_test"] = np.full((len(ms), ms[0].n_points), 0.0)
+    ms["cell_test"] = np.full((len(ms), ms[0].n_cells), 0.0)
+    with pytest.raises(ValueError, match=r"Shape .+ does not fit"):
+        ms["fail_test"] = [np.arange(123)] * 2
+
+
+def test_add_new_data():
+    ms = examples.load_meshseries_THM_2D_PVD()
+    var = ot.variables.temperature.gradient
+    vals = var.transform(ms)
+    ms.add_new_data(var)
+    assert var.output_name in ms.point_data
+    np.testing.assert_array_equal(var.transform(ms), vals)
+
+
 def test_transform():
     ms = examples.load_meshseries_THM_2D_PVD()
     ms_mod = ms.transform(lambda mesh: mesh.slice("x"))

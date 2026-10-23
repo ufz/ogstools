@@ -380,6 +380,56 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         )
         raise ValueError(msg)
 
+    @overload
+    def __setitem__(self, key: str, value: np.ndarray) -> None: ...
+
+    @overload
+    def __setitem__(self, key: int, value: pv.UnstructuredGrid) -> None: ...
+
+    @overload
+    def __setitem__(
+        self, key: slice | Sequence, value: Sequence[pv.UnstructuredGrid]
+    ) -> None: ...
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        if isinstance(key, int | np.unsignedinteger | np.signedinteger):
+            timevalue = self.timevalues[key]
+            self._mesh_cache[timevalue] = value
+        elif isinstance(key, str):
+            value_ = np.asarray(value)
+            if value_.ndim < 2:
+                msg = "Values dimensionality must be > 2, but is {value_.ndim}."
+                raise ValueError(msg)
+            if value_.shape[0] != len(self):
+                msg = (
+                    "Values must be of same length as the meshseries "
+                    f"({len(self)}), but its length is {value_.shape[0]}."
+                )
+                raise ValueError(msg)
+            if value_.shape[1] == self[0].n_points:
+                self.point_data[key] = value_
+            elif value_.shape[1] == self[0].n_cells:
+                self.cell_data[key] = value_
+            else:
+                msg = (
+                    "Shape of values does not fit into point or cell data."
+                    "If you want to write into field data, use "
+                    "`ms.field_data[key] = value` instead."
+                )
+                raise ValueError(msg)
+        elif isinstance(key, slice | Sequence):
+            for index, sub_val in zip(
+                np.arange(len(self))[key], value, strict=True
+            ):
+                self[index] = sub_val
+        else:
+            msg = (
+                "Index type not supported.\n "
+                "It has to be one of following: "
+                "int, np.int, str, slice or sequence."
+            )
+            raise ValueError(msg)
+
     def __len__(self) -> int:
         return len(self.timesteps)
 
@@ -1427,6 +1477,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 else:
                     msg = "array type unknown"
                     raise RuntimeError(msg)
+
+    def add_new_data(self, variable: Variable) -> None:
+        "Computes the given variable and writes into self as its output_name."
+        for mesh in self:
+            mesh[variable.output_name] = variable.transform(mesh)
 
     def _propagate_target(self) -> None:
         pass

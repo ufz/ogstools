@@ -13,8 +13,9 @@ from . import integrity, tensor_math
 from .custom_colormaps import integrity_cmap, none_cmap, temperature_cmap
 from .func import Function
 from .matrix import Matrix
+from .scalar import Scalar
 from .unit_registry import u_reg
-from .variable import Scalar, Variable
+from .variable import Variable
 from .vector import Components_BHE, Vector
 
 __all__ = ["Matrix", "Scalar", "Variable", "Vector", "u_reg"]
