@@ -512,6 +512,15 @@ class TestPhysicalVariable:
         ms_b.cell_data[var.mask] = np.broadcast_to(mask_a[-1], mask_a.shape)
         _check_masked_data(ms_b, var.transform(ms_b))
 
+    def test_matrix_col_row(self):
+        "Test matrix row and column equality due to symmetry."
+        var = ov.stress
+        for data in [np.arange(4), np.arange(6)]:
+            for i in range(3):
+                np.testing.assert_array_equal(
+                    var.col(i).transform(data), var.row(i).transform(data)
+                )
+
     def test_access_via_str(self):
         "Test accessing variables and their components via a string"
         mesh = examples.load_meshseries_THM_2D_PVD()[-1]

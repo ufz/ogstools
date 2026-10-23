@@ -59,6 +59,22 @@ class Matrix(Variable):
             bilinear_cmap=True,
         )
 
+    def col(self, index: int) -> Vector:
+        return Vector.from_variable(
+            self,
+            func=Function(tensor_math.column, [], {"index": index}),
+            suffix=f"column_{index}",
+            symbol=f"{{{self.symbol}}}{{{index}}}",
+        )
+
+    def row(self, index: int) -> Vector:
+        return Vector.from_variable(
+            self,
+            func=Function(tensor_math.row, [], {"index": index}),
+            suffix=f"row_{index}",
+            symbol=f"{{{self.symbol}}}{{{index}}}",
+        )
+
     def to_polar(
         self, center: Sequence = (0, 0, 0), normal: Sequence = (0, 0, 1)
     ) -> Matrix:
