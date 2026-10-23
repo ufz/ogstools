@@ -391,6 +391,37 @@ class TestPhysicalVariable:
             u_div.transform(mesh), eps_trace.transform(mesh), atol=2.3e-5
         )
 
+    def test_divergence_matrix(self):
+        "Test divergence of a Matrix correctly reduces to a Vector."
+        ms = examples.load_meshseries_THM_2D_PVD()
+        var = ov.stress.divergence
+        assert var.transform(ms).shape == (len(ms), ms[0].n_points, 3)
+        assert var.transform(ms[-1]).shape == (ms[0].n_points, 3)
+
+    def test_derivative_units(self):
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        stress_pa = ov.stress.replace(output_unit="Pa")
+        div_pa = stress_pa.divergence.transform(mesh)
+        div_mpa = ov.stress.divergence.transform(mesh)
+        np.testing.assert_allclose(div_mpa, div_pa * 1e-6, 0, 0)
+
+        grad_pa = stress_pa.trace.gradient.transform(mesh)
+        grad_mpa = ov.stress.trace.gradient.transform(mesh)
+        np.testing.assert_allclose(grad_mpa, grad_pa * 1e-6, 0, 0)
+
+        velocity_mm_s = ov.velocity.replace(output_unit="mm/s")
+        div_mm_s = velocity_mm_s.divergence.transform(mesh)
+        div_m_s = ov.velocity.divergence.transform(mesh)
+        np.testing.assert_allclose(div_m_s, div_mm_s * 1e-3, 1e-15, 0)
+
+    def test_derivative_spatial_unit(self):
+        "Test correct handling of spatial unit of dataset."
+        ms = examples.load_meshseries_THM_2D_PVD()
+        var = ov.temperature.gradient
+        ref = var.transform(ms[-1])
+        actual = var.transform(ms.scale("km")[-1])
+        np.testing.assert_allclose(actual, 1e3 * ref)
+
     def test_polar_tranformation_2D(self):
         "Check with different formulation for rr and tt components."
         mesh = examples.load_mesh_mechanics_2D()

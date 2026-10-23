@@ -1479,6 +1479,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     raise RuntimeError(msg)
 
     def add_new_data(self, variable: Variable) -> None:
+        "Computes the given variable and writes into self as its output_name."
         for mesh in self:
             mesh[variable.output_name] = variable.transform(mesh)
 
