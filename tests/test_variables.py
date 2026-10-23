@@ -530,18 +530,20 @@ class TestPhysicalVariable:
 
         def equal(name: str, var: ov.Variable) -> None:
             str_var = ov.Variable.find(name, mesh)
-            for key in vars(var):
+            var_ = var.find(var, mesh)
+            for key in vars(var_):
                 if key == "functions":
                     # a simple comparison like var == str_var would fail due to
                     # the functions being stored in different memory locations
                     continue
-                assert getattr(str_var, key) == getattr(var, key)
+                assert getattr(str_var, key) == getattr(var_, key)
             np.testing.assert_equal(
-                var.transform(mesh), str_var.transform(mesh)
+                var_.transform(mesh), str_var.transform(mesh)
             )
 
         for name, var in [
             ("temperature", ov.temperature),
+            ("temperature_gradient", ov.temperature.gradient),
             ("displacement", ov.displacement),
             ("displacement_x", ov.displacement["x"]),
             ("displacement_0", ov.displacement[0]),

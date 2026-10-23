@@ -69,10 +69,6 @@ class Variable:
     """Does this variable only have categoric values?"""
     color: str | None = None
     """Default color for plotting"""
-    spatial_unit: str = "m"
-    """Default spatial unit"""
-    temporal_unit: str = "s"
-    """Default temporal unit"""
     _parent: Variable | None = None
 
     def __post_init__(self, func: Function | Callable | None) -> None:
@@ -236,25 +232,23 @@ class Variable:
             return time_var(var_name, data)
 
         if isinstance(variable, Variable):
-            if variable.data_name == "None":
-                return variable
-            if variable.output_name not in all_keys:
-                if variable.data_name in data_keys:
-                    return variable
+            var = variable._finalize_units(data)
+            if var.data_name == "None":
+                return var
+            if var.output_name not in all_keys:
+                if var.data_name in data_keys:
+                    return var
                 raise KeyError(error_msg)
-            data_key = variable.output_name
-            if variable.output_unit == "time_unit":
-                variable = variable.replace(output_unit=_time_unit(data))
 
-            if len(variable.functions) > 0:
-                return variable.replace(
-                    data_name=data_key,
-                    data_unit=variable.output_unit,
-                    output_unit=variable.output_unit,
-                    output_name=data_key,
+            if len(var.functions) > 0:
+                return var.replace(
+                    data_name=var.output_name,
+                    data_unit=var.output_unit,
+                    output_unit=var.output_unit,
+                    output_name=var.output_name,
                     functions=[],
                 )
-            return variable.replace(data_name=data_key)
+            return var.replace(data_name=var.output_name)
 
         from ogstools.variables import all_variables
 
@@ -273,6 +267,9 @@ class Variable:
             suffix_ = int(suffix) if suffix.isdigit() else suffix
             if suffix == "":
                 return var
+            if hasattr(var, suffix):
+                var = cast(Variable, getattr(var, suffix))
+                return var._finalize_units(data)
             if isinstance(var, Scalar):
                 msg = f"Scalar '{var.data_name}' has no component {suffix}."
                 raise KeyError(msg)
@@ -345,6 +342,22 @@ class Variable:
             for p, val in params.items()
         }
 
+    def _finalize_units(self, data: Data) -> Self:
+        def final(unit: str) -> bool:
+            return not ("time_unit" in unit or "spatial_unit" in unit)
+
+        if final(self.data_unit) and final(self.output_unit):
+            return self
+        var = self.copy()
+        for unit_name in ["data_unit", "output_unit"]:
+            unit = getattr(var, unit_name)
+            unit = unit.replace("spatial_unit", _spatial_unit(data))
+            unit = unit.replace("time_unit", _time_unit(data))
+            unit = _quantity_to_str(unit)
+            unit = unit.replace(" ", "")
+            setattr(var, unit_name, unit)
+        return var
+
     def transform(
         self, data: Data, strip_unit: bool = True
     ) -> np.ndarray | PlainQuantity:
@@ -362,36 +375,34 @@ class Variable:
         if `process_with_units` is True data is passed to the function with
         units (i.e. as a pint quantity).
         """
-        if self.output_unit == "time_unit":
-            var = self.replace(output_unit=_time_unit(data))
-            return var.transform(data, strip_unit)
+        var = self._finalize_units(data)
         if (
-            not u_reg.is_compatible_with(self.data_unit, self.output_unit)
-            and not self.process_with_units
+            not u_reg.is_compatible_with(var.data_unit, var.output_unit)
+            and not var.process_with_units
         ):
             msg = (
                 "The data and output units are incompatible "
-                f"({self.data_unit} -> {self.output_unit}). Please set "
+                f"({var.data_unit} -> {var.output_unit}). Please set "
                 "`process_with_units` to True, to be sure the result of "
                 "`transform` does not silently give false results."
             )
             raise TypeError(msg)
         is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
         is_dataset = isinstance(data, pv.DataSet) or is_ms
-        result = self._get_data(data) if is_dataset else np.asarray(data)
-        if self.process_with_units:
-            result = u_reg.Quantity(result, self.data_unit)
+        result = var._get_data(data) if is_dataset else np.asarray(data)
+        if var.process_with_units:
+            result = u_reg.Quantity(result, var.data_unit)
 
-        for function in self.functions:
+        for function in var.functions:
             result = function.callable(
                 result,
-                *(self._get_input_values(data, inp) for inp in function.args),
-                **self._preprocess_params(function.params),
+                *(var._get_input_values(data, inp) for inp in function.args),
+                **var._preprocess_params(function.params),
             )
 
-        if not self.process_with_units:
-            result = u_reg.Quantity(result, self.data_unit)
-        result = u_reg.Quantity(result, self.output_unit)
+        if not var.process_with_units:
+            result = u_reg.Quantity(result, var.data_unit)
+        result = u_reg.Quantity(result, var.output_unit)
         return result.magnitude if strip_unit else result
 
     def _unit_convert(self, values: np.ndarray) -> np.ndarray:
@@ -807,10 +818,7 @@ class Variable:
         def derivative_func(
             data: np.ndarray, dataset: MeshOrSeries, **kwargs: Any
         ) -> np.ndarray:
-            data_converted = u_reg.Quantity(
-                u_reg.Quantity(data, self.data_unit), self.output_unit
-            ).magnitude
-            dataset[self.output_name] = data_converted  # type: ignore[index] # fmt: skip
+            dataset[self.output_name] = data  # type: ignore[index] # fmt: skip
             from ogstools.mesh.derivatives import calculate_derivative
 
             _var = type(self).from_variable(
@@ -831,20 +839,27 @@ class Variable:
                 )
             return calculate_derivative(dataset, _var, **kwargs)
 
+        # copy of mesh to avoid adding data to the user mesh
         func = Function(
-            derivative_func,
-            # copy of mesh to avoid adding data to the user mesh
-            [lambda mesh: mesh.copy(deep=True)],
-            **kwargs,
+            derivative_func, [lambda mesh: mesh.copy(deep=True)], **kwargs
         )
+
+        def derivative_unit(unit: str) -> str:
+            result = f"{self._diff_unit(unit) or 1}/spatial_unit"
+            if derivative == "qcriterion":
+                return f"({result})^2"
+            return result
+
         return var_type.from_variable(
             self,
             func=func,
             suffix=derivative,
-            data_unit=f"{self._diff_unit(self.data_unit) or 1}/{self.spatial_unit}",
-            output_unit=f"{self._diff_unit(self.output_unit) or 1}/{self.spatial_unit}",
+            data_unit=derivative_unit(self.data_unit),
+            output_unit=derivative_unit(self.output_unit),
             symbol=new_symbol,
         )
+
+    # TODO: add new class FullMatrix for correct return type of gradient
 
     @property
     def gradient(self) -> Vector | Matrix:
@@ -891,9 +906,13 @@ def _quantity_to_str(unit: PlainQuantity | str) -> str:
     return unit
 
 
+def _spatial_unit(data: Data) -> str:
+    return _quantity_to_str(getattr(data, "spatial_unit", "m"))
+
+
 def spatial_var(var_name: str, data: Data) -> Scalar | Vector:
 
-    unit = _quantity_to_str(getattr(data, "spatial_unit", "m"))
+    unit = _spatial_unit(data)
 
     from .vector import Vector
 
