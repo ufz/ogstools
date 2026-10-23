@@ -18,6 +18,8 @@ from ogstools.examples import (
     prj_beier_sandbox_add_output_ref,
     prj_beier_sandbox_power_ref,
     prj_beier_sandbox_ref,
+    prj_consolidation_benchmark_mono,
+    prj_consolidation_benchmark_staggered_ref,
     prj_deactivate_replace,
     prj_heat_transport_bhe,
     prj_heat_transport_bhe_simple,
@@ -1245,6 +1247,31 @@ class TestiOGS:
         )
         model.write_input()
         self.compare(prjfile, prj_thm_point_heat_source_staggered_ref)
+
+    def test_convert_to_staggered_hm(self, tmp_path: Path) -> None:
+        prjfile = tmp_path / "consolidation_benchmark_staggered.prj"
+        model = ot.Project(
+            input_file=prj_consolidation_benchmark_mono, output_file=prjfile
+        )
+        model.convert_to_staggered(
+            coupling_criteria=[
+                {
+                    "convergence_type": "DeltaX",
+                    "norm_type": "NORM2",
+                    "abstol": "1.e-14",
+                    "reltol": "1.e-10",
+                }
+            ]
+            * 2,
+            max_iter=20,
+            coupling_scheme={
+                "type": "staggered",
+                "fixed_stress_stabilization_parameter": 0.5,
+            },
+            linear_solver_settings=[{"eigen/solver_type": "CG"}] * 2,
+        )
+        model.write_input()
+        self.compare(prjfile, prj_consolidation_benchmark_staggered_ref)
 
     def test_convert_to_staggered_defaults(self) -> None:
         model = ot.Project(input_file=prj_thm_point_heat_source)
