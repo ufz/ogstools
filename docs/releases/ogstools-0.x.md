@@ -16,6 +16,7 @@
 
 - the python files next to the python script (`<python_script>`) are now saved with it, so a Python BC script run by `Model.run()` can import them.
 - `plot.contourf` failed to plot a variable on celldata with a mask, but is now able to.
+- `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 
 ## Features
 

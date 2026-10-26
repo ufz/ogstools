@@ -23,16 +23,15 @@ class Medium:
     It constructs its internal structure based on the selected process schema,
     automatically generating phases and components as required.
 
-    Parameters
-    ----------
-    material_id : int
-        The material ID assigned to this medium.
-    material : Material
-        The solid/medium material to use as property source.
-    fluids : dict[str, Material] | None
-        A mapping from phase type to fluid material (e.g. {"AqueousLiquid": water, "Gas": co2}).
-    process : str
-        The process type, e.g. "TH2M_PT". Used to determine required structure.
+    :param material_id: The material ID assigned to this medium.
+    :param material: The solid/medium material to use as property source.
+    :param name: The name of the medium.
+    :param fluids: A mapping from phase type to fluid material
+        (e.g. `{"AqueousLiquid": water, "Gas": co2}`).
+    :param process: The process type, e.g. "TH2M_PT". Used to determine
+        the required structure.
+    :param data_dir: The directory with the material data.
+        `None` means `MATERIALS_DIR`.
     """
 
     def __init__(
@@ -140,29 +139,28 @@ class Medium:
                             data_dir=self.data_dir,
                         )
 
-                    else:
-                        # --- Case 1 + 2: No components ---
-                        if phase_type == "Gas":
-                            if self.fluids.get("Gas") is None:
-                                msg = "Gas phase requires gas_material."
-                                raise ValueError(msg)
-                            phase = Phase(
-                                phase_type="Gas",
-                                gas_material=self.fluids["Gas"],
-                                process=self.process,
-                                data_dir=self.data_dir,
-                            )
+                    # --- Case 1 + 2: No components ---
+                    elif phase_type == "Gas":
+                        if self.fluids.get("Gas") is None:
+                            msg = 'Gas phase requires a "Gas" entry in fluids.'
+                            raise ValueError(msg)
+                        phase = Phase(
+                            phase_type="Gas",
+                            gas_material=self.fluids["Gas"],
+                            process=self.process,
+                            data_dir=self.data_dir,
+                        )
 
-                        elif phase_type == "AqueousLiquid":
-                            if self.fluids.get("AqueousLiquid") is None:
-                                msg = "AqueousLiquid phase requires liquid_material."
-                                raise ValueError(msg)
-                            phase = Phase(
-                                phase_type="AqueousLiquid",
-                                liquid_material=self.fluids["AqueousLiquid"],
-                                process=self.process,
-                                data_dir=self.data_dir,
-                            )
+                    elif phase_type == "AqueousLiquid":
+                        if self.fluids.get("AqueousLiquid") is None:
+                            msg = 'AqueousLiquid phase requires an "AqueousLiquid" entry in fluids.'
+                            raise ValueError(msg)
+                        phase = Phase(
+                            phase_type="AqueousLiquid",
+                            liquid_material=self.fluids["AqueousLiquid"],
+                            process=self.process,
+                            data_dir=self.data_dir,
+                        )
 
                 # -------------------
                 # UNSUPPORTED
@@ -205,7 +203,10 @@ class Medium:
         logger.debug(self.properties)
 
     def set_phase(self, phase: Phase) -> None:
-        """Assigns a Phase to the correct slot based on its type."""
+        """Assign a phase to the slot of its type.
+
+        :param phase: The phase to assign. It replaces a phase of the same type.
+        """
         match phase.type:
             case "Solid":
                 self.solid = phase
@@ -220,6 +221,11 @@ class Medium:
                 raise ValueError(msg)
 
     def get_phase(self, phase_type: str) -> Phase | None:
+        """Return the phase of the given type.
+
+        :param phase_type: "Solid", "Gas", "AqueousLiquid" or "NonAqueousLiquid".
+        :returns: The phase, or `None` if the medium has no phase of this type.
+        """
         match phase_type:
             case "Solid":
                 return self.solid
@@ -233,10 +239,20 @@ class Medium:
                 return None
 
     def validate_phase(self, phase: Phase) -> bool:
+        """Check a phase against the process schema.
+
+        Raises `ValueError` if the phase does not match the schema.
+
+        :param phase: The phase to check.
+        :returns: `True` if the phase is valid.
+        """
         return phase.validate()
 
     def get_phases(self) -> list[Phase]:
-        """Returns all defined phases in order."""
+        """Return the defined phases.
+
+        :returns: The phases in the order solid, aqueous, non-aqueous, gas.
+        """
         return [
             p
             for p in [self.solid, self.aqueous, self.nonaqueous, self.gas]
@@ -244,9 +260,19 @@ class Medium:
         ]
 
     def add_property(self, prop: MaterialProperty) -> None:
+        """Add a medium-level property to this medium.
+
+        :param prop: The property to add.
+        """
         self.properties.append(prop)
 
     def validate(self) -> bool:
+        """Check the phases and properties against the process schema.
+
+        Raises `ValueError` for a missing or unknown phase or property.
+
+        :returns: `True` if the medium is valid.
+        """
         self._validate_required_phases()
         self._validate_extra_phases()
         self._validate_phase_objects()

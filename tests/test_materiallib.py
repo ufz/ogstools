@@ -433,6 +433,14 @@ class TestMaterialLib:
         )
         assert mat.property_names == ["Density", "Viscosity"]
 
+    def test_material_get_property_warns_once(self):
+        """Material.get_property returns the property and warns exactly once that it is deprecated."""
+        mat = make_material({"Density": {"type": "Constant", "value": 2500}})
+        with pytest.warns(DeprecationWarning, match="get_property") as record:
+            prop = mat.get_property("Density")
+        assert len(record) == 1
+        assert prop is mat["Density"]
+
     def test_material_filter_properties_returns_only_allowed(self):
         """Material.filter_properties should return a new Material with only allowed properties."""
         mat = make_material(

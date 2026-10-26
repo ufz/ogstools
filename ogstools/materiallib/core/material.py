@@ -6,7 +6,6 @@ from __future__ import annotations
 import copy
 import logging
 import re
-import warnings
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any, ClassVar
@@ -501,13 +500,8 @@ class Material(Mapping[str, MaterialProperty]):
         """Returns a list of all property names of this material."""
         return list(self)
 
-    @deprecated(""": use mat[key] instead.""")
+    @deprecated("Use mat[key] instead.")
     def get_property(self, key: str) -> MaterialProperty:
-        warnings.warn(
-            "get_property() is deprecated, use mat[key] instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         return self[key]
 
     def filter_process(self, process_schema: dict[str, Any]) -> None:

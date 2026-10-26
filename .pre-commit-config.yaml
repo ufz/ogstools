@@ -92,14 +92,13 @@ repos:
         args: [--multiline]
         files: ^ogstools/.*\.py$
         # baseline: remove a file when it is fixed
-        exclude: ^ogstools/(core/simulation_controller|logparser/monitor_cli|materiallib/core/(components|material_manager|material|media|medium)|mesh/vtk_pyvista|ogs6py/(linsolvers|local_coordinate_system|media|nonlinsolvers|parameters|processes|project_media_importer|timeloop))\.py$
+        exclude: ^ogstools/(core/simulation_controller|logparser/monitor_cli|materiallib/core/(components|material_manager|material|media)|mesh/vtk_pyvista|ogs6py/(linsolvers|local_coordinate_system|media|nonlinsolvers|parameters|processes|project_media_importer|timeloop))\.py$
       - id: deprecate-with-helper
         name: "deprecate API with the package's deprecation helper"
         language: pygrep
         entry: '\bDeprecationWarning\b'
         files: ^ogstools/.*\.py$
-        # baseline: remove a file when it is fixed
-        exclude: ^ogstools/(_internal|materiallib/core/material)\.py$
+        exclude: ^ogstools/_internal\.py$
       - id: no-np-testing-in-library
         name: "no testing helpers in library code"
         language: pygrep

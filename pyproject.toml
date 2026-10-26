@@ -530,7 +530,6 @@ flake8-import-conventions.extend-aliases = { "ogstools" = "ot" }
 "ogstools/materiallib/core/components.py" = ["D101", "D401"]
 "ogstools/materiallib/core/material.py" = ["ANN401", "D102"]
 "ogstools/materiallib/core/material_manager.py" = ["D401", "ERA001"]
-"ogstools/materiallib/core/medium.py" = ["D102", "D401", "PLR5501"]
 "ogstools/materiallib/core/phase.py" = ["D101", "D102"]
 "ogstools/materiallib/core/property.py" = ["ANN401", "D101", "D102"]
 "ogstools/materiallib/distributions.py" = ["D101", "D103"]
