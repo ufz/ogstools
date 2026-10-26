@@ -520,7 +520,6 @@ flake8-import-conventions.extend-aliases = { "ogstools" = "ot" }
 "ogstools/feflowlib/feflow_model.py" = ["D102", "D401", "T201"]
 "ogstools/gmsh_tools/meshing.py" = ["D103", "D401", "T201"]
 "ogstools/logparser/common_ogs_analyses.py" = ["ANN401", "D103", "D401", "ERA001", "T201", "TRY002"]
-"ogstools/logparser/log_file_handler.py" = ["D101", "D102", "T201"]
 "ogstools/logparser/log_parser.py" = ["ANN401", "D103", "D401", "T201"]
 "ogstools/logparser/monitor.py" = ["D401", "T201"]
 "ogstools/logparser/monitor_app.py" = ["D103", "T201"]

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) OpenGeoSys Community (opengeosys.org)
 # SPDX-License-Identifier: BSD-3-Clause
 
-
+import logging
 import threading
 from collections.abc import Callable
 from pathlib import Path
@@ -23,8 +23,12 @@ from ogstools.logparser.log_parser import (
 )
 from ogstools.logparser.regexes import Context, Log, Termination
 
+logger = logging.getLogger(__name__)
+
 
 class LogFileHandler(FileSystemEventHandler):
+    """Parse the lines that OGS appends to a log file and put the records into a queue."""
+
     def __init__(
         self,
         file_name: str | Path,
@@ -36,9 +40,9 @@ class LogFileHandler(FileSystemEventHandler):
         """
         :param file_name: The location of the log file to monitor.
         :param queue: The queue where log entries are put and to be consumed.
-        :status: The status of the simulation (e.g. current time step).
-        :stop_callback: A callback function to stop the simulation.
-        :line_limit: The number of lines to read before stopping the simulation. 0 means no limit.
+        :param status: The status of the simulation (e.g. current time step).
+        :param stop_callback: A callback function to stop the simulation.
+        :param line_limit: The number of lines to read before stopping the simulation. 0 means no limit.
         """
 
         self.file_name = Path(file_name)
@@ -57,16 +61,28 @@ class LogFileHandler(FileSystemEventHandler):
         )
 
     def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
+        """Process the log file when it is created.
+
+        :param event: The file system event from watchdog.
+        """
         if Path(event.src_path).resolve() != self.file_name.resolve():
             return
         self.process()
 
     def on_modified(self, event: FileModifiedEvent | DirModifiedEvent) -> None:
+        """Process the log file when it changes.
+
+        :param event: The file system event from watchdog.
+        """
         if Path(event.src_path).resolve() != self.file_name.resolve():
             return
         self.process()
 
     def process(self) -> None:
+        """Parse the complete lines added since the last call.
+
+        Stop at the termination record or after `line_limit` lines.
+        """
         with self._lock:
             if self._stopped:
                 return
@@ -77,7 +93,7 @@ class LogFileHandler(FileSystemEventHandler):
                     self._file.seek(0, 0)
                     self._file_read = True
                 except FileNotFoundError:
-                    print(f"File not found yet: {self.file_name}")
+                    logger.info("File not found yet: %s", self.file_name)
                     return
 
             while True:
@@ -99,7 +115,7 @@ class LogFileHandler(FileSystemEventHandler):
                     self.status.update(log_entry)
 
                 if isinstance(log_entry, Termination):
-                    print("===== Termination =====")
+                    logger.info("Simulation terminated: %s", self.file_name)
                     self.queue.put(log_entry)
                     self.status.update(log_entry)
                     self._stopped = True
