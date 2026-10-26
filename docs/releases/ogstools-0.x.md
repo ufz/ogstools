@@ -30,6 +30,8 @@
 
 ## Infrastructure
 
+- `pytest-mpl` moved from the dependencies to the `test` extra, so installing ogstools no longer installs pytest.
+
 ## Documentation
 
 ### New Examples
