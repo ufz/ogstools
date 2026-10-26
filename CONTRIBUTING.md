@@ -20,6 +20,7 @@ Planning a new module, a significant feature, or a breaking change? Open an issu
 ## Contributing code
 
 Start with the [Developer Guide](https://ogs.ogs.xyz/tools/ogstools/development/index.html) for setting up your environment, running tests, building the docs and running the pre-commit checks.
+Code, tests and documentation follow the coding standard: see [its index](https://ogs.ogs.xyz/tools/ogstools/development/coding-standards/index.html).
 
 New to `ogstools`? Look for issues labeled [`Good first issue`](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/issues?label_name%5B%5D=Good%20first%20issue) — these are scoped to be small and self-contained, a good way to get familiar with the codebase and the contribution flow below before tackling something bigger. If nothing fits, feel free to ask on [Discourse](https://discourse.opengeosys.org) for directions.
 
