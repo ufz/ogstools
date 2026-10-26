@@ -6,9 +6,12 @@ from itertools import pairwise
 from pathlib import Path
 from typing import cast
 
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
+import shapely
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
 
@@ -119,6 +122,143 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
     assert np.all(meshes["back"].points[:, 1] == domain.bounds[3])
     assert np.all(meshes["bottom"].points[:, 2] == domain.bounds[4])
     assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
+
+
+@pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+def test_meshes_from_spatial_data() -> plt.Figure:
+    """test that meshing from spatial data works correctly"""
+
+    def point_distance(dim, tag, x, y, z, lc):  # noqa: ARG001
+        # do not remove unused arguments. gmsh requires that the callback function be of this form.
+        import math
+
+        distance = math.sqrt((x - 7.5) ** 2 + (y - 2.5) ** 2)
+        return min(max(0.2, distance / 5), lc)
+
+    gdf_domain = gpd.GeoDataFrame(
+        geometry=[shapely.Polygon(((0, 0), (10, 0), (10, 10), (0, 10), (0, 0)))]
+    )
+    gdf_layer_0 = gpd.GeoDataFrame(
+        geometry=[shapely.Polygon([(0, 5), (10, 5), (10, 10), (0, 10), (0, 5)])]
+    )
+    gdf_layer_0["cellsize"] = 0.7
+    gdf_left = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(0, 0), (0, 5), (0, 10)])]
+    )
+    gdf_middle = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(1, 1), (8, 1)])]
+    )
+    gdf_points = gpd.GeoDataFrame(
+        geometry=[shapely.Point(2, 4), shapely.Point(3, 8)]
+    )
+    gdf_clip = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(12, 12), (14, 12)])]
+    )
+    frame_list = [
+        ("square", gdf_domain),
+        ("layer_0", gdf_layer_0),
+        ("left", gdf_left),
+        ("middle", gdf_middle),
+        ("points", gdf_points),
+        ("clip", gdf_clip),
+    ]
+    meshes_square = ot.Meshes.from_spatial_data(
+        files=frame_list,
+        domain="square",
+        cellsize=2,
+        cellsize_func=point_distance,
+        silence_gmsh_log=True,
+    )
+    # Check that correct submeshes were created
+    assert len(meshes_square) == 5
+    for name in ["square", "layer_0", "left", "middle", "points"]:
+        assert name in meshes_square
+    assert "clip" not in meshes_square
+    # Check that the resulting mesh has the correct size
+    mesh_domain_bounds = np.array(
+        [
+            meshes_square.domain.bounds[0],
+            meshes_square.domain.bounds[2],
+            meshes_square.domain.bounds[1],
+            meshes_square.domain.bounds[3],
+        ]
+    )
+    assert np.allclose(gdf_domain.total_bounds, mesh_domain_bounds)
+    # Check that submeshes are consistent with the domain mesh
+    for _, submesh in meshes_square.subdomains.items():
+        assert np.all(
+            np.any(
+                np.all(
+                    submesh.points[:, np.newaxis, :]
+                    == meshes_square.domain.points,
+                    axis=-1,
+                ),
+                axis=-1,
+            )
+        )
+    # Check correctness of cellsizes
+    meshes_square.domain = meshes_square.domain.compute_cell_sizes()
+    layer_0_cell_ids = np.flatnonzero(
+        meshes_square.domain.cell_centers().points[:, 1] > 5
+    )
+    layer_0_cells = meshes_square.domain.extract_cells(layer_0_cell_ids)
+    assert meshes_square.domain.cell_data["Area"].max() < 2
+    assert layer_0_cells.cell_data["Area"].max() < 0.7
+    assert (
+        meshes_square.domain.cell_data["Area"][
+            meshes_square.domain.find_containing_cell((7.5, 2.5, 0))
+        ]
+        < 0.2
+    )
+    return meshes_square.plot()
+
+
+def test_meshes_from_spatial_with_height():
+    """
+    Testing that interpolating height data for meshing from spatial data works correctly.
+    Separate test since correctly sized cells can no longer be guaranteed when adding height data
+    """
+    gdf_domain = gpd.GeoDataFrame(
+        geometry=[
+            shapely.Polygon(
+                (
+                    (0, 0, 100),
+                    (10, 0, 102),
+                    (10, 10, 104),
+                    (0, 10, 102),
+                    (0, 0, 100),
+                )
+            )
+        ]
+    )
+    gdf_line = gpd.GeoDataFrame(
+        geometry=[
+            shapely.LineString(
+                (
+                    (8, 2, 102.5),
+                    (8, 8, 103.5),
+                )
+            )
+        ]
+    )
+    height_data = np.array([[2, 2, 107], [2, 4, 108], [8, 2, 108], [8, 4, 110]])
+    meshes_with_height = ot.Meshes.from_spatial_data(
+        [("domain", gdf_domain), ("line", gdf_line)],
+        cellsize=2,
+        height_data=height_data,
+    )
+    assert meshes_with_height.domain.bounds.z_min > 100 - 1e-8
+    assert meshes_with_height.domain.bounds.z_max < 110 + 1e-8
+    assert np.all(
+        np.any(
+            np.all(
+                meshes_with_height["line"].points[:, np.newaxis, :]
+                == meshes_with_height.domain.points,
+                axis=-1,
+            ),
+            axis=-1,
+        )
+    )
 
 
 @pytest.mark.tools
