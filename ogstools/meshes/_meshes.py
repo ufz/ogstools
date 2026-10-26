@@ -417,6 +417,8 @@ class Meshes(MutableMapping, StorageBase):
                                     into gmsh. See gmshs formal requirements for
                                     `MathEval <https://gmsh.info/doc/texinfo/#index-MathEval>`_ and
                                     `setSizeCallback <https://gmsh.info/doc/texinfo/gmsh.html#index-gmsh_002fmodel_002fmesh_002fsetSizeCallback>`_
+                                    Note that sizeCallback functions overwrite cellsizes otherwise attached
+                                    to points.
         :param domain:              The name of the layer which corresponds to the domain to which
                                     everything else will be clipped and for which no submesh should
                                     be generated. If None, the domain is the union of all
@@ -621,7 +623,8 @@ class Meshes(MutableMapping, StorageBase):
                     line_ids[(coord_tags[start], coord_tags[end])] = lnid
             return result_ids, new_ids
 
-        def poly_from_row(row: pd.Series, groups: dict[str, list[int]]) -> int:
+        poly_ids: dict[int, int] = {}
+        for index, row in sj.iterrows():
             outer_boundary_ids, _ = gmsh_add_lines(
                 row["geometry"].exterior, coord_tags, line_ids
             )
@@ -631,17 +634,9 @@ class Meshes(MutableMapping, StorageBase):
                 ring_ids, _ = gmsh_add_lines(ring, coord_tags, line_ids)
                 inner_ids.append(gmsh.model.geo.addCurveLoop(ring_ids))
             result = gmsh.model.geo.addPlaneSurface([outer_id, *inner_ids])
+            poly_ids[index] = result
             for name in row["original_layer"]:  # phys_group
-                groups[name].append(result)
-            return result
-
-        poly_ids = dict(
-            zip(
-                sj.index,
-                sj.apply(lambda row: poly_from_row(row, poly_groups), axis=1),
-                strict=True,
-            )
-        )
+                poly_groups[name].append(result)
         # Since we can only embed in polygon interiors we need to keep track
         # which lines actually can/need to be embedded and which polygon they
         # lie in
