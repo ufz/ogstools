@@ -22,6 +22,7 @@ from matplotlib import pyplot as plt
 import ogstools.mesh as Mesh
 from ogstools._internal import deprecated
 from ogstools.core.storage import StorageBase
+from ogstools.definitions import temp_file
 from ogstools.mesh import check_datatypes, utils
 
 logger = log.getLogger(__name__)
@@ -707,11 +708,12 @@ class Meshes(MutableMapping, StorageBase):
         for name, poly_tags in poly_groups.items():
             gmsh.model.addPhysicalGroup(2, poly_tags, name=name)
         gmsh.model.mesh.generate(2)
-        gmsh.write("tmp_mesh_output.msh")
-        gmsh.finalize()
-        meshes = Meshes.from_gmsh(
-            "tmp_mesh_output.msh", log=False, reindex=False
+        msh_file = temp_file(
+            ".msh", "spatial_gen_mesh", "" if domain is None else domain
         )
+        gmsh.write(str(msh_file))
+        gmsh.finalize()
+        meshes = Meshes.from_gmsh(msh_file, log=False, reindex=False)
         if domain is not None:
             del meshes[domain]
         if height_data is not None:
