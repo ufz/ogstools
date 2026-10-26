@@ -21,18 +21,15 @@ saturation = ot.variables.saturation
 #
 # ..  code-block:: python
 #
-#   from ogstools.meshlib import MeshSeries
-#   mesh_series = MeshSeries("filepath/filename_pvd_or_xdmf")
+#   mesh_series = ot.MeshSeries("filepath/filename_pvd_or_xdmf")
 
 # %% [markdown]
-# You can choose which timesteps to render by either slicing the MeshSeries or
-# by resampling it to new timesteps (this interpolates between existing
-# timesteps).
+# You can choose which timesteps to render by either slicing the MeshSeries
+# (`ms[::2]` uses every second timestep) or by resampling it to new timesteps
+# (this interpolates between existing timesteps).
 
 # %%
-# this would only use every second timesteps for animation
-# ms = ms[::2]
-# this uses equally spaced timesteps for a smooth animation
+# equally spaced timesteps give a smooth animation
 timevalues = np.linspace(ms.timevalues[0], ms.timevalues[-1], num=21)
 ms = ms.resample_temporal(timevalues)
 

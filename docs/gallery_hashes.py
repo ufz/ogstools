@@ -15,6 +15,15 @@ import imagehash
 from PIL import Image
 from tqdm import tqdm
 
+EXCLUDE = [
+    "*thumb.png",
+    "*plot_framework_004*",
+    "*plot_framework_short_003*",
+    "*plot_101_logparser_analyses_002*",
+]
+# written to the hashes file, but not compared
+COMPARE_EXCLUDE = [*EXCLUDE, "*feflowlib*"]
+
 
 def hash_file(filepath: Path, hash_size: int = 32):
     "Generate a perceptual hash of a figure."
@@ -125,8 +134,9 @@ def main():
         "--exclude",
         type=str,
         nargs="+",
-        default=[],
-        help="Pattern for excluded document filenames. Default: []",
+        default=None,
+        help="Patterns for excluded document filenames. "
+        "Default: EXCLUDE for write, COMPARE_EXCLUDE for compare.",
     )
 
     args = parser.parse_args()
@@ -135,14 +145,14 @@ def main():
         compare_hashes(
             Path(args.docs_dir),
             args.pattern,
-            args.exclude,
+            args.exclude or COMPARE_EXCLUDE,
             Path(args.hashes_file),
         )
     elif args.action == "write":
         write_hashes(
             Path(args.docs_dir),
             args.pattern,
-            args.exclude,
+            args.exclude or EXCLUDE,
             Path(args.hashes_file),
         )
     else:
