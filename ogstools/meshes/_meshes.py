@@ -420,7 +420,7 @@ class Meshes(MutableMapping, StorageBase):
         :param domain:              The name of the layer which corresponds to the domain to which
                                     everything else will be clipped and for which no submesh should
                                     be generated. If None, the domain is the union of all
-                                    polygons.
+                                    polygons and its mesh is named "domain".
         :param height_data:         Additional height_data provided as points with 3D coordinates.
                                     These points will not be forced into the topology during meshing
                                     but considered during height interpolation at the end
@@ -537,6 +537,7 @@ class Meshes(MutableMapping, StorageBase):
                 how="left",
                 predicate="within",
             )
+            .dropna(subset=["original_layer"])
             .groupby(level=0)
             .agg(
                 {"geometry": "first", "original_layer": list, "cellsize": "min"}
@@ -713,9 +714,12 @@ class Meshes(MutableMapping, StorageBase):
         )
         gmsh.write(str(msh_file))
         gmsh.finalize()
-        meshes = Meshes.from_gmsh(msh_file, log=False, reindex=False)
-        if domain is not None:
-            del meshes[domain]
+        meshes = Meshes.from_gmsh(
+            msh_file,
+            log=False,
+            reindex=False,
+            meshname="domain" if domain is None else domain,
+        )
         if height_data is not None:
             from scipy.interpolate import LinearNDInterpolator
 
