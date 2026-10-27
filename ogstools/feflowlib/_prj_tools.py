@@ -3,11 +3,11 @@
 
 import logging as log
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 import pyvista as pv
-from typing_extensions import NotRequired, Unpack
+from typing_extensions import Unpack
 
 from ogstools import Project
 

@@ -1,3 +1,4 @@
+import logging
 import shutil
 import sys
 from collections import defaultdict, namedtuple
@@ -254,7 +255,7 @@ class TestLogparser_Version2:
         "delay",
         [0, 0.001, 0.003],
     )
-    def test_coupled_with_producer(self, chunk_size, delay):
+    def test_coupled_with_producer(self, chunk_size, delay, caplog):
         original_file = serial_v2_coupled_ht
         new_file = temp_file(".log", "test_coupled_with_producer", "ht")
         records: Queue = Queue()
@@ -272,6 +273,7 @@ class TestLogparser_Version2:
 
         print("Starting observer...")
 
+        caplog.set_level(logging.INFO, logger="ogstools.logparser")
         observer.start()
 
         # alternatively shutil.copyfile(original_file, new_file)
@@ -288,6 +290,7 @@ class TestLogparser_Version2:
         ), f"Expected {num_expected} records, got {records.qsize()} with {records}"
 
         assert status.process_step_status == StepStatus.TERMINATED
+        assert "Simulation terminated" in caplog.text
         assert status.time_step_status == StepStatus.TERMINATED
         assert status.simulation_status == StepStatus.TERMINATED
 

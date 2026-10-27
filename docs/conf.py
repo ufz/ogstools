@@ -34,6 +34,9 @@ version = release = ogstools.__version__
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+# single backticks in docstrings render as inline code
+default_role = "code"
+
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",

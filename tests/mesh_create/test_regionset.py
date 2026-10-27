@@ -88,15 +88,17 @@ def layerset_example_surfs() -> create.LayerSet:
 
 
 @pytest.mark.tools  # multiple tools
-@pytest.mark.xfail(
-    shutil.which("tetgen") is None, reason="Tetgen not installed"
-)
 @pytest.mark.parametrize(
     "discretization",
     [
         lambda ls: ls.to_region_simplified(200, 2),
         lambda ls: ls.to_region_simplified(400, 3),
-        lambda ls: ls.to_region_tetrahedron(500),
+        pytest.param(
+            lambda ls: ls.to_region_tetrahedron(500),
+            marks=pytest.mark.xfail(
+                shutil.which("tetgen") is None, reason="Tetgen not installed"
+            ),
+        ),
         lambda ls: ls.to_region_prism(400),
         lambda ls: ls.to_region_voxel([300, 300, 50]),
     ],

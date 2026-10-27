@@ -16,11 +16,10 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 from lxml import etree as ET
-from typing_extensions import Self
 
 from ogstools._internal import deprecated
 from ogstools.core.storage import StorageBase

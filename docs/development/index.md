@@ -4,6 +4,7 @@
 ---
 hidden:
 ---
+Coding Standard <coding-standards/index>
 Maintainer Guide <maintainer>
 ```
 
@@ -135,22 +136,19 @@ The examples can be downloaded from the final website as Jupyter notebook files.
 
 You can interactively run and debug these files in Visual Studio Code, see the [Python Interactive window documentation](https://code.visualstudio.com/docs/python/jupyter-support-py).
 
-If you want to link to a gallery page from another page use the following syntax (prefix with `sphx_glr_`, replace directory separator with `_`):
+How to structure an example and how to link to it is part of the [coding standard](coding-standards/shared.md#gallery-examples).
 
-```md
-{ref}`meshlib example <sphx_glr_auto_examples_howto_meshlib_plot_meshlib_pyvista_input.py>`
+### Gallery hashes
+
+CI compares the figures of the examples with the hashes in `docs/gallery_hashes.json`.
+When a figure changes on purpose, regenerate the hashes in the same MR.
+Figure rendering depends on system libraries, so run this in the CI image, not on your host:
+
+```bash
+docker run --rm -it -v "$PWD":/workspace -w /workspace \
+  registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0 \
+  bash -c 'make setup_devcontainer && source .venv-devcontainer/bin/activate && make docs && make gallery_hashes'
 ```
-
-### Guidelines for examples
-
-In order to maintain consistency in style and structure between different
-examples, please follow those recommendations when creating a new one:
-
-- All imports and global settings must be done in first python block.
-- No heading for import and settings cell.
-- Examples that cover multiple steps and/or datasets must contain section.
-- Sections have to be give a title, indicated by highest level heading.
-- Section titles cannot start with ordinal number or letter (no 1./I./A. Example section title)
 
 ### Further information
 

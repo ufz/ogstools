@@ -89,10 +89,10 @@ test_figures:  ## Create the reference figures for the plot tests
 #     registry.opengeosys.org/ogs/tools/ogstools/devcontainer-3.12-feflow-10.0 \
 #     bash -c 'make setup_devcontainer && source .venv-devcontainer/bin/activate && make docs && make gallery_hashes'
 gallery_hashes:
-	python docs/gallery_hashes.py write  --exclude *thumb.png *plot_framework_004* *plot_framework_short_003* *plot_101_logparser_analyses_002*
+	python docs/gallery_hashes.py write
 
 gallery_check:
-	python docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png *plot_framework_004* *plot_framework_short_003* *plot_101_logparser_analyses_002*
+	python docs/gallery_hashes.py compare
 
 coverage:  ## Runs the unit tests generating code coverage reports
 	coverage run -m pytest --hypothesis-profile ci

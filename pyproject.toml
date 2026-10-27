@@ -357,8 +357,15 @@ addopts = [
   "--log-cli-level=INFO",
   "--tb=short",
   "--mpl",
+  "--durations=0",
+  "--durations-min=10",
 ]
 xfail_strict = true
+markers = [
+  "system: runs an OGS simulation",
+  "tools: runs an OGS binary tool",
+]
+filterwarnings = ["ignore:Animation was deleted without rendering anything"]
 # TODO: LB enable this again, deal with MatplotlibDeprecationWarning in fe2vtu
 # tests
 #filterwarnings = ["error"]
@@ -388,7 +395,7 @@ enable_incomplete_feature = ["Unpack"]
 show_absolute_path = true
 
 [tool.ruff]
-target-version = "py310"
+# target-version is read from requires-python
 exclude = ["EXPERIMENTAL"]
 line-length = 80
 
@@ -419,6 +426,19 @@ select = [
   "EXE",  # flake8-executable
   "NPY",  # NumPy specific rules
   "PD",   # pandas-vet
+  "A",       # flake8-builtins
+  "T20",     # flake8-print
+  "TRY002",  # raise-vanilla-class
+  "LOG",     # flake8-logging
+  "ERA001",  # commented-out code
+  "TID251",  # banned-api
+  "ANN401",  # any-type
+  "D101",    # undocumented public class
+  "D102",    # undocumented public method
+  "D103",    # undocumented public function
+  "D401",    # imperative summary line
+  "PLR1714", # repeated-equality-comparison
+  "PLR5501", # collapsible-else-if
 ]
 extend-ignore = [
   "PLR",   # Design related pylint codes
@@ -430,16 +450,146 @@ extend-ignore = [
   "PLC0415", # import-outside-top-level
   "E402",    # module-import-not-at-top-of-file
 ]
-typing-modules = ["mypackage._compat.typing"]
 unfixable = [
   "T20",  # Removes print statements
   "F841", # Removes unused variables
 ]
 flake8-unused-arguments.ignore-variadic-names = true
+flake8-builtins.builtins-ignorelist = ["id"]
+flake8-annotations.allow-star-arg-any = true
+flake8-import-conventions.extend-aliases = { "ogstools" = "ot" }
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# Shared
+"sys.exit".msg = "Only command-line tools exit; raise an exception instead."
+"logging.basicConfig".msg = "Do not configure logging in the library."
+"sys.setrecursionlimit".msg = "Do not change global state."
+"pint.UnitRegistry".msg = "Use ogstools.variables.u_reg."
+"matplotlib.rcParams".msg = "Use ot.plot.setup."
+"matplotlib.pyplot.rcParams".msg = "Use ot.plot.setup."
+"pyvista.read".msg = "Use ot.mesh.read."
+"meshio".msg = "Use ot.mesh.read and ot.mesh.save."
+# OGSTools
+"tempfile".msg = "Use ogstools.definitions.temp_dir() or temp_file()."
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["T20"]
+"tests/**" = ["T20", "D", "TID251"]
+"docs/**" = ["T20", "D", "ERA001"]  # gallery syntax looks like code
 "docs/examples/**" = ["B018"]
+"ogstools/**/*_cli.py" = ["T20", "TID251"]  # command-line tools print and exit
+"ogstools/definitions.py" = ["TID251"]  # implements temp_dir
+"ogstools/mesh/file_io.py" = ["TID251"]  # implements ot.mesh.read and save
+"ogstools/meshseries/_meshseries.py" = ["TID251"]  # XDMF input and output
+"ogstools/meshseries/xdmf_reader.py" = ["TID251"]  # XDMF input
+"ogstools/variables/unit_registry.py" = ["TID251"]  # defines u_reg
+"ogstools/physics/nuclearwasteheat/_unitsetup.py" = ["TID251"]  # self-contained model with its own registry
+"docs/gallery_hashes.py" = ["TID251"]  # script
+
+# Baseline: violations that existed when the rules above were enabled.
+# Remove a file from this list when you fix it; never add a file.
+[tool.ruff.lint.extend-per-file-ignores]
+"docs/conf.py" = ["A001", "ICN001"]
+"docs/examples/howto_conversions/plot_E_feflowlib_H_simulation.py" = ["A001"]
+"docs/examples/howto_plot/plot_contourf_3d.py" = ["A001"]
+"docs/examples/howto_postprocessing/plot_nuclearwasteheat.py" = ["TID251"]
+"ogstools/_cli/provide_ogs_cli_tools_via_wheel.py" = ["ANN401", "D103", "ERA001"]
+"ogstools/_cli/wrap_cli_tools.py" = ["ANN401", "D101", "D401", "T201"]
+"ogstools/_find_ogs.py" = ["ANN401", "D401", "ERA001", "T201"]
+"ogstools/core/execution.py" = ["D102"]
+"ogstools/core/interactive_simulation_controller.py" = ["T201"]
+"ogstools/core/model.py" = ["ANN401", "D401", "ERA001"]
+"ogstools/core/native_simulation_controller.py" = ["T201"]
+"ogstools/core/simulation.py" = ["ANN401", "D401", "T201"]
+"ogstools/core/simulation_controller.py" = ["ANN401", "T201"]
+"ogstools/core/storage.py" = ["A001", "D401", "ERA001", "TID251"]
+"ogstools/definitions.py" = ["A002", "D401"]
+"ogstools/examples/__init__.py" = ["D103", "D401"]
+"ogstools/examples/analytical_solutions/_heat_conduction.py" = ["D401"]
+"ogstools/examples/analytical_solutions/_steady_state_diffusion.py" = ["TID251"]
+"ogstools/examples/gmsh/cube_mixed.py" = ["D103", "ERA001"]
+"ogstools/examples/gmsh/line.py" = ["D103", "ERA001"]
+"ogstools/examples/gmsh/quarter_rectangle_with_hole.py" = ["D103", "ERA001"]
+"ogstools/examples/ogs6py/example_THM.py" = ["ERA001"]
+"ogstools/examples/prj/decay_boundary_conditions.py" = ["D101", "D102"]
+"ogstools/feflowlib/__init__.py" = ["LOG009", "TID251"]
+"ogstools/feflowlib/_cli.py" = ["A002", "D401"]
+"ogstools/feflowlib/_feflowlib.py" = ["D401", "LOG015"]
+"ogstools/feflowlib/_prj_tools.py" = ["A002", "D401"]
+"ogstools/feflowlib/_templates.py" = ["D401"]
+"ogstools/feflowlib/_tools.py" = ["A002", "D401", "PLR1714", "T201"]
+"ogstools/feflowlib/feflow_model.py" = ["D102", "D401", "T201"]
+"ogstools/gmsh_tools/meshing.py" = ["D103", "D401", "T201"]
+"ogstools/logparser/common_ogs_analyses.py" = ["ANN401", "D103", "D401", "ERA001", "T201", "TRY002"]
+"ogstools/logparser/log_parser.py" = ["ANN401", "D103", "D401", "T201"]
+"ogstools/logparser/monitor.py" = ["D401", "T201"]
+"ogstools/logparser/monitor_app.py" = ["D103", "T201"]
+"ogstools/logparser/monitor_cli.py" = ["D103"]
+"ogstools/logparser/regexes.py" = ["D101", "D102", "D103", "D401"]
+"ogstools/materiallib/core/component.py" = ["D101", "D102", "D401"]
+"ogstools/materiallib/core/components.py" = ["D101", "D401"]
+"ogstools/materiallib/core/material.py" = ["ANN401", "D102"]
+"ogstools/materiallib/core/material_manager.py" = ["D401", "ERA001"]
+"ogstools/materiallib/core/phase.py" = ["D101", "D102"]
+"ogstools/materiallib/core/property.py" = ["ANN401", "D101", "D102"]
+"ogstools/materiallib/distributions.py" = ["D101", "D103"]
+"ogstools/materiallib/schema/process_schema.py" = ["ERA001"]
+"ogstools/mesh/cosim.py" = ["ANN401", "D401", "ERA001"]
+"ogstools/mesh/create/boundary.py" = ["D101", "D102", "TRY002"]
+"ogstools/mesh/create/boundary_set.py" = ["D102", "D401"]
+"ogstools/mesh/create/boundary_subset.py" = ["A002", "D102", "D401"]
+"ogstools/mesh/create/region.py" = ["A002"]
+"ogstools/mesh/differences.py" = ["D401"]
+"ogstools/mesh/geo.py" = ["D401"]
+"ogstools/mesh/ip_data.py" = ["D101", "D102", "TID251"]
+"ogstools/mesh/ip_mesh.py" = ["D401", "ERA001"]
+"ogstools/mesh/utils.py" = ["ANN401", "D103", "D401", "T201"]
+"ogstools/meshes/_meshes.py" = ["D401", "T201"]
+"ogstools/meshes/_meshes_from_yaml.py" = ["ANN401", "D401", "T201"]
+"ogstools/meshes/gmsh_BHE.py" = ["D101", "ERA001", "PLR5501", "TRY002"]
+"ogstools/meshes/gmsh_converter.py" = ["ERA001", "TID251"]
+"ogstools/meshseries/_meshseries.py" = ["A002", "ANN401", "D401", "PLR1714"]
+"ogstools/meshseries/data_dict.py" = ["ANN401"]
+"ogstools/meshseries/xdmf_reader.py" = ["D101", "D102", "D401", "ERA001", "PLR1714"]
+"ogstools/ogs6py/build_tree.py" = ["ANN401"]
+"ogstools/ogs6py/curves.py" = ["D401"]
+"ogstools/ogs6py/linsolvers.py" = ["D401"]
+"ogstools/ogs6py/local_coordinate_system.py" = ["D401"]
+"ogstools/ogs6py/media.py" = ["D401", "PLR5501", "T201"]
+"ogstools/ogs6py/mesh.py" = ["D401"]
+"ogstools/ogs6py/parameters.py" = ["A002", "ANN401", "D102", "D401"]
+"ogstools/ogs6py/processes.py" = ["D401", "PLR5501"]
+"ogstools/ogs6py/processvars.py" = ["A002", "D401"]
+"ogstools/ogs6py/project.py" = ["ANN401", "D102", "D401", "ERA001", "PLR5501", "T201", "TID251"]
+"ogstools/ogs6py/properties.py" = ["D401"]
+"ogstools/ogs6py/referenced_file.py" = ["D102"]
+"ogstools/ogs6py/timeloop.py" = ["D401"]
+"ogstools/physics/nuclearwasteheat/nuclearwaste.py" = ["ERA001"]
+"ogstools/plot/contourplots.py" = ["D103", "ERA001"]
+"ogstools/plot/features.py" = ["D103"]
+"ogstools/plot/levels.py" = ["D103"]
+"ogstools/plot/utils.py" = ["D103", "D401", "T201"]
+"ogstools/studies/convergence/convergence.py" = ["D103", "D401", "TID251"]
+"ogstools/studies/templates/convergence_study.py" = ["ERA001"]
+"ogstools/variables/func.py" = ["D101"]
+"ogstools/variables/integrity.py" = ["D401"]
+"ogstools/variables/matrix.py" = ["D401"]
+"ogstools/variables/tensor_math.py" = ["D401"]
+"ogstools/variables/variable.py" = ["A002", "D102", "D103", "D401"]
+"ogstools/variables/vector.py" = ["D401"]
+"ogstools/workflow/jupyter_conversion.py" = ["D401", "TID251"]
+"paper/figures/graphical_abstract/generate_graphical_abstract_assets.py" = ["D401", "T201"]
+"scripts/pull_containers.py" = ["D103", "T201"]
+"scripts/update_tests.py" = ["T201"]
+"tests/mesh_create/test_layer.py" = ["ERA001"]
+"tests/test_framework.py" = ["ERA001"]
+"tests/test_logparser.py" = ["ERA001"]
+"tests/test_materiallib.py" = ["A001"]
+"tests/test_meshes.py" = ["ERA001"]
+"tests/test_meshes_from_gmsh.py" = ["ERA001"]
+"tests/test_meshes_from_yaml.py" = ["ERA001"]
+"tests/test_meshseries.py" = ["ERA001"]
+"tests/test_simulation.py" = ["PLR1714"]
+"tests/test_storage.py" = ["ERA001"]
 
 [tool.codespell]
 ignore-words-list = "methode,ot"

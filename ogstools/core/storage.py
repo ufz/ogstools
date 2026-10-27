@@ -13,8 +13,7 @@ import tempfile
 import warnings
 from datetime import datetime
 from pathlib import Path
-
-from typing_extensions import Self
+from typing import Self
 
 from ogstools.definitions import usr_tmp_dir
 

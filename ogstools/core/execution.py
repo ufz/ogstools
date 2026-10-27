@@ -9,9 +9,9 @@ import subprocess
 import sys
 import warnings
 from pathlib import Path
+from typing import Self
 
 import yaml
-from typing_extensions import Self
 
 from .storage import StorageBase
 

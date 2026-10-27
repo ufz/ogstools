@@ -133,10 +133,6 @@ def test_simulation_parallel(good_model: ot.Model, n: int):
 
 @pytest.mark.tools  # NodeReordering
 @pytest.mark.system
-@pytest.mark.xfail(
-    sys.platform == "darwin",
-    reason="OGS accidentally compiled without OpenMP on Mac in dependent ogs wheel package",
-)
 def test_simulation_omp_num_threads(good_model: ot.Model):
     model_with_threads = good_model.copy()
     model_with_threads.execution.omp_num_threads = 2

@@ -70,11 +70,15 @@ pre-commit:
   rules:
     - if: $CI_MERGE_REQUEST_IID
   needs: []
-  variables:
-    SKIP: ruff,mypy
   script:
+    - pre-commit run --all-files
+    # the commit-msg hooks that a local commit runs, for each commit of the MR
     - git fetch origin ${CI_MERGE_REQUEST_DIFF_BASE_SHA}
-    - pre-commit run --from-ref ${CI_MERGE_REQUEST_DIFF_BASE_SHA} --to-ref HEAD
+    - |
+      for commit in $(git rev-list ${CI_MERGE_REQUEST_DIFF_BASE_SHA}..HEAD); do
+        git log -1 --format=%B "$commit" > .git/COMMIT_MSG_CHECK
+        pre-commit run --hook-stage commit-msg --commit-msg-filename .git/COMMIT_MSG_CHECK || exit 1
+      done
 
 build:
   needs: []
@@ -255,7 +259,12 @@ tests (mac - pip) (R):
     - *pip-setup-activate
     - pip install -e ".[pinned]"
   script:
-    - pytest
+    # the summary shows baseline, result and difference of each image test
+    - pytest --mpl-results-path=mpl-results --mpl-generate-summary=html
+  artifacts:
+    when: always
+    paths:
+      - mpl-results
 
 # Remove -j 1 when this is resolved:
 # https://github.com/pydata/pydata-sphinx-theme/issues/1643
@@ -299,7 +308,7 @@ docs hashes check:
       when: manual
       allow_failure: true
   script:
-    - uv run docs/gallery_hashes.py compare --exclude *feflowlib* *thumb.png *plot_framework_004* *plot_framework_short_003* *plot_101_logparser_analyses_002* || exit $?
+    - uv run docs/gallery_hashes.py compare || exit $?
   allow_failure:
     exit_codes: 123  # gallery figure hashes don't match
 
