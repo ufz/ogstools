@@ -407,8 +407,8 @@ def test_probe_xdmf_ids(
     if not isinstance(timeslice, list):
         timeslice = [timeslice]
     ms = examples.load_meshseries_LF_2D_XDMF()
-    for slice in timeslice:
-        ms = ms[slice]
+    for time in timeslice:
+        ms = ms[time]
     result_id = ms.probe_values([], variables, ids=ids)
     if variables == "MaterialIDs":
         coordinates = ms[0].cell_centers().points[ids]
@@ -438,8 +438,8 @@ def test_probe_pvd_ids(
     if not isinstance(timeslice, list):
         timeslice = [timeslice]
     ms = examples.load_meshseries_THM_2D_PVD()
-    for slice in timeslice:
-        ms = ms[slice]
+    for time in timeslice:
+        ms = ms[time]
     result_id = ms.probe_values([], variables, ids=ids)
     if variables == "MaterialIDs":
         coordinates = ms[0].cell_centers().points[ids]
