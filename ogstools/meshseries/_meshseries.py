@@ -133,7 +133,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                     f"'vtu' files, but not '{suffix}'"
                 )
                 raise TypeError(msg)
-        self.dim = self.mesh(0).GetMaxSpatialDimension()
 
     @classmethod
     def from_data(
@@ -150,7 +149,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         new_ms._mesh_cache.update(
             dict(zip(new_ms.timevalues, deepcopy(meshes), strict=True))
         )
-        new_ms.dim = meshes[0].GetMaxSpatialDimension()
         return new_ms
 
     @classmethod
@@ -455,6 +453,70 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             f"rawdata_file:     {self._format_path(self.rawdata_file())}\n"
         )
 
+    @overload
+    def _data(
+        self, variable: list[str | Variable], points: int | list[int]
+    ) -> list[np.ndarray]: ...
+
+    @overload
+    def _data(
+        self, variable: str | Variable, points: int | list[int]
+    ) -> np.ndarray: ...
+
+    def _data(
+        self,
+        variable: str | Variable | list[str | Variable],
+        points: int | list[int],
+    ) -> np.ndarray | list[np.ndarray]:
+        # Reads data from attached xdmf-file.
+        # This is very fast but only works on xdmf
+        if self._data_type != ".xdmf":
+            msg = "Ensure that data_type of the MeshSeries is xdmf before calling this function"
+            raise ValueError(msg)
+        if isinstance(variable, list):
+            return [self._data(var, points) for var in variable]
+        # TODO (FZ): reuse common logic in Variable.find
+        if isinstance(variable, Variable):
+            if (
+                variable.data_name != variable.output_name
+                and variable.output_name in self._xdmf_reader.data_items
+            ):
+                variable_name = variable.output_name
+                do_transform = False
+            else:
+                variable_name = variable.data_name
+                do_transform = True
+        else:
+            variable_name = variable
+        if variable_name not in self._xdmf_reader.data_items:
+            msg = "Variable not found in data_items"
+            raise ValueError(msg)
+        time_indices = list(range(self._xdmf_reader.num_steps))
+        for timeslice in self._time_indices:
+            time_indices = time_indices[timeslice]
+        time_indices = list(time_indices)
+        if isinstance(points, int):
+            result = self._xdmf_reader.data_items[variable_name][
+                time_indices, points
+            ]
+        elif len(time_indices) < len(points):
+            result = np.vstack(
+                [
+                    self._xdmf_reader.data_items[variable_name][i, points]
+                    for i in time_indices
+                ]
+            )
+        else:
+            result = np.column_stack(
+                [
+                    self._xdmf_reader.data_items[variable_name][time_indices, i]
+                    for i in points
+                ]
+            )
+        if isinstance(variable, Variable) and do_transform:
+            return variable.transform(result)
+        return result
+
     # deliberately typing as Sequence and not as zip because typing as zip
     # leads to a weird cross-referencing error from sphinx side with no easy
     # apparent fix
@@ -641,6 +703,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # TODO: read time steps from fn string if available
         return np.arange(len(self.timevalues), dtype=int)
 
+    @property
+    def dim(self) -> int:
+        return self.mesh(0).GetMaxSpatialDimension()
+
     def _xdmf_values(self, variable_name: str) -> np.ndarray:
         dataitem = self._xdmf_reader.data_items[variable_name]
         # pv filters produces these arrays, which we can use for slicing
@@ -707,6 +773,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         return self._values(variable)
 
     def _values(self, variable: str | Variable) -> np.ndarray:
+        # TODO (FZ): reuse common logic in Variable.find
         if isinstance(variable, Variable):
             if (
                 variable.data_name != variable.output_name
@@ -864,9 +931,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
     def probe_values(
         self,
-        points: np.ndarray | list,
+        points: np.ndarray | list[float | list[float]],
         data_name: str | Variable | list[str | Variable],
         interp_method: Literal["nearest", "linear"] = "linear",
+        ids: int | list[int] | None = None,
     ) -> np.ndarray | list[np.ndarray]:
         """
         Return the sampled data of the MeshSeries at observation points.
@@ -874,11 +942,19 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         Similar to :func:`~ogstools.MeshSeries.probe` but returns the
         data directly instead of creating a new MeshSeries.
 
-        :param points:          The observation points to sample at.
+        :param points:          The observation points to sample at. If an empty
+                                list/array is given will try to probe for ids
+                                instead.
         :param data_name:       Data to sample. If provided as a Variable, the
                                 output will transformed accordingly. Can also be
                                 a list of str or Variable.
         :param interp_method:   Interpolation method, defaults to `linear`
+        :param ids:             Alternative way to specify observation points
+                                to sample at. Probing by ids is very efficient for
+                                MeshSeries read from xdmf files. Ids are
+                                assumed to match data_type (i.e. the ids are
+                                treated as point ids if probing for point data
+                                and cell ids if probing for cell data).
 
         :returns:   `numpy` array/s of interpolated data at observation points
                     with the following shape:
@@ -888,6 +964,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
                     If `data_name` is a list, a corresponding list of arrays is
                     returned.
+
+        :Example:
+            >>> import matplotlib.pyplot as plt
+            >>>
+            >>> ms=ot.MeshSeries(filepath)
+            >>> temp_at_id=ms.probe_values(id, "temperature")
+            >>> plt.plot(ms.timevalues, temp_at_id)
         """
         if (
             isinstance(data_name, list)
@@ -896,6 +979,26 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
+        if len(points) > 0 and ids:
+            msg = (
+                "Cannot assign points by index and coordinates simultaneously."
+            )
+            raise TypeError(msg)
+        if len(points) == 0 and not ids:
+            msg = "Please specify points at which to probe"
+            raise TypeError(msg)
+        if ids and self._data_type == ".xdmf":
+            return self._data(data_name, ids)
+        is_cell_data = (
+            isinstance(data_name, list)
+            and any(key in self.cell_data for key in data_name)
+        ) or data_name in self.cell_data
+        if ids:
+            points = (
+                self[0].cell_centers().points[ids]
+                if is_cell_data
+                else self[0].points[ids]
+            )
         pts = reshape_obs_points(points, self.mesh(0))
         values = self.values(data_name)
         if isinstance(data_name, list):
@@ -905,11 +1008,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             values = np.moveaxis(self._flatten_vectors(values), 0, -1)
         values = np.swapaxes(values, 0, 1)
         geom = self.mesh(0).points
-
-        is_cell_data = values.shape[0] != geom.shape[0]
         if is_cell_data:
             geom = self.mesh(0).cell_centers().points
-
         # remove flat dimensions for interpolation
         flat_axis = np.argwhere(np.all(np.isclose(geom, geom[0]), axis=0))
         geom = np.delete(geom, flat_axis, 1)
@@ -1102,23 +1202,39 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         mesh_func: Callable[
             [pv.UnstructuredGrid], pv.UnstructuredGrid
         ] = lambda mesh: mesh,
+        detach_file: bool = False,
     ) -> MeshSeries:
         """
         Apply a transformation function to the underlying mesh.
 
-        :param mesh_func: A function which expects to read a mesh and return a
-                          mesh. Useful for slicing / clipping / thresholding.
+        :param mesh_func:   A function which expects to read a mesh and return a
+                            mesh. Useful for slicing / clipping / thresholding.
+        :param detach_file: If True, detaches file from which the MeshSeries
+                            was originally read and caches all timesteps.
+                            Note: Even if detach_file is False, the attached
+                            file will not be changed and some OGSTools functions
+                            (like probe_values), which expect the MeshSeries to be
+                            consistent with the attached file, will return
+                            unexpected results.
 
         :returns: A deep copy of this MeshSeries with transformed meshes.
         """
         ms_copy = self.copy(deep=True)
         # pylint: disable=protected-access
-        for cache_timevalue, cache_mesh in self._mesh_cache.items():
-            ms_copy._mesh_cache[cache_timevalue] = pv.UnstructuredGrid(
-                mesh_func(cache_mesh), deep=True
-            )
+        if detach_file:
+            ms_copy._data_type = None
+            ms_copy._mesh_cache = {
+                self.timevalues[i]: pv.UnstructuredGrid(
+                    mesh_func(self.mesh(i)), deep=True
+                )
+                for i in self.timesteps
+            }
+        else:
+            for cache_timevalue, cache_mesh in self._mesh_cache.items():
+                ms_copy._mesh_cache[cache_timevalue] = pv.UnstructuredGrid(
+                    mesh_func(cache_mesh), deep=True
+                )
         ms_copy._mesh_func_opt = lambda mesh: mesh_func(self.mesh_func(mesh))
-        ms_copy.dim = ms_copy.mesh(0).GetMaxSpatialDimension()
         return ms_copy
 
     def scale(
@@ -1291,12 +1407,20 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self,
         index: slice | int | np.ndarray | list,
         preference: Literal["points", "cells"] = "points",
+        detach_file: bool = False,
     ) -> MeshSeries:
         """
         Extract a subset of the domain by point or cell indices.
 
         :param index:       Indices of points or cells to extract.
         :param preference:  Selected entities.
+        :param detach_file: If True, detaches file from which the MeshSeries
+                            was originally read and caches all timesteps.
+                            Note: Even if detach_file is False, the attached
+                            file will not be changed and some OGSTools functions
+                            (like probe_values), which expect the MeshSeries to be
+                            consistent with the attached file, will return
+                            unexpected results.
 
         :returns: A MeshSeries with the selected domain subset.
         """
@@ -1310,7 +1434,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 np.arange(mesh.n_points)[index]
             ),
         }
-        return self.transform(func[preference])
+        return self.transform(func[preference], detach_file)
 
     def _rename_vtufiles(self, new_pvd_fn: Path, fns: list[Path]) -> list:
         fns_new: list[Path] = []

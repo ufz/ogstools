@@ -29,6 +29,8 @@
   - temperature_var -> temperature_variance
 - variables now have methods for derivatives (`gradient`, `divergence`, `vorticity`, `qcriterion`) which can be computed or plotted on the fly.
 - meshseries now has a setitem method to set either data (`ms["new_data"] = ...`) or a mesh (`ms[-1] = ...` -> overwrites the last timestep)
+- `MeshSeries.probe_values` now accepts integer ids in addition to coordinates and probes these very fast for Meshseries read from xdmf-files
+- `MeshSeries.extract` and `MeshSeries.transform` now can now detach the originally read file to ensure consistency.
 
 ## Infrastructure
 

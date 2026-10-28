@@ -387,6 +387,68 @@ def test_probe_2D_mesh():
     _check_probe(ms, points)
 
 
+@pytest.mark.parametrize(
+    "ids",
+    [5, [2, 22, 94]],
+)
+@pytest.mark.parametrize(
+    ("variables", "timeslice"),
+    [
+        ("pressure", slice(0, 5, 1)),
+        (ot.variables.pressure, [slice(0, 6, 1), slice(None, None, 2)]),
+        (["VolumetricFlowRate", ot.variables.pressure], slice(None, None, 2)),
+        ("MaterialIDs", slice(None, None, None)),
+    ],
+)
+def test_probe_xdmf_ids(
+    ids: int | list[int], variables, timeslice: slice | list[slice]
+) -> None:
+    """Test that probing xdmf files for point ids gives the same results as probing the corresponding coordinates"""
+    if not isinstance(timeslice, list):
+        timeslice = [timeslice]
+    ms = examples.load_meshseries_LF_2D_XDMF()
+    for slice in timeslice:
+        ms = ms[slice]
+    result_id = ms.probe_values([], variables, ids=ids)
+    if variables == "MaterialIDs":
+        coordinates = ms[0].cell_centers().points[ids]
+    else:
+        coordinates = ms[0].points[ids]
+    result_coordinates = ms.probe_values(coordinates, variables)
+    np.testing.assert_allclose(result_id, result_coordinates)
+
+
+@pytest.mark.parametrize(
+    "ids",
+    [5, [2, 22, 94]],
+)
+@pytest.mark.parametrize(
+    ("variables", "timeslice"),
+    [
+        ("pressure", slice(0, 5, 1)),
+        (ot.variables.pressure, [slice(0, 6, 1), slice(None, None, 2)]),
+        (["temperature", ot.variables.pressure], slice(None, None, 2)),
+        ("MaterialIDs", slice(None, None, None)),
+    ],
+)
+def test_probe_pvd_ids(
+    ids: int | list[int], variables, timeslice: slice | list[slice]
+) -> None:
+    """Test that probing pvd files for point ids gives the same results as probing the corresponding coordinates"""
+    if not isinstance(timeslice, list):
+        timeslice = [timeslice]
+    ms = examples.load_meshseries_THM_2D_PVD()
+    for slice in timeslice:
+        ms = ms[slice]
+    result_id = ms.probe_values([], variables, ids=ids)
+    if variables == "MaterialIDs":
+        coordinates = ms[0].cell_centers().points[ids]
+    else:
+        coordinates = ms[0].points[ids]
+    result_coordinates = ms.probe_values(coordinates, variables)
+    np.testing.assert_allclose(result_id, result_coordinates)
+
+
 def test_probe_1D_mesh():
     "Test point probing on a 1D meshseries."
     ms = examples.load_meshseries_HT_2D_XDMF()
