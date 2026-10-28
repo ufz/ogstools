@@ -32,6 +32,8 @@ from ogstools.examples import (
     prj_solid_inc_ref,
     prj_square_1e4_robin,
     prj_square_1e4_robin_ref,
+    prj_square_5500x5500,
+    prj_square_5500x5500_staggered_ref,
     prj_staggered,
     prj_staggered_ref,
     prj_thm_point_heat_source,
@@ -1272,6 +1274,23 @@ class TestiOGS:
         )
         model.write_input()
         self.compare(prjfile, prj_consolidation_benchmark_staggered_ref)
+
+    def test_convert_to_staggered_ht(self, tmp_path: Path) -> None:
+        prjfile = tmp_path / "square_5500x5500_staggered.prj"
+        model = ot.Project(input_file=prj_square_5500x5500, output_file=prjfile)
+        model.convert_to_staggered(
+            coupling_criteria=[
+                {
+                    "convergence_type": "DeltaX",
+                    "norm_type": "NORM2",
+                    "reltol": "1.e-10",
+                }
+            ]
+            * 2,
+            max_iter=50,
+        )
+        model.write_input()
+        self.compare(prjfile, prj_square_5500x5500_staggered_ref)
 
     def test_convert_to_staggered_defaults(self) -> None:
         model = ot.Project(input_file=prj_thm_point_heat_source)

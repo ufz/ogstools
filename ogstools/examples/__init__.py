@@ -258,6 +258,10 @@ prj_consolidation_benchmark_mono = _prj_dir / "consolidation_benchmark_mono.prj"
 prj_consolidation_benchmark_staggered_ref = (
     _prj_dir / "consolidation_benchmark_staggered_ref.prj"
 )
+prj_square_5500x5500 = _prj_dir / "square_5500x5500.prj"
+prj_square_5500x5500_staggered_ref = (
+    _prj_dir / "square_5500x5500_staggered_ref.prj"
+)
 prj_pid_timestepping = _prj_dir / "PID_timestepping.prj"
 prj_pid_timestepping_ref = _prj_dir / "PID_timestepping_ref.prj"
 prj_solid_inc_ref = _prj_dir / "tunnel_ogs6py_solid_inc_ref.prj"
