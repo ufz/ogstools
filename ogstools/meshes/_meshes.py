@@ -453,6 +453,12 @@ class Meshes(MutableMapping, StorageBase):
                     layer_dict[name] = gpd.read_file(
                         filepath, layer=layer
                     ).explode()
+        if domain is not None and (
+            domain not in layer_dict
+            or set(layer_dict[domain].geom_type.unique()) != {"Polygon"}
+        ):
+            msg = f"domain not found among polygon input layers. Available names are {[name for name, frame in layer_dict.items() if set(frame.geom_type.unique())=={'Polygon'}]}"
+            raise ValueError(msg)
         for name, layer in layer_dict.items():
             layer["original_layer"] = name
         if height_data is not None and height_data.shape[1] != 3:
@@ -598,7 +604,6 @@ class Meshes(MutableMapping, StorageBase):
             coord_tags: dict[tuple[float, float], int],
             line_ids: dict[tuple[int, int], int],
         ) -> tuple[list[int], list[int]]:
-            """TODO: Figure out how to treat negative indices"""
             result_ids = []
             new_ids = []
             for start, end in zip(
