@@ -25,7 +25,7 @@ def unneeded_codes(path: str, codes: list[str]) -> list[str]:
     :returns: The codes without a violation, all of them for a missing file.
     """
     file = ROOT / path
-    if not file.exists():
+    if not file.exists() or codes == []:
         return codes
     # The probe name ends like the file name, so permanent per-file-ignores
     # such as "*_cli.py" still match, but the baseline entry does not. It
