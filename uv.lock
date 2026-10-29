@@ -2869,7 +2869,7 @@ requires-dist = [
     { name = "fonttools", marker = "extra == 'pinned'", specifier = "==4.61.1" },
     { name = "fqdn", marker = "extra == 'pinned'", specifier = "==1.5.1" },
     { name = "frozenlist", marker = "extra == 'pinned'", specifier = "==1.8.0" },
-    { name = "gmsh", specifier = ">=4.12.0" },
+    { name = "gmsh", specifier = ">=4.12.0,<5" },
     { name = "gmsh", marker = "extra == 'pinned'", specifier = "==4.14.1" },
     { name = "greenlet", marker = "extra == 'pinned'", specifier = "==3.3.1" },
     { name = "h5py", specifier = ">=3.8.0" },

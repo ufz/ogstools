@@ -46,6 +46,8 @@
 ## Infrastructure
 
 - `pytest-mpl` moved from the dependencies to the `test` extra, so installing ogstools no longer installs pytest.
+- `gmsh` is limited to `<5`.
+  gmsh 5 writes MSH 4.2 by default, and `meshio` 5.3.5 cannot read it ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
 
 ## Documentation
 
