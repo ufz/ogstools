@@ -23,9 +23,13 @@
 - Masking a variable no longer writes NaN into the mesh data.
 - Eigenvalues and eigenvectors of masked tensors are NaN instead of raising an error or giving wrong values.
 - fixed `ot.mesh.read` for a symbolic link to a file without extension; the reader is now chosen by the extension of the link name ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
+- the logparser reads the end messages of current OGS versions: `OGS completed on`, `Simulation aborted on … Received signal`, and `OGS terminated on … One of the tests failed.`
+  `Simulation failed` gives a `SimulationExecutionTimeFailed` record, and the live monitor reports it as terminated with error.
+  `SimulationAbort` records now carry `mpi_process` ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
 
 ## Features
 
+- `logparser.end_state` reads from an OGS log how the run ended: `EndState.COMPLETED`, `FAILED` (in the time loop), `ERROR`, `ABORTED` (by a signal) or `NO_END` ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
 - variable aggregations over a meshseries can now be plotted directly e.g.:
   `fig = ot.plot.contourf(meshseries, ot.variables.temperature.max)`
 - output names of variables aggregations have changed:

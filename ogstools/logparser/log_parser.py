@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import re
-from dataclasses import asdict
+from collections.abc import Callable
+from dataclasses import asdict, fields
+from enum import Enum
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any, cast
@@ -12,6 +14,10 @@ from ogstools.logparser.regexes import (
     Log,
     MPIProcess,
     NoRankOutput,
+    SimulationAbort,
+    SimulationEndTime,
+    SimulationEndTimeFailed,
+    SimulationExecutionTimeFailed,
     Termination,
 )
 
@@ -32,7 +38,7 @@ def _try_match_line(
     if match := regex.match(line):
         # Line , Process, Type specific
         ts = log_type.type_str()
-        types = (str, int, int) + tuple(log_type.__annotations__.values())
+        types = [cast(Callable, field.type) for field in fields(log_type)]
         optional_mpi_id = (0,) if fill_mpi else ()
         match_with_line = (ts, line_nr) + optional_mpi_id + match.groups()
         return [
@@ -222,6 +228,55 @@ def parse_file(
                     records.append(asdict(valid_entry))
 
     return records
+
+
+class EndState(Enum):
+    """How an OGS run ended, as its log shows it."""
+
+    COMPLETED = "completed"
+    "The time loop and the tests passed."
+    FAILED = "failed"
+    "The time loop failed, e.g. a time step did not converge."
+    ERROR = "error"
+    "OGS stopped with an error outside the time loop, or a test failed."
+    ABORTED = "aborted"
+    "OGS received a signal."
+    NO_END = "no_end"
+    "The log has no end entry: OGS was killed or is still running."
+
+
+def end_state(file_name: str | Path) -> EndState:
+    """Read from an OGS log how the run ended.
+
+    :param file_name:   The OGS log file.
+
+    :returns:           The end state of the run.
+    """
+    file_name = Path(file_name)
+    parallel_execution = read_mpi_processes(file_name) is not None
+    patterns = normalize_regex(
+        select_regex(read_version(file_name)), parallel_execution
+    )
+    with file_name.open() as file:
+        ends = {
+            type(entry)
+            for line_nr, line in enumerate(file, start=1)
+            if isinstance(
+                entry := parse_line(
+                    patterns, line, parallel_execution, line_nr
+                ),
+                Termination,
+            )
+        }
+    if SimulationAbort in ends:
+        return EndState.ABORTED
+    if SimulationExecutionTimeFailed in ends:
+        return EndState.FAILED
+    if SimulationEndTimeFailed in ends:
+        return EndState.ERROR
+    if SimulationEndTime in ends:
+        return EndState.COMPLETED
+    return EndState.NO_END
 
 
 def select_regex(version: int) -> list[tuple[str, type[Log]]]:
