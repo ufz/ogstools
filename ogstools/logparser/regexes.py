@@ -143,15 +143,16 @@ class Context:
     def update(self, x: Log | Termination) -> None:
         if isinstance(x, SimulationStartTime):
             self.simulation_status = StepStatus.RUNNING
-        elif isinstance(x, SimulationEndTime | SimulationExecutionTime):
-            self.simulation_status = StepStatus.TERMINATED
         elif isinstance(
             x,
             SimulationEndTimeFailed
             | SimulationAbort
             | SimulationExecutionTimeFailed,
         ):
+            # before the success check: the failed time is a subclass of it
             self.simulation_status = StepStatus.TERMINATED_WITH_ERROR
+        elif isinstance(x, SimulationEndTime | SimulationExecutionTime):
+            self.simulation_status = StepStatus.TERMINATED
         elif isinstance(x, TimeStepStart):
             self.time_step = x.time_step
             self.time_step_status = StepStatus.RUNNING
@@ -296,7 +297,7 @@ class SimulationExecutionTimeFailed(SimulationExecutionTime):
 
 
 @dataclass
-class SimulationAbort(Info, Termination):
+class SimulationAbort(MPIProcess, Info, Termination):
     signal: int
 
 
@@ -515,15 +516,27 @@ def new_regexes() -> list[tuple[str, type[Log]]]:
         ),
         (
             r"info: \[time\] Simulation failed. It took ([\d\.e+-]+) s",
-            SimulationExecutionTime,
+            SimulationExecutionTimeFailed,
         ),
         (
             r"info: \[time\] Simulation aborted. Received signal: (\d+).",
             SimulationAbort,
         ),
         (
+            r"error: Simulation aborted on (?:\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\. Received signal: (\d+)\.",
+            SimulationAbort,
+        ),
+        (
             r"info: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
             SimulationEndTime,
+        ),
+        (
+            r"info: OGS completed on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",
+            SimulationEndTime,
+        ),
+        (
+            r"error: OGS terminated on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\. One of the tests failed\.",
+            SimulationEndTimeFailed,
         ),
         (
             r"error: OGS aborted on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4})\.",

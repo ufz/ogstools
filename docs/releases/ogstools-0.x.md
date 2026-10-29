@@ -19,9 +19,13 @@
 - `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - fixed `ot.mesh.read` for a symbolic link to a file without extension; the reader is now chosen by the extension of the link name.
+- the logparser reads the end messages of current OGS versions: `OGS completed on`, `Simulation aborted on … Received signal`, and `OGS terminated on … One of the tests failed.`
+  `Simulation failed` gives a `SimulationExecutionTimeFailed` record, and the live monitor reports it as terminated with error.
+  `SimulationAbort` records now carry `mpi_process`.
 
 ## Features
 
+- `logparser.end_state` reads from an OGS log how the run ended: `EndState.COMPLETED`, `FAILED` (in the time loop), `ERROR`, `ABORTED` (by a signal) or `NO_END`.
 - variable aggregations over a meshseries can now be plotted directly e.g.:
   `fig = ot.plot.contourf(meshseries, ot.variables.temperature.max)`
 - output names of variables aggregations have changed:

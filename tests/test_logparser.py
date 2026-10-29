@@ -301,8 +301,8 @@ class TestLogparser_Version2:
         assert ver == 2, f"Expected version 2, but got {ver}"
         l_regexes = len(select_regex(ver))
         assert (
-            l_regexes == 23
-        ), f"Expected regexes version {ver},this is of length 22 but got {l_regexes}."
+            l_regexes == 26
+        ), f"Expected regexes version {ver},this is of length 26 but got {l_regexes}."
 
     # parameterized
     def test_parse_version(self):
@@ -311,8 +311,8 @@ class TestLogparser_Version2:
         l_records = list(p)
         print(l_records)
         assert (
-            len(l_records) == 48
-        ), f"Expected 48 records, but got {len(l_records)}"
+            len(l_records) == 49
+        ), f"Expected 49 records, but got {len(l_records)}"
 
     def test_parse_line(self):
         v2_regexes = normalize_regex(select_regex(2), False)
@@ -444,8 +444,8 @@ class TestLogparser_Version2:
         assert lp.log_parser.read_mpi_processes(debug_parallel_3) == 3
 
         assert (
-            len(records) == 508
-        ), f"The expected number of records is 508. Got: {len(records)}."
+            len(records) == 511
+        ), f"The expected number of records is 511. Got: {len(records)}."
 
         df_records = pd.DataFrame(records)
         df_ts = lp.analysis_time_step(df_records)
@@ -497,3 +497,98 @@ class TestLogparser_Version2:
         pd.testing.assert_frame_equal(df_log_copy, df_log)
         assert len(fig.axes) == 6  # 3 original axes + 3 axes for the colorbars
         return fig
+
+
+_T = "2026-10-13 10:01:00+0200"
+
+
+@pytest.mark.parametrize(
+    ("last_lines", "expected"),
+    [
+        (
+            [
+                "info: [time] Simulation completed. It took 1.5 s.",
+                f"info: OGS completed on {_T}.",
+            ],
+            lp.EndState.COMPLETED,
+        ),
+        (
+            [
+                "info: [time] Simulation failed. It took 1.5 s.",
+                f"error: OGS terminated with error on {_T}.",
+            ],
+            lp.EndState.FAILED,
+        ),
+        (
+            ["error: some error", f"error: OGS terminated with error on {_T}."],
+            lp.EndState.ERROR,
+        ),
+        (
+            [
+                "info: [time] Simulation completed. It took 1.5 s.",
+                f"error: OGS terminated on {_T}. One of the tests failed.",
+            ],
+            lp.EndState.ERROR,
+        ),
+        (
+            [f"error: Simulation aborted on {_T}. Received signal: 15."],
+            lp.EndState.ABORTED,
+        ),
+        ([], lp.EndState.NO_END),
+    ],
+)
+def test_end_state(tmp_path, last_lines, expected):
+    """Each way an OGS run can end gives its own end state.
+
+    scope: component (end_state) | oracle: correctness, OGS end messages
+    """
+    log = tmp_path / "ogs.log"
+    first_lines = [
+        "info: This is OpenGeoSys-6 version 6.5.7. Log version: 2, Log level: info.",
+        "info: OGS started on 2026-10-13 10:00:00+0200.",
+    ]
+    log.write_text("\n".join(first_lines + last_lines) + "\n")
+    assert lp.end_state(log) == expected
+
+
+@pytest.mark.parametrize("log", [serial_v2_coupled_ht, debug_parallel_3])
+def test_end_state_of_example_logs(log):
+    """Logs of successful serial and parallel runs end as completed.
+
+    scope: component (end_state) | oracle: reproducibility, example logs
+    """
+    assert lp.end_state(log) == lp.EndState.COMPLETED
+
+
+def test_end_state_parallel_abort(tmp_path):
+    """A signal received by one rank of a parallel run ends it as aborted.
+
+    scope: component (end_state) | oracle: correctness, OGS end messages
+    """
+    log = tmp_path / "ogs.log"
+    log.write_text(
+        "[0] info: OGS started on 2026-10-13 10:00:00+0200 with MPI. MPI processes: 2.\n"
+        "[0] info: This is OpenGeoSys-6 version 6.5.7. Log version: 2, Log level: info.\n"
+        f"[1] error: Simulation aborted on {_T}. Received signal: 15.\n"
+    )
+    assert lp.end_state(log) == lp.EndState.ABORTED
+
+
+def test_context_update_failed_simulation():
+    """A failed simulation sets the live status to terminated with error.
+
+    scope: component (Context.update) | oracle: correctness
+    """
+    from ogstools.logparser.regexes import (
+        Context,
+        SimulationExecutionTimeFailed,
+        StepStatus,
+    )
+
+    context = Context()
+    context.update(
+        SimulationExecutionTimeFailed(
+            type="Info", line=1, mpi_process=0, execution_time=1.5
+        )
+    )
+    assert context.simulation_status == StepStatus.TERMINATED_WITH_ERROR
