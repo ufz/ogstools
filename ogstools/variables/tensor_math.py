@@ -117,25 +117,34 @@ def row(values: ValType, index: int) -> ValType:
     return _to_quantity(np.moveaxis(mat_vals, -1, -2)[..., index], unit)
 
 
+def _eigh(mat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    "Like LA.eigh, but NaN for non-finite (e.g. masked) tensors."
+    eigvals = np.full(mat.shape[:-1], np.nan)
+    eigvecs = np.full(mat.shape, np.nan)
+    finite = np.all(np.isfinite(mat), axis=(-2, -1))
+    eigvals[finite], eigvecs[finite] = LA.eigh(mat[finite])
+    return eigvals, eigvecs
+
+
 def eigenvalues(values: ValType) -> ValType:
     "Return the eigenvalues."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals: np.ndarray = LA.eigvalsh(mat_vals)
+    eigvals = _eigh(mat_vals)[0]
     eigvals.sort(axis=-1)
-    assert np.all(eigvals[..., 0] <= eigvals[..., 1])
-    assert np.all(eigvals[..., 1] <= eigvals[..., 2])
+    assert not np.any(eigvals[..., 0] > eigvals[..., 1])
+    assert not np.any(eigvals[..., 1] > eigvals[..., 2])
     return _to_quantity(eigvals, unit)
 
 
 def eigenvectors(values: ValType) -> ValType:
     "Return the eigenvectors."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals, eigvecs = LA.eigh(mat_vals)
+    eigvals, eigvecs = _eigh(mat_vals)
     ids = eigvals.argsort(axis=-1)
     eigvals = np.take_along_axis(eigvals, ids, axis=-1)
     eigvecs = np.take_along_axis(eigvecs, ids[:, np.newaxis], axis=-1)
-    assert np.all(eigvals[..., 0] <= eigvals[..., 1])
-    assert np.all(eigvals[..., 1] <= eigvals[..., 2])
+    assert not np.any(eigvals[..., 0] > eigvals[..., 1])
+    assert not np.any(eigvals[..., 1] > eigvals[..., 2])
     return _to_quantity(eigvecs, unit)
 
 

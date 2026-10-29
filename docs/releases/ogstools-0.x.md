@@ -19,6 +19,7 @@
 - `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - Masking a variable no longer writes NaN into the mesh data.
+- Eigenvalues and eigenvectors of masked tensors are NaN instead of raising an error or giving wrong values.
 
 ## Features
 
