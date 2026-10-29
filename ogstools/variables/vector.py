@@ -18,7 +18,7 @@ T = TypeVar("T")
 
 
 def vector_norm(values: ValType) -> ValType:
-    ":returns: The norm of the vector."
+    "Return the norm of the vector."
     vals, unit = _split_quantity(values)
     result = np.linalg.norm(vals, axis=-1)
     return _to_quantity(result, unit)
@@ -161,7 +161,7 @@ class VectorList(Variable):
     """Represent a list of vector variables."""
 
     def __getitem__(self, index: int) -> Vector:
-        ":returns: A vector variable as a component of the vectorlist variable."
+        "Return a vector Variable as a component of the vectorlist Variable."
         return Vector.from_variable(
             self,
             func=lambda x: np.take(x, index, axis=-1),

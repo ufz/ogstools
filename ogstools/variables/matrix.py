@@ -31,7 +31,7 @@ class Matrix(Variable):
             | Literal["rr", "tt", "pp", "rt", "tp", "rp"]
         ),
     ) -> Scalar:
-        """A scalar variable as a matrix component.
+        """Return a scalar variable as a matrix component.
 
         The following index values correspond to a polar coordinate system:
 
@@ -60,7 +60,7 @@ class Matrix(Variable):
         )
 
     def col(self, index: int) -> Vector:
-        """A vector variable as the matrix column at index.
+        """Return a vector variable as the matrix column at index.
 
         :param index: The index of the column.
         :returns: The column as a `Vector`.
@@ -73,7 +73,7 @@ class Matrix(Variable):
         )
 
     def row(self, index: int) -> Vector:
-        """A vector variable as the matrix row at index.
+        """Return a vector variable as the matrix row at index.
 
         :param index: The index of the row.
         :returns: The row as a `Vector`.

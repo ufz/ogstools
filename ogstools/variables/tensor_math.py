@@ -48,11 +48,6 @@ def _to_quantity(
     return values if unit is None else u_reg.Quantity(values, unit)
 
 
-def identity(vals: T) -> T:
-    ":returns: The input values."
-    return vals
-
-
 def sym_tensor_to_mat(values: ValType) -> ValType:
     "Convert a symmetric tensor to a 3x3 matrix."
     vals, unit = _split_quantity(values)
@@ -118,7 +113,7 @@ def row(values: ValType, index: int) -> ValType:
 
 
 def _eigh(mat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    "Wraps LA.eigh with NaN for non-finite (e.g. masked) tensors."
+    "Wrap LA.eigh with NaN for non-finite (e.g. masked) tensors."
     eigvals = np.full(mat.shape[:-1], np.nan)
     eigvecs = np.full(mat.shape, np.nan)
     finite = np.all(np.isfinite(mat), axis=(-2, -1))
@@ -314,7 +309,7 @@ def add_pore_pressure(
     biot: float = 1.0,
     sign: Literal[1, -1] = 1,
 ) -> np.ndarray | PlainQuantity:
-    """Adds or subtracts biot * chi * p to the stress' diagonal.
+    """Add or subtract biot * chi * p to the stress' diagonal.
 
     The pressure is expected to be in the same unit as the stress data.
 
