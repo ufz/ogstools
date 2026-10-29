@@ -571,7 +571,7 @@ flake8-import-conventions.extend-aliases = { "ogstools" = "ot" }
 "ogstools/studies/convergence/convergence.py" = ["D103", "D401", "TID251"]
 "ogstools/studies/templates/convergence_study.py" = ["ERA001"]
 "ogstools/variables/func.py" = ["D101"]
-"ogstools/variables/integrity.py" = ["D401"]
+"ogstools/variables/integrity.py" = []
 "ogstools/variables/matrix.py" = ["D401"]
 "ogstools/variables/tensor_math.py" = ["D401"]
 "ogstools/variables/variable.py" = ["A002", "D102", "D103", "D401"]

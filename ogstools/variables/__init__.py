@@ -23,6 +23,7 @@ __all__ = ["Matrix", "Scalar", "Variable", "Vector", "u_reg"]
 T_MASK = "temperature_active"
 H_MASK = "pressure_active"
 M_MASK = "displacement_active"
+INTEGRITY_MASK = "host_rock"
 
 # Default colors to be used in plotting functions
 COLOR_THERMAL = "tab:red"
@@ -127,23 +128,17 @@ dilatancy_critescu = Scalar(
     symbol=r"F_\mathrm{dil}",
     func=Function(
         integrity.dilatancy_critescu,
-        [pressure],
+        [],
         {"a": -0.01697, "b": 0.8996, "sigma_0": u_reg.Quantity(1e6, "Pa")},
     ),
-    mask=M_MASK,
+    mask=INTEGRITY_MASK,
     color=COLOR_MECH,
     cmap=integrity_cmap,
     bilinear_cmap=True,
     process_with_units=True,
 )
-dilatancy_critescu_eff = dilatancy_critescu.replace(
-    output_name="effective_dilatancy_criterion",
-    func=Function(
-        integrity.dilatancy_critescu,
-        [],
-        {"a": -0.01697, "b": 0.8996, "sigma_0": u_reg.Quantity(1e6, "Pa")},
-    ),
-)
+# TODO(ogs-version): 0.9.0
+dilatancy_critescu_eff = dilatancy_critescu
 
 dilatancy_alkan = Scalar(
     data_name="sigma",
@@ -153,22 +148,6 @@ dilatancy_alkan = Scalar(
     symbol=r"F_\mathrm{dil}",
     func=Function(
         integrity.dilatancy_alkan,
-        [pressure],
-        {
-            "b": 0.04,
-            "tau_max": u_reg.Quantity(33e6, "Pa"),
-            "sigma_0": u_reg.Quantity(1e6, "Pa"),
-        },
-    ),
-    mask=M_MASK,
-    color=COLOR_MECH,
-    cmap=integrity_cmap,
-    bilinear_cmap=True,
-)
-dilatancy_alkan_eff = dilatancy_alkan.replace(
-    output_name="effective_dilatancy_criterion",
-    func=Function(
-        integrity.dilatancy_alkan,
         [],
         {
             "b": 0.04,
@@ -176,22 +155,30 @@ dilatancy_alkan_eff = dilatancy_alkan.replace(
             "sigma_0": u_reg.Quantity(1e6, "Pa"),
         },
     ),
-)
-
-fluid_pressure_criterion = Scalar(
-    data_name="sigma",
-    data_unit="Pa",
-    output_unit="MPa",
-    output_name="fluid_pressure_criterion",
-    symbol=r"\sigma_{III}'",
-    func=Function(
-        integrity.fluid_pressure_criterion, [pressure], {"biot": 1.0}
-    ),
-    mask=M_MASK,
+    mask=INTEGRITY_MASK,
     color=COLOR_MECH,
     cmap=integrity_cmap,
     bilinear_cmap=True,
 )
+# TODO(ogs-version): 0.9.0
+dilatancy_alkan_eff = dilatancy_alkan
+
+fluid_pressure_criterion_clay = stress.eigenvalues[2].replace(
+    output_name="fluid_pressure_criterion",
+    symbol=r"F_\mathrm{p}",
+    mask=INTEGRITY_MASK,
+    color=COLOR_MECH,
+    cmap=integrity_cmap,
+    bilinear_cmap=True,
+)
+fluid_pressure_criterion_salt = fluid_pressure_criterion_clay.convert_stress(
+    to="effective", pressure="water_pressure"
+)
+
+# TODO(ogs-version): 0.9.0
+fluid_pressure_criterion = fluid_pressure_criterion_clay
+
+
 nodal_forces = Vector(data_name="NodalForces", mask=M_MASK)
 
 # ====== other ======

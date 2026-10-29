@@ -18,7 +18,6 @@ stress analysis:
 
 # sphinx_gallery_end_ignore
 
-
 import ogstools as ot
 from ogstools import examples
 
@@ -102,33 +101,3 @@ for comp in ["rr", "tt", "pp"]:
     pl = ot.plot.contourf(mesh_3D, polar_stress_3D[comp])
     pl.view_xz()
     pl.show()
-
-# %% [markdown]
-# Integrity criteria
-# ==================
-# Evaluating models regarding their integrity is often dependent on the fluid
-# pressure. If not already present, we have to calculate it manually, e.g. as a
-# hypothetical water column proportional to the depth.
-# note: The large violation of the criterion in this example is due to the
-# large diameter of the tunnel.
-
-# %%
-mesh["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
-fig = ot.plot.contourf(mesh, ot.variables.pressure)
-
-# %% [markdown]
-# Dilantancy criterion
-# --------------------
-# see: :func:`ogstools.variables.integrity.dilatancy_critescu`
-
-# %%
-fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu)
-fig = ot.plot.contourf(mesh, ot.variables.dilatancy_critescu_eff)
-
-# %% [markdown]
-# Fluid pressure criterion
-# ------------------------
-# see: :func:`ogstools.variables.integrity.fluid_pressure_criterion`
-
-# %%
-fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_criterion)

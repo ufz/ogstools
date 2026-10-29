@@ -22,7 +22,7 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
-from typing import TypeAlias, TypeVar
+from typing import Literal, TypeAlias, TypeVar
 
 import numpy as np
 from numpy import linalg as LA
@@ -118,7 +118,7 @@ def row(values: ValType, index: int) -> ValType:
 
 
 def _eigh(mat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    "Like LA.eigh, but NaN for non-finite (e.g. masked) tensors."
+    "Wraps LA.eigh with NaN for non-finite (e.g. masked) tensors."
     eigvals = np.full(mat.shape[:-1], np.nan)
     eigvecs = np.full(mat.shape, np.nan)
     finite = np.all(np.isfinite(mat), axis=(-2, -1))
@@ -305,3 +305,33 @@ def to_polar(
     vals, unit = _split_quantity(values)
     result = np.moveaxis(rot_mat, -1, -2) @ sym_tensor_to_mat(vals) @ rot_mat
     return _to_quantity(mat_to_sym_tensor(result), unit)
+
+
+def add_pore_pressure(
+    sigma: ValType,
+    p: ValType,
+    bishop: float | np.ndarray = 1.0,
+    biot: float = 1.0,
+    sign: Literal[1, -1] = 1,
+) -> np.ndarray | PlainQuantity:
+    """Adds or subtracts biot * chi * p to the stress' diagonal.
+
+    The pressure is expected to be in the same unit as the stress data.
+
+    :param sigma:   Stress values
+    :param p:       Pore pressure values
+    :param bishop:  Bishop's coefficient
+    :param biot:    Biot's coefficient
+    :param sign:    1: adds the term, -1: subtracts the term
+    """
+    unit = None
+    stress, unit = _split_quantity(sigma)
+    if stress.shape[-1] not in [4, 6]:
+        msg = (
+            "Expected a symmetric tensor in Kelvin notation (4 or 6 "
+            f"components) as input data, but got shape {stress.shape}."
+        )
+        raise ValueError(msg)
+    result = np.array(sigma, dtype=float, copy=True)
+    result[..., :3] += np.asarray(sign * biot * bishop * p)[..., np.newaxis]
+    return _to_quantity(result, unit)

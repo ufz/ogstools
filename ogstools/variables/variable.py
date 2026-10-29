@@ -10,6 +10,7 @@ via pint.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
@@ -22,6 +23,7 @@ from pint.facets.plain import PlainQuantity
 
 from .custom_colormaps import mask_cmap
 from .func import Function
+from .tensor_math import add_pore_pressure
 from .unit_registry import u_reg
 
 if TYPE_CHECKING:
@@ -305,19 +307,36 @@ class Variable:
             return component(Vector(variable), suffix)
         return component(Matrix(variable), suffix)
 
-    def _get_input_values(
-        self, data: Data, input: Callable | str | Variable
-    ) -> np.ndarray | PlainQuantity:
-
-        if isinstance(input, str):
-            is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
-            if isinstance(data, pv.DataSet) or is_ms:
-                return data[input]  # type: ignore[reportReturnType, call-overload, index]
+    def _input_values_from_dataset(self, data: Data, input: str) -> np.ndarray:
+        is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
+        if not (isinstance(data, pv.DataSet) or is_ms):
             msg = (
                 f"{self.output_name} requires input {input}, thus it can only "
                 "be applied on a mesh or a meshseries."
             )
             raise TypeError(msg)
+        meshes = cast(Sequence[pv.DataSet], data if is_ms else [data])
+        if (
+            input in meshes[0].cell_data
+            and input not in meshes[0].point_data
+            and self.data_name in meshes[0].point_data
+        ):  # e.g. material property, interpolated to points for compatibility
+            msg = (
+                f"{input} lives on cell data, while {self.data_name} lives "
+                f"on point data. {input} will be interpolated to the points."
+            )
+            warnings.warn(msg, category=UserWarning, stacklevel=2)
+            vals = [
+                m.ctp(pass_cell_data=False).point_data[input] for m in meshes
+            ]
+            return np.asarray(vals if is_ms else vals[0])
+        return data[input]  # type: ignore[reportReturnType, call-overload, index]
+
+    def _get_input_values(
+        self, data: Data, input: Callable | str | Variable
+    ) -> np.ndarray | PlainQuantity:
+        if isinstance(input, str):
+            return self._input_values_from_dataset(data, input)
         if isinstance(input, Variable):
             pwu = self.process_with_units
             unit = input.output_unit if pwu else input.data_unit
@@ -709,6 +728,38 @@ class Variable:
     @property
     def magnitude(self) -> Variable:
         return self
+
+    def convert_stress(
+        self,
+        to: Literal["effective", "total"],
+        biot: float = 1.0,
+        bishop: float | str = 1.0,
+        pressure: str = "pressure",
+    ) -> Self:
+        """A deep copy, converted from effective to total stress or vice versa.
+
+        The conversion is applied before any other stored function. Tension is
+        positive, the pore pressure is positive in compression:
+
+        .. math::
+
+            \\sigma' = \\sigma_\\mathrm{total} \\pm \\alpha_B \\chi p \\mathbf{I}
+
+        :param biot:        Biot coefficient :math:`\\alpha_B`.
+        :param bishop:      Bishop's coefficient :math:`\\chi`, either a
+                            constant or the name of a data field (e.g. a
+                            precomputed :math:`\\chi(S_L)`) in the mesh.
+        :param pressure:    Name of the pore pressure data field in the mesh.
+        """
+        new_var = self.copy()
+        args: list[str | Variable | Callable] = [pressure]
+        params = {"biot": biot, "sign": 1 if to == "effective" else -1}
+        if isinstance(bishop, str):
+            args.append(bishop)
+        else:
+            params["bishop"] = bishop
+        new_var.functions.insert(0, Function(add_pore_pressure, args, params))
+        return new_var
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
         "Check whether the mesh contains the mask of this variable."
