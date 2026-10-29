@@ -756,6 +756,8 @@ class Variable:
 
             mask0 = mask_vals(mesh0)
             if not isinstance(dataset, Sequence):
+                # copy, to not write the mask into the mesh data
+                values = np.array(values, copy=True)
                 values[mask0] = np.nan
                 return values
 

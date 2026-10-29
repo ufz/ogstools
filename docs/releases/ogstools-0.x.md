@@ -18,6 +18,7 @@
 - `plot.contourf` failed to plot a variable on celldata with a mask, but is now able to.
 - `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
+- Masking a variable no longer writes NaN into the mesh data.
 
 ## Features
 
