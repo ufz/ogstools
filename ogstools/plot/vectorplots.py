@@ -48,9 +48,12 @@ def _vectorfield(
     i_grid, j_grid = np.meshgrid(i_pts, j_pts, indexing="ij")
     grid_input = [i_grid, j_grid]
     grid_input.insert(projection, i_grid * 0)
+    # vtk>=9.7 accepts points just outside the mesh with its default tolerance
+    rel_tol = 1e-8
     grid = pv.StructuredGrid(*grid_input).sample(
         _mesh,
         pass_cell_data=True,  # to pass the potentially existing mask
+        tolerance=rel_tol * mesh.length,
     )
     values = variable.transform(grid)
 
