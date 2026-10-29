@@ -43,6 +43,7 @@ from ogstools.logparser.log_file_handler import (
 )
 from ogstools.logparser.regexes import (
     Context,
+    SimulationExecutionTimeFailed,
     StepStatus,
     Termination,
     TimeStepEnd,
@@ -579,12 +580,6 @@ def test_context_update_failed_simulation():
 
     scope: component (Context.update) | oracle: correctness
     """
-    from ogstools.logparser.regexes import (
-        Context,
-        SimulationExecutionTimeFailed,
-        StepStatus,
-    )
-
     context = Context()
     context.update(
         SimulationExecutionTimeFailed(
