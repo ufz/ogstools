@@ -972,11 +972,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             >>> temp_at_id=ms.probe_values(id, "temperature")
             >>> plt.plot(ms.timevalues, temp_at_id)
         """
-        if (
-            isinstance(data_name, list)
-            and any(key in self.point_data for key in data_name)
-            and any(key in self.cell_data for key in data_name)
-        ):
+        keys = data_name if isinstance(data_name, list) else [data_name]
+        is_cell_data = any(key in self.cell_data for key in keys)
+        if is_cell_data and any(key in self.point_data for key in keys):
             msg = "Cannot probe point and cell data together."
             raise TypeError(msg)
         if len(points) > 0 and ids:
@@ -989,10 +987,6 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             raise TypeError(msg)
         if ids and self._data_type == ".xdmf":
             return self._data(data_name, ids)
-        is_cell_data = (
-            isinstance(data_name, list)
-            and any(key in self.cell_data for key in data_name)
-        ) or data_name in self.cell_data
         if ids:
             points = (
                 self[0].cell_centers().points[ids]
