@@ -270,6 +270,9 @@ prj_beier_sandbox_processed = _prj_dir / "beier_sandbox_processed.prj"
 prj_square_1e4_robin = _prj_dir / "square_1e4_robin.prj"
 prj_square_1e4_robin_ref = _prj_dir / "square_1e4_robin_ref.prj"
 pybc_nuclear_decay = _prj_dir / "decay_boundary_conditions.py"
+prj_two_anchors = (
+    _prj_dir / "HydroMechanics" / "AnchorSourceTerm" / "two_anchors.prj"
+)
 prj_th2m_phase_transition = (
     _prj_dir / "TH2M" / "TH2M_PT" / "th2m_phase_transition.prj"
 )

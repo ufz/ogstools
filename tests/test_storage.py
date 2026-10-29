@@ -597,11 +597,18 @@ class TestStorage:
     @pytest.fixture(
         params=[
             pytest.param(s, id=f"meshes_{s}")
-            for s in ["original", "copy", "saved"]
+            for s in ["original", "copy", "saved", "from_files"]
         ]
     )
     def meshes_link(self, request, tmp_path):
         meshes = ot.Meshes.from_gmsh(rect(n_edge_cells=12))
+        if request.param == "from_files":
+            folder = tmp_path / "meshes_files"
+            meshes.save(folder)
+            (folder / "unrelated.txt").write_text("not a mesh")
+            return ot.Meshes.from_files(
+                sorted(folder.glob("*.vtu")), domain_key=meshes.domain_name
+            )
         if request.param == "copy":
             return meshes.copy()
         if request.param == "saved":
@@ -619,9 +626,10 @@ class TestStorage:
     @pytest.mark.parametrize(
         "model_save", [0, 1, 2], ids=["save_only", "run_only", "save_then_run"]
     )
-    def test_links_model(self, tmp_path, model_link, model_save):
+    def test_links_model(self, request, tmp_path, model_link, model_save):
         model = model_link
-        meshes_was_saved = model.meshes.is_saved
+        # Only meshes saved as a folder are linked, not meshes read from files
+        meshes_linked = request.node.callspec.params["meshes_link"] == "saved"
         project_was_saved = model.project.is_saved
         if model_save == 0:
             model.save(tmp_path / "model")
@@ -636,7 +644,8 @@ class TestStorage:
         assert (model.active_target / "project").exists()
         assert (model.active_target / "execution.yaml").exists()
 
-        assert (model.active_target / "meshes").is_symlink() == meshes_was_saved
+        assert (model.active_target / "meshes").is_symlink() == meshes_linked
+        assert not (model.active_target / "meshes" / "unrelated.txt").exists()
 
         assert (
             model.active_target / "project"

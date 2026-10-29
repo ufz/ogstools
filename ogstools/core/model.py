@@ -418,12 +418,11 @@ class Model(StorageBase):
             meshes_path = meshes_path / "partition" / str(exe.mpi_ranks)
         return f"{exe.cmd} -m {meshes_path} {self.project.prjfile}"
 
-    def plot_constraints(self, **kwargs: typing.Any) -> plt.Figure:
-        """Plot the meshes with annotated boundary conditions and source terms.
+    def _constraint_meshes(self) -> Meshes:
+        """Return a copy of the meshes with the subdomains that have constraints.
 
-        keyword arguments: see :func:`~ogstools.plot.contourf`
+        Subdomains from the geometry of the project are added first.
         """
-
         meshes = self.meshes.copy()
         tmp_path = temp_dir("plot_constraints")
         if (
@@ -436,7 +435,7 @@ class Model(StorageBase):
                 meshes.save()
 
             meshes.add_gml_subdomains(
-                self.project.meshpaths(self.meshes.active_target)[0],
+                self.project.meshpaths(meshes.active_target)[0],
                 gml_file,
                 tmp_path,
             )
@@ -445,6 +444,15 @@ class Model(StorageBase):
         unused = set(meshes.subdomains.keys()) - set(constraints.keys())
         for subdomain in unused:
             meshes.pop(subdomain)
+        return meshes
+
+    def plot_constraints(self, **kwargs: typing.Any) -> plt.Figure:
+        """Plot the meshes with annotated boundary conditions and source terms.
+
+        keyword arguments: see :func:`~ogstools.plot.contourf`
+        """
+        meshes = self._constraint_meshes()
+        constraints = self.project.constraints_labels()
 
         from ogstools.plot import setup
 
