@@ -294,14 +294,25 @@ class TestPlotting:
         ("slice_func"),
         [
             lambda mesh: np.reshape(mesh.slice_along_axis(4, "x"), (2, 2)),
-            lambda mesh: mesh.slice((1, 1, 0)),
+            pytest.param(
+                lambda mesh: mesh.slice((1, 1, 0)),
+                marks=pytest.mark.xfail(
+                    sys.platform == "darwin", reason=MAC_RENDERING
+                ),
+            ),
             lambda mesh: mesh.slice([1, -2, 0]),
         ],
     )
     def test_contourf_arbitrary_orientation(self, slice_func):
         "Test with arbitrary orientated 2D mesh via image comparison."
-        mesh = pv_examples.load_uniform()
-        return contourf(slice_func(mesh), "Spatial Point Data")
+        mesh = slice_func(pv_examples.load_uniform())
+        # Each polygon starts at its lowest point id, as vtk>=9.7 and 9.6
+        # start them differently, which changes the triangulation.
+        for block in mesh.ravel() if isinstance(mesh, np.ndarray) else [mesh]:
+            block.regular_faces = [
+                np.roll(f, -np.argmin(f)) for f in block.regular_faces
+            ]
+        return contourf(mesh, "Spatial Point Data")
 
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     @pytest.mark.parametrize(
