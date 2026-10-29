@@ -18,6 +18,7 @@
 - `plot.contourf` failed to plot a variable on celldata with a mask, but is now able to.
 - `Material.get_property` warns only once that it is deprecated ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - `Model.save` writes only the meshes that the model uses. Before, it linked the whole folder of the meshes, also with unrelated files ([!518](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/518)).
+- `Result.save` with `overwrite=True` replaces an existing link instead of raising `FileExistsError` ([!518](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/518)).
 - `ogsmonitor` logs `LogFileHandler` messages through the `ogstools.logparser` logger instead of printing them ([!510](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/510)).
 - Masking a variable no longer writes NaN into the mesh data.
 - Eigenvalues and eigenvectors of masked tensors are NaN instead of raising an error or giving wrong values.
