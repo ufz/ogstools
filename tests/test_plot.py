@@ -222,7 +222,7 @@ class TestPlotting:
     def test_contourf_dilatancy_aggregate(self, agg: str) -> plt.Figure:
         """Temporal aggregation of dilatancy criterion."""
         ms = examples.load_meshseries_THM_2D_PVD()
-        variable = getattr(ot.variables.dilatancy_alkan_eff, agg)
+        variable = getattr(ot.variables.dilatancy_alkan, agg)
         return contourf(ms, variable)
 
     @pytest.mark.parametrize("agg", ["max", "var"])

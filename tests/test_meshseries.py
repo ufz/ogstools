@@ -345,7 +345,7 @@ def test_aggregate_time_of_limit():
 def test_temporal_aggregate_integrity():
     "Test aggregation of integrity variables on meshseries."
     mesh_series = examples.load_meshseries_THM_2D_PVD()
-    prop = ot.variables.dilatancy_alkan_eff
+    prop = ot.variables.dilatancy_alkan
     agg_mesh = mesh_series.aggregate_temporal(prop, np.max)
     assert not np.any(np.isnan(agg_mesh[prop.max.output_name]))
     agg_mesh = mesh_series.time_of_max(prop)

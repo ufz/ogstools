@@ -10,6 +10,7 @@ via pint.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import InitVar, dataclass, field, replace
@@ -22,6 +23,7 @@ from pint.facets.plain import PlainQuantity
 
 from .custom_colormaps import mask_cmap
 from .func import Function
+from .tensor_math import add_pore_pressure
 from .unit_registry import u_reg
 
 if TYPE_CHECKING:
@@ -85,6 +87,7 @@ class Variable:
 
     @property
     def parent(self) -> Variable:
+        "Return the Variable from which self is derived - if None return self."
         return self._parent or self
 
     @property
@@ -94,7 +97,7 @@ class Variable:
 
     @function.setter
     def function(self, func: Callable | Function | list[Function]) -> None:
-        """Set's this Variable's function.
+        """Set this Variable's function.
 
         If given a list of functions, all stored functions are overwritten."""
         if isinstance(func, list):
@@ -108,6 +111,7 @@ class Variable:
 
     @property
     def type_name(self) -> str:
+        "Return the type of this Variable."
         return type(self).__name__
 
     def replace(self, **changes: Any) -> Self:
@@ -131,6 +135,7 @@ class Variable:
         return replace(self.copy(), **changes)
 
     def copy(self, deep: bool = True) -> Self:
+        "Return a copy of this Variable (by default a deep copy)."
         if deep:
             return deepcopy(self)
         return copy(self)
@@ -222,7 +227,10 @@ class Variable:
             set().union(mesh.point_data, mesh.cell_data, mesh.field_data)
         )
         all_keys = data_keys + dir(data)
-        error_msg = f"'{variable}' not found in dataset. Available data names are {data_keys}. "
+        error_msg = (
+            f"'{variable}' not found in dataset. "
+            f"Available data names are {data_keys}. "
+        )
         var_name = variable if isinstance(variable, str) else variable.data_name
 
         if var_name in ["x", "y", "z"] or var_name.startswith("points"):
@@ -305,30 +313,45 @@ class Variable:
             return component(Vector(variable), suffix)
         return component(Matrix(variable), suffix)
 
-    def _get_input_values(
-        self, data: Data, input: Callable | str | Variable
-    ) -> np.ndarray | PlainQuantity:
-
-        if isinstance(input, str):
-            is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
-            if isinstance(data, pv.DataSet) or is_ms:
-                return data[input]  # type: ignore[reportReturnType, call-overload, index]
+    def _input_values_from_dataset(self, data: Data, inp: str) -> np.ndarray:
+        is_ms = isinstance(data, Sequence) and isinstance(data[0], Mesh)
+        if not (isinstance(data, pv.DataSet) or is_ms):
             msg = (
-                f"{self.output_name} requires input {input}, thus it can only "
+                f"{self.output_name} requires input {inp}, thus it can only "
                 "be applied on a mesh or a meshseries."
             )
             raise TypeError(msg)
-        if isinstance(input, Variable):
+        meshes = cast(Sequence[pv.DataSet], data if is_ms else [data])
+        if (
+            inp in meshes[0].cell_data
+            and inp not in meshes[0].point_data
+            and self.data_name in meshes[0].point_data
+        ):  # e.g. material property, interpolated to points for compatibility
+            msg = (
+                f"{inp} lives on cell data, while {self.data_name} lives "
+                f"on point data. {inp} will be interpolated to the points."
+            )
+            warnings.warn(msg, category=UserWarning, stacklevel=2)
+            vals = [m.ctp(pass_cell_data=False).point_data[inp] for m in meshes]
+            return np.asarray(vals if is_ms else vals[0])
+        return data[inp]  # type: ignore[reportReturnType, call-overload, index]
+
+    def _get_input_values(
+        self, data: Data, inp: Callable | str | Variable
+    ) -> np.ndarray | PlainQuantity:
+        if isinstance(inp, str):
+            return self._input_values_from_dataset(data, inp)
+        if isinstance(inp, Variable):
             pwu = self.process_with_units
-            unit = input.output_unit if pwu else input.data_unit
-            var = input.replace(output_unit=unit, process_with_units=pwu)
+            unit = inp.output_unit if pwu else inp.data_unit
+            var = inp.replace(output_unit=unit, process_with_units=pwu)
             # to ensure, that this is only used on datasets, we call
             # _get_input_values again otherwise the same data will be
             # interpreted as different variables
             return var.transform(
                 self._get_input_values(data, var.data_name), strip_unit=not pwu
             )
-        return input(data)
+        return inp(data)
 
     def _preprocess_params(self, params: dict) -> dict:
         return {
@@ -420,14 +443,14 @@ class Variable:
         return sum(f.aggregating for f in self.functions)
 
     def aggregation_variable(self, func: Callable) -> Self:
-        "Returns an aggregating Variable corresponding to the function."
+        "Return an aggregating Variable corresponding to the function."
         name = func.__name__
         return getattr(
             self, name, self.aggregate(func, symbol=self.symbol, prefix=name)
         )
 
     def aggregate(self, func: Callable, **kwargs: Any) -> Self:
-        """Creates a Variable aggregating the data with func."""
+        """Create a Variable aggregating the data with func."""
         subclasses = Variable.__subclasses__()
         vector = next(x for x in subclasses if x.__name__ == "Vector")
         matrix = next(x for x in subclasses if x.__name__ == "Matrix")
@@ -443,7 +466,7 @@ class Variable:
         return agg_var
 
     def normalize_aggregation(self, func: Callable | None = None) -> Self:
-        """Returns a variable with exactly one aggregation function.
+        """Return a variable with exactly one aggregation function.
 
         If all previous functions plus the optionally given one contain not
         exactly one aggregating function an Error is thrown.
@@ -633,7 +656,7 @@ class Variable:
         )
 
     def rate(self, time_unit: str = "s") -> Self:
-        "A variable relating to rate change of this quantity."
+        "return a variable relating to rate change of this quantity."
         diff_unit = self._diff_unit(self.output_unit)
         rate_unit = f"{diff_unit or 1}/{time_unit}"
 
@@ -701,14 +724,47 @@ class Variable:
         return self.data_name == self.mask
 
     def get_mask(self) -> Variable:
-        "A variable representing this variables mask."
+        "Return a variable representing this variables mask."
         return Variable(
             data_name=self.mask, mask=self.mask, categoric=True, cmap=mask_cmap
         )
 
     @property
     def magnitude(self) -> Variable:
+        "Return a variable representing this variables magnitude."
         return self
+
+    def convert_stress(
+        self,
+        to: Literal["effective", "total"],
+        biot: float = 1.0,
+        bishop: float | str = 1.0,
+        pressure: str = "pressure",
+    ) -> Self:
+        """Convert from effective to total stress or vice versa on a deep copy.
+
+        The conversion is applied before any other stored function. Tension is
+        positive, the pore pressure is positive in compression:
+
+        .. math::
+
+            \\sigma' = \\sigma_\\mathrm{total} \\pm \\alpha_B \\chi p \\mathbf{I}
+
+        :param biot:        Biot coefficient :math:`\\alpha_B`.
+        :param bishop:      Bishop's coefficient :math:`\\chi`, either a
+                            constant or the name of a data field (e.g. a
+                            precomputed :math:`\\chi(S_L)`) in the mesh.
+        :param pressure:    Name of the pore pressure data field in the mesh.
+        """
+        new_var = self.copy()
+        args: list[str | Variable | Callable] = [pressure]
+        params = {"biot": biot, "sign": 1 if to == "effective" else -1}
+        if isinstance(bishop, str):
+            args.append(bishop)
+        else:
+            params["bishop"] = bishop
+        new_var.functions.insert(0, Function(add_pore_pressure, args, params))
+        return new_var
 
     def mask_used(self, mesh: pv.UnstructuredGrid) -> bool:
         "Check whether the mesh contains the mask of this variable."
@@ -756,6 +812,8 @@ class Variable:
 
             mask0 = mask_vals(mesh0)
             if not isinstance(dataset, Sequence):
+                # copy, to not write the mask into the mesh data
+                values = np.array(values, copy=True)
                 values[mask0] = np.nan
                 return values
 
@@ -770,7 +828,7 @@ class Variable:
         return values
 
     def get_label(self, split_at: int | None = None) -> str:
-        "Creates variable label in format 'variable_name / variable_unit'"
+        "Create a variable label in format 'variable_name / variable_unit'"
         unit_str = f" / {self.get_output_unit}" if self.get_output_unit else ""
         symbol_str = " " + f"${self.symbol}$" if self.symbol != "" else ""
         name = self.output_name
@@ -862,18 +920,22 @@ class Variable:
 
     @property
     def gradient(self) -> Vector | Matrix:
+        "Return a variable representing this variables gradient."
         return self._get_derivative("gradient")  # type: ignore[return-value]
 
     @property
     def divergence(self) -> Vector | Scalar:
+        "Return a variable representing this variables divergence."
         return self._get_derivative("divergence")  # type: ignore[return-value]
 
     @property
     def vorticity(self) -> Vector:
+        "Return a variable representing this variables vorticity."
         return self._get_derivative("vorticity")  # type: ignore[return-value]
 
     @property
     def qcriterion(self) -> Vector | Scalar:
+        "Return a variable representing this variables qcriterion."
         return self._get_derivative("qcriterion")  # type: ignore[return-value]
 
     def _split_long_label(self, split_at: int, name: str, label: str) -> str:
@@ -910,6 +972,7 @@ def _spatial_unit(data: Data) -> str:
 
 
 def spatial_var(var_name: str, data: Data) -> Scalar | Vector:
+    "Return a variable representing the point coordinates of a mesh."
 
     unit = _spatial_unit(data)
 
@@ -928,6 +991,7 @@ def _time_unit(data: Data) -> str:
 
 
 def time_var(var_name: str, data: Data) -> Scalar:
+    "Return a variable representing the timevalues of a MeshSeries."
     unit = _time_unit(data)
     from .scalar import Scalar
 

@@ -22,7 +22,7 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
-from typing import TypeAlias, TypeVar
+from typing import Literal, TypeAlias, TypeVar
 
 import numpy as np
 from numpy import linalg as LA
@@ -46,11 +46,6 @@ def _to_quantity(
     values: np.ndarray, unit: PlainUnit | None
 ) -> np.ndarray | PlainQuantity:
     return values if unit is None else u_reg.Quantity(values, unit)
-
-
-def identity(vals: T) -> T:
-    ":returns: The input values."
-    return vals
 
 
 def sym_tensor_to_mat(values: ValType) -> ValType:
@@ -117,25 +112,34 @@ def row(values: ValType, index: int) -> ValType:
     return _to_quantity(np.moveaxis(mat_vals, -1, -2)[..., index], unit)
 
 
+def _eigh(mat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    "Wrap LA.eigh with NaN for non-finite (e.g. masked) tensors."
+    eigvals = np.full(mat.shape[:-1], np.nan)
+    eigvecs = np.full(mat.shape, np.nan)
+    finite = np.all(np.isfinite(mat), axis=(-2, -1))
+    eigvals[finite], eigvecs[finite] = LA.eigh(mat[finite])
+    return eigvals, eigvecs
+
+
 def eigenvalues(values: ValType) -> ValType:
     "Return the eigenvalues."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals: np.ndarray = LA.eigvalsh(mat_vals)
+    eigvals = _eigh(mat_vals)[0]
     eigvals.sort(axis=-1)
-    assert np.all(eigvals[..., 0] <= eigvals[..., 1])
-    assert np.all(eigvals[..., 1] <= eigvals[..., 2])
+    assert not np.any(eigvals[..., 0] > eigvals[..., 1])
+    assert not np.any(eigvals[..., 1] > eigvals[..., 2])
     return _to_quantity(eigvals, unit)
 
 
 def eigenvectors(values: ValType) -> ValType:
     "Return the eigenvectors."
     mat_vals, unit = _split_quantity(sym_tensor_to_mat(values))
-    eigvals, eigvecs = LA.eigh(mat_vals)
+    eigvals, eigvecs = _eigh(mat_vals)
     ids = eigvals.argsort(axis=-1)
     eigvals = np.take_along_axis(eigvals, ids, axis=-1)
     eigvecs = np.take_along_axis(eigvecs, ids[:, np.newaxis], axis=-1)
-    assert np.all(eigvals[..., 0] <= eigvals[..., 1])
-    assert np.all(eigvals[..., 1] <= eigvals[..., 2])
+    assert not np.any(eigvals[..., 0] > eigvals[..., 1])
+    assert not np.any(eigvals[..., 1] > eigvals[..., 2])
     return _to_quantity(eigvecs, unit)
 
 
@@ -296,3 +300,33 @@ def to_polar(
     vals, unit = _split_quantity(values)
     result = np.moveaxis(rot_mat, -1, -2) @ sym_tensor_to_mat(vals) @ rot_mat
     return _to_quantity(mat_to_sym_tensor(result), unit)
+
+
+def add_pore_pressure(
+    sigma: ValType,
+    p: ValType,
+    bishop: float | np.ndarray = 1.0,
+    biot: float = 1.0,
+    sign: Literal[1, -1] = 1,
+) -> np.ndarray | PlainQuantity:
+    """Add or subtract biot * chi * p to the stress' diagonal.
+
+    The pressure is expected to be in the same unit as the stress data.
+
+    :param sigma:   Stress values
+    :param p:       Pore pressure values
+    :param bishop:  Bishop's coefficient
+    :param biot:    Biot's coefficient
+    :param sign:    1: adds the term, -1: subtracts the term
+    """
+    unit = None
+    stress, unit = _split_quantity(sigma)
+    if stress.shape[-1] not in [4, 6]:
+        msg = (
+            "Expected a symmetric tensor in Kelvin notation (4 or 6 "
+            f"components) as input data, but got shape {stress.shape}."
+        )
+        raise ValueError(msg)
+    result = np.array(sigma, dtype=float, copy=True)
+    result[..., :3] += np.asarray(sign * biot * bishop * p)[..., np.newaxis]
+    return _to_quantity(result, unit)

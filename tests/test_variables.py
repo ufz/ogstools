@@ -109,21 +109,66 @@ class TestPhysicalVariable:
 
     def test_integrity_criteria(self):
         """Test integrity criteria."""
-        sig = np.array([4, 1, 2, 1, 1, 1]) * 1e6
-        with pytest.raises(TypeError, match=r"requires input pressure"):
-            ov.dilatancy_alkan.transform(sig)
+        mesh = examples.load_mesh_mechanics_2D()
+        assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
+        assert np.max(ov.dilatancy_critescu.transform(mesh)) > 0
+        sigma = mesh["sigma"]
+        fpc = ov.fluid_pressure_criterion_clay
+        fpc_vals = fpc.transform(mesh)
+        # repeated evaluation must neither change the result nor the mesh
+        np.testing.assert_array_equal(fpc_vals, fpc.transform(mesh))
+        np.testing.assert_array_equal(mesh["sigma"], sigma)
+
+        p = -1000 * 9.81 * mesh.points[:, 1]
+        mesh.point_data["water_pressure"] = p
+        fps = ov.fluid_pressure_criterion_salt
+        fps_vals = fps.transform(mesh)
+        assert np.max(fps_vals) > 0
+        p_MPa = ov.u_reg.convert(p, "Pa", "MPa")
+        np.testing.assert_allclose(fps_vals, fpc_vals + p_MPa, 1e-12)
+
+        # masked tensors give NaN instead of failing in the eigen solver
+        masked_mesh = mesh.copy()
+        masked_mesh["host_rock"] = (mesh["MaterialIDs"] == 1).astype(int)
+        fps_vals_masked = fps.transform(masked_mesh)
+        is_nan = np.isnan(fps_vals_masked)
+        assert 0 < np.count_nonzero(is_nan) < len(fps_vals_masked)
+        np.testing.assert_array_equal(
+            fps_vals_masked[~is_nan], fps_vals[~is_nan]
+        )
+        np.testing.assert_array_equal(masked_mesh["sigma"], sigma)
+
+    def test_stress_effective_total_roundtrip(self):
+        """Check, that conversion of effective / total stress is reversible."""
+        biot, chi = 0.6, 0.8
+        stress = ov.stress.convert_stress(
+            to="total", biot=biot, bishop=chi
+        ).convert_stress(to="effective", biot=biot, bishop=chi)
+        mesh = examples.load_meshseries_THM_2D_PVD()[-1]
+        np.testing.assert_allclose(
+            stress.transform(mesh), ov.stress.transform(mesh)
+        )
+
+    def test_stress_conversion_with_Bishops_field(self):
+        """Test stress conversion with Bishop's coefficient from data field."""
+        mesh = examples.load_mesh_mechanics_2D()
+        mesh["pressure"] = ov.u_reg.convert(np.ones(mesh.n_points), "MPa", "Pa")
+        ref = ov.stress.convert_stress(to="total").transform(mesh)
+        mesh["chi"] = np.ones(mesh.n_cells)
+        val = ov.stress.convert_stress(to="total", bishop="chi").transform(mesh)
+        np.testing.assert_array_equal(ref, val)
+
+    def test_stress_conversion_errors(self):
+        """Test input validation of the total/effective stress conversion."""
         mesh = examples.load_mesh_mechanics_2D()
         with pytest.raises(KeyError, match=r"not present"):  # pressure missing
-            ov.dilatancy_alkan.transform(mesh)
-        mesh.point_data["pressure"] = -1000 * 9.81 * mesh.points[:, 1]
-        assert np.max(ov.dilatancy_alkan.transform(mesh)) > 0
-        assert np.max(ov.dilatancy_alkan_eff.transform(mesh)) > 0
-        assert np.max(ov.dilatancy_critescu.transform(mesh)) > 0
-        assert np.max(ov.dilatancy_critescu_eff.transform(mesh)) > 0
-        assert np.max(ov.fluid_pressure_criterion.transform(mesh)) > 0
+            ov.dilatancy_alkan.convert_stress(to="total").transform(mesh)
+        mesh.point_data["pressure"] = np.ones(mesh.n_points)
+        with pytest.raises(ValueError, match="Kelvin notation"):
+            ov.displacement.convert_stress(to="total").transform(mesh)
 
     @pytest.mark.parametrize(
-        "var", [ov.dilatancy_alkan, ov.fluid_pressure_criterion]
+        "var", [ov.dilatancy_alkan, ov.fluid_pressure_criterion_clay]
     )
     def test_integrity_criteria_unit_correctness(self, var: ov.Variable):
         """Test integrity criteria."""

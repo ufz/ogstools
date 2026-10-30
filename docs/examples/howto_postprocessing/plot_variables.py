@@ -72,19 +72,24 @@ fig = ot.plot.contourf(
 fig.show()
 
 # %% [markdown]
-# Some variables store functions with arguments or parameters.
+# Variables provide methods to create derived Variables. They store functions
+# potentially with additional arguments or parameters which will get called in
+# sequential order when `transform` is called.
 
 # %%
-ot.variables.fluid_pressure_criterion.function
+ot.variables.stress.von_Mises.abs.max.functions
 
 # %% [markdown]
-# These can be changed in the following way.
+# Function parameters can be changed in the following way.
 
 # %%
 # create a copy of the variables to not modify the original:
-fpc = ot.variables.fluid_pressure_criterion.copy()
-fpc.function.params["biot"] = 0.6  # change a parameter
-fpc.function
+dil_var = ot.variables.dilatancy_critescu.copy()
+dil_var.function.params
+
+# %%
+# change a parameter
+dil_var.function.params["a"] = -0.17
 
 # %% [markdown]
 # Have a look at
