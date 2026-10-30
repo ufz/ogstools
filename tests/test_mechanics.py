@@ -82,15 +82,18 @@ class TestMechanics:
         """Test third deviator invariant."""
         sig = self.generate_random_sig(symten_len)
         mat_sig = tensor_math.sym_tensor_to_mat(sig)
+        ref = (1.0 / 3.0) * (
+            tensor_math.matrix_trace(mat_sig @ mat_sig @ mat_sig)
+            - tensor_math.matrix_trace(mat_sig @ mat_sig)
+            * tensor_math.trace(sig)
+            + (2.0 / 9.0) * tensor_math.trace(sig) ** 3.0
+        )
+        # the terms are of order |sig|^3 and cancel near J3 = 0
+        scale = np.linalg.norm(sig, axis=-1) ** 3
         assert_allclose(
-            tensor_math.deviator_invariant_3(sig),
-            (1.0 / 3.0)
-            * (
-                tensor_math.matrix_trace(mat_sig @ mat_sig @ mat_sig)
-                - tensor_math.matrix_trace(mat_sig @ mat_sig)
-                * tensor_math.trace(sig)
-                + (2.0 / 9.0) * tensor_math.trace(sig) ** 3.0
-            ),
+            tensor_math.deviator_invariant_3(sig) / scale,
+            ref / scale,
+            atol=100 * np.finfo(float).eps,
         )
 
     def test_von_mises(self, symten_len: int):
