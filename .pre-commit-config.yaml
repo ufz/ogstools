@@ -148,7 +148,8 @@ repos:
       - id: commit-subject-length
         name: "commit subject at most 72 characters"
         language: pygrep
-        entry: '\A[^\n]{73,}'
+        # fixup!, squash! and amend! do not count: autosquash removes them
+        entry: '\A(?!(fixup|squash|amend)! )[^\n]{73,}|\A(fixup|squash|amend)! [^\n]{73,}'
         args: [--multiline]
         stages: [commit-msg]
       # OGSTools
