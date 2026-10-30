@@ -50,11 +50,13 @@ settings.load_profile("default")
 
 @pytest.fixture(scope="session", autouse=True)
 def set_userpath(tmp_path_factory):
-    base = tmp_path_factory.getbasetemp()
+    worker_base = tmp_path_factory.getbasetemp()
+    base = worker_base
     if base.name.startswith("popen-gw"):
         base = base.parent
     ot.StorageBase.Userpath = base / "ot_user"
-    ot.StorageBase.TempFile = base / "ot_temp"
+    # one per xdist worker: fixtures with a fixed id (good_model) save there
+    ot.StorageBase.TempFile = worker_base / "ot_temp"
 
 
 def pytest_collection_modifyitems(items: list) -> None:
