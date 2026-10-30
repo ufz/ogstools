@@ -53,6 +53,9 @@ class Result(StorageBase):
         if not dry_run:
             target.parent.mkdir(parents=True, exist_ok=True)
             if self.active_target and target != self.active_target:
+                # Replace only a link, never real files or folders
+                if target.is_symlink():
+                    target.unlink()
                 target.symlink_to(self.active_target, target_is_directory=True)
 
         # Return the target directory that was created/linked

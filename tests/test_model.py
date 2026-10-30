@@ -1,7 +1,10 @@
+import shutil
+
 import pytest
 import pyvista as pv
 
 import ogstools as ot
+from ogstools import examples
 from ogstools.definitions import EXAMPLES_DIR
 
 
@@ -84,3 +87,26 @@ def test_model_run_python_bc_imports_module_next_to_it(tmp_path):
     )
     sim = ot.Model(ot.Project(prj_nuclear_decay), meshes).run(tmp_path / "sim")
     assert sim.status == sim.Status.done, sim.status_str
+
+
+@pytest.mark.tools  # constructMeshesFromGeometry
+def test_model_constraint_meshes_apart_from_prj(tmp_path):
+    """Geometry subdomains are built when the meshes do not lie next to the prj file.
+
+    scope: component (Model._constraint_meshes) | oracle: correctness, subdomains
+    """
+    prj_dir = tmp_path / "prj"
+    prj_dir.mkdir()
+    for file in [
+        examples.prj_two_anchors,
+        examples.prj_two_anchors.with_name("square_1x1.gml"),
+    ]:
+        shutil.copy(file, prj_dir)
+    model = ot.Model(
+        prj_dir / examples.prj_two_anchors.name,
+        meshes=examples.prj_two_anchors.parent,
+    )
+    meshes = model._constraint_meshes()
+    # top, bottom: built from square_1x1.gml, as the prj uses them
+    # two_anchors: read from the meshes folder
+    assert set(meshes.subdomains) == {"top", "bottom", "two_anchors"}

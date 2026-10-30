@@ -96,6 +96,7 @@ class Meshes(MutableMapping, StorageBase):
             [filepath / (mesh + ".vtu") for mesh in mesh_names],
             domain_key=mesh_names[0],
         )
+        meshes._bind_to_path(filepath)
         meshes.has_identified_subdomains = has_identified_subdomain
         meshes.num_partitions = num_partitions
         output_dict = restored_data.get("output_names", None)
@@ -198,11 +199,9 @@ class Meshes(MutableMapping, StorageBase):
             others = sorted(Path(p) for p in paths if domain_key not in str(p))
             return domains + others
 
-        meshes = cls(
+        return cls(
             {Path(m).stem: Mesh.read(m) for m in sorted_paths(filepaths)}
         )
-        meshes._bind_to_path(Path(filepaths[0]).parent)
-        return meshes
 
     @classmethod
     def from_file(cls, meta_file: str | Path) -> Self:
@@ -231,6 +230,7 @@ class Meshes(MutableMapping, StorageBase):
             [base_path / f"{name}.vtu" for name in mesh_names],
             domain_key=mesh_names[0],
         )
+        meshes._bind_to_path(base_path)
 
         meshes.has_identified_subdomains = restored_data.get(
             "has_identified_subdomains", False

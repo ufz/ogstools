@@ -391,3 +391,22 @@ def test_from_id_roundtrip(cls_name, factory):
     assert obj_from_repr.id == test_id, "Loaded object has same id."
     copied = obj_from_repr.copy(id=test_id)
     assert copied.id == test_id, "Reassigned id"
+
+
+# Not in test_storage.py::test_state_machine: a Result is saved from the start,
+# because it points to an existing output folder, which the machine does not model.
+def test_result_save_overwrite(tmp_path):
+    """A second save to the same target needs overwrite and links the output again.
+
+    scope: component (Result.save) | oracle: correctness, link target
+    """
+    out = tmp_path / "sim_output"
+    out.mkdir()
+    (out / "log.txt").write_text("log")
+    target = tmp_path / "result"
+    Result(out).save(target)
+    with pytest.raises(ValueError, match="overwrite"):
+        Result(out).save(target)
+    Result(out).save(target, overwrite=True)
+    assert target.is_symlink()
+    assert (target / "log.txt").read_text() == "log"
