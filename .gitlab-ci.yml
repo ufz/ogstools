@@ -423,7 +423,7 @@ publish:
 
 devcontainer image:
   stage: .pre
-  tags: [shell, envinf]
+  tags: [shell, envinf, podman]
   rules:
     - when: manual
       allow_failure: true
@@ -435,7 +435,7 @@ devcontainer image:
 user container image:
   stage: .pre
   needs: []
-  tags: [shell, envinf]
+  tags: [shell, envinf, podman]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       allow_failure: true
