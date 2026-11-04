@@ -14,7 +14,7 @@ Tension is positive and the pore pressure is positive in compression.
 All integrity criteria take the effective stress as input, which is what OGS
 writes to "sigma" (for purely mechanical processes effective and total stress
 coincide). If the stress in the dataset is total stress, use
-``<integrity_variable>.from_total_stress(biot=..., bishop=...)``.
+``<integrity_variable>.convert_stress(to="effective", biot=..., bishop=...)``.
 This returns a new Variable, which converts the stress prior to evaluating the
 integrity criterion. Bishop's coefficient can be a constant or the name of a
 data field (e.g. :math:`\\chi(S_L)` evaluated from a material property). Cell
