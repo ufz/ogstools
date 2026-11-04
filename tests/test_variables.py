@@ -158,6 +158,30 @@ class TestPhysicalVariable:
         val = ov.stress.convert_stress(to="total", bishop="chi").transform(mesh)
         np.testing.assert_array_equal(ref, val)
 
+    def test_fluid_pressure_criterion_with_biot_field(self):
+        """The criterion with the full pore pressure from Biot effective stress.
+
+        OGS writes the effective stress with Biot's coefficient, the fluid
+        pressure criterion compares the total stress with the full pore
+        pressure: sigma_tot_III + p = sigma'_III + (1 - biot) * p.
+        """
+        mesh = examples.load_mesh_mechanics_2D()
+        p = -1000 * 9.81 * mesh.points[:, 1]
+        mesh.point_data["pressure"] = p
+        biot = 0.6
+        mesh.point_data["biot"] = np.full(mesh.n_points, biot)
+        fpc = ov.fluid_pressure_criterion_clay
+        fpc_full_p = fpc.convert_stress(to="total", biot="biot").convert_stress(
+            to="effective"
+        )
+        p_MPa = ov.u_reg.convert(p, "Pa", "MPa")
+        np.testing.assert_allclose(
+            fpc_full_p.transform(mesh),
+            fpc.transform(mesh) + (1 - biot) * p_MPa,
+            rtol=1e-12,
+            atol=1e-12,
+        )
+
     def test_stress_conversion_errors(self):
         """Test input validation of the total/effective stress conversion."""
         mesh = examples.load_mesh_mechanics_2D()

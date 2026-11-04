@@ -10,6 +10,7 @@ via pint.
 
 from __future__ import annotations
 
+import math
 import warnings
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
@@ -737,7 +738,7 @@ class Variable:
     def convert_stress(
         self,
         to: Literal["effective", "total"],
-        biot: float = 1.0,
+        biot: float | str = 1.0,
         bishop: float | str = 1.0,
         pressure: str = "pressure",
     ) -> Self:
@@ -750,19 +751,25 @@ class Variable:
 
             \\sigma' = \\sigma_\\mathrm{total} \\pm \\alpha_B \\chi p \\mathbf{I}
 
-        :param biot:        Biot coefficient :math:`\\alpha_B`.
+        :param biot:        Biot coefficient :math:`\\alpha_B`, either a
+                            constant or the name of a data field (e.g. set
+                            per material from the MaterialIDs) in the mesh.
         :param bishop:      Bishop's coefficient :math:`\\chi`, either a
                             constant or the name of a data field (e.g. a
                             precomputed :math:`\\chi(S_L)`) in the mesh.
         :param pressure:    Name of the pore pressure data field in the mesh.
         """
         new_var = self.copy()
-        args: list[str | Variable | Callable] = [pressure]
-        params = {"biot": biot, "sign": 1 if to == "effective" else -1}
-        if isinstance(bishop, str):
-            args.append(bishop)
-        else:
-            params["bishop"] = bishop
+        coefficients = [biot, bishop]
+        fields = [coeff for coeff in coefficients if isinstance(coeff, str)]
+        constant = math.prod(
+            coeff for coeff in coefficients if not isinstance(coeff, str)
+        )
+        args: list[str | Variable | Callable] = [pressure, *fields]
+        params = {
+            "coefficient": constant,
+            "sign": 1 if to == "effective" else -1,
+        }
         new_var.functions.insert(0, Function(add_pore_pressure, args, params))
         return new_var
 

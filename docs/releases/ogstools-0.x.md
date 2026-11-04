@@ -35,7 +35,7 @@
 - meshseries now has a setitem method to set either data (`ms["new_data"] = ...`) or a mesh (`ms[-1] = ...` -> overwrites the last timestep)
 - `MeshSeries.probe_values` now accepts integer ids in addition to coordinates and probes these very fast for Meshseries read from xdmf-files
 - `MeshSeries.extract` and `MeshSeries.transform` now can now detach the originally read file to ensure consistency.
-- added `Variable.convert_stress(to=..., biot=..., bishop=..., pressure=...)` to give a modified Variable, which converts between total and effective stress before evaluation of any other stored functions. Bishop's coefficient can be a constant or the name of a data field (cell data, e.g. from a material property, is interpolated to the points).
+- added `Variable.convert_stress(to=..., biot=..., bishop=..., pressure=...)` to give a modified Variable, which converts between total and effective stress before evaluation of any other stored functions. Biot's and Bishop's coefficient can each be a constant or the name of a data field (cell data, e.g. from a material property, is interpolated to the points).
 - `variables.dilatancy_critescu` and `variables.dilatancy_alkan` now assume effective stress and no longer read "pressure", so they behave the same as `variables.dilatancy_critescu_eff` and `variables.dilatancy_alkan_eff` as calculating from effective stress is the default for all OGS process (aside from TRM). For total stress input use e.g. `<variable>.convert_stress(to="effective", ...)`.
 - added `variables.fluid_pressure_criterion_clay` (== `variables.fluid_pressure_criterion`) and `variables.fluid_pressure_criterion_salt`
 - The integrity criteria are masked by the field `variables.INTEGRITY_MASK` ("host_rock") instead of "displacement_active".

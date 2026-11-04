@@ -16,9 +16,9 @@ writes to "sigma" (for purely mechanical processes effective and total stress
 coincide). If the stress in the dataset is total stress, use
 ``<integrity_variable>.convert_stress(to="effective", biot=..., bishop=...)``.
 This returns a new Variable, which converts the stress prior to evaluating the
-integrity criterion. Bishop's coefficient can be a constant or the name of a
-data field (e.g. :math:`\\chi(S_L)` evaluated from a material property). Cell
-data is interpolated to the points if needed.
+integrity criterion. Biot's and Bishop's coefficient can each be a constant
+or the name of a data field (e.g. :math:`\\chi(S_L)` evaluated from a material
+property). Cell data is interpolated to the points if needed.
 
 At first, we add a datafield, defining where the integrity criteria are
 evaluated, by masking all non-hostrock material ids.
@@ -60,6 +60,20 @@ fig = ot.plot.contourf(mesh, dil_var)
 # %% [markdown]
 # For clay rock
 # -------------
+# The fluid pressure criterion compares the total stress with the full pore
+# pressure: :math:`\\sigma_\\mathrm{III}^\\mathrm{tot} + p < 0`.
+# ``fluid_pressure_criterion_clay`` evaluates the third principal value of
+# "sigma", which equals this only for a Biot coefficient of 1. OGS writes the
+# effective stress with the Biot coefficient :math:`\\alpha_B` of the model,
+# so for :math:`\\alpha_B < 1` convert to total stress with it, and back to
+# effective stress with a Biot coefficient of 1:
+#
+# .. code-block:: python
+#
+#     mesh["biot"] = ...  # alpha_B of the model, e.g. per MaterialID
+#     fpc = ot.variables.fluid_pressure_criterion_clay
+#     fpc = fpc.convert_stress(to="total", biot="biot")
+#     fpc = fpc.convert_stress(to="effective")
 
 # %%
 fig = ot.plot.contourf(mesh, ot.variables.fluid_pressure_criterion_clay)
