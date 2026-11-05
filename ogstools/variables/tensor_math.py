@@ -22,6 +22,7 @@ here, for example:
 <https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Cauchy's_stress_theorem%E2%80%94stress_tensor>
 """
 
+import math
 from typing import Literal, TypeAlias, TypeVar
 
 import numpy as np
@@ -305,19 +306,22 @@ def to_polar(
 def add_pore_pressure(
     sigma: ValType,
     p: ValType,
-    bishop: float | np.ndarray = 1.0,
-    biot: float = 1.0,
+    *coefficient_fields: np.ndarray,
+    coefficient: float = 1.0,
     sign: Literal[1, -1] = 1,
 ) -> np.ndarray | PlainQuantity:
     """Add or subtract biot * chi * p to the stress' diagonal.
 
     The pressure is expected to be in the same unit as the stress data.
+    Biot's and Bishop's coefficient enter as one product: the constant ones
+    multiplied into `coefficient`, the ones from data fields as
+    `coefficient_fields`.
 
-    :param sigma:   Stress values
-    :param p:       Pore pressure values
-    :param bishop:  Bishop's coefficient
-    :param biot:    Biot's coefficient
-    :param sign:    1: adds the term, -1: subtracts the term
+    :param sigma:               Stress values
+    :param p:                   Pore pressure values
+    :param coefficient_fields:  Values of the coefficients from data fields
+    :param coefficient:         Product of the constant coefficients
+    :param sign:                1: adds the term, -1: subtracts the term
     """
     unit = None
     stress, unit = _split_quantity(sigma)
@@ -328,5 +332,6 @@ def add_pore_pressure(
         )
         raise ValueError(msg)
     result = np.array(sigma, dtype=float, copy=True)
-    result[..., :3] += np.asarray(sign * biot * bishop * p)[..., np.newaxis]
+    factor = math.prod(coefficient_fields, start=sign * coefficient)
+    result[..., :3] += np.asarray(factor * p)[..., np.newaxis]
     return _to_quantity(result, unit)
