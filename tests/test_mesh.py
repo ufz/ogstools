@@ -214,6 +214,20 @@ def test_read_symlink_without_extension(tmp_path: Path) -> None:
     )
 
 
+def test_read_symlink_to_file_with_extension(tmp_path: Path) -> None:
+    """A link without extension is read by the extension of its target.
+
+    scope: unit (mesh.read) | oracle: consistency, reading the original file
+    """
+    target = tmp_path / "target.msh"  # read by meshio, not by a vtk reader
+    pv.save_meshio(target, ot.mesh.read(examples.mechanics_2D))
+    link = tmp_path / "mesh"
+    link.symlink_to(target)
+    np.testing.assert_array_equal(
+        ot.mesh.read(link).points, ot.mesh.read(target).points
+    )
+
+
 @pytest.mark.tools  # convertToLinearMesh, createQuadraticMesh
 @pytest.mark.skipif(
     shutil.which("convertToLinearMesh") is None, reason="checkMesh not found"
