@@ -26,7 +26,8 @@ def read(filename: Path | str) -> pv.UnstructuredGrid:
 
     path = Path(filename)
     # pv.read resolves symlinks before choosing the reader by file extension
-    forced_ext = path.suffix if path.resolve().suffix != path.suffix else None
+    suffix = path.suffix
+    forced_ext = suffix if suffix and path.resolve().suffix != suffix else None
     mesh = pv.UnstructuredGrid(pv.read(path, force_ext=forced_ext))
     pv_set_attr(mesh, "filepath", path)
     return mesh
