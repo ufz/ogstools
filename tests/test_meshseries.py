@@ -1204,6 +1204,27 @@ def test_read_symlinked_file(tmp_path, suffix):
     assert ot.MeshSeries.compare(ms, linked, strict=True)
 
 
+@pytest.mark.parametrize("suffix", [".xdmf", ".pvd"])
+def test_save_backup_keeps_data_files(tmp_path, monkeypatch, suffix):
+    """A backup on overwrite keeps the data files of the old series too.
+
+    scope: component (MeshSeries.save) | oracle: consistency, restored backup
+    """
+    monkeypatch.setattr(ot.StorageBase, "Backup", True)
+    old = examples.load_meshseries_HT_2D_XDMF()[:2]
+    old.save(tmp_path / "out" / f"ms{suffix}")
+    new = _translated(old)
+    new.save(tmp_path / "out" / f"ms{suffix}", overwrite=True)
+
+    restored = tmp_path / "restored"
+    restored.mkdir()
+    for backup in (tmp_path / "out").glob("*_backup_*"):
+        name = backup.name.rsplit("_backup_", 1)[0]
+        (restored / name).write_bytes(backup.read_bytes())
+    ms = ot.MeshSeries(restored / f"ms{suffix}")
+    assert ot.MeshSeries.compare(old, ms, strict=True)
+
+
 @pytest.mark.parametrize(
     ("load", "suffix"),
     [

@@ -11,6 +11,7 @@ import inspect
 import shutil
 import tempfile
 import warnings
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Self
@@ -316,7 +317,19 @@ class StorageBase(abc.ABC):
         overwrite: bool | None = None,
         dry_run: bool = False,
         id: str | None = None,
+        data_files: Callable[[], list[Path]] | None = None,
     ) -> bool:
+        """Set the next target and back up or refuse what it would overwrite.
+
+        :param target:     File or folder to save to.
+        :param overwrite:  Overwrite an existing target.
+        :param dry_run:    If True, do not move anything.
+        :param id:         Save to the user storage under this id.
+        :param data_files: Returns the files besides a file target that the
+                           save writes, e.g. the HDF5 file of an XDMF file.
+                           A backup moves the existing ones too.
+        :returns:          Whether the target is user defined.
+        """
         if target is not None and id is not None:
             msg = "Cannot specify both target and id"
             raise ValueError(msg)
@@ -348,11 +361,21 @@ class StorageBase(abc.ABC):
         if user_defined and target_overwritten:
             if overwrite:
                 if self._should_backup() and not dry_run:
+                    backup_suffix = "_backup_" + _temp_id()
                     backup_target = self.next_target.with_name(
-                        self.next_target.name + "_backup_" + _temp_id()
+                        self.next_target.name + backup_suffix
                     )
                     if self.is_file:
                         backup_target.parent.mkdir(exist_ok=True, parents=True)
+                        # the save overwrites these too, keep them with the file
+                        for file in data_files() if data_files else []:
+                            if file.exists():
+                                _backup_move(
+                                    src=file,
+                                    dst=file.with_name(
+                                        file.name + backup_suffix
+                                    ),
+                                )
                     else:
                         backup_target.mkdir(exist_ok=True, parents=True)
                     _backup_move(src=self.next_target, dst=backup_target)

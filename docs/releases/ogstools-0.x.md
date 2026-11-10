@@ -37,6 +37,7 @@
 - `MeshSeries.save("x.pvd")` of a series read from XDMF writes one VTU file per time step, and a dry run returns the files the save writes ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - `MeshSeries.save("x.pvd", deep=False)` raises a `ValueError` for a series that was changed after reading or not read from PVD.
   It wrote a PVD file that referenced VTU files that do not exist ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- With `StorageBase.Backup`, overwriting a `.pvd` or `.xdmf` file backs up its VTU or HDF5 files too, not only the PVD or XDMF file ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 
 ## Features
 

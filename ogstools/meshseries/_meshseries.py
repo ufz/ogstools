@@ -1569,7 +1569,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 )
                 raise ValueError(msg)
 
-        user_defined = self._pre_save(target, overwrite, dry_run, id=id)
+        user_defined = self._pre_save(
+            target,
+            overwrite,
+            dry_run,
+            id=id,
+            # a shallow save writes only the XDMF or PVD file, nothing to back up
+            data_files=(lambda: self._backup_files(ascii)) if deep else None,
+        )
         files = self._save_impl(deep, ascii, dry_run)
         self._post_save(user_defined, archive, dry_run)
         return files
@@ -1585,6 +1592,18 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         if self.next_target.suffix == ".xdmf":
             return self._save_xdmf_impl(deep=deep, dry_run=dry_run)
         return self._save_pvd_impl(deep=deep, ascii=ascii, dry_run=dry_run)
+
+    def _backup_files(self, ascii: bool) -> list[Path]:
+        """Return the data files that a deep save overwrites, for a backup.
+
+        A file that the series reads from stays in place, as the save reads it.
+
+        :param ascii: See :meth:`save`.
+        :returns:     The data files besides the PVD or XDMF file.
+        """
+        source = self._source_files()
+        files = self._save_impl(deep=True, ascii=ascii, dry_run=True)[1:]
+        return [file for file in files if file.resolve() not in source]
 
     def _save_pvd_impl(
         self,
