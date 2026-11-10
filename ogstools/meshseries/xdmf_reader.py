@@ -125,14 +125,7 @@ class H5DataItem(DataItem):
         :param xdmf_path: Path to the xdmf file that references to the h5 file
         """
 
-        file_h5path__selections = file_info.split("|")
-        file_h5path = file_h5path__selections[0]
-        selections = (
-            file_h5path__selections[1]
-            if len(file_h5path__selections) > 1
-            else None
-        )
-        filename, h5path = file_h5path.split(":")
+        filename, h5path, selections = _split_hdf5_reference(file_info)
         if selections:
             # offsets, slices, current_data_extends, global_data_extends by dimension
             m = [
@@ -294,6 +287,22 @@ class DataItems:
         unique_rows, inverse = np.unique(physical_rows, return_inverse=True)
         raw = self.items[0][(unique_rows, *rest)]
         return raw[inverse]
+
+
+def _split_hdf5_reference(reference: str) -> tuple[str, str, str | None]:
+    """Split the text of an HDF DataItem into its parts.
+
+    `file.h5:/path/to/dataset|0 0:1 1:1 3:4 3` gives the file, the dataset
+    path and the hyperslab selection, which is None if there is none.
+    The file is split off at the last colon before the `|`, because a
+    Windows path holds a colon after the drive letter.
+
+    :param reference: The text of the DataItem.
+    :returns:         The file, the dataset path and the selection.
+    """
+    file_and_path, bar, selection = reference.partition("|")
+    file, _, path = file_and_path.rpartition(":")
+    return file, path, selection if bar else None
 
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
@@ -563,14 +572,7 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             raise ReadError(msg)
 
         file_info = data_item.text.strip()
-        file_h5path__selections = file_info.split("|")
-        file_h5path = file_h5path__selections[0]
-        selections = (
-            file_h5path__selections[1]
-            if len(file_h5path__selections) > 1
-            else None
-        )
-        filename, h5path = file_h5path.split(":")
+        filename, h5path, selections = _split_hdf5_reference(file_info)
         if selections:
             # offsets, slices, current_data_extends, global_data_extends by dimension
             m = [
