@@ -252,3 +252,17 @@ def test_calculate_derivative():
     grad_T = calculate_derivative(ms[-1], ot.variables.temperature.gradient)
     assert np.max(grad_T) < 1
     assert np.min(grad_T) > -1
+
+
+def test_compare_polydata_with_unstructured_grid():
+    """A PolyData and an UnstructuredGrid compare by their cells, not their type.
+
+    scope: component (mesh.differences.compare) | oracle: correctness, changed cells
+    """
+    from ogstools.mesh.differences import compare
+
+    points = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+    vertices = pv.PolyData(points)
+    assert compare(vertices, vertices.cast_to_unstructured_grid(), strict=True)
+    line = pv.PolyData(points, lines=[2, 0, 1]).cast_to_unstructured_grid()
+    assert not compare(vertices, line)
