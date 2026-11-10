@@ -35,7 +35,8 @@ def _set_ip_metadata(
     mesh: pv.UnstructuredGrid, ip_metadata: dict[str, list[dict[str, Any]]]
 ) -> None:
     "Write IntegrationPointMetaData into the mesh's field_data."
-    ip_meta_str = json.dumps(ip_metadata)
+    # compact, as OGS writes it, so that a save keeps the bytes
+    ip_meta_str = json.dumps(ip_metadata, separators=(",", ":"))
     mesh.field_data["IntegrationPointMetaData"] = np.frombuffer(
         ip_meta_str.encode("utf-8"), dtype=np.int8
     )
