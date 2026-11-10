@@ -102,9 +102,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self._data_type = self.filepath.suffix
         match self._data_type:
             case ".pvd":
-                self._pvd_reader = pv.PVDReader(self.filepath)
+                # resolve: a symlinked PVD file references files next to its target
+                self._pvd_reader = pv.PVDReader(self.filepath.resolve())
                 self.timestep_files = [
-                    str(self.filepath.parent / dataset.path)
+                    str(self.filepath.resolve().parent / dataset.path)
                     for dataset in self._pvd_reader.datasets
                 ]
                 self._timevalues = np.asarray(self._pvd_reader.time_values)

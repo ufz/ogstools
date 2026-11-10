@@ -31,6 +31,8 @@
 - Vector plots with vtk 9.7 draw no arrow outside the mesh ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 - `MeshSeries` reads XDMF files that meshio wrote.
   Their `xi:include` elements use an `xpointer()` XPath, which raised a `ReadError` ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- `MeshSeries` reads a PVD or XDMF file through a symlink, as `StorageBase.link` creates it.
+  It looked for the data files next to the symlink instead of next to its target ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - XDMF point data keeps its integer type instead of being cast to float ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - `MeshSeries.save("x.pvd")` of a series read from XDMF writes one VTU file per time step, and a dry run returns the files the save writes ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - `MeshSeries.save("x.pvd", deep=False)` raises a `ValueError` for a series that was changed after reading or not read from PVD.

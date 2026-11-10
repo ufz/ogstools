@@ -322,7 +322,8 @@ def _child_path(el: lxml_etree._Element) -> list[int]:
 
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
     def __init__(self, filename: str | Path):
-        super().__init__(filename)
+        # resolve: a symlinked XDMF file references files next to its target
+        super().__init__(Path(filename).resolve())
 
         ### extension for indexing
         self.filename: Path = Path(self.filename)

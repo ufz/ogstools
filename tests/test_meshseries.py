@@ -1191,6 +1191,19 @@ def test_save_xdmf_shallow_moves_with_source(tmp_path):
     assert ot.MeshSeries.compare(source, moved, strict=True)
 
 
+@pytest.mark.parametrize("suffix", [".xdmf", ".pvd"])
+def test_read_symlinked_file(tmp_path, suffix):
+    """A series read through a symlink finds the data files next to its target.
+
+    scope: component (MeshSeries) | oracle: consistency, saved series
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()[:2]
+    ms.save(tmp_path / "a" / f"ms{suffix}")
+    ms.link(tmp_path / "b" / f"ms{suffix}", dry_run=False)
+    linked = ot.MeshSeries(tmp_path / "b" / f"ms{suffix}")
+    assert ot.MeshSeries.compare(ms, linked, strict=True)
+
+
 @pytest.mark.parametrize(
     ("load", "suffix"),
     [
