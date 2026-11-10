@@ -474,9 +474,7 @@ class StorageBase(abc.ABC):
 
         if id:
             suffix = self._ext
-            if suffix == "xdmf":
-                file = "ms.pvd"  # only pvd save supported
-            elif suffix == "pvd":
+            if suffix == "pvd":
                 file = "ms.pvd"
             elif suffix == "yaml":
                 file = "meta.yaml"

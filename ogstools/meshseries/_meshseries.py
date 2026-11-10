@@ -70,6 +70,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         self._time_factor = 1.0
         self._epsilon = 1.0e-6
         self._mesh_cache: dict[float, pv.UnstructuredGrid] = {}
+        # set by __setitem__; a deep=False save then cannot reference the source
+        self._has_set_data = False
         self._mesh_func_opt: (
             Callable[[pv.UnstructuredGrid], pv.UnstructuredGrid] | None
         ) = None
@@ -390,6 +392,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     ) -> None: ...
 
     def __setitem__(self, key: Any, value: Any) -> None:
+        self._has_set_data = True
         if isinstance(key, int | np.unsignedinteger | np.signedinteger):
             timevalue = self.timevalues[key]
             self._mesh_cache[timevalue] = value
@@ -491,10 +494,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         if variable_name not in self._xdmf_reader.data_items:
             msg = "Variable not found in data_items"
             raise ValueError(msg)
-        time_indices = list(range(self._xdmf_reader.num_steps))
-        for timeslice in self._time_indices:
-            time_indices = time_indices[timeslice]
-        time_indices = list(time_indices)
+        time_indices = self._xdmf_time_indices()
         if isinstance(points, int):
             result = self._xdmf_reader.data_items[variable_name][
                 time_indices, points
@@ -643,6 +643,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         ]:
             pv_set_attr(mesh, attr, val)
         return mesh
+
+    def _xdmf_time_indices(self) -> list[int]:
+        """Return the indices of the time steps in the source XDMF file.
+
+        :returns: One index per time step of this series.
+        """
+        time_indices = list(range(self._xdmf_reader.num_steps))
+        for timeslice in self._time_indices:
+            time_indices = time_indices[timeslice]
+        return list(time_indices)
 
     def rawdata_file(self) -> Path | None:
         """
@@ -880,6 +890,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # pv.from_meshio does not copy field_data (fix in pyvista?)
         pv_mesh = pv.from_meshio(meshio_mesh)
         pv_mesh.field_data.update(field_data)
+        # pv.from_meshio casts point data to float; keep integer types
+        pv_mesh.point_data.update(meshio_mesh.point_data)
         return pv_mesh
 
     @deprecated("Please use `ms.aggregate_temporal(variable.time_of_min)`.")
@@ -1449,18 +1461,13 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     ) -> None:
         from ogstools.mesh import save
 
-        for i, timestep in enumerate(self.timesteps):
-            if ".vtu" in fns[i].name:
+        for i, file in enumerate(fns):
+            if ".vtu" in file.name:
                 save(
                     self.mesh(i),
-                    Path(new_pvd_fn.parent, fns[i].name),
+                    new_pvd_fn.parent / file.name,
                     binary=not ascii,
                 )
-            elif ".xdmf" in fns[i].name:
-                newname = fns[i].name.replace(
-                    ".xdmf", f"_ts_{timestep}_t_{self.timevalues[i]}.vtu"
-                )
-                save(self.mesh(i), Path(new_pvd_fn.parent, newname))
             else:
                 s = "File type not supported."
                 raise RuntimeError(s)
@@ -1479,12 +1486,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             timestepselement.attrib["timestep"] = str(timestep)
             timestepselement.attrib["group"] = ""
             timestepselement.attrib["part"] = "0"
-            if ".xdmf" in fns[i].name:
-                newname = fns[i].name.replace(
-                    ".xdmf", f"_ts_{self.timesteps[i]}_t_{timestep}.vtu"
-                )
-                timestepselement.attrib["file"] = newname
-            elif ".vtu" in fns[i].name:
+            if ".vtu" in fns[i].name:
                 timestepselement.attrib["file"] = fns[i].name
             else:
                 s = "File type not supported."
@@ -1514,26 +1516,91 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         archive: bool = False,
         id: str | None = None,
     ) -> list[Path]:
+        """Save the mesh series. The suffix of the target selects the format.
+
+        `.pvd` writes a PVD file and VTU files next to it.
+        `.xdmf` writes an XDMF file and one HDF5 file with the same stem,
+        e.g. `ms.xdmf` and `ms.h5`. Read it back with `MeshSeries("ms.xdmf")`.
+        As in OGS output, the points, cells and array names of the first time
+        step hold for all time steps.
+        Without a target, the last target is used, otherwise a new PVD file.
+        With `id`, PVD and VTU files are written.
+
+        :param target:    File to write to.
+        :param deep:      If False, write only the PVD or XDMF file and
+                          reference the data files of the source. The series
+                          must be read from that format and not changed since
+                          (`transform`, `ms[...] = ...`), otherwise it raises
+                          a ValueError. A change inside a mesh
+                          (`ms[0]["p"] *= 2`) is not detected.
+        :param ascii:     Write VTU files as ASCII instead of binary (PVD only).
+        :param overwrite: Overwrite an existing target.
+        :param dry_run:   Return the paths without writing.
+        :param archive:   If True, copy all data instead of creating symlinks.
+        :param id:        Save to the user storage under this id.
+        :returns:         The PVD or XDMF file, then the data files it
+                          references (with deep=False those of the source).
+        """
+        if target:
+            planned = Path(target)
+        elif id is None:
+            planned = self.next_target
+        else:
+            planned = Path("ms.pvd")  # _target_for_save names it ms.pvd
+        # before _pre_save, which may move the target into a backup
+        if planned.suffix not in (".pvd", ".xdmf"):
+            msg = (
+                f"MeshSeries.save writes .pvd or .xdmf files, not "
+                f"'{planned.suffix}'. Use a target that ends in one of them."
+            )
+            # TODO: raise a ValueError in 0.9.0, as for other wrong arguments
+            raise RuntimeError(msg)
+        if deep and planned.suffix == ".xdmf":
+            h5 = planned.with_suffix(".h5")
+            self._check_not_source(h5)
+            # _pre_save checks only the XDMF file, the HDF5 file may be left over
+            if h5.exists() and not (
+                self.DefaultOverwrite if overwrite is None else overwrite
+            ):
+                msg = (
+                    f"You are trying to overwrite the file: {h5}. "
+                    "If you really want this set overwrite to True."
+                )
+                raise ValueError(msg)
+
         user_defined = self._pre_save(target, overwrite, dry_run, id=id)
-        files = self._save_impl(deep=deep, ascii=ascii, dry_run=dry_run)
+        files = self._save_impl(deep, ascii, dry_run)
         self._post_save(user_defined, archive, dry_run)
         return files
 
-    def _save_impl(
+    def _save_impl(self, deep: bool, ascii: bool, dry_run: bool) -> list[Path]:
+        """Save to `next_target` in the format of its suffix.
+
+        :param deep:    See :meth:`save`.
+        :param ascii:   See :meth:`save`.
+        :param dry_run: If True, only return the paths that would be written.
+        :returns:       See :meth:`save`.
+        """
+        if self.next_target.suffix == ".xdmf":
+            return self._save_xdmf_impl(deep=deep, dry_run=dry_run)
+        return self._save_pvd_impl(deep=deep, ascii=ascii, dry_run=dry_run)
+
+    def _save_pvd_impl(
         self,
         deep: bool = True,
         ascii: bool = False,
         dry_run: bool = False,
     ) -> list[Path]:
-        """
-        Save mesh series to disk.
+        """Save mesh series to a PVD file and VTU files.
 
-        :param filename:   Filename to save the series to. Extension specifies
-                           the file type. Currently only PVD is supported.
-        :param deep:  Specifies whether VTU/H5 files should be written.
+        :param deep:  Specifies whether VTU files should be written.
         :param ascii: Specifies if ascii or binary format should be used,
                       defaults to binary (False) - True for ascii.
+        :param dry_run: If True, only return the paths that would be written.
+        :returns:     The PVD file and the VTU files.
         """
+        if not deep:
+            self._check_shallow(".pvd", "PVD")
         fn = self.next_target
         fn.parent.mkdir(parents=True, exist_ok=True)
         if self.filepath is None:
@@ -1547,27 +1614,107 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 self._check_path(self.mesh(t).filepath)
                 for t in np.arange(len(self.timevalues), dtype=int)
             ]
-        if ".pvd" in fn.name:
-            if deep is True:
-                if self.filepath is not None:
-                    fns = self._rename_vtufiles(fn, fns)
-                if dry_run:
-                    # For dry_run, return paths where files would be written
-                    fns_written = [fn.parent / f.name for f in fns]
-                    return [fn] + fns_written
-                self._save_vtu(fn, fns, ascii=ascii)
-                # Update fns to actual written paths
-                fns = [fn.parent / f.name for f in fns]
+        if deep is True:
+            if self.filepath is not None:
+                fns = self._rename_vtufiles(fn, fns)
+            # a series read from XDMF gets one VTU file per time step
+            fns = [
+                f.with_name(f.name.replace(".xdmf", f"_ts_{ts}_t_{tv}.vtu"))
+                for f, ts, tv in zip(
+                    fns, self.timesteps, self.timevalues, strict=True
+                )
+            ]
             if dry_run:
+                # For dry_run, return paths where files would be written
                 fns_written = [fn.parent / f.name for f in fns]
                 return [fn] + fns_written
-            self._save_pvd(fn, fns)
-        else:
-            s = "Currently the save method is implemented for PVD/VTU only."
-            raise RuntimeError(s)
+            self._save_vtu(fn, fns, ascii=ascii)
+            # Update fns to actual written paths
+            fns = [fn.parent / f.name for f in fns]
+        if dry_run:
+            return [fn] + fns
+        self._save_pvd(fn, fns)
 
         # Return both the PVD file and all VTU files
         return [fn] + fns
+
+    def _save_xdmf_impl(
+        self,
+        deep: bool = True,
+        dry_run: bool = False,
+    ) -> list[Path]:
+        """Save mesh series to an XDMF file and an HDF5 file next to it.
+
+        :param deep:    If True, write full HDF5 data. If False, write XDMF XML
+                        only, referencing the HDF5 data of the source file;
+                        this raises if the series was not read from XDMF.
+        :param dry_run: If True, only return the paths that would be written.
+        :returns:       The XDMF file and the HDF5 file(s).
+        """
+        from ogstools.meshseries._xdmf_writer import (
+            save_xdmf,
+            save_xdmf_shallow,
+            source_h5_files,
+        )
+
+        fn = self.next_target
+        if deep:
+            return (
+                [fn, fn.with_suffix(".h5")] if dry_run else save_xdmf(self, fn)
+            )
+        self._check_shallow(".xdmf", "XDMF")
+        if self.rawdata_file() is None:
+            msg = (
+                "deep=False needs each variable in one HDF5 dataset, as OGS "
+                "writes it. Use deep=True."
+            )
+            raise ValueError(msg)
+        if dry_run:
+            return [fn, *sorted(source_h5_files(self._xdmf_reader))]
+        return save_xdmf_shallow(self, fn)
+
+    def _source_files(self) -> set[Path]:
+        """Return the resolved data files that this series reads from.
+
+        :returns: The VTU files of a PVD series or the HDF5 files of an XDMF
+                  series, otherwise nothing.
+        """
+        if self._data_type == ".pvd":
+            return {Path(file).resolve() for file in self.timestep_files}
+        if self._data_type == ".xdmf":
+            from ogstools.meshseries._xdmf_writer import source_h5_files
+
+            return source_h5_files(self._xdmf_reader)
+        return set()
+
+    def _check_not_source(self, h5: Path) -> None:
+        """Raise if `h5` is an HDF5 file that this series reads from.
+
+        A deep save opens it for writing, which truncates the source data.
+
+        :param h5: The HDF5 file the save would write.
+        """
+        if h5.resolve() in self._source_files():
+            msg = (
+                f"Saving would overwrite {h5}, which this series reads "
+                "from. Save to another file."
+            )
+            raise ValueError(msg)
+
+    def _check_shallow(self, suffix: str, name: str) -> None:
+        """Raise if a deep=False save cannot reference the source data.
+
+        :param suffix: The suffix of the source file the save references.
+        :param name:   The name of the format, for the message.
+        """
+        if self._mesh_func_opt is not None or self._has_set_data:
+            reason = "the series was changed after reading"
+        elif self._data_type != suffix:
+            reason = f"the series was not read from {name}"
+        else:
+            return
+        msg = f"deep=False references the source data, but {reason}. Use deep=True."
+        raise ValueError(msg)
 
     @deprecated("""
     Please use `del meshseries.field_data[key]` or, if you want to keep the
