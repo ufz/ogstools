@@ -13,11 +13,23 @@ from .ip_data import IPdata
 
 
 def read(filename: Path | str) -> pv.UnstructuredGrid:
-    "Read a single mesh from a filepath."
+    """Read a single mesh from a file.
+
+    The reader is chosen by the file extension of ``filename``, also when
+    ``filename`` is a symbolic link to a file without extension.
+
+    :param filename:    Path to the mesh file, any format pyvista can read.
+
+    :returns:           The mesh, with the attribute ``filepath`` set.
+    """
     from ogstools.mesh.utils import pv_set_attr
 
-    mesh = pv.UnstructuredGrid(pv.read(filename))
-    pv_set_attr(mesh, "filepath", Path(filename))
+    path = Path(filename)
+    # pv.read resolves symlinks before choosing the reader by file extension
+    suffix = path.suffix
+    forced_ext = suffix if suffix and path.resolve().suffix != suffix else None
+    mesh = pv.UnstructuredGrid(pv.read(path, force_ext=forced_ext))
+    pv_set_attr(mesh, "filepath", path)
     return mesh
 
 

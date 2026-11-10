@@ -16,17 +16,19 @@ from .common_ogs_analyses import (
     time_step_vs_iterations,
     time_step_vs_step_size_and_time,
 )
-from .log_parser import parse_file, read_version
+from .log_parser import EndState, end_state, parse_file, read_version
 from .plots import plot_convergence, plot_convergence_order
 from .regexes import ogs_regexes
 
 __all__ = [
+    "EndState",
     "analysis_convergence_coupling_iteration",
     "analysis_convergence_newton_iteration",
     "analysis_simulation",
     "analysis_simulation_termination",
     "analysis_time_step",
     "convergence_order_per_ts_iteration",
+    "end_state",
     "errors_per_ts_iteration",
     "fill_ogs_context",
     "model_and_clock_time",
