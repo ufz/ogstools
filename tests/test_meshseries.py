@@ -1,7 +1,10 @@
 """Unit tests for meshlib."""
 
-from collections.abc import Callable
+import contextlib
+from collections.abc import Callable, Sequence
+from pathlib import Path
 
+import meshio
 import numpy as np
 import pytest
 import pyvista as pv
@@ -972,6 +975,56 @@ def test_save_xdmf_mesh_series(tmp_path):
     for i in range(num_slices):
         ts = float(pvd_entries[i].attrib["timestep"])
         assert np.abs(ms.timevalues[i] - ts) < 1e-14
+
+
+def _meshio_xdmf(folder: Path, times: Sequence[float] = (0.0, 1.0)) -> Path:
+    """Write a series of one quad with meshio and return its file."""
+    points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]], dtype=float)
+    # meshio writes the .h5 file in the cwd
+    with (
+        contextlib.chdir(folder),
+        meshio.xdmf.TimeSeriesWriter("meshio.xdmf") as writer,
+    ):
+        writer.write_points_cells(points, [("quad", np.array([[0, 1, 2, 3]]))])
+        for t in times:
+            writer.write_data(t, point_data={"p": np.arange(4.0) + t})
+    return folder / "meshio.xdmf"
+
+
+def test_read_meshio_xdmf(tmp_path):
+    """A series that meshio wrote, with xpointer() includes, is read.
+
+    scope: component (MeshSeries, XDMFReader) | oracle: consistency, meshio XDMF
+    """
+    ms = ot.MeshSeries(_meshio_xdmf(tmp_path))
+    np.testing.assert_array_equal(ms.timevalues, [0.0, 1.0])
+    np.testing.assert_array_equal(ms.mesh(1)["p"], np.arange(4.0) + 1.0)
+
+
+@pytest.mark.parametrize(
+    ("xpointer", "reason"),
+    [
+        ("xpointer(count(/Xdmf))", "does not select elements"),
+        ("xmlns(a=b)", "Unsupported xpointer"),
+        (None, "without xpointer"),
+    ],
+    ids=["no-elements", "other-scheme", "missing"],
+)
+def test_read_xdmf_bad_xpointer(tmp_path, xpointer, reason):
+    """An xi:include without an xpointer that selects elements cannot be read.
+
+    scope: component (XDMFReader) | oracle: correctness, expected error
+    """
+    file = _meshio_xdmf(tmp_path)
+    tree = ET.parse(file)
+    for include in tree.iter("{*}include"):
+        if xpointer is None:
+            del include.attrib["xpointer"]
+        else:
+            include.set("xpointer", xpointer)
+    tree.write(file)
+    with pytest.raises(meshio.ReadError, match=reason):
+        ot.MeshSeries(file)
 
 
 def test_remove_array():

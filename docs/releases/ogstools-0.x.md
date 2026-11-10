@@ -29,6 +29,8 @@
 - `MeshSeries.probe_values` with a list of data names works with pyvista 0.49 ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 - `Variable.transform` works with pint 0.26 for units with an offset, such as `°C**2` of a temperature variance ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 - Vector plots with vtk 9.7 draw no arrow outside the mesh ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
+- `MeshSeries` reads XDMF files that meshio wrote.
+  Their `xi:include` elements use an `xpointer()` XPath, which raised a `ReadError` ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 
 ## Features
 

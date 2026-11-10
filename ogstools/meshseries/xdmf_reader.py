@@ -26,6 +26,7 @@ from xml.etree.ElementTree import Element
 import h5py
 import meshio
 import numpy as np
+from lxml import etree as lxml_etree
 from meshio._mesh import CellBlock
 from meshio.xdmf import common, time_series
 from meshio.xdmf.time_series import (
@@ -305,6 +306,20 @@ def _split_hdf5_reference(reference: str) -> tuple[str, str, str | None]:
     return file, path, selection if bar else None
 
 
+def _child_path(el: lxml_etree._Element) -> list[int]:
+    """Return the 0-based element child indices from the root to `el`.
+
+    :param el: An element of a parsed XDMF file.
+    :returns:  The index of each element among its parent's elements.
+    """
+    path: list[int] = []
+    while (parent := el.getparent()) is not None:
+        children = [c for c in parent if isinstance(c.tag, str)]  # no comments
+        path.insert(0, children.index(el))
+        el = parent
+    return path
+
+
 class XDMFReader(meshio.xdmf.TimeSeriesReader):
     def __init__(self, filename: str | Path):
         super().__init__(filename)
@@ -318,6 +333,8 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
 
         # Cache for xi:include-resolved reads, keyed by id(<DataItem>).
         self._xinclude_cache: dict[int, np.ndarray] = {}
+        # Parsed on demand, to evaluate xpointer() XPaths.
+        self._lxml_root: lxml_etree._Element | None = None
 
         self.t = None
         for grid in self.collection:
@@ -327,11 +344,11 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
                 elif item.tag == "Attribute":
                     self._collect_attribute(item, data_items, data_attribute)
                 elif "XInclude" in item.tag:
-                    resolved = self._resolve_xinclude(item)
-                    if resolved.tag == "Attribute":
-                        self._collect_attribute(
-                            resolved, data_items, data_attribute
-                        )
+                    for resolved in self._resolve_xinclude(item):
+                        if resolved.tag == "Attribute":
+                            self._collect_attribute(
+                                resolved, data_items, data_attribute
+                            )
 
         for key, value in data_items.items():
             self.data_items[key] = DataItems(value, data_attribute[key])
@@ -435,23 +452,46 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             c, cached.copy(), point_data, cell_data_raw, other_data
         )
 
-    def _resolve_xinclude(self, c: Element) -> Element:
-        # xpointer e.g. "element(/1/1/2/1/3)": 1-based path; first 3
-        # segments == self.collection, drop them, rest is 0-based into it.
+    def _resolve_xinclude(self, c: Element) -> list[Element]:
+        """Return the elements that an xi:include points to.
+
+        Two XPointer schemes are supported: `element(/1/1/2/1/3)` as OGS
+        writes it and `xpointer(<XPath>)` as meshio writes it.
+
+        :param c: The xi:include element.
+        :returns: The elements it selects.
+        """
         xpointer = c.get("xpointer")
         if xpointer is None:
-            raise ReadError()
-        match = re.fullmatch(r"element\((/\d+)+\)", xpointer)
-        if match is None:
-            raise ReadError()
-        path = [
-            int(segment)
-            for segment in xpointer[len("element(") : -1].split("/")[1:]
-        ]
-        indices = [segment - 1 for segment in path[3:]]
+            msg = "xi:include without xpointer"
+            raise ReadError(msg)
+        if match := re.fullmatch(r"element\(((?:/\d+)+)\)", xpointer):
+            # 1-based child numbers from the root: Xdmf, Domain, then below
+            path = [int(n) - 1 for n in match.group(1).split("/")[1:]]
+            return [self._element_at(path[2:])]
+        if match := re.fullmatch(r"xpointer\((.+)\)", xpointer):
+            if self._lxml_root is None:
+                self._lxml_root = lxml_etree.parse(self.filename).getroot()
+            found = self._lxml_root.xpath(match.group(1))
+            if not isinstance(found, list):
+                msg = f"xpointer does not select elements: {xpointer}"
+                raise ReadError(msg)
+            return [
+                self._element_at(_child_path(el)[1:])
+                for el in found
+                if isinstance(el, lxml_etree._Element)
+            ]
+        msg = f"Unsupported xpointer: {xpointer}"
+        raise ReadError(msg)
 
-        target: Element = self.collection
-        for index in indices:
+    def _element_at(self, path: list[int]) -> Element:
+        """Return the element at 0-based child indices below the Domain.
+
+        :param path: The child index on each level.
+        :returns:    The element at that path.
+        """
+        target: Element = self.domain
+        for index in path:
             target = target[index]
         return target
 
@@ -472,11 +512,11 @@ class XDMFReader(meshio.xdmf.TimeSeriesReader):
             elif c.tag == "Topology" or c.tag == "Geometry":
                 continue
             elif "XInclude" in c.tag:
-                resolved = self._resolve_xinclude(c)
-                if resolved.tag == "Attribute":
-                    self._process_included_attribute(
-                        resolved, point_data, cell_data_raw, other_data
-                    )
+                for resolved in self._resolve_xinclude(c):
+                    if resolved.tag == "Attribute":
+                        self._process_included_attribute(
+                            resolved, point_data, cell_data_raw, other_data
+                        )
             else:
                 continue
 
