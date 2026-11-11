@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import logging
 from itertools import product
 from typing import TYPE_CHECKING
 from warnings import warn
@@ -17,8 +16,6 @@ from ogstools.variables import Variable
 if TYPE_CHECKING:
     from pint import Quantity
 
-logger = logging.getLogger(__name__)
-
 
 def _is_same_topology(
     mesh_a: pv.UnstructuredGrid, mesh_b: pv.UnstructuredGrid
@@ -29,19 +26,18 @@ def _is_same_topology(
     ):
         return False
 
-    has_cells_a = hasattr(mesh_a, "cells")
-    has_cells_b = hasattr(mesh_b, "cells")
+    return np.array_equal(_cells(mesh_a), _cells(mesh_b))
 
-    # both have no cells
-    if not has_cells_a and not has_cells_b:
-        return True
 
-    # only one has cells
-    if has_cells_a != has_cells_b:
-        logger.info("cells defined on only one mesh.")
-        return False
+def _cells(mesh: pv.DataSet) -> np.ndarray:
+    """Return the cell connectivity, also of a PolyData (e.g. a probed series).
 
-    return np.array_equal(mesh_a.cells, mesh_b.cells)
+    :param mesh: The mesh.
+    :returns:    The cells in VTK's flat connectivity format.
+    """
+    if isinstance(mesh, pv.UnstructuredGrid):
+        return mesh.cells
+    return mesh.cast_to_unstructured_grid().cells
 
 
 def _raw_differences_all_data(

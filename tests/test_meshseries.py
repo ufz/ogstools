@@ -1,7 +1,11 @@
 """Unit tests for meshlib."""
 
-from collections.abc import Callable
+import contextlib
+import shutil
+from collections.abc import Callable, Sequence
+from pathlib import Path
 
+import meshio
 import numpy as np
 import pytest
 import pyvista as pv
@@ -944,34 +948,349 @@ def test_save_pvd_mesh_series(tmp_path):
         assert np.abs(ms.timevalues[i] - ts) < 1e-14
 
 
-def test_save_xdmf_mesh_series(tmp_path):
-    file_name = "test.pvd"
+def _meshio_xdmf(folder: Path, times: Sequence[float] = (0.0, 1.0)) -> Path:
+    """Write a series of one quad with meshio and return its file."""
+    points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]], dtype=float)
+    # meshio writes the .h5 file in the cwd
+    with (
+        contextlib.chdir(folder),
+        meshio.xdmf.TimeSeriesWriter("meshio.xdmf") as writer,
+    ):
+        writer.write_points_cells(points, [("quad", np.array([[0, 1, 2, 3]]))])
+        for t in times:
+            writer.write_data(t, point_data={"p": np.arange(4.0) + t})
+    return folder / "meshio.xdmf"
 
-    ms = examples.load_meshseries_CT_2D_XDMF()
-    ms.save(tmp_path / file_name, deep=True)
-    ms_test = ot.MeshSeries(tmp_path / file_name)
-    assert len(ms.timevalues) == len(ms_test.timevalues)
-    assert np.abs(ms.timevalues[1] - ms_test.timevalues[1]) < 1e-14
-    assert (
-        np.abs(
-            np.sum(ms.aggregate_spatial("Si", np.max))
-            - np.sum(ms_test.aggregate_spatial("Si", np.max))
-        )
-        < 1e-14
+
+def test_read_meshio_xdmf(tmp_path):
+    """A series that meshio wrote, with xpointer() includes, is read and saved.
+
+    scope: component (MeshSeries, XDMFReader) | oracle: consistency, meshio XDMF
+    """
+    ms = ot.MeshSeries(_meshio_xdmf(tmp_path))
+    np.testing.assert_allclose(ms.timevalues, [0.0, 1.0], rtol=1e-12)
+    np.testing.assert_allclose(
+        ms.mesh(1)["p"], np.arange(4.0) + 1.0, rtol=1e-12
     )
-    for m in ms_test:
-        assert "test" in m.filepath.name
 
-    file_name = "test_shallow.pvd"
-    ms.save(tmp_path / file_name, deep=False)
-    tree = ET.parse(tmp_path / file_name)
-    num_slices = len(ms.timevalues)
-    pvd_entries = tree.findall("./Collection/DataSet")
-    num_slices_test = len(pvd_entries)
-    assert num_slices == num_slices_test
-    for i in range(num_slices):
-        ts = float(pvd_entries[i].attrib["timestep"])
-        assert np.abs(ms.timevalues[i] - ts) < 1e-14
+    ms.save(tmp_path / "saved.xdmf")
+    ms_test = ot.MeshSeries(tmp_path / "saved.xdmf")
+    assert ot.MeshSeries.compare(ms, ms_test, strict=True)
+
+
+@pytest.mark.parametrize(
+    ("xpointer", "reason"),
+    [
+        ("xpointer(count(/Xdmf))", "does not select elements"),
+        ("xmlns(a=b)", "Unsupported xpointer"),
+        (None, "without xpointer"),
+    ],
+    ids=["no-elements", "other-scheme", "missing"],
+)
+def test_read_xdmf_bad_xpointer(tmp_path, xpointer, reason):
+    """An xi:include without an xpointer that selects elements cannot be read.
+
+    scope: component (XDMFReader) | oracle: correctness, expected error
+    """
+    file = _meshio_xdmf(tmp_path)
+    tree = ET.parse(file)
+    for include in tree.iter("{*}include"):
+        if xpointer is None:
+            del include.attrib["xpointer"]
+        else:
+            include.set("xpointer", xpointer)
+    tree.write(file)
+    with pytest.raises(meshio.ReadError, match=reason):
+        ot.MeshSeries(file)
+
+
+def test_save_xdmf_shallow_keeps_inline_data(tmp_path):
+    """A shallow save keeps DataItems that hold their data inline.
+
+    scope: component (MeshSeries.save) | oracle: consistency, source series
+    """
+    file = _meshio_xdmf(tmp_path, times=[0.0])  # one dataset per variable
+    tree = ET.parse(file)
+    geometry = next(tree.iter("Geometry"))[0]
+    geometry.set("Format", "XML")
+    geometry.text = "0 0 1 0 1 1 0 1"
+    tree.write(file)
+
+    ms = ot.MeshSeries(file)
+    ms.save(tmp_path / "shallow.xdmf", deep=False)
+    assert ot.MeshSeries.compare(
+        ms, ot.MeshSeries(tmp_path / "shallow.xdmf"), strict=True
+    )
+
+
+def test_save_xdmf_shallow_needs_one_dataset(tmp_path):
+    """deep=False refuses a series that meshio wrote, one dataset per time step.
+
+    scope: component (MeshSeries.save) | oracle: correctness, expected error
+    """
+    ms = ot.MeshSeries(_meshio_xdmf(tmp_path))
+    with pytest.raises(ValueError, match="one HDF5 dataset"):
+        ms.save(tmp_path / "shallow.xdmf", deep=False)
+
+
+@pytest.mark.parametrize(
+    "load",
+    [examples.load_meshseries_LF_2D_XDMF, examples.load_meshseries_HT_2D_XDMF],
+    ids=["LF", "HT"],
+)
+def test_save_xdmf_shallow_keeps_layout(tmp_path, load):
+    """A shallow save of OGS XDMF output reads back the same data, also for a time slice.
+
+    scope: component (MeshSeries.save) | oracle: consistency, OGS HDF5 layouts
+    """
+    ms = load()[1::2]
+    files = ms.save(tmp_path / "shallow.xdmf", deep=False)
+    assert [file.suffix for file in files] == [".xdmf", ".h5"]
+    assert files[1] == ms.rawdata_file()
+
+    ms_test = ot.MeshSeries(tmp_path / "shallow.xdmf")
+    assert ot.MeshSeries.compare(ms, ms_test, strict=True)
+
+
+def test_read_xdmf_keeps_integer_point_data(tmp_path):
+    """Integer point data keeps its type, which pv.from_meshio casts to float.
+
+    scope: component (MeshSeries) | oracle: correctness, integer dtype
+    """
+    ms = examples.load_meshseries_HT_2D_PVD()[:2]
+    ms.save(tmp_path / "out.xdmf")
+    point_ids = ot.MeshSeries(tmp_path / "out.xdmf")[0]["vtkOriginalPointIds"]
+    assert point_ids.dtype == np.int64
+
+
+def _translated(ms: ot.MeshSeries) -> ot.MeshSeries:
+    return ms.transform(lambda mesh: mesh.translate([1.0, 0.0, 0.0]))
+
+
+def _first_step_replaced(ms: ot.MeshSeries) -> ot.MeshSeries:
+    ms[0] = ms[1]
+    return ms
+
+
+@pytest.mark.parametrize(
+    ("make", "target", "reason"),
+    [
+        (examples.load_meshseries_HT_2D_PVD, "out.xdmf", "not read from XDMF"),
+        (examples.load_meshseries_HT_2D_XDMF, "out.pvd", "not read from PVD"),
+        (
+            lambda: _translated(examples.load_meshseries_HT_2D_XDMF()),
+            "out.xdmf",
+            "changed after reading",
+        ),
+        (
+            lambda: _translated(examples.load_meshseries_HT_2D_PVD()),
+            "out.pvd",
+            "changed after reading",
+        ),
+        (
+            lambda: _first_step_replaced(examples.load_meshseries_HT_2D_XDMF()),
+            "out.xdmf",
+            "changed after reading",
+        ),
+    ],
+    ids=[
+        "PVD-to-XDMF",
+        "XDMF-to-PVD",
+        "changed-XDMF",
+        "changed-PVD",
+        "set-XDMF",
+    ],
+)
+def test_save_shallow_needs_unchanged_source(tmp_path, make, target, reason):
+    """deep=False refuses a series whose data it cannot reference.
+
+    scope: component (MeshSeries.save) | oracle: correctness, expected error
+    """
+    with pytest.raises(ValueError, match=reason):
+        make().save(tmp_path / target, deep=False)
+
+
+def test_save_target_selects_format(tmp_path, monkeypatch):
+    """The suffix of the target selects the format; others are refused.
+
+    scope: component (MeshSeries.save) | oracle: correctness, file names per target
+    """
+    monkeypatch.setattr(ot.StorageBase, "Userpath", tmp_path)
+    ms = examples.load_meshseries_HT_2D_XDMF()[:2]
+    assert ms.copy().save()[0].suffix == ".pvd"
+    assert ms.copy().save(id="a")[0] == tmp_path / "MeshSeries" / "a" / "ms.pvd"
+    assert ot.MeshSeries.compare(ms, ot.MeshSeries.from_id("a"), strict=True)
+    files = ms.copy().save(tmp_path / "out.xdmf")
+    assert files == [tmp_path / "out.xdmf", tmp_path / "out.h5"]
+    (tmp_path / "out.vtu").touch()
+    monkeypatch.setattr(ot.StorageBase, "Backup", True)
+    with pytest.raises(RuntimeError, match=r"not '\.vtu'"):
+        ms.copy().save(tmp_path / "out.vtu", overwrite=True)
+    assert (tmp_path / "out.vtu").exists()  # not moved into a backup
+
+
+def _with_text(mesh: pv.UnstructuredGrid) -> pv.UnstructuredGrid:
+    mesh.field_data["note"] = np.array(["abc"])
+    return mesh
+
+
+def test_save_xdmf_refuses_text_data(tmp_path):
+    """A deep XDMF save refuses data that HDF5 cannot store as numbers.
+
+    scope: component (MeshSeries.save) | oracle: correctness, expected error
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()[:2].transform(_with_text)
+    with pytest.raises(ValueError, match="'note' of type <U3"):
+        ms.save(tmp_path / "ms.xdmf")
+    assert not (tmp_path / "ms.h5").exists()
+
+
+def test_save_xdmf_onto_its_source(tmp_path, monkeypatch):
+    """A deep save does not truncate or back up the files the series reads from.
+
+    scope: component (MeshSeries.save) | oracle: correctness, expected error and unchanged files
+    """
+    examples.load_meshseries_HT_2D_XDMF()[:2].save(tmp_path / "ms.xdmf")
+    ms = ot.MeshSeries(tmp_path / "ms.xdmf")
+    monkeypatch.setattr(ot.StorageBase, "Backup", True)
+    with pytest.raises(ValueError, match="reads from"):
+        ms.save(tmp_path / "ms.xdmf", overwrite=True)
+    ms._bind_to_path(tmp_path / "ms.xdmf")  # as a later save() without target
+    with pytest.raises(ValueError, match="reads from"):
+        ms.save(overwrite=True)
+    assert sorted(f.name for f in tmp_path.iterdir()) == ["ms.h5", "ms.xdmf"]
+    assert ot.MeshSeries.compare(ms, ot.MeshSeries(tmp_path / "ms.xdmf"))
+
+
+def test_save_xdmf_keeps_left_over_h5(tmp_path):
+    """Without overwrite, a deep save does not truncate an HDF5 file without XDMF.
+
+    scope: component (MeshSeries.save) | oracle: correctness, expected error and unchanged file
+    """
+    (tmp_path / "ms.h5").write_bytes(b"data")
+    ms = examples.load_meshseries_HT_2D_XDMF()[:2]
+    with pytest.raises(ValueError, match=r"overwrite the file: .*ms\.h5"):
+        ms.save(tmp_path / "ms.xdmf", overwrite=False)
+    assert (tmp_path / "ms.h5").read_bytes() == b"data"
+    assert not (tmp_path / "ms.xdmf").exists()
+
+
+def test_save_xdmf_shallow_moves_with_source(tmp_path):
+    """A shallow save still reads its data after it moves together with its source.
+
+    scope: component (MeshSeries.save) | oracle: consistency, source series
+    """
+    source = examples.load_meshseries_HT_2D_XDMF()
+    run = tmp_path / "before" / "run"
+    run.mkdir(parents=True)
+    for file in [source.filepath, source.rawdata_file()]:
+        shutil.copy(file, run)
+    ms = ot.MeshSeries(run / source.filepath.name)
+    ms.save(tmp_path / "before" / "out" / "ms.xdmf", deep=False)
+
+    (tmp_path / "before").rename(tmp_path / "after")
+    moved = ot.MeshSeries(tmp_path / "after" / "out" / "ms.xdmf")
+    assert ot.MeshSeries.compare(source, moved, strict=True)
+
+
+@pytest.mark.parametrize("suffix", [".xdmf", ".pvd"])
+def test_read_symlinked_file(tmp_path, suffix):
+    """A series read through a symlink finds the data files next to its target.
+
+    scope: component (MeshSeries) | oracle: consistency, saved series
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()[:2]
+    ms.save(tmp_path / "a" / f"ms{suffix}")
+    ms.link(tmp_path / "b" / f"ms{suffix}", dry_run=False)
+    linked = ot.MeshSeries(tmp_path / "b" / f"ms{suffix}")
+    assert ot.MeshSeries.compare(ms, linked, strict=True)
+
+
+@pytest.mark.parametrize("suffix", [".xdmf", ".pvd"])
+def test_save_backup_keeps_data_files(tmp_path, monkeypatch, suffix):
+    """A backup on overwrite keeps the data files of the old series too.
+
+    scope: component (MeshSeries.save) | oracle: consistency, restored backup
+    """
+    monkeypatch.setattr(ot.StorageBase, "Backup", True)
+    old = examples.load_meshseries_HT_2D_XDMF()[:2]
+    old.save(tmp_path / "out" / f"ms{suffix}")
+    new = _translated(old)
+    new.save(tmp_path / "out" / f"ms{suffix}", overwrite=True)
+
+    restored = tmp_path / "restored"
+    restored.mkdir()
+    for backup in (tmp_path / "out").glob("*_backup_*"):
+        name = backup.name.rsplit("_backup_", 1)[0]
+        (restored / name).write_bytes(backup.read_bytes())
+    ms = ot.MeshSeries(restored / f"ms{suffix}")
+    assert ot.MeshSeries.compare(old, ms, strict=True)
+
+
+@pytest.mark.parametrize(
+    ("load", "suffix"),
+    [
+        (examples.load_meshseries_HT_2D_XDMF, ".xdmf"),
+        (examples.load_meshseries_HT_2D_PVD, ".pvd"),
+    ],
+    ids=["XDMF", "PVD"],
+)
+@pytest.mark.parametrize("deep", [True, False], ids=["deep", "shallow"])
+def test_save_dry_run_lists_written_files(tmp_path, load, suffix, deep):
+    """A dry run returns the files that the save returns.
+
+    scope: component (MeshSeries.save) | oracle: consistency, real save
+    """
+    target = tmp_path / f"out{suffix}"
+    dry = load().save(target, deep=deep, dry_run=True)
+    assert dry == load().save(target, deep=deep)
+
+
+def test_save_probe_point(tmp_path):
+    """A series of a single point can be written and read again.
+
+    scope: component (MeshSeries.save) | oracle: consistency, probed values
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()
+    pt = np.array([[2.0, 10.0, 0.0]])
+    ms_probe = ms.probe(pt, "temperature")
+
+    ms_probe.save(tmp_path / "probe_out.xdmf")
+    ms2 = ot.MeshSeries(tmp_path / "probe_out.xdmf")
+    assert ot.MeshSeries.compare(ms_probe, ms2, strict=True)
+    assert ms2.mesh(0).n_points == 1
+
+
+@pytest.mark.parametrize(
+    ("load", "target"),
+    [
+        (examples.load_meshseries_CT_2D_XDMF, "out.xdmf"),
+        (examples.load_meshseries_HT_2D_XDMF, "out.xdmf"),
+        (examples.load_meshseries_HT_2D_PVD, "out.xdmf"),
+        (examples.load_meshseries_THM_2D_PVD, "out.xdmf"),
+        (examples.load_meshseries_CT_2D_XDMF, "out.pvd"),
+        (examples.load_meshseries_HT_2D_XDMF, "out.pvd"),
+    ],
+    ids=[
+        "CT-XDMF",
+        "HT-XDMF",
+        "HT-PVD-to-XDMF",
+        "THM-PVD-to-XDMF",
+        "CT-XDMF-to-PVD",
+        "HT-XDMF-to-PVD",
+    ],
+)
+def test_save_roundtrip(tmp_path, load, target):
+    """Saving and loading again gives the same series, also in the other format.
+
+    scope: component (MeshSeries.save) | oracle: consistency, re-read series
+    """
+    ms = load()
+    files = ms.save(tmp_path / target)
+    assert all(f.exists() and f.name.startswith("out") for f in files)
+
+    ms2 = ot.MeshSeries(tmp_path / target)
+    assert ot.MeshSeries.compare(ms, ms2, strict=True)
 
 
 def test_remove_array():

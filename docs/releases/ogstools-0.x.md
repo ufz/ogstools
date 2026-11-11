@@ -29,6 +29,15 @@
 - `MeshSeries.probe_values` with a list of data names works with pyvista 0.49 ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 - `Variable.transform` works with pint 0.26 for units with an offset, such as `°C**2` of a temperature variance ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 - Vector plots with vtk 9.7 draw no arrow outside the mesh ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
+- `MeshSeries` reads XDMF files that meshio wrote.
+  Their `xi:include` elements use an `xpointer()` XPath, which raised a `ReadError` ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- `MeshSeries` reads a PVD or XDMF file through a symlink, as `StorageBase.link` creates it.
+  It looked for the data files next to the symlink instead of next to its target ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- XDMF point data keeps its integer type instead of being cast to float ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- `MeshSeries.save("x.pvd")` of a series read from XDMF writes one VTU file per time step, and a dry run returns the files the save writes ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- `MeshSeries.save("x.pvd", deep=False)` raises a `ValueError` for a series that was changed after reading or not read from PVD.
+  It wrote a PVD file that referenced VTU files that do not exist ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- With `StorageBase.Backup`, overwriting a `.pvd` or `.xdmf` file backs up its VTU or HDF5 files too, not only the PVD or XDMF file ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 
 ## Features
 
@@ -49,6 +58,12 @@
 - The integrity criteria are masked by the field `variables.INTEGRITY_MASK` ("host_rock") instead of "displacement_active".
 - ogs6py
   - added `Project.convert_to_staggered` (`ogstools.ogs6py.staggered`), which converts a monolithic HT, HYDRO_MECHANICS, RICHARDS_MECHANICS, THERMO_HYDRO_MECHANICS or THERMO_MECHANICS project to the staggered scheme: one time loop process per process variable, with the monolithic convergence criterion split by components and own copies of the nonlinear and linear solvers. ([!514](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/514))
+- `MeshSeries.save("x.xdmf")` writes the series as XDMF, with all time steps in one HDF5 file `x.h5`.
+  Read it back with `MeshSeries("x.xdmf")`.
+  With `deep=False`, a series read from XDMF gets only an XDMF file that references its HDF5 data.
+  A `.pvd` target, no target and `save(id=...)` still write PVD and VTU files.
+  Data that is not a number, such as text, raises a `ValueError`; save it as `.pvd`.
+  Any other suffix raises a `RuntimeError` before anything is written ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 
 ## Infrastructure
 
@@ -76,3 +91,5 @@
 ### next sub release
 
 ### next main release
+
+- `MeshSeries.save` with a suffix other than `.pvd` or `.xdmf`: raise a `ValueError` instead of a `RuntimeError` ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
