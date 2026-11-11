@@ -115,3 +115,21 @@ def test_model_constraint_meshes_apart_from_prj(tmp_path):
     # top, bottom: built from square_1x1.gml, as the prj uses them
     # two_anchors: read from the meshes folder
     assert set(meshes.subdomains) == {"top", "bottom", "two_anchors"}
+
+
+def test_model_auto_identify_domain():
+    """Domain gets id mapping if it has a constraint itself.
+
+    scope: component (Model.save) | oracle: correctness, bulk_node_ids/bulk_element_ids
+    """
+    prj = (
+        EXAMPLES_DIR / "prj" / "HydroMechanics/AnchorSourceTerm/two_anchors.prj"
+    )
+    model = ot.Model(prj)
+    model.project.parameters["zero"] = 0
+    model.project.process_variables.add_st(
+        "pressure", "Nodal", mesh="square_1x1_quad4_1e2", parameter="zero"
+    )
+    assert "bulk_node_ids" not in model.meshes.domain.point_data
+    model.save()
+    assert "bulk_node_ids" in model.meshes.domain.point_data
