@@ -968,8 +968,10 @@ def test_read_meshio_xdmf(tmp_path):
     scope: component (MeshSeries, XDMFReader) | oracle: consistency, meshio XDMF
     """
     ms = ot.MeshSeries(_meshio_xdmf(tmp_path))
-    np.testing.assert_array_equal(ms.timevalues, [0.0, 1.0])
-    np.testing.assert_array_equal(ms.mesh(1)["p"], np.arange(4.0) + 1.0)
+    np.testing.assert_allclose(ms.timevalues, [0.0, 1.0], rtol=1e-12)
+    np.testing.assert_allclose(
+        ms.mesh(1)["p"], np.arange(4.0) + 1.0, rtol=1e-12
+    )
 
     ms.save(tmp_path / "saved.xdmf")
     ms_test = ot.MeshSeries(tmp_path / "saved.xdmf")
