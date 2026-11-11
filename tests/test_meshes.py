@@ -1,5 +1,6 @@
 """Unit tests for meshlib."""
 
+import math
 import shutil
 from collections.abc import Callable
 from itertools import pairwise
@@ -7,13 +8,13 @@ from pathlib import Path
 from typing import cast
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import pyvista as pv
 import shapely
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
+from scipy.spatial import KDTree as scikdtree
 
 import ogstools as ot
 from ogstools import examples
@@ -124,17 +125,99 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
     assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
 
 
-@pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
-def test_meshes_from_spatial_data() -> plt.Figure:
-    """test that meshing from spatial data works correctly"""
+def _cellsize_near_point(dim, tag, x, y, z, lc):  # noqa: ARG001
+    """Cell size that grows with the distance to (7.5, 2.5), from 0.2 up to lc.
 
-    def point_distance(dim, tag, x, y, z, lc):  # noqa: ARG001
-        # do not remove unused arguments. gmsh requires that the callback function be of this form.
-        import math
+    Callback for gmsh's setSizeCallback: gmsh requires all six arguments,
+    so do not remove the unused ones.
+    """
+    distance = math.hypot(x - 7.5, y - 2.5)
+    return min(max(0.2, distance / 5), lc)
 
-        distance = math.sqrt((x - 7.5) ** 2 + (y - 2.5) ** 2)
-        return min(max(0.2, distance / 5), lc)
 
+def _check_meshes_match_polygon(
+    meshes: ot.Meshes, domain_polygon: shapely.Polygon
+) -> None:
+    """Check the domain boundary matches the polygon and submeshes nest in the domain."""
+    domain = meshes.domain
+    # Allowed round-off, relative to the domain size and as a distance.
+    rtol = 1e-6
+    atol = rtol * np.ptp(domain.points[:, :2], axis=0).max()
+
+    # The domain mesh has the same boundary as the domain polygon (in xy).
+    np.testing.assert_allclose(
+        np.asarray(domain.bounds)[[0, 2, 1, 3]],
+        domain_polygon.bounds,
+        rtol=0,
+        atol=atol,
+    )
+    flat_domain = domain.copy()
+    flat_domain.points[:, 2] = 0.0
+    area = flat_domain.compute_cell_sizes()["Area"].sum()
+    np.testing.assert_allclose(area, domain_polygon.area, rtol=rtol, atol=0)
+    boundary = domain.extract_feature_edges(
+        boundary_edges=True,
+        feature_edges=False,
+        manifold_edges=False,
+        non_manifold_edges=False,
+    )
+    boundary_xy = boundary.points[:, :2]
+    distance_to_polygon = shapely.distance(
+        domain_polygon.boundary, shapely.points(boundary_xy)
+    )
+    np.testing.assert_array_less(distance_to_polygon, atol)
+    polygon_vertices = np.asarray(domain_polygon.exterior.coords)[:, :2]
+    distance_to_mesh, _ = scikdtree(boundary_xy).query(polygon_vertices)
+    np.testing.assert_array_less(distance_to_mesh, atol)
+
+    # Every point of every submesh is a point of the domain mesh.
+    domain_tree = scikdtree(domain.points)
+    for name, submesh in meshes.subdomains.items():
+        distance_to_domain, _ = domain_tree.query(submesh.points)
+        np.testing.assert_array_less(distance_to_domain, atol, err_msg=name)
+
+
+def test_meshes_from_spatial_files():
+    """Meshing .gpkg, .shp and .geojson files gives one submesh per layer and keeps the domain boundary.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    meshes = ot.Meshes.from_spatial_data(
+        [
+            examples.selke_gpkg,
+            examples.koenigsauer_shp,
+            examples.concordia_geojson,
+        ],
+        cellsize=2000,
+    )
+    # Check that the correct submeshes were created: one per gpkg layer
+    # ("filename_layername") and one per shp/geojson file ("filename").
+    expected_celltypes = {
+        "Selke_Basin_Domain_homo": pv.CellType.TRIANGLE,
+        "Selke_Basin_PG_Wilsleber": pv.CellType.TRIANGLE,
+        "Selke_Basin_PL_Bode": pv.CellType.LINE,
+        "Selke_Basin_PL_Selke": pv.CellType.LINE,
+        "Selke_Basin_PL_Wipper": pv.CellType.LINE,
+        "Selke_Basin_Pnt_Wells": pv.CellType.VERTEX,
+        "Selke_Basin_PG_Koenigsauer": pv.CellType.TRIANGLE,
+        "Selke_Basin_PG_Concordia": pv.CellType.TRIANGLE,
+    }
+    assert set(meshes.subdomains) == set(expected_celltypes)
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes[name].celltypes == celltype), name
+    wells = gpd.read_file(examples.selke_gpkg, layer="Pnt_Wells")
+    assert meshes["Selke_Basin_Pnt_Wells"].n_points == len(wells)
+    domain_polygon = gpd.read_file(
+        examples.selke_gpkg, layer="Domain_homo"
+    ).union_all()
+    _check_meshes_match_polygon(meshes, domain_polygon)
+
+
+def test_meshes_from_spatial_data():
+    """Meshing GeoDataFrames clips to the domain, keeps its boundary and keeps the requested cell sizes.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, input geometry and cell sizes
+    """
     gdf_domain = gpd.GeoDataFrame(
         geometry=[shapely.Polygon(((0, 0), (10, 0), (10, 10), (0, 10), (0, 0)))]
     )
@@ -166,36 +249,23 @@ def test_meshes_from_spatial_data() -> plt.Figure:
         spatial_data=frame_list,
         domain="square",
         cellsize=2,
-        cellsize_func=point_distance,
-        silence_gmsh_log=True,
+        cellsize_func=_cellsize_near_point,
     )
-    # Check that correct submeshes were created
-    assert len(meshes_square) == 5
-    for name in ["square", "layer_0", "left", "middle", "points"]:
-        assert name in meshes_square
-    assert "clip" not in meshes_square
-    # Check that the resulting mesh has the correct size
-    mesh_domain_bounds = np.array(
-        [
-            meshes_square.domain.bounds[0],
-            meshes_square.domain.bounds[2],
-            meshes_square.domain.bounds[1],
-            meshes_square.domain.bounds[3],
-        ]
-    )
-    assert np.allclose(gdf_domain.total_bounds, mesh_domain_bounds)
-    # Check that submeshes are consistent with the domain mesh
-    for _, submesh in meshes_square.subdomains.items():
-        assert np.all(
-            np.any(
-                np.all(
-                    submesh.points[:, np.newaxis, :]
-                    == meshes_square.domain.points,
-                    axis=-1,
-                ),
-                axis=-1,
-            )
-        )
+    # Check that the correct submeshes were created: one per frame, named after
+    # it, except the domain "square" and "clip", which lies outside the domain.
+    expected_celltypes = {
+        "layer_0": pv.CellType.TRIANGLE,
+        "left": pv.CellType.LINE,
+        "middle": pv.CellType.LINE,
+        "points": pv.CellType.VERTEX,
+    }
+    assert set(meshes_square) == {"square", *expected_celltypes}
+    assert set(meshes_square.subdomains) == set(expected_celltypes)
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes_square[name].celltypes == celltype), name
+    assert meshes_square["points"].n_points == len(gdf_points)
+    # Check the domain boundary and that submeshes are consistent with the domain
+    _check_meshes_match_polygon(meshes_square, gdf_domain.union_all())
     # Check correctness of cellsizes
     meshes_square.domain = meshes_square.domain.compute_cell_sizes()
     layer_0_cell_ids = np.flatnonzero(
@@ -210,13 +280,12 @@ def test_meshes_from_spatial_data() -> plt.Figure:
         ]
         < 0.2
     )
-    return meshes_square.plot()
 
 
 def test_meshes_from_spatial_with_height():
-    """
-    Testing that interpolating height data for meshing from spatial data works correctly.
-    Separate test since correctly sized cells can no longer be guaranteed when adding height data
+    """Interpolated mesh heights stay within the heights of the geometry and the height data.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, input heights
     """
     gdf_domain = gpd.GeoDataFrame(
         geometry=[
@@ -247,8 +316,11 @@ def test_meshes_from_spatial_with_height():
         cellsize=2,
         height_data=height_data,
     )
-    assert meshes_with_height.domain.bounds.z_min > 100 - 1e-8
-    assert meshes_with_height.domain.bounds.z_max < 110 + 1e-8
+    # Cell sizes are not checked: the height interpolation distorts them.
+    # Interpolated heights stay within the input heights, up to round-off.
+    height_atol = 1e-8
+    assert meshes_with_height.domain.bounds.z_min > 100 - height_atol
+    assert meshes_with_height.domain.bounds.z_max < 110 + height_atol
     assert np.all(
         np.any(
             np.all(
