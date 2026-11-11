@@ -163,7 +163,7 @@ def test_meshes_from_spatial_data() -> plt.Figure:
         ("clip", gdf_clip),
     ]
     meshes_square = ot.Meshes.from_spatial_data(
-        files=frame_list,
+        spatial_data=frame_list,
         domain="square",
         cellsize=2,
         cellsize_func=point_distance,

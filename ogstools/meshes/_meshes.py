@@ -353,7 +353,7 @@ class Meshes(MutableMapping, StorageBase):
     @classmethod
     def from_spatial_data(
         cls,
-        files: (
+        spatial_data: (
             Path
             | str
             | GeoDataFrame
@@ -391,7 +391,7 @@ class Meshes(MutableMapping, StorageBase):
 
         7.  All files/GeoDataFrames must have the same crs attached.
 
-        :param files:               The geodata to be meshed. Can be given as path to a
+        :param spatial_data:        The geodata to be meshed. Can be given as path to a
                                     .gpkg/.shp/.geojson file, GeoDataFrame, tuple of name and
                                     GeoDataFrame or list of any of the above.
                                     Several inputs must be given as a list, not as a
@@ -433,17 +433,17 @@ class Meshes(MutableMapping, StorageBase):
         import pandas as pd
         import shapely
 
-        if not isinstance(files, list):
-            files = [files]
+        if not isinstance(spatial_data, list):
+            spatial_data = [spatial_data]
         if height_data is not None and height_data.shape[1] != 3:
             msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
             raise ValueError(msg)
         layer_dict: dict[str, gpd.GeoDataFrame] = {}
-        gdf = 1
-        for file in files:
+        gdf_number = 1
+        for file in spatial_data:
             if isinstance(file, gpd.GeoDataFrame):
-                layer_dict[f"frame_{gdf}"] = file.copy().explode()
-                gdf += 1
+                layer_dict[f"frame_{gdf_number}"] = file.copy().explode()
+                gdf_number += 1
             elif isinstance(file, tuple):
                 layer_dict[file[0]] = file[1].copy().explode()
             else:
@@ -542,7 +542,7 @@ class Meshes(MutableMapping, StorageBase):
             dissolved_polys.geometry.representative_point()
         )
         dissolved_polys.set_geometry("rep_point", inplace=True)
-        sj = gpd.GeoDataFrame(
+        poly_sj = gpd.GeoDataFrame(
             gpd.sjoin(
                 left_df=dissolved_polys,
                 right_df=geom_dict["Polygon"],
@@ -571,9 +571,11 @@ class Meshes(MutableMapping, StorageBase):
         coords = (
             pd.concat(
                 [
-                    sj.get_coordinates(include_z=False, index_parts=True)
+                    poly_sj.get_coordinates(include_z=False, index_parts=True)
                     .reset_index()
-                    .merge(sj["cellsize"], left_on="level_0", right_index=True),
+                    .merge(
+                        poly_sj["cellsize"], left_on="level_0", right_index=True
+                    ),
                     geom_dict["LineString"]
                     .get_coordinates(include_z=False, index_parts=True)
                     .reset_index()
@@ -624,16 +626,16 @@ class Meshes(MutableMapping, StorageBase):
                         -line_ids[(coord_tags[end], coord_tags[start])]
                     )
                 else:
-                    lnid = gmsh.model.geo.add_line(
+                    line_id = gmsh.model.geo.add_line(
                         coord_tags[start], coord_tags[end]
                     )
-                    result_ids.append(lnid)
-                    new_ids.append(lnid)
-                    line_ids[(coord_tags[start], coord_tags[end])] = lnid
+                    result_ids.append(line_id)
+                    new_ids.append(line_id)
+                    line_ids[(coord_tags[start], coord_tags[end])] = line_id
             return result_ids, new_ids
 
         poly_ids: dict[int, int] = {}
-        for index, row in sj.iterrows():
+        for index, row in poly_sj.iterrows():
             outer_boundary_ids, _ = gmsh_add_lines(
                 row["geometry"].exterior, coord_tags, line_ids
             )
@@ -649,7 +651,7 @@ class Meshes(MutableMapping, StorageBase):
         # Since we can only embed in polygon interiors we need to keep track
         # which lines actually can/need to be embedded and which polygon they
         # lie in
-        line_embed: dict[int, list[int]] = {name: [] for name in sj.index}
+        line_embed: dict[int, list[int]] = {name: [] for name in poly_sj.index}
         lines_groups: dict[str, list[int]] = {
             name: []
             for name in geom_dict["LineString"]["original_layer"].unique()
@@ -665,13 +667,13 @@ class Meshes(MutableMapping, StorageBase):
         }
         point_sj = gpd.sjoin(
             geom_dict["Point"],
-            sj,
+            poly_sj,
             how="left",
             predicate="within",
         )
         point_embed = dict(
             zip(
-                sj.index,
+                poly_sj.index,
                 [
                     [
                         coord_tags[(row.geometry.x, row.geometry.y)]
@@ -679,14 +681,14 @@ class Meshes(MutableMapping, StorageBase):
                             point_sj["index_right"] == i
                         ].iterrows()
                     ]
-                    for i in sj.index
+                    for i in poly_sj.index
                 ],
                 strict=True,
             )
         )
         line_sj = gpd.sjoin(
             geom_dict["LineString"],
-            sj,
+            poly_sj,
             how="left",
             predicate="within",
         ).reset_index()
