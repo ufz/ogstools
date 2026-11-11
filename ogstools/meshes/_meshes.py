@@ -8,14 +8,10 @@ import logging as log
 import os
 from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from pathlib import Path
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
-import geopandas as gpd
-import gmsh
 import numpy as np
-import pandas as pd
 import pyvista as pv
-import shapely
 import yaml
 from matplotlib import pyplot as plt
 
@@ -26,6 +22,9 @@ from ogstools.definitions import temp_file
 from ogstools.mesh import check_datatypes, utils
 
 logger = log.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
 
 
 class Meshes(MutableMapping, StorageBase):
@@ -357,9 +356,9 @@ class Meshes(MutableMapping, StorageBase):
         files: (
             Path
             | str
-            | gpd.GeoDataFrame
-            | tuple[str, gpd.GeoDataFrame]
-            | list[str | Path | gpd.GeoDataFrame | tuple[str, gpd.GeoDataFrame]]
+            | GeoDataFrame
+            | tuple[str, GeoDataFrame]
+            | list[str | Path | GeoDataFrame | tuple[str, GeoDataFrame]]
         ),
         cellsize: float | None = None,
         cellsize_func: str | Callable | None = None,
@@ -429,6 +428,11 @@ class Meshes(MutableMapping, StorageBase):
         :param log:                 if True shows log from gmsh during meshing
         :returns:                   A Meshes object.
         """
+        import geopandas as gpd
+        import gmsh
+        import pandas as pd
+        import shapely
+
         if not isinstance(files, list):
             files = [files]
         if height_data is not None and height_data.shape[1] != 3:
