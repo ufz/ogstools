@@ -366,7 +366,7 @@ class Meshes(MutableMapping, StorageBase):
         domain: str | None = None,
         height_data: np.ndarray | None = None,
         silence_gmsh_log: bool = True,
-    ) -> Meshes:
+    ) -> Self:
         """Create Meshes by meshing spatial data via gmsh.
 
         Every file/frame and every layer within a geopackage corresponds to a submesh of the result.
@@ -714,7 +714,7 @@ class Meshes(MutableMapping, StorageBase):
         )
         gmsh.write(str(msh_file))
         gmsh.finalize()
-        meshes = Meshes.from_gmsh(
+        meshes = cls.from_gmsh(
             msh_file,
             log=False,
             reindex=False,
