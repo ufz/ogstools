@@ -365,7 +365,7 @@ class Meshes(MutableMapping, StorageBase):
         cellsize_func: str | Callable | None = None,
         domain: str | None = None,
         height_data: np.ndarray | None = None,
-        silence_gmsh_log: bool = True,
+        log: bool = False,
     ) -> Self:
         """Create Meshes by meshing spatial data via gmsh.
 
@@ -426,7 +426,7 @@ class Meshes(MutableMapping, StorageBase):
         :param height_data:         Additional height_data provided as points with 3D coordinates.
                                     These points will not be forced into the topology during meshing
                                     but considered during height interpolation at the end
-        :param silence_gmsh_log:    if True does not show log from gmsh during meshing
+        :param log:                 if True shows log from gmsh during meshing
         :returns:                   A Meshes object.
         """
         if not isinstance(files, list):
@@ -562,7 +562,7 @@ class Meshes(MutableMapping, StorageBase):
             gmsh.model.mesh.field.setAsBackgroundMesh(math_field)
         elif callable(cellsize_func):
             gmsh.model.mesh.setSizeCallback(cellsize_func)
-        if silence_gmsh_log:
+        if not log:
             gmsh.option.setNumber("General.Terminal", 0)
         coords = (
             pd.concat(
