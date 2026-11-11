@@ -431,6 +431,9 @@ class Meshes(MutableMapping, StorageBase):
         """
         if not isinstance(files, list):
             files = [files]
+        if height_data is not None and height_data.shape[1] != 3:
+            msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
+            raise ValueError(msg)
         layer_dict: dict[str, gpd.GeoDataFrame] = {}
         gdf = 1
         for file in files:
@@ -461,9 +464,6 @@ class Meshes(MutableMapping, StorageBase):
             raise ValueError(msg)
         for name, layer in layer_dict.items():
             layer["original_layer"] = name
-        if height_data is not None and height_data.shape[1] != 3:
-            msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
-            raise ValueError(msg)
         is_3d = any(
             layer.geometry.has_z.any() for _, layer in layer_dict.items()
         )
