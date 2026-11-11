@@ -25,6 +25,7 @@ logger = log.getLogger(__name__)
 
 if TYPE_CHECKING:
     from geopandas import GeoDataFrame
+    from shapely import LinearRing, LineString
 
 
 class Meshes(MutableMapping, StorageBase):
@@ -351,6 +352,51 @@ class Meshes(MutableMapping, StorageBase):
         return meshes_obj
 
     @classmethod
+    def _gmsh_add_lines(
+        cls,
+        lines: LineString | LinearRing,
+        coord_tags: dict[tuple[float, float], int],
+        line_ids: dict[tuple[int, int], int],
+    ) -> tuple[list[int], list[int]]:
+        """
+        Inserts lines into gmsh. Note that this assumes that gmsh is already initialized
+        and does not finalize gmsh. Be careful to do this yourself when calling this function!
+
+        :param lines:       The geometries which are to be added
+        :param coord tags:  Mapping from point coordinates to gmsh point tags
+        :param line_ids:    Mapping of tags of vertices to line tags. Keeps track
+                            of existing lines to ensure that no line is added twice.
+
+        :returns:   a list of all gmsh line tags of line segments making up the input line
+                    and a list of gmsh line tags of newly created lines
+        """
+        import gmsh
+
+        result_ids = []
+        new_ids = []
+        for start, end in zip(
+            lines.coords[:-1],
+            lines.coords[1:],
+            strict=True,
+        ):
+            if (coord_tags[start], coord_tags[end]) in line_ids:
+                result_ids.append(
+                    line_ids[(coord_tags[start], coord_tags[end])]
+                )
+            elif (coord_tags[end], coord_tags[start]) in line_ids:
+                result_ids.append(
+                    -line_ids[(coord_tags[end], coord_tags[start])]
+                )
+            else:
+                line_id = gmsh.model.geo.add_line(
+                    coord_tags[start], coord_tags[end]
+                )
+                result_ids.append(line_id)
+                new_ids.append(line_id)
+                line_ids[(coord_tags[start], coord_tags[end])] = line_id
+        return result_ids, new_ids
+
+    @classmethod
     def from_spatial_data(
         cls,
         spatial_data: (
@@ -604,45 +650,15 @@ class Meshes(MutableMapping, StorageBase):
                 point.x, point.y, 0.0, point.cellsize
             )
         line_ids: dict[tuple[int, int], int] = {}
-
-        def gmsh_add_lines(
-            lines: shapely.LineString | shapely.LinearRing,
-            coord_tags: dict[tuple[float, float], int],
-            line_ids: dict[tuple[int, int], int],
-        ) -> tuple[list[int], list[int]]:
-            result_ids = []
-            new_ids = []
-            for start, end in zip(
-                lines.coords[:-1],
-                lines.coords[1:],
-                strict=True,
-            ):
-                if (coord_tags[start], coord_tags[end]) in line_ids:
-                    result_ids.append(
-                        line_ids[(coord_tags[start], coord_tags[end])]
-                    )
-                elif (coord_tags[end], coord_tags[start]) in line_ids:
-                    result_ids.append(
-                        -line_ids[(coord_tags[end], coord_tags[start])]
-                    )
-                else:
-                    line_id = gmsh.model.geo.add_line(
-                        coord_tags[start], coord_tags[end]
-                    )
-                    result_ids.append(line_id)
-                    new_ids.append(line_id)
-                    line_ids[(coord_tags[start], coord_tags[end])] = line_id
-            return result_ids, new_ids
-
         poly_ids: dict[int, int] = {}
         for index, row in poly_sj.iterrows():
-            outer_boundary_ids, _ = gmsh_add_lines(
+            outer_boundary_ids, _ = cls._gmsh_add_lines(
                 row["geometry"].exterior, coord_tags, line_ids
             )
             outer_id = gmsh.model.geo.addCurveLoop(outer_boundary_ids)
             inner_ids = []
             for ring in row["geometry"].interiors:
-                ring_ids, _ = gmsh_add_lines(ring, coord_tags, line_ids)
+                ring_ids, _ = cls._gmsh_add_lines(ring, coord_tags, line_ids)
                 inner_ids.append(gmsh.model.geo.addCurveLoop(ring_ids))
             result = gmsh.model.geo.addPlaneSurface([outer_id, *inner_ids])
             poly_ids[index] = result
@@ -693,7 +709,7 @@ class Meshes(MutableMapping, StorageBase):
             predicate="within",
         ).reset_index()
         for _, line in line_sj.iterrows():
-            line_segments, new_segments = gmsh_add_lines(
+            line_segments, new_segments = cls._gmsh_add_lines(
                 line["geometry"],
                 coord_tags=coord_tags,
                 line_ids=line_ids,
