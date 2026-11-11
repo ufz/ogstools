@@ -26,6 +26,9 @@
 - the logparser reads the end messages of current OGS versions: `OGS completed on`, `Simulation aborted on … Received signal`, and `OGS terminated on … One of the tests failed.`
   `Simulation failed` gives a `SimulationExecutionTimeFailed` record, and the live monitor reports it as terminated with error.
   `SimulationAbort` records now carry `mpi_process` ([!520](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/520)).
+- `MeshSeries.probe_values` with a list of data names works with pyvista 0.49 ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
+- `Variable.transform` works with pint 0.26 for units with an offset, such as `°C**2` of a temperature variance ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
+- Vector plots with vtk 9.7 draw no arrow outside the mesh ([!521](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/521)).
 
 ## Features
 

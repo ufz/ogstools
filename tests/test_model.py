@@ -1,3 +1,4 @@
+import os
 import shutil
 
 import pytest
@@ -78,6 +79,10 @@ def test_domain_mesh_resolution(tmp_path):
 
 
 @pytest.mark.system
+@pytest.mark.skipif(
+    "OGS_BIN_PATH" in os.environ,
+    reason="The Python BC imports ogstools which may not be installed when OGS_BIN_PATH is set.",
+)
 def test_model_run_python_bc_imports_module_next_to_it(tmp_path):
     """The python BC script imports decay_parameters.py, which lies next to it."""
     from ogstools.examples import prj_nuclear_decay

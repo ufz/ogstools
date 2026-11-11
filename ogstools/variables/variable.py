@@ -400,7 +400,9 @@ class Variable:
         """
         var = self._finalize_units(data)
         if (
-            not u_reg.is_compatible_with(var.data_unit, var.output_unit)
+            not u_reg.Unit(var.data_unit).is_compatible_with(
+                u_reg.Unit(var.output_unit)
+            )
             and not var.process_with_units
         ):
             msg = (
