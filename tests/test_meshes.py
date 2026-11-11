@@ -6,8 +6,10 @@ from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
 from typing import cast
+from unittest import mock
 
 import geopandas as gpd
+import gmsh
 import numpy as np
 import pytest
 import pyvista as pv
@@ -331,6 +333,156 @@ def test_meshes_from_spatial_with_height():
             axis=-1,
         )
     )
+
+
+def _square_frame(size: float = 10.0) -> gpd.GeoDataFrame:
+    """A GeoDataFrame with one square polygon from (0, 0) to (size, size)."""
+    return gpd.GeoDataFrame(geometry=[shapely.box(0, 0, size, size)])
+
+
+def test_meshes_from_spatial_files_in_tmp_path(tmp_path: Path):
+    """Each layer of a .gpkg file and each .shp and .geojson file becomes a submesh named after it.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    # All inputs share one projected crs, as from_spatial_data requires.
+    crs = "EPSG:25832"
+    gpkg_file = tmp_path / "model.gpkg"
+    _square_frame().set_crs(crs).to_file(gpkg_file, layer="area")
+    gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(1, 1), (9, 1)])], crs=crs
+    ).to_file(gpkg_file, layer="river")
+    shp_file = tmp_path / "wells.shp"
+    gpd.GeoDataFrame(
+        geometry=[shapely.Point(2, 4), shapely.Point(3, 8)], crs=crs
+    ).to_file(shp_file)
+    geojson_file = tmp_path / "lake.geojson"
+    gpd.GeoDataFrame(geometry=[shapely.box(5, 5, 8, 8)], crs=crs).to_file(
+        geojson_file
+    )
+
+    meshes = ot.Meshes.from_spatial_data(
+        [gpkg_file, shp_file, str(geojson_file)], cellsize=2
+    )
+
+    expected_celltypes = {
+        "model_area": pv.CellType.TRIANGLE,
+        "model_river": pv.CellType.LINE,
+        "wells": pv.CellType.VERTEX,
+        "lake": pv.CellType.TRIANGLE,
+    }
+    assert set(meshes) == {"domain", *expected_celltypes}
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes[name].celltypes == celltype), name
+    assert meshes["wells"].n_points == 2
+    _check_meshes_match_polygon(meshes, shapely.box(0, 0, 10, 10))
+
+
+def test_meshes_from_spatial_data_bare_frames():
+    """GeoDataFrames without a name give submeshes named frame_1, frame_2, … in input order.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    gdf_line = gpd.GeoDataFrame(geometry=[shapely.LineString([(1, 1), (9, 1)])])
+
+    single = ot.Meshes.from_spatial_data(_square_frame(), cellsize=2)
+    several = ot.Meshes.from_spatial_data(
+        [_square_frame(), gdf_line], cellsize=2
+    )
+
+    assert set(single) == {"domain", "frame_1"}
+    assert set(several) == {"domain", "frame_1", "frame_2"}
+    assert np.all(several["frame_2"].celltypes == pv.CellType.LINE)
+    _check_meshes_match_polygon(several, shapely.box(0, 0, 10, 10))
+
+
+def test_meshes_from_spatial_data_hole():
+    """A polygon with a hole gives a domain mesh without cells in the hole.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    polygon = shapely.Polygon(
+        shapely.box(0, 0, 10, 10).exterior.coords,
+        holes=[shapely.box(4, 4, 6, 6).exterior.coords],
+    )
+
+    meshes = ot.Meshes.from_spatial_data(
+        gpd.GeoDataFrame(geometry=[polygon]), cellsize=2
+    )
+
+    _check_meshes_match_polygon(meshes, polygon)
+    assert meshes.domain.find_containing_cell((5, 5, 0)) == -1
+
+
+def test_meshes_from_spatial_data_cellsize_func_string():
+    """A MathEval string as cellsize_func gives cells that grow along x as the expression does.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, cell sizes
+    """
+    meshes = ot.Meshes.from_spatial_data(
+        _square_frame(), cellsize=2, cellsize_func="0.2 + 0.1 * x"
+    )
+
+    domain = meshes.domain.compute_cell_sizes()
+    area_at = {
+        x: domain.cell_data["Area"][domain.find_containing_cell((x, 5, 0))]
+        for x in (0.5, 9.5)
+    }
+    # Cell size 0.25 at x = 0.5 and 1.15 at x = 9.5: the cells differ by
+    # about a factor of 20 in area, so a factor of 4 leaves room for gmsh.
+    assert area_at[0.5] * 4 < area_at[9.5]
+
+
+def test_meshes_from_spatial_data_cellsize_default():
+    """Without a cellsize, the cell size follows from the area of the polygons.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, cell sizes
+    """
+    meshes = ot.Meshes.from_spatial_data(_square_frame())
+
+    areas = meshes.domain.compute_cell_sizes().cell_data["Area"]
+    expected_cellsize = np.sqrt(10 * 10) / 100
+    # A triangle with sides of about the cell size has an area of about
+    # 0.43 times its square.
+    assert areas.max() < expected_cellsize**2
+    assert areas.mean() > expected_cellsize**2 / 10
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_meshes_from_spatial_data_log(
+    log: bool, monkeypatch: pytest.MonkeyPatch
+):
+    """gmsh's terminal output is switched off unless log=True.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, gmsh option
+    """
+    set_number = mock.Mock(wraps=gmsh.option.setNumber)
+    monkeypatch.setattr(gmsh.option, "setNumber", set_number)
+
+    ot.Meshes.from_spatial_data(_square_frame(), cellsize=2, log=log)
+
+    terminal_off = mock.call("General.Terminal", 0)
+    assert (terminal_off in set_number.call_args_list) != log
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"spatial_data": Path("data.csv")}, r"\.csv"),
+        ({"height_data": np.zeros((4, 2))}, r"shape \(n,3\)"),
+        ({"domain": "lake"}, "Available names are"),
+    ],
+    ids=["unsupported suffix", "height_data shape", "unknown domain"],
+)
+def test_meshes_from_spatial_data_invalid_input(kwargs: dict, message: str):
+    """Unsupported input raises a ValueError that says what is wrong.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, error message
+    """
+    arguments = {"spatial_data": _square_frame(), "cellsize": 2, **kwargs}
+
+    with pytest.raises(ValueError, match=message):
+        ot.Meshes.from_spatial_data(**arguments)
 
 
 @pytest.mark.tools
