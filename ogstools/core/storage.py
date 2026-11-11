@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from ogstools.definitions import usr_tmp_dir
 
@@ -271,6 +271,7 @@ class StorageBase(abc.ABC):
         link_target: Path,
         dry_run: bool = False,
         overwrite: bool | None = None,
+        **kwargs: Any,
     ) -> list[Path]:
         """
         Save a child component or create a symlink if already saved.
@@ -288,7 +289,7 @@ class StorageBase(abc.ABC):
             child.link(link_target, dry_run)
             return []  # because no files are created
 
-        files = child.save(dry_run=dry_run, overwrite=overwrite)  # type: ignore[attr-defined]
+        files = child.save(dry_run=dry_run, overwrite=overwrite, **kwargs)  # type: ignore[attr-defined]
         child.link(link_target, dry_run)
         return files
 

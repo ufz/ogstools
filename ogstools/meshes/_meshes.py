@@ -396,8 +396,9 @@ class Meshes(MutableMapping, StorageBase):
         if not dry_run:
             active_path.mkdir(parents=True, exist_ok=True)
 
+            include_domain = kwargs.pop("include_domain", None)
             if not self.has_identified_subdomains:
-                self.identify_subdomain()
+                self.identify_subdomain(include_domain)
 
             for name, mesh in self._meshes.items():
                 check_datatypes(mesh, strict=True, meshname=name)
@@ -539,7 +540,21 @@ class Meshes(MutableMapping, StorageBase):
         items = list(self._meshes.items())
         return dict(items[1:])  # by convention: first mesh is domain
 
-    def identify_subdomain(self, include_domain: bool = False) -> None:
+    def identify_subdomain(self, include_domain: bool | None = None) -> None:
+        """
+        Add the bulk ID mapping from the domain mesh to the subdomains.
+
+        Each mapped mesh receives `bulk_node_ids` and `bulk_element_ids` that
+        reference the corresponding entities in the domain mesh. Existing
+        mappings are replaced. 1D meshes with `anchor_stiffness` cell data are
+        skipped, as they represent embedded anchors rather than subdomains.
+
+        :param include_domain: If True, the domain mesh is also treated as a
+                               subdomain and receives the mapping. If False,
+                               only the subdomains are mapped. By default (None)
+                               it is treated as a subdomain, if it already
+                               contains `bulk_node_ids` or `bulk_element_ids`.
+        """
         from ogstools.meshes.subdomains import identify_subdomains
 
         def is_anchor(mesh: pv.UnstructuredGrid) -> bool:
@@ -547,6 +562,11 @@ class Meshes(MutableMapping, StorageBase):
                 "anchor_stiffness" in mesh.cell_data
             )
 
+        if include_domain is None:
+            include_domain = (
+                "bulk_node_ids" in self.domain.point_data
+                or "bulk_element_ids" in self.domain.cell_data
+            )
         all_subdomains = (self if include_domain else self.subdomains).values()
         subdomains = list(
             filter(lambda mesh: not is_anchor(mesh), all_subdomains)

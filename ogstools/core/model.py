@@ -197,8 +197,14 @@ class Model(StorageBase):
 
         files: list[Path] = []
 
+        # For identify_subdomains
+        include_domain = self.meshes.domain_name in self.project.constraints()
         files += self._save_or_link_child(
-            self.meshes, self.next_target / "meshes", dry_run, overwrite
+            self.meshes,
+            self.next_target / "meshes",
+            dry_run,
+            overwrite,
+            include_domain=include_domain,
         )
 
         files += self._save_or_link_child(

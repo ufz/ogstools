@@ -38,6 +38,8 @@
 - `MeshSeries.save("x.pvd", deep=False)` raises a `ValueError` for a series that was changed after reading or not read from PVD.
   It wrote a PVD file that referenced VTU files that do not exist ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - With `StorageBase.Backup`, overwriting a `.pvd` or `.xdmf` file backs up its VTU or HDF5 files too, not only the PVD or XDMF file ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- `model.save` will now recognize, if the domain mesh needs ID mapping and passes the `include_domain` flag to `Meshes.identify_subdomain` ([!531](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/531)).
+- If the domain mesh already contains an ID mapping prior to `Meshes.identify_subdomain`, it will be also included for recomputation automatically (otherwise a modified domain mesh might include a faulty mapping and wouldn't get updated before) ([!531](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/531))
 
 ## Features
 
