@@ -20,6 +20,8 @@ They follow the conventions of OGS and use OGSTools as the shared tool for runni
 - Add a shared helper only when a second caller exists.
 - A bug fix fixes the cause in the shared code, not the symptom at one caller.
   Check every caller of the function you change.
+- Normalise a value once, where it enters, and use the normalised value from there on: convert its type, resolve a path, find a `Variable`.
+  Do not repeat the normalisation at each use or leave it to a callee for some cases only.
 - Run OGS and its tools through OGSTools (`ot.Model`, `ot.cli()`), not through `subprocess`.
 - Do not convert units by hand.
   Use `Variable` (`data_unit`, `output_unit`) or the unit registry `ogstools.variables.u_reg`.
