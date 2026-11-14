@@ -156,6 +156,23 @@ def _add_permeabilty_prj(
     :returns: model
     """
     diffusion_or_permeability = "diffusion" if steady else "permeability"
+    if "permeability_tensor" in material_properties[material_id]:
+        tensor = material_properties[material_id]["permeability_tensor"]
+        if isinstance(tensor, str):
+            _add_heterogeneous_material_property(
+                model,
+                material_id,
+                diffusion_or_permeability,
+                "conductivity_tensor",
+            )
+        else:
+            model.media.add_property(
+                medium_id=material_id,
+                name=diffusion_or_permeability,
+                type="Constant",
+                value=" ".join(str(component) for component in tensor),
+            )
+        return model
     if any(
         isinstance(mat_value, str) and "permeability" in mat_property
         for mat_property, mat_value in material_properties[material_id].items()

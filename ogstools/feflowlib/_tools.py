@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
+from ogstools.feflowlib._conductivity import _conductivity_tensor
+
 # log configuration
 logger = log.getLogger(__name__)
 
@@ -237,6 +239,18 @@ def _add_heterogeneous_material_property_to_mesh(
 
     """
     if "undefined" not in material_properties:
+        if any(
+            "permeability_tensor" in props
+            for props in material_properties.values()
+        ):
+            if any(
+                isinstance(props.get("permeability_tensor"), str)
+                for props in material_properties.values()
+            ):
+                mesh.cell_data["conductivity_tensor"] = _conductivity_tensor(
+                    mesh
+                )
+            return mesh
         inhomo_permeabilities = set()
         for properties in material_properties.values():
             if isinstance(properties, tuple):
@@ -255,6 +269,28 @@ def _add_heterogeneous_material_property_to_mesh(
             )
             mesh.cell_data["KF"] = zipped
     return mesh
+
+
+def _tensor_material_properties(mesh: pv.UnstructuredGrid) -> dict:
+    """Group planar conductivity tensors by material.
+
+    :param mesh: Converted FEFLOW mesh with SI material properties.
+    :returns: Constant tensors or a reference to the element tensor field.
+    """
+    if get_dimension(mesh) != 2 or not all(
+        name in mesh.cell_data for name in ("P_COND", "P_ANIS", "P_ANGL")
+    ):
+        return {}
+    tensors = _conductivity_tensor(mesh)
+    properties = {}
+    for material_id in np.unique(mesh.cell_data["MaterialIDs"]):
+        values = tensors[mesh.cell_data["MaterialIDs"] == material_id]
+        properties[int(material_id)] = (
+            values[0]
+            if np.all(values == values[0])
+            else "inhomogeneous_conductivity_tensor"
+        )
+    return properties
 
 
 def get_material_properties_of_H_model(
@@ -286,6 +322,8 @@ def get_material_properties_of_H_model(
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
 
+    for material_id, tensor in _tensor_material_properties(mesh).items():
+        material_properties[material_id]["permeability_tensor"] = tensor
     return material_properties
 
 
@@ -327,6 +365,8 @@ def get_material_properties_of_HT_model(
         ).items():
             material_properties[material_id][parameter_ogs] = property_value[0]
 
+    for material_id, tensor in _tensor_material_properties(mesh).items():
+        material_properties[material_id]["permeability_tensor"] = tensor
     return material_properties
 
 
