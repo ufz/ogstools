@@ -512,40 +512,73 @@ def test_probe():
     )
 
 
-def test_xdmf_values_fancy_indexing() -> None:
+@pytest.fixture(scope="module")
+def ms_cell_data_xdmf(tmp_path_factory) -> ot.MeshSeries:
+    """The HT example with its point data moved to the cells, saved as XDMF."""
+    ms = examples.load_meshseries_HT_2D_XDMF()
+    meshes = [m.point_data_to_cell_data(pass_point_data=False) for m in ms]
+    path = tmp_path_factory.mktemp("cell_data") / "cells.xdmf"
+    ot.MeshSeries.from_data(meshes, ms.timevalues).save(path)
+    return ot.MeshSeries(path)
+
+
+@pytest.mark.parametrize(
+    "data_name", ["temperature", "darcy_velocity"], ids=["scalar", "vector"]
+)
+@pytest.mark.parametrize(
+    ("preference", "index", "times"),
+    [
+        ("points", None, slice(4, 95, 4)),
+        ("points", lambda mesh: mesh.points[:, 1] == 0, None),
+        ("points", [5, 47, 183], None),
+        ("points", [5, 47, 183], [1, 7, 11, 25]),
+        ("points", [5, 47, 183], [2, 2, 5, 37, 5]),
+        ("cells", [3, 10, 20, 30], [1, 2, 7, 11, 25]),
+    ],
+    ids=[
+        "stepped times",
+        "line of points",
+        "scattered points",
+        "scattered points, more scattered times",
+        "scattered points, repeated times",
+        "scattered cells, more scattered times",
+    ],
+)
+def test_xdmf_values_fancy_indexing(
+    request, preference, index, times, data_name
+) -> None:
     """
     correct results for both temporally and spatially extracted MeshSeries
 
     scope: component (MeshSeries._xdmf_values) | oracle: correctness
     """
-    ms = examples.load_meshseries_HT_2D_XDMF()
-    ms_time = ms[slice(4, 95, 4)]
-    xdmf_values = ms_time._xdmf_values("temperature")
+    ms = (
+        examples.load_meshseries_HT_2D_XDMF()
+        if preference == "points"
+        else request.getfixturevalue("ms_cell_data_xdmf")
+    )
+    if index is not None:
+        index = index(ms[0]) if callable(index) else index
+        ms = ms.extract(index, preference=preference)
+    if times is not None:
+        ms = ms[times]
+    xdmf_values = ms._xdmf_values(data_name)
     # Testing for strict equality since the same data should be accessed in both cases.
-    for i in ms_time.timesteps:
-        np.testing.assert_array_equal(xdmf_values[i], ms_time[i]["temperature"])
-    ms_1D = ms.extract(ms[0].points[:, 1] == 0)
-    xdmf_values = ms_1D._xdmf_values("temperature")
-    for i in ms_1D.timesteps:
-        np.testing.assert_array_equal(xdmf_values[i], ms_1D[i]["temperature"])
-    ms_scattered = ms.extract([5, 47, 183])
-    xdmf_values = ms_scattered._xdmf_values("temperature")
-    for i in ms_scattered.timesteps:
-        np.testing.assert_array_equal(
-            xdmf_values[i], ms_scattered[i]["temperature"]
-        )
-    for timeslice in [
-        slice(4, 95, 4),
-        slice(4, 24, 5),
-        [1, 7, 11, 25],
-        [2, 37],
-    ]:
-        ms_scattered_time = ms_scattered[timeslice]
-        xdmf_values_time = ms_scattered_time._xdmf_values("temperature")
-        for i in ms_scattered_time.timesteps:
-            np.testing.assert_array_equal(
-                xdmf_values_time[i], ms_scattered_time[i]["temperature"]
-            )
+    for i in ms.timesteps:
+        np.testing.assert_array_equal(xdmf_values[i], ms[i][data_name])
+
+
+def test_dataitems_stepped_slice() -> None:
+    """
+    scattered time steps with a stepped slice of points read the right values
+
+    scope: unit (DataItems.__getitem__) | oracle: correctness
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()
+    times = [1, 2, 7, 11, 25]
+    values = ms._xdmf_reader.data_items["temperature"][times, ::50]
+    expected = np.stack([ms[t]["temperature"][::50] for t in times])
+    np.testing.assert_array_equal(values, expected)
 
 
 def test_temporal_resample():
