@@ -273,20 +273,41 @@ class DataItems:
 
         if physical_rows.size == 0:
             return self.items[0][(physical_rows, *rest)]
-
+        step = (
+            physical_rows[1] - physical_rows[0]
+            if physical_rows.size > 1 and physical_rows[1] != physical_rows[0]
+            else 1
+        )
         if np.array_equal(
             physical_rows,
-            np.arange(physical_rows[0], physical_rows[0] + physical_rows.size),
+            np.arange(physical_rows[0], physical_rows[-1] + 1, step),
         ):
             # Avoids pairing a fancy row index with a fancy `rest`.
             row_selector = slice(
-                int(physical_rows[0]), int(physical_rows[-1]) + 1
+                int(physical_rows[0]), int(physical_rows[-1]) + 1, step
             )
             return self.items[0][(row_selector, *rest)]
 
         # h5py fancy indices must be unique/increasing; dedupe and re-expand.
         unique_rows, inverse = np.unique(physical_rows, return_inverse=True)
-        raw = self.items[0][(unique_rows, *rest)]
+        if not rest or not isinstance(rest[0], list | np.ndarray):
+            # h5py combines one index array with ints and slices of any step.
+            raw = self.items[0][(unique_rows, *rest)]
+        else:
+            # h5py allows only one index array, so read along the shorter one.
+            ids, tail = np.asarray(rest[0]), rest[1:]
+            if ids.size < unique_rows.size:
+                raw = np.stack(
+                    [self.items[0][(unique_rows, int(i), *tail)] for i in ids],
+                    axis=1,
+                )
+            else:
+                raw = np.stack(
+                    [
+                        self.items[0][(int(row), ids, *tail)]
+                        for row in unique_rows
+                    ]
+                )
         return raw[inverse]
 
 
