@@ -512,6 +512,42 @@ def test_probe():
     )
 
 
+def test_xdmf_values_fancy_indexing() -> None:
+    """
+    correct results for both temporally and spatially extracted MeshSeries
+
+    scope: component (MeshSeries._xdmf_values) | oracle: correctness
+    """
+    ms = examples.load_meshseries_HT_2D_XDMF()
+    ms_time = ms[slice(4, 95, 4)]
+    xdmf_values = ms_time._xdmf_values("temperature")
+    # Testing for strict equality since the same data should be accessed in both cases.
+    for i in ms_time.timesteps:
+        np.testing.assert_array_equal(xdmf_values[i], ms_time[i]["temperature"])
+    ms_1D = ms.extract(ms[0].points[:, 1] == 0)
+    xdmf_values = ms_1D._xdmf_values("temperature")
+    for i in ms_1D.timesteps:
+        np.testing.assert_array_equal(xdmf_values[i], ms_1D[i]["temperature"])
+    ms_scattered = ms.extract([5, 47, 183])
+    xdmf_values = ms_scattered._xdmf_values("temperature")
+    for i in ms_scattered.timesteps:
+        np.testing.assert_array_equal(
+            xdmf_values[i], ms_scattered[i]["temperature"]
+        )
+    for timeslice in [
+        slice(4, 95, 4),
+        slice(4, 24, 5),
+        [1, 7, 11, 25],
+        [2, 37],
+    ]:
+        ms_scattered_time = ms_scattered[timeslice]
+        xdmf_values_time = ms_scattered_time._xdmf_values("temperature")
+        for i in ms_scattered_time.timesteps:
+            np.testing.assert_array_equal(
+                xdmf_values_time[i], ms_scattered_time[i]["temperature"]
+            )
+
+
 def test_temporal_resample():
     results = examples.load_meshseries_HT_2D_XDMF()
     in_between = 0.5 * (results.timevalues[:-1] + results.timevalues[1:])
