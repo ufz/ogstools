@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Sequence
 from copy import copy as shallowcopy
 from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 from warnings import warn
@@ -25,6 +26,15 @@ from ogstools.plot.lineplots import line
 from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 
 from .data_dict import DataDict
+
+
+def _file_hash(path: Path) -> str:
+    """Computes the hash of the file at path"""
+    hash_compare = sha256()
+    with Path.open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            hash_compare.update(chunk)
+    return hash_compare.hexdigest()
 
 
 class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
@@ -1328,6 +1338,84 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             (ms_a.spatial_unit, ms_a.spatial_unit),
             (ms_a.time_unit, ms_a.time_unit),
         )
+
+    @staticmethod
+    def compare_files(
+        ms_a: MeshSeries | Path | str,
+        ms_b: MeshSeries | Path | str,
+        *,
+        strict: bool = False,
+    ) -> bool:
+        """
+        Compares the underlying files via hashing. This is much faster than
+        :func:`~ogstools.MeshSeries.compare` but might lead to false positives (if one of
+        the MeshSeries has been modified, e.g. with :func:`~ogstools.MeshSeries.extract`,
+        but the underlying file is unchanged) and false negatives (if the
+        underlying files contain the same data saved in different ways).
+        This method is only able to check for strict equality and cannot
+        consider tolerances.
+
+        :param ms_a:    First MeshSeries to be compared or path to file in which
+                        a MeshSeries is saved.
+        :param ms_b:    Second MeshSeries to be compared or path to file in which
+                        a MeshSeries is saved.
+        :param strict:  If True raises an AssertionError if underlying files are
+                        not equal
+
+        :returns:   True, if underlying files are equal, False if not.
+        """
+        filepath_a = (
+            ms_a.filepath if isinstance(ms_a, MeshSeries) else Path(ms_a)
+        )
+        filepath_b = (
+            ms_b.filepath if isinstance(ms_b, MeshSeries) else Path(ms_b)
+        )
+        if filepath_a is None or filepath_b is None:
+            if strict:
+                msg = "At least one MeshSeries has no underlying file attached"
+                raise AssertionError(msg)
+            return False
+        if not all(
+            filepath.suffix in {".xdmf", ".xmf", ".pvd", ".vtu"}
+            for filepath in {filepath_a, filepath_b}
+        ):
+            false_suffixes = {
+                filepath.suffix
+                for filepath in {filepath_a, filepath_b}
+                if filepath.suffix not in {".xdmf", ".xmf", ".pvd", ".vtu"}
+            }
+            msg = f"Currently, only .pvd, .xdmf, .xmf and .vtu are supported, not {false_suffixes}"
+            raise ValueError(msg)
+        if _file_hash(filepath_a) != _file_hash(filepath_b):
+            if strict:
+                msg = f"{filepath_a} and {filepath_b} do not match!"
+                raise AssertionError(msg)
+            return False
+        # A .vtu file holds all its data and references no other files.
+        if filepath_a.suffix == ".vtu":
+            return True
+        from .xdmf_reader import XDMFReader
+
+        attached_files = (
+            [XDMFReader(filepath_a).rawdata_path()]
+            if filepath_a.suffix in {".xdmf", ".xmf"}
+            else (
+                [dataset.path for dataset in pv.PVDReader(filepath_a).datasets]
+                if filepath_a.suffix == ".pvd"
+                else []
+            )
+        )
+        for filepath in list(attached_files):
+            if _file_hash(filepath_a.resolve().parent / filepath) != _file_hash(
+                filepath_b.resolve().parent / filepath
+            ):
+                if strict:
+                    msg = (
+                        f"Attached file {filepath} differs between MeshSeries!"
+                    )
+                    raise AssertionError(msg)
+                return False
+        return True
 
     @staticmethod
     def compare(

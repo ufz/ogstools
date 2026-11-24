@@ -1,6 +1,7 @@
 """Unit tests for meshlib."""
 
 import contextlib
+import re
 import shutil
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -835,6 +836,144 @@ def test_compare_meshseries_tol(tols):
     ):
         ot.MeshSeries.compare(ms, ms_b, atol=atol, strict=True)
     return
+
+
+@pytest.mark.parametrize(
+    ("ms1", "ms2", "expected", "changed"),
+    [
+        (
+            examples.load_meshseries_THM_2D_PVD(),
+            examples.load_meshseries_THM_2D_PVD(),
+            True,
+            False,
+        ),
+        (
+            examples.load_meshseries_HT_2D_XDMF(),
+            examples.load_meshseries_HT_2D_XDMF(),
+            True,
+            False,
+        ),
+        (
+            examples.load_meshseries_THM_2D_PVD(),
+            examples.load_meshseries_CT_2D_XDMF(),
+            False,
+            False,
+        ),
+        (
+            examples.load_meshseries_HT_2D_XDMF(),
+            examples.load_meshseries_CT_2D_XDMF(),
+            False,
+            False,
+        ),
+        (
+            examples.load_meshseries_CT_2D_XDMF(),
+            examples.load_meshseries_CT_2D_XDMF().scale(2.0),
+            True,
+            True,
+        ),
+        (
+            examples.load_meshseries_THM_2D_PVD(),
+            examples.load_meshseries_THM_2D_PVD().extract(slice(0, 5, 1)),
+            True,
+            True,
+        ),
+        (
+            examples.elder_xdmf,
+            examples.elder_xdmf,
+            True,
+            False,
+        ),
+        (
+            examples.elder_xdmf,
+            examples.single_fracture_HT_2D_xdmf,
+            False,
+            False,
+        ),
+        (
+            examples.load_meshseries_HT_2D_XDMF(),
+            examples.single_fracture_HT_2D_xdmf,
+            True,
+            False,
+        ),
+        (
+            examples.load_meshseries_LF_2D_XDMF(),
+            examples.single_fracture_HT_2D_xdmf,
+            False,
+            False,
+        ),
+        (
+            examples.load_meshseries_HT_2D_VTU(),
+            examples.load_meshseries_HT_2D_VTU(),
+            True,
+            False,
+        ),
+        (
+            examples.load_meshseries_HT_2D_paraview_XMF(),
+            examples.load_meshseries_HT_2D_paraview_XMF(),
+            True,
+            False,
+        ),
+    ],
+    ids=[
+        "pvd same",
+        "xdmf same",
+        "pvd vs xdmf",
+        "xdmf different",
+        "xdmf scaled",
+        "pvd extracted",
+        "xdmf path same",
+        "xdmf path different",
+        "xdmf vs same path",
+        "xdmf vs different path",
+        "vtu same",
+        "xmf same",
+    ],
+)
+def test_hash_compare_meshseries(ms1, ms2, expected, changed):
+    """
+    compare_files checks underlying files, compare checks modifications
+
+    :param expected:    Whether the underlying files are equal. Comparing
+                        files only should always conform to this.
+    :param changed:     Whether the MeshSeries has been modified at runtime.
+                        Comparing files only ignores it.
+                        Comparing MeshSeries does not rely on file comparison
+                        in this case.
+
+    scope: component (MeshSeries.compare_files, MeshSeries.compare) | oracle: correctness
+    """
+    assert expected == ot.MeshSeries.compare_files(ms1, ms2)
+    if isinstance(ms1, ot.MeshSeries) and isinstance(ms2, ot.MeshSeries):
+        assert (expected and not changed) == ot.MeshSeries.compare(ms1, ms2)
+    if not expected:
+        with pytest.raises(AssertionError, match="do not match"):
+            ot.MeshSeries.compare_files(ms1, ms2, strict=True)
+
+
+def test_hash_compare_no_file():
+    """
+    MeshSeries with no attached files are not equal
+
+    scope: component (MeshSeries.compare_files) | oracle: correctness
+    """
+    ms1 = examples.load_meshseries_HT_2D_XDMF()
+    ms2 = examples.load_meshseries_HT_2D_XDMF()
+    ms1.filepath = None
+    assert not ot.MeshSeries.compare_files(ms1, ms2)
+    with pytest.raises(AssertionError, match="no underlying file attached"):
+        ot.MeshSeries.compare_files(ms1, ms2, strict=True)
+
+
+def test_hash_compare_false_type():
+    """
+    Filepaths with unsupported suffix raise ValueError
+
+    scope: component (MeshSeries.compare_files) | oracle: correctness
+    """
+    ms1 = Path("badsuffix.prj")
+    ms2 = Path("goodsuffix.xdmf")
+    with pytest.raises(ValueError, match=re.escape("supported, not {'.prj'}")):
+        ot.MeshSeries.compare_files(ms1, ms2)
 
 
 @pytest.mark.parametrize(
