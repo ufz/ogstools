@@ -1431,7 +1431,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         strict: bool = False,
     ) -> bool:
         """
-        Method to compare two ``ot.MeshSeries`` objects.
+        Method to compare two ``ot.MeshSeries`` objects. Compares hashes of underlying files first
+        and only does expensive mesh-wise comparison if hashes do not match or meshes have been
+        accessed (and therefore potentially modified)
 
         Returns ``True`` if they match within the tolerances,
         otherwise ``False``.
@@ -1450,8 +1452,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         """
         from ogstools.mesh.differences import compare
 
+        hash_comparison = MeshSeries.compare_files(ms_a, ms_b, strict=False)
         # Testing timevalues
         if ms_a.timevalues.shape != ms_b.timevalues.shape:
+            if strict:
+                err_msg = f"timevalues differs between MeshSeries. In ms_a their shape is {ms_a.timevalues.shape}, in ms_b it is {ms_b.timevalues.shape}"
+                raise AssertionError(err_msg)
             return False
 
         if not np.allclose(
@@ -1465,13 +1471,24 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 err_msg = "timevalues differs between MeshSeries."
                 raise AssertionError(err_msg)
             return False
-
+        # If the hashes of the files are equal, we only have to check meshes that are already cached since they might have been modified
+        changed_ms = (
+            ms_a._mesh_func_opt is not None or ms_b._mesh_func_opt is not None
+        )
+        timesteps = (
+            [
+                ms_a.closest_timestep(t)
+                for t in list(ms_a._mesh_cache.keys() | ms_b._mesh_cache.keys())
+            ]
+            if hash_comparison and not changed_ms
+            else ms_a.timesteps
+        )
         # Testing mesh-wise
-        for i, (mesh_a, mesh_b) in enumerate(zip(ms_a, ms_b, strict=True)):
+        for i in timesteps:
             check_topo = not fast_compare or i == 0
             if not compare(
-                mesh_a,
-                mesh_b,
+                ms_a[i],
+                ms_b[i],
                 variable=variable,
                 point_data=point_data,
                 cell_data=cell_data,
