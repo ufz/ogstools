@@ -422,10 +422,10 @@ class Meshes(MutableMapping, StorageBase):
 
         2.  Geometries may have z-coordinates but everything is flattened during meshing and
             later reattached using interpolation. This will distort cellsizes and may produce
-            unexpected results/crashes if the projection to the xy-plane is not 1-to-1
+            unexpected results/crashes if the projection to the xy-plane is not 1-to-1.
 
-        3.  Only Points, MultiPoints, LineStrings, MultiLines, Polygons and Multipolygons are
-            supported. Any other geometry is ignored
+        3.  Only Points, MultiPoints, LineStrings, MultiLineStrings, Polygons and MultiPolygons are
+            supported. Any other geometry is ignored.
 
         4.  Polygons may overlap but lines may only intersect each other/polygon boundaries if
             the intersection is a vertex of both geometries.

@@ -316,6 +316,7 @@ pvd_serial_2D = _meshseries_dir / "2D_mechanics_pvd/serial/mesh.pvd"
 mechanics_2D = _meshseries_dir / "mechanics_2D.vtu"
 example_hlw = _yaml_mesh_dir / "example_hlw.yml"
 
-selke_gpkg = _geodata_dir / "Selke_Basin.gpkg"
+selke_complete_gpkg = _geodata_dir / "Selke_Basin_complete.gpkg"
+selke_partial_gpkg = _geodata_dir / "Selke_Basin_partial.gpkg"
 concordia_geojson = _geodata_dir / "Selke_Basin_PG_Concordia.geojson"
 koenigsauer_shp = _geodata_dir / "Selke_Basin_PG_Koenigsauer.shp"

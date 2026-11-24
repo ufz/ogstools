@@ -186,7 +186,7 @@ def test_meshes_from_spatial_files():
     """
     meshes = ot.Meshes.from_spatial_data(
         [
-            examples.selke_gpkg,
+            examples.selke_partial_gpkg,
             examples.koenigsauer_shp,
             examples.concordia_geojson,
         ],
@@ -195,22 +195,22 @@ def test_meshes_from_spatial_files():
     # Check that the correct submeshes were created: one per gpkg layer
     # ("filename_layername") and one per shp/geojson file ("filename").
     expected_celltypes = {
-        "Selke_Basin_Domain_homo": pv.CellType.TRIANGLE,
-        "Selke_Basin_PG_Wilsleber": pv.CellType.TRIANGLE,
-        "Selke_Basin_PL_Bode": pv.CellType.LINE,
-        "Selke_Basin_PL_Selke": pv.CellType.LINE,
-        "Selke_Basin_PL_Wipper": pv.CellType.LINE,
-        "Selke_Basin_Pnt_Wells": pv.CellType.VERTEX,
+        "Selke_Basin_partial_Domain_homo": pv.CellType.TRIANGLE,
+        "Selke_Basin_partial_PG_Wilsleber": pv.CellType.TRIANGLE,
+        "Selke_Basin_partial_PL_Bode": pv.CellType.LINE,
+        "Selke_Basin_partial_PL_Selke": pv.CellType.LINE,
+        "Selke_Basin_partial_PL_Wipper": pv.CellType.LINE,
+        "Selke_Basin_partial_Pnt_Wells": pv.CellType.VERTEX,
         "Selke_Basin_PG_Koenigsauer": pv.CellType.TRIANGLE,
         "Selke_Basin_PG_Concordia": pv.CellType.TRIANGLE,
     }
     assert set(meshes.subdomains) == set(expected_celltypes)
     for name, celltype in expected_celltypes.items():
         assert np.all(meshes[name].celltypes == celltype), name
-    wells = gpd.read_file(examples.selke_gpkg, layer="Pnt_Wells")
-    assert meshes["Selke_Basin_Pnt_Wells"].n_points == len(wells)
+    wells = gpd.read_file(examples.selke_partial_gpkg, layer="Pnt_Wells")
+    assert meshes["Selke_Basin_partial_Pnt_Wells"].n_points == len(wells)
     domain_polygon = gpd.read_file(
-        examples.selke_gpkg, layer="Domain_homo"
+        examples.selke_partial_gpkg, layer="Domain_homo"
     ).union_all()
     _check_meshes_match_polygon(meshes, domain_polygon)
 
