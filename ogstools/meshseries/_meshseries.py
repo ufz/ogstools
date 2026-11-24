@@ -1380,7 +1380,7 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
 
         # Testing mesh-wise
         for i, (mesh_a, mesh_b) in enumerate(zip(ms_a, ms_b, strict=True)):
-            check_topo = fast_compare or i == 0
+            check_topo = not fast_compare or i == 0
             if not compare(
                 mesh_a,
                 mesh_b,

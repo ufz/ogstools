@@ -776,6 +776,22 @@ def test_compare_meshseries(ms, var):
     return
 
 
+def test_compare_meshseries_fast_compare():
+    """A topology change after the first timestep is ignored only with fast_compare.
+
+    scope: component (MeshSeries.compare) | oracle: correctness
+    """
+    ms_1 = examples.load_meshseries_THM_2D_PVD()
+    ms_2 = examples.load_meshseries_THM_2D_PVD()
+    ms_2[1] = ms_2[1].cast_to_pointset().cast_to_unstructured_grid()
+    assert ot.MeshSeries.compare(
+        ms_1, ms_2, ot.variables.pressure, fast_compare=True
+    )
+    assert not ot.MeshSeries.compare(
+        ms_1, ms_2, ot.variables.pressure, fast_compare=False
+    )
+
+
 @given(
     tols=st.builds(
         lambda atol, frac_in, sign, mult: (
