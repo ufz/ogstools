@@ -37,6 +37,47 @@ def _file_hash(path: Path) -> str:
     return hash_compare.hexdigest()
 
 
+def _referenced_files(ms: MeshSeries | Path | str) -> list[Path]:
+    """Return the data files that the PVD or XDMF file of `ms` references.
+
+    :param ms:  A MeshSeries or the path to a PVD or XDMF file.
+    :returns:   The resolved paths of the referenced files, sorted.
+    """
+    filepath = ms.filepath if isinstance(ms, MeshSeries) else Path(ms)
+    if filepath is None:
+        msg = "The MeshSeries has no underlying file."
+        raise ValueError(msg)
+    match filepath.suffix:
+        case ".pvd":
+            pvd_reader = (
+                ms._pvd_reader
+                if isinstance(ms, MeshSeries)
+                else pv.PVDReader(filepath.resolve())
+            )
+            folder = Path(pvd_reader.path).parent
+            files = {
+                (folder / dataset.path).resolve()
+                for dataset in pvd_reader.datasets
+            }
+        case ".xdmf" | ".xmf":
+            from ogstools.meshseries._xdmf_writer import source_h5_files
+            from ogstools.meshseries.xdmf_reader import XDMFReader
+
+            xdmf_reader = (
+                ms._xdmf_reader
+                if isinstance(ms, MeshSeries)
+                else XDMFReader(filepath.resolve())
+            )
+            files = source_h5_files(xdmf_reader)
+        case _:
+            msg = (
+                "Only .pvd, .xdmf and .xmf files reference other files, "
+                f"not {filepath.suffix}."
+            )
+            raise ValueError(msg)
+    return sorted(files)
+
+
 class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
     """
     A wrapper around pyvista and meshio for reading of pvd and xdmf timeseries.
@@ -1394,25 +1435,12 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         # A .vtu file holds all its data and references no other files.
         if filepath_a.suffix == ".vtu":
             return True
-        from .xdmf_reader import XDMFReader
-
-        attached_files = (
-            [XDMFReader(filepath_a).rawdata_path()]
-            if filepath_a.suffix in {".xdmf", ".xmf"}
-            else (
-                [dataset.path for dataset in pv.PVDReader(filepath_a).datasets]
-                if filepath_a.suffix == ".pvd"
-                else []
-            )
-        )
-        for filepath in list(attached_files):
-            if _file_hash(filepath_a.resolve().parent / filepath) != _file_hash(
-                filepath_b.resolve().parent / filepath
-            ):
+        files_a = _referenced_files(ms_a)
+        files_b = _referenced_files(ms_b)
+        for file_a, file_b in zip(files_a, files_b, strict=True):
+            if _file_hash(file_a) != _file_hash(file_b):
                 if strict:
-                    msg = (
-                        f"Attached file {filepath} differs between MeshSeries!"
-                    )
+                    msg = f"Attached file {file_b} differs from {file_a}!"
                     raise AssertionError(msg)
                 return False
         return True

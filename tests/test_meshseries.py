@@ -950,6 +950,54 @@ def test_hash_compare_meshseries(ms1, ms2, expected, changed):
             ot.MeshSeries.compare_files(ms1, ms2, strict=True)
 
 
+def _copy_series(source: Path, attached: Sequence[str], folder: Path) -> Path:
+    """Copy a series file and the data files it references into `folder`."""
+    folder.mkdir()
+    for name in [source.name, *attached]:
+        shutil.copy(source.parent / name, folder / name)
+    return folder / source.name
+
+
+@pytest.mark.parametrize(
+    ("source", "attached"),
+    [
+        (examples.elder_xdmf, ["elder.h5"]),
+        (
+            examples.pvd_serial_2D,
+            ["mesh_ts_0_t_0.000000.vtu", "mesh_ts_1_t_1.000000.vtu"],
+        ),
+    ],
+    ids=["xdmf", "pvd"],
+)
+@pytest.mark.parametrize(
+    "as_meshseries", [False, True], ids=["path", "MeshSeries"]
+)
+def test_hash_compare_attached_file(
+    tmp_path: Path, source: Path, attached: list[str], as_meshseries: bool
+):
+    """MeshSeries with equal meta files but unequal data files are unequal.
+
+    scope: component (MeshSeries.compare_files) | oracle: correctness
+    """
+    file_a = _copy_series(source, attached, tmp_path / "a")
+    file_same = _copy_series(source, attached, tmp_path / "same")
+    file_changed = _copy_series(source, attached, tmp_path / "changed")
+    # One flipped byte changes the data file, the series file stays equal.
+    changed_data = file_changed.parent / attached[-1]
+    content = bytearray(changed_data.read_bytes())
+    content[len(content) // 2] ^= 0xFF
+    changed_data.write_bytes(content)
+    load = ot.MeshSeries if as_meshseries else Path
+    ms_a, ms_same, ms_changed = (
+        load(file) for file in (file_a, file_same, file_changed)
+    )
+
+    assert ot.MeshSeries.compare_files(ms_a, ms_same)
+    assert not ot.MeshSeries.compare_files(ms_a, ms_changed)
+    with pytest.raises(AssertionError, match="differs"):
+        ot.MeshSeries.compare_files(ms_a, ms_changed, strict=True)
+
+
 def test_hash_compare_no_file():
     """
     MeshSeries with no attached files are not equal
