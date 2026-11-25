@@ -6,9 +6,9 @@ from __future__ import annotations
 import copy
 import logging as log
 import os
-from collections.abc import Iterator, MutableMapping, Sequence
+from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from pathlib import Path
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import pyvista as pv
@@ -21,6 +21,9 @@ from ogstools.core.storage import StorageBase
 from ogstools.mesh import check_datatypes, utils
 
 logger = log.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
 
 
 class Meshes(MutableMapping, StorageBase):
@@ -345,6 +348,128 @@ class Meshes(MutableMapping, StorageBase):
         meshes_obj = cls(meshes_dict)
         meshes_obj.has_identified_subdomains = False
         return meshes_obj
+
+    @classmethod
+    def from_spatial_data(
+        cls,
+        spatial_data: (
+            Path
+            | str
+            | GeoDataFrame
+            | tuple[str, GeoDataFrame]
+            | list[Path | str | GeoDataFrame | tuple[str, GeoDataFrame]]
+        ),
+        cellsize: float | None = None,
+        cellsize_func: str | Callable | None = None,
+        domain: str | None = None,
+        height_data: np.ndarray | None = None,
+        log: bool = False,
+    ) -> Self:
+        """Create Meshes by meshing spatial data via gmsh.
+
+        Every file/frame and every layer within a geopackage corresponds to a submesh of the result.
+
+        **Geometric limitations**:
+
+        1.  Only surfaces can be meshed (though lines and points may be created as submeshes).
+
+        2.  Geometries may have z-coordinates but everything is flattened during meshing and
+            later reattached using interpolation. This will distort cellsizes and may produce
+            unexpected results/crashes if the projection to the xy-plane is not 1-to-1.
+
+        3.  Only Points, MultiPoints, LineStrings, MultiLineStrings, Polygons and MultiPolygons are
+            supported. Any other geometry is ignored.
+
+        4.  Polygons may overlap but lines may only intersect each other/polygon boundaries if
+            the intersection is a vertex of both geometries.
+
+        5.  If a domain is specified the corresponding GeoDataFrame/layer/file may only contain polygons.
+
+        6.  All geometries are clipped to the domain layer before meshing (If no domain is
+            specified, the domain is assumed to be the union of all polygons)
+
+        7.  All files/GeoDataFrames must have the same crs attached.
+
+        :param spatial_data:        The geodata to be meshed. Can be given as path to a
+                                    .gpkg/.shp/.geojson file, GeoDataFrame, tuple of name and
+                                    GeoDataFrame or list of any of the above.
+                                    Several inputs must be given as a list, not as a
+                                    tuple, because a tuple is one named GeoDataFrame.
+                                    Each frame/file as well as each layer within a gpkg will
+                                    correspond to one mesh in the resulting Meshes object.
+                                    The naming convention for these meshes is:
+
+                                    - "filename"/"filename_layername" for meshes from files
+
+                                    - name for meshes from tuples of (name, GeoDataFrame)
+
+                                    - frame_i, i=1,... for GeoDataFrames
+
+                                    If any name should appear twice the second mesh overwrites the first.
+        :param cellsize:            Fallback maximal cellsize if the geodata does not contain "cellsize"
+                                    columns (or they are missing a value for some geometries).
+                                    If None, it is a hundredth of the square root of the
+                                    area of all polygons.
+        :param cellsize_func:       Function for dynamic cellsizes. Can be given as string (as a MathEval
+                                    field) or a function (as a callback), These will be plugged directly
+                                    into gmsh. See gmshs formal requirements for
+                                    `MathEval <https://gmsh.info/doc/texinfo/#index-MathEval>`_ and
+                                    `setSizeCallback <https://gmsh.info/doc/texinfo/gmsh.html#index-gmsh_002fmodel_002fmesh_002fsetSizeCallback>`_
+                                    Note that sizeCallback functions overwrite cellsizes otherwise attached
+                                    to points.
+        :param domain:              The name of the layer which corresponds to the domain to which
+                                    everything else will be clipped and for which no submesh should
+                                    be generated. If None, the domain is the union of all
+                                    polygons and its mesh is named "domain".
+        :param height_data:         Additional height_data provided as points with 3D coordinates.
+                                    These points will not be forced into the topology during meshing
+                                    but considered during height interpolation at the end
+        :param log:                 if True shows log from gmsh during meshing
+        :returns:                   A Meshes object.
+        """
+
+        from ogstools.meshes._spatial import (
+            _collect_3D_coords,
+            _interp_height_data,
+            _mesh_with_gmsh,
+            _preprocess_geometry,
+            _read_spatial_data,
+        )
+
+        if not isinstance(spatial_data, list):
+            spatial_data = [spatial_data]
+        if height_data is not None and height_data.shape[1] != 3:
+            msg = f"Height data should come as x,y,z coordinates and should therefore have shape (n,3), actual shape is {height_data.shape}!"
+            raise ValueError(msg)
+        layer_dict = _read_spatial_data(spatial_data)
+        if domain is not None and (
+            domain not in layer_dict
+            or set(layer_dict[domain].geom_type.unique()) != {"Polygon"}
+        ):
+            msg = f"domain not found among polygon input layers. Available names are {[name for name, frame in layer_dict.items() if set(frame.geom_type.unique())=={'Polygon'}]}"
+            raise ValueError(msg)
+        for name, layer in layer_dict.items():
+            layer["original_layer"] = name
+        is_3d = any(
+            layer.geometry.has_z.any() for _, layer in layer_dict.items()
+        )
+        if is_3d:
+            height_data = _collect_3D_coords(layer_dict, height_data)
+            for name, value in layer_dict.items():
+                layer_dict[name]["geometry"] = value.force_2d()
+        geom_dict, poly_sj = _preprocess_geometry(layer_dict, cellsize, domain)
+        msh_file = _mesh_with_gmsh(
+            geom_dict, poly_sj, cellsize_func, domain, log
+        )
+        meshes = cls.from_gmsh(
+            msh_file,
+            log=False,
+            reindex=False,
+            meshname="domain" if domain is None else domain,
+        )
+        if height_data is not None:
+            _interp_height_data(meshes, height_data)
+        return meshes
 
     def add_gml_subdomains(
         self,

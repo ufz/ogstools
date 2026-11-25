@@ -1,16 +1,22 @@
 """Unit tests for meshlib."""
 
+import math
 import shutil
 from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
 from typing import cast
+from unittest import mock
 
+import geopandas as gpd
+import gmsh
 import numpy as np
 import pytest
 import pyvista as pv
+import shapely
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
+from scipy.spatial import KDTree as scikdtree
 
 import ogstools as ot
 from ogstools import examples
@@ -119,6 +125,364 @@ def test_meshes_from_mesh_3D_simple(tmp_path):
     assert np.all(meshes["back"].points[:, 1] == domain.bounds[3])
     assert np.all(meshes["bottom"].points[:, 2] == domain.bounds[4])
     assert np.all(meshes["top"].points[:, 2] == domain.bounds[5])
+
+
+def _cellsize_near_point(dim, tag, x, y, z, lc):  # noqa: ARG001
+    """Cell size that grows with the distance to (7.5, 2.5), from 0.2 up to lc.
+
+    Callback for gmsh's setSizeCallback: gmsh requires all six arguments,
+    so do not remove the unused ones.
+    """
+    distance = math.hypot(x - 7.5, y - 2.5)
+    return min(max(0.2, distance / 5), lc)
+
+
+def _check_meshes_match_polygon(
+    meshes: ot.Meshes, domain_polygon: shapely.Polygon
+) -> None:
+    """Check the domain boundary matches the polygon and submeshes nest in the domain."""
+    domain = meshes.domain
+    # Allowed round-off, relative to the domain size and as a distance.
+    rtol = 1e-6
+    atol = rtol * np.ptp(domain.points[:, :2], axis=0).max()
+
+    # The domain mesh has the same boundary as the domain polygon (in xy).
+    np.testing.assert_allclose(
+        np.asarray(domain.bounds)[[0, 2, 1, 3]],
+        domain_polygon.bounds,
+        rtol=0,
+        atol=atol,
+    )
+    flat_domain = domain.copy()
+    flat_domain.points[:, 2] = 0.0
+    area = flat_domain.compute_cell_sizes()["Area"].sum()
+    np.testing.assert_allclose(area, domain_polygon.area, rtol=rtol, atol=0)
+    boundary = domain.extract_feature_edges(
+        boundary_edges=True,
+        feature_edges=False,
+        manifold_edges=False,
+        non_manifold_edges=False,
+    )
+    boundary_xy = boundary.points[:, :2]
+    distance_to_polygon = shapely.distance(
+        domain_polygon.boundary, shapely.points(boundary_xy)
+    )
+    np.testing.assert_array_less(distance_to_polygon, atol)
+    polygon_vertices = np.asarray(domain_polygon.exterior.coords)[:, :2]
+    distance_to_mesh, _ = scikdtree(boundary_xy).query(polygon_vertices)
+    np.testing.assert_array_less(distance_to_mesh, atol)
+
+    # Every point of every submesh is a point of the domain mesh.
+    domain_tree = scikdtree(domain.points)
+    for name, submesh in meshes.subdomains.items():
+        distance_to_domain, _ = domain_tree.query(submesh.points)
+        np.testing.assert_array_less(distance_to_domain, atol, err_msg=name)
+
+
+def test_meshes_from_spatial_files():
+    """Meshing .gpkg, .shp and .geojson files gives one submesh per layer and keeps the domain boundary.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    meshes = ot.Meshes.from_spatial_data(
+        [
+            examples.selke_partial_gpkg,
+            examples.koenigsauer_shp,
+            examples.concordia_geojson,
+        ],
+        cellsize=2000,
+    )
+    # Check that the correct submeshes were created: one per gpkg layer
+    # ("filename_layername") and one per shp/geojson file ("filename").
+    expected_celltypes = {
+        "Selke_Basin_partial_Domain_homo": pv.CellType.TRIANGLE,
+        "Selke_Basin_partial_PG_Wilsleber": pv.CellType.TRIANGLE,
+        "Selke_Basin_partial_PL_Bode": pv.CellType.LINE,
+        "Selke_Basin_partial_PL_Selke": pv.CellType.LINE,
+        "Selke_Basin_partial_PL_Wipper": pv.CellType.LINE,
+        "Selke_Basin_partial_Pnt_Wells": pv.CellType.VERTEX,
+        "Selke_Basin_PG_Koenigsauer": pv.CellType.TRIANGLE,
+        "Selke_Basin_PG_Concordia": pv.CellType.TRIANGLE,
+    }
+    assert set(meshes.subdomains) == set(expected_celltypes)
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes[name].celltypes == celltype), name
+    wells = gpd.read_file(examples.selke_partial_gpkg, layer="Pnt_Wells")
+    assert meshes["Selke_Basin_partial_Pnt_Wells"].n_points == len(wells)
+    domain_polygon = gpd.read_file(
+        examples.selke_partial_gpkg, layer="Domain_homo"
+    ).union_all()
+    _check_meshes_match_polygon(meshes, domain_polygon)
+
+
+def test_meshes_from_spatial_data():
+    """Meshing GeoDataFrames clips to the domain, keeps its boundary and keeps the requested cell sizes.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, input geometry and cell sizes
+    """
+    gdf_domain = gpd.GeoDataFrame(
+        geometry=[shapely.Polygon(((0, 0), (10, 0), (10, 10), (0, 10), (0, 0)))]
+    )
+    gdf_layer_0 = gpd.GeoDataFrame(
+        geometry=[shapely.Polygon([(0, 5), (10, 5), (10, 10), (0, 10), (0, 5)])]
+    )
+    gdf_layer_0["cellsize"] = 0.7
+    gdf_left = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(0, 0), (0, 5), (0, 10)])]
+    )
+    gdf_middle = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(1, 1), (8, 1)])]
+    )
+    gdf_points = gpd.GeoDataFrame(
+        geometry=[shapely.Point(2, 4), shapely.Point(3, 8)]
+    )
+    gdf_clip = gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(12, 12), (14, 12)])]
+    )
+    frame_list = [
+        ("square", gdf_domain),
+        ("layer_0", gdf_layer_0),
+        ("left", gdf_left),
+        ("middle", gdf_middle),
+        ("points", gdf_points),
+        ("clip", gdf_clip),
+    ]
+    meshes_square = ot.Meshes.from_spatial_data(
+        spatial_data=frame_list,
+        domain="square",
+        cellsize=2,
+        cellsize_func=_cellsize_near_point,
+    )
+    # Check that the correct submeshes were created: one per frame, named after
+    # it, except the domain "square" and "clip", which lies outside the domain.
+    expected_celltypes = {
+        "layer_0": pv.CellType.TRIANGLE,
+        "left": pv.CellType.LINE,
+        "middle": pv.CellType.LINE,
+        "points": pv.CellType.VERTEX,
+    }
+    assert set(meshes_square) == {"square", *expected_celltypes}
+    assert set(meshes_square.subdomains) == set(expected_celltypes)
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes_square[name].celltypes == celltype), name
+    assert meshes_square["points"].n_points == len(gdf_points)
+    # Check the domain boundary and that submeshes are consistent with the domain
+    _check_meshes_match_polygon(meshes_square, gdf_domain.union_all())
+    # Check correctness of cellsizes
+    meshes_square.domain = meshes_square.domain.compute_cell_sizes()
+    layer_0_cell_ids = np.flatnonzero(
+        meshes_square.domain.cell_centers().points[:, 1] > 5
+    )
+    layer_0_cells = meshes_square.domain.extract_cells(layer_0_cell_ids)
+    assert meshes_square.domain.cell_data["Area"].max() < 2
+    assert layer_0_cells.cell_data["Area"].max() < 0.7
+    assert (
+        meshes_square.domain.cell_data["Area"][
+            meshes_square.domain.find_containing_cell((7.5, 2.5, 0))
+        ]
+        < 0.2
+    )
+
+
+def test_meshes_from_spatial_with_height():
+    """Interpolated mesh heights stay within the heights of the geometry and the height data.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, input heights
+    """
+    gdf_domain = gpd.GeoDataFrame(
+        geometry=[
+            shapely.Polygon(
+                (
+                    (0, 0, 100),
+                    (10, 0, 102),
+                    (10, 10, 104),
+                    (0, 10, 102),
+                    (0, 0, 100),
+                )
+            )
+        ]
+    )
+    gdf_line = gpd.GeoDataFrame(
+        geometry=[
+            shapely.LineString(
+                (
+                    (8, 2, 102.5),
+                    (8, 8, 103.5),
+                )
+            )
+        ]
+    )
+    height_data = np.array([[2, 2, 107], [2, 4, 108], [8, 2, 108], [8, 4, 110]])
+    meshes_with_height = ot.Meshes.from_spatial_data(
+        [("domain", gdf_domain), ("line", gdf_line)],
+        cellsize=2,
+        height_data=height_data,
+    )
+    # Cell sizes are not checked: the height interpolation distorts them.
+    # Interpolated heights stay within the input heights, up to round-off.
+    height_atol = 1e-8
+    assert meshes_with_height.domain.bounds.z_min > 100 - height_atol
+    assert meshes_with_height.domain.bounds.z_max < 110 + height_atol
+    assert np.all(
+        np.any(
+            np.all(
+                meshes_with_height["line"].points[:, np.newaxis, :]
+                == meshes_with_height.domain.points,
+                axis=-1,
+            ),
+            axis=-1,
+        )
+    )
+
+
+def _square_frame(size: float = 10.0) -> gpd.GeoDataFrame:
+    """A GeoDataFrame with one square polygon from (0, 0) to (size, size)."""
+    return gpd.GeoDataFrame(geometry=[shapely.box(0, 0, size, size)])
+
+
+def test_meshes_from_spatial_files_in_tmp_path(tmp_path: Path):
+    """Each layer of a .gpkg file and each .shp and .geojson file becomes a submesh named after it.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    # All inputs share one projected crs, as from_spatial_data requires.
+    crs = "EPSG:25832"
+    gpkg_file = tmp_path / "model.gpkg"
+    _square_frame().set_crs(crs).to_file(gpkg_file, layer="area")
+    gpd.GeoDataFrame(
+        geometry=[shapely.LineString([(1, 1), (9, 1)])], crs=crs
+    ).to_file(gpkg_file, layer="river")
+    shp_file = tmp_path / "wells.shp"
+    gpd.GeoDataFrame(
+        geometry=[shapely.Point(2, 4), shapely.Point(3, 8)], crs=crs
+    ).to_file(shp_file)
+    geojson_file = tmp_path / "lake.geojson"
+    gpd.GeoDataFrame(geometry=[shapely.box(5, 5, 8, 8)], crs=crs).to_file(
+        geojson_file
+    )
+
+    meshes = ot.Meshes.from_spatial_data(
+        [gpkg_file, shp_file, str(geojson_file)], cellsize=2
+    )
+
+    expected_celltypes = {
+        "model_area": pv.CellType.TRIANGLE,
+        "model_river": pv.CellType.LINE,
+        "wells": pv.CellType.VERTEX,
+        "lake": pv.CellType.TRIANGLE,
+    }
+    assert set(meshes) == {"domain", *expected_celltypes}
+    for name, celltype in expected_celltypes.items():
+        assert np.all(meshes[name].celltypes == celltype), name
+    assert meshes["wells"].n_points == 2
+    _check_meshes_match_polygon(meshes, shapely.box(0, 0, 10, 10))
+
+
+def test_meshes_from_spatial_data_bare_frames():
+    """GeoDataFrames without a name give submeshes named frame_1, frame_2, … in input order.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    gdf_line = gpd.GeoDataFrame(geometry=[shapely.LineString([(1, 1), (9, 1)])])
+
+    single = ot.Meshes.from_spatial_data(_square_frame(), cellsize=2)
+    several = ot.Meshes.from_spatial_data(
+        [_square_frame(), gdf_line], cellsize=2
+    )
+
+    assert set(single) == {"domain", "frame_1"}
+    assert set(several) == {"domain", "frame_1", "frame_2"}
+    assert np.all(several["frame_2"].celltypes == pv.CellType.LINE)
+    _check_meshes_match_polygon(several, shapely.box(0, 0, 10, 10))
+
+
+def test_meshes_from_spatial_data_hole():
+    """A polygon with a hole gives a domain mesh without cells in the hole.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, input geometry
+    """
+    polygon = shapely.Polygon(
+        shapely.box(0, 0, 10, 10).exterior.coords,
+        holes=[shapely.box(4, 4, 6, 6).exterior.coords],
+    )
+
+    meshes = ot.Meshes.from_spatial_data(
+        gpd.GeoDataFrame(geometry=[polygon]), cellsize=2
+    )
+
+    _check_meshes_match_polygon(meshes, polygon)
+    assert meshes.domain.find_containing_cell((5, 5, 0)) == -1
+
+
+def test_meshes_from_spatial_data_cellsize_func_string():
+    """A MathEval string as cellsize_func gives cells that grow along x as the expression does.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, cell sizes
+    """
+    meshes = ot.Meshes.from_spatial_data(
+        _square_frame(), cellsize=2, cellsize_func="0.2 + 0.1 * x"
+    )
+
+    domain = meshes.domain.compute_cell_sizes()
+    area_at = {
+        x: domain.cell_data["Area"][domain.find_containing_cell((x, 5, 0))]
+        for x in (0.5, 9.5)
+    }
+    # Cell size 0.25 at x = 0.5 and 1.15 at x = 9.5: the cells differ by
+    # about a factor of 20 in area, so a factor of 4 leaves room for gmsh.
+    assert area_at[0.5] * 4 < area_at[9.5]
+
+
+def test_meshes_from_spatial_data_cellsize_default():
+    """Without a cellsize, the cell size follows from the area of the polygons.
+
+    scope: component (Meshes.from_spatial_data) | oracle: plausibility, cell sizes
+    """
+    meshes = ot.Meshes.from_spatial_data(_square_frame())
+
+    areas = meshes.domain.compute_cell_sizes().cell_data["Area"]
+    expected_cellsize = np.sqrt(10 * 10) / 100
+    # A triangle with sides of about the cell size has an area of about
+    # 0.43 times its square.
+    assert areas.max() < expected_cellsize**2
+    assert areas.mean() > expected_cellsize**2 / 10
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_meshes_from_spatial_data_log(
+    log: bool, monkeypatch: pytest.MonkeyPatch
+):
+    """gmsh's terminal output is switched off unless log=True.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, gmsh option
+    """
+    set_number = mock.Mock(wraps=gmsh.option.setNumber)
+    monkeypatch.setattr(gmsh.option, "setNumber", set_number)
+
+    ot.Meshes.from_spatial_data(_square_frame(), cellsize=2, log=log)
+
+    terminal_off = mock.call("General.Terminal", 0)
+    assert (terminal_off in set_number.call_args_list) != log
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"spatial_data": Path("data.csv")}, r"\.csv"),
+        ({"height_data": np.zeros((4, 2))}, r"shape \(n,3\)"),
+        ({"domain": "lake"}, "Available names are"),
+    ],
+    ids=["unsupported suffix", "height_data shape", "unknown domain"],
+)
+def test_meshes_from_spatial_data_invalid_input(kwargs: dict, message: str):
+    """Unsupported input raises a ValueError that says what is wrong.
+
+    scope: component (Meshes.from_spatial_data) | oracle: correctness, error message
+    """
+    arguments = {"spatial_data": _square_frame(), "cellsize": 2, **kwargs}
+
+    with pytest.raises(ValueError, match=message):
+        ot.Meshes.from_spatial_data(**arguments)
 
 
 @pytest.mark.tools

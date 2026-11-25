@@ -67,7 +67,8 @@ dependencies = [
   "types-PyYAML>=6.0.0.20240917",
   "vtk>=9.4.0",
   "imagehash>=4.3.2",
-  "bokeh>=3.6.0"
+  "bokeh>=3.6.0",
+  "geopandas>=1.1.3"
 ]
 
 [project.urls]
@@ -147,6 +148,7 @@ pinned = [
   "fonttools==4.61.1",
   "fqdn==1.5.1",
   "frozenlist==1.8.0",
+  "geopandas==1.1.4",
   "gmsh==4.14.1",
   "greenlet==3.3.1",
   "h5py==3.15.1",
@@ -232,7 +234,9 @@ pinned = [
   "pycparser==3.0",
   "pydata-sphinx-theme==0.16.1",
   "Pygments==2.19.2",
+  "pyogrio==0.13.0",
   "pyparsing==3.3.2",
+  "pyproj==3.7.2",
   "pyproject_hooks==1.2.0",
   "pytest==9.0.2",
   "pytest-cov==7.1.0",

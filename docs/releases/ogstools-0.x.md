@@ -70,6 +70,7 @@
   A `.pvd` target, no target and `save(id=...)` still write PVD and VTU files.
   Data that is not a number, such as text, raises a `ValueError`; save it as `.pvd`.
   Any other suffix raises a `RuntimeError` before anything is written ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
+- New method `Meshes.from_spatial_data` to build simple Meshes objects from spatial data files or GeoDataFrames ([!498](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/498))
 
 ## Infrastructure
 
@@ -82,6 +83,7 @@
 ### New Examples
 
 - Evaluation of mechanical integrity criteria
+- Meshing spatial data ([!498](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/498))
 
 ### Updated Examples
 
