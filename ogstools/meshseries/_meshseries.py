@@ -497,24 +497,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
             msg = "Variable not found in data_items"
             raise ValueError(msg)
         time_indices = self._xdmf_time_indices()
-        if isinstance(points, int):
-            result = self._xdmf_reader.data_items[variable_name][
-                time_indices, points
-            ]
-        elif len(time_indices) < len(points):
-            result = np.vstack(
-                [
-                    self._xdmf_reader.data_items[variable_name][i, points]
-                    for i in time_indices
-                ]
-            )
-        else:
-            result = np.column_stack(
-                [
-                    self._xdmf_reader.data_items[variable_name][time_indices, i]
-                    for i in points
-                ]
-            )
+        result = self._xdmf_reader.data_items[variable_name][
+            time_indices, points
+        ]
         if isinstance(variable, Variable) and do_transform:
             return variable.transform(result)
         return result
