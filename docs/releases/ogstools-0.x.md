@@ -41,6 +41,7 @@
 - `model.save` will now recognize, if the domain mesh needs ID mapping and passes the `include_domain` flag to `Meshes.identify_subdomain` ([!531](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/531)).
 - If the domain mesh already contains an ID mapping prior to `Meshes.identify_subdomain`, it will be also included for recomputation automatically (otherwise a modified domain mesh might include a faulty mapping and wouldn't get updated before) ([!531](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/531))
 - `MeshSeries` saved as XDMF that were both spatially and temporally extracted now correctly return values when probing([!505](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/505))
+- `MeshSeries.compare` with `fast_compare=True` checks the mesh topology only at the first timestep, as documented. Before, the parameter had the opposite effect ([!515](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/515)).
 
 ## Features
 
@@ -55,6 +56,8 @@
 - meshseries now has a setitem method to set either data (`ms["new_data"] = ...`) or a mesh (`ms[-1] = ...` -> overwrites the last timestep)
 - `MeshSeries.probe_values` now accepts integer ids in addition to coordinates and probes these very fast for Meshseries read from xdmf-files
 - `MeshSeries.extract` and `MeshSeries.transform` now can now detach the originally read file to ensure consistency.
+- `MeshSeries.compare` now first compares hashes of underlying files and only does more expensive comparison if hashes differ or MeshSeries has been modified ([!515](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/515))
+- added `MeshSeries.compare_files` to compare underlying files of two MeshSeries. This only checks for bitwise equality of the underlying files and does not take changes during Runtime into account but is very fast. ([!515](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/515))
 - added `Variable.convert_stress(to=..., biot=..., bishop=..., pressure=...)` to give a modified Variable, which converts between total and effective stress before evaluation of any other stored functions. Biot's and Bishop's coefficient can each be a constant or the name of a data field (cell data, e.g. from a material property, is interpolated to the points).
 - `variables.dilatancy_critescu` and `variables.dilatancy_alkan` now assume effective stress and no longer read "pressure", so they behave the same as `variables.dilatancy_critescu_eff` and `variables.dilatancy_alkan_eff` as calculating from effective stress is the default for all OGS process (aside from TRM). For total stress input use e.g. `<variable>.convert_stress(to="effective", ...)`.
 - added `variables.fluid_pressure_criterion_clay` (== `variables.fluid_pressure_criterion`) and `variables.fluid_pressure_criterion_salt`

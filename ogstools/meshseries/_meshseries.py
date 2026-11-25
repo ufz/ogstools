@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Sequence
 from copy import copy as shallowcopy
 from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal, cast, overload
 from warnings import warn
@@ -25,6 +26,56 @@ from ogstools.plot.lineplots import line
 from ogstools.variables import Function, Variable, _normalize_vars, u_reg
 
 from .data_dict import DataDict
+
+
+def _file_hash(path: Path) -> str:
+    """Computes the hash of the file at path"""
+    hash_compare = sha256()
+    with Path.open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            hash_compare.update(chunk)
+    return hash_compare.hexdigest()
+
+
+def _referenced_files(ms: MeshSeries | Path | str) -> list[Path]:
+    """Return the data files that the PVD or XDMF file of `ms` references.
+
+    :param ms:  A MeshSeries or the path to a PVD or XDMF file.
+    :returns:   The resolved paths of the referenced files, sorted.
+    """
+    filepath = ms.filepath if isinstance(ms, MeshSeries) else Path(ms)
+    if filepath is None:
+        msg = "The MeshSeries has no underlying file."
+        raise ValueError(msg)
+    match filepath.suffix:
+        case ".pvd":
+            pvd_reader = (
+                ms._pvd_reader
+                if isinstance(ms, MeshSeries)
+                else pv.PVDReader(filepath.resolve())
+            )
+            folder = Path(pvd_reader.path).parent
+            files = {
+                (folder / dataset.path).resolve()
+                for dataset in pvd_reader.datasets
+            }
+        case ".xdmf" | ".xmf":
+            from ogstools.meshseries._xdmf_writer import source_h5_files
+            from ogstools.meshseries.xdmf_reader import XDMFReader
+
+            xdmf_reader = (
+                ms._xdmf_reader
+                if isinstance(ms, MeshSeries)
+                else XDMFReader(filepath.resolve())
+            )
+            files = source_h5_files(xdmf_reader)
+        case _:
+            msg = (
+                "Only .pvd, .xdmf and .xmf files reference other files, "
+                f"not {filepath.suffix}."
+            )
+            raise ValueError(msg)
+    return sorted(files)
 
 
 class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
@@ -1330,6 +1381,76 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         )
 
     @staticmethod
+    def compare_files(
+        ms_a: MeshSeries | Path | str,
+        ms_b: MeshSeries | Path | str,
+        *,
+        strict: bool = False,
+    ) -> bool:
+        """
+        Compares the underlying files via hashing. This is much faster than
+        :func:`~ogstools.MeshSeries.compare` but might lead to false positives (if one of
+        the MeshSeries has been modified, e.g. with :func:`~ogstools.MeshSeries.extract`,
+        but the underlying file is unchanged) and false negatives (if the
+        underlying files contain the same data saved in different ways).
+        This method is only able to check for strict equality and cannot
+        consider tolerances.
+
+        If both filepaths are None/MeshSeries have no file attached, returns True
+
+        :param ms_a:    First MeshSeries to be compared or path to file in which
+                        a MeshSeries is saved.
+        :param ms_b:    Second MeshSeries to be compared or path to file in which
+                        a MeshSeries is saved.
+        :param strict:  If True raises an AssertionError if underlying files are
+                        not equal
+
+        :returns:   True, if underlying files are equal, False if not.
+        """
+        filepath_a = (
+            ms_a.filepath if isinstance(ms_a, MeshSeries) else Path(ms_a)
+        )
+        filepath_b = (
+            ms_b.filepath if isinstance(ms_b, MeshSeries) else Path(ms_b)
+        )
+        if (filepath_a is None) != (filepath_b is None):
+            if strict:
+                ms_no_path = "ms_a" if filepath_a is None else "ms_b"
+                msg = f"{ms_no_path} has no file attached."
+                raise AssertionError(msg)
+            return False
+        if filepath_a is None or filepath_b is None:
+            return True
+        if not all(
+            filepath.suffix in {".xdmf", ".xmf", ".pvd", ".vtu"}
+            for filepath in {filepath_a, filepath_b}
+        ):
+            false_suffixes = {
+                filepath.suffix
+                for filepath in {filepath_a, filepath_b}
+                if filepath.suffix not in {".xdmf", ".xmf", ".pvd", ".vtu"}
+            }
+            msg = f"Currently, only .pvd, .xdmf, .xmf and .vtu are supported, not {false_suffixes}"
+            raise ValueError(msg)
+        if _file_hash(filepath_a) != _file_hash(filepath_b):
+            if strict:
+                msg = f"{filepath_a} and {filepath_b} do not match!"
+                raise AssertionError(msg)
+            return False
+        # A .vtu file holds all its data and references no other files.
+        if filepath_a.suffix == ".vtu":
+            return True
+        files_a = _referenced_files(ms_a)
+        files_b = _referenced_files(ms_b)
+        for file_a, file_b in zip(files_a, files_b, strict=True):
+            if _file_hash(file_a) != _file_hash(file_b):
+                if strict:
+                    msg = f"Attached file {file_b} differs from {file_a}!"
+                    raise AssertionError(msg)
+                return False
+        return True
+
+    @staticmethod
     def compare(
         ms_a: MeshSeries,
         ms_b: MeshSeries,
@@ -1343,7 +1464,9 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         strict: bool = False,
     ) -> bool:
         """
-        Method to compare two ``ot.MeshSeries`` objects.
+        Method to compare two ``ot.MeshSeries`` objects. Compares hashes of underlying files first
+        and only does expensive mesh-wise comparison if hashes do not match or meshes have been
+        accessed (and therefore potentially modified)
 
         Returns ``True`` if they match within the tolerances,
         otherwise ``False``.
@@ -1362,8 +1485,16 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         """
         from ogstools.mesh.differences import compare
 
+        hash_comparison = (
+            MeshSeries.compare_files(ms_a, ms_b, strict=False)
+            and ms_a.filepath is not None
+            and ms_b.filepath is not None
+        )
         # Testing timevalues
         if ms_a.timevalues.shape != ms_b.timevalues.shape:
+            if strict:
+                err_msg = f"timevalues differs between MeshSeries. In ms_a their shape is {ms_a.timevalues.shape}, in ms_b it is {ms_b.timevalues.shape}"
+                raise AssertionError(err_msg)
             return False
 
         if not np.allclose(
@@ -1377,13 +1508,24 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 err_msg = "timevalues differs between MeshSeries."
                 raise AssertionError(err_msg)
             return False
-
+        changed_ms = (
+            ms_a._mesh_func_opt is not None or ms_b._mesh_func_opt is not None
+        )
+        # If the hashes of the attached files are equal and there is no mesh_func attached, we only have to check meshes that are already cached since they might have been modified
+        timesteps = (
+            [
+                ms_a.closest_timestep(t)
+                for t in list(ms_a._mesh_cache.keys() | ms_b._mesh_cache.keys())
+            ]
+            if hash_comparison and not changed_ms
+            else ms_a.timesteps
+        )
         # Testing mesh-wise
-        for i, (mesh_a, mesh_b) in enumerate(zip(ms_a, ms_b, strict=True)):
-            check_topo = fast_compare or i == 0
+        for i in timesteps:
+            check_topo = not fast_compare or i == 0
             if not compare(
-                mesh_a,
-                mesh_b,
+                ms_a[i],
+                ms_b[i],
                 variable=variable,
                 point_data=point_data,
                 cell_data=cell_data,
