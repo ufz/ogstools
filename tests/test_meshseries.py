@@ -1000,16 +1000,19 @@ def test_hash_compare_attached_file(
 
 def test_hash_compare_no_file():
     """
-    MeshSeries with no attached files are not equal
+    MeshSeries with no attached files are only hash-equal if both miss files.
 
-    scope: component (MeshSeries.compare_files) | oracle: correctness
+    scope: component (MeshSeries.compare_files, MeshSeries.compare) | oracle: correctness
     """
     ms1 = examples.load_meshseries_HT_2D_XDMF()
-    ms2 = examples.load_meshseries_HT_2D_XDMF()
+    ms2 = examples.load_meshseries_CT_2D_XDMF()
     ms1.filepath = None
     assert not ot.MeshSeries.compare_files(ms1, ms2)
-    with pytest.raises(AssertionError, match="no underlying file attached"):
+    with pytest.raises(AssertionError, match="no file attached"):
         ot.MeshSeries.compare_files(ms1, ms2, strict=True)
+    ms2.filepath = None
+    assert ot.MeshSeries.compare_files(ms1, ms2)
+    assert not ot.MeshSeries.compare(ms1, ms2)
 
 
 def test_hash_compare_false_type():

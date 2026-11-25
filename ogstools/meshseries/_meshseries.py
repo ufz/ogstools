@@ -1396,6 +1396,8 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         This method is only able to check for strict equality and cannot
         consider tolerances.
 
+        If both filepaths are None/MeshSeries have no file attached, returns True
+
         :param ms_a:    First MeshSeries to be compared or path to file in which
                         a MeshSeries is saved.
         :param ms_b:    Second MeshSeries to be compared or path to file in which
@@ -1411,11 +1413,14 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         filepath_b = (
             ms_b.filepath if isinstance(ms_b, MeshSeries) else Path(ms_b)
         )
-        if filepath_a is None or filepath_b is None:
+        if (filepath_a is None) != (filepath_b is None):
             if strict:
-                msg = "At least one MeshSeries has no underlying file attached"
+                ms_no_path = "ms_a" if filepath_a is None else "ms_b"
+                msg = f"{ms_no_path} has no file attached."
                 raise AssertionError(msg)
             return False
+        if filepath_a is None or filepath_b is None:
+            return True
         if not all(
             filepath.suffix in {".xdmf", ".xmf", ".pvd", ".vtu"}
             for filepath in {filepath_a, filepath_b}
@@ -1480,7 +1485,11 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
         """
         from ogstools.mesh.differences import compare
 
-        hash_comparison = MeshSeries.compare_files(ms_a, ms_b, strict=False)
+        hash_comparison = (
+            MeshSeries.compare_files(ms_a, ms_b, strict=False)
+            and ms_a.filepath is not None
+            and ms_b.filepath is not None
+        )
         # Testing timevalues
         if ms_a.timevalues.shape != ms_b.timevalues.shape:
             if strict:
@@ -1499,10 +1508,10 @@ class MeshSeries(Sequence[pv.UnstructuredGrid], StorageBase):
                 err_msg = "timevalues differs between MeshSeries."
                 raise AssertionError(err_msg)
             return False
-        # If the hashes of the files are equal, we only have to check meshes that are already cached since they might have been modified
         changed_ms = (
             ms_a._mesh_func_opt is not None or ms_b._mesh_func_opt is not None
         )
+        # If the hashes of the attached files are equal and there is no mesh_func attached, we only have to check meshes that are already cached since they might have been modified
         timesteps = (
             [
                 ms_a.closest_timestep(t)
