@@ -18,6 +18,8 @@ class PlotSetup:
     :obj:`ogstools.plot.plot_setup_defaults`.
     """
 
+    isolines: bool
+    """Adds isolines to the plot, in particular for continuous colormap"""
     combined_colorbar: bool
     "True if all subplots share on colorbar, else each has its own colorbar."
     custom_cmap: Any | None
@@ -92,6 +94,7 @@ class PlotSetup:
             linewidth=obj["linewidth"],
             label_split=obj["label_split"],
             arrowsize=obj["arrowsize"],
+            isolines=obj["isolines"],
         )
 
     def reset(self) -> None:

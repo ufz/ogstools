@@ -10,6 +10,7 @@
 """
 
 setup_dict = {
+    "isolines": False,
     "default_cmap": "RdBu_r",
     "continuous_cmap": False,
     "custom_cmap": None,

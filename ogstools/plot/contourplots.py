@@ -115,6 +115,11 @@ def add_colorbars(
             pad=cb_pad,
             extendrect=True,
         )
+    if kwargs.get("isolines", setup.isolines):
+        linewidth = kwargs.get("linewidth", setup.linewidth)
+        for height in ticks:
+            cb.ax.axhline(height, color="black", linewidth=linewidth)
+
     if continuous_cmap and variable.bilinear_cmap:
         # fix stretched colorbar with Matplotlib's TwoSlopeNorm
         cb.ax.set_yscale("linear")
@@ -229,6 +234,14 @@ def subplot(
     x, y = surf_tri.points.T[[x_id, y_id]]
     tri = surf_tri.faces.reshape((-1, 4))[:, 1:]
     values = variable.magnitude.transform(surf_tri)
+    isolines = kwargs.get("isolines", setup.isolines)
+    if isolines and variable.data_name not in surf_tri.point_data:
+        msg = (
+            f"Isolines need point data, but '{variable.data_name}' is cell "
+            "data. Set isolines=False or interpolate the data to points, "
+            "e.g. with mesh.cell_data_to_point_data()."
+        )
+        raise ValueError(msg)
     # Passing the data and not the mesh here purposely to ensure correct shape
     # of mask. Otherwise transform() might remove additional triangulated cells
     # due to those being part of the usual mask e.g. "pressure_active".
@@ -285,6 +298,16 @@ def subplot(
                     cmap=cmap, norm=norm, hatch="/"
                 )  # fmt: skip
 
+    if isolines:
+        linewidth = kwargs.get("linewidth", setup.linewidth)
+        ax.tricontour(
+            triangulation,
+            values,
+            levels=levels,
+            colors="k",
+            linestyles="solid",
+            linewidths=linewidth,
+        )
     show_edges = setup.show_element_edges
     if isinstance(setup.show_element_edges, str):
         show_edges = setup.show_element_edges == variable.data_name
@@ -562,6 +585,8 @@ def contourf(
         - xlim:               limits as [min, max], use None for auto limit
         - ylim:               limits as [min, max], use None for auto limit
         - alpha:              opaqueness (1: opaque, 0: transparent)
+        - isolines:           displays isolines, useful for continuous colormap
+                              (point data only)
     """
     from ogstools.meshseries._meshseries import MeshSeries
 

@@ -71,6 +71,10 @@
   Data that is not a number, such as text, raises a `ValueError`; save it as `.pvd`.
   Any other suffix raises a `RuntimeError` before anything is written ([!457](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/457)).
 - New method `Meshes.from_spatial_data` to build simple Meshes objects from spatial data files or GeoDataFrames ([!498](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/498))
+- Two new keywords for `Meshes.plot` ([!502](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/502))
+  - `show_domain_boundary_points` (bool) plots boundary points of the domain mesh for visual confirmation of consistency between domain and submeshes
+  - `add_points` takes a dictionary of names and coordinates (2 or 3 values) and adds the points to the plot
+- New `isolines` keyword for `ot.plot.contourf` adds isolines to the plot (useful for continuous colourmaps, point data only) ([!502](https://gitlab.opengeosys.org/ogs/tools/ogstools/-/merge_requests/502))
 
 ## Infrastructure
 
