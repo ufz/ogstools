@@ -314,6 +314,27 @@ class TestPlotting:
             ]
         return contourf(mesh, "Spatial Point Data")
 
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    def test_contourf_isolines(self) -> plt.Figure:
+        """Isolines are plotted at levels of discrete colormap.
+
+        scope: component (contourf) | oracle: reproducibility, baseline image
+        """
+        ms = examples.load_meshseries_THM_2D_PVD().scale("km")
+        return contourf(
+            ms[1],
+            ot.variables.temperature,
+            continuous_cmap=True,
+            isolines=True,
+            show_region_bounds=False,
+        )
+
+    def test_contourf_isolines_cell_data_raises(self) -> None:
+        """Isolines on cell data raise a ValueError that names the remedy."""
+        mesh = examples.load_meshseries_THM_2D_PVD()[1]
+        with pytest.raises(ValueError, match="Isolines need point data"):
+            contourf(mesh, ot.variables.material_id, isolines=True)
+
     @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 30})
     @pytest.mark.parametrize(
         ("axis"),
@@ -679,6 +700,59 @@ class TestPlotting:
         meshes = examples.load_meshes_selke()
         ot.plot.setup.linewidth = 0.25
         return meshes.plot(fontsize=16)
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    def test_meshes_plot_additional_points(self) -> plt.Figure:
+        """Meshes.plot plots additional point at the right place.
+
+        scope: component (Meshes.plot) | oracle: reproducibility, baseline image
+        """
+        meshes = examples.load_meshes_simple_lf()
+        point = {"P": (5, 1.5)}
+        return meshes.plot(add_points=point)
+
+    @pytest.mark.parametrize(
+        ("rotate", "point"),
+        [
+            (lambda m: m, (5.0, 1.5, 0.0)),
+            (lambda m: m.rotate_x(90), (5.0, 0.0, 1.5)),
+        ],
+        ids=["xy", "xz"],
+    )
+    def test_meshes_plot_additional_points_3D_coords(
+        self,
+        rotate: Callable[[pv.UnstructuredGrid], pv.UnstructuredGrid],
+        point: tuple[float, float, float],
+    ) -> None:
+        """A point with 3 coordinates is drawn at its projection on the plot plane.
+
+        scope: component (Meshes.plot) | oracle: correctness, known projection
+        """
+        meshes = examples.load_meshes_simple_lf()
+        for name in list(meshes.keys()):
+            meshes[name] = rotate(meshes[name])
+        fig = meshes.plot(add_points={"P": point})
+        line = next(ln for ln in fig.axes[0].lines if ln.get_label() == "P")
+        plt.close(fig)
+        np.testing.assert_array_equal(line.get_xydata(), [[5.0, 1.5]])
+
+    @pytest.mark.parametrize(
+        "point", [(5.0,), (5.0, 1.5, 0.0, 1.0)], ids=["1 value", "4 values"]
+    )
+    def test_meshes_plot_additional_points_invalid(self, point) -> None:
+        """A point with neither 2 nor 3 coordinates raises a ValueError."""
+        meshes = examples.load_meshes_simple_lf()
+        with pytest.raises(ValueError, match="needs 2 or 3 coordinates"):
+            meshes.plot(add_points={"P": point})
+
+    @pytest.mark.mpl_image_compare(savefig_kwargs={"dpi": 20})
+    def test_meshes_plot_domain_boundary_points(self) -> plt.Figure:
+        """Boundary points of the domain appear correctly when plotting.
+
+        scope: component (Meshes.plot) | oracle: reproducibility, baseline image
+        """
+        meshes = examples.load_meshes_simple_lf()
+        return meshes.plot(show_domain_boundary_points=True)
 
     # ### Testing model plot ###################################################
 

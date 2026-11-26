@@ -955,10 +955,24 @@ class Meshes(MutableMapping, StorageBase):
 
         return parallel_files
 
-    def plot(self, **kwargs: Any) -> plt.Figure:
+    def plot(
+        self,
+        *,
+        add_points: dict[str, Sequence[float]] | None = None,
+        show_domain_boundary_points: bool = False,
+        **kwargs: Any,
+    ) -> plt.Figure:
         """Plot the domain mesh and the subdomains.
 
-        keyword arguments: see :func:`ogstools.plot.contourf`
+        :param add_points:  Extra points to plot, as name -> coordinates.
+                            Coordinates should be given in 3 dimensions (x, y, z)
+                            or 2 dimensions in the plane of the plot.
+        :param show_domain_boundary_points: If True, plot the points on the
+                            boundary of the domain, for visual confirmation of
+                            consistency between domain and submeshes.
+        :param kwargs:      see :func:`ogstools.plot.contourf`
+
+        :returns:   The figure with the plot.
         """
         # TODO: 1D, 3D
         self.sort()
@@ -969,6 +983,21 @@ class Meshes(MutableMapping, StorageBase):
         from ogstools import plot
         from ogstools.variables import Scalar
 
+        axes = plot.utils.get_projection(self.domain)[:2]
+        points_2D: dict[str, np.ndarray] = {}
+        for name, point in (add_points or {}).items():
+            coords = np.asarray(point, dtype=float)
+            if coords.shape == (3,):
+                points_2D[name] = coords[list(axes)]
+            elif coords.shape == (2,):
+                points_2D[name] = coords
+            else:
+                msg = (
+                    f"Point '{name}' needs 2 or 3 coordinates, "
+                    f"got {coords.size}."
+                )
+                raise ValueError(msg)
+
         fontsize = kwargs.pop("fontsize", plot.setup.fontsize)
         lw = kwargs.get("lw", kwargs.get("linewidth", 2))
         show_edges = kwargs.pop("show_edges", True)
@@ -978,6 +1007,8 @@ class Meshes(MutableMapping, StorageBase):
         else:
             var = "None"
         cbar = kwargs.pop("cbar", var != "None")
+        # MaterialIDs are cell data, for which contourf cannot draw isolines
+        kwargs.setdefault("isolines", False)
         clip_on = kwargs.get("clip_on", False)
         fig = plot.contourf(
             self.domain, var, show_edges=show_edges, cbar=cbar, **kwargs
@@ -991,7 +1022,6 @@ class Meshes(MutableMapping, StorageBase):
         colors_2D = iter(colormaps["Set2"].colors)
         colors_1D = iter(colormaps["Set1"].colors)
         colors_0D = iter(colormaps["Pastel1"].colors)
-
         for name, mesh in self.items():
             label = self.output_names[name]
             if name == self.domain_name:
@@ -1019,13 +1049,34 @@ class Meshes(MutableMapping, StorageBase):
                     fontsize=fontsize, clip_on=clip_on
                 )  # fmt: skip
             else:
-                axes = plot.utils.get_projection(self.domain)[:2]
                 color = next(colors_0D)
                 ax.plot(
                     *mesh.points[:, axes].T, "o", label=label,
                     clip_on=clip_on, color=color, ms=8 * lw
                 )  # fmt: skip
-
+        if show_domain_boundary_points:
+            domain_points = self.domain.extract_feature_edges().points
+            ax.plot(
+                domain_points[:, axes[0]],
+                domain_points[:, axes[1]],
+                "o",
+                color="black",
+                zorder=2,
+                ms=6 * lw,
+                clip_on=clip_on,
+                label="Domain Boundary Points",
+            )
+        for name, (x, y) in points_2D.items():
+            color = next(colors_0D)
+            ax.plot(
+                x,
+                y,
+                "o",
+                clip_on=clip_on,
+                color=color,
+                ms=16 * lw,
+                label=name,
+            )
         plot.utils.update_font_sizes(fig.axes, fontsize)
         ax.legend(
             loc="upper left",
